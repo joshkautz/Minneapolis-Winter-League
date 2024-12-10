@@ -15,7 +15,7 @@
 	"dependencies": {
 		"@dropbox/sign": "^1.6.2",
 		"firebase-admin": "^12.6.0",
-		"firebase-functions": "^5.1.1"
+		"firebase-functions": "^6.1.2"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.10.0",
