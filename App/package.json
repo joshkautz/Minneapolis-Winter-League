@@ -50,7 +50,7 @@
 		"tailwindcss-animate": "^1.0.7",
 		"uuid": "^10.0.0",
 		"vite-plugin-eslint": "^1.8.1",
-		"vitest": "^2.1.1",
+		"vitest": "^2.1.9",
 		"zod": "^3.23.8"
 	},
 	"eslintConfig": {
