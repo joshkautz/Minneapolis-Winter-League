@@ -1,35 +1,35 @@
 {
-  "name": "functions",
-  "version": "2.0.0",
-  "private": true,
-  "type": "module",
-  "main": "dist/index.js",
-  "engines": {
-    "node": ">=20.0.0"
-  },
-  "scripts": {
-    "format": "prettier --check .",
-    "lint": "eslint .",
-    "build": "tsc"
-  },
-  "dependencies": {
-    "@dropbox/sign": "^1.8.0",
-    "firebase-admin": "^12.6.0",
-    "firebase-functions": "^6.3.2"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@types/eslint__js": "^8.42.3",
-    "eslint": "^9.22.0",
-    "firebase-functions-test": "^3.4.1",
-    "prettier": "^3.5.3",
-    "typescript": "^5.6.2",
-    "typescript-eslint": "^8.18.2"
-  },
-  "prettier": {
-    "trailingComma": "es5",
-    "semi": false,
-    "singleQuote": true,
-    "useTabs": true
-  }
+	"name": "functions",
+	"version": "2.0.0",
+	"private": true,
+	"type": "module",
+	"main": "dist/index.js",
+	"engines": {
+		"node": ">=20.0.0"
+	},
+	"scripts": {
+		"format": "prettier --check .",
+		"lint": "eslint .",
+		"build": "tsc"
+	},
+	"dependencies": {
+		"@dropbox/sign": "^1.8.0",
+		"firebase-admin": "^12.6.0",
+		"firebase-functions": "^6.3.2"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.17.0",
+		"@types/eslint__js": "^8.42.3",
+		"eslint": "^9.22.0",
+		"firebase-functions-test": "^3.4.1",
+		"prettier": "^3.5.3",
+		"typescript": "^5.6.2",
+		"typescript-eslint": "^8.18.2"
+	},
+	"prettier": {
+		"trailingComma": "es5",
+		"semi": false,
+		"singleQuote": true,
+		"useTabs": true
+	}
 }
