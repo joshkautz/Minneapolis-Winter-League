@@ -33,7 +33,7 @@
 		"@radix-ui/react-visually-hidden": "^1.1.0",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@testing-library/react": "^16.0.1",
-		"@testing-library/user-event": "^14.5.2",
+		"@testing-library/user-event": "^14.6.1",
 		"@tsparticles/engine": "^3.5.0",
 		"@tsparticles/react": "^3.0.0",
 		"@tsparticles/slim": "^3.8.1",
