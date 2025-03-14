@@ -37,20 +37,6 @@ export const Footer = () => {
 								/>
 							</a>
 						</div>
-						<div>
-							<a
-								href="https://watchufa.com/windchill"
-								target="_blank"
-								title="Minnesota Wind Chill"
-								rel="noreferrer"
-							>
-								<img
-									src={'/Wind Chill.png'}
-									alt="Minnesota Wind Chill"
-									width={80}
-								/>
-							</a>
-						</div>
 					</div>
 				</div>
 
