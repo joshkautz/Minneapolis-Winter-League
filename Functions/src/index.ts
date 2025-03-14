@@ -13,7 +13,7 @@ import {
 } from '@dropbox/sign'
 
 // Firebase Functions SDK - Gen 1
-import functions from 'firebase-functions'
+import v1 from 'firebase-functions/v1'
 
 // Firebase Functions SDK - Gen 2
 import {
@@ -140,7 +140,7 @@ initializeApp()
  * Firebase Documentation: {@link https://firebase.google.com/docs/functions/auth-events#trigger_a_function_on_user_deletion Trigger a function on user deletion.}
  */
 
-export const OnUserDeleted = functions
+export const OnUserDeleted = v1
 	.region(REGION)
 	.auth.user()
 	.onDelete((user) => {
