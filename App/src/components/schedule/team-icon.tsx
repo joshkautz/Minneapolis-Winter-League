@@ -20,13 +20,21 @@ export const TeamIcon = ({
 
 	return (
 		<Link to={`/teams/${team.id}`}>
-			<img
-				src={url ? url : ''}
-				className={cn(
-					'mx-auto w-8 h-8 rounded-full object-cover bg-muted hover:scale-105 transition duration-300',
-					!team.data().logo && 'bg-linear-to-r from-primary to-sky-300'
-				)}
-			/>
+			{url ? (
+				<img
+					className={cn(
+						'mx-auto w-8 h-8 rounded-full object-cover bg-muted hover:scale-105 transition duration-300'
+					)}
+					src={url}
+				/>
+			) : (
+				<img
+					className={cn(
+						'mx-auto w-8 h-8 rounded-full object-cover bg-muted hover:scale-105 transition duration-300',
+						'bg-linear-to-r from-primary to-sky-300'
+					)}
+				/>
+			)}
 		</Link>
 	)
 }

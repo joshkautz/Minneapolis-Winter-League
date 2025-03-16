@@ -81,14 +81,21 @@ export const StandingsTable = ({
 									<Link to={`/teams/${team?.id}`}>
 										<div className="flex items-center justify-start gap-2 ">
 											<div className="flex justify-start w-16">
-												<img
-													className={cn(
-														'w-8 h-8 rounded-full object-cover bg-muted',
-														!teamData?.logo &&
+												{url ? (
+													<img
+														className={cn(
+															'w-8 h-8 rounded-full object-cover bg-muted'
+														)}
+														src={url}
+													/>
+												) : (
+													<img
+														className={cn(
+															'w-8 h-8 rounded-full object-cover bg-muted',
 															'bg-linear-to-r from-primary to-sky-300'
-													)}
-													src={url ? url : ''}
-												/>
+														)}
+													/>
+												)}
 											</div>
 											<span>{teamData?.name}</span>
 										</div>
