@@ -30,9 +30,7 @@ export const TeamRecordRowDate = ({ children }: { children: ReactNode }) => {
 
 export const TeamRecordRowResult = ({ children }: { children: ReactNode }) => {
 	return (
-		<p
-			className={'flex grow-1 text-center basis-[74px] shrink-0 select-none'}
-		>
+		<p className={'flex grow-1 text-center basis-[74px] shrink-0 select-none'}>
 			{children}
 		</p>
 	)

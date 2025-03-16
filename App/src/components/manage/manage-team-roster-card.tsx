@@ -86,9 +86,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 		<div className={'inline-flex items-center gap-2 h-4'}>
 			<p>{team?.data().name}</p>
 			<div className={'h-8 w-8 rounded-full overflow-hidden'}>
-				{!imgLoaded && (
-					<Skeleton className="h-[100px] md:h-[250px] md:w-1/4" />
-				)}
+				{!imgLoaded && <Skeleton className="h-[100px] md:h-[250px] md:w-1/4" />}
 				<img
 					onError={() => {
 						setImgLoaded(false)
