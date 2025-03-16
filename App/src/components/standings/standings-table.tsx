@@ -85,7 +85,7 @@ export const StandingsTable = ({
 													className={cn(
 														'w-8 h-8 rounded-full object-cover bg-muted',
 														!teamData?.logo &&
-															'bg-gradient-to-r from-primary to-sky-300'
+															'bg-linear-to-r from-primary to-sky-300'
 													)}
 													src={url ? url : ''}
 												/>

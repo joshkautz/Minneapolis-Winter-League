@@ -135,7 +135,7 @@ export const TopNav = ({
 	return (
 		<header
 			className={
-				'sticky top-0 z-50 w-full border-b supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur'
+				'sticky top-0 z-50 w-full border-b supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur-sm'
 			}
 		>
 			<div className={'container flex items-center h-14'}>

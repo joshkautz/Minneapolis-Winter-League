@@ -25,7 +25,7 @@ export const ScheduleCard = ({
 	const { selectedSeasonTeamsQuerySnapshot } = useTeamsContext()
 
 	return (
-		<Card className={'flex-1 flex-shrink-0 basis-80'}>
+		<Card className={'flex-1 shrink-0 basis-80'}>
 			<CardHeader>
 				<CardTitle>{title}</CardTitle>
 				<CardDescription>
@@ -61,7 +61,7 @@ export const ScheduleCard = ({
 							>
 								<div className={'flex-1'}>Field {index + 1}</div>
 								<div
-									className={'flex-[4] flex justify-center gap-4 items-center'}
+									className={'flex-4 flex justify-center gap-4 items-center'}
 								>
 									<TooltipProvider>
 										<Tooltip>

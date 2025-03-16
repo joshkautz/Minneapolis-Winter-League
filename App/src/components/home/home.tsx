@@ -28,7 +28,7 @@ export const Home = () => {
 							<div className="max-w-[800px] h-1 w-full flex items-start lg:justify-center justify-start">
 								<div
 									className={
-										'mr-16 w-full max-w-[300px] lg:max-w-[475px] h-1 rounded bg-gradient-to-r from-primary to-sky-300'
+										'mr-16 w-full max-w-[300px] lg:max-w-[475px] h-1 rounded bg-linear-to-r from-primary to-sky-300'
 									}
 								/>
 							</div>
@@ -203,7 +203,7 @@ export const Home = () => {
 						<div className={'w-full flex'}>
 							<span
 								className={
-									'bg-accent text-foreground dark:text-background flex flex-shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+									'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 								}
 							>
 								1
@@ -213,7 +213,7 @@ export const Home = () => {
 						<div className={'w-full flex'}>
 							<span
 								className={
-									'bg-accent text-foreground dark:text-background flex flex-shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+									'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 								}
 							>
 								2
@@ -225,7 +225,7 @@ export const Home = () => {
 						<div className={'w-full flex'}>
 							<span
 								className={
-									'bg-accent text-foreground dark:text-background flex flex-shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+									'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 								}
 							>
 								3
@@ -237,7 +237,7 @@ export const Home = () => {
 						<div className={'w-full flex'}>
 							<span
 								className={
-									'bg-accent text-foreground dark:text-background flex flex-shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+									'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 								}
 							>
 								4
@@ -249,7 +249,7 @@ export const Home = () => {
 						<div className={'w-full flex'}>
 							<span
 								className={
-									'bg-accent text-foreground dark:text-background flex flex-shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+									'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 								}
 							>
 								5
@@ -261,7 +261,7 @@ export const Home = () => {
 						<div className={'w-full flex'}>
 							<span
 								className={
-									'bg-accent text-foreground dark:text-background flex flex-shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+									'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 								}
 							>
 								6

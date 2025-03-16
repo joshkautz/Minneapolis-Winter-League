@@ -219,7 +219,7 @@ export const Profile = () => {
 						'flex md:flex-row flex-col flex-wrap items-stretch justify-center w-full md:space-x-16 md:space-y-0 space-y-16 space-x-0'
 					}
 				>
-					<div className={'max-w-screen-md flex-1 basis-[300px] shrink-0'}>
+					<div className={'max-w-(--breakpoint-md) flex-1 basis-[300px] shrink-0'}>
 						<p className="mb-4 text-xl font-bold">Details</p>
 
 						<Form {...form}>
@@ -282,7 +282,7 @@ export const Profile = () => {
 						</Form>
 					</div>
 
-					<div className={'max-w-screen-md flex-1 basis-[300px] shrink-0'}>
+					<div className={'max-w-(--breakpoint-md) flex-1 basis-[300px] shrink-0'}>
 						<p className="mb-4 text-xl font-bold">Actions</p>
 						<div className={'flex flex-col gap-6'}>
 							{/* EMAIL */}

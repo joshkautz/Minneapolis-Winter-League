@@ -126,7 +126,7 @@ export const TeamProfile = () => {
 		<div className={'container'}>
 			<div className={'w-1/2 md:w-1/4 my-8 mx-auto'}>
 				{teamProfileImageLoaded ? null : (
-					<Skeleton className="h-[100px] md:h-[250px] md:w-[1/4]" />
+					<Skeleton className="h-[100px] md:h-[250px] md:w-1/4" />
 				)}
 				<img
 					onError={() => {
@@ -150,7 +150,7 @@ export const TeamProfile = () => {
 							? `${teamDocumentSnapshot?.data()?.name} team players and captains`
 							: ``
 					}
-					className={'flex-1 basis-[360px] flex-shrink-0'}
+					className={'flex-1 basis-[360px] shrink-0'}
 					footerContent={registrationStatus}
 				>
 					{teamDocumentSnapshot?.data()?.roster?.map(
@@ -184,7 +184,7 @@ export const TeamProfile = () => {
 									{gameData.date.toDate().toLocaleDateString()}
 								</TeamRecordRowDate>
 								<TeamRecordRowResult>{result}</TeamRecordRowResult>
-								<div className="flex grow-[3] shrink-0 basis-[100px] overflow-hidden text-clip">
+								<div className="flex grow-3 shrink-0 basis-[100px] overflow-hidden text-clip">
 									<Link
 										className="flex flex-col transition duration-300 group w-max"
 										to={

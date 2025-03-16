@@ -269,7 +269,7 @@ export const ManageEditTeam = ({
 								<img src={url} />
 							</div>
 						) : (
-							<Skeleton className="h-[100px] md:h-[250px] md:w-[1/4]" />
+							<Skeleton className="h-[100px] md:h-[250px] md:w-1/4" />
 						)}
 						<Button type={'submit'} disabled={isLoading}>
 							{isLoading ? (

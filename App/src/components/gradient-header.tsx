@@ -11,7 +11,7 @@ export const GradientHeader = ({
 	return (
 		<div
 			className={cn(
-				'max-w-max mx-auto my-8 text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-sky-300',
+				'max-w-max mx-auto my-8 text-2xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-primary to-sky-300',
 				className
 			)}
 		>

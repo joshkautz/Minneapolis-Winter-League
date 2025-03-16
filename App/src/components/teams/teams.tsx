@@ -76,7 +76,7 @@ export const Teams = () => {
 												className={cn(
 													'w-full h-full max-w-[250px] max-h-[250px] transition duration-300 bg-muted group-hover:scale-105 mx-auto object-cover',
 													!url &&
-														'bg-gradient-to-r from-primary to-sky-300 border-0 scale-[1.05]'
+														'bg-linear-to-r from-primary to-sky-300 border-0 scale-[1.05]'
 												)}
 											/>
 										</div>

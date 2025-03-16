@@ -24,7 +24,7 @@ export const TeamIcon = ({
 				src={url ? url : ''}
 				className={cn(
 					'mx-auto w-8 h-8 rounded-full object-cover bg-muted hover:scale-105 transition duration-300',
-					!team.data().logo && 'bg-gradient-to-r from-primary to-sky-300'
+					!team.data().logo && 'bg-linear-to-r from-primary to-sky-300'
 				)}
 			/>
 		</Link>

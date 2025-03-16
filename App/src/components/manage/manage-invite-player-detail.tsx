@@ -69,7 +69,7 @@ export const ManageInvitePlayerDetail = ({
 			{statusColor && (
 				<span
 					className={cn(
-						'flex flex-shrink-0 content-center self-start w-2 h-2 mt-2 mr-2 translate-y-1 rounded-full',
+						'flex shrink-0 content-center self-start w-2 h-2 mt-2 mr-2 translate-y-1 rounded-full',
 						statusColor
 					)}
 				/>

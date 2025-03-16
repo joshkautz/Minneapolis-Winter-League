@@ -107,7 +107,7 @@ export const HeroSection = () => {
 						</div>
 						<div
 							className={
-								'w-[220px] h-1 rounded bg-gradient-to-r from-primary to-sky-300'
+								'w-[220px] h-1 rounded bg-linear-to-r from-primary to-sky-300'
 							}
 						/>
 						<div className="flex mt-4 sm:mt-12">
