@@ -79,7 +79,6 @@
 		"@types/uuid": "10.0.0",
 		"@vitejs/plugin-react": "^4.3.4",
 		"eslint": "^9.22.0",
-		"eslint-config-google": "^0.14.0",
 		"eslint-plugin-react": "^7.37.4",
 		"jsdom": "^26.0.0",
 		"postcss": "^8.4.47",
