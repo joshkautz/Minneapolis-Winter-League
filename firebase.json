@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firebase-config.json",
   "functions": {
     "source": "Functions",
-    "runtime": "nodejs22",
+    "runtime": "nodejs20",
     "ignore": [
       "node_modules",
       "src",
