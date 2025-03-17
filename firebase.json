@@ -2,14 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firebase-config.json",
   "functions": {
     "source": "Functions",
-    "runtime": "nodejs20",
+    "runtime": "nodejs22",
     "ignore": [
       "node_modules",
       "src",
       ".gitignore",
       "eslint.config.js",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
+      "package-lock.json",
+      "package.json",
       "tsconfig.json"
     ]
   },
@@ -19,7 +19,11 @@
   },
   "hosting": {
     "public": "App/dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
     "rewrites": [
       {
         "source": "/dropboxSignHandleWebhookEvents",
