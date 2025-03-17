@@ -45,7 +45,6 @@ jobs:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MINNESOTA_WINTER_LEAGUE }}
         run: |
           # Install Firebase Tools
-          # curl -sL https://firebase.tools | bash
           npm install -g firebase-tools
 
           echo "$GCP_SA_KEY" > /opt/gcp_key.json
@@ -103,7 +102,6 @@ jobs:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MINNESOTA_WINTER_LEAGUE }}
         run: |
           # Install Firebase Tools
-          # curl -sL https://firebase.tools | bash
           npm install -g firebase-tools
 
           echo "$GCP_SA_KEY" > /opt/gcp_key.json

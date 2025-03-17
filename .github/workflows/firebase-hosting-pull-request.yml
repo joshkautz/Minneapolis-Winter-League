@@ -45,7 +45,6 @@ jobs:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MINNESOTA_WINTER_LEAGUE }}
         run: |
           # Install Firebase Tools.
-          # curl -sL https://firebase.tools | bash
           npm install -g firebase-tools
 
           echo "$GCP_SA_KEY" > /opt/gcp_key.json
@@ -54,7 +53,7 @@ jobs:
           # Deploy to Firebase Hosting Preview Channel.
           DATE=$(date +'%A-%m-%d-%Y-%H-%M-%S')
           CHANNEL="Preview-"$DATE
-          DEPLOYMENT_OUTPUT=$(firebase hosting:channel:deploy $CHANNEL --expires 2d --json)
+          DEPLOYMENT_OUTPUT=$(firebase hosting:channel:deploy $CHANNEL --expires 1d --json)
 
           # Prepare Firebase Hosting Preview Channel URL for GitHub environment file.
           PREVIEW_CHANNEL_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -E -o '(http|https)://[a-zA-Z0-9./?=_%:-]*.web.app')
@@ -76,7 +75,6 @@ jobs:
           KEY_ID: 38baec1a-f61c-481e-a9d4-d0ddaba7cbb8
         run: |
           # Install Firebase Tools.
-          # curl -sL https://firebase.tools | bash
           npm install -g firebase-tools
 
           echo "$GCP_SA_KEY" > /opt/gcp_key.json
@@ -117,9 +115,6 @@ jobs:
           # Install Google's OAuth Tool.
           wget https://storage.googleapis.com/oauth2l/latest/linux_amd64.tgz
           tar -xvzf linux_amd64.tgz
-
-          # Prepare Google Service Account credentials for gcurl.
-          echo "$GCP_SA_KEY" > /opt/gcp_key.json
 
           # Create gcurl command.
           shopt -s expand_aliases
