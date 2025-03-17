@@ -108,4 +108,4 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS=/opt/gcp_key.json
 
           # Deploy to Firebase Functions
-          firebase deploy --debug --only functions
+          firebase deploy --only functions
