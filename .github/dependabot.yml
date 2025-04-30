@@ -10,15 +10,18 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 20
 
   # Maintain dependencies for npm
   - package-ecosystem: "npm"
     directory: "/App"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 20
 
   # Maintain dependencies for npm
   - package-ecosystem: "npm"
     directory: "/Functions"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 20
