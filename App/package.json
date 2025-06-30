@@ -72,7 +72,7 @@
 		"@types/react-dom": "^19.1.5",
 		"@types/uuid": "10.0.0",
 		"@vitejs/plugin-react": "^4.5.0",
-		"eslint": "^9.27.0",
+		"eslint": "^9.30.0",
 		"eslint-plugin-react": "^7.37.5",
 		"jsdom": "^26.1.0",
 		"postcss": "^8.5.4",
