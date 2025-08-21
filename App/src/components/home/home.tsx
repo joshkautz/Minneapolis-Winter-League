@@ -42,7 +42,7 @@ export const Home = () => {
 						>
 							<CardHeader>
 								<CardTitle className={'text-2xl font-bold self-center'}>
-									2024 Fall | Dates + Details
+									2025 Fall | Dates + Details
 								</CardTitle>
 							</CardHeader>
 							<CardContent className={'flex flex-col gap-4'}>
@@ -52,7 +52,7 @@ export const Home = () => {
 								</div>
 								<div className={'flex'}>
 									<p className={'w-16 mr-2 font-bold min-w-16'}>When:</p>
-									<span>{`Every Saturday, November 2nd - December 14th.`}</span>
+									<span>{`Every Saturday, November 1st - December 20th.`}</span>
 								</div>
 								<div className={'flex'}>
 									<p className={'w-16 mr-2 font-bold min-w-16'}>Where:</p>
@@ -76,7 +76,7 @@ export const Home = () => {
 								</div>
 								<div className={'flex'}>
 									<p className={'w-16 mr-2 font-bold min-w-16'}>Cost:</p>
-									<span>{`$70 for the 2024 Fall season. 7 weeks of games. 2 games a night.`}</span>
+									<span>{`$100 for the 2025 Fall season. 7 weeks of games. 2 games a night.`}</span>
 								</div>
 								<div className={'flex'}>
 									<p className={'w-16 mr-2 font-bold min-w-16'}>New!</p>
