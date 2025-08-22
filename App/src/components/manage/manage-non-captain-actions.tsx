@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { removeFromTeam } from '@/firebase/firestore'
-import { toast } from '../ui/use-toast'
+import { toast } from 'sonner'
 import { useAuthContext } from '@/contexts/auth-context'
 import { Button } from '../ui/button'
 import { DotsVerticalIcon } from '@radix-ui/react-icons'
@@ -46,18 +46,18 @@ export const ManageNonCaptainActions = () => {
 			currentSeasonQueryDocumentSnapshot?.ref
 		)
 			.then(() => {
-				toast({
-					title: `${
+				toast.success(
+					`${
 						authenticatedUserSnapshot?.data()?.firstname ?? 'Player'
 					} has left the team`,
-					description: 'Send player invites to build up your roster.',
-				})
+					{
+						description: 'Send player invites to build up your roster.',
+					}
+				)
 			})
 			.catch((error) => {
-				toast({
-					title: 'Unable to Remove',
+				toast.error('Unable to Remove', {
 					description: error.message,
-					variant: 'destructive',
 				})
 			})
 	}, [

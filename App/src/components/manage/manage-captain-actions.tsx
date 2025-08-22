@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { deleteTeam, removeFromTeam } from '@/firebase/firestore'
-import { toast } from '../ui/use-toast'
+import { toast } from 'sonner'
 import { useAuthContext } from '@/contexts/auth-context'
 import { Button } from '../ui/button'
 import { DotsVerticalIcon } from '@radix-ui/react-icons'
@@ -49,16 +49,13 @@ export const ManageCaptainActions = () => {
 			currentSeasonQueryDocumentSnapshot?.ref
 		)
 			.then(() => {
-				toast({
-					title: `Success`,
-					description: `You have left the team.`,
+				toast.success('Success', {
+					description: 'You have left the team.',
 				})
 			})
 			.catch((error) => {
-				toast({
-					title: 'Failure',
+				toast.error('Failure', {
 					description: error.message,
-					variant: 'destructive',
 				})
 			})
 	}, [
@@ -73,16 +70,13 @@ export const ManageCaptainActions = () => {
 			currentSeasonQueryDocumentSnapshot?.ref
 		)
 			.then(() => {
-				toast({
-					title: `Success`,
-					description: `Team has been deleted.`,
+				toast.success('Success', {
+					description: 'Team has been deleted.',
 				})
 			})
 			.catch((error) => {
-				toast({
-					title: 'Failure',
+				toast.error('Failure', {
 					description: error.message,
-					variant: 'destructive',
 				})
 			})
 	}, [

@@ -7,7 +7,7 @@ import {
 } from '@/firebase/firestore'
 import { useCallback, useMemo, useState } from 'react'
 import { NotificationCard } from '../notification-card'
-import { toast } from '../ui/use-toast'
+import { toast } from 'sonner'
 import { PlayerData, TeamData } from '@/lib/interfaces'
 import { ManageInvitePlayerDetail } from './manage-invite-player-detail'
 import { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
@@ -71,17 +71,13 @@ export const ManageInvitePlayerList = () => {
 				authenticatedUserDocumentSnapshot
 			)
 				?.then(() => {
-					toast({
-						title: 'Invite sent',
+					toast.success('Invite sent', {
 						description: `${playerQueryDocumentSnapshot.data().firstname} ${playerQueryDocumentSnapshot.data().lastname} has been invited to join ${teamQueryDocumentSnapshot?.data().name}.`,
-						variant: 'default',
 					})
 				})
 				.catch(() => {
-					toast({
-						title: 'Invite failed',
+					toast.error('Invite failed', {
 						description: 'Ensure your email is verified.',
-						variant: 'destructive',
 					})
 				})
 		},

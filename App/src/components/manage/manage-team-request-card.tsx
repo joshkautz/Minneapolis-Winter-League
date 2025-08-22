@@ -8,7 +8,7 @@ import { TeamsContext } from '@/contexts/teams-context'
 import { useCallback, useContext } from 'react'
 import { NotificationCard } from '../notification-card'
 import { useAuthContext } from '@/contexts/auth-context'
-import { toast } from '../ui/use-toast'
+import { toast } from 'sonner'
 import { PlayerData, TeamData } from '@/lib/interfaces'
 import { ManageTeamDetail } from './manage-team-detail'
 import { ReloadIcon } from '@radix-ui/react-icons'
@@ -33,19 +33,14 @@ export const ManageTeamRequestCard = () => {
 				teamQueryDocumentSnapshot
 			)
 				?.then(() => {
-					toast({
-						title: 'Request sent',
-						description: 'you requested to join',
-						variant: 'default',
-					})
+					toast.success('Request sent', {
+			description: 'you requested to join',
+		})
 				})
 				.catch(() => {
-					toast({
-						title: 'Unable to send request',
-						description:
-							'Ensure your email is verified. Please try again later.',
-						variant: 'destructive',
-					})
+					toast.error('Unable to send request', {
+			description: 'Ensure your email is verified. Please try again later.',
+		})
 				}),
 		[]
 	)

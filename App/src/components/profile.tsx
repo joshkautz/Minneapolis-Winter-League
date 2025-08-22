@@ -14,7 +14,7 @@ import {
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from './ui/use-toast'
+import { toast } from 'sonner'
 import { stripeRegistration, updatePlayer } from '@/firebase/firestore'
 import { Label } from './ui/label'
 import { CheckCircledIcon, ReloadIcon } from '@radix-ui/react-icons'
@@ -69,10 +69,8 @@ export const Profile = () => {
 
 	useEffect(() => {
 		if (stripeError) {
-			toast({
-				title: `Failure`,
+			toast.error('Failure', {
 				description: stripeError,
-				variant: 'destructive',
 			})
 			setStripeError(undefined)
 		}
@@ -85,17 +83,13 @@ export const Profile = () => {
 				lastname: data.lastname,
 			})
 				.then(() => {
-					toast({
-						title: `Success`,
-						description: `User updated!`,
-						variant: 'default',
+					toast.success('Success', {
+						description: 'User updated!',
 					})
 				})
 				.catch((err) => {
-					toast({
-						title: `Failure`,
+					toast.error('Failure', {
 						description: `${err}`,
-						variant: 'destructive',
 					})
 				})
 		},
@@ -125,10 +119,8 @@ export const Profile = () => {
 				const data: DropboxResult = result.data as DropboxResult
 				setDropboxEmailSent(true)
 				setDropboxEmailLoading(false)
-				toast({
-					title: `Success`,
+				toast.success('Success', {
 					description: `Email sent to ${data.result.requesterEmailAddress}`,
-					variant: 'default',
 				})
 			}
 
@@ -136,14 +128,12 @@ export const Profile = () => {
 				const data: DropboxError = result.data as DropboxError
 				setDropboxEmailSent(false)
 				setDropboxEmailLoading(false)
-				toast({
-					title: `Failure`,
+				toast.error('Failure', {
 					description: `Dropbox Error: ${data.error.message}`,
-					variant: 'destructive',
 				})
 			}
 		})
-	}, [sendDropboxEmail, setDropboxEmailSent, setDropboxEmailLoading, toast])
+	}, [sendDropboxEmail, setDropboxEmailSent, setDropboxEmailLoading])
 
 	const isAuthenticatedUserAdmin = useMemo(
 		() => authenticatedUserSnapshot?.data()?.admin,

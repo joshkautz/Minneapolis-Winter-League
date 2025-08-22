@@ -1,6 +1,6 @@
 import { useAuthContext } from '@/contexts/auth-context'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
 import { useDownloadURL, useUploadFile } from 'react-firebase-hooks/storage'
 import { Label } from '@/components/ui/label'
 import { ReloadIcon } from '@radix-ui/react-icons'
@@ -68,16 +68,20 @@ export const CreateTeam = () => {
 			description: string
 			navigation: boolean
 		}) => {
-			toast({
-				title: title,
-				description: description,
-				variant: success ? 'default' : 'destructive',
-			})
+			if (success) {
+				toast.success(title, {
+					description: description,
+				})
+			} else {
+				toast.error(title, {
+					description: description,
+				})
+			}
 			if (navigation) {
 				navigate('/manage')
 			}
 		},
-		[toast, navigate]
+		[navigate]
 	)
 
 	useEffect(() => {

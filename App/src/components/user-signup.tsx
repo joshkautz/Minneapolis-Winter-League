@@ -12,7 +12,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
 import { useAuthContext } from '@/contexts/auth-context'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { createPlayer } from '@/firebase/firestore'
@@ -59,13 +59,13 @@ export const UserSignup = ({
 						currentSeasonQueryDocumentSnapshot
 					),
 				]).then(() => {
-					toast({
-						title: res?.user
-							? 'User created'
-							: `${createUserWithEmailAndPasswordError?.message}`,
-						variant: res?.user ? 'default' : 'destructive',
-						description: 'Welcome to Minneapolis Winter League!',
-					})
+					if (res?.user) {
+						toast.success('User created', {
+							description: 'Welcome to Minneapolis Winter League!',
+						})
+					} else {
+						toast.error(`${createUserWithEmailAndPasswordError?.message}`)
+					}
 
 					if (closeMobileSheet) {
 						closeMobileSheet()
@@ -77,7 +77,6 @@ export const UserSignup = ({
 			createUserWithEmailAndPassword,
 			sendEmailVerification,
 			createPlayer,
-			toast,
 			createUserWithEmailAndPasswordError,
 			currentSeasonQueryDocumentSnapshot,
 		]

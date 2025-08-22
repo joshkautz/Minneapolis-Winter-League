@@ -9,7 +9,7 @@ import {
 	rejectOffer,
 	acceptOffer,
 } from '@/firebase/firestore'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { getInviteMessage, getRequestMessage } from '@/lib/utils'
 import { NotificationCardItem } from '../notification-card-item'
@@ -33,18 +33,14 @@ export const ManageCaptainsOffersPanel = () => {
 	) => {
 		rejectOffer(offerDocumentReference)
 			.then(() => {
-				toast({
-					title: 'Success',
-					description: 'Request rejected',
-					variant: 'default',
-				})
+				toast.success('Success', {
+			description: 'Request rejected',
+		})
 			})
 			.catch(() => {
-				toast({
-					title: 'Failure',
-					description: 'Request not rejected',
-					variant: 'destructive',
-				})
+				toast.error('Failure', {
+			description: 'Request not rejected',
+		})
 			})
 	}
 
@@ -53,18 +49,14 @@ export const ManageCaptainsOffersPanel = () => {
 	) => {
 		acceptOffer(offerDocumentReference)
 			.then(() => {
-				toast({
-					title: 'Success',
-					description: 'Request accepted',
-					variant: 'default',
-				})
+				toast.success('Success', {
+			description: 'Request accepted',
+		})
 			})
 			.catch(() => {
-				toast({
-					title: 'Failure',
-					description: 'Request not accepted',
-					variant: 'destructive',
-				})
+				toast.error('Failure', {
+			description: 'Request not accepted',
+		})
 			})
 	}
 
@@ -73,18 +65,14 @@ export const ManageCaptainsOffersPanel = () => {
 	) => {
 		rejectOffer(offerDocumentReference)
 			.then(() => {
-				toast({
-					title: 'Success',
-					description: 'Invite canceled',
-					variant: 'default',
-				})
+				toast.success('Success', {
+			description: 'Invite canceled',
+		})
 			})
 			.catch(() => {
-				toast({
-					title: 'Failure',
-					description: 'Invite not canceled',
-					variant: 'destructive',
-				})
+				toast.error('Failure', {
+			description: 'Invite not canceled',
+		})
 			})
 	}
 

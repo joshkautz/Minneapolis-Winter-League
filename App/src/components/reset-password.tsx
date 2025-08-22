@@ -12,7 +12,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
 import { useAuthContext } from '@/contexts/auth-context'
 
 const passwordResetEmailSchema = z.object({
@@ -38,15 +38,18 @@ export const ResetPassword = ({
 	const onSubmit = async (data: PasswordResetEmailSchema) => {
 		const res = await sendPasswordResetEmail(data.email)
 
-		toast({
-			title: res
-				? 'Password reset email sent'
-				: `Password reset email failed: ${sendPasswordResetEmailError}`,
-			variant: res ? 'default' : 'destructive',
-			description: res
-				? `Check your inbox!`
-				: `${sendPasswordResetEmailError?.message}`,
-		})
+		if (res) {
+			toast.success('Password reset email sent', {
+				description: 'Check your inbox!',
+			})
+		} else {
+			toast.error(
+				`Password reset email failed: ${sendPasswordResetEmailError}`,
+				{
+					description: `${sendPasswordResetEmailError?.message}`,
+				}
+			)
+		}
 
 		if (res && closeMobileSheet) {
 			closeMobileSheet()

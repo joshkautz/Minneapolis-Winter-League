@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { toast } from '../ui/use-toast'
+import { toast } from 'sonner'
 import { Button } from '../ui/button'
 import { useDownloadURL, useUploadFile } from 'react-firebase-hooks/storage'
 import {
@@ -112,22 +112,18 @@ export const ManageEditTeam = ({
 		)
 			.then(() => {
 				setIsLoading(false)
-				toast({
-					variant: 'default',
-					title: 'Team Edited',
+				toast.success('Team Edited', {
 					description: `Changes have been saved, ${editedTeamData.name}!`,
 				})
 				closeDialog()
 			})
 			.catch((error) => {
 				setIsLoading(false)
-				toast({
-					variant: 'destructive',
-					title: 'Error',
+				toast.error('Error', {
 					description: error.message,
 				})
 			})
-	}, [downloadUrl, editedTeamData, team, editTeam, setIsLoading, toast])
+	}, [downloadUrl, editedTeamData, team, editTeam, setIsLoading])
 
 	const onSubmit = useCallback(
 		async (data: ManageEditTeamSchema) => {
@@ -154,18 +150,14 @@ export const ManageEditTeam = ({
 						editTeam(team?.ref, data.name, undefined, undefined)
 							.then(() => {
 								setIsLoading(false)
-								toast({
-									variant: 'default',
-									title: 'Team Edited',
+								toast.success('Team Edited', {
 									description: `Changes have been saved, ${data.name}!`,
 								})
 								closeDialog()
 							})
 							.catch((error) => {
 								setIsLoading(false)
-								toast({
-									variant: 'destructive',
-									title: 'Error',
+								toast.error('Error', {
 									description: error.message,
 								})
 							})
@@ -173,18 +165,14 @@ export const ManageEditTeam = ({
 						editTeam(team?.ref, data.name, undefined, undefined)
 							.then(() => {
 								setIsLoading(false)
-								toast({
-									variant: 'default',
-									title: 'Team Edited',
+								toast.success('Team Edited', {
 									description: `Changes have been saved, ${data.name}!`,
 								})
 								closeDialog()
 							})
 							.catch((error) => {
 								setIsLoading(false)
-								toast({
-									variant: 'destructive',
-									title: 'Error',
+								toast.error('Error', {
 									description: error.message,
 								})
 							})
@@ -193,9 +181,7 @@ export const ManageEditTeam = ({
 			} catch (error) {
 				if (error instanceof Error) {
 					setIsLoading(false)
-					toast({
-						variant: 'destructive',
-						title: 'Error',
+					toast.error('Error', {
 						description: error.message,
 					})
 				}

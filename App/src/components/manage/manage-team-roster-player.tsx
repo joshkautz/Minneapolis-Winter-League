@@ -20,7 +20,7 @@ import { useAuthContext } from '@/contexts/auth-context'
 import { PlayerData } from '@/lib/interfaces'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { DestructiveConfirmationDialog } from '../destructive-confirmation-dialog'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext } from '@/contexts/seasons-context'
 import { useTeamsContext } from '@/contexts/teams-context'
@@ -101,18 +101,19 @@ export const ManageTeamRosterPlayer = ({
 				currentSeasonQueryDocumentSnapshot?.ref
 			)
 				.then(() => {
-					toast({
-						title: `${
+					toast.success(
+						`${
 							playerSnapshot?.data()?.firstname ?? 'Player'
 						} is no longer a team captain`,
-						description: `They are still on your roster. You may be promote them back at any time.`,
-					})
+						{
+							description:
+								'They are still on your roster. You may be promote them back at any time.',
+						}
+					)
 				})
 				.catch((error) => {
-					toast({
-						title: 'Unable to Demote',
+					toast.error('Unable to Demote', {
 						description: error.message,
-						variant: 'destructive',
 					})
 				}),
 		[team, playerSnapshot, currentSeasonQueryDocumentSnapshot]
@@ -126,19 +127,16 @@ export const ManageTeamRosterPlayer = ({
 				currentSeasonQueryDocumentSnapshot?.ref
 			)
 				.then(() => {
-					toast({
-						title: 'Congratulations',
+					toast.success('Congratulations', {
 						description: `${
 							playerSnapshot?.data()?.firstname ?? 'Player'
 						} has been promoted to team captain.`,
 					})
 				})
 				.catch(() => {
-					toast({
-						title: 'Unable to Promote',
+					toast.error('Unable to Promote', {
 						description:
 							'Ensure your email is verified. Please try again later.',
-						variant: 'destructive',
 					})
 				}),
 		[team, playerSnapshot, currentSeasonQueryDocumentSnapshot]
@@ -151,18 +149,16 @@ export const ManageTeamRosterPlayer = ({
 			currentSeasonQueryDocumentSnapshot?.ref
 		)
 			.then(() => {
-				toast({
-					title: `${
-						playerSnapshot?.data()?.firstname ?? 'Player'
-					} has left the team`,
-					description: 'Send player invites to build up your roster.',
-				})
+				toast.success(
+					`${playerSnapshot?.data()?.firstname ?? 'Player'} has left the team`,
+					{
+						description: 'Send player invites to build up your roster.',
+					}
+				)
 			})
 			.catch((error) => {
-				toast({
-					title: 'Unable to Remove',
+				toast.error('Unable to Remove', {
 					description: error.message,
-					variant: 'destructive',
 				})
 			})
 	}, [team, playerSnapshot, currentSeasonQueryDocumentSnapshot])

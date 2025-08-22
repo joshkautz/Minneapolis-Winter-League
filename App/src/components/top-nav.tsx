@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from './theme-toggle'
 import { useOffersContext } from '@/contexts/offers-context'
 import { UserForm } from './user-form'
-import { toast } from './ui/use-toast'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useSeasonsContext } from '@/contexts/seasons-context'
 import { SeasonSelect } from './season-select'
@@ -253,16 +253,14 @@ export const TopNav = ({
 										onClick={() => {
 											signOut()
 												.then(() => {
-													toast({
-														title: 'Logged Out',
+													toast.success('Logged Out', {
 														description:
 															'You are no longer signed in to an account.',
 													})
 													handleCloseMobileNav()
 												})
 												.catch(() => {
-													toast({
-														title: 'Unable to Log Out',
+													toast.error('Unable to Log Out', {
 														description:
 															'Ensure your email is verified. Please try again later.',
 													})

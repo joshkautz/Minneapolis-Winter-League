@@ -12,7 +12,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from 'sonner'
 import { useAuthContext } from '@/contexts/auth-context'
 
 const loginSchema = z.object({
@@ -38,13 +38,15 @@ export const UserLogin = ({
 	const onSubmit = async (data: LoginSchema) => {
 		const res = await signInWithEmailAndPassword(data.email, data.password)
 
-		toast({
-			title: res?.user
-				? 'Login successful!'
-				: `Login failed: ${signInWithEmailAndPasswordError}`,
-			variant: res?.user ? 'default' : 'destructive',
-			description: res?.user ? `Welcome back` : `Invalid email or password`,
-		})
+		if (res?.user) {
+			toast.success('Login successful!', {
+				description: 'Welcome back',
+			})
+		} else {
+			toast.error(`Login failed: ${signInWithEmailAndPasswordError}`, {
+				description: 'Invalid email or password',
+			})
+		}
 
 		if (res?.user && closeMobileSheet) {
 			closeMobileSheet()
