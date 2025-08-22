@@ -59,7 +59,7 @@ export const RolloverTeamForm = ({
 	} = useTeamsContext()
 	const { seasonsQuerySnapshot } = useSeasonsContext()
 
-	const [stringValue, setStringValue] = useState<string | undefined>()
+	const [stringValue, setStringValue] = useState<string>('')
 
 	const [
 		selectedTeamQueryDocumentSnapshot,
@@ -101,8 +101,8 @@ export const RolloverTeamForm = ({
 					defaultTeamQueryDocumentSnapshot?.data().teamId
 			)
 
-		if (!defaultTeamHasBeenRolledOver) {
-			setStringValue(defaultTeamQueryDocumentSnapshot?.data().name)
+		if (!defaultTeamHasBeenRolledOver && defaultTeamQueryDocumentSnapshot?.data().name) {
+			setStringValue(defaultTeamQueryDocumentSnapshot.data().name)
 			setSelectedTeamQueryDocumentSnapshot(defaultTeamQueryDocumentSnapshot)
 		}
 	}, [

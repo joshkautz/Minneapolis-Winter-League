@@ -21,7 +21,7 @@ export const SeasonSelect = ({
 		seasonsQuerySnapshotLoading,
 	} = useSeasonsContext()
 
-	const [stringValue, setStringValue] = useState<string | undefined>(undefined)
+	const [stringValue, setStringValue] = useState<string>('')
 	const [initialSelection, setInitialSelection] = useState<boolean>(false)
 
 	const handleSeasonChange = (season: string) => {
