@@ -56,7 +56,7 @@ export const TeamRosterPlayer = ({
 							<Badge
 								className={'select-none hover:bg-initial'}
 								variant={
-									isPlayerPaid && isPlayerSigned ? 'secondary' : 'inverse'
+									isPlayerPaid && isPlayerSigned ? 'secondary' : 'outline'
 								}
 							>
 								{isPlayerPaid && isPlayerSigned ? 'registered' : 'unregistered'}
