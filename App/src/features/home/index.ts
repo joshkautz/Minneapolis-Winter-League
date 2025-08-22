@@ -6,8 +6,10 @@
 
 export { Home } from './home'
 export { HeroSection } from './hero-section'
+export { LeagueDetailsSection } from './league-details-section'
+export { WhyJoinSection } from './why-join-section'
+export { RegistrationSection } from './registration-section'
 export { Footer } from './footer'
-export { SparklesCore } from './particles'
-export { RegistrationCountdown } from './registration-countdown'
-export { CitySvg } from './city-svg'
 export { Snowflake } from './snowflake'
+export { CitySvg } from './city-svg'
+export { RegistrationCountdown } from './registration-countdown'

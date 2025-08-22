@@ -1,10 +1,3 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { toast } from 'sonner'
-import { useAuthContext } from '@/providers'
-import { useSeasonsContext } from '@/providers'
-import { createPlayer } from '@/firebase/firestore'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
@@ -22,76 +15,20 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-
-const signupSchema = z.object({
-	firstName: z.string().min(2, 'First name must be at least 2 characters'),
-	lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-	email: z.string().email('Please enter a valid email address'),
-	password: z.string().min(6, 'Password must be at least 6 characters'),
-})
-
-type SignupFormData = z.infer<typeof signupSchema>
+import { useSignupForm } from './use-signup-form'
 
 interface SignupFormProps {
 	onSuccess: () => void
 }
 
+/**
+ * Signup Form Component
+ * 
+ * Provides user registration functionality with form validation.
+ * Refactored to use custom hook for better separation of concerns.
+ */
 export const SignupForm = ({ onSuccess }: SignupFormProps) => {
-	const {
-		createUserWithEmailAndPassword,
-		createUserWithEmailAndPasswordError,
-		sendEmailVerification,
-	} = useAuthContext()
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
-
-	const form = useForm<SignupFormData>({
-		resolver: zodResolver(signupSchema),
-		defaultValues: {
-			firstName: '',
-			lastName: '',
-			email: '',
-			password: '',
-		},
-	})
-
-	const onSubmit = async (data: SignupFormData) => {
-		try {
-			const result = await createUserWithEmailAndPassword(
-				data.email,
-				data.password
-			)
-
-			if (result?.user) {
-				// Send email verification and create player profile
-				await Promise.all([
-					sendEmailVerification(),
-					createPlayer(
-						result,
-						data.firstName,
-						data.lastName,
-						data.email,
-						currentSeasonQueryDocumentSnapshot
-					),
-				])
-
-				toast.success('Account created successfully!', {
-					description:
-						'Welcome to Minneapolis Winter League! Please check your email to verify your account.',
-				})
-				onSuccess()
-			} else {
-				toast.error('Signup failed', {
-					description:
-						createUserWithEmailAndPasswordError?.message ||
-						'Failed to create account',
-				})
-			}
-		} catch (error) {
-			toast.error('Signup failed', {
-				description: 'An unexpected error occurred',
-			})
-		}
-	}
+	const { form, onSubmit, isLoading, error } = useSignupForm({ onSuccess })
 
 	return (
 		<Card>
@@ -99,7 +36,7 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 				<CardTitle>Sign up</CardTitle>
 				<CardDescription>Create a new account</CardDescription>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="space-y-4">
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 						<div className="grid grid-cols-2 gap-4">
@@ -110,11 +47,7 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 									<FormItem>
 										<FormLabel>First name</FormLabel>
 										<FormControl>
-											<Input
-												placeholder="First name"
-												autoComplete="given-name"
-												{...field}
-											/>
+											<Input placeholder="Max" {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -127,11 +60,7 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 									<FormItem>
 										<FormLabel>Last name</FormLabel>
 										<FormControl>
-											<Input
-												placeholder="Last name"
-												autoComplete="family-name"
-												{...field}
-											/>
+											<Input placeholder="Robinson" {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -147,8 +76,7 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 									<FormControl>
 										<Input
 											type="email"
-											placeholder="Enter your email"
-											autoComplete="email"
+											placeholder="m@example.com"
 											{...field}
 										/>
 									</FormControl>
@@ -163,26 +91,20 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 								<FormItem>
 									<FormLabel>Password</FormLabel>
 									<FormControl>
-										<Input
-											type="password"
-											placeholder="Create a password"
-											autoComplete="new-password"
-											{...field}
-										/>
+										<Input type="password" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={form.formState.isSubmitting}
-						>
-							{form.formState.isSubmitting
-								? 'Creating account...'
-								: 'Create account'}
+						<Button type="submit" className="w-full" disabled={isLoading}>
+							{isLoading ? 'Creating account...' : 'Create account'}
 						</Button>
+						{error && (
+							<p className="text-sm text-red-500 text-center">
+								{error.message || 'An error occurred during signup'}
+							</p>
+						)}
 					</form>
 				</Form>
 			</CardContent>

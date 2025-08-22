@@ -1,8 +1,3 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { toast } from 'sonner'
-import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
@@ -20,61 +15,31 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-
-const loginSchema = z.object({
-	email: z.string().email('Please enter a valid email address'),
-	password: z.string().min(1, 'Password is required'),
-})
-
-type LoginFormData = z.infer<typeof loginSchema>
+import { useLoginForm } from './use-login-form'
 
 interface LoginFormProps {
 	onSuccess: () => void
 	onForgotPassword: () => void
 }
 
+/**
+ * Login Form Component
+ * 
+ * Provides user authentication functionality with form validation.
+ * Refactored to use custom hook for better separation of concerns.
+ */
 export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
-	const { signInWithEmailAndPassword, signInWithEmailAndPasswordError } =
-		useAuthContext()
-
-	const form = useForm<LoginFormData>({
-		resolver: zodResolver(loginSchema),
-		defaultValues: {
-			email: '',
-			password: '',
-		},
-	})
-
-	const onSubmit = async (data: LoginFormData) => {
-		try {
-			const result = await signInWithEmailAndPassword(data.email, data.password)
-
-			if (result?.user) {
-				toast.success('Login successful!', {
-					description: 'Welcome back',
-				})
-				onSuccess()
-			} else {
-				toast.error('Login failed', {
-					description:
-						signInWithEmailAndPasswordError?.message ||
-						'Invalid email or password',
-				})
-			}
-		} catch (error) {
-			toast.error('Login failed', {
-				description: 'An unexpected error occurred',
-			})
-		}
-	}
+	const { form, onSubmit, isLoading, error } = useLoginForm({ onSuccess })
 
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Login</CardTitle>
-				<CardDescription>Welcome back</CardDescription>
+				<CardTitle>Log in</CardTitle>
+				<CardDescription>
+					Enter your email below to log in to your account
+				</CardDescription>
 			</CardHeader>
-			<CardContent>
+			<CardContent className="space-y-4">
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 						<FormField
@@ -86,8 +51,7 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
 									<FormControl>
 										<Input
 											type="email"
-											placeholder="Enter your email"
-											autoComplete="email"
+											placeholder="m@example.com"
 											{...field}
 										/>
 									</FormControl>
@@ -102,36 +66,31 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
 								<FormItem>
 									<FormLabel>Password</FormLabel>
 									<FormControl>
-										<Input
-											type="password"
-											placeholder="Enter your password"
-											autoComplete="current-password"
-											{...field}
-										/>
+										<Input type="password" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
-						<div className="space-y-2">
-							<Button
-								type="submit"
-								className="w-full"
-								disabled={form.formState.isSubmitting}
-							>
-								{form.formState.isSubmitting ? 'Signing in...' : 'Sign in'}
-							</Button>
-							<Button
-								type="button"
-								variant="link"
-								className="w-full"
-								onClick={onForgotPassword}
-							>
-								Forgot your password?
-							</Button>
-						</div>
+						<Button type="submit" className="w-full" disabled={isLoading}>
+							{isLoading ? 'Logging in...' : 'Log in'}
+						</Button>
+						{error && (
+							<p className="text-sm text-red-500 text-center">
+								{error.message || 'An error occurred during login'}
+							</p>
+						)}
 					</form>
 				</Form>
+				<div className="text-center text-sm">
+					<Button
+						variant="link"
+						onClick={onForgotPassword}
+						className="px-0 underline"
+					>
+						Forgot your password?
+					</Button>
+				</div>
 			</CardContent>
 		</Card>
 	)
