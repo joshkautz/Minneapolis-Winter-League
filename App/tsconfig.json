@@ -24,7 +24,14 @@
 
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"@/features/*": ["./src/features/*"],
+			"@/shared/*": ["./src/shared/*"],
+			"@/providers/*": ["./src/providers/*"],
+			"@/pages/*": ["./src/pages/*"],
+			"@/routes/*": ["./src/routes/*"],
+			"@/firebase/*": ["./src/firebase/*"],
+			"@/components/*": ["./src/components/*"]
 		}
 	},
 	"include": ["src/**/*"],

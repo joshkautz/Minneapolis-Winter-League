@@ -1,5 +1,5 @@
 import { AppRoutes } from '@/routes'
-import { useEmailVerificationPolling } from '@/hooks/use-email-verification-polling'
+import { useEmailVerificationPolling } from '@/shared/hooks'
 
 /**
  * Main Application Component

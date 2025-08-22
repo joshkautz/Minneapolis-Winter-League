@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import { Layout } from '@/components/layout'
+import { Layout } from '@/shared/components'
 import { PublicRoute, AuthenticatedRoute } from './route-wrappers'
 import {
 	Home,

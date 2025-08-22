@@ -1,4 +1,4 @@
-import { lazyImport } from '@/utils/lazy-import'
+import { lazyImport } from '@/shared/utils'
 
 /**
  * Centralized registry of all lazy-loaded route components
@@ -10,34 +10,34 @@ import { lazyImport } from '@/utils/lazy-import'
  */
 
 // Public routes - accessible without authentication
-export const Home = lazyImport(() => import('@/components/home/home'), 'Home')
+export const Home = lazyImport(() => import('@/features/home'), 'Home')
 export const Schedule = lazyImport(
-	() => import('@/components/schedule/schedule'),
+	() => import('@/features/schedule'),
 	'Schedule'
 )
 export const Standings = lazyImport(
-	() => import('@/components/standings/standings'),
+	() => import('@/features/standings'),
 	'Standings'
 )
-export const Teams = lazyImport(() => import('@/components/teams/teams'), 'Teams')
+export const Teams = lazyImport(() => import('@/features/teams'), 'Teams')
 export const TeamProfile = lazyImport(
-	() => import('@/components/team-profile/team-profile'),
+	() => import('@/features/teams'),
 	'TeamProfile'
 )
 
 // Protected routes - require authentication
-export const Profile = lazyImport(() => import('@/components/profile'), 'Profile')
+export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')
 export const CreateTeam = lazyImport(
-	() => import('@/components/create/create-team'),
+	() => import('@/features/create'),
 	'CreateTeam'
 )
 export const ManageTeam = lazyImport(
-	() => import('@/components/manage/manage-team'),
+	() => import('@/features/manage'),
 	'ManageTeam'
 )
 
 // Error pages
 export const FourOhFour = lazyImport(
-	() => import('@/components/four-oh-four'),
+	() => import('@/pages'),
 	'FourOhFour'
 )

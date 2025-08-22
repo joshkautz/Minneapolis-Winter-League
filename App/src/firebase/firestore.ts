@@ -40,7 +40,7 @@ import {
 	OfferStatus,
 	OfferCreator,
 	Collections,
-} from '@/lib/interfaces'
+} from '@/shared/utils'
 import { deleteImage, ref, storage } from './storage'
 import { v4 as uuidv4 } from 'uuid'
 

@@ -5,7 +5,7 @@ import {
 } from 'firebase/functions'
 
 import { app } from './app'
-import { DropboxError, DropboxResult } from '@/lib/interfaces'
+import { DropboxError, DropboxResult } from '@/shared/utils'
 
 const functions = getFunctions(app)
 
