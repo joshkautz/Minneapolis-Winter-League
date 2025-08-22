@@ -13,7 +13,7 @@ import { RegistrationCountdown } from './registration-countdown'
 export const HeroSection = () => {
 	useAnchorScroll()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
-	const { setIsMobileLoginOpen } = useOutletContext<OutletContext>()
+	const { openAuthModal } = useOutletContext<OutletContext>()
 	const navigate = useNavigate()
 	const {
 		authStateUser,
@@ -67,7 +67,7 @@ export const HeroSection = () => {
 
 	const handleCallToAction = () => {
 		if (!authenticatedUserSnapshot) {
-			setIsMobileLoginOpen(true)
+			openAuthModal()
 			return
 		}
 		navigate('/manage')

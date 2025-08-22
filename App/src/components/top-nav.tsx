@@ -11,24 +11,17 @@ import {
 } from './ui/sheet'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAuthContext } from '@/contexts/auth-context'
-import { UserAvatar } from '@/components/user-avatar'
+import { UserAvatar } from '@/components/auth/user-avatar'
 import { Separator } from '@/components/ui/separator'
 import { ThemeToggle } from './theme-toggle'
 import { useOffersContext } from '@/contexts/offers-context'
-import { UserForm } from './user-form'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { useSeasonsContext } from '@/contexts/seasons-context'
 import { SeasonSelect } from './season-select'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
-export const TopNav = ({
-	isMobileLoginOpen,
-	setIsMobileLoginOpen,
-}: {
-	isMobileLoginOpen: boolean
-	setIsMobileLoginOpen: React.Dispatch<React.SetStateAction<boolean>>
-}) => {
+export const TopNav = ({ onLoginClick }: { onLoginClick: () => void }) => {
 	const {
 		authStateUser,
 		authStateLoading,
@@ -132,6 +125,31 @@ export const TopNav = ({
 		}
 	}
 
+	const handleSignOut = async () => {
+		try {
+			const success = await signOut()
+			if (success) {
+				toast.success('Logged Out', {
+					description: 'You are no longer signed in to an account.',
+				})
+				handleCloseMobileNav()
+			} else {
+				toast.error('Unable to Log Out', {
+					description: 'Please try again later.',
+				})
+			}
+		} catch (error) {
+			toast.error('Unable to Log Out', {
+				description: 'An unexpected error occurred.',
+			})
+		}
+	}
+
+	const handleMobileLogin = () => {
+		onLoginClick()
+		setIsMobileNavOpen(false)
+	}
+
 	return (
 		<header
 			className={
@@ -164,25 +182,15 @@ export const TopNav = ({
 						<div className="flex items-center justify-end flex-1 gap-4">
 							<SeasonSelect />
 							<ThemeToggle />
-							<UserAvatar userContent={userContent} />
+							<UserAvatar
+								userContent={userContent}
+								onLoginClick={onLoginClick}
+							/>
 						</div>
 					</nav>
 				</div>
 
-				<Sheet
-					open={isMobileLoginOpen}
-					onOpenChange={() => setIsMobileLoginOpen((prev) => !prev)}
-				>
-					<VisuallyHidden>
-						<SheetTitle>Mobile login</SheetTitle>
-						<SheetDescription>Mobile login sheet</SheetDescription>
-					</VisuallyHidden>
-					<SheetContent className="w-full pt-10">
-						<UserForm closeMobileSheet={() => setIsMobileLoginOpen(false)} />
-					</SheetContent>
-				</Sheet>
-
-				{/* Mobile HAMBERGER BUTTON */}
+				{/* Mobile HAMBURGER BUTTON */}
 				<Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
 					<SheetTrigger asChild>
 						<Button
@@ -214,7 +222,6 @@ export const TopNav = ({
 									</Link>
 								))}
 								{authStateUser && (
-									// Mostly placeholder links for now will refine later.
 									<>
 										<Separator />
 										{userContent.map(({ path, label, alt }) => (
@@ -250,22 +257,7 @@ export const TopNav = ({
 								{authStateUser ? (
 									<Button
 										disabled={signOutLoading || authStateLoading}
-										onClick={() => {
-											signOut()
-												.then(() => {
-													toast.success('Logged Out', {
-														description:
-															'You are no longer signed in to an account.',
-													})
-													handleCloseMobileNav()
-												})
-												.catch(() => {
-													toast.error('Unable to Log Out', {
-														description:
-															'Ensure your email is verified. Please try again later.',
-													})
-												})
-										}}
+										onClick={handleSignOut}
 									>
 										{(signOutLoading || authStateLoading) && (
 											<ReloadIcon className={'mr-2 h-4 w-4 animate-spin'} />
@@ -274,10 +266,7 @@ export const TopNav = ({
 									</Button>
 								) : (
 									<Button
-										onClick={() => {
-											setIsMobileLoginOpen(true)
-											setIsMobileNavOpen(false)
-										}}
+										onClick={handleMobileLogin}
 										disabled={authStateLoading}
 									>
 										Login

@@ -1,16 +1,16 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { TopNav } from '@/components/top-nav'
+import { AuthModal } from '@/components/auth'
+import { useAuthModal } from '@/components/auth/use-auth-modal'
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
 
 export type OutletContext = {
-	setIsMobileLoginOpen: React.Dispatch<React.SetStateAction<boolean>>
+	openAuthModal: () => void
 }
 
 export const Layout = () => {
 	const { pathname } = useLocation()
-
-	const [isMobileLoginOpen, setIsMobileLoginOpen] = useState(false)
+	const { isAuthModalOpen, openAuthModal, closeAuthModal } = useAuthModal()
 
 	return (
 		<div
@@ -19,11 +19,9 @@ export const Layout = () => {
 				pathname !== '/' && 'pb-10'
 			)}
 		>
-			<TopNav
-				isMobileLoginOpen={isMobileLoginOpen}
-				setIsMobileLoginOpen={setIsMobileLoginOpen}
-			/>
-			<Outlet context={{ setIsMobileLoginOpen } satisfies OutletContext} />
+			<TopNav onLoginClick={openAuthModal} />
+			<Outlet context={{ openAuthModal } satisfies OutletContext} />
+			<AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
 		</div>
 	)
 }
