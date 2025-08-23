@@ -17,7 +17,7 @@ export const Profile = () => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const isAuthenticatedUserAdmin = useMemo(
-		() => authenticatedUserSnapshot?.data()?.admin,
+		() => authenticatedUserSnapshot?.data()?.admin ?? false,
 		[authenticatedUserSnapshot]
 	)
 
@@ -27,7 +27,7 @@ export const Profile = () => {
 				?.data()
 				?.seasons.find(
 					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.paid,
+				)?.paid ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
@@ -37,7 +37,7 @@ export const Profile = () => {
 				?.data()
 				?.seasons.find(
 					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.signed,
+				)?.signed ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
@@ -67,7 +67,7 @@ export const Profile = () => {
 				?.data()
 				?.seasons.find(
 					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.banned,
+				)?.banned ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
@@ -105,12 +105,12 @@ export const Profile = () => {
 				<ProfileActions
 					authStateUser={authStateUser}
 					isVerified={isVerified}
-					isAuthenticatedUserPaid={isAuthenticatedUserPaid}
-					isAuthenticatedUserSigned={isAuthenticatedUserSigned}
 					isLoading={isLoading}
 					isRegistrationOpen={isRegistrationOpen}
 					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 					isAuthenticatedUserBanned={isAuthenticatedUserBanned}
+					isAuthenticatedUserPaid={isAuthenticatedUserPaid}
+					isAuthenticatedUserSigned={isAuthenticatedUserSigned}
 					currentSeasonQueryDocumentSnapshot={
 						currentSeasonQueryDocumentSnapshot
 					}

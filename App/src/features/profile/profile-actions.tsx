@@ -8,12 +8,12 @@ import { SeasonData } from '@/shared/utils'
 interface ProfileActionsProps {
 	authStateUser: User | null | undefined
 	isVerified: boolean | undefined
-	isAuthenticatedUserPaid: boolean | undefined
-	isAuthenticatedUserSigned: boolean | undefined
 	isLoading: boolean
 	isRegistrationOpen: boolean | undefined
-	isAuthenticatedUserAdmin: boolean | undefined
-	isAuthenticatedUserBanned: boolean | undefined
+	isAuthenticatedUserAdmin: boolean
+	isAuthenticatedUserBanned: boolean
+	isAuthenticatedUserPaid: boolean
+	isAuthenticatedUserSigned: boolean
 	currentSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonData, DocumentData>
 		| undefined
@@ -29,12 +29,12 @@ interface ProfileActionsProps {
 export const ProfileActions = ({
 	authStateUser,
 	isVerified,
-	isAuthenticatedUserPaid,
-	isAuthenticatedUserSigned,
 	isLoading,
 	isRegistrationOpen,
 	isAuthenticatedUserAdmin,
 	isAuthenticatedUserBanned,
+	isAuthenticatedUserPaid,
+	isAuthenticatedUserSigned,
 	currentSeasonQueryDocumentSnapshot,
 	sendEmailVerification,
 }: ProfileActionsProps) => {

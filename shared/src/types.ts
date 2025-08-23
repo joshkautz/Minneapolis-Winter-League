@@ -68,7 +68,7 @@ export interface PlayerData extends DocumentData {
  */
 export interface PlayerSeasonData {
 	/** Whether the player is banned from the season */
-	banned?: boolean
+	banned: boolean
 	/** Whether the player is a team captain */
 	captain: boolean
 	/** Whether the player has paid for the season */

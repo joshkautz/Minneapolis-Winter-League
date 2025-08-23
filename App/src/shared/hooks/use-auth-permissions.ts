@@ -11,7 +11,7 @@ export const useAuthPermissions = () => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const isAdmin = useMemo(
-		() => authenticatedUserSnapshot?.data()?.admin || false,
+		() => authenticatedUserSnapshot?.data()?.admin,
 		[authenticatedUserSnapshot]
 	)
 
@@ -31,7 +31,7 @@ export const useAuthPermissions = () => {
 				?.data()
 				?.seasons.find(
 					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.captain || false,
+				)?.captain,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
@@ -41,7 +41,7 @@ export const useAuthPermissions = () => {
 				?.data()
 				?.seasons.find(
 					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.paid || false,
+				)?.paid,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
@@ -51,7 +51,7 @@ export const useAuthPermissions = () => {
 				?.data()
 				?.seasons.find(
 					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.signed || false,
+				)?.signed,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 

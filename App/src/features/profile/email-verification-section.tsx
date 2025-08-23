@@ -6,7 +6,7 @@ import { CheckCircledIcon, ReloadIcon } from '@radix-ui/react-icons'
 interface EmailVerificationSectionProps {
 	isVerified: boolean | undefined
 	isLoading: boolean
-	isAuthenticatedUserBanned: boolean | undefined
+	isAuthenticatedUserBanned: boolean
 	sendEmailVerification: () => Promise<boolean>
 }
 
@@ -49,7 +49,7 @@ export const EmailVerificationSection = ({
 					<span className={'relative flex w-2 h-2 ml-1'}>
 						<span
 							className={'relative inline-flex w-2 h-2 rounded-full bg-primary'}
-						 />
+						/>
 					</span>
 				)}
 			</Label>

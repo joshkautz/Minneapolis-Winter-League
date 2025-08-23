@@ -152,6 +152,7 @@ export const OnOfferAccepted = onDocumentUpdated(
 										)
 										.find((season) => season)?.id
 										? {
+												banned: item.banned,
 												captain: item.captain,
 												paid: item.paid,
 												season: item.season,
@@ -288,6 +289,7 @@ export const OnPaymentCreated = onDocumentCreated(
 									)
 									.find((season) => season)?.id
 									? {
+											banned: item.banned,
 											captain: item.captain,
 											paid: true,
 											season: item.season,
@@ -650,6 +652,7 @@ export const dropboxSignHandleWebhookEvents = onRequest(
 														)
 														.find((season) => season)?.id
 														? {
+																banned: item.banned,
 																captain: item.captain,
 																paid: item.paid,
 																season: item.season,

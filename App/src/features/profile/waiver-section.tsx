@@ -14,7 +14,7 @@ interface WaiverSectionProps {
 	isRegistrationOpen: boolean | undefined
 	isAuthenticatedUserAdmin: boolean | undefined
 	isAuthenticatedUserPaid: boolean | undefined
-	isAuthenticatedUserBanned: boolean | undefined
+	isAuthenticatedUserBanned: boolean
 	currentSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonData, DocumentData>
 		| undefined

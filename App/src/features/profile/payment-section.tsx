@@ -11,11 +11,11 @@ import { SeasonData } from '@/shared/utils'
 
 interface PaymentSectionProps {
 	authStateUser: User | null | undefined
-	isAuthenticatedUserPaid: boolean | undefined
 	isLoading: boolean
 	isRegistrationOpen: boolean | undefined
-	isAuthenticatedUserAdmin: boolean | undefined
-	isAuthenticatedUserBanned: boolean | undefined
+	isAuthenticatedUserAdmin: boolean
+	isAuthenticatedUserBanned: boolean
+	isAuthenticatedUserPaid: boolean
 	currentSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonData, DocumentData>
 		| undefined
@@ -29,11 +29,11 @@ interface PaymentSectionProps {
  */
 export const PaymentSection = ({
 	authStateUser,
-	isAuthenticatedUserPaid,
 	isLoading,
 	isRegistrationOpen,
 	isAuthenticatedUserAdmin,
 	isAuthenticatedUserBanned,
+	isAuthenticatedUserPaid,
 	currentSeasonQueryDocumentSnapshot,
 }: PaymentSectionProps) => {
 	const [stripeLoading, setStripeLoading] = useState<boolean>(false)
@@ -64,7 +64,7 @@ export const PaymentSection = ({
 					<span className={'relative flex w-2 h-2 ml-1'}>
 						<span
 							className={'relative inline-flex w-2 h-2 rounded-full bg-primary'}
-						 />
+						/>
 					</span>
 				)}
 			</Label>

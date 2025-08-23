@@ -30,7 +30,7 @@ export const useTopNavigation = () => {
 				?.data()
 				?.seasons.find(
 					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.captain || false,
+				)?.captain ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
@@ -57,7 +57,7 @@ export const useTopNavigation = () => {
 				?.data()
 				?.seasons.find(
 					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.paid || false,
+				)?.paid ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
@@ -67,7 +67,7 @@ export const useTopNavigation = () => {
 				?.data()
 				?.seasons.find(
 					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.signed || false,
+				)?.signed ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 

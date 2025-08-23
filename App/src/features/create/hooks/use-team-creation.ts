@@ -54,7 +54,7 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 	const [rolloverMode, setRolloverMode] = useState(false)
 
 	const isAdmin = useMemo(
-		() => authenticatedUserSnapshot?.data()?.admin || false,
+		() => authenticatedUserSnapshot?.data()?.admin ?? false,
 		[authenticatedUserSnapshot]
 	)
 

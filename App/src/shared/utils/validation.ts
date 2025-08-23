@@ -322,7 +322,7 @@ const documentRefSchema = z.unknown()
 const nullableDocumentRefSchema = z.unknown().nullable()
 
 export const playerSeasonSchema = z.object({
-	banned: z.boolean().optional(),
+	banned: z.boolean(),
 	captain: z.boolean(),
 	paid: z.boolean(),
 	season: documentRefSchema, // DocumentReference - can't validate at runtime but must be present
