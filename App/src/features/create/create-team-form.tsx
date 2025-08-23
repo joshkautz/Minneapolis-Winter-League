@@ -9,19 +9,14 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import * as z from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { StorageReference, ref, storage } from '@/firebase/storage'
 import { errorHandler, logger } from '@/shared/utils'
+import { teamFormSchema, type TeamFormData } from '@/shared/utils/validation'
 
-const createTeamSchema = z.object({
-	logo: z.string().optional(),
-	name: z.string().min(2),
-})
-
-type CreateTeamSchema = z.infer<typeof createTeamSchema>
+type CreateTeamSchema = TeamFormData
 
 interface CreateFormProps {
 	isSubmitting: boolean
@@ -64,7 +59,7 @@ export const CreateTeamForm = ({
 	const [blob, setBlob] = useState<Blob>()
 
 	const form = useForm<CreateTeamSchema>({
-		resolver: zodResolver(createTeamSchema),
+		resolver: zodResolver(teamFormSchema),
 	})
 
 	const handleFileChange = useCallback(

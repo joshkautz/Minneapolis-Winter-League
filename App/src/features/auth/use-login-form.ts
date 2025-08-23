@@ -1,16 +1,11 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { logger } from '@/shared/utils'
+import { loginFormSchema, type LoginFormData } from '@/shared/utils/validation'
 
-const loginSchema = z.object({
-	email: z.string().email('Please enter a valid email address'),
-	password: z.string().min(1, 'Password is required'),
-})
-
-export type LoginFormData = z.infer<typeof loginSchema>
+export type { LoginFormData } from '@/shared/utils/validation'
 
 interface UseLoginFormProps {
 	onSuccess: () => void
@@ -27,7 +22,7 @@ export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
 		useAuthContext()
 
 	const form = useForm<LoginFormData>({
-		resolver: zodResolver(loginSchema),
+		resolver: zodResolver(loginFormSchema),
 		defaultValues: {
 			email: '',
 			password: '',
@@ -60,6 +55,6 @@ export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
 		onSubmit,
 		isLoading: form.formState.isSubmitting,
 		error: signInWithEmailAndPasswordError,
-		loginSchema,
+		loginFormSchema,
 	}
 }

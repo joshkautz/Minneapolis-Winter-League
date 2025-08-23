@@ -1,20 +1,16 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
 import { createPlayer } from '@/firebase/firestore'
 import { logger } from '@/shared/utils'
+import {
+	signupFormSchema,
+	type SignupFormData,
+} from '@/shared/utils/validation'
 
-const signupSchema = z.object({
-	firstName: z.string().min(2, 'First name must be at least 2 characters'),
-	lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-	email: z.string().email('Please enter a valid email address'),
-	password: z.string().min(6, 'Password must be at least 6 characters'),
-})
-
-export type SignupFormData = z.infer<typeof signupSchema>
+export type { SignupFormData } from '@/shared/utils/validation'
 
 interface UseSignupFormProps {
 	onSuccess: () => void
@@ -35,7 +31,7 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const form = useForm<SignupFormData>({
-		resolver: zodResolver(signupSchema),
+		resolver: zodResolver(signupFormSchema),
 		defaultValues: {
 			firstName: '',
 			lastName: '',
@@ -93,6 +89,6 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 		onSubmit,
 		isLoading: form.formState.isSubmitting,
 		error: createUserWithEmailAndPasswordError,
-		signupSchema,
+		signupFormSchema,
 	}
 }

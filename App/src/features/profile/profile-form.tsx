@@ -11,39 +11,36 @@ import {
 } from '@/components/ui/form'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { updatePlayer } from '@/firebase/firestore'
 import { User } from 'firebase/auth'
 import { DocumentSnapshot, DocumentData } from '@/firebase/firestore'
 import { PlayerData } from '@/shared/utils'
-
-const profileSchema = z.object({
-	firstname: z.string(),
-	lastname: z.string(),
-	email: z.string().email(),
-})
-
-type ProfileSchema = z.infer<typeof profileSchema>
+import {
+	profileFormSchema,
+	type ProfileFormData,
+} from '@/shared/utils/validation'
 
 interface ProfileFormProps {
 	authStateUser: User | null | undefined
-	authenticatedUserSnapshot: DocumentSnapshot<PlayerData, DocumentData> | undefined
+	authenticatedUserSnapshot:
+		| DocumentSnapshot<PlayerData, DocumentData>
+		| undefined
 }
 
 /**
  * ProfileForm Component
- * 
+ *
  * Handles user profile editing (first name, last name, email)
  * Separated from main Profile component for better maintainability
  */
-export const ProfileForm = ({ 
-	authStateUser, 
-	authenticatedUserSnapshot 
+export const ProfileForm = ({
+	authStateUser,
+	authenticatedUserSnapshot,
 }: ProfileFormProps) => {
-	const form = useForm<ProfileSchema>({
-		resolver: zodResolver(profileSchema),
+	const form = useForm<ProfileFormData>({
+		resolver: zodResolver(profileFormSchema),
 		defaultValues: { firstname: '', lastname: '', email: '' },
 	})
 
@@ -59,7 +56,7 @@ export const ProfileForm = ({
 	}, [authenticatedUserSnapshot, form])
 
 	const onSubmit = useCallback(
-		(data: ProfileSchema) => {
+		(data: ProfileFormData) => {
 			updatePlayer(authStateUser, {
 				firstname: data.firstname,
 				lastname: data.lastname,

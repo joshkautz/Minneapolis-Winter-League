@@ -2,7 +2,6 @@ import { useAuthContext } from '@/providers'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import * as z from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useDownloadURL, useUploadFile } from 'react-firebase-hooks/storage'
@@ -24,13 +23,9 @@ import { useSeasonsContext } from '@/providers'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FocusScope } from '@radix-ui/react-focus-scope'
 import { logger, errorHandler, ErrorType } from '@/shared/utils'
+import { teamFormSchema, type TeamFormData } from '@/shared/utils/validation'
 
-const manageEditTeamSchema = z.object({
-	logo: z.string().optional(),
-	name: z.string().min(2),
-})
-
-type ManageEditTeamSchema = z.infer<typeof manageEditTeamSchema>
+type ManageEditTeamSchema = TeamFormData
 
 export const ManageEditTeam = ({
 	closeDialog,
@@ -73,7 +68,7 @@ export const ManageEditTeam = ({
 	const url = team?.data().logo
 
 	const form = useForm<ManageEditTeamSchema>({
-		resolver: zodResolver(manageEditTeamSchema),
+		resolver: zodResolver(teamFormSchema),
 		defaultValues: { name: '', logo: '' },
 	})
 

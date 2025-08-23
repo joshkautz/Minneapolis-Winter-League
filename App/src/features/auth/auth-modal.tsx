@@ -1,4 +1,9 @@
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import {
+	Dialog,
+	DialogContent,
+	DialogTitle,
+	DialogDescription,
+} from '@/components/ui/dialog'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { useIsMobile } from '@/shared/hooks'
@@ -15,8 +20,10 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 	const content = (
 		<>
 			<VisuallyHidden>
-				<h2>Authentication</h2>
-				<p>Sign in to your account or create a new one</p>
+				<DialogTitle>Authentication</DialogTitle>
+				<DialogDescription>
+					Sign in to your account or create a new one
+				</DialogDescription>
 			</VisuallyHidden>
 			<AuthForm onSuccess={onClose} />
 		</>

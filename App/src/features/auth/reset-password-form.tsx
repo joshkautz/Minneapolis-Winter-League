@@ -1,6 +1,5 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
@@ -21,12 +20,10 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { errorHandler, logger } from '@/shared/utils'
-
-const resetPasswordSchema = z.object({
-	email: z.string().email('Please enter a valid email address'),
-})
-
-type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
+import {
+	resetPasswordFormSchema,
+	type ResetPasswordFormData,
+} from '@/shared/utils/validation'
 
 interface ResetPasswordFormProps {
 	onSuccess: () => void
@@ -41,7 +38,7 @@ export const ResetPasswordForm = ({
 		useAuthContext()
 
 	const form = useForm<ResetPasswordFormData>({
-		resolver: zodResolver(resetPasswordSchema),
+		resolver: zodResolver(resetPasswordFormSchema),
 		defaultValues: {
 			email: '',
 		},
