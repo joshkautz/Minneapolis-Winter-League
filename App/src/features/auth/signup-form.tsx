@@ -23,7 +23,7 @@ interface SignupFormProps {
 
 /**
  * Signup Form Component
- * 
+ *
  * Provides user registration functionality with form validation.
  * Refactored to use custom hook for better separation of concerns.
  */
@@ -74,11 +74,7 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 								<FormItem>
 									<FormLabel>Email</FormLabel>
 									<FormControl>
-										<Input
-											type="email"
-											placeholder="m@example.com"
-											{...field}
-										/>
+										<Input type="email" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>

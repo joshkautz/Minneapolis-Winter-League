@@ -24,7 +24,7 @@ interface LoginFormProps {
 
 /**
  * Login Form Component
- * 
+ *
  * Provides user authentication functionality with form validation.
  * Refactored to use custom hook for better separation of concerns.
  */
@@ -49,11 +49,7 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
 								<FormItem>
 									<FormLabel>Email</FormLabel>
 									<FormControl>
-										<Input
-											type="email"
-											placeholder="m@example.com"
-											{...field}
-										/>
+										<Input type="email" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
