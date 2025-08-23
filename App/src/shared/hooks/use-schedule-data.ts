@@ -5,7 +5,7 @@ import { useGamesContext } from '@/providers'
 
 /**
  * useScheduleData Hook
- * 
+ *
  * Custom hook to process schedule data and organize games into rounds.
  * Extracted from Schedule component for better separation of concerns.
  */
@@ -16,7 +16,7 @@ export const useScheduleData = () => {
 		const result: GameData[][] = []
 		let index: number = 0
 		let previousTimestamp: number = 0
-		
+
 		gamesQuerySnapshot?.docs
 			.sort((a, b) => a.data().date.seconds - b.data().date.seconds)
 			.forEach(

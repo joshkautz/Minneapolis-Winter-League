@@ -6,7 +6,7 @@ import { RegistrationSection } from './registration-section'
 
 /**
  * Home Component
- * 
+ *
  * Main landing page component that orchestrates all home page sections.
  * Refactored to use smaller, focused section components for better maintainability.
  */

@@ -1,6 +1,6 @@
 /**
  * Shared component prop interfaces
- * 
+ *
  * Centralized type definitions for commonly used component props
  * to improve consistency and reduce duplication.
  */

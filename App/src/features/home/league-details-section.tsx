@@ -4,7 +4,7 @@ import { Snowflake } from './snowflake'
 
 /**
  * LeagueDetailsSection Component
- * 
+ *
  * Contains the league overview, season details card, and information
  * about individuals and teams. Extracted from main Home component.
  */
@@ -86,9 +86,7 @@ export const LeagueDetailsSection = () => {
 						</CardContent>
 					</Card>
 					<div
-						className={
-							'flex flex-col flex-1 gap-12 p-8 basis-[320px] shrink-0'
-						}
+						className={'flex flex-col flex-1 gap-12 p-8 basis-[320px] shrink-0'}
 					>
 						<div className={'flex flex-col gap-4'}>
 							<p className={'text-2xl font-bold'}>Individuals</p>
@@ -103,12 +101,12 @@ export const LeagueDetailsSection = () => {
 						<div className={'flex flex-col gap-4'}>
 							<p className={'text-2xl font-bold'}>Teams</p>
 							<p>
-								Minneapolis Winter League has room for <b>12 teams.</b> Be
-								sure to register your team before space fills up. There is a{' '}
+								Minneapolis Winter League has room for <b>12 teams.</b> Be sure
+								to register your team before space fills up. There is a{' '}
 								<b>10-player minimum</b> requirement for teams, with{' '}
 								<u>no roster maximum.</u> The first twelve teams to meet this
-								requirement of ten fully registered players will be
-								successfully locked in. All other players have the option to:
+								requirement of ten fully registered players will be successfully
+								locked in. All other players have the option to:
 							</p>
 							<ul>
 								<li>1. Request a roster spot on an existing team.</li>

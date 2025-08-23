@@ -4,7 +4,9 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"format": "prettier --check .",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"format:fix": "prettier --write .",
 		"lint": "eslint .",
 		"build": "tsc && vite build",
 		"build:staging": "vite build --mode staging",
@@ -77,7 +79,8 @@
 		"vaul": "^1.1.2",
 		"vite-plugin-eslint": "^1.8.1",
 		"vitest": "^3.2.4",
-		"zod": "^3.25.76"
+		"zod": "^3.25.76",
+		"@mwl/shared": "file:../shared"
 	},
 	"browserslist": {
 		"production": [

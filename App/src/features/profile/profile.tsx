@@ -111,7 +111,9 @@ export const Profile = () => {
 					isRegistrationOpen={isRegistrationOpen}
 					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 					isAuthenticatedUserBanned={isAuthenticatedUserBanned}
-					currentSeasonQueryDocumentSnapshot={currentSeasonQueryDocumentSnapshot}
+					currentSeasonQueryDocumentSnapshot={
+						currentSeasonQueryDocumentSnapshot
+					}
 					sendEmailVerification={sendEmailVerification}
 				/>
 			</div>

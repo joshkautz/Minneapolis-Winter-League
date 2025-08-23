@@ -12,7 +12,7 @@ interface EmailVerificationSectionProps {
 
 /**
  * EmailVerificationSection Component
- * 
+ *
  * Handles email verification functionality
  * Extracted from main Profile component for better separation of concerns
  */
@@ -23,7 +23,8 @@ export const EmailVerificationSection = ({
 	sendEmailVerification,
 }: EmailVerificationSectionProps) => {
 	const [verificationEmailSent, setVerificationEmailSent] = useState(false)
-	const [verificationEmailLoading, setVerificationEmailLoading] = useState(false)
+	const [verificationEmailLoading, setVerificationEmailLoading] =
+		useState(false)
 
 	const sendVerificationEmailButtonOnClickHandler = useCallback(() => {
 		setVerificationEmailLoading(true)
@@ -47,9 +48,7 @@ export const EmailVerificationSection = ({
 					// action needed, solid dot
 					<span className={'relative flex w-2 h-2 ml-1'}>
 						<span
-							className={
-								'relative inline-flex w-2 h-2 rounded-full bg-primary'
-							}
+							className={'relative inline-flex w-2 h-2 rounded-full bg-primary'}
 						></span>
 					</span>
 				)}
@@ -57,9 +56,7 @@ export const EmailVerificationSection = ({
 
 			<div>
 				{isLoading || isVerified === undefined ? (
-					<div className={'inline-flex items-center gap-2'}>
-						Loading...
-					</div>
+					<div className={'inline-flex items-center gap-2'}>Loading...</div>
 				) : isVerified ? (
 					<></>
 				) : (

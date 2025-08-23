@@ -1,0 +1,14 @@
+{
+  "name": "minneapolis-winter-league",
+  "private": true,
+  "workspaces": ["App", "Functions"],
+  "scripts": {
+    "dev": "npm run dev --workspace=App",
+    "build": "npm run build --workspace=App && npm run build --workspace=Functions",
+    "emulators": "firebase emulators:start",
+    "deploy": "firebase deploy"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
+  }
+}

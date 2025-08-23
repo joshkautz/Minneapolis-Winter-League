@@ -145,3 +145,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 1. Create a Pull Request to merge a new feature branch into the Main branch.
 2. Merge the Pull Request into the Main branch.
 3. Firebase Hosting GitHub Action will deploy the new changes to the production environment.
+
+# TODO:
+
+Allow players to include messages in their team requests so they can have a better chance of joining a team.
+Add a karma mechanism so teams can get more karma by allowing individuals onto their team.
+Add a flag to teams that indicates that they're looking for more players, so individuals weel welcome to request to join them.
+Add a mechanism so teams with the most karma have priority seeding for our already established seeding format, rather than going randomly (which was prviously alphabetically)

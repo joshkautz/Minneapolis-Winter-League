@@ -2,7 +2,7 @@ import { ReloadIcon } from '@radix-ui/react-icons'
 
 /**
  * ScheduleLoadingState Component
- * 
+ *
  * Displays loading state for the schedule page.
  * Extracted from main Schedule component for better organization.
  */

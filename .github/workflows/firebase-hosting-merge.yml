@@ -28,6 +28,9 @@ jobs:
         working-directory: ./App
         run: npm ci
 
+      - name: Build shared types
+        run: npm run build:shared
+
       - name: Format App
         working-directory: ./App
         run: npx prettier . --check
@@ -85,9 +88,12 @@ jobs:
         working-directory: ./Functions
         run: npm ci
 
+      - name: Build shared types
+        run: npm run build:shared
+
       - name: Format Functions
         working-directory: ./Functions
-        run: npm run format
+        run: npm run format:check
 
       - name: Lint Functions
         working-directory: ./Functions

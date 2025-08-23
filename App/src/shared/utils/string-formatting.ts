@@ -1,6 +1,6 @@
 /**
  * String formatting utilities
- * 
+ *
  * Reusable functions for string manipulation and formatting
  */
 
@@ -45,7 +45,7 @@ export const toTitleCase = (str: string): string => {
 	return str
 		.toLowerCase()
 		.split(' ')
-		.map(word => capitalize(word))
+		.map((word) => capitalize(word))
 		.join(' ')
 }
 
@@ -62,17 +62,20 @@ export const truncate = (str: string, maxLength: number): string => {
  */
 export const getInitials = (firstName: string, lastName?: string): string => {
 	if (!firstName) return ''
-	
+
 	const first = firstName.charAt(0).toUpperCase()
 	const last = lastName ? lastName.charAt(0).toUpperCase() : ''
-	
+
 	return first + last
 }
 
 /**
  * Format full name from first and last name
  */
-export const formatFullName = (firstName: string, lastName?: string): string => {
+export const formatFullName = (
+	firstName: string,
+	lastName?: string
+): string => {
 	if (!firstName) return ''
 	if (!lastName) return firstName
 	return `${firstName} ${lastName}`
@@ -95,7 +98,7 @@ export const slugify = (str: string): string => {
  */
 export const pluralize = (word: string, count: number): string => {
 	if (count === 1) return word
-	
+
 	// Simple pluralization rules
 	if (word.endsWith('y')) {
 		return word.slice(0, -1) + 'ies'

@@ -4,7 +4,12 @@ import { Label } from '@/components/ui/label'
 import { CheckCircledIcon, ReloadIcon } from '@radix-ui/react-icons'
 import { toast } from 'sonner'
 import { sendDropboxEmail } from '@/firebase/functions'
-import { DropboxError, DropboxResult, formatTimestamp, SeasonData } from '@/shared/utils'
+import {
+	DropboxError,
+	DropboxResult,
+	formatTimestamp,
+	SeasonData,
+} from '@/shared/utils'
 import { QueryDocumentSnapshot, DocumentData } from '@/firebase/firestore'
 
 interface WaiverSectionProps {
@@ -14,12 +19,14 @@ interface WaiverSectionProps {
 	isAuthenticatedUserAdmin: boolean | undefined
 	isAuthenticatedUserPaid: boolean | undefined
 	isAuthenticatedUserBanned: boolean | undefined
-	currentSeasonQueryDocumentSnapshot: QueryDocumentSnapshot<SeasonData, DocumentData> | undefined
+	currentSeasonQueryDocumentSnapshot:
+		| QueryDocumentSnapshot<SeasonData, DocumentData>
+		| undefined
 }
 
 /**
  * WaiverSection Component
- * 
+ *
  * Handles waiver signing functionality via Dropbox Sign
  * Extracted from main Profile component for better separation of concerns
  */
@@ -69,9 +76,7 @@ export const WaiverSection = ({
 				) : (
 					<span className={'relative flex w-2 h-2 ml-1'}>
 						<span
-							className={
-								'relative inline-flex w-2 h-2 rounded-full bg-primary'
-							}
+							className={'relative inline-flex w-2 h-2 rounded-full bg-primary'}
 						></span>
 					</span>
 				)}
@@ -79,9 +84,7 @@ export const WaiverSection = ({
 
 			<div>
 				{isLoading || isAuthenticatedUserSigned === undefined ? (
-					<div className={'inline-flex items-center gap-2'}>
-						Loading...
-					</div>
+					<div className={'inline-flex items-center gap-2'}>Loading...</div>
 				) : isAuthenticatedUserSigned ? (
 					<></>
 				) : (

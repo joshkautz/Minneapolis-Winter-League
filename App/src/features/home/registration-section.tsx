@@ -1,6 +1,6 @@
 /**
  * RegistrationSection Component
- * 
+ *
  * Contains the "How to Register" section with step-by-step instructions
  * and the field map image. Extracted from main Home component.
  */
@@ -18,7 +18,10 @@ export const RegistrationSection = () => {
 				}
 			>
 				<div className="flex items-center justify-center flex-1 rounded-lg overflow-clip bg-primary dark:bg-secondary max-w-[500px]">
-					<img src="/Map.png" alt="University of Minnesota URW Sports Field Complex Map" />
+					<img
+						src="/Map.png"
+						alt="University of Minnesota URW Sports Field Complex Map"
+					/>
 				</div>
 				<div className="flex flex-col flex-1 gap-2 my-auto max-w-[500px]">
 					<p className="pb-2 text-2xl font-bold">How to Register</p>

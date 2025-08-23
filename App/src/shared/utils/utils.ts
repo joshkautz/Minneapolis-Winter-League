@@ -3,7 +3,7 @@ import { twMerge } from 'tailwind-merge'
 
 /**
  * Core utilities
- * 
+ *
  * Essential utility functions used throughout the application
  */
 
@@ -18,7 +18,7 @@ export const cn = (...inputs: ClassValue[]) => {
  * Create a delay/sleep function
  */
 export const delay = (ms: number): Promise<void> => {
-	return new Promise(resolve => setTimeout(resolve, ms))
+	return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**

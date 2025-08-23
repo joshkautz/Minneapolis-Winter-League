@@ -1,11 +1,11 @@
 import { ReactNode } from 'react'
-import { 
+import {
 	ThemeProvider,
 	AuthContextProvider,
 	SeasonsContextProvider,
 	TeamsContextProvider,
 	GamesContextProvider,
-	OffersContextProvider
+	OffersContextProvider,
 } from '@/providers'
 
 interface ProvidersWrapperProps {
@@ -14,7 +14,7 @@ interface ProvidersWrapperProps {
 
 /**
  * ProvidersWrapper Component
- * 
+ *
  * Centralizes all context providers to reduce nesting in main.tsx
  * and improve maintainability of the provider hierarchy.
  */
@@ -25,9 +25,7 @@ export const ProvidersWrapper = ({ children }: ProvidersWrapperProps) => {
 				<SeasonsContextProvider>
 					<TeamsContextProvider>
 						<GamesContextProvider>
-							<OffersContextProvider>
-								{children}
-							</OffersContextProvider>
+							<OffersContextProvider>{children}</OffersContextProvider>
 						</GamesContextProvider>
 					</TeamsContextProvider>
 				</SeasonsContextProvider>

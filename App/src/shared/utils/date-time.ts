@@ -1,6 +1,6 @@
 /**
  * Date and time utilities
- * 
+ *
  * Reusable functions for formatting and manipulating dates
  */
 
@@ -9,9 +9,11 @@ import { Timestamp } from '@firebase/firestore'
 /**
  * Format a Firebase Timestamp to a readable date string
  */
-export const formatTimestamp = (timestamp: Timestamp | undefined): string | undefined => {
+export const formatTimestamp = (
+	timestamp: Timestamp | undefined
+): string | undefined => {
 	if (!timestamp) return undefined
-	
+
 	const date = new Date(timestamp.seconds * 1000)
 	return date.toLocaleDateString('en-US', {
 		month: 'long',
@@ -48,9 +50,11 @@ export const formatDateTime = (date: Date): string => {
 /**
  * Format a Firebase Timestamp to include time
  */
-export const formatTimestampWithTime = (timestamp: Timestamp | undefined): string | undefined => {
+export const formatTimestampWithTime = (
+	timestamp: Timestamp | undefined
+): string | undefined => {
 	if (!timestamp) return undefined
-	
+
 	const date = new Date(timestamp.seconds * 1000)
 	return formatDateTime(date)
 }
@@ -61,26 +65,26 @@ export const formatTimestampWithTime = (timestamp: Timestamp | undefined): strin
 export const getRelativeTime = (date: Date): string => {
 	const now = new Date()
 	const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-	
+
 	if (diffInSeconds < 60) {
 		return 'just now'
 	}
-	
+
 	const diffInMinutes = Math.floor(diffInSeconds / 60)
 	if (diffInMinutes < 60) {
 		return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`
 	}
-	
+
 	const diffInHours = Math.floor(diffInMinutes / 60)
 	if (diffInHours < 24) {
 		return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`
 	}
-	
+
 	const diffInDays = Math.floor(diffInHours / 24)
 	if (diffInDays < 7) {
 		return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`
 	}
-	
+
 	return formatDate(date)
 }
 

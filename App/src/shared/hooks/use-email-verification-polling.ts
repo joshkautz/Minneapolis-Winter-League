@@ -3,10 +3,10 @@ import { useAuthContext } from '@/providers'
 
 /**
  * Hook to handle email verification polling
- * 
+ *
  * Automatically polls for email verification status and refreshes
  * the user's auth token when verification is detected.
- * 
+ *
  * This logic is extracted from App.tsx to separate concerns and
  * make it reusable across the application if needed.
  */

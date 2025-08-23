@@ -1,6 +1,6 @@
 /**
  * Routes module barrel export
- * 
+ *
  * Provides a clean interface for importing route-related functionality
  */
 

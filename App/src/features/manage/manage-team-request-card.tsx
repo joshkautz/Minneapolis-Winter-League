@@ -34,13 +34,14 @@ export const ManageTeamRequestCard = () => {
 			)
 				?.then(() => {
 					toast.success('Request sent', {
-			description: 'you requested to join',
-		})
+						description: 'you requested to join',
+					})
 				})
 				.catch(() => {
 					toast.error('Unable to send request', {
-			description: 'Ensure your email is verified. Please try again later.',
-		})
+						description:
+							'Ensure your email is verified. Please try again later.',
+					})
 				}),
 		[]
 	)

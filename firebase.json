@@ -9,6 +9,11 @@
       ".gitignore",
       "eslint.config.js",
       "tsconfig.json"
+    ],
+    "predeploy": [
+      "npm run build:shared",
+      "npm install --prefix Functions",
+      "npm run build --prefix Functions"
     ]
   },
   "firestore": {
@@ -58,7 +63,11 @@
         "source": "**/*.@(js|css)"
       }
     ],
-    "predeploy": [],
+    "predeploy": [
+      "npm run build:shared",
+      "npm install --prefix App",
+      "npm run build --prefix App"
+    ],
     "postdeploy": []
   },
   "storage": {

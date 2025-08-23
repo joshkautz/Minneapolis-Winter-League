@@ -4,7 +4,7 @@ import { formatTimestamp } from '@/shared/utils'
 
 /**
  * ScheduleEmptyState Component
- * 
+ *
  * Displays empty state when no games are scheduled yet.
  * Extracted from main Schedule component for better organization.
  */

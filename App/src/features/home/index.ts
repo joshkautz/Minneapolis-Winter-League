@@ -1,6 +1,6 @@
 /**
  * Home feature exports
- * 
+ *
  * Centralized exports for all home page components
  */
 

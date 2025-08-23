@@ -1,6 +1,6 @@
 /**
  * Pages exports
- * 
+ *
  * Centralized exports for all page components
  */
 

@@ -3,7 +3,7 @@ import { useScheduleData } from '@/shared/hooks/use-schedule-data'
 
 /**
  * ScheduleGrid Component
- * 
+ *
  * Renders the grid of schedule cards for all game rounds.
  * Extracted from main Schedule component for better organization.
  */

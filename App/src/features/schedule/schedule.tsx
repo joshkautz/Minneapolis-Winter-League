@@ -6,7 +6,7 @@ import { ScheduleEmptyState } from './schedule-empty-state'
 
 /**
  * Schedule Component
- * 
+ *
  * Main schedule page component that displays game schedules organized by rounds.
  * Refactored to use smaller, focused components and custom hooks for better maintainability.
  */

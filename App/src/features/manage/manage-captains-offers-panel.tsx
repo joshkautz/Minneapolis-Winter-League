@@ -34,13 +34,13 @@ export const ManageCaptainsOffersPanel = () => {
 		rejectOffer(offerDocumentReference)
 			.then(() => {
 				toast.success('Success', {
-			description: 'Request rejected',
-		})
+					description: 'Request rejected',
+				})
 			})
 			.catch(() => {
 				toast.error('Failure', {
-			description: 'Request not rejected',
-		})
+					description: 'Request not rejected',
+				})
 			})
 	}
 
@@ -50,13 +50,13 @@ export const ManageCaptainsOffersPanel = () => {
 		acceptOffer(offerDocumentReference)
 			.then(() => {
 				toast.success('Success', {
-			description: 'Request accepted',
-		})
+					description: 'Request accepted',
+				})
 			})
 			.catch(() => {
 				toast.error('Failure', {
-			description: 'Request not accepted',
-		})
+					description: 'Request not accepted',
+				})
 			})
 	}
 
@@ -66,13 +66,13 @@ export const ManageCaptainsOffersPanel = () => {
 		rejectOffer(offerDocumentReference)
 			.then(() => {
 				toast.success('Success', {
-			description: 'Invite canceled',
-		})
+					description: 'Invite canceled',
+				})
 			})
 			.catch(() => {
 				toast.error('Failure', {
-			description: 'Invite not canceled',
-		})
+					description: 'Invite not canceled',
+				})
 			})
 	}
 

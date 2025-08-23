@@ -14,13 +14,15 @@ interface ProfileActionsProps {
 	isRegistrationOpen: boolean | undefined
 	isAuthenticatedUserAdmin: boolean | undefined
 	isAuthenticatedUserBanned: boolean | undefined
-	currentSeasonQueryDocumentSnapshot: QueryDocumentSnapshot<SeasonData, DocumentData> | undefined
+	currentSeasonQueryDocumentSnapshot:
+		| QueryDocumentSnapshot<SeasonData, DocumentData>
+		| undefined
 	sendEmailVerification: () => Promise<boolean>
 }
 
 /**
  * ProfileActions Component
- * 
+ *
  * Container component for all profile action sections
  * (email verification, payment, waiver)
  */
@@ -54,7 +56,9 @@ export const ProfileActions = ({
 					isRegistrationOpen={isRegistrationOpen}
 					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 					isAuthenticatedUserBanned={isAuthenticatedUserBanned}
-					currentSeasonQueryDocumentSnapshot={currentSeasonQueryDocumentSnapshot}
+					currentSeasonQueryDocumentSnapshot={
+						currentSeasonQueryDocumentSnapshot
+					}
 				/>
 
 				<WaiverSection
@@ -64,7 +68,9 @@ export const ProfileActions = ({
 					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 					isAuthenticatedUserPaid={isAuthenticatedUserPaid}
 					isAuthenticatedUserBanned={isAuthenticatedUserBanned}
-					currentSeasonQueryDocumentSnapshot={currentSeasonQueryDocumentSnapshot}
+					currentSeasonQueryDocumentSnapshot={
+						currentSeasonQueryDocumentSnapshot
+					}
 				/>
 			</div>
 		</div>

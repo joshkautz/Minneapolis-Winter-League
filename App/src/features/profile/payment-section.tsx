@@ -16,12 +16,14 @@ interface PaymentSectionProps {
 	isRegistrationOpen: boolean | undefined
 	isAuthenticatedUserAdmin: boolean | undefined
 	isAuthenticatedUserBanned: boolean | undefined
-	currentSeasonQueryDocumentSnapshot: QueryDocumentSnapshot<SeasonData, DocumentData> | undefined
+	currentSeasonQueryDocumentSnapshot:
+		| QueryDocumentSnapshot<SeasonData, DocumentData>
+		| undefined
 }
 
 /**
  * PaymentSection Component
- * 
+ *
  * Handles Stripe payment functionality
  * Extracted from main Profile component for better separation of concerns
  */
@@ -61,9 +63,7 @@ export const PaymentSection = ({
 				) : (
 					<span className={'relative flex w-2 h-2 ml-1'}>
 						<span
-							className={
-								'relative inline-flex w-2 h-2 rounded-full bg-primary'
-							}
+							className={'relative inline-flex w-2 h-2 rounded-full bg-primary'}
 						></span>
 					</span>
 				)}
@@ -71,9 +71,7 @@ export const PaymentSection = ({
 
 			<div>
 				{isLoading || isAuthenticatedUserPaid === undefined ? (
-					<div className={'inline-flex items-center gap-2'}>
-						Loading...
-					</div>
+					<div className={'inline-flex items-center gap-2'}>Loading...</div>
 				) : isAuthenticatedUserPaid ? (
 					<></>
 				) : (
