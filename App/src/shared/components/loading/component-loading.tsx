@@ -9,7 +9,10 @@ interface ComponentLoadingProps {
  * Standardized component loading state
  * Used for individual component loading states
  */
-export const ComponentLoading = ({ rows = 3, className }: ComponentLoadingProps) => {
+export const ComponentLoading = ({
+	rows = 3,
+	className,
+}: ComponentLoadingProps) => {
 	return (
 		<div className={className}>
 			<div className="space-y-2">

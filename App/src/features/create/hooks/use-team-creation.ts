@@ -26,7 +26,8 @@ interface TeamCreationResult {
  */
 export const useTeamCreation = () => {
 	const navigate = useNavigate()
-	const { authenticatedUserSnapshot, authenticatedUserSnapshotLoading } = useAuthContext()
+	const { authenticatedUserSnapshot, authenticatedUserSnapshotLoading } =
+		useAuthContext()
 	const {
 		currentSeasonQueryDocumentSnapshot,
 		currentSeasonQueryDocumentSnapshotLoading,
@@ -37,7 +38,7 @@ export const useTeamCreation = () => {
 	const [newTeamData, setNewTeamData] = useState<TeamCreationData>()
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 	const [rolloverMode, setRolloverMode] = useState(false)
-	
+
 	const { storageRef, setStorageRef, downloadUrl } = useFileUpload()
 	const [uploadFile] = useUploadFile()
 
@@ -58,15 +59,16 @@ export const useTeamCreation = () => {
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
-	const isRegistrationOpen = useMemo(
-		() =>
-			currentSeasonQueryDocumentSnapshot &&
-			Timestamp.now() >
-				currentSeasonQueryDocumentSnapshot?.data().registrationStart &&
-			Timestamp.now() <
-				currentSeasonQueryDocumentSnapshot?.data().registrationEnd,
-		[currentSeasonQueryDocumentSnapshot]
-	) || false
+	const isRegistrationOpen =
+		useMemo(
+			() =>
+				currentSeasonQueryDocumentSnapshot &&
+				Timestamp.now() >
+					currentSeasonQueryDocumentSnapshot?.data().registrationStart &&
+				Timestamp.now() <
+					currentSeasonQueryDocumentSnapshot?.data().registrationEnd,
+			[currentSeasonQueryDocumentSnapshot]
+		) || false
 
 	const isLoading = useMemo(
 		() =>
@@ -101,7 +103,7 @@ export const useTeamCreation = () => {
 	)
 
 	const toggleRolloverMode = useCallback(() => {
-		setRolloverMode(prev => !prev)
+		setRolloverMode((prev) => !prev)
 	}, [])
 
 	// Effect for handling team creation without logo

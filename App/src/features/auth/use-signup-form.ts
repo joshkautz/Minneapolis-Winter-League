@@ -22,7 +22,7 @@ interface UseSignupFormProps {
 
 /**
  * Custom hook for signup form logic
- * 
+ *
  * Encapsulates form validation, submission logic, and error handling
  * for the user signup process.
  */
@@ -53,10 +53,10 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 
 			if (credential?.user) {
 				logger.auth('sign_up', true, undefined, credential.user.uid)
-				logger.userAction('account_created', 'SignupForm', { 
+				logger.userAction('account_created', 'SignupForm', {
 					email: data.email,
 					firstName: data.firstName,
-					lastName: data.lastName
+					lastName: data.lastName,
 				})
 
 				// Send email verification
@@ -71,12 +71,18 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 					currentSeasonQueryDocumentSnapshot
 				)
 
-				logger.firebase('create', 'players', undefined, { userId: credential.user.uid })
+				logger.firebase('create', 'players', undefined, {
+					userId: credential.user.uid,
+				})
 				toast.success('Account created successfully! Please verify your email.')
 				onSuccess()
 			}
 		} catch (error) {
-			logger.auth('sign_up', false, error instanceof Error ? error : new Error(String(error)))
+			logger.auth(
+				'sign_up',
+				false,
+				error instanceof Error ? error : new Error(String(error))
+			)
 			console.error('Signup error:', error)
 			toast.error('Failed to create account. Please try again.')
 		}

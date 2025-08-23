@@ -64,12 +64,17 @@ export const ResetPasswordForm = ({
 				})
 			}
 		} catch (error) {
-			logger.error('Password reset failed', error instanceof Error ? error : new Error(String(error)), {
-				component: 'ResetPasswordForm',
-				email: data.email,
-			})
+			logger.error(
+				'Password reset failed',
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					component: 'ResetPasswordForm',
+					email: data.email,
+				}
+			)
 			errorHandler.handleAuth(error, 'password_reset', {
-				fallbackMessage: 'An unexpected error occurred while sending reset email',
+				fallbackMessage:
+					'An unexpected error occurred while sending reset email',
 			})
 		}
 	}

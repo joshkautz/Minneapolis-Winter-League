@@ -101,7 +101,10 @@ export const RolloverTeamForm = ({
 					defaultTeamQueryDocumentSnapshot?.data().teamId
 			)
 
-		if (!defaultTeamHasBeenRolledOver && defaultTeamQueryDocumentSnapshot?.data().name) {
+		if (
+			!defaultTeamHasBeenRolledOver &&
+			defaultTeamQueryDocumentSnapshot?.data().name
+		) {
 			setStringValue(defaultTeamQueryDocumentSnapshot.data().name)
 			setSelectedTeamQueryDocumentSnapshot(defaultTeamQueryDocumentSnapshot)
 		}
@@ -139,11 +142,15 @@ export const RolloverTeamForm = ({
 				})
 			}
 		} catch (error) {
-			logger.error('Team rollover failed', error instanceof Error ? error : new Error(String(error)), {
-				component: 'RolloverTeamForm',
-				teamId: selectedTeamQueryDocumentSnapshot?.data().teamId,
-			})
-			
+			logger.error(
+				'Team rollover failed',
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					component: 'RolloverTeamForm',
+					teamId: selectedTeamQueryDocumentSnapshot?.data().teamId,
+				}
+			)
+
 			errorHandler.handleValidation(error, 'rollover-team-form', {
 				fallbackMessage: 'Failed to rollover team. Please try again.',
 			})

@@ -98,10 +98,14 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 				})
 			}
 		} catch (error) {
-			logger.error('Sign out failed', error instanceof Error ? error : new Error(String(error)), {
-				component: 'UserAvatar',
-				userId: authStateUser?.uid,
-			})
+			logger.error(
+				'Sign out failed',
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					component: 'UserAvatar',
+					userId: authStateUser?.uid,
+				}
+			)
 			errorHandler.handleAuth(error, 'sign_out', {
 				fallbackMessage: 'An unexpected error occurred while signing out',
 			})

@@ -1,6 +1,6 @@
 /**
  * Features barrel export
- * 
+ *
  * Main entry point for all feature modules
  */
 

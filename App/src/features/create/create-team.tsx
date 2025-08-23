@@ -37,7 +37,9 @@ export const CreateTeam = () => {
 				<TeamCreationStatusCard
 					isRostered={isRostered}
 					isRegistrationOpen={isRegistrationOpen}
-					registrationStartDate={currentSeasonQueryDocumentSnapshot?.data()?.registrationStart}
+					registrationStartDate={
+						currentSeasonQueryDocumentSnapshot?.data()?.registrationStart
+					}
 				/>
 			</div>
 		)

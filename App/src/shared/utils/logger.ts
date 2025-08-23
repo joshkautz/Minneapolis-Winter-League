@@ -21,7 +21,11 @@ interface LogContext {
 class Logger {
 	private isDevelopment = process.env.NODE_ENV === 'development'
 
-	private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
+	private formatMessage(
+		level: LogLevel,
+		message: string,
+		context?: LogContext
+	): string {
 		const timestamp = new Date().toISOString()
 		const contextStr = context ? ` | Context: ${JSON.stringify(context)}` : ''
 		return `[${timestamp}] [${level.toUpperCase()}] ${message}${contextStr}`
@@ -57,11 +61,13 @@ class Logger {
 		if (this.shouldLog(LogLevel.ERROR)) {
 			const errorContext = {
 				...context,
-				error: error ? {
-					name: error.name,
-					message: error.message,
-					stack: error.stack,
-				} : undefined,
+				error: error
+					? {
+							name: error.name,
+							message: error.message,
+							stack: error.stack,
+						}
+					: undefined,
 			}
 			console.error(this.formatMessage(LogLevel.ERROR, message, errorContext))
 		}
@@ -73,7 +79,7 @@ class Logger {
 	auth(action: string, success: boolean, error?: Error, userId?: string): void {
 		const message = `Auth: ${action} ${success ? 'succeeded' : 'failed'}`
 		const context = { component: 'auth', action, userId, success }
-		
+
 		if (success) {
 			this.info(message, context)
 		} else {
@@ -84,10 +90,20 @@ class Logger {
 	/**
 	 * Log Firebase operations
 	 */
-	firebase(operation: string, collection?: string, error?: Error, context?: LogContext): void {
+	firebase(
+		operation: string,
+		collection?: string,
+		error?: Error,
+		context?: LogContext
+	): void {
 		const message = `Firebase: ${operation}${collection ? ` on ${collection}` : ''}`
-		const firebaseContext = { component: 'firebase', operation, collection, ...context }
-		
+		const firebaseContext = {
+			component: 'firebase',
+			operation,
+			collection,
+			...context,
+		}
+
 		if (error) {
 			this.error(message, error, firebaseContext)
 		} else {
@@ -99,14 +115,29 @@ class Logger {
 	 * Log user interactions
 	 */
 	userAction(action: string, component: string, context?: LogContext): void {
-		this.info(`User action: ${action}`, { component, action: 'user_interaction', ...context })
+		this.info(`User action: ${action}`, {
+			component,
+			action: 'user_interaction',
+			...context,
+		})
 	}
 
 	/**
 	 * Log performance metrics
 	 */
-	performance(metric: string, value: number, unit: string, context?: LogContext): void {
-		this.debug(`Performance: ${metric} = ${value}${unit}`, { component: 'performance', metric, value, unit, ...context })
+	performance(
+		metric: string,
+		value: number,
+		unit: string,
+		context?: LogContext
+	): void {
+		this.debug(`Performance: ${metric} = ${value}${unit}`, {
+			component: 'performance',
+			metric,
+			value,
+			unit,
+			...context,
+		})
 	}
 }
 

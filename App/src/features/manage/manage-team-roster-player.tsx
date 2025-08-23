@@ -122,12 +122,16 @@ export const ManageTeamRosterPlayer = ({
 					)
 				})
 				.catch((error) => {
-					logger.error('Demote captain failed', error instanceof Error ? error : new Error(String(error)), {
-						component: 'ManageTeamRosterPlayer',
-						action: 'demote_captain',
-						playerId: playerSnapshot?.id,
-						teamId: team?.id,
-					})
+					logger.error(
+						'Demote captain failed',
+						error instanceof Error ? error : new Error(String(error)),
+						{
+							component: 'ManageTeamRosterPlayer',
+							action: 'demote_captain',
+							playerId: playerSnapshot?.id,
+							teamId: team?.id,
+						}
+					)
 					errorHandler.handleFirebase(error, 'demote_captain', 'teams', {
 						fallbackMessage: 'Unable to demote captain. Please try again.',
 					})
@@ -159,14 +163,19 @@ export const ManageTeamRosterPlayer = ({
 					})
 				})
 				.catch((error) => {
-					logger.error('Promote captain failed', error instanceof Error ? error : new Error(String(error)), {
-						component: 'ManageTeamRosterPlayer',
-						action: 'promote_captain',
-						playerId: playerSnapshot?.id,
-						teamId: team?.id,
-					})
+					logger.error(
+						'Promote captain failed',
+						error instanceof Error ? error : new Error(String(error)),
+						{
+							component: 'ManageTeamRosterPlayer',
+							action: 'promote_captain',
+							playerId: playerSnapshot?.id,
+							teamId: team?.id,
+						}
+					)
 					errorHandler.handleFirebase(error, 'promote_captain', 'teams', {
-						fallbackMessage: 'Unable to promote captain. Ensure your email is verified and try again.',
+						fallbackMessage:
+							'Unable to promote captain. Ensure your email is verified and try again.',
 					})
 				}),
 		[team, playerSnapshot, currentSeasonQueryDocumentSnapshot]
@@ -187,12 +196,16 @@ export const ManageTeamRosterPlayer = ({
 				)
 			})
 			.catch((error) => {
-				logger.error('Remove player failed', error instanceof Error ? error : new Error(String(error)), {
-					component: 'ManageTeamRosterPlayer',
-					action: 'remove_player',
-					playerId: playerSnapshot?.id,
-					teamId: team?.id,
-				})
+				logger.error(
+					'Remove player failed',
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						component: 'ManageTeamRosterPlayer',
+						action: 'remove_player',
+						playerId: playerSnapshot?.id,
+						teamId: team?.id,
+					}
+				)
 				errorHandler.handleFirebase(error, 'remove_player', 'teams', {
 					fallbackMessage: 'Unable to remove player. Please try again.',
 				})

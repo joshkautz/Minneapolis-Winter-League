@@ -11,7 +11,8 @@ export const useFileUpload = () => {
 	const [uploadedFile, setUploadedFile] = useState<Blob>()
 	const [storageRef, setStorageRef] = useState<StorageReference>()
 	const [uploadFile, uploading, uploadError] = useUploadFile()
-	const [downloadUrl, downloadLoading, downloadError] = useDownloadURL(storageRef)
+	const [downloadUrl, downloadLoading, downloadError] =
+		useDownloadURL(storageRef)
 
 	const handleFileUpload = async (file: Blob, reference: StorageReference) => {
 		try {

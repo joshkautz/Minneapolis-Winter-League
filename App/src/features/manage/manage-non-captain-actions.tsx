@@ -57,12 +57,16 @@ export const ManageNonCaptainActions = () => {
 				)
 			})
 			.catch((error) => {
-				logger.error('Leave team failed', error instanceof Error ? error : new Error(String(error)), {
-					component: 'ManageNonCaptainActions',
-					action: 'leave_team',
-					teamId: teamQueryDocumentSnapshot?.id,
-					userId: authenticatedUserSnapshot?.id,
-				})
+				logger.error(
+					'Leave team failed',
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						component: 'ManageNonCaptainActions',
+						action: 'leave_team',
+						teamId: teamQueryDocumentSnapshot?.id,
+						userId: authenticatedUserSnapshot?.id,
+					}
+				)
 				errorHandler.handleFirebase(error, 'leave_team', 'teams', {
 					fallbackMessage: 'Unable to leave team. Please try again.',
 				})

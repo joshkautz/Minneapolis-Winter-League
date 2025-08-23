@@ -16,7 +16,7 @@ export const useAuthPermissions = () => {
 	)
 
 	const isRostered = useMemo(
-		() => 
+		() =>
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(

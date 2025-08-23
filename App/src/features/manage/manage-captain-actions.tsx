@@ -62,11 +62,15 @@ export const ManageCaptainActions = () => {
 				})
 			})
 			.catch((error) => {
-				logger.error('Leave team failed', error instanceof Error ? error : new Error(String(error)), {
-					component: 'ManageCaptainActions',
-					action: 'leave_team',
-					teamId: teamQueryDocumentSnapshot?.id,
-				})
+				logger.error(
+					'Leave team failed',
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						component: 'ManageCaptainActions',
+						action: 'leave_team',
+						teamId: teamQueryDocumentSnapshot?.id,
+					}
+				)
 				errorHandler.handleFirebase(error, 'leave_team', 'teams', {
 					fallbackMessage: 'Failed to leave team. Please try again.',
 				})
@@ -95,11 +99,15 @@ export const ManageCaptainActions = () => {
 				})
 			})
 			.catch((error) => {
-				logger.error('Delete team failed', error instanceof Error ? error : new Error(String(error)), {
-					component: 'ManageCaptainActions',
-					action: 'delete_team',
-					teamId: teamQueryDocumentSnapshot?.id,
-				})
+				logger.error(
+					'Delete team failed',
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						component: 'ManageCaptainActions',
+						action: 'delete_team',
+						teamId: teamQueryDocumentSnapshot?.id,
+					}
+				)
 				errorHandler.handleFirebase(error, 'delete_team', 'teams', {
 					fallbackMessage: 'Failed to delete team. Please try again.',
 				})

@@ -22,9 +22,9 @@ export const TeamCreationFormWrapper = ({
 			title="Team Creation Form"
 			description="Create a team to compete in the upcoming season. You can create a new team from scratch, or rollover a team you've captained in a previous season."
 			moreActions={
-				<TeamCreationToggle 
-					rolloverMode={rolloverMode} 
-					onToggle={onToggleMode} 
+				<TeamCreationToggle
+					rolloverMode={rolloverMode}
+					onToggle={onToggleMode}
 				/>
 			}
 		>

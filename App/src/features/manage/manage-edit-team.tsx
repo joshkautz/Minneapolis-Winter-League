@@ -120,11 +120,15 @@ export const ManageEditTeam = ({
 			})
 			.catch((error) => {
 				setIsLoading(false)
-				logger.error('Edit team with logo failed', error instanceof Error ? error : new Error(String(error)), {
-					component: 'ManageEditTeam',
-					action: 'edit_team_with_logo',
-					teamId: team?.id,
-				})
+				logger.error(
+					'Edit team with logo failed',
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						component: 'ManageEditTeam',
+						action: 'edit_team_with_logo',
+						teamId: team?.id,
+					}
+				)
 				errorHandler.handleFirebase(error, 'edit_team', 'teams', {
 					fallbackMessage: 'Failed to save team changes. Please try again.',
 				})
@@ -163,13 +167,18 @@ export const ManageEditTeam = ({
 							})
 							.catch((error) => {
 								setIsLoading(false)
-								logger.error('Edit team (no file) failed', error instanceof Error ? error : new Error(String(error)), {
-									component: 'ManageEditTeam',
-									action: 'edit_team_no_file',
-									teamId: team?.id,
-								})
+								logger.error(
+									'Edit team (no file) failed',
+									error instanceof Error ? error : new Error(String(error)),
+									{
+										component: 'ManageEditTeam',
+										action: 'edit_team_no_file',
+										teamId: team?.id,
+									}
+								)
 								errorHandler.handleFirebase(error, 'edit_team', 'teams', {
-									fallbackMessage: 'Failed to save team changes. Please try again.',
+									fallbackMessage:
+										'Failed to save team changes. Please try again.',
 								})
 							})
 					} else {
@@ -183,26 +192,36 @@ export const ManageEditTeam = ({
 							})
 							.catch((error) => {
 								setIsLoading(false)
-								logger.error('Edit team (else case) failed', error instanceof Error ? error : new Error(String(error)), {
-									component: 'ManageEditTeam',
-									action: 'edit_team_else',
-									teamId: team?.id,
-								})
+								logger.error(
+									'Edit team (else case) failed',
+									error instanceof Error ? error : new Error(String(error)),
+									{
+										component: 'ManageEditTeam',
+										action: 'edit_team_else',
+										teamId: team?.id,
+									}
+								)
 								errorHandler.handleFirebase(error, 'edit_team', 'teams', {
-									fallbackMessage: 'Failed to save team changes. Please try again.',
+									fallbackMessage:
+										'Failed to save team changes. Please try again.',
 								})
 							})
 					}
 				}
 			} catch (error) {
 				setIsLoading(false)
-				logger.error('Edit team general error', error instanceof Error ? error : new Error(String(error)), {
-					component: 'ManageEditTeam',
-					action: 'edit_team_catch',
-					teamId: team?.id,
-				})
+				logger.error(
+					'Edit team general error',
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						component: 'ManageEditTeam',
+						action: 'edit_team_catch',
+						teamId: team?.id,
+					}
+				)
 				errorHandler.handle(error, ErrorType.UNEXPECTED, 'ManageEditTeam', {
-					fallbackMessage: 'An unexpected error occurred while saving team changes.',
+					fallbackMessage:
+						'An unexpected error occurred while saving team changes.',
 				})
 			}
 		},

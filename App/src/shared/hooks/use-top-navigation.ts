@@ -1,6 +1,10 @@
 import { useState, useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
-import { useAuthContext, useOffersContext, useSeasonsContext } from '@/providers'
+import {
+	useAuthContext,
+	useOffersContext,
+	useSeasonsContext,
+} from '@/providers'
 import { logger } from '@/shared/utils'
 
 /**

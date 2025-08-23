@@ -44,15 +44,19 @@ class ErrorHandler {
 		} = options
 
 		const processedError = this.processError(error)
-		const userMessage = this.getUserMessage(processedError, type, fallbackMessage)
+		const userMessage = this.getUserMessage(
+			processedError,
+			type,
+			fallbackMessage
+		)
 
 		// Log the error
 		if (logError) {
-			logger.error(
-				`${type} error in ${component}`,
-				processedError,
-				{ component, errorType: type, ...context }
-			)
+			logger.error(`${type} error in ${component}`, processedError, {
+				component,
+				errorType: type,
+				...context,
+			})
 		}
 
 		// Show user-friendly toast
@@ -66,14 +70,22 @@ class ErrorHandler {
 	/**
 	 * Handle authentication errors specifically
 	 */
-	handleAuth(error: Error | unknown, action: string, options?: Partial<ErrorHandlerOptions>): void {
+	handleAuth(
+		error: Error | unknown,
+		action: string,
+		options?: Partial<ErrorHandlerOptions>
+	): void {
 		this.handle(error, ErrorType.AUTHENTICATION, 'auth', {
 			fallbackMessage: 'Authentication failed. Please try again.',
 			...options,
 		})
-		
+
 		// Log to auth-specific logger
-		logger.auth(action, false, error instanceof Error ? error : new Error(String(error)))
+		logger.auth(
+			action,
+			false,
+			error instanceof Error ? error : new Error(String(error))
+		)
 	}
 
 	/**
@@ -92,7 +104,11 @@ class ErrorHandler {
 		})
 
 		// Log to Firebase-specific logger
-		logger.firebase(operation, collection, error instanceof Error ? error : new Error(String(error)))
+		logger.firebase(
+			operation,
+			collection,
+			error instanceof Error ? error : new Error(String(error))
+		)
 	}
 
 	/**
@@ -113,9 +129,14 @@ class ErrorHandler {
 	/**
 	 * Handle network/API errors
 	 */
-	handleNetwork(error: Error | unknown, endpoint?: string, options?: Partial<ErrorHandlerOptions>): void {
+	handleNetwork(
+		error: Error | unknown,
+		endpoint?: string,
+		options?: Partial<ErrorHandlerOptions>
+	): void {
 		this.handle(error, ErrorType.NETWORK, 'api', {
-			fallbackMessage: 'Network error. Please check your connection and try again.',
+			fallbackMessage:
+				'Network error. Please check your connection and try again.',
 			context: { endpoint },
 			...options,
 		})
@@ -125,19 +146,23 @@ class ErrorHandler {
 		if (error instanceof Error) {
 			return error
 		}
-		
+
 		if (typeof error === 'string') {
 			return new Error(error)
 		}
-		
+
 		if (error && typeof error === 'object' && 'message' in error) {
 			return new Error(String((error as { message: unknown }).message))
 		}
-		
+
 		return new Error('Unknown error occurred')
 	}
 
-	private getUserMessage(error: Error, type: ErrorType, fallback: string): string {
+	private getUserMessage(
+		error: Error,
+		type: ErrorType,
+		fallback: string
+	): string {
 		// Firebase-specific error messages
 		if (type === ErrorType.FIREBASE || type === ErrorType.AUTHENTICATION) {
 			const firebaseMessages: Record<string, string> = {
@@ -145,13 +170,18 @@ class ErrorHandler {
 				'auth/user-disabled': 'This account has been disabled.',
 				'auth/user-not-found': 'No account found with this email address.',
 				'auth/wrong-password': 'Incorrect password. Please try again.',
-				'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
-				'auth/network-request-failed': 'Network error. Please check your connection.',
-				'auth/email-already-in-use': 'An account with this email already exists.',
+				'auth/too-many-requests':
+					'Too many failed attempts. Please try again later.',
+				'auth/network-request-failed':
+					'Network error. Please check your connection.',
+				'auth/email-already-in-use':
+					'An account with this email already exists.',
 				'auth/weak-password': 'Password should be at least 6 characters.',
-				'permission-denied': 'You do not have permission to perform this action.',
-				'unavailable': 'Service is temporarily unavailable. Please try again later.',
-				'cancelled': 'Operation was cancelled.',
+				'permission-denied':
+					'You do not have permission to perform this action.',
+				unavailable:
+					'Service is temporarily unavailable. Please try again later.',
+				cancelled: 'Operation was cancelled.',
 				'deadline-exceeded': 'Operation timed out. Please try again.',
 			}
 
@@ -174,13 +204,13 @@ class ErrorHandler {
 	private isUserFriendlyMessage(message: string): boolean {
 		// Check if the message looks like a technical error or user-friendly message
 		const technicalPatterns = [
-			/^[A-Z_]+$/,  // ALL_CAPS constants
-			/\b(undefined|null|NaN)\b/i,  // Technical values
-			/\b(stack|trace|TypeError|ReferenceError)\b/i,  // Technical terms
-			/^Error:/,  // Raw error prefixes
+			/^[A-Z_]+$/, // ALL_CAPS constants
+			/\b(undefined|null|NaN)\b/i, // Technical values
+			/\b(stack|trace|TypeError|ReferenceError)\b/i, // Technical terms
+			/^Error:/, // Raw error prefixes
 		]
 
-		return !technicalPatterns.some(pattern => pattern.test(message))
+		return !technicalPatterns.some((pattern) => pattern.test(message))
 	}
 }
 

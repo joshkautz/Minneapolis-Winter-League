@@ -24,11 +24,7 @@ export const FormSubmitButton = ({
 	type = 'submit',
 }: FormSubmitButtonProps) => {
 	return (
-		<Button
-			type={type}
-			disabled={disabled || isLoading}
-			className={className}
-		>
+		<Button type={type} disabled={disabled || isLoading} className={className}>
 			{isLoading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
 			{isLoading ? loadingText : children}
 		</Button>

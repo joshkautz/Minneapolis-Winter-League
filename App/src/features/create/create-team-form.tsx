@@ -99,11 +99,15 @@ export const CreateTeamForm = ({
 					})
 				}
 			} catch (error) {
-				logger.error('Team creation failed', error instanceof Error ? error : new Error(String(error)), {
-					component: 'CreateTeamForm',
-					teamName: data.name,
-				})
-				
+				logger.error(
+					'Team creation failed',
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						component: 'CreateTeamForm',
+						teamName: data.name,
+					}
+				)
+
 				errorHandler.handleValidation(error, 'create-team-form', {
 					fallbackMessage: 'Failed to create team. Please try again.',
 				})

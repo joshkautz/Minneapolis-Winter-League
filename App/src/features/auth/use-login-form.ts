@@ -18,7 +18,7 @@ interface UseLoginFormProps {
 
 /**
  * Custom hook for login form logic
- * 
+ *
  * Encapsulates form validation, submission logic, and error handling
  * for the user login process.
  */
@@ -45,7 +45,11 @@ export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
 				onSuccess()
 			}
 		} catch (error) {
-			logger.auth('sign_in', false, error instanceof Error ? error : new Error(String(error)))
+			logger.auth(
+				'sign_in',
+				false,
+				error instanceof Error ? error : new Error(String(error))
+			)
 			console.error('Login error:', error)
 			toast.error('Failed to log in. Please try again.')
 		}

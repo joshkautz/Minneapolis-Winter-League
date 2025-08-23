@@ -38,12 +38,7 @@ export const MobileNavigation = ({
 			<div className="flex flex-col space-y-3">
 				<SeasonSelect handleCloseMobileNav={onItemClick} />
 				{navItems.map(({ path, label, alt }) => (
-					<Link
-						key={path}
-						to={path}
-						aria-label={alt}
-						onClick={onItemClick}
-					>
+					<Link key={path} to={path} aria-label={alt} onClick={onItemClick}>
 						{label}
 					</Link>
 				))}
@@ -91,10 +86,7 @@ export const MobileNavigation = ({
 						Log Out
 					</Button>
 				) : (
-					<Button
-						onClick={onLogin}
-						disabled={authStateLoading}
-					>
+					<Button onClick={onLogin} disabled={authStateLoading}>
 						Login
 					</Button>
 				)}

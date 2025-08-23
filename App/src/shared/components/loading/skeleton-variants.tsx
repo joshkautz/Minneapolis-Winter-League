@@ -26,9 +26,7 @@ export const AvatarSkeleton = () => (
 	<Skeleton className="h-10 w-10 rounded-full" />
 )
 
-export const ButtonSkeleton = () => (
-	<Skeleton className="h-10 w-20" />
-)
+export const ButtonSkeleton = () => <Skeleton className="h-10 w-20" />
 
 export const FormFieldSkeleton = () => (
 	<div className="space-y-2">
