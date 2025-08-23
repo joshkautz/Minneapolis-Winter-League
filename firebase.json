@@ -17,11 +17,7 @@
   },
   "hosting": {
     "public": "App/dist",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
         "source": "/dropboxSignHandleWebhookEvents",
@@ -69,11 +65,6 @@
     "rules": "storage.rules"
   },
   "emulators": {
-    "apphosting": {
-      "port": 5002,
-      "rootDirectory": "./App",
-      "startCommand": "npm run dev"
-    },
     "auth": {
       "port": 9099
     },
@@ -87,7 +78,7 @@
       "port": 9000
     },
     "hosting": {
-      "port": 5000
+      "port": 5005
     },
     "pubsub": {
       "port": 8085

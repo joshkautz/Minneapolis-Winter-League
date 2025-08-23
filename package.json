@@ -1,0 +1,20 @@
+{
+  "name": "minneapolis-winter-league",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "emulators:start": "firebase emulators:start --only auth,firestore,storage,hosting --import ./emulator-data --export-on-exit ./emulator-data",
+    "emulators:start:clean": "firebase emulators:start --only auth,firestore,storage,hosting",
+    "emulators:backend": "firebase emulators:start --only auth,firestore,storage --import ./emulator-data --export-on-exit ./emulator-data",
+    "emulators:export": "firebase emulators:export ./emulator-data",
+    "emulators:clear": "rm -rf ./emulator-data && mkdir -p ./emulator-data",
+    "build:app": "cd App && npm run build",
+    "dev": "npm run build:app && npm run emulators:start",
+    "dev:clean": "npm run build:app && npm run emulators:start:clean",
+    "dev:backend": "npm run emulators:backend"
+  },
+  "devDependencies": {
+    "firebase-tools": "^14.14.0"
+  }
+}
