@@ -3,6 +3,7 @@ import { connectAuthEmulator, getAuth } from 'firebase/auth'
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore'
 import { connectStorageEmulator, getStorage } from 'firebase/storage'
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions'
+import { logger } from '@/shared/utils'
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -22,7 +23,7 @@ const requiredEnvVars = [
 	'VITE_FIREBASE_STORAGE_BUCKET',
 	'VITE_FIREBASE_MESSAGING_SENDER_ID',
 	'VITE_FIREBASE_APP_ID',
-]
+] as const
 
 for (const envVar of requiredEnvVars) {
 	if (!import.meta.env[envVar]) {
@@ -39,40 +40,36 @@ export const firestore = getFirestore(app)
 export const storage = getStorage(app)
 export const functions = getFunctions(app)
 
-// Environment configuration
-const isDevelopment = import.meta.env.DEV
+// Connect to emulators when enabled
 const useEmulators = import.meta.env.VITE_USE_EMULATORS === 'true'
 
-// Connect to emulators when enabled
-if (useEmulators && isDevelopment) {
+if (useEmulators) {
 	try {
-		// Auth emulator
+		// Connect to all emulators
 		connectAuthEmulator(auth, 'http://localhost:9099', {
 			disableWarnings: true,
 		})
-
-		// Firestore emulator
 		connectFirestoreEmulator(firestore, 'localhost', 8080)
-
-		// Storage emulator
 		connectStorageEmulator(storage, 'localhost', 9199)
-
-		// Functions emulator
 		connectFunctionsEmulator(functions, 'localhost', 5001)
 
-		console.log('🔥 Connected to Firebase emulators')
-		console.log(`🔥 Project ID: ${firebaseConfig.projectId}`)
-		console.log(`🔥 Environment: development (emulators)`)
+		logger.info(`Firebase connected to emulators`, {
+			component: 'firebase',
+			projectId: firebaseConfig.projectId,
+		})
 	} catch (error) {
-		console.warn('⚠️  Failed to connect to emulators:', error)
+		logger.warn('Failed to connect to Firebase emulators', {
+			component: 'firebase',
+			error: error instanceof Error ? error.message : String(error),
+		})
 	}
-} else if (isDevelopment) {
-	console.log('🔥 Firebase initialized in development mode (no emulators)')
-	console.log(`🔥 Project ID: ${firebaseConfig.projectId}`)
 } else {
-	console.log('🔥 Firebase initialized in production mode')
-	console.log(`🔥 Project ID: ${firebaseConfig.projectId}`)
+	logger.info(`Firebase initialized`, {
+		component: 'firebase',
+		projectId: firebaseConfig.projectId,
+		mode: import.meta.env.DEV ? 'development' : 'production',
+	})
 }
 
 // Export configuration for debugging
-export { firebaseConfig, isDevelopment, useEmulators }
+export { firebaseConfig, useEmulators }

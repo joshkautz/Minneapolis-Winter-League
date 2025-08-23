@@ -19,7 +19,25 @@ interface LogContext {
 }
 
 class Logger {
-	private isDevelopment = process.env.NODE_ENV === 'development'
+	private logLevelHierarchy = {
+		[LogLevel.DEBUG]: 0,
+		[LogLevel.INFO]: 1,
+		[LogLevel.WARN]: 2,
+		[LogLevel.ERROR]: 3,
+	}
+
+	private getMinLogLevel(): LogLevel {
+		const envLogLevel =
+			import.meta.env.VITE_LOG_LEVEL?.toLowerCase() as LogLevel
+		const validLevels = Object.values(LogLevel)
+
+		if (validLevels.includes(envLogLevel)) {
+			return envLogLevel
+		}
+
+		// Fallback to error level if VITE_LOG_LEVEL is invalid or missing
+		return LogLevel.ERROR
+	}
 
 	private formatMessage(
 		level: LogLevel,
@@ -32,11 +50,8 @@ class Logger {
 	}
 
 	private shouldLog(level: LogLevel): boolean {
-		// In production, only log warnings and errors
-		if (!this.isDevelopment) {
-			return level === LogLevel.WARN || level === LogLevel.ERROR
-		}
-		return true
+		const minLevel = this.getMinLogLevel()
+		return this.logLevelHierarchy[level] >= this.logLevelHierarchy[minLevel]
 	}
 
 	debug(message: string, context?: LogContext): void {
