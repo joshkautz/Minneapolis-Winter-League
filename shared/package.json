@@ -23,6 +23,7 @@
 		"typescript-eslint": "^8.40.0"
 	},
 	"dependencies": {
+		"firebase": "^11.8.1",
 		"firebase-admin": "^13.4.0"
 	}
 }

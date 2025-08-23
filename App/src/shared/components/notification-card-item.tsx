@@ -1,6 +1,19 @@
-import { cn } from '@/shared/utils'
+import { cn, ExtendedOfferData, OfferData, OfferType } from '@/shared/utils'
 import { Button } from '@/components/ui/button'
-import { NotificationCardItemProps, OfferType } from '@/shared/utils'
+import { DocumentData, DocumentReference } from '@/firebase/firestore'
+
+export interface NotificationCardItemProps {
+	type: OfferType
+	data: ExtendedOfferData | any
+	statusColor?: string
+	message?: string
+	actionOptions: {
+		title: string
+		action: (
+			offerDocumentReference: DocumentReference<OfferData, DocumentData>
+		) => void
+	}[]
+}
 
 export const NotificationCardItem = ({
 	type,

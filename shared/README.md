@@ -71,12 +71,6 @@ npm run format
 - `GameData` - Game scheduling and scores
 - `WaiverData` - Legal waiver information
 
-### Utility Types
-
-- `OfferAction` - User interaction types
-- `NotificationCardItemProps` - UI notification data
-- `StandingsData` - Team rankings and statistics
-
 ### Enums
 
 - `Collections` - Firebase collection names

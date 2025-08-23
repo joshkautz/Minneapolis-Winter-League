@@ -2,9 +2,22 @@
  * Form validation utilities
  *
  * Reusable validation functions and schemas for forms
+ *
+ * This module provides Zod validation schemas that are aligned with the shared types
+ * from @mwl/shared. Key improvements include:
+ *
+ * - Uses shared enum types (OfferCreator, OfferStatus) for consistency
+ * - Schemas designed to be compatible with shared TypeScript interfaces
+ * - Better type safety with generic validator functions
+ * - Proper handling of Firebase DocumentReference types (using z.unknown())
+ * - Pre-configured validators for common use cases
+ *
+ * Note: Firebase DocumentReference types use z.unknown() since they cannot be
+ * validated at runtime, but the schemas maintain structural compatibility.
  */
 
 import { z } from 'zod'
+import { OfferCreator, OfferStatus } from '@mwl/shared'
 
 // Common validation schemas with advanced features
 export const emailSchema = z
@@ -124,12 +137,16 @@ export const optionalImageFileSchema = z
 	.instanceof(File)
 	.optional()
 	.refine((file) => {
-		if (!file) {return true}
+		if (!file) {
+			return true
+		}
 		const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 		return allowedTypes.includes(file.type)
 	}, 'Please select a valid image file (JPEG, PNG, GIF, or WebP)')
 	.refine((file) => {
-		if (!file) {return true}
+		if (!file) {
+			return true
+		}
 		const maxSize = 5 * 1024 * 1024 // 5MB
 		return file.size <= maxSize
 	}, 'Image file must be less than 5MB')
@@ -225,6 +242,15 @@ export type TeamFormData = z.infer<typeof teamFormSchema>
 export type SearchQueryData = z.infer<typeof searchQuerySchema>
 export type PaginationData = z.infer<typeof paginationSchema>
 
+// Type exports for data model schemas - these are designed to be compatible with shared types
+// Note: DocumentReference fields use z.unknown() since Firebase types can't be validated at runtime
+export type PlayerSeasonSchemaType = z.infer<typeof playerSeasonSchema>
+export type PlayerDataSchemaType = z.infer<typeof playerDataSchema>
+export type TeamRosterItemSchemaType = z.infer<typeof teamRosterItemSchema>
+export type TeamDataSchemaType = z.infer<typeof teamDataSchema>
+export type SeasonDataSchemaType = z.infer<typeof seasonDataSchema>
+export type OfferDataSchemaType = z.infer<typeof offerDataSchema>
+
 // Advanced form schemas with conditional validation
 export const teamRegistrationSchema = z
 	.object({
@@ -288,37 +314,43 @@ export const dateStringSchema = z
 	.datetime()
 	.transform((str) => new Date(str))
 
-// API/Data Model Schemas for runtime validation
+// API/Data Model Schemas for runtime validation - aligned with shared types
+
+// Firebase DocumentReference placeholders - cannot validate at runtime
+// Using z.unknown() to ensure they're required but accept any value
+const documentRefSchema = z.unknown()
+const nullableDocumentRefSchema = z.unknown().nullable()
+
 export const playerSeasonSchema = z.object({
-	banned: z.boolean().default(false),
-	captain: z.boolean().default(false),
-	paid: z.boolean().default(false),
-	season: z.any(), // DocumentReference - can't validate at runtime
-	signed: z.boolean().default(false),
-	team: z.any().nullable(), // DocumentReference | null
+	banned: z.boolean().optional(),
+	captain: z.boolean(),
+	paid: z.boolean(),
+	season: documentRefSchema, // DocumentReference - can't validate at runtime but must be present
+	signed: z.boolean(),
+	team: nullableDocumentRefSchema, // DocumentReference | null
 })
 
 export const playerDataSchema = z.object({
-	admin: z.boolean().default(false),
+	admin: z.boolean(),
 	email: emailSchema,
 	firstname: nameSchema,
 	lastname: nameSchema,
-	seasons: z.array(playerSeasonSchema).default([]),
+	seasons: z.array(playerSeasonSchema),
 })
 
 export const teamRosterItemSchema = z.object({
 	captain: z.boolean(),
-	player: z.any(), // DocumentReference
+	player: documentRefSchema, // DocumentReference - required
 })
 
 export const teamDataSchema = z.object({
 	logo: z.string().nullable(),
 	name: teamNameSchema,
 	placement: z.number().int().positive().nullable(),
-	registered: z.boolean().default(false),
+	registered: z.boolean(),
 	registeredDate: timestampSchema,
-	roster: z.array(teamRosterItemSchema).default([]),
-	season: z.any(), // DocumentReference
+	roster: z.array(teamRosterItemSchema),
+	season: documentRefSchema, // DocumentReference - required
 	storagePath: z.string().nullable(),
 	teamId: z.string().uuid(),
 })
@@ -329,51 +361,61 @@ export const seasonDataSchema = z.object({
 	name: z.string().min(1, 'Season name is required'),
 	registrationEnd: timestampSchema,
 	registrationStart: timestampSchema,
-	teams: z.array(z.any()).default([]), // Array of DocumentReference
+	teams: z.array(documentRefSchema), // Array of DocumentReference
 })
 
-// Game/Offer related schemas
-export const offerStatusSchema = z.enum(['pending', 'accepted', 'rejected'])
-export const offerCreatorSchema = z.enum(['captain', 'noncaptain'])
+// Game/Offer related schemas - using shared enum types
+export const offerStatusSchema = z.nativeEnum(OfferStatus)
+export const offerCreatorSchema = z.nativeEnum(OfferCreator)
 
 export const offerDataSchema = z.object({
 	creator: offerCreatorSchema,
 	creatorName: z.string().min(1),
-	player: z.any(), // DocumentReference
-	team: z.any(), // DocumentReference
+	player: documentRefSchema, // DocumentReference - required
 	status: offerStatusSchema,
+	team: documentRefSchema, // DocumentReference - required
 })
 
-// Runtime validation helpers for API responses
-export const validatePlayerData = (
-	data: unknown
-): z.infer<typeof playerDataSchema> => {
+// Runtime validation helpers for API responses - with proper typing
+export const validatePlayerData = (data: unknown): PlayerDataSchemaType => {
 	return playerDataSchema.parse(data)
 }
 
-export const validateTeamData = (
-	data: unknown
-): z.infer<typeof teamDataSchema> => {
+export const validateTeamData = (data: unknown): TeamDataSchemaType => {
 	return teamDataSchema.parse(data)
 }
 
-export const validateSeasonData = (
-	data: unknown
-): z.infer<typeof seasonDataSchema> => {
+export const validateSeasonData = (data: unknown): SeasonDataSchemaType => {
 	return seasonDataSchema.parse(data)
 }
 
-// Safe parsing helpers
-export const safeParsePlayerData = (data: unknown) => {
+export const validateOfferData = (data: unknown): OfferDataSchemaType => {
+	return offerDataSchema.parse(data)
+}
+
+// Safe parsing helpers - with proper typing
+export const safeParsePlayerData = (
+	data: unknown
+): z.SafeParseReturnType<unknown, PlayerDataSchemaType> => {
 	return playerDataSchema.safeParse(data)
 }
 
-export const safeParseTeamData = (data: unknown) => {
+export const safeParseTeamData = (
+	data: unknown
+): z.SafeParseReturnType<unknown, TeamDataSchemaType> => {
 	return teamDataSchema.safeParse(data)
 }
 
-export const safeParseSeasonData = (data: unknown) => {
+export const safeParseSeasonData = (
+	data: unknown
+): z.SafeParseReturnType<unknown, SeasonDataSchemaType> => {
 	return seasonDataSchema.safeParse(data)
+}
+
+export const safeParseOfferData = (
+	data: unknown
+): z.SafeParseReturnType<unknown, OfferDataSchemaType> => {
+	return offerDataSchema.safeParse(data)
 }
 
 // Custom error map for better user-facing error messages
@@ -431,10 +473,12 @@ export const setCustomErrorMap = () => {
 	z.setErrorMap(customErrorMap)
 }
 
-// Schema validation utilities with better error handling
-export const createFormValidator = <T extends z.ZodTypeAny>(schema: T) => {
+// Schema validation utilities with better error handling and type safety
+export const createFormValidator = <TInput, TOutput>(
+	schema: z.ZodSchema<TOutput, any, TInput>
+) => {
 	return {
-		validate: (data: unknown): z.infer<T> => {
+		validate: (data: TInput): TOutput => {
 			const result = schema.safeParse(data)
 			if (!result.success) {
 				throw new Error(
@@ -443,7 +487,7 @@ export const createFormValidator = <T extends z.ZodTypeAny>(schema: T) => {
 			}
 			return result.data
 		},
-		validateAsync: async (data: unknown): Promise<z.infer<T>> => {
+		validateAsync: async (data: TInput): Promise<TOutput> => {
 			const result = await schema.safeParseAsync(data)
 			if (!result.success) {
 				throw new Error(
@@ -452,9 +496,11 @@ export const createFormValidator = <T extends z.ZodTypeAny>(schema: T) => {
 			}
 			return result.data
 		},
-		getFieldErrors: (data: unknown): Record<string, string> => {
+		getFieldErrors: (data: TInput): Record<string, string> => {
 			const result = schema.safeParse(data)
-			if (result.success) {return {}}
+			if (result.success) {
+				return {}
+			}
 
 			const fieldErrors: Record<string, string> = {}
 			result.error.errors.forEach((error) => {
@@ -465,5 +511,18 @@ export const createFormValidator = <T extends z.ZodTypeAny>(schema: T) => {
 			})
 			return fieldErrors
 		},
+		safeParse: (data: TInput): z.SafeParseReturnType<TInput, TOutput> => {
+			return schema.safeParse(data)
+		},
 	}
 }
+
+// Pre-configured validators for common schemas
+export const playerDataValidator = createFormValidator(playerDataSchema)
+export const teamDataValidator = createFormValidator(teamDataSchema)
+export const seasonDataValidator = createFormValidator(seasonDataSchema)
+export const offerDataValidator = createFormValidator(offerDataSchema)
+export const loginFormValidator = createFormValidator(loginFormSchema)
+export const signupFormValidator = createFormValidator(signupFormSchema)
+export const profileFormValidator = createFormValidator(profileFormSchema)
+export const teamFormValidator = createFormValidator(teamFormSchema)

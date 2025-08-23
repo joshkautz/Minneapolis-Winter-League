@@ -17,8 +17,9 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@dropbox/sign": "^1.10.0",
 		"@hookform/resolvers": "^5.2.1",
-		"@mwl/shared": "file:../shared",
+		"@mwl/shared": "file:../Shared",
 		"@radix-ui/react-accordion": "^1.2.12",
 		"@radix-ui/react-alert-dialog": "^1.1.15",
 		"@radix-ui/react-aspect-ratio": "^1.1.7",

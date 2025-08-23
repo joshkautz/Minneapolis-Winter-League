@@ -8,7 +8,7 @@ import globals from 'globals'
  * This configuration provides consistent linting rules across all packages:
  * - App (React frontend)
  * - Functions (Node.js backend)
- * - shared (TypeScript library)
+ * - Shared (TypeScript library)
  *
  * Rules are balanced for development productivity while maintaining code quality.
  */
@@ -63,7 +63,7 @@ const baseConfig = [
 	},
 ]
 
-// Node.js specific configuration (for Functions and shared)
+// Node.js specific configuration (for Functions and Shared)
 const nodeConfig = {
 	languageOptions: {
 		globals: {

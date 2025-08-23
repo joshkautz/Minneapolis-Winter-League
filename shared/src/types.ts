@@ -3,24 +3,12 @@
  *
  * This module contains all the common data types used across both the frontend (App)
  * and backend (Functions) of the Minneapolis Winter League application.
- *
- * These types ensure consistency between client and server code and provide
- * strong typing for Firebase Firestore document structures.
  */
 
-// Type definitions compatible with both firebase-admin and firebase client SDKs
-export type DocumentData = { [field: string]: unknown }
-export type DocumentReference<_T = DocumentData, _U = DocumentData> = {
-	id: string
-	path: string
-}
-export type Timestamp = {
-	seconds: number
-	nanoseconds: number
-}
+import { DocumentReference, DocumentData, Timestamp } from 'firebase/firestore'
 
 /////////////////////////////////////////////////////////////////
-/////////////////////////// Enums //////////////////////////////
+/////////////////////////// Enums ///////////////////////////////
 /////////////////////////////////////////////////////////////////
 
 export enum Collections {
@@ -50,8 +38,13 @@ export enum OfferType {
 	INCOMING_REQUEST = 'incomingRequest',
 }
 
+export enum GameType {
+	REGULAR = 'regular',
+	PLAYOFF = 'playoff',
+}
+
 /////////////////////////////////////////////////////////////////
-//////////////////////// Core Data Types ///////////////////////
+//////////////////////// Core Data Types ////////////////////////
 /////////////////////////////////////////////////////////////////
 
 /**
@@ -89,7 +82,7 @@ export interface PlayerSeasonData {
 }
 
 /**
- * Team data structure
+ * Team data structure representing a team in the system
  */
 export interface TeamData extends DocumentData {
 	/** URL or path to team logo (nullable) */
@@ -123,7 +116,7 @@ export interface TeamRosterEntry {
 }
 
 /**
- * Season data structure
+ * Season data structure representing a season in the system
  */
 export interface SeasonData extends DocumentData {
 	/** Season end date */
@@ -184,6 +177,8 @@ export interface GameData extends DocumentData {
 	homeScore: number
 	/** Reference to the season this game belongs to */
 	season: DocumentReference<SeasonData, DocumentData>
+	/** Type of game: regular season or playoff */
+	type: GameType
 }
 
 /**
@@ -194,22 +189,6 @@ export interface WaiverData extends DocumentData {
 	player: DocumentReference<PlayerData, DocumentData>
 	/** Dropbox Sign signature request ID (optional) */
 	signatureRequestId?: string
-}
-
-/**
- * Team standings data structure
- */
-export interface StandingsData extends DocumentData {
-	/** Number of wins */
-	wins: number
-	/** Number of losses */
-	losses: number
-	/** Total points scored */
-	pointsFor: number
-	/** Total points allowed */
-	pointsAgainst: number
-	/** Point differential (pointsFor - pointsAgainst) */
-	differential: number
 }
 
 /**
@@ -234,58 +213,6 @@ export interface CheckoutSessionData extends DocumentData {
 	success_url: string
 	/** Checkout session URL */
 	url: string
-}
-
-/////////////////////////////////////////////////////////////////
-/////////////////////// Dropbox Sign Types ////////////////////
-/////////////////////////////////////////////////////////////////
-
-/**
- * Successful Dropbox Sign API response
- */
-export interface DropboxResult {
-	result: {
-		signatureRequestId: string
-		signingUrl: string
-		requesterEmailAddress: string
-	}
-}
-
-/**
- * Dropbox Sign API error response
- */
-export interface DropboxError {
-	error: {
-		message: string
-		name: string
-		statusCode: number
-		statusText: string
-	}
-}
-
-/////////////////////////////////////////////////////////////////
-//////////////////////// Utility Types //////////////////////////
-/////////////////////////////////////////////////////////////////
-
-/**
- * Generic action type for handling user interactions
- */
-export interface OfferAction {
-	type: 'accept' | 'reject' | 'create' | 'cancel'
-	offerId?: string
-	teamId?: string
-	playerId?: string
-}
-
-/**
- * Notification card item properties
- */
-export interface NotificationCardItemProps {
-	title: string
-	description: string
-	timestamp: Timestamp
-	type: 'info' | 'success' | 'warning' | 'error'
-	action?: OfferAction
 }
 
 /////////////////////////////////////////////////////////////////

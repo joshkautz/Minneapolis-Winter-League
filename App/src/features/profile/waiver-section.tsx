@@ -4,12 +4,8 @@ import { Label } from '@/components/ui/label'
 import { CheckCircledIcon, ReloadIcon } from '@radix-ui/react-icons'
 import { toast } from 'sonner'
 import { sendDropboxEmail } from '@/firebase/functions'
-import {
-	DropboxError,
-	DropboxResult,
-	formatTimestamp,
-	SeasonData,
-} from '@/shared/utils'
+import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
+import { formatTimestamp, SeasonData } from '@/shared/utils'
 import { QueryDocumentSnapshot, DocumentData } from '@/firebase/firestore'
 
 interface WaiverSectionProps {
@@ -44,25 +40,37 @@ export const WaiverSection = ({
 
 	const sendDropboxEmailButtonOnClickHandler = useCallback(() => {
 		setDropboxEmailLoading(true)
-		sendDropboxEmail().then((result) => {
-			if ('result' in result.data) {
-				const data: DropboxResult = result.data as DropboxResult
+		sendDropboxEmail()
+			.then((result) => {
+				const data: returnTypeT<SignatureRequestGetResponse> = result.data
 				setDropboxEmailSent(true)
 				setDropboxEmailLoading(false)
 				toast.success('Success', {
-					description: `Email sent to ${data.result.requesterEmailAddress}`,
+					description: `Email sent to ${data.body.signatureRequest?.requesterEmailAddress}`,
 				})
-			}
-
-			if ('error' in result.data) {
-				const data: DropboxError = result.data as DropboxError
+			})
+			.catch((error) => {
+				console.error('Dropbox error:', error)
 				setDropboxEmailSent(false)
 				setDropboxEmailLoading(false)
+
+				// Handle both HttpError from Dropbox SDK and other errors
+				let errorMessage = 'An unknown error occurred'
+
+				if (error?.code === 'functions/unknown' && error?.details) {
+					// Firebase Functions wrapped the HttpError
+					errorMessage = `Dropbox Error: ${error.details.body?.error?.errorMsg || error.message}`
+				} else if (error?.body?.error) {
+					// Direct HttpError from Dropbox
+					errorMessage = `Dropbox Error: ${error.body.error.errorMsg}`
+				} else if (error?.message) {
+					errorMessage = error.message
+				}
+
 				toast.error('Failure', {
-					description: `Dropbox Error: ${data.error.message}`,
+					description: errorMessage,
 				})
-			}
-		})
+			})
 	}, [])
 
 	return (
@@ -77,7 +85,7 @@ export const WaiverSection = ({
 					<span className={'relative flex w-2 h-2 ml-1'}>
 						<span
 							className={'relative inline-flex w-2 h-2 rounded-full bg-primary'}
-						 />
+						/>
 					</span>
 				)}
 			</Label>

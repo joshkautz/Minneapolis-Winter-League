@@ -16,9 +16,9 @@ The shared package is already configured in both App and Functions `package.json
 
 ```json
 {
-  "dependencies": {
-    "@mwl/shared": "file:../shared"
-  }
+	"dependencies": {
+		"@mwl/shared": "file:../Shared"
+	}
 }
 ```
 
@@ -31,15 +31,15 @@ The shared package is already configured in both App and Functions `package.json
 ```typescript
 // Functions/src/index.ts
 interface PlayerData extends DocumentData {
-  admin: boolean;
-  email: string;
-  // ...
+	admin: boolean
+	email: string
+	// ...
 }
 
 interface TeamData extends DocumentData {
-  logo: string;
-  name: string;
-  // ...
+	logo: string
+	name: string
+	// ...
 }
 ```
 
@@ -47,7 +47,7 @@ interface TeamData extends DocumentData {
 
 ```typescript
 // Functions/src/index.ts
-import { PlayerData, TeamData, COLLECTIONS, FIELDS } from "@mwl/shared";
+import { PlayerData, TeamData, COLLECTIONS, FIELDS } from '@mwl/shared'
 ```
 
 ### 2. Update Imports in App
@@ -57,9 +57,9 @@ import { PlayerData, TeamData, COLLECTIONS, FIELDS } from "@mwl/shared";
 ```typescript
 // App/src/shared/utils/interfaces.ts
 export interface PlayerData extends DocumentData {
-  admin: boolean;
-  email: string;
-  // ...
+	admin: boolean
+	email: string
+	// ...
 }
 ```
 
@@ -67,7 +67,7 @@ export interface PlayerData extends DocumentData {
 
 ```typescript
 // App/src/components/SomeComponent.tsx
-import { PlayerData, TeamData, isPlayerData } from "@mwl/shared";
+import { PlayerData, TeamData, isPlayerData } from '@mwl/shared'
 ```
 
 ### 3. Replace Constants
@@ -76,16 +76,16 @@ import { PlayerData, TeamData, isPlayerData } from "@mwl/shared";
 
 ```typescript
 const COLLECTIONS = {
-  SEASONS: "seasons",
-  PLAYERS: "players",
-  // ...
-};
+	SEASONS: 'seasons',
+	PLAYERS: 'players',
+	// ...
+}
 ```
 
 **After:**
 
 ```typescript
-import { COLLECTIONS, FIELDS } from "@mwl/shared";
+import { COLLECTIONS, FIELDS } from '@mwl/shared'
 ```
 
 ### 4. Use Type Guards
@@ -94,19 +94,19 @@ import { COLLECTIONS, FIELDS } from "@mwl/shared";
 
 ```typescript
 // Manual type checking
-if (data && typeof data.admin === "boolean") {
-  // Use data as PlayerData
+if (data && typeof data.admin === 'boolean') {
+	// Use data as PlayerData
 }
 ```
 
 **After:**
 
 ```typescript
-import { isPlayerData } from "@mwl/shared";
+import { isPlayerData } from '@mwl/shared'
 
 if (isPlayerData(data)) {
-  // TypeScript knows data is PlayerData
-  console.log(data.firstname); // Type-safe!
+	// TypeScript knows data is PlayerData
+	console.log(data.firstname) // Type-safe!
 }
 ```
 
@@ -134,35 +134,35 @@ if (isPlayerData(data)) {
 
 ```typescript
 interface PlayerData extends DocumentData {
-  admin: boolean;
-  email: string;
-  firstname: string;
-  lastname: string;
-  seasons: {
-    captain: boolean;
-    paid: boolean;
-    season: DocumentReference<SeasonData, DocumentData>;
-    signed: boolean;
-    team: DocumentReference<TeamData, DocumentData> | null;
-  }[];
+	admin: boolean
+	email: string
+	firstname: string
+	lastname: string
+	seasons: {
+		captain: boolean
+		paid: boolean
+		season: DocumentReference<SeasonData, DocumentData>
+		signed: boolean
+		team: DocumentReference<TeamData, DocumentData> | null
+	}[]
 }
 
 const COLLECTIONS = {
-  SEASONS: "seasons",
-  PLAYERS: "players",
-};
+	SEASONS: 'seasons',
+	PLAYERS: 'players',
+}
 ```
 
 **After (Functions/src/index.ts):**
 
 ```typescript
 import {
-  PlayerData,
-  TeamData,
-  SeasonData,
-  COLLECTIONS,
-  FIELDS,
-} from "@mwl/shared";
+	PlayerData,
+	TeamData,
+	SeasonData,
+	COLLECTIONS,
+	FIELDS,
+} from '@mwl/shared'
 ```
 
 ## Benefits After Migration

@@ -30,103 +30,21 @@ import {
 	DocumentReference,
 	FieldValue,
 	Query,
-	Timestamp,
 	getFirestore,
 } from 'firebase-admin/firestore'
 
-interface PlayerData extends DocumentData {
-	admin: boolean
-	email: string
-	firstname: string
-	lastname: string
-	seasons: {
-		captain: boolean
-		paid: boolean
-		season: DocumentReference<SeasonData, DocumentData>
-		signed: boolean
-		team: DocumentReference<TeamData, DocumentData> | null
-	}[]
-}
-interface TeamData extends DocumentData {
-	logo: string
-	name: string
-	placement: number
-	registered: boolean
-	registeredDate: Timestamp
-	roster: {
-		captain: boolean
-		player: DocumentReference<PlayerData, DocumentData>
-	}[]
-	season: DocumentReference<SeasonData, DocumentData>
-	storagePath: string
-	teamId: string
-}
-
-interface SeasonData extends DocumentData {
-	dateEnd: Timestamp
-	dateStart: Timestamp
-	name: string
-	registrationEnd: Timestamp
-	registrationStart: Timestamp
-	teams: DocumentReference<TeamData, DocumentData>[]
-}
-
-enum OfferCreator {
-	CAPTAIN = 'captain',
-	NONCAPTAIN = 'noncaptain',
-}
-
-enum OfferStatus {
-	PENDING = 'pending',
-	ACCEPTED = 'accepted',
-	REJECTED = 'rejected',
-}
-
-interface OfferData extends DocumentData {
-	creator: OfferCreator
-	creatorName: string
-	player: DocumentReference<PlayerData, DocumentData>
-	status: OfferStatus
-	team: DocumentReference<TeamData, DocumentData>
-}
-
-interface WaiverData extends DocumentData {
-	player: DocumentReference<PlayerData, DocumentData>
-}
-
-interface DropboxResult {
-	result: {
-		signatureRequestId: string
-		signingUrl: string
-		requesterEmailAddress: string
-	}
-}
-
-interface DropboxError {
-	error: {
-		message: string
-		name: string
-		statusCode: number
-		statusText: string
-	}
-}
-
-const REGION = 'us-central1'
-
-const COLLECTIONS = {
-	SEASONS: 'seasons',
-	WAIVERS: 'waivers',
-	OFFERS: 'offers',
-	PLAYERS: 'players',
-}
-
-const FIELDS = {
-	PLAYER: 'player',
-	TEAM: 'team',
-	PAID: 'paid',
-	SIGNED: 'signed',
-	SIGNATUREREQUESTID: 'signatureRequestId',
-}
+// Import shared data structure interfaces and constants only
+import {
+	PlayerData,
+	TeamData,
+	SeasonData,
+	OfferData,
+	WaiverData,
+	OfferStatus,
+	COLLECTIONS,
+	FIELDS,
+	REGION,
+} from '@mwl/shared'
 
 const DROPBOX_SIGN_API_KEY = 'DROPBOX_SIGN_API_KEY'
 const DROPBOX_TEMPLATE_ID = '2ea9b881ec6798e7c6122ebaa51baf50689c573c'
@@ -162,12 +80,12 @@ export const OnUserDeleted = v1
 			const teamsUpdatePromises = playerDocumentReference
 				.get()
 				.then((playerDocumentSnapshot) =>
-					playerDocumentSnapshot.data()?.seasons.map((item) =>
-						item.team?.get().then((teamDocumentSnapshot) =>
+					playerDocumentSnapshot.data()?.seasons.map((item: any) =>
+						item.team?.get().then((teamDocumentSnapshot: any) =>
 							item.team?.update({
 								roster: teamDocumentSnapshot
 									?.data()
-									?.roster.filter((item) => item.player.id !== user.uid),
+									?.roster.filter((item: any) => item.player.id !== user.uid),
 							})
 						)
 					)
@@ -223,23 +141,25 @@ export const OnOfferAccepted = onDocumentUpdated(
 					)
 					.then(([playerDocumentSnapshot, seasonQuerySnapshot]) =>
 						playerDocumentReference.update({
-							seasons: playerDocumentSnapshot.data()?.seasons.map((item) =>
-								item.season.id ==
-								seasonQuerySnapshot.docs
-									.sort(
-										(a, b) =>
-											b.data().dateStart.seconds - a.data().dateStart.seconds
-									)
-									.find((season) => season)?.id
-									? {
-											captain: item.captain,
-											paid: item.paid,
-											season: item.season,
-											signed: item.signed,
-											team: teamDocumentReference,
-										}
-									: item
-							),
+							seasons: playerDocumentSnapshot
+								.data()
+								?.seasons.map((item: any) =>
+									item.season.id ==
+									seasonQuerySnapshot.docs
+										.sort(
+											(a, b) =>
+												b.data().dateStart.seconds - a.data().dateStart.seconds
+										)
+										.find((season) => season)?.id
+										? {
+												captain: item.captain,
+												paid: item.paid,
+												season: item.season,
+												signed: item.signed,
+												team: teamDocumentReference,
+											}
+										: item
+								),
 						})
 					)
 
@@ -809,26 +729,11 @@ export const dropboxSignSendReminderEmail = onCall(
 			})
 			.then((dropboxResponse: returnTypeT<SignatureRequestGetResponse>) => {
 				console.log(dropboxResponse)
-				return {
-					result: {
-						signatureRequestId:
-							dropboxResponse.body.signatureRequest?.signatureRequestId,
-						signingUrl: dropboxResponse.body.signatureRequest?.signingUrl,
-						requesterEmailAddress:
-							dropboxResponse.body.signatureRequest?.requesterEmailAddress,
-					},
-				} as DropboxResult
+				return dropboxResponse
 			})
 			.catch((e: HttpError) => {
 				console.log(e)
-				return {
-					error: {
-						message: e.body.error.errorMsg,
-						name: e.body.error.errorName,
-						statusCode: e.statusCode,
-						statusText: e.response.statusText,
-					},
-				} as DropboxError
+				throw e
 			})
 	}
 )
