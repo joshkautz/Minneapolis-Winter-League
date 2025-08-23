@@ -1,3 +1,4 @@
+// Production configuration
 const config = {
 	apiKey: 'AIzaSyD9BRnmHEKSLpc73jY0FxCWjPbwewblCWE',
 	authDomain: 'winter.mplsmallard.com',

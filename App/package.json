@@ -7,7 +7,9 @@
 		"format": "prettier --check .",
 		"lint": "eslint .",
 		"build": "tsc && vite build",
-		"dev": "vite",
+		"build:staging": "vite build --mode staging",
+		"dev": "vite --mode development",
+		"dev:emulators": "VITE_USE_EMULATORS=true vite --mode development",
 		"test": "vitest",
 		"preview": "vite preview"
 	},

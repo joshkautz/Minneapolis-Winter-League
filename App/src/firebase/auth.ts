@@ -1,14 +1,11 @@
 import {
-	getAuth,
 	User,
 	UserCredential,
 	AuthError,
 	ActionCodeSettings,
 } from 'firebase/auth'
 
-import { app } from './app.ts'
-
-const auth = getAuth(app)
+import { auth } from './app'
 
 export {
 	auth,

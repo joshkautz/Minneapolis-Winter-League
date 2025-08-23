@@ -6,7 +6,6 @@ import {
 	where,
 	getDoc,
 	setDoc,
-	getFirestore,
 	DocumentData,
 	FirestoreError,
 	orderBy,
@@ -27,7 +26,7 @@ import {
 	CollectionReference,
 } from 'firebase/firestore'
 
-import { app } from './app'
+import { firestore } from './app'
 import { User, UserCredential } from './auth'
 import { Products } from './stripe'
 import {
@@ -43,8 +42,6 @@ import {
 } from '@/shared/utils'
 import { deleteImage, ref, storage } from './storage'
 import { v4 as uuidv4 } from 'uuid'
-
-const firestore = getFirestore(app)
 
 const acceptOffer = (
 	offerDocumentReference: DocumentReference<OfferData, DocumentData>

@@ -1,0 +1,328 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // SEASONS [Read]: Always
+    match /seasons/{document=**} {
+      allow get, list:
+      if true;
+    }
+ 
+   	// STANDINGS [Read]: Always
+    match /standings/{document=**} {
+      allow get, list:
+      if true;
+    }
+    
+    // GAMES [Read]: Always
+    match /games/{document=**} {
+      allow get, list:
+      if true;
+    }
+ 
+    // PLAYERS [Read]: Always
+    match /players/{document=**} {
+      allow get, list:
+      if true;
+    }
+    
+    // PLAYERS [Create]:
+    // Authenticated.
+    // Creating their own document.
+    match /players/{uid} {
+      allow create:
+      if request.auth != null &&
+      request.auth.uid == uid
+ 		}
+
+    // PLAYERS [Update]:
+    // Authenticated.
+    // Email is verified.
+    // One of the following:
+    //  - [Player is updating their name]
+    //    - Authenticated user is updating their own document.
+    // 		- Updating only Firstname and Lastname.
+    // 	- [Player is creating their team]
+    // 		- Authenticated user is updating their own document.
+    // 		- Authenticated user is listed as a captain for the team of the player being updated.
+    // 		- Updating only Captain and Team.
+    //		- Team is not null.
+    //		- Captain is not false.
+    // 	- [Player is leaving their team]:
+    // 		- Authenticated user is updating their own document.
+    // 		- Updating only Captain and Team.
+    // 		- Team is null.
+    // 		- Captain is false.
+    // 	- [Player is removed from team]:
+    //    - Authenticated user is listed as a captain for the team of the player being updated.
+    // 		- Updating only Captain and Team.
+    //		- Team is null.
+    //		- Captain is false.
+    // 	- [Player is promoted to captain]:
+    // 		- Authenticated user is listed as a captain for the team of the player being updated.
+    // 		- Updating only Captain.
+    // 	- [Player is demoted from captain]:
+    //      - Authenticated user is updating their own document.
+    // 		  - Authenticated user is listed as a captain for the team of the player being updated.
+    // 		- Updating only Captain.
+    match /players/{uid} {
+      allow update:
+      if request.auth != null &&
+      request.auth.token.email_verified == true
+      // (
+      // 	( // Player is updating their name
+      //     request.auth.uid == uid &&
+      //     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['firstname', 'lastname'])
+      // )
+      //   ||
+      //   ( // Player is creating their team
+      //     request.auth.uid == uid &&
+      // /databases/$(database)/documents/players/$(request.auth.uid) in get(request.resource.data.team).data.captains &&
+      //     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['captain', 'team']) &&
+      //     request.resource.data.team != null &&
+      //     request.resource.data.captain != false
+      //   )
+      //   ||
+      //   ( // Player is leaving their team
+      //   	request.auth.uid == uid &&
+      //   	request.resource.data.diff(resource.data).affectedKeys().hasOnly(['captain', 'team']) &&
+      //     request.resource.data.team == null &&
+      //     request.resource.data.captain == false
+      //   )
+      //   ||
+      //   ( // Player is removed from team
+      // /databases/$(database)/documents/players/$(request.auth.uid) in get(resource.data.team).data.captains &&
+      //   	request.resource.data.diff(resource.data).affectedKeys().hasOnly(['captain', 'team']) &&
+      //     request.resource.data.team == null &&
+      //     request.resource.data.captain == false
+      // )
+      //   ||
+      //   ( // Player is promoted to captain
+      //   	/databases/$(database)/documents/players/$(request.auth.uid) in get(resource.data.team).data.captains &&
+      //     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['captain']) &&
+      //     request.resource.data.captain == true
+      // )
+      //   ||
+      //   ( // Player is demoted from captain
+      //     (
+      //       request.auth.uid == uid ||
+      //       /databases/$(database)/documents/players/$(request.auth.uid) in get(resource.data.team).data.captains
+      //     ) &&
+      //   	request.resource.data.diff(resource.data).affectedKeys().hasOnly(['captain']) &&
+      //     request.resource.data.captain == false
+      // )
+      // )
+    }
+
+    // TEAMS [Read]: Always
+    match /teams/{document=**} {
+      allow get, list:
+      if true;
+    }
+    
+    // TEAMS [Create]:
+    // User is authenticated.
+    // User is email verified.
+    // Authenticated user's captain value is false.
+    // Authenticated user's team value is null.
+    // Authenticated user is listed as a captain for the team.
+    // Authenticated user is listed as a player for the team.
+    // Registered is false.
+    match /teams/{document=**} {
+      allow create:
+      if request.auth != null &&
+      request.auth.token.email_verified == true
+ 			// get(/databases/$(database)/documents/players/$(request.auth.uid)).data.captain == false &&
+ 			// get(/databases/$(database)/documents/players/$(request.auth.uid)).data.team == null &&
+ 			// /databases/$(database)/documents/players/$(request.auth.uid) in request.resource.data.captains &&
+ 			// /databases/$(database)/documents/players/$(request.auth.uid) in request.resource.data.roster &&
+ 			// request.resource.data.registered == false
+ 		}
+    
+		// TEAMS [Update]:
+    // Authenticated.
+    // Email is verified.
+    // 	- [Player is leaving their team, is a Player]:
+    // 		-	Authenticated user was listed as a player for the team being updated.
+    // 		-	Authenticated user is updating only Roster.
+    // 	- [Player is leaving their team, is a Captain]:
+    // 		-	Authenticated user was listed as a captain for the team being updated.
+    // 		-	Authenticated user is updating only Captains and Roster.
+    // 	- [Player is promoted to captain]:
+    // 		-	Authenticated user was listed as a captain for the team being updated.
+    // 		-	Authenticated user is updating only Captains.
+    // 	- [Player is demoted from captain]:
+    // 		-	Authenticated user was listed as a captain for the team being updated.
+    // 		-	Authenticated user is updating only Captains.
+    // 	- [Player is editing their team, is a Captain]:
+    // 		-	Authenticated user was listed as a captain for the team being updated.
+    // 		-	Authenticated user is updating only Logo, Name, StoragePath
+    match /teams/{document=**} {
+      allow update:
+      if request.auth != null &&
+      request.auth.token.email_verified == true
+      // (
+      //   ( // Player is leaving their team, is a Player
+      //     /databases/$(database)/documents/players/$(request.auth.uid) in resource.data.roster &&
+      //     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['roster'])
+      //   )
+      //   ||
+      //   ( // Player is leaving their team, is a Captain
+      //     /databases/$(database)/documents/players/$(request.auth.uid) in resource.data.captains &&
+      //     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['roster', 'captains'])
+      //   )
+      //   ||
+      //   ( // Player is promoted to captain
+      //     /databases/$(database)/documents/players/$(request.auth.uid) in resource.data.captains &&
+      //     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['captains'])
+      //   )
+      //   ||
+      //   ( // Player is demoted from captain
+      //     /databases/$(database)/documents/players/$(request.auth.uid) in resource.data.captains &&
+      //     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['captains'])
+      //   )
+      //   ||
+      //   ( // Player is editing team
+      //     /databases/$(database)/documents/players/$(request.auth.uid) in resource.data.captains &&
+      //     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['logo', 'name', 'storagePath'])
+      //   )
+      // )
+		}
+
+    // TEAMS [Delete]:
+    // Authenticated.
+    // Email is verified.
+    // Authenticated user is listed as a captain for the team.
+    match /teams/{document=**} {
+      allow delete:
+      if request.auth != null &&
+      request.auth.token.email_verified == true &&
+      /databases/$(database)/documents/players/$(request.auth.uid) in resource.data.captains
+ 		}
+
+    // OFFERS [Read]:
+    // Authenticated.
+    // One of the following:
+    //  - Authenticated user is a captain of the team in the Offer.
+    //  - Authenticated user is the player in the Offer.
+    match /offers/{document=**} {
+      allow get, list:
+      if request.auth != null &&
+      (
+      	/databases/$(database)/documents/players/$(request.auth.uid) in get(resource.data.team).data.captains ||
+        request.auth.uid == get(resource.data.player).id
+      )
+    }
+
+    // OFFERS [Create]:
+    // Authenticated.
+    // Email is verified.
+    // The Status is Pending.
+    // One of the following:
+    //  - Authenticated user is a captain of the team in the Offer, and the creator is Captain.
+    //  - Authenticated user is the player in the Offer, and the creator is Player.
+    match /offers/{document=**} {
+      allow create:
+      if request.auth != null &&
+      request.auth.token.email_verified == true &&
+			request.resource.data.status == 'pending' &&
+      (
+        // Authenticated user is a captain of the team in the Offer, and the creator is Captain.
+        (
+					/databases/$(database)/documents/players/$(request.auth.uid) in get(request.resource.data.team).data.captains &&
+          request.resource.data.creator == 'captain'
+        ) ||
+        // Authenticated user is the player in the Offer, and the creator is Player.
+        (
+          request.auth.uid == get(request.resource.data.player).id &&
+          request.resource.data.creator == 'player'
+        )
+      )
+    }
+
+    // OFFERS [Update]:
+    // Authenticated.
+    // Email is verified.
+    // Only Status is updated.
+    // One of the following:
+    //  - Authenticated user is a captain of the team in the Offer, and the creator is Player.
+    //  - Authenticated user is a captain of the team in the Offer, and the creator is Captain, and the status is Rejected.
+    //  - Authenticated user is the player in the Offer, and the creator is Captain.
+    //  - Authenticated user is the player in the Offer, and the creator is Player, and the status is Rejected.
+    match /offers/{document=**} {
+      allow update:
+      if request.auth != null &&
+      request.auth.token.email_verified == true &&
+      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+				(
+          // Authenticated user is a captain of the team in the Offer, and the creator is Player.
+          (
+            /databases/$(database)/documents/players/$(request.auth.uid) in get(resource.data.team).data.captains &&
+            resource.data.creator == 'player'
+          ) ||
+          // Authenticated user is a captain of the team in the Offer, and the creator is Captain, and the status is Rejected.
+          (
+            /databases/$(database)/documents/players/$(request.auth.uid) in get(resource.data.team).data.captains &&
+            resource.data.creator == 'captain' &&
+            request.resource.data.status == 'rejected'
+          ) ||
+          // Authenticated user is the player in the Offer, and the creator is Captain.
+          (
+            request.auth.uid == get(resource.data.player).id &&
+            resource.data.creator == 'captain'
+          ) ||
+          // Authenticated user is the player in the Offer, and the creator is Player, and the status is Rejected.
+          (
+            request.auth.uid == get(resource.data.player).id &&
+            resource.data.creator == 'player' &&
+            request.resource.data.status == 'rejected'
+          )
+        )
+    }
+    
+    // OFFERS [Delete]:
+    // Authenticated.
+    // Email is verified.
+    // [A Captain is deleting their team]:
+    //  - Authenticated user is a captain of the team in the Offer.
+    // [A Player is deleting an offer in which they're involved]:
+    //  - Authenticated user is the player involved in the Offer.
+    match /teams/{document=**} {
+      allow delete:
+      if request.auth != null &&
+      request.auth.token.email_verified == true &&
+      (
+        /databases/$(database)/documents/players/$(request.auth.uid) in get(resource.data.team).data.captains ||
+        /databases/$(database)/documents/players/$(request.auth.uid) == resource.data.player
+      )
+ 		}
+
+    // Invertase Stripe Firebase Extension
+    match /customers/{uid} {
+      allow read: if request.auth.uid == uid;
+
+      match /checkout_sessions/{id} {
+        allow read, write: if request.auth.uid == uid;
+      }
+      match /subscriptions/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+      match /payments/{id} {
+        allow read: if request.auth.uid == uid;
+      }
+    }
+
+    // Invertase Stripe Firebase Extension
+    match /products/{id} {
+      allow read: if true;
+
+      match /prices/{id} {
+        allow read: if true;
+      }
+
+      match /tax_rates/{id} {
+        allow read: if true;
+      }
+    }
+  }
+}

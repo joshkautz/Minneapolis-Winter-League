@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+    
+      // CREATE:
+      // Authenticated.
+      // Email is verified.
+      // Upload is less than 5MB.
+      // Upload is an image.
+      allow create:
+        if request.auth != null &&
+        request.auth.token.email_verified == true &&
+        request.resource.size < 5 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+        
+      // DELETE:
+      // Authenticated.
+      // Email is verified.
+      allow delete:
+        if request.auth != null &&
+        request.auth.token.email_verified == true
+        
+      allow read: if true;
+    }
+  }
+}

@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "minnesota-winter-league"
+    "default": "minnesota-winter-league",
+    "production": "minnesota-winter-league",
+    "development": "minnesota-winter-league-dev",
+    "staging": "minnesota-winter-league-staging"
   }
 }
