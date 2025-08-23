@@ -9,9 +9,9 @@ import { Snowflake } from './snowflake'
  */
 export const WhyJoinSection = () => {
 	return (
-		<div className="border border-transparent bg-foreground dark:bg-background">
+		<div className='border border-transparent bg-foreground dark:bg-background'>
 			<section
-				id="why-join"
+				id='why-join'
 				className={
 					'relative bg-accent text-accent-foreground min-h-[600px] rounded-2xl max-w-[968px] mx-auto -mt-20 p-8 lg:py-16 lg:px-0'
 				}
@@ -57,8 +57,8 @@ export const WhyJoinSection = () => {
 						</span>
 					</div>
 				</div>
-				<div className="absolute right-0 invisible md:visible -bottom-52 2xl:-bottom-52 2xl:-right-32">
-					<Snowflake className="fill-background dark:fill-foreground max-w-[150px] 2xl:max-w-[300px]" />
+				<div className='absolute right-0 invisible md:visible -bottom-52 2xl:-bottom-52 2xl:-right-32'>
+					<Snowflake className='fill-background dark:fill-foreground max-w-[150px] 2xl:max-w-[300px]' />
 				</div>
 			</section>
 		</div>

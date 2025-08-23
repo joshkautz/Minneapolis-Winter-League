@@ -49,7 +49,7 @@ export const EmailVerificationSection = ({
 					<span className={'relative flex w-2 h-2 ml-1'}>
 						<span
 							className={'relative inline-flex w-2 h-2 rounded-full bg-primary'}
-						></span>
+						 />
 					</span>
 				)}
 			</Label>

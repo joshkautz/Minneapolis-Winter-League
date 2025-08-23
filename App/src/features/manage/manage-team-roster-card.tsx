@@ -54,7 +54,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 	const registrationStatus =
 		authenticatedUserSnapshotLoading ||
 		currentSeasonTeamsQuerySnapshotLoading ? (
-			<p className="text-sm text-muted-foreground">Loading...</p>
+			<p className='text-sm text-muted-foreground'>Loading...</p>
 		) : !team?.data().registered ? (
 			<p className={'text-sm text-muted-foreground'}>
 				You need 10 registered players in order to meet the minimum requirement.
@@ -71,7 +71,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 				}
 			>
 				{team?.data().name} is fully registered
-				<CheckCircledIcon className="w-4 h-4" />
+				<CheckCircledIcon className='w-4 h-4' />
 			</p>
 		)
 
@@ -86,7 +86,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 		<div className={'inline-flex items-center gap-2 h-4'}>
 			<p>{team?.data().name}</p>
 			<div className={'h-8 w-8 rounded-full overflow-hidden'}>
-				{!imgLoaded && <Skeleton className="h-[100px] md:h-[250px] md:w-1/4" />}
+				{!imgLoaded && <Skeleton className='h-[100px] md:h-[250px] md:w-1/4' />}
 				<img
 					onError={() => {
 						setImgLoaded(false)

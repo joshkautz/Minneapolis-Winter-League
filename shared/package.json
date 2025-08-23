@@ -11,6 +11,7 @@
 		"format:check": "prettier --check .",
 		"format:fix": "prettier --write .",
 		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
 		"clean": "rm -rf dist"
 	},
 	"devDependencies": {
@@ -23,12 +24,5 @@
 	},
 	"dependencies": {
 		"firebase-admin": "^13.4.0"
-	},
-	"prettier": {
-		"trailingComma": "es5",
-		"semi": false,
-		"singleQuote": true,
-		"useTabs": true,
-		"tabWidth": 2
 	}
 }

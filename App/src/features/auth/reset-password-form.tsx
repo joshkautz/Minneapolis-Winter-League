@@ -87,18 +87,18 @@ export const ResetPasswordForm = ({
 			</CardHeader>
 			<CardContent>
 				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
 						<FormField
 							control={form.control}
-							name="email"
+							name='email'
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Email</FormLabel>
 									<FormControl>
 										<Input
-											type="email"
-											placeholder="Enter your email"
-											autoComplete="email"
+											type='email'
+											placeholder='Enter your email'
+											autoComplete='email'
 											{...field}
 										/>
 									</FormControl>
@@ -106,10 +106,10 @@ export const ResetPasswordForm = ({
 								</FormItem>
 							)}
 						/>
-						<div className="space-y-2">
+						<div className='space-y-2'>
 							<Button
-								type="submit"
-								className="w-full"
+								type='submit'
+								className='w-full'
 								disabled={form.formState.isSubmitting}
 							>
 								{form.formState.isSubmitting
@@ -117,9 +117,9 @@ export const ResetPasswordForm = ({
 									: 'Send reset email'}
 							</Button>
 							<Button
-								type="button"
-								variant="outline"
-								className="w-full"
+								type='button'
+								variant='outline'
+								className='w-full'
 								onClick={onBack}
 							>
 								Back to login

@@ -76,26 +76,26 @@ export const HeroSection = () => {
 	const sparklesCore = useMemo(() => {
 		return (
 			<SparklesCore
-				background="transparent"
+				background='transparent'
 				minSize={0.6}
 				maxSize={1.4}
 				particleDensity={100}
-				className="w-full h-full"
-				particleColor="#FFFFFF"
+				className='w-full h-full'
+				particleColor='#FFFFFF'
 			/>
 		)
 	}, [])
 
 	return (
 		<section
-			id="welcome"
+			id='welcome'
 			className={
 				'h-[80vh] max-h-[620px] relative bg-foreground text-background dark:text-foreground dark:bg-background z-10'
 			}
 		>
-			<div className="container">
-				<div className="flex flex-col items-stretch h-full md:flex-row justify-stretch">
-					<div className="flex-1 mt-8">
+			<div className='container'>
+				<div className='flex flex-col items-stretch h-full md:flex-row justify-stretch'>
+					<div className='flex-1 mt-8'>
 						<div
 							className={'flex flex-col gap-4 pt-2 sm:pt-16 pb-2 max-w-[680px]'}
 						>
@@ -110,7 +110,7 @@ export const HeroSection = () => {
 								'w-[220px] h-1 rounded bg-linear-to-r from-primary to-sky-300'
 							}
 						/>
-						<div className="flex mt-4 sm:mt-12">
+						<div className='flex mt-4 sm:mt-12'>
 							<RegistrationCountdown />
 						</div>
 						{/* TEMPORARILY REMOVING THIS PARAGRAPH */}
@@ -124,10 +124,10 @@ export const HeroSection = () => {
 						</div> */}
 
 						{isLoading ? (
-							<Skeleton className="w-24 mt-8 rounded sm:mt-12 bg-accent h-9" />
+							<Skeleton className='w-24 mt-8 rounded sm:mt-12 bg-accent h-9' />
 						) : (
 							<Button
-								className="z-50 mt-8 sm:mt-12 bg-accent text-foreground hover:bg-accent/90 dark:text-background"
+								className='z-50 mt-8 sm:mt-12 bg-accent text-foreground hover:bg-accent/90 dark:text-background'
 								onClick={handleCallToAction}
 							>
 								{!isAuthenticated
@@ -140,10 +140,10 @@ export const HeroSection = () => {
 					</div>
 				</div>
 			</div>
-			<div className="absolute inset-y-0 right-0 w-full h-screen pointer-events-none md:w-1/2">
+			<div className='absolute inset-y-0 right-0 w-full h-screen pointer-events-none md:w-1/2'>
 				{sparklesCore}
 			</div>
-			<CitySvg className="absolute right-0 bottom-0 w-auto h-full max-h-[400px] -z-10" />
+			<CitySvg className='absolute right-0 bottom-0 w-auto h-full max-h-[400px] -z-10' />
 			<img
 				src={'/snowman.png'}
 				alt={'A snowman shaped like a duck.'}

@@ -39,7 +39,7 @@ export const Teams = () => {
 		<div className={'container'}>
 			<GradientHeader>Teams</GradientHeader>
 			{!selectedSeasonTeamsQuerySnapshot ? (
-				<div className="absolute inset-0 flex items-center justify-center">
+				<div className='absolute inset-0 flex items-center justify-center'>
 					<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
 				</div>
 			) : selectedSeasonTeamsQuerySnapshot.docs.length == 0 ? (
@@ -87,14 +87,14 @@ export const Teams = () => {
 										}
 									>
 										<p className={'flex flex-col flex-nowrap text-ellipsis'}>
-											<span className="text-ellipsis whitespace-nowrap">
+											<span className='text-ellipsis whitespace-nowrap'>
 												{team.data().name}
 											</span>
 											<span
 												className={
 													'max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-primary'
 												}
-											></span>
+											 />
 										</p>
 									</CardContent>
 									<CardFooter>
@@ -106,9 +106,9 @@ export const Teams = () => {
 											{!team.data().registered ? (
 												<p>Registration in progress</p>
 											) : (
-												<div className="inline-flex items-center gap-2 text-green-600 dark:text-green-500">
+												<div className='inline-flex items-center gap-2 text-green-600 dark:text-green-500'>
 													Registered
-													<CheckCircledIcon className="w-4 h-4" />
+													<CheckCircledIcon className='w-4 h-4' />
 												</div>
 											)}
 										</div>

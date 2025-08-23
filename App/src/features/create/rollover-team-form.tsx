@@ -155,12 +155,12 @@ export const RolloverTeamForm = ({
 	)
 
 	return (
-		<div className="inline-flex items-start justify-start w-full space-x-2">
+		<div className='inline-flex items-start justify-start w-full space-x-2'>
 			{!teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot ? (
 				<p>No previous teams eligible for rollover</p>
 			) : (
-				<div className="flex flex-col space-y-6">
-					<div className="space-y-2">
+				<div className='flex flex-col space-y-6'>
+					<div className='space-y-2'>
 						<Label>{`Teams you've captained in the past`}</Label>
 						<Select value={stringValue} onValueChange={handleSeasonChange}>
 							<SelectTrigger>

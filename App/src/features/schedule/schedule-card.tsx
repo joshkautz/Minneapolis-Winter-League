@@ -42,7 +42,7 @@ export const ScheduleCard = ({
 						})}
 				</CardDescription>
 			</CardHeader>
-			<CardContent className="flex flex-col gap-2">
+			<CardContent className='flex flex-col gap-2'>
 				{games
 					.sort((a, b) => a.field - b.field)
 					.map((game, index) => {

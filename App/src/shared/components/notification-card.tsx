@@ -31,10 +31,10 @@ export const NotificationCard = ({
 }) => {
 	return (
 		<Card className={cn('max-w-[888px]', className)}>
-			<CardHeader className="relative">
-				<CardTitle className="select-none">{title}</CardTitle>
+			<CardHeader className='relative'>
+				<CardTitle className='select-none'>{title}</CardTitle>
 				{description && (
-					<CardDescription className="select-none max-w-[600px]">
+					<CardDescription className='select-none max-w-[600px]'>
 						{description}
 					</CardDescription>
 				)}
@@ -42,7 +42,7 @@ export const NotificationCard = ({
 				{searchBar && searchBar}
 			</CardHeader>
 			{scrollArea ? (
-				<ScrollArea className="h-[600px]">
+				<ScrollArea className='h-[600px]'>
 					<CardContent>{children}</CardContent>
 				</ScrollArea>
 			) : (

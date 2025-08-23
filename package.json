@@ -1,40 +1,41 @@
 {
-  "name": "minneapolis-winter-league",
-  "version": "2.0.0",
-  "private": true,
-  "type": "module",
-  "workspaces": [
-    "App",
-    "Functions",
-    "shared"
-  ],
-  "scripts": {
-    "dev": "npm run build:app && npm run emulators:start",
-    "dev:clean": "npm run build:app && npm run emulators:start:clean",
-    "dev:backend": "npm run emulators:backend",
-    "dev:app": "npm run dev --workspace=App",
-    "dev:emulators": "npm run dev:emulators --workspace=App",
-    "build": "npm run build:shared && npm run build:app && npm run build:functions",
-    "build:app": "npm run build --workspace=App",
-    "build:functions": "npm run build --workspace=Functions",
-    "build:shared": "npm run build --workspace=shared",
-    "format": "npm run format --workspace=App && npm run format --workspace=Functions && npm run format --workspace=shared",
-    "format:check": "npm run format:check --workspace=App && npm run format:check --workspace=Functions && npm run format:check --workspace=shared",
-    "format:fix": "npm run format:fix --workspace=App && npm run format:fix --workspace=Functions && npm run format:fix --workspace=shared",
-    "lint": "npm run lint --workspace=App && npm run lint --workspace=Functions && npm run lint --workspace=shared",
-    "test": "npm run test --workspace=App",
-    "emulators:start": "firebase emulators:start --only auth,firestore,storage,hosting --import ./emulator-data --export-on-exit ./emulator-data",
-    "emulators:start:clean": "firebase emulators:start --only auth,firestore,storage,hosting",
-    "emulators:backend": "firebase emulators:start --only auth,firestore,storage --import ./emulator-data --export-on-exit ./emulator-data",
-    "emulators:export": "firebase emulators:export ./emulator-data",
-    "emulators:clear": "rm -rf ./emulator-data && mkdir -p ./emulator-data",
-    "deploy": "firebase deploy",
-    "deploy:hosting": "firebase deploy --only hosting",
-    "deploy:functions": "firebase deploy --only functions",
-    "deploy:firestore": "firebase deploy --only firestore"
-  },
-  "devDependencies": {
-    "firebase-tools": "^14.14.0",
-    "typescript": "^5.9.2"
-  }
+	"name": "minneapolis-winter-league",
+	"version": "2.0.0",
+	"private": true,
+	"type": "module",
+	"workspaces": [
+		"App",
+		"Functions",
+		"shared"
+	],
+	"scripts": {
+		"dev": "npm run build:app && npm run emulators:start",
+		"dev:clean": "npm run build:app && npm run emulators:start:clean",
+		"dev:backend": "npm run emulators:backend",
+		"dev:app": "npm run dev --workspace=App",
+		"dev:emulators": "npm run dev:emulators --workspace=App",
+		"build": "npm run build:shared && npm run build:app && npm run build:functions",
+		"build:app": "npm run build --workspace=App",
+		"build:functions": "npm run build --workspace=Functions",
+		"build:shared": "npm run build --workspace=shared",
+		"format": "npm run format --workspace=App && npm run format --workspace=Functions && npm run format --workspace=shared",
+		"format:check": "npm run format:check --workspace=App && npm run format:check --workspace=Functions && npm run format:check --workspace=shared",
+		"format:fix": "npm run format:fix --workspace=App && npm run format:fix --workspace=Functions && npm run format:fix --workspace=shared",
+		"lint": "npm run lint --workspace=App && npm run lint --workspace=Functions && npm run lint --workspace=shared",
+		"lint:fix": "npm run lint:fix --workspace=App && npm run lint:fix --workspace=Functions && npm run lint:fix --workspace=shared",
+		"test": "npm run test --workspace=App",
+		"emulators:start": "firebase emulators:start --only auth,firestore,storage,hosting --import ./emulator-data --export-on-exit ./emulator-data",
+		"emulators:start:clean": "firebase emulators:start --only auth,firestore,storage,hosting",
+		"emulators:backend": "firebase emulators:start --only auth,firestore,storage --import ./emulator-data --export-on-exit ./emulator-data",
+		"emulators:export": "firebase emulators:export ./emulator-data",
+		"emulators:clear": "rm -rf ./emulator-data && mkdir -p ./emulator-data",
+		"deploy": "firebase deploy",
+		"deploy:hosting": "firebase deploy --only hosting",
+		"deploy:functions": "firebase deploy --only functions",
+		"deploy:firestore": "firebase deploy --only firestore"
+	},
+	"devDependencies": {
+		"firebase-tools": "^14.14.0",
+		"typescript": "^5.9.2"
+	}
 }

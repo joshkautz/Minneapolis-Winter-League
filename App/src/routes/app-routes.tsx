@@ -26,7 +26,7 @@ export const AppRoutes: React.FC = () => {
 	return (
 		<Routes>
 			{/* Main layout routes */}
-			<Route path="/" element={<Layout />}>
+			<Route path='/' element={<Layout />}>
 				{/* Public routes */}
 				<Route
 					index
@@ -37,7 +37,7 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path="/schedule"
+					path='/schedule'
 					element={
 						<PublicRoute>
 							<Schedule />
@@ -45,7 +45,7 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path="/standings"
+					path='/standings'
 					element={
 						<PublicRoute>
 							<Standings />
@@ -53,7 +53,7 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path="/teams"
+					path='/teams'
 					element={
 						<PublicRoute>
 							<Teams />
@@ -61,7 +61,7 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path="/teams/:id"
+					path='/teams/:id'
 					element={
 						<PublicRoute>
 							<TeamProfile />
@@ -71,7 +71,7 @@ export const AppRoutes: React.FC = () => {
 
 				{/* Protected routes */}
 				<Route
-					path="/profile"
+					path='/profile'
 					element={
 						<AuthenticatedRoute>
 							<Profile />
@@ -79,7 +79,7 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path="/create"
+					path='/create'
 					element={
 						<AuthenticatedRoute>
 							<CreateTeam />
@@ -87,7 +87,7 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path="/manage"
+					path='/manage'
 					element={
 						<AuthenticatedRoute>
 							<ManageTeam />
@@ -98,7 +98,7 @@ export const AppRoutes: React.FC = () => {
 
 			{/* Error routes */}
 			<Route
-				path="*"
+				path='*'
 				element={
 					<PublicRoute>
 						<FourOhFour />

@@ -124,12 +124,12 @@ export const optionalImageFileSchema = z
 	.instanceof(File)
 	.optional()
 	.refine((file) => {
-		if (!file) return true
+		if (!file) {return true}
 		const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
 		return allowedTypes.includes(file.type)
 	}, 'Please select a valid image file (JPEG, PNG, GIF, or WebP)')
 	.refine((file) => {
-		if (!file) return true
+		if (!file) {return true}
 		const maxSize = 5 * 1024 * 1024 // 5MB
 		return file.size <= maxSize
 	}, 'Image file must be less than 5MB')
@@ -454,7 +454,7 @@ export const createFormValidator = <T extends z.ZodTypeAny>(schema: T) => {
 		},
 		getFieldErrors: (data: unknown): Record<string, string> => {
 			const result = schema.safeParse(data)
-			if (result.success) return {}
+			if (result.success) {return {}}
 
 			const fieldErrors: Record<string, string> = {}
 			result.error.errors.forEach((error) => {

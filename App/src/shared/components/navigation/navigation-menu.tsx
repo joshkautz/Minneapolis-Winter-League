@@ -10,7 +10,7 @@ interface NavigationMenuProps {
  */
 export const NavigationMenu = ({ items }: NavigationMenuProps) => {
 	return (
-		<nav className="flex items-center justify-start space-x-6 text-sm font-medium flex-1">
+		<nav className='flex items-center justify-start space-x-6 text-sm font-medium flex-1'>
 			{items.map((entry) => (
 				<NavLink
 					key={entry.path}

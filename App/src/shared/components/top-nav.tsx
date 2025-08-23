@@ -28,11 +28,11 @@ export const TopNav = ({ onLoginClick }: { onLoginClick: () => void }) => {
 	} = useTopNavigation()
 
 	return (
-		<header className="sticky top-0 z-50 w-full border-b supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur-sm">
-			<div className="container flex items-center h-14">
+		<header className='sticky top-0 z-50 w-full border-b supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur-sm'>
+			<div className='container flex items-center h-14'>
 				{/* Desktop */}
-				<div className="hidden mr-4 md:flex md:flex-1">
-					<div className="flex items-center justify-between w-full">
+				<div className='hidden mr-4 md:flex md:flex-1'>
+					<div className='flex items-center justify-between w-full'>
 						<NavigationMenu items={navContent} />
 						<UserSection
 							userContent={userContent}
@@ -45,18 +45,18 @@ export const TopNav = ({ onLoginClick }: { onLoginClick: () => void }) => {
 				<Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
 					<SheetTrigger asChild>
 						<Button
-							variant="ghost"
-							className="px-0 mr-2 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+							variant='ghost'
+							className='px-0 mr-2 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden'
 						>
-							<HamburgerMenuIcon className="w-5 h-5" />
-							<span className="sr-only">Toggle Menu</span>
+							<HamburgerMenuIcon className='w-5 h-5' />
+							<span className='sr-only'>Toggle Menu</span>
 						</Button>
 					</SheetTrigger>
 					<VisuallyHidden>
 						<SheetTitle>Mobile nav menu</SheetTitle>
 						<SheetDescription>Mobile nav menu</SheetDescription>
 					</VisuallyHidden>
-					<SheetContent side="top" className="pr-0">
+					<SheetContent side='top' className='pr-0'>
 						<MobileNavigation
 							navItems={navContent}
 							userItems={userContent}

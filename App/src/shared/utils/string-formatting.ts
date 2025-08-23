@@ -34,7 +34,7 @@ export const getInviteMessage = (count: number | undefined): string => {
  * Capitalize first letter of a string
  */
 export const capitalize = (str: string): string => {
-	if (!str) return str
+	if (!str) {return str}
 	return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
 }
 
@@ -53,7 +53,7 @@ export const toTitleCase = (str: string): string => {
  * Truncate string with ellipsis
  */
 export const truncate = (str: string, maxLength: number): string => {
-	if (str.length <= maxLength) return str
+	if (str.length <= maxLength) {return str}
 	return str.slice(0, maxLength - 3) + '...'
 }
 
@@ -61,7 +61,7 @@ export const truncate = (str: string, maxLength: number): string => {
  * Generate initials from a name
  */
 export const getInitials = (firstName: string, lastName?: string): string => {
-	if (!firstName) return ''
+	if (!firstName) {return ''}
 
 	const first = firstName.charAt(0).toUpperCase()
 	const last = lastName ? lastName.charAt(0).toUpperCase() : ''
@@ -76,8 +76,8 @@ export const formatFullName = (
 	firstName: string,
 	lastName?: string
 ): string => {
-	if (!firstName) return ''
-	if (!lastName) return firstName
+	if (!firstName) {return ''}
+	if (!lastName) {return firstName}
 	return `${firstName} ${lastName}`
 }
 
@@ -97,7 +97,7 @@ export const slugify = (str: string): string => {
  * Pluralize a word based on count
  */
 export const pluralize = (word: string, count: number): string => {
-	if (count === 1) return word
+	if (count === 1) {return word}
 
 	// Simple pluralization rules
 	if (word.endsWith('y')) {

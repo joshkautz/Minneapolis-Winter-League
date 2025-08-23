@@ -99,7 +99,7 @@ export const TeamProfile = () => {
 	const registrationStatus = useMemo(
 		() =>
 			isLoading ? (
-				<p className="text-sm text-muted-foreground">Loading...</p>
+				<p className='text-sm text-muted-foreground'>Loading...</p>
 			) : teamDocumentSnapshot?.data()?.registered ? (
 				<p
 					className={
@@ -107,7 +107,7 @@ export const TeamProfile = () => {
 					}
 				>
 					{teamDocumentSnapshot?.data()?.name} is fully registered
-					<CheckCircledIcon className="w-4 h-4" />
+					<CheckCircledIcon className='w-4 h-4' />
 				</p>
 			) : (
 				<p className={'text-sm text-muted-foreground'}>
@@ -126,7 +126,7 @@ export const TeamProfile = () => {
 		<div className={'container'}>
 			<div className={'w-1/2 md:w-1/4 my-8 mx-auto'}>
 				{teamProfileImageLoaded ? null : (
-					<Skeleton className="h-[100px] md:h-[250px] md:w-1/4" />
+					<Skeleton className='h-[100px] md:h-[250px] md:w-1/4' />
 				)}
 				<img
 					onError={() => {
@@ -142,7 +142,7 @@ export const TeamProfile = () => {
 				/>
 			</div>
 
-			<div className="flex justify-center items-start gap-8 flex-wrap max-w-[1040px] mx-auto">
+			<div className='flex justify-center items-start gap-8 flex-wrap max-w-[1040px] mx-auto'>
 				<NotificationCard
 					title={'Roster'}
 					description={
@@ -184,9 +184,9 @@ export const TeamProfile = () => {
 									{gameData.date.toDate().toLocaleDateString()}
 								</TeamRecordRowDate>
 								<TeamRecordRowResult>{result}</TeamRecordRowResult>
-								<div className="flex grow-3 shrink-0 basis-[100px] overflow-hidden text-clip">
+								<div className='flex grow-3 shrink-0 basis-[100px] overflow-hidden text-clip'>
 									<Link
-										className="flex flex-col transition duration-300 group w-max"
+										className='flex flex-col transition duration-300 group w-max'
 										to={
 											opponent == OPPONENT.AWAY
 												? `/teams/${gameData.away.id}`
@@ -200,7 +200,7 @@ export const TeamProfile = () => {
 											: teamsQuerySnapshot?.docs
 													.find((team) => team.id === gameData.home.id)
 													?.data().name}
-										<span className="max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-primary"></span>
+										<span className='max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-primary' />
 									</Link>
 								</div>
 							</TeamRecordRow>

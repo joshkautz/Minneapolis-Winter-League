@@ -23,9 +23,9 @@ export const CreateTeam: React.FC = () => {
 
 	if (isLoading || isSubmitting) {
 		return (
-			<div className="container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10">
-				<div className="absolute inset-0 flex items-center justify-center">
-					<ReloadIcon className="mr-2 h-10 w-10 animate-spin" />
+			<div className='container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10'>
+				<div className='absolute inset-0 flex items-center justify-center'>
+					<ReloadIcon className='mr-2 h-10 w-10 animate-spin' />
 				</div>
 			</div>
 		)
@@ -36,7 +36,7 @@ export const CreateTeam: React.FC = () => {
 			currentSeasonQueryDocumentSnapshot?.data()?.registrationStart
 
 		return (
-			<div className="container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10">
+			<div className='container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10'>
 				<TeamCreationStatusCard
 					isRostered={isRostered}
 					isRegistrationOpen={isRegistrationOpen}
@@ -47,7 +47,7 @@ export const CreateTeam: React.FC = () => {
 	}
 
 	return (
-		<div className="container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10">
+		<div className='container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10'>
 			<GradientHeader>Create a Team</GradientHeader>
 
 			<TeamCreationFormWrapper

@@ -57,13 +57,13 @@ export function isNonEmptyArray<T>(value: unknown): value is T[] {
 }
 
 export function isEmail(value: unknown): value is string {
-	if (!isString(value)) return false
+	if (!isString(value)) {return false}
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 	return emailRegex.test(value)
 }
 
 export function isUrl(value: unknown): value is string {
-	if (!isString(value)) return false
+	if (!isString(value)) {return false}
 	try {
 		new URL(value)
 		return true
@@ -174,7 +174,7 @@ export function hasProperties<K extends string>(
 	obj: unknown,
 	keys: readonly K[]
 ): obj is Record<K, unknown> {
-	if (!isObject(obj)) return false
+	if (!isObject(obj)) {return false}
 	return keys.every((key) => key in obj)
 }
 

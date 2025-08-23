@@ -55,7 +55,7 @@ export const ResultsTable = ({
 
 	return (
 		<Table>
-			<TableCaption></TableCaption>
+			<TableCaption />
 			<TableHeader>
 				<TableRow>
 					<TableHead>Placement</TableHead>
@@ -78,11 +78,11 @@ export const ResultsTable = ({
 						const url = teamData?.logo
 						return (
 							<TableRow key={index}>
-								<TableCell className="font-medium ">{index + 1}</TableCell>
+								<TableCell className='font-medium '>{index + 1}</TableCell>
 								<TableCell>
 									<Link to={`/teams/${team?.id}`}>
-										<div className="flex items-center justify-start gap-2 ">
-											<div className="flex justify-start w-16">
+										<div className='flex items-center justify-start gap-2 '>
+											<div className='flex justify-start w-16'>
 												{url ? (
 													<img
 														className={cn(

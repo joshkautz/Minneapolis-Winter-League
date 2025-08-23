@@ -15,9 +15,9 @@ export const ComponentLoading = ({
 }: ComponentLoadingProps) => {
 	return (
 		<div className={className}>
-			<div className="space-y-2">
+			<div className='space-y-2'>
 				{Array.from({ length: rows }, (_, i) => (
-					<Skeleton key={i} className="h-4 w-full" />
+					<Skeleton key={i} className='h-4 w-full' />
 				))}
 			</div>
 		</div>

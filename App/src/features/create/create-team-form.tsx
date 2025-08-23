@@ -87,7 +87,7 @@ export const CreateTeamForm = ({
 	)
 
 	return (
-		<div className="max-w-[400px]">
+		<div className='max-w-[400px]'>
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onCreateSubmit)}

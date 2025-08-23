@@ -25,19 +25,19 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 		<Tabs
 			value={activeTab}
 			onValueChange={(value) => setActiveTab(value as 'login' | 'signup')}
-			className="min-w-[340px]"
+			className='min-w-[340px]'
 		>
-			<TabsList className="grid w-full grid-cols-2">
-				<TabsTrigger value="login">Login</TabsTrigger>
-				<TabsTrigger value="signup">Sign up</TabsTrigger>
+			<TabsList className='grid w-full grid-cols-2'>
+				<TabsTrigger value='login'>Login</TabsTrigger>
+				<TabsTrigger value='signup'>Sign up</TabsTrigger>
 			</TabsList>
-			<TabsContent value="login">
+			<TabsContent value='login'>
 				<LoginForm
 					onSuccess={onSuccess}
 					onForgotPassword={() => setShowResetPassword(true)}
 				/>
 			</TabsContent>
-			<TabsContent value="signup">
+			<TabsContent value='signup'>
 				<SignupForm onSuccess={onSuccess} />
 			</TabsContent>
 		</Tabs>

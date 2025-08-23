@@ -25,7 +25,7 @@ export const FormSubmitButton = ({
 }: FormSubmitButtonProps) => {
 	return (
 		<Button type={type} disabled={disabled || isLoading} className={className}>
-			{isLoading && <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />}
+			{isLoading && <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />}
 			{isLoading ? loadingText : children}
 		</Button>
 	)

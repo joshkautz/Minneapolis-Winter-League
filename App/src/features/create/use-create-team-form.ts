@@ -68,7 +68,7 @@ export const useCreateTeamForm = ({
 
 	const onSubmit = useCallback(
 		async (data: CreateTeamFormData) => {
-			if (isSubmitting) return
+			if (isSubmitting) {return}
 			setIsSubmitting(true)
 
 			try {

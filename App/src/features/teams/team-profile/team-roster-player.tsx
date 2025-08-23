@@ -43,16 +43,16 @@ export const TeamRosterPlayer = ({
 	return (
 		<div>
 			{playerSnapshot ? (
-				<div className="flex items-end gap-2 py-2">
-					<div className="flex flex-row items-center">
-						<p className="mr-2 select-none">
+				<div className='flex items-end gap-2 py-2'>
+					<div className='flex flex-row items-center'>
+						<p className='mr-2 select-none'>
 							{playerSnapshot.data()?.firstname}{' '}
 							{playerSnapshot.data()?.lastname}{' '}
 						</p>
-						{isPlayerCaptain && <StarFilledIcon className="text-primary" />}
+						{isPlayerCaptain && <StarFilledIcon className='text-primary' />}
 					</div>
-					<div className="flex justify-end flex-1 gap-2">
-						<div className="flex items-center">
+					<div className='flex justify-end flex-1 gap-2'>
+						<div className='flex items-center'>
 							<Badge
 								className={'select-none hover:bg-initial'}
 								variant={
@@ -65,9 +65,9 @@ export const TeamRosterPlayer = ({
 					</div>
 				</div>
 			) : (
-				<div className="flex items-end gap-2 py-2">
-					<div className="mr-2">
-						<Skeleton className="h-4 w-[250px]" />
+				<div className='flex items-end gap-2 py-2'>
+					<div className='mr-2'>
+						<Skeleton className='h-4 w-[250px]' />
 					</div>
 				</div>
 			)}

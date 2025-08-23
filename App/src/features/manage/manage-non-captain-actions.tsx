@@ -78,7 +78,7 @@ export const ManageNonCaptainActions = () => {
 	])
 
 	return (
-		<div className="absolute right-6 top-6">
+		<div className='absolute right-6 top-6'>
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
 					<Button size={'sm'} variant={'ghost'}>
@@ -95,7 +95,7 @@ export const ManageNonCaptainActions = () => {
 							onConfirm={removeFromTeamOnClickHandler}
 						>
 							<DropdownMenuItem
-								className="focus:bg-destructive focus:text-destructive-foreground"
+								className='focus:bg-destructive focus:text-destructive-foreground'
 								onClick={(event) => event.preventDefault()}
 							>
 								Leave team

@@ -15,7 +15,7 @@ export const UserSection = ({
 	onLoginClick,
 }: UserSectionProps) => {
 	return (
-		<div className="flex items-center justify-end flex-1 gap-4">
+		<div className='flex items-center justify-end flex-1 gap-4'>
 			<SeasonSelect />
 			<ThemeToggle />
 			<UserAvatar userContent={userContent} onLoginClick={onLoginClick} />

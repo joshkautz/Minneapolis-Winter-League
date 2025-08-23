@@ -35,7 +35,7 @@ export const ManageTeamDetail = ({
 	)
 
 	return (
-		<div className="flex items-end gap-2 py-2">
+		<div className='flex items-end gap-2 py-2'>
 			<Link to={`/teams/${currentSeasonTeamsQueryDocumentSnapshot.id}`}>
 				<Avatar>
 					<AvatarImage
@@ -51,11 +51,11 @@ export const ManageTeamDetail = ({
 				</Avatar>
 			</Link>
 			<Link to={`/teams/${currentSeasonTeamsQueryDocumentSnapshot.id}`}>
-				<div className="mr-2">
+				<div className='mr-2'>
 					<p>{currentSeasonTeamsQueryDocumentSnapshot.data().name}</p>
 				</div>
 			</Link>
-			<div className="flex justify-end flex-1 gap-2">
+			<div className='flex justify-end flex-1 gap-2'>
 				<Button
 					size={'sm'}
 					variant={'default'}

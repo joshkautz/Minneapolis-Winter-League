@@ -8,7 +8,7 @@ export const ProtectedRoute: React.FC<PropsWithChildren> = ({ children }) => {
 
 	if (authStateLoading) {
 		return (
-			<div className="ring-3 h-[calc(100vh-60px)] w-full items-center justify-center flex">
+			<div className='ring-3 h-[calc(100vh-60px)] w-full items-center justify-center flex'>
 				<ReloadIcon className={'h-10 w-10 animate-spin'} />
 			</div>
 		)

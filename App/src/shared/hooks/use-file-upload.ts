@@ -34,7 +34,7 @@ export const useFileUpload = (
 
 			// For now, handle single file upload (can be extended for multiple files)
 			const file = filesToUpload[0]
-			if (!file) return
+			if (!file) {return}
 
 			// You'll need to provide the storage reference from outside
 			if (!storageRef) {

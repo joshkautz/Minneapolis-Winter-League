@@ -11,7 +11,7 @@ export const ComingSoon = ({
 }) => {
 	return (
 		<Card className={cn('max-w-[800px] w-full mx-auto', className)}>
-			<CardHeader className="items-center justify-center h-40 text-2xl font-bold rounded-t-lg text-background md:h-60 bg-linear-to-r from-primary to-sky-300">
+			<CardHeader className='items-center justify-center h-40 text-2xl font-bold rounded-t-lg text-background md:h-60 bg-linear-to-r from-primary to-sky-300'>
 				Coming Soon
 			</CardHeader>
 			<CardContent>{children}</CardContent>

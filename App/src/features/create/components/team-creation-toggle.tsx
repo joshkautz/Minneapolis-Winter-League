@@ -14,9 +14,9 @@ export const TeamCreationToggle = ({
 	onToggle,
 }: TeamCreationToggleProps) => {
 	return (
-		<div className="flex items-center space-x-2">
-			<Switch id="rollover" checked={rolloverMode} onCheckedChange={onToggle} />
-			<Label htmlFor="rollover">Rollover past team</Label>
+		<div className='flex items-center space-x-2'>
+			<Switch id='rollover' checked={rolloverMode} onCheckedChange={onToggle} />
+			<Label htmlFor='rollover'>Rollover past team</Label>
 		</div>
 	)
 }

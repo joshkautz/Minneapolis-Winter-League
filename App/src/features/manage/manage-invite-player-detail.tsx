@@ -65,7 +65,7 @@ export const ManageInvitePlayerDetail = ({
 	)
 
 	return (
-		<div className="flex items-end gap-2 py-2">
+		<div className='flex items-end gap-2 py-2'>
 			{statusColor && (
 				<span
 					className={cn(
@@ -74,9 +74,9 @@ export const ManageInvitePlayerDetail = ({
 					)}
 				/>
 			)}
-			<div className="mr-2">
+			<div className='mr-2'>
 				<p>{`${playerQueryDocumentSnapshot.data().firstname} ${playerQueryDocumentSnapshot.data().lastname}`}</p>
-				<p className="overflow-hidden text-sm max-h-5 text-muted-foreground">
+				<p className='overflow-hidden text-sm max-h-5 text-muted-foreground'>
 					{`${playerQueryDocumentSnapshot.data().email}`}
 				</p>
 			</div>
@@ -87,7 +87,7 @@ export const ManageInvitePlayerDetail = ({
 					</Badge>
 				</div>
 			)}
-			<div className="flex justify-end flex-1 gap-2">
+			<div className='flex justify-end flex-1 gap-2'>
 				<Button
 					disabled={!offersForPlayerByTeamQuerySnapshot?.empty}
 					size={'sm'}

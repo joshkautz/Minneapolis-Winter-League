@@ -32,15 +32,15 @@ export const FileUploadField = ({
 
 	return (
 		<div className={className}>
-			<Label htmlFor="file-upload">{label}</Label>
+			<Label htmlFor='file-upload'>{label}</Label>
 			<Input
-				id="file-upload"
+				id='file-upload'
 				ref={fileInputRef}
-				type="file"
+				type='file'
 				accept={accept}
 				onChange={handleFileChange}
 				disabled={disabled}
-				className="cursor-pointer"
+				className='cursor-pointer'
 			/>
 		</div>
 	)

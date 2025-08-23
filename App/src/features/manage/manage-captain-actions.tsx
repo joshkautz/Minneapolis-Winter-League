@@ -119,7 +119,7 @@ export const ManageCaptainActions = () => {
 	])
 
 	return (
-		<div className="absolute right-6 top-6">
+		<div className='absolute right-6 top-6'>
 			<DropdownMenu open={open} onOpenChange={setOpen}>
 				<DropdownMenuTrigger asChild>
 					<Button size={'sm'} variant={'ghost'}>
@@ -141,7 +141,7 @@ export const ManageCaptainActions = () => {
 							onConfirm={removeFromTeamOnClickHandler}
 						>
 							<DropdownMenuItem
-								className="focus:bg-destructive focus:text-destructive-foreground"
+								className='focus:bg-destructive focus:text-destructive-foreground'
 								onClick={(event) => event.preventDefault()}
 							>
 								Leave team
@@ -156,7 +156,7 @@ export const ManageCaptainActions = () => {
 							onConfirm={deleteTeamOnClickHandler}
 						>
 							<DropdownMenuItem
-								className="focus:bg-destructive focus:text-destructive-foreground"
+								className='focus:bg-destructive focus:text-destructive-foreground'
 								onClick={(event) => event.preventDefault()}
 							>
 								Delete team

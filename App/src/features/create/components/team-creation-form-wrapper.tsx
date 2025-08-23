@@ -18,8 +18,8 @@ export const TeamCreationFormWrapper = ({
 }: TeamCreationFormWrapperProps) => {
 	return (
 		<NotificationCard
-			className="w-full min-w-0"
-			title="Team Creation Form"
+			className='w-full min-w-0'
+			title='Team Creation Form'
 			description="Create a team to compete in the upcoming season. You can create a new team from scratch, or rollover a team you've captained in a previous season."
 			moreActions={
 				<TeamCreationToggle

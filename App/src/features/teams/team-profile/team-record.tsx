@@ -7,7 +7,7 @@ export const TeamRecordRoot = ({ children }: { children: ReactNode }) => {
 			title={'Record'}
 			className={'flex-1 basis-[360px] shrink-0'}
 		>
-			<div className="flex flex-col items-end gap-2 py-2">{children}</div>
+			<div className='flex flex-col items-end gap-2 py-2'>{children}</div>
 		</NotificationCard>
 	)
 }

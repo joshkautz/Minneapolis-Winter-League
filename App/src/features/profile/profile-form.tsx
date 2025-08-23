@@ -77,7 +77,7 @@ export const ProfileForm = ({
 
 	return (
 		<div className={'max-w-(--breakpoint-md) flex-1 basis-[300px] shrink-0'}>
-			<p className="mb-4 text-xl font-bold">Details</p>
+			<p className='mb-4 text-xl font-bold'>Details</p>
 
 			<Form {...form}>
 				<form
@@ -86,7 +86,7 @@ export const ProfileForm = ({
 				>
 					<FormField
 						control={form.control}
-						name="firstname"
+						name='firstname'
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>First Name</FormLabel>
@@ -102,7 +102,7 @@ export const ProfileForm = ({
 					/>
 					<FormField
 						control={form.control}
-						name="lastname"
+						name='lastname'
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Last Name</FormLabel>
@@ -118,7 +118,7 @@ export const ProfileForm = ({
 					/>
 					<FormField
 						control={form.control}
-						name="email"
+						name='email'
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Email</FormLabel>
@@ -132,7 +132,7 @@ export const ProfileForm = ({
 							</FormItem>
 						)}
 					/>
-					<Button disabled={!form.formState.isDirty} type="submit">
+					<Button disabled={!form.formState.isDirty} type='submit'>
 						Save Changes
 					</Button>
 				</form>

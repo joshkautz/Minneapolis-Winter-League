@@ -21,7 +21,7 @@ const getInitials = (
 	firstName: string | undefined,
 	lastName: string | undefined
 ) => {
-	if (!firstName || !lastName) return 'NA'
+	if (!firstName || !lastName) {return 'NA'}
 	return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
 
@@ -42,7 +42,7 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const userInitials = useMemo(() => {
-		if (!authenticatedUserSnapshot) return 'NA'
+		if (!authenticatedUserSnapshot) {return 'NA'}
 		const data = authenticatedUserSnapshot.data()
 		return getInitials(data?.firstname, data?.lastname)
 	}, [authenticatedUserSnapshot])
@@ -114,13 +114,13 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 
 	// Loading state
 	if (isLoading) {
-		return <ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+		return <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
 	}
 
 	// Not authenticated - show login button
 	if (!authStateUser) {
 		return (
-			<Button variant="default" onClick={onLoginClick}>
+			<Button variant='default' onClick={onLoginClick}>
 				Login
 			</Button>
 		)
@@ -130,32 +130,32 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Avatar className="overflow-visible cursor-pointer">
+				<Avatar className='overflow-visible cursor-pointer'>
 					{(hasPendingOffers || hasRequiredTasks) && (
-						<span className="z-10 absolute bottom-0 right-0 w-2 h-2 rounded-full bg-primary" />
+						<span className='z-10 absolute bottom-0 right-0 w-2 h-2 rounded-full bg-primary' />
 					)}
-					<AvatarFallback className="transition-colors bg-secondary hover:bg-accent dark:hover:text-background uppercase">
+					<AvatarFallback className='transition-colors bg-secondary hover:bg-accent dark:hover:text-background uppercase'>
 						{userInitials}
 					</AvatarFallback>
 				</Avatar>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent className="w-56">
+			<DropdownMenuContent className='w-56'>
 				<DropdownMenuGroup>
 					{userContent.map(({ path, label, alt }) => (
 						<DropdownMenuItem key={path} asChild>
-							<Link to={path} aria-label={alt} className="flex items-center">
+							<Link to={path} aria-label={alt} className='flex items-center'>
 								{path === '/manage' && hasPendingOffers ? (
 									<>
 										{label}
-										<span className="relative flex w-2 h-2 ml-auto">
-											<span className="relative inline-flex w-2 h-2 rounded-full bg-primary" />
+										<span className='relative flex w-2 h-2 ml-auto'>
+											<span className='relative inline-flex w-2 h-2 rounded-full bg-primary' />
 										</span>
 									</>
 								) : path === '/profile' && hasRequiredTasks ? (
 									<>
 										{label}
-										<span className="relative flex w-2 h-2 ml-auto">
-											<span className="relative inline-flex w-2 h-2 rounded-full bg-primary" />
+										<span className='relative flex w-2 h-2 ml-auto'>
+											<span className='relative inline-flex w-2 h-2 rounded-full bg-primary' />
 										</span>
 									</>
 								) : (
@@ -169,11 +169,11 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 				<DropdownMenuItem
 					onClick={handleSignOut}
 					disabled={signOutLoading}
-					className="cursor-pointer"
+					className='cursor-pointer'
 				>
 					{signOutLoading ? (
 						<>
-							<ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+							<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
 							Logging out...
 						</>
 					) : (

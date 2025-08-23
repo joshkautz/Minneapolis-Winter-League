@@ -9,8 +9,8 @@
  */
 
 // Type definitions compatible with both firebase-admin and firebase client SDKs
-export type DocumentData = { [field: string]: any }
-export type DocumentReference<T = DocumentData, U = DocumentData> = {
+export type DocumentData = { [field: string]: unknown }
+export type DocumentReference<_T = DocumentData, _U = DocumentData> = {
 	id: string
 	path: string
 }

@@ -36,18 +36,18 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 				<CardTitle>Sign up</CardTitle>
 				<CardDescription>Create a new account</CardDescription>
 			</CardHeader>
-			<CardContent className="space-y-4">
+			<CardContent className='space-y-4'>
 				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-						<div className="grid grid-cols-2 gap-4">
+					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+						<div className='grid grid-cols-2 gap-4'>
 							<FormField
 								control={form.control}
-								name="firstName"
+								name='firstName'
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>First name</FormLabel>
 										<FormControl>
-											<Input placeholder="Max" {...field} />
+											<Input placeholder='Max' {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -55,12 +55,12 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 							/>
 							<FormField
 								control={form.control}
-								name="lastName"
+								name='lastName'
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Last name</FormLabel>
 										<FormControl>
-											<Input placeholder="Robinson" {...field} />
+											<Input placeholder='Robinson' {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -69,12 +69,12 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 						</div>
 						<FormField
 							control={form.control}
-							name="email"
+							name='email'
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Email</FormLabel>
 									<FormControl>
-										<Input type="email" {...field} />
+										<Input type='email' {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -82,22 +82,22 @@ export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 						/>
 						<FormField
 							control={form.control}
-							name="password"
+							name='password'
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Password</FormLabel>
 									<FormControl>
-										<Input type="password" {...field} />
+										<Input type='password' {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
-						<Button type="submit" className="w-full" disabled={isLoading}>
+						<Button type='submit' className='w-full' disabled={isLoading}>
 							{isLoading ? 'Creating account...' : 'Create account'}
 						</Button>
 						{error && (
-							<p className="text-sm text-red-500 text-center">
+							<p className='text-sm text-red-500 text-center'>
 								{error.message || 'An error occurred during signup'}
 							</p>
 						)}

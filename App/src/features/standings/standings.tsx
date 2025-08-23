@@ -19,10 +19,10 @@ export const Standings = () => {
 	const results = useStandings(playoffGamesQuerySnapshot)
 
 	return (
-		<div className="container">
+		<div className='container'>
 			<GradientHeader>Standings (Regular Season)</GradientHeader>
 			{!regularSeasonGamesQuerySnapshot ? (
-				<div className="absolute inset-0 flex items-center justify-center">
+				<div className='absolute inset-0 flex items-center justify-center'>
 					<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
 				</div>
 			) : Object.keys(standings).length === 0 ? (

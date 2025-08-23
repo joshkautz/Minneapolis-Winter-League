@@ -40,7 +40,7 @@ export const ProfileActions = ({
 }: ProfileActionsProps) => {
 	return (
 		<div className={'max-w-(--breakpoint-md) flex-1 basis-[300px] shrink-0'}>
-			<p className="mb-4 text-xl font-bold">Actions</p>
+			<p className='mb-4 text-xl font-bold'>Actions</p>
 			<div className={'flex flex-col gap-6'}>
 				<EmailVerificationSection
 					isVerified={isVerified}

@@ -83,7 +83,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 	]
 
 	return (
-		<div className="max-w-[600px] flex-1 basis-80 space-y-4">
+		<div className='max-w-[600px] flex-1 basis-80 space-y-4'>
 			<NotificationCard
 				title={'Incoming invites'}
 				description={getInviteMessage(incomingInvites?.length)}

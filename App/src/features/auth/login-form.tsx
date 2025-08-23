@@ -39,17 +39,17 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
 					Enter your email below to log in to your account
 				</CardDescription>
 			</CardHeader>
-			<CardContent className="space-y-4">
+			<CardContent className='space-y-4'>
 				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
 						<FormField
 							control={form.control}
-							name="email"
+							name='email'
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Email</FormLabel>
 									<FormControl>
-										<Input type="email" {...field} />
+										<Input type='email' {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
@@ -57,32 +57,32 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
 						/>
 						<FormField
 							control={form.control}
-							name="password"
+							name='password'
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Password</FormLabel>
 									<FormControl>
-										<Input type="password" {...field} />
+										<Input type='password' {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
-						<Button type="submit" className="w-full" disabled={isLoading}>
+						<Button type='submit' className='w-full' disabled={isLoading}>
 							{isLoading ? 'Logging in...' : 'Log in'}
 						</Button>
 						{error && (
-							<p className="text-sm text-red-500 text-center">
+							<p className='text-sm text-red-500 text-center'>
 								{error.message || 'An error occurred during login'}
 							</p>
 						)}
 					</form>
 				</Form>
-				<div className="text-center text-sm">
+				<div className='text-center text-sm'>
 					<Button
-						variant="link"
+						variant='link'
 						onClick={onForgotPassword}
-						className="px-0 underline"
+						className='px-0 underline'
 					>
 						Forgot your password?
 					</Button>

@@ -34,8 +34,8 @@ export const MobileNavigation = ({
 	authStateLoading,
 }: MobileNavigationProps) => {
 	return (
-		<ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 px-6">
-			<div className="flex flex-col space-y-3">
+		<ScrollArea className='my-4 h-[calc(100vh-8rem)] pb-10 px-6'>
+			<div className='flex flex-col space-y-3'>
 				<SeasonSelect handleCloseMobileNav={onItemClick} />
 				{navItems.map(({ path, label, alt }) => (
 					<Link key={path} to={path} aria-label={alt} onClick={onItemClick}>
@@ -51,20 +51,20 @@ export const MobileNavigation = ({
 								to={path}
 								aria-label={alt}
 								onClick={onItemClick}
-								className="inline-flex"
+								className='inline-flex'
 							>
 								{path === '/manage' && !!hasPendingOffers ? (
 									<>
 										{label}
-										<span className="relative flex w-2 h-2 ml-1">
-											<span className="relative inline-flex w-2 h-2 rounded-full bg-primary"></span>
+										<span className='relative flex w-2 h-2 ml-1'>
+											<span className='relative inline-flex w-2 h-2 rounded-full bg-primary' />
 										</span>
 									</>
 								) : path === '/profile' && hasRequiredTasks ? (
 									<>
 										{label}
-										<span className="relative flex w-2 h-2 ml-1">
-											<span className="relative inline-flex w-2 h-2 rounded-full bg-primary"></span>
+										<span className='relative flex w-2 h-2 ml-1'>
+											<span className='relative inline-flex w-2 h-2 rounded-full bg-primary' />
 										</span>
 									</>
 								) : (
@@ -81,7 +81,7 @@ export const MobileNavigation = ({
 						onClick={onSignOut}
 					>
 						{(signOutLoading || authStateLoading) && (
-							<ReloadIcon className="mr-2 h-4 w-4 animate-spin" />
+							<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
 						)}
 						Log Out
 					</Button>

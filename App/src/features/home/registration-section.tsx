@@ -12,19 +12,19 @@ export const RegistrationSection = () => {
 			}
 		>
 			<section
-				id="how-to-register"
+				id='how-to-register'
 				className={
 					'my-32 flex justify-center md:items-stretch gap-8 flex-col md:flex-row items-center'
 				}
 			>
-				<div className="flex items-center justify-center flex-1 rounded-lg overflow-clip bg-primary dark:bg-secondary max-w-[500px]">
+				<div className='flex items-center justify-center flex-1 rounded-lg overflow-clip bg-primary dark:bg-secondary max-w-[500px]'>
 					<img
-						src="/Map.png"
-						alt="University of Minnesota URW Sports Field Complex Map"
+						src='/Map.png'
+						alt='University of Minnesota URW Sports Field Complex Map'
 					/>
 				</div>
-				<div className="flex flex-col flex-1 gap-2 my-auto max-w-[500px]">
-					<p className="pb-2 text-2xl font-bold">How to Register</p>
+				<div className='flex flex-col flex-1 gap-2 my-auto max-w-[500px]'>
+					<p className='pb-2 text-2xl font-bold'>How to Register</p>
 					<div className={'w-full flex'}>
 						<span
 							className={
@@ -106,8 +106,8 @@ export const RegistrationSection = () => {
 				</p>
 			</div>
 
-			<div className="max-w-[1040px] mx-auto flex items-center justify-start pb-24">
-				<p className="text-2xl font-bold">See you on the field!</p>
+			<div className='max-w-[1040px] mx-auto flex items-center justify-start pb-24'>
+				<p className='text-2xl font-bold'>See you on the field!</p>
 			</div>
 		</div>
 	)

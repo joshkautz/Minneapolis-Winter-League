@@ -42,8 +42,8 @@ export const RegistrationCountdown = () => {
 	// const seconds = remaining ? Math.floor((remaining % MINUTES) / 1000) : '?'
 
 	return (
-		<div className="flex flex-col items-start">
-			<div className="text-3xl font-bold">Registration is closed!</div>
+		<div className='flex flex-col items-start'>
+			<div className='text-3xl font-bold'>Registration is closed!</div>
 			{/* {remaining === undefined ? (
 				<div className="text-3xl font-bold">Registration...</div>
 			) : remaining <= 0 ? (

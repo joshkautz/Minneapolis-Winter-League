@@ -47,9 +47,9 @@ export const SeasonSelect = ({
 	}, [selectedSeasonQueryDocumentSnapshot])
 
 	return (
-		<div className="inline-flex items-center justify-center space-x-2">
+		<div className='inline-flex items-center justify-center space-x-2'>
 			{seasonsQuerySnapshotLoading ? (
-				<Skeleton className="w-24 h-8" />
+				<Skeleton className='w-24 h-8' />
 			) : (
 				<Select value={stringValue} onValueChange={handleSeasonChange}>
 					<SelectTrigger>

@@ -15,16 +15,16 @@ export const LeagueDetailsSection = () => {
 				'w-full min-h-screen bg-background text-foreground dark:text-background dark:bg-foreground'
 			}
 		>
-			<section id="league-details" className={'container pb-40'}>
-				<div className="flex flex-row">
-					<Snowflake className="-mt-32 max-w-[400px] flex-1 basis-[80px] shrink-0 fill-accent z-10 hidden lg:flex" />
+			<section id='league-details' className={'container pb-40'}>
+				<div className='flex flex-row'>
+					<Snowflake className='-mt-32 max-w-[400px] flex-1 basis-[80px] shrink-0 fill-accent z-10 hidden lg:flex' />
 
 					<div className={'flex flex-col flex-2 items-end gap-2 pt-24'}>
 						<p className={'text-4xl font-bold max-w-[800px]'}>
 							Our league is about community, growth, competition, and a whole
 							lot of fun.
 						</p>
-						<div className="max-w-[800px] h-1 w-full flex items-start lg:justify-center justify-start">
+						<div className='max-w-[800px] h-1 w-full flex items-start lg:justify-center justify-start'>
 							<div
 								className={
 									'mr-16 w-full max-w-[300px] lg:max-w-[475px] h-1 rounded bg-linear-to-r from-primary to-sky-300'
@@ -57,9 +57,9 @@ export const LeagueDetailsSection = () => {
 								<p className={'w-16 mr-2 font-bold min-w-16'}>Where:</p>
 								<span>
 									<a
-										href="https://maps.app.goo.gl/avAamyReCbGmz8jWA"
-										target="_blank"
-										rel="noreferrer"
+										href='https://maps.app.goo.gl/avAamyReCbGmz8jWA'
+										target='_blank'
+										rel='noreferrer'
 									>
 										<u>{`University of Minnesota | URW Sports Field Complex`}</u>
 									</a>

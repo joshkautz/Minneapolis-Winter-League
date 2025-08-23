@@ -98,8 +98,8 @@ export const ManageEditTeam = ({
 	}, [team, storage, setStorageRef, ref])
 
 	useEffect(() => {
-		if (!downloadUrl) return
-		if (!editedTeamData) return
+		if (!downloadUrl) {return}
+		if (!editedTeamData) {return}
 		editTeam(
 			team?.ref,
 			editedTeamData.name,
@@ -236,7 +236,7 @@ export const ManageEditTeam = ({
 
 	return (
 		<FocusScope asChild loop trapped>
-			<div className="max-w-[400px]">
+			<div className='max-w-[400px]'>
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit(onSubmit)}
@@ -267,9 +267,9 @@ export const ManageEditTeam = ({
 									<FormLabel>Team logo</FormLabel>
 									<FormControl>
 										<Input
-											id="image-upload"
+											id='image-upload'
 											type={'file'}
-											accept="image/*"
+											accept='image/*'
 											placeholder={'Upload Image'}
 											{...field}
 											onChange={handleFileChange}
@@ -280,15 +280,15 @@ export const ManageEditTeam = ({
 							)}
 						/>
 						{uploadedFile ? (
-							<div className="flex items-center justify-center w-40 h-40 mx-auto rounded-md overflow-clip">
+							<div className='flex items-center justify-center w-40 h-40 mx-auto rounded-md overflow-clip'>
 								<img src={URL.createObjectURL(uploadedFile)} />
 							</div>
 						) : url ? (
-							<div className="flex items-center justify-center w-40 h-40 mx-auto rounded-md overflow-clip">
+							<div className='flex items-center justify-center w-40 h-40 mx-auto rounded-md overflow-clip'>
 								<img src={url} />
 							</div>
 						) : (
-							<Skeleton className="h-[100px] md:h-[250px] md:w-1/4" />
+							<Skeleton className='h-[100px] md:h-[250px] md:w-1/4' />
 						)}
 						<Button type={'submit'} disabled={isLoading}>
 							{isLoading ? (
