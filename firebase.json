@@ -74,9 +74,6 @@
     "firestore": {
       "port": 8080
     },
-    "database": {
-      "port": 9000
-    },
     "hosting": {
       "port": 5005
     },
@@ -88,10 +85,6 @@
     },
     "eventarc": {
       "port": 9299
-    },
-    "dataconnect": {
-      "port": 9399,
-      "dataDir": "dataconnect/.dataconnect/pgliteData"
     },
     "tasks": {
       "port": 9499

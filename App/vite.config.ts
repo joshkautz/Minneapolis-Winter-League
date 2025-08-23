@@ -29,48 +29,6 @@ export default defineConfig({
 	},
 	build: {
 		outDir: 'dist',
-		chunkSizeWarningLimit: 600, // Increase warning limit to account for Firebase chunk
-		rollupOptions: {
-			output: {
-				/**
-				 * Bundle optimization strategy:
-				 * Splits large vendor libraries into separate chunks to improve caching
-				 * and reduce initial bundle size. This helps with:
-				 * - Better browser caching (vendors change less frequently)
-				 * - Faster initial page loads
-				 * - More efficient updates (only changed chunks need re-download)
-				 */
-				manualChunks: (id) => {
-					// React and React-related libraries
-					if (id.includes('react') && !id.includes('firebase')) {
-						return 'react-vendor'
-					}
-
-					// Radix UI components
-					if (id.includes('@radix-ui/')) {
-						return 'radix-ui'
-					}
-
-					// Form libraries
-					if (
-						id.includes('react-hook-form') ||
-						id.includes('@hookform/') ||
-						id.includes('zod')
-					) {
-						return 'forms'
-					}
-
-					// Firebase related
-					if (id.includes('firebase') || id.includes('@firebase/')) {
-						return 'firebase'
-					}
-
-					// Other vendor libraries
-					if (id.includes('node_modules')) {
-						return 'vendor'
-					}
-				},
-			},
-		},
+		chunkSizeWarningLimit: 1000, // Increase limit since we're not splitting chunks as aggressively
 	},
 })
