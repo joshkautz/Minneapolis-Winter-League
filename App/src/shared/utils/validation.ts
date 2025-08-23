@@ -275,19 +275,6 @@ export const paymentDataSchema = z.object({
 	description: z.string().optional(),
 })
 
-// File validation (legacy functions - consider migration to schemas above)
-export const validateImageFile = (file: File): boolean => {
-	return imageFileSchema.safeParse(file).success
-}
-
-export const getFileValidationError = (file: File): string | null => {
-	const result = imageFileSchema.safeParse(file)
-	if (result.success) {
-		return null
-	}
-	return result.error.errors[0]?.message || 'Invalid file'
-}
-
 // API/Data Model Schemas for runtime validation
 import { Timestamp } from 'firebase/firestore'
 

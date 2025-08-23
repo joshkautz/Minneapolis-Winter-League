@@ -1,15 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Timestamp } from '@firebase/firestore'
-import { useUploadFile } from 'react-firebase-hooks/storage'
 import { useAuthContext, useSeasonsContext } from '@/providers'
-import { useLegacyFileUpload } from '@/shared/hooks'
-import { StorageReference } from '@/firebase/storage'
 
 interface TeamCreationData {
 	name: string | undefined
-	storageRef: StorageReference | undefined
 	teamId: string | undefined
 }
 
@@ -36,10 +32,6 @@ interface UseTeamCreationReturn {
 	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 	handleResult: (result: TeamCreationResult) => void
 	toggleRolloverMode: () => void
-	uploadFile: ReturnType<typeof useUploadFile>[0]
-	storageRef: StorageReference | undefined
-	setStorageRef: (ref: StorageReference | undefined) => void
-	downloadUrl: string | undefined
 }
 
 /**
@@ -60,9 +52,6 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 	const [newTeamData, setNewTeamData] = useState<TeamCreationData>()
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 	const [rolloverMode, setRolloverMode] = useState(false)
-
-	const { storageRef, setStorageRef, downloadUrl } = useLegacyFileUpload()
-	const [uploadFile] = useUploadFile()
 
 	const isAdmin = useMemo(
 		() => authenticatedUserSnapshot?.data()?.admin || false,
@@ -128,28 +117,11 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		setRolloverMode((prev) => !prev)
 	}, [])
 
-	// Effect for handling team creation without logo
-	useEffect(() => {
-		if (newTeamData && !newTeamData.storageRef) {
-			// TODO: Implement team creation logic when firebase functions are uncommented
-			console.log('Creating team without logo:', newTeamData)
-		}
-	}, [newTeamData])
-
-	// Effect for handling team creation with logo
-	useEffect(() => {
-		if (newTeamData && storageRef && downloadUrl) {
-			// TODO: Implement team creation logic when firebase functions are uncommented
-			console.log('Creating team with logo:', newTeamData, downloadUrl)
-		}
-	}, [newTeamData, storageRef, downloadUrl])
-
-	// Update storage ref when new team data includes it
-	useEffect(() => {
-		if (newTeamData?.storageRef) {
-			setStorageRef(newTeamData.storageRef)
-		}
-	}, [newTeamData, setStorageRef])
+	// TODO: Implement team creation logic when firebase functions are available
+	// Effect for handling team creation
+	if (newTeamData) {
+		// Team creation logic will be implemented here
+	}
 
 	return {
 		// State
@@ -166,9 +138,5 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		setIsSubmitting,
 		handleResult,
 		toggleRolloverMode,
-		uploadFile,
-		storageRef,
-		setStorageRef,
-		downloadUrl,
 	}
 }

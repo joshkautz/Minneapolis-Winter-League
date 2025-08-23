@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/components/ui/button'
-import { StorageReference, ref, storage } from '@/firebase/storage'
 import { useTeamsContext } from '@/providers'
 import { Label } from '@/components/ui/label'
 import {
@@ -22,7 +20,6 @@ interface RolloverTeamFormProps {
 		React.SetStateAction<
 			| {
 					name: string | undefined
-					storageRef: StorageReference | undefined
 					teamId: string | undefined
 			  }
 			| undefined
@@ -39,11 +36,6 @@ interface RolloverTeamFormProps {
 		description: string
 		navigation: boolean
 	}) => void
-	uploadFile: (
-		ref: StorageReference,
-		blob: Blob,
-		metadata: { contentType: string }
-	) => Promise<{ ref: StorageReference } | undefined>
 }
 
 export const RolloverTeamForm = ({
@@ -51,7 +43,6 @@ export const RolloverTeamForm = ({
 	setIsSubmitting,
 	setNewTeamData,
 	handleResult,
-	uploadFile,
 }: RolloverTeamFormProps) => {
 	const {
 		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
@@ -119,28 +110,10 @@ export const RolloverTeamForm = ({
 	const onRolloverSubmit = useCallback(async () => {
 		try {
 			setIsSubmitting(true)
-			const url = selectedTeamQueryDocumentSnapshot?.data().logo
-			if (url) {
-				fetch(url)
-					.then((response) => response.blob())
-					.then((blob) => {
-						uploadFile(ref(storage, `teams/${uuidv4()}`), blob, {
-							contentType: 'image/jpeg',
-						}).then((result) => {
-							setNewTeamData({
-								name: selectedTeamQueryDocumentSnapshot?.data().name,
-								storageRef: result?.ref,
-								teamId: selectedTeamQueryDocumentSnapshot?.data().teamId,
-							})
-						})
-					})
-			} else {
-				setNewTeamData({
-					name: selectedTeamQueryDocumentSnapshot?.data().name,
-					storageRef: undefined,
-					teamId: selectedTeamQueryDocumentSnapshot?.data().teamId,
-				})
-			}
+			setNewTeamData({
+				name: selectedTeamQueryDocumentSnapshot?.data().name,
+				teamId: selectedTeamQueryDocumentSnapshot?.data().teamId,
+			})
 		} catch (error) {
 			logger.error(
 				'Team rollover failed',
@@ -154,15 +127,14 @@ export const RolloverTeamForm = ({
 			errorHandler.handleValidation(error, 'rollover-team-form', {
 				fallbackMessage: 'Failed to rollover team. Please try again.',
 			})
+		} finally {
+			setIsSubmitting(false)
 		}
 	}, [
 		selectedTeamQueryDocumentSnapshot,
-		uploadFile,
-		ref,
-		storage,
-		uuidv4,
 		setNewTeamData,
 		handleResult,
+		setIsSubmitting,
 	])
 
 	const handleSeasonChange = useCallback(

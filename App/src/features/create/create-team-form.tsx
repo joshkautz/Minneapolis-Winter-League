@@ -7,12 +7,10 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { useForm } from 'react-hook-form'
-import { v4 as uuidv4 } from 'uuid'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { StorageReference, ref, storage } from '@/firebase/storage'
 import { errorHandler, logger } from '@/shared/utils'
 import { teamFormSchema, type TeamFormData } from '@/shared/utils/validation'
 
@@ -25,7 +23,6 @@ interface CreateFormProps {
 		React.SetStateAction<
 			| {
 					name: string | undefined
-					storageRef: StorageReference | undefined
 					teamId: string | undefined
 			  }
 			| undefined
@@ -42,11 +39,6 @@ interface CreateFormProps {
 		description: string
 		navigation: boolean
 	}) => void
-	uploadFile: (
-		ref: StorageReference,
-		blob: Blob,
-		metadata: { contentType: string }
-	) => Promise<{ ref: StorageReference } | undefined>
 }
 
 export const CreateTeamForm = ({
@@ -54,45 +46,19 @@ export const CreateTeamForm = ({
 	setIsSubmitting,
 	setNewTeamData,
 	handleResult,
-	uploadFile,
 }: CreateFormProps) => {
-	const [blob, setBlob] = useState<Blob>()
-
 	const form = useForm<CreateTeamSchema>({
 		resolver: zodResolver(teamFormSchema),
 	})
-
-	const handleFileChange = useCallback(
-		(event: React.ChangeEvent<HTMLInputElement>) => {
-			if (!event.target.files?.[0]) {
-				return
-			}
-			setBlob(event.target.files[0])
-		},
-		[setBlob]
-	)
 
 	const onCreateSubmit = useCallback(
 		async (data: CreateTeamSchema) => {
 			try {
 				setIsSubmitting(true)
-				if (blob) {
-					uploadFile(ref(storage, `teams/${uuidv4()}`), blob, {
-						contentType: 'image/jpeg',
-					}).then((result) => {
-						setNewTeamData({
-							name: data.name,
-							storageRef: result?.ref,
-							teamId: undefined,
-						})
-					})
-				} else {
-					setNewTeamData({
-						name: data.name,
-						storageRef: undefined,
-						teamId: undefined,
-					})
-				}
+				setNewTeamData({
+					name: data.name,
+					teamId: undefined,
+				})
 			} catch (error) {
 				logger.error(
 					'Team creation failed',
@@ -102,13 +68,22 @@ export const CreateTeamForm = ({
 						teamName: data.name,
 					}
 				)
-
-				errorHandler.handleValidation(error, 'create-team-form', {
-					fallbackMessage: 'Failed to create team. Please try again.',
+				errorHandler.handle(
+					error,
+					'unexpected' as any,
+					'CreateTeamForm.onCreateSubmit'
+				)
+				handleResult({
+					success: false,
+					title: 'Creation failed',
+					description: 'Something went wrong. Please try again.',
+					navigation: false,
 				})
+			} finally {
+				setIsSubmitting(false)
 			}
 		},
-		[uploadFile, blob, ref, storage, uuidv4, setNewTeamData, handleResult]
+		[setNewTeamData, handleResult, setIsSubmitting]
 	)
 
 	return (
@@ -129,26 +104,6 @@ export const CreateTeamForm = ({
 										placeholder={'Team name'}
 										{...field}
 										value={field.value ?? ''}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name={'logo'}
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Team logo</FormLabel>
-								<FormControl>
-									<Input
-										id="image-upload"
-										type={'file'}
-										accept="image/*"
-										placeholder={'Upload Image'}
-										{...field}
-										onChange={handleFileChange}
 									/>
 								</FormControl>
 								<FormMessage />

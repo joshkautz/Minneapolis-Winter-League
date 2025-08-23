@@ -793,7 +793,6 @@ const stripeRegistration = async (
 					}
 					if (data.error) {
 						setStripeLoading(false)
-						console.log('setting stripe error')
 						setStripeError(data.error.message)
 					}
 				}

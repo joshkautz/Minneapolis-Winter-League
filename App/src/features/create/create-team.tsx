@@ -19,7 +19,6 @@ export const CreateTeam: React.FC = () => {
 		setIsSubmitting,
 		handleResult,
 		toggleRolloverMode,
-		uploadFile,
 	} = useTeamCreation()
 
 	if (isLoading || isSubmitting) {
@@ -59,7 +58,6 @@ export const CreateTeam: React.FC = () => {
 					<RolloverTeamForm
 						isSubmitting={isSubmitting}
 						setIsSubmitting={setIsSubmitting}
-						uploadFile={uploadFile}
 						setNewTeamData={setNewTeamData}
 						handleResult={handleResult}
 					/>
@@ -67,7 +65,6 @@ export const CreateTeam: React.FC = () => {
 					<CreateTeamForm
 						isSubmitting={isSubmitting}
 						setIsSubmitting={setIsSubmitting}
-						uploadFile={uploadFile}
 						setNewTeamData={setNewTeamData}
 						handleResult={handleResult}
 					/>
