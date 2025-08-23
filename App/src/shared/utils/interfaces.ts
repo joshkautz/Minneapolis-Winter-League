@@ -4,13 +4,12 @@ import {
 	TeamData,
 	SeasonData,
 	OfferData,
-	ExtendedOfferData,
 	CheckoutSessionData,
 	GameData,
 	WaiverData,
-	OfferCreator,
 	OfferStatus,
 	OfferType,
+	OfferDirection,
 	Collections,
 } from '@mwl/shared'
 
@@ -20,11 +19,10 @@ export type {
 	TeamData,
 	SeasonData,
 	OfferData,
-	ExtendedOfferData,
 	CheckoutSessionData,
 	GameData,
 	WaiverData,
 }
 
 // Re-export enums as values (not just types)
-export { OfferCreator, OfferStatus, OfferType, Collections }
+export { OfferStatus, OfferType, OfferDirection, Collections }

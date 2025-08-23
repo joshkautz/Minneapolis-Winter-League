@@ -20,11 +20,6 @@ export enum Collections {
 	WAIVERS = 'waivers',
 }
 
-export enum OfferCreator {
-	CAPTAIN = 'captain',
-	NONCAPTAIN = 'noncaptain',
-}
-
 export enum OfferStatus {
 	PENDING = 'pending',
 	ACCEPTED = 'accepted',
@@ -32,6 +27,11 @@ export enum OfferStatus {
 }
 
 export enum OfferType {
+	REQUEST = 'request',
+	INVITATION = 'invitation',
+}
+
+export enum OfferDirection {
 	OUTGOING_INVITE = 'outgoingInvite',
 	OUTGOING_REQUEST = 'outgoingRequest',
 	INCOMING_INVITE = 'incomingInvite',
@@ -137,25 +137,19 @@ export interface SeasonData extends DocumentData {
  * Offer/invitation data structure
  */
 export interface OfferData extends DocumentData {
-	/** Who created the offer (captain or non-captain) */
-	creator: OfferCreator
+	/** Type of offer: request or invitation */
+	type: OfferType
 	/** Display name of the offer creator */
-	creatorName: string
+	creator: string
 	/** Reference to the player being invited/requested */
 	player: DocumentReference<PlayerData, DocumentData>
+	/** Resolved player name for display (optional, populated by frontend) */
+	playerName: string
 	/** Current status of the offer */
 	status: OfferStatus
 	/** Reference to the team making/receiving the offer */
 	team: DocumentReference<TeamData, DocumentData>
-}
-
-/**
- * Extended offer data with resolved names for display purposes
- */
-export interface ExtendedOfferData extends OfferData {
-	/** Resolved player name for display */
-	playerName: string
-	/** Resolved team name for display */
+	/** Resolved team name for display (optional, populated by frontend) */
 	teamName: string
 }
 
@@ -188,7 +182,7 @@ export interface WaiverData extends DocumentData {
 	/** Reference to the player who signed the waiver */
 	player: DocumentReference<PlayerData, DocumentData>
 	/** Dropbox Sign signature request ID (optional) */
-	signatureRequestId?: string
+	signatureRequestId: string
 }
 
 /**

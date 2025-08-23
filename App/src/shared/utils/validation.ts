@@ -17,7 +17,7 @@
  */
 
 import { z } from 'zod'
-import { OfferCreator, OfferStatus } from '@mwl/shared'
+import { OfferType, OfferStatus } from '@mwl/shared'
 
 // Common validation schemas with advanced features
 export const emailSchema = z
@@ -366,14 +366,16 @@ export const seasonDataSchema = z.object({
 
 // Game/Offer related schemas - using shared enum types
 export const offerStatusSchema = z.nativeEnum(OfferStatus)
-export const offerCreatorSchema = z.nativeEnum(OfferCreator)
+export const offerTypeSchema = z.nativeEnum(OfferType)
 
 export const offerDataSchema = z.object({
-	creator: offerCreatorSchema,
-	creatorName: z.string().min(1),
+	type: offerTypeSchema,
+	creator: z.string().min(1),
 	player: documentRefSchema, // DocumentReference - required
 	status: offerStatusSchema,
 	team: documentRefSchema, // DocumentReference - required
+	playerName: z.string().optional(), // populated by frontend
+	teamName: z.string().optional(), // populated by frontend
 })
 
 // Runtime validation helpers for API responses - with proper typing

@@ -1,10 +1,10 @@
-import { cn, ExtendedOfferData, OfferData, OfferType } from '@/shared/utils'
+import { cn, OfferData, OfferDirection } from '@/shared/utils'
 import { Button } from '@/components/ui/button'
 import { DocumentData, DocumentReference } from '@/firebase/firestore'
 
 export interface NotificationCardItemProps {
-	type: OfferType
-	data: ExtendedOfferData | any
+	type: OfferDirection
+	data: OfferData | any
 	statusColor?: string
 	message?: string
 	actionOptions: {
@@ -34,10 +34,10 @@ export const NotificationCardItem = ({
 			)}
 			<div className='mr-2'>
 				<p>
-					{type === OfferType.OUTGOING_INVITE ||
-					type === OfferType.INCOMING_REQUEST
+					{type === OfferDirection.OUTGOING_INVITE ||
+					type === OfferDirection.INCOMING_REQUEST
 						? data.playerName
-						: data.creatorName}
+						: data.creator}
 				</p>
 				<p className='overflow-hidden text-sm max-h-5 text-muted-foreground'>
 					{`${message} ${data.teamName}`}

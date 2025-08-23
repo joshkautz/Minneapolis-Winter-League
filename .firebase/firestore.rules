@@ -227,15 +227,15 @@ service cloud.firestore {
       request.auth.token.email_verified == true &&
 			request.resource.data.status == 'pending' &&
       (
-        // Authenticated user is a captain of the team in the Offer, and the creator is Captain.
+        // Authenticated user is a captain of the team in the Offer, and the type is invitation.
         (
 					/databases/$(database)/documents/players/$(request.auth.uid) in get(request.resource.data.team).data.captains &&
-          request.resource.data.creator == 'captain'
+          request.resource.data.type == 'invitation'
         ) ||
-        // Authenticated user is the player in the Offer, and the creator is Player.
+        // Authenticated user is the player in the Offer, and the type is request.
         (
           request.auth.uid == get(request.resource.data.player).id &&
-          request.resource.data.creator == 'player'
+          request.resource.data.type == 'request'
         )
       )
     }
@@ -255,26 +255,26 @@ service cloud.firestore {
       request.auth.token.email_verified == true &&
       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
 				(
-          // Authenticated user is a captain of the team in the Offer, and the creator is Player.
+          // Authenticated user is a captain of the team in the Offer, and the type is request.
           (
             /databases/$(database)/documents/players/$(request.auth.uid) in get(resource.data.team).data.captains &&
-            resource.data.creator == 'player'
+            resource.data.type == 'request'
           ) ||
-          // Authenticated user is a captain of the team in the Offer, and the creator is Captain, and the status is Rejected.
+          // Authenticated user is a captain of the team in the Offer, and the type is invitation, and the status is Rejected.
           (
             /databases/$(database)/documents/players/$(request.auth.uid) in get(resource.data.team).data.captains &&
-            resource.data.creator == 'captain' &&
+            resource.data.type == 'invitation' &&
             request.resource.data.status == 'rejected'
           ) ||
-          // Authenticated user is the player in the Offer, and the creator is Captain.
+          // Authenticated user is the player in the Offer, and the type is invitation.
           (
             request.auth.uid == get(resource.data.player).id &&
-            resource.data.creator == 'captain'
+            resource.data.type == 'invitation'
           ) ||
-          // Authenticated user is the player in the Offer, and the creator is Player, and the status is Rejected.
+          // Authenticated user is the player in the Offer, and the type is request, and the status is Rejected.
           (
             request.auth.uid == get(resource.data.player).id &&
-            resource.data.creator == 'player' &&
+            resource.data.type == 'request' &&
             request.resource.data.status == 'rejected'
           )
         )

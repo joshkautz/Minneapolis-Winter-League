@@ -1,13 +1,13 @@
 import { getPlayerSnapshot } from '@/firebase/firestore'
 import { QuerySnapshot, DocumentData } from '@firebase/firestore'
 import { useEffect, useState } from 'react'
-import { ExtendedOfferData, OfferData, TeamData } from '@/shared/utils'
+import { OfferData, TeamData } from '@/shared/utils'
 
 export const useOffer = (
 	offersQuerySnapshot: QuerySnapshot<OfferData, DocumentData> | undefined,
 	teamsQuerySnapshot: QuerySnapshot<TeamData, DocumentData> | undefined
 ) => {
-	const [offers, setOffers] = useState<ExtendedOfferData[] | undefined>()
+	const [offers, setOffers] = useState<OfferData[] | undefined>()
 	const [offersLoading, setOffersLoading] = useState<boolean>(true)
 
 	useEffect(() => {
@@ -31,7 +31,7 @@ export const useOffer = (
 								.find((team) => team.id == offer.data().team.id)
 								?.data().name,
 							ref: offersQuerySnapshot.docs[index].ref,
-						}) as ExtendedOfferData
+						}) as OfferData
 				)
 			)
 		).then((updatedOffers) => {

@@ -1,4 +1,4 @@
-import { ExtendedOfferData, OfferData, OfferType } from '@/shared/utils'
+import { OfferData, OfferDirection } from '@/shared/utils'
 import { NotificationCard } from '@/shared/components'
 import { useOffersContext } from '@/providers'
 import { useOffer } from '@/shared/hooks'
@@ -93,10 +93,10 @@ export const ManageCaptainsOffersPanel = () => {
 						<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
 					</div>
 				) : (
-					incomingRequests?.map((incomingRequest: ExtendedOfferData) => (
+					incomingRequests?.map((incomingRequest: OfferData) => (
 						<NotificationCardItem
 							key={`incomingRequest-row-${incomingRequest.ref.id}`}
-							type={OfferType.INCOMING_REQUEST}
+							type={OfferDirection.INCOMING_REQUEST}
 							data={incomingRequest}
 							statusColor={'bg-primary'}
 							message={'would like to join'}
@@ -114,10 +114,10 @@ export const ManageCaptainsOffersPanel = () => {
 						<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
 					</div>
 				) : (
-					outgoingInvites?.map((outgoingInvite: ExtendedOfferData) => (
+					outgoingInvites?.map((outgoingInvite: OfferData) => (
 						<NotificationCardItem
 							key={`outgoingInvite-row-${outgoingInvite.ref.id}`}
-							type={OfferType.OUTGOING_INVITE}
+							type={OfferDirection.OUTGOING_INVITE}
 							data={outgoingInvite}
 							statusColor={'bg-muted-foreground'}
 							message={'invite sent for'}

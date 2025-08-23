@@ -10,7 +10,7 @@ import {
 	GameData,
 	WaiverData,
 	OfferStatus,
-	OfferCreator,
+	OfferType,
 	Collections,
 } from './types.js'
 
@@ -62,9 +62,9 @@ export function isSeasonData(obj: any): obj is SeasonData {
 export function isOfferData(obj: any): obj is OfferData {
 	return (
 		obj &&
-		Object.values(OfferCreator).includes(obj.creator) &&
+		Object.values(OfferType).includes(obj.type) &&
 		Object.values(OfferStatus).includes(obj.status) &&
-		typeof obj.creatorName === 'string' &&
+		typeof obj.creator === 'string' &&
 		obj.player &&
 		obj.team
 	)
