@@ -1,5 +1,5 @@
 // React
-import { PropsWithChildren, createContext, useContext } from 'react'
+import React, { PropsWithChildren, createContext, useContext } from 'react'
 
 // Firebase Hooks
 import {
@@ -30,7 +30,7 @@ import {
 } from '@/firebase/firestore'
 import { PlayerData } from '@/shared/utils'
 
-interface AuthProps {
+interface AuthContextValue {
 	authStateUser: User | null | undefined
 	authStateLoading: boolean
 	authStateError: Error | undefined
@@ -66,9 +66,16 @@ interface AuthProps {
 	sendPasswordResetEmailSending: boolean
 	sendPasswordResetEmailError: Error | AuthError | undefined
 }
-export const AuthContext = createContext<AuthProps>({} as AuthProps)
 
-export const useAuthContext = () => useContext(AuthContext)
+const AuthContext = createContext<AuthContextValue | null>(null)
+
+export const useAuthContext = (): AuthContextValue => {
+	const context = useContext(AuthContext)
+	if (!context) {
+		throw new Error('useAuthContext must be used within an AuthContextProvider')
+	}
+	return context
+}
 
 export const AuthContextProvider: React.FC<PropsWithChildren> = ({
 	children,
@@ -103,39 +110,35 @@ export const AuthContextProvider: React.FC<PropsWithChildren> = ({
 		sendPasswordResetEmailError,
 	] = useSendPasswordResetEmail(auth)
 
+	const contextValue: AuthContextValue = {
+		authStateUser,
+		authStateLoading,
+		authStateError,
+		authenticatedUserSnapshot: authenticatedUserSnapshot as
+			| DocumentSnapshot<PlayerData, DocumentData>
+			| undefined,
+		authenticatedUserSnapshotLoading,
+		authenticatedUserSnapshotError,
+		createUserWithEmailAndPassword,
+		createUserWithEmailAndPasswordUser,
+		createUserWithEmailAndPasswordLoading,
+		createUserWithEmailAndPasswordError,
+		signInWithEmailAndPassword,
+		signInWithEmailAndPasswordUser,
+		signInWithEmailAndPasswordLoading,
+		signInWithEmailAndPasswordError,
+		signOut,
+		signOutLoading,
+		signOutError,
+		sendEmailVerification,
+		sendEmailVerificationSending,
+		sendEmailVerificationError,
+		sendPasswordResetEmail,
+		sendPasswordResetEmailSending,
+		sendPasswordResetEmailError,
+	}
+
 	return (
-		<AuthContext.Provider
-			value={{
-				authStateUser: authStateUser,
-				authStateLoading: authStateLoading,
-				authStateError: authStateError,
-				authenticatedUserSnapshot: authenticatedUserSnapshot as
-					| DocumentSnapshot<PlayerData, DocumentData>
-					| undefined,
-				authenticatedUserSnapshotLoading: authenticatedUserSnapshotLoading,
-				authenticatedUserSnapshotError: authenticatedUserSnapshotError,
-				createUserWithEmailAndPassword: createUserWithEmailAndPassword,
-				createUserWithEmailAndPasswordUser: createUserWithEmailAndPasswordUser,
-				createUserWithEmailAndPasswordLoading:
-					createUserWithEmailAndPasswordLoading,
-				createUserWithEmailAndPasswordError:
-					createUserWithEmailAndPasswordError,
-				signInWithEmailAndPassword: signInWithEmailAndPassword,
-				signInWithEmailAndPasswordUser: signInWithEmailAndPasswordUser,
-				signInWithEmailAndPasswordLoading: signInWithEmailAndPasswordLoading,
-				signInWithEmailAndPasswordError: signInWithEmailAndPasswordError,
-				signOut: signOut,
-				signOutLoading: signOutLoading,
-				signOutError: signOutError,
-				sendEmailVerification: sendEmailVerification,
-				sendEmailVerificationSending: sendEmailVerificationSending,
-				sendEmailVerificationError: sendEmailVerificationError,
-				sendPasswordResetEmail: sendPasswordResetEmail,
-				sendPasswordResetEmailSending: sendPasswordResetEmailSending,
-				sendPasswordResetEmailError: sendPasswordResetEmailError,
-			}}
-		>
-			{children}
-		</AuthContext.Provider>
+		<AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
 	)
 }

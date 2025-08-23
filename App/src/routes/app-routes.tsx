@@ -1,3 +1,4 @@
+import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from '@/shared/components'
 import { PublicRoute, AuthenticatedRoute } from './route-wrappers'
@@ -15,13 +16,13 @@ import {
 
 /**
  * Application route configuration
- * 
+ *
  * Centralized route definitions with clear separation between:
  * - Public routes (accessible to all users)
  * - Protected routes (require authentication)
  * - Error routes (404, etc.)
  */
-export function AppRoutes() {
+export const AppRoutes: React.FC = () => {
 	return (
 		<Routes>
 			{/* Main layout routes */}

@@ -1,7 +1,13 @@
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
-export const FourOhFour = () => {
+/**
+ * 404 Not Found page component
+ *
+ * Displays a user-friendly error page when a route is not found.
+ */
+export const FourOhFour: React.FC = () => {
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen gap-12 p-4 sm:justify-start sm:p-16">
 			<div

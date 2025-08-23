@@ -16,11 +16,22 @@
 		"noEmit": true,
 		"jsx": "react-jsx",
 
-		/* Linting */
+		/* Linting - Enhanced strict mode (some settings temporarily relaxed) */
 		"strict": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noImplicitOverride": true,
+		"noImplicitAny": true,
+		"noImplicitThis": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"strictBindCallApply": true,
+		"strictPropertyInitialization": true,
+		"useUnknownInCatchVariables": true,
+		// "exactOptionalPropertyTypes": true, // Temporarily disabled - enable gradually
+		// "noUncheckedIndexedAccess": true,   // Temporarily disabled - enable gradually
 
 		"baseUrl": ".",
 		"paths": {

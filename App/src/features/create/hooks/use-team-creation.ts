@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { Timestamp } from '@firebase/firestore'
 import { useUploadFile } from 'react-firebase-hooks/storage'
 import { useAuthContext, useSeasonsContext } from '@/providers'
-import { useFileUpload } from '@/shared/hooks'
+import { useLegacyFileUpload } from '@/shared/hooks'
 import { StorageReference } from '@/firebase/storage'
 
 interface TeamCreationData {
@@ -20,11 +20,33 @@ interface TeamCreationResult {
 	navigation: boolean
 }
 
+interface UseTeamCreationReturn {
+	rolloverMode: boolean
+	isSubmitting: boolean
+	isLoading: boolean
+	isAdmin: boolean
+	isRostered: boolean
+	isRegistrationOpen: boolean
+	currentSeasonQueryDocumentSnapshot: ReturnType<
+		typeof useSeasonsContext
+	>['currentSeasonQueryDocumentSnapshot']
+	setNewTeamData: React.Dispatch<
+		React.SetStateAction<TeamCreationData | undefined>
+	>
+	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
+	handleResult: (result: TeamCreationResult) => void
+	toggleRolloverMode: () => void
+	uploadFile: ReturnType<typeof useUploadFile>[0]
+	storageRef: StorageReference | undefined
+	setStorageRef: (ref: StorageReference | undefined) => void
+	downloadUrl: string | undefined
+}
+
 /**
  * Custom hook for team creation logic
  * Centralizes team creation state and business logic
  */
-export const useTeamCreation = () => {
+export const useTeamCreation = (): UseTeamCreationReturn => {
 	const navigate = useNavigate()
 	const { authenticatedUserSnapshot, authenticatedUserSnapshotLoading } =
 		useAuthContext()
@@ -39,7 +61,7 @@ export const useTeamCreation = () => {
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 	const [rolloverMode, setRolloverMode] = useState(false)
 
-	const { storageRef, setStorageRef, downloadUrl } = useFileUpload()
+	const { storageRef, setStorageRef, downloadUrl } = useLegacyFileUpload()
 	const [uploadFile] = useUploadFile()
 
 	const isAdmin = useMemo(
@@ -145,5 +167,8 @@ export const useTeamCreation = () => {
 		handleResult,
 		toggleRolloverMode,
 		uploadFile,
+		storageRef,
+		setStorageRef,
+		downloadUrl,
 	}
 }

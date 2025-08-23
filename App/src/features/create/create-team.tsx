@@ -1,3 +1,4 @@
+import React from 'react'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { GradientHeader } from '@/shared/components'
 import { CreateTeamForm } from './create-team-form'
@@ -5,7 +6,7 @@ import { RolloverTeamForm } from './rollover-team-form'
 import { TeamCreationStatusCard, TeamCreationFormWrapper } from './components'
 import { useTeamCreation } from './hooks'
 
-export const CreateTeam = () => {
+export const CreateTeam: React.FC = () => {
 	const {
 		rolloverMode,
 		isSubmitting,
@@ -32,14 +33,15 @@ export const CreateTeam = () => {
 	}
 
 	if (isRostered || (!isRegistrationOpen && !isAdmin)) {
+		const registrationStartDate =
+			currentSeasonQueryDocumentSnapshot?.data()?.registrationStart
+
 		return (
 			<div className="container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10">
 				<TeamCreationStatusCard
 					isRostered={isRostered}
 					isRegistrationOpen={isRegistrationOpen}
-					registrationStartDate={
-						currentSeasonQueryDocumentSnapshot?.data()?.registrationStart
-					}
+					{...(registrationStartDate && { registrationStartDate })}
 				/>
 			</div>
 		)

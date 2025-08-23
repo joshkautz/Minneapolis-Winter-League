@@ -1,3 +1,13 @@
+import React, {
+	createContext,
+	Dispatch,
+	ReactNode,
+	SetStateAction,
+	useCallback,
+	useContext,
+	useEffect,
+	useState,
+} from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import {
 	DocumentData,
@@ -6,20 +16,9 @@ import {
 	FirestoreError,
 	QueryDocumentSnapshot,
 } from '@/firebase/firestore'
-import {
-	createContext,
-	Dispatch,
-	FC,
-	ReactNode,
-	SetStateAction,
-	useCallback,
-	useContext,
-	useEffect,
-	useState,
-} from 'react'
 import { SeasonData } from '@/shared/utils'
 
-interface SeasonProps {
+interface SeasonsContextValue {
 	currentSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonData, DocumentData>
 		| undefined
@@ -35,19 +34,23 @@ interface SeasonProps {
 	>
 }
 
-export const SeasonsContext = createContext<SeasonProps>({
-	currentSeasonQueryDocumentSnapshot: undefined,
-	currentSeasonQueryDocumentSnapshotLoading: false,
-	seasonsQuerySnapshot: undefined,
-	seasonsQuerySnapshotLoading: false,
-	seasonsQuerySnapshotError: undefined,
-	selectedSeasonQueryDocumentSnapshot: undefined,
-	setSelectedSeasonQueryDocumentSnapshot: () => {},
-})
+interface SeasonsContextProviderProps {
+	children: ReactNode
+}
 
-export const useSeasonsContext = () => useContext(SeasonsContext)
+const SeasonsContext = createContext<SeasonsContextValue | null>(null)
 
-export const SeasonsContextProvider: FC<{ children: ReactNode }> = ({
+export const useSeasonsContext = (): SeasonsContextValue => {
+	const context = useContext(SeasonsContext)
+	if (!context) {
+		throw new Error(
+			'useSeasonsContext must be used within a SeasonsContextProvider'
+		)
+	}
+	return context
+}
+
+export const SeasonsContextProvider: React.FC<SeasonsContextProviderProps> = ({
 	children,
 }) => {
 	const [
@@ -66,7 +69,9 @@ export const SeasonsContextProvider: FC<{ children: ReactNode }> = ({
 		setCurrentSeasonQueryDocumentSnapshot,
 	] = useState<QueryDocumentSnapshot<SeasonData, DocumentData> | undefined>()
 
-	const getMostRecentSeason = useCallback(() => {
+	const getMostRecentSeason = useCallback(():
+		| QueryDocumentSnapshot<SeasonData, DocumentData>
+		| undefined => {
 		return seasonsQuerySnapshot?.docs
 			.sort((a, b) => b.data().dateStart.seconds - a.data().dateStart.seconds)
 			?.find((season) => season)
@@ -80,18 +85,18 @@ export const SeasonsContextProvider: FC<{ children: ReactNode }> = ({
 		setCurrentSeasonQueryDocumentSnapshot(getMostRecentSeason())
 	}, [setCurrentSeasonQueryDocumentSnapshot, getMostRecentSeason])
 
+	const contextValue: SeasonsContextValue = {
+		currentSeasonQueryDocumentSnapshot,
+		currentSeasonQueryDocumentSnapshotLoading: seasonsQuerySnapshotLoading,
+		seasonsQuerySnapshot,
+		seasonsQuerySnapshotLoading,
+		seasonsQuerySnapshotError,
+		selectedSeasonQueryDocumentSnapshot,
+		setSelectedSeasonQueryDocumentSnapshot,
+	}
+
 	return (
-		<SeasonsContext.Provider
-			value={{
-				currentSeasonQueryDocumentSnapshot,
-				currentSeasonQueryDocumentSnapshotLoading: seasonsQuerySnapshotLoading,
-				seasonsQuerySnapshot,
-				seasonsQuerySnapshotLoading,
-				seasonsQuerySnapshotError,
-				selectedSeasonQueryDocumentSnapshot,
-				setSelectedSeasonQueryDocumentSnapshot,
-			}}
-		>
+		<SeasonsContext.Provider value={contextValue}>
 			{children}
 		</SeasonsContext.Provider>
 	)

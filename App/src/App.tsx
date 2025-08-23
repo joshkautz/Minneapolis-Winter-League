@@ -1,3 +1,4 @@
+import React from 'react'
 import { AppRoutes } from '@/routes'
 import { useEmailVerificationPolling } from '@/shared/hooks'
 
@@ -11,7 +12,7 @@ import { useEmailVerificationPolling } from '@/shared/hooks'
  * This component is now focused solely on application-level orchestration,
  * with route definitions, lazy loading, and auth logic extracted to separate modules.
  */
-function App() {
+const App: React.FC = () => {
 	// Handle email verification polling
 	useEmailVerificationPolling()
 

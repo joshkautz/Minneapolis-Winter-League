@@ -2,7 +2,7 @@ import { lazyImport } from '@/shared/utils'
 
 /**
  * Centralized registry of all lazy-loaded route components
- * 
+ *
  * This keeps all component imports in one place, making it easier to:
  * - Track which components are being lazy-loaded
  * - Update import paths consistently
@@ -28,7 +28,7 @@ export const TeamProfile = lazyImport(
 // Protected routes - require authentication
 export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')
 export const CreateTeam = lazyImport(
-	() => import('@/features/create'),
+	() => import('@/features/create/create-team'),
 	'CreateTeam'
 )
 export const ManageTeam = lazyImport(
@@ -37,7 +37,4 @@ export const ManageTeam = lazyImport(
 )
 
 // Error pages
-export const FourOhFour = lazyImport(
-	() => import('@/pages'),
-	'FourOhFour'
-)
+export const FourOhFour = lazyImport(() => import('@/pages'), 'FourOhFour')
