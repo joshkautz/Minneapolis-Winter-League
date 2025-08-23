@@ -23,6 +23,7 @@ import { useTeamsContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FocusScope } from '@radix-ui/react-focus-scope'
+import { logger, errorHandler, ErrorType } from '@/shared/utils'
 
 const manageEditTeamSchema = z.object({
 	logo: z.string().optional(),
@@ -119,8 +120,13 @@ export const ManageEditTeam = ({
 			})
 			.catch((error) => {
 				setIsLoading(false)
-				toast.error('Error', {
-					description: error.message,
+				logger.error('Edit team with logo failed', error instanceof Error ? error : new Error(String(error)), {
+					component: 'ManageEditTeam',
+					action: 'edit_team_with_logo',
+					teamId: team?.id,
+				})
+				errorHandler.handleFirebase(error, 'edit_team', 'teams', {
+					fallbackMessage: 'Failed to save team changes. Please try again.',
 				})
 			})
 	}, [downloadUrl, editedTeamData, team, editTeam, setIsLoading])
@@ -157,8 +163,13 @@ export const ManageEditTeam = ({
 							})
 							.catch((error) => {
 								setIsLoading(false)
-								toast.error('Error', {
-									description: error.message,
+								logger.error('Edit team (no file) failed', error instanceof Error ? error : new Error(String(error)), {
+									component: 'ManageEditTeam',
+									action: 'edit_team_no_file',
+									teamId: team?.id,
+								})
+								errorHandler.handleFirebase(error, 'edit_team', 'teams', {
+									fallbackMessage: 'Failed to save team changes. Please try again.',
 								})
 							})
 					} else {
@@ -172,19 +183,27 @@ export const ManageEditTeam = ({
 							})
 							.catch((error) => {
 								setIsLoading(false)
-								toast.error('Error', {
-									description: error.message,
+								logger.error('Edit team (else case) failed', error instanceof Error ? error : new Error(String(error)), {
+									component: 'ManageEditTeam',
+									action: 'edit_team_else',
+									teamId: team?.id,
+								})
+								errorHandler.handleFirebase(error, 'edit_team', 'teams', {
+									fallbackMessage: 'Failed to save team changes. Please try again.',
 								})
 							})
 					}
 				}
 			} catch (error) {
-				if (error instanceof Error) {
-					setIsLoading(false)
-					toast.error('Error', {
-						description: error.message,
-					})
-				}
+				setIsLoading(false)
+				logger.error('Edit team general error', error instanceof Error ? error : new Error(String(error)), {
+					component: 'ManageEditTeam',
+					action: 'edit_team_catch',
+					teamId: team?.id,
+				})
+				errorHandler.handle(error, ErrorType.UNEXPECTED, 'ManageEditTeam', {
+					fallbackMessage: 'An unexpected error occurred while saving team changes.',
+				})
 			}
 		},
 		[

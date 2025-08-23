@@ -24,6 +24,7 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
+import { logger, errorHandler } from '@/shared/utils'
 
 export const ManageTeamRosterPlayer = ({
 	playerRef,
@@ -101,6 +102,15 @@ export const ManageTeamRosterPlayer = ({
 				currentSeasonQueryDocumentSnapshot?.ref
 			)
 				.then(() => {
+					logger.userAction('captain_demoted', 'ManageTeamRosterPlayer', {
+						playerId: playerSnapshot?.id,
+						teamId: team?.id,
+						playerName: playerSnapshot?.data()?.firstname,
+					})
+					logger.firebase('demoteFromCaptain', 'teams', undefined, {
+						playerId: playerSnapshot?.id,
+						teamId: team?.id,
+					})
 					toast.success(
 						`${
 							playerSnapshot?.data()?.firstname ?? 'Player'
@@ -112,8 +122,14 @@ export const ManageTeamRosterPlayer = ({
 					)
 				})
 				.catch((error) => {
-					toast.error('Unable to Demote', {
-						description: error.message,
+					logger.error('Demote captain failed', error instanceof Error ? error : new Error(String(error)), {
+						component: 'ManageTeamRosterPlayer',
+						action: 'demote_captain',
+						playerId: playerSnapshot?.id,
+						teamId: team?.id,
+					})
+					errorHandler.handleFirebase(error, 'demote_captain', 'teams', {
+						fallbackMessage: 'Unable to demote captain. Please try again.',
 					})
 				}),
 		[team, playerSnapshot, currentSeasonQueryDocumentSnapshot]
@@ -127,16 +143,30 @@ export const ManageTeamRosterPlayer = ({
 				currentSeasonQueryDocumentSnapshot?.ref
 			)
 				.then(() => {
+					logger.userAction('captain_promoted', 'ManageTeamRosterPlayer', {
+						playerId: playerSnapshot?.id,
+						teamId: team?.id,
+						playerName: playerSnapshot?.data()?.firstname,
+					})
+					logger.firebase('promoteToCaptain', 'teams', undefined, {
+						playerId: playerSnapshot?.id,
+						teamId: team?.id,
+					})
 					toast.success('Congratulations', {
 						description: `${
 							playerSnapshot?.data()?.firstname ?? 'Player'
 						} has been promoted to team captain.`,
 					})
 				})
-				.catch(() => {
-					toast.error('Unable to Promote', {
-						description:
-							'Ensure your email is verified. Please try again later.',
+				.catch((error) => {
+					logger.error('Promote captain failed', error instanceof Error ? error : new Error(String(error)), {
+						component: 'ManageTeamRosterPlayer',
+						action: 'promote_captain',
+						playerId: playerSnapshot?.id,
+						teamId: team?.id,
+					})
+					errorHandler.handleFirebase(error, 'promote_captain', 'teams', {
+						fallbackMessage: 'Unable to promote captain. Ensure your email is verified and try again.',
 					})
 				}),
 		[team, playerSnapshot, currentSeasonQueryDocumentSnapshot]
@@ -157,8 +187,14 @@ export const ManageTeamRosterPlayer = ({
 				)
 			})
 			.catch((error) => {
-				toast.error('Unable to Remove', {
-					description: error.message,
+				logger.error('Remove player failed', error instanceof Error ? error : new Error(String(error)), {
+					component: 'ManageTeamRosterPlayer',
+					action: 'remove_player',
+					playerId: playerSnapshot?.id,
+					teamId: team?.id,
+				})
+				errorHandler.handleFirebase(error, 'remove_player', 'teams', {
+					fallbackMessage: 'Unable to remove player. Please try again.',
 				})
 			})
 	}, [team, playerSnapshot, currentSeasonQueryDocumentSnapshot])

@@ -8,6 +8,7 @@ import { useContext } from 'react'
 import { ThemeContext } from '@/providers'
 import { Button } from '@/components/ui/button'
 import { LaptopIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons'
+import { logger } from '@/shared/utils'
 
 export const ThemeToggle = () => {
 	const themeContext = useContext(ThemeContext)
@@ -17,6 +18,11 @@ export const ThemeToggle = () => {
 	}
 
 	const { setTheme } = themeContext
+
+	const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+		logger.userAction('theme_changed', 'ThemeToggle', { theme })
+		setTheme(theme)
+	}
 
 	return (
 		<DropdownMenu>
@@ -28,15 +34,15 @@ export const ThemeToggle = () => {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuItem onClick={() => setTheme('light')}>
+				<DropdownMenuItem onClick={() => handleThemeChange('light')}>
 					<SunIcon className="w-4 h-4 mr-2" />
 					<span>Light</span>
 				</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => setTheme('dark')}>
+				<DropdownMenuItem onClick={() => handleThemeChange('dark')}>
 					<MoonIcon className="w-4 h-4 mr-2" />
 					<span>Dark</span>
 				</DropdownMenuItem>
-				<DropdownMenuItem onClick={() => setTheme('system')}>
+				<DropdownMenuItem onClick={() => handleThemeChange('system')}>
 					<LaptopIcon className="w-4 h-4 mr-2" />
 					<span>System</span>
 				</DropdownMenuItem>

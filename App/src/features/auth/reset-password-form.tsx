@@ -20,6 +20,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { errorHandler, logger } from '@/shared/utils'
 
 const resetPasswordSchema = z.object({
 	email: z.string().email('Please enter a valid email address'),
@@ -63,8 +64,12 @@ export const ResetPasswordForm = ({
 				})
 			}
 		} catch (error) {
-			toast.error('Failed to send reset email', {
-				description: 'An unexpected error occurred',
+			logger.error('Password reset failed', error instanceof Error ? error : new Error(String(error)), {
+				component: 'ResetPasswordForm',
+				email: data.email,
+			})
+			errorHandler.handleAuth(error, 'password_reset', {
+				fallbackMessage: 'An unexpected error occurred while sending reset email',
 			})
 		}
 	}

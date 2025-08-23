@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { StorageReference, ref, storage } from '@/firebase/storage'
+import { errorHandler, logger } from '@/shared/utils'
 
 const createTeamSchema = z.object({
 	logo: z.string().optional(),
@@ -98,14 +99,14 @@ export const CreateTeamForm = ({
 					})
 				}
 			} catch (error) {
-				if (error instanceof Error) {
-					handleResult({
-						success: false,
-						title: 'Error',
-						description: error.message,
-						navigation: false,
-					})
-				}
+				logger.error('Team creation failed', error instanceof Error ? error : new Error(String(error)), {
+					component: 'CreateTeamForm',
+					teamName: data.name,
+				})
+				
+				errorHandler.handleValidation(error, 'create-team-form', {
+					fallbackMessage: 'Failed to create team. Please try again.',
+				})
 			}
 		},
 		[uploadFile, blob, ref, storage, uuidv4, setNewTeamData, handleResult]

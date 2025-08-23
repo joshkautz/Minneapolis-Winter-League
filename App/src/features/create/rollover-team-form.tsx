@@ -12,7 +12,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { DocumentData, QueryDocumentSnapshot } from '@/firebase/firestore'
-import { TeamData } from '@/shared/utils'
+import { TeamData, errorHandler, logger } from '@/shared/utils'
 import { useSeasonsContext } from '@/providers'
 
 interface RolloverTeamFormProps {
@@ -139,14 +139,14 @@ export const RolloverTeamForm = ({
 				})
 			}
 		} catch (error) {
-			if (error instanceof Error) {
-				handleResult({
-					success: false,
-					title: 'Error',
-					description: error.message,
-					navigation: false,
-				})
-			}
+			logger.error('Team rollover failed', error instanceof Error ? error : new Error(String(error)), {
+				component: 'RolloverTeamForm',
+				teamId: selectedTeamQueryDocumentSnapshot?.data().teamId,
+			})
+			
+			errorHandler.handleValidation(error, 'rollover-team-form', {
+				fallbackMessage: 'Failed to rollover team. Please try again.',
+			})
 		}
 	}, [
 		selectedTeamQueryDocumentSnapshot,

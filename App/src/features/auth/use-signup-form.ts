@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
 import { createPlayer } from '@/firebase/firestore'
+import { logger } from '@/shared/utils'
 
 const signupSchema = z.object({
 	firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -51,6 +52,13 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 			)
 
 			if (credential?.user) {
+				logger.auth('sign_up', true, undefined, credential.user.uid)
+				logger.userAction('account_created', 'SignupForm', { 
+					email: data.email,
+					firstName: data.firstName,
+					lastName: data.lastName
+				})
+
 				// Send email verification
 				sendEmailVerification()
 
@@ -63,10 +71,12 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 					currentSeasonQueryDocumentSnapshot
 				)
 
+				logger.firebase('create', 'players', undefined, { userId: credential.user.uid })
 				toast.success('Account created successfully! Please verify your email.')
 				onSuccess()
 			}
 		} catch (error) {
+			logger.auth('sign_up', false, error instanceof Error ? error : new Error(String(error)))
 			console.error('Signup error:', error)
 			toast.error('Failed to create account. Please try again.')
 		}

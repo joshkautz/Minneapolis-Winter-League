@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
+import { logger } from '@/shared/utils'
 
 const loginSchema = z.object({
 	email: z.string().email('Please enter a valid email address'),
@@ -38,10 +39,13 @@ export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
 			const result = await signInWithEmailAndPassword(data.email, data.password)
 
 			if (result?.user) {
+				logger.auth('sign_in', true, undefined, result.user.uid)
+				logger.userAction('login_success', 'LoginForm', { email: data.email })
 				toast.success('Successfully logged in!')
 				onSuccess()
 			}
 		} catch (error) {
+			logger.auth('sign_in', false, error instanceof Error ? error : new Error(String(error)))
 			console.error('Login error:', error)
 			toast.error('Failed to log in. Please try again.')
 		}

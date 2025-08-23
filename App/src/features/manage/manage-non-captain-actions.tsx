@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
+import { logger, errorHandler } from '@/shared/utils'
 
 export const ManageNonCaptainActions = () => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
@@ -56,8 +57,14 @@ export const ManageNonCaptainActions = () => {
 				)
 			})
 			.catch((error) => {
-				toast.error('Unable to Remove', {
-					description: error.message,
+				logger.error('Leave team failed', error instanceof Error ? error : new Error(String(error)), {
+					component: 'ManageNonCaptainActions',
+					action: 'leave_team',
+					teamId: teamQueryDocumentSnapshot?.id,
+					userId: authenticatedUserSnapshot?.id,
+				})
+				errorHandler.handleFirebase(error, 'leave_team', 'teams', {
+					fallbackMessage: 'Unable to leave team. Please try again.',
 				})
 			})
 	}, [

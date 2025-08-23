@@ -15,6 +15,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { errorHandler, logger } from '@/shared/utils'
 
 const getInitials = (
 	firstName: string | undefined,
@@ -97,8 +98,12 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 				})
 			}
 		} catch (error) {
-			toast.error('Failed to log out', {
-				description: 'An unexpected error occurred.',
+			logger.error('Sign out failed', error instanceof Error ? error : new Error(String(error)), {
+				component: 'UserAvatar',
+				userId: authStateUser?.uid,
+			})
+			errorHandler.handleAuth(error, 'sign_out', {
+				fallbackMessage: 'An unexpected error occurred while signing out',
 			})
 		}
 	}

@@ -13,6 +13,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ManageEditTeamDialog } from './manage-edit-team-dialog'
+import { errorHandler, logger } from '@/shared/utils'
 import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
 
@@ -49,13 +50,25 @@ export const ManageCaptainActions = () => {
 			currentSeasonQueryDocumentSnapshot?.ref
 		)
 			.then(() => {
+				logger.userAction('team_left', 'ManageCaptainActions', {
+					teamId: teamQueryDocumentSnapshot?.id,
+					userId: authenticatedUserSnapshot?.id,
+				})
+				logger.firebase('removeFromTeam', 'teams', undefined, {
+					teamId: teamQueryDocumentSnapshot?.id,
+				})
 				toast.success('Success', {
 					description: 'You have left the team.',
 				})
 			})
 			.catch((error) => {
-				toast.error('Failure', {
-					description: error.message,
+				logger.error('Leave team failed', error instanceof Error ? error : new Error(String(error)), {
+					component: 'ManageCaptainActions',
+					action: 'leave_team',
+					teamId: teamQueryDocumentSnapshot?.id,
+				})
+				errorHandler.handleFirebase(error, 'leave_team', 'teams', {
+					fallbackMessage: 'Failed to leave team. Please try again.',
 				})
 			})
 	}, [
@@ -70,13 +83,25 @@ export const ManageCaptainActions = () => {
 			currentSeasonQueryDocumentSnapshot?.ref
 		)
 			.then(() => {
+				logger.userAction('team_deleted', 'ManageCaptainActions', {
+					teamId: teamQueryDocumentSnapshot?.id,
+					userId: authenticatedUserSnapshot?.id,
+				})
+				logger.firebase('deleteTeam', 'teams', undefined, {
+					teamId: teamQueryDocumentSnapshot?.id,
+				})
 				toast.success('Success', {
 					description: 'Team has been deleted.',
 				})
 			})
 			.catch((error) => {
-				toast.error('Failure', {
-					description: error.message,
+				logger.error('Delete team failed', error instanceof Error ? error : new Error(String(error)), {
+					component: 'ManageCaptainActions',
+					action: 'delete_team',
+					teamId: teamQueryDocumentSnapshot?.id,
+				})
+				errorHandler.handleFirebase(error, 'delete_team', 'teams', {
+					fallbackMessage: 'Failed to delete team. Please try again.',
 				})
 			})
 	}, [

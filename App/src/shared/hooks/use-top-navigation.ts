@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
 import { useAuthContext, useOffersContext, useSeasonsContext } from '@/providers'
+import { logger } from '@/shared/utils'
 
 /**
  * Custom hook for top navigation logic
@@ -114,6 +115,9 @@ export const useTopNavigation = () => {
 		try {
 			const success = await signOut()
 			if (success) {
+				logger.userAction('sign_out_success', 'TopNavigation', {
+					userId: authStateUser?.uid,
+				})
 				toast.success('Logged Out', {
 					description: 'You are no longer signed in to an account.',
 				})
@@ -128,7 +132,7 @@ export const useTopNavigation = () => {
 				description: 'An unexpected error occurred.',
 			})
 		}
-	}, [signOut, handleCloseMobileNav])
+	}, [signOut, handleCloseMobileNav, authStateUser])
 
 	const handleMobileLogin = useCallback((onLoginClick: () => void) => {
 		onLoginClick()
