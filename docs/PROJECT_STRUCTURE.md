@@ -1,52 +1,68 @@
 # Project Structure
 
-This Firebase project follows modern best practices for full-stack TypeScript development with clear separation between frontend (React), backend (Cloud Functions), and shared type definitions.
+This Firebase project follows modern best practices for full-stack TypeScript development with a **Functions-first security architecture**. The structure clearly separates frontend (React), backend (Cloud Functions), shared types, and comprehensive documentation.
 
 ## Overall Project Structure
 
 ```text
 Minneapolis-Winter-League/
-├── App/                    # React frontend application
-├── Functions/              # Firebase Cloud Functions
-├── Shared/                 # Shared TypeScript types and utilities
-├── docs/                   # Project documentation
-├── emulator-data/          # Firebase emulator data
-├── firebase.json           # Firebase configuration
-├── package.json            # Root workspace configuration
-└── README.md              # Project overview
+├── App/                    # React frontend application (client-side)
+├── Functions/              # Firebase Cloud Functions (server-side business logic)
+├── Shared/                 # Shared TypeScript types and validation (@mwl/shared)
+├── docs/                   # Comprehensive project documentation
+├── emulator-data/          # Firebase emulator test data
+├── firebase.json           # Firebase project configuration
+├── firestore.rules        # Firestore security rules (Functions-only writes)
+├── package.json           # Root workspace configuration
+└── README.md              # Project overview and quick start
 ```
+
+## Security Architecture Overview
+
+### Functions-First Design
+
+- **All write operations** handled by secure Firebase Functions
+- **Client-side code** limited to read operations and Function calls
+- **Firestore rules** deny all direct writes, forcing Function usage
+- **Server-side validation** with comprehensive error handling
 
 ## Frontend Application Structure (App/)
 
 ```text
 App/
 ├── src/
-│   ├── components/ui/          # shadcn/ui components (Radix UI primitives)
+│   ├── components/ui/          # shadcn/ui components (Radix UI + Tailwind)
 │   ├── features/              # Feature-based organization
-│   │   ├── auth/             # Authentication feature
-│   │   ├── home/             # Home page components
-│   │   ├── teams/            # Teams management
-│   │   ├── profile/          # User profile
-│   │   ├── schedule/         # Game schedule
-│   │   ├── standings/        # League standings
-│   │   ├── create/           # Team creation
-│   │   ├── manage/           # Team management
+│   │   ├── auth/             # Authentication & user management
+│   │   ├── home/             # Landing page & league information
+│   │   ├── teams/            # Team browsing & information
+│   │   ├── profile/          # User profile & account management
+│   │   ├── schedule/         # Game schedule & results
+│   │   ├── standings/        # League standings & statistics
+│   │   ├── create/           # Secure team creation via Functions
+│   │   ├── manage/           # Team management via Functions
 │   │   └── index.ts          # Feature barrel exports
-│   ├── shared/               # Shared/common modules
+│   ├── shared/               # Shared frontend modules
 │   │   ├── components/       # Reusable UI components
-│   │   ├── hooks/           # Custom React hooks
+│   │   ├── hooks/           # Custom React hooks (auth, data fetching)
 │   │   ├── utils/           # Utility functions & interfaces
 │   │   └── index.ts         # Shared barrel exports
-│   ├── providers/           # Context providers & state management
-│   ├── pages/              # Page-level components (error pages, etc.)
-│   ├── routes/             # Route configuration & lazy loading
-│   ├── firebase/           # Firebase configuration & services
+│   ├── providers/           # Context providers (auth, games, offers)
+│   ├── pages/              # Page-level components & error boundaries
+│   ├── routes/             # Route configuration with lazy loading
+│   ├── firebase/           # Firebase SDK integration
+│   │   ├── app.ts          # Firebase app initialization
+│   │   ├── auth.ts         # Authentication configuration
+│   │   ├── firestore.ts    # Firestore client setup
+│   │   ├── functions.ts    # Functions client setup
+│   │   └── collections/    # **DEPRECATED** - Legacy client-side operations
+│   │       └── functions.ts # New Functions wrapper (replacement)
 │   ├── App.tsx             # Root application component
 │   ├── main.tsx            # Application entry point
-│   └── globals.css         # Global styles
-├── public/                 # Static assets
-├── package.json           # Frontend dependencies
-├── vite.config.ts         # Vite configuration
+│   └── globals.css         # Global Tailwind CSS styles
+├── public/                 # Static assets (icons, images, PWA files)
+├── package.json           # Frontend dependencies & scripts
+├── vite.config.ts         # Vite build configuration
 └── tsconfig.json          # TypeScript configuration
 ```
 
@@ -118,33 +134,33 @@ Shared/
 
 ```typescript
 // Feature imports
-import { Home } from "@/features/home";
-import { AuthModal } from "@/features/auth";
+import { Home } from '@/features/home'
+import { AuthModal } from '@/features/auth'
 
 // Shared imports
-import { Layout, ProtectedRoute } from "@/shared/components";
-import { useDebounce } from "@/shared/hooks";
-import { cn } from "@/shared/utils";
+import { Layout, ProtectedRoute } from '@/shared/components'
+import { useDebounce } from '@/shared/hooks'
+import { cn } from '@/shared/utils'
 
 // Provider imports
-import { AuthContextProvider } from "@/providers";
+import { AuthContextProvider } from '@/providers'
 
 // UI component imports
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 
 // Shared types (from shared package)
-import { PlayerData, TeamData } from "@mwl/shared";
+import { PlayerData, TeamData } from '@mwl/shared'
 ```
 
 ### Backend (Functions/)
 
 ```typescript
 // Firebase Functions imports
-import { onDocumentUpdated } from "firebase-functions/v2/firestore";
-import { getFirestore } from "firebase-admin/firestore";
+import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
+import { getFirestore } from 'firebase-admin/firestore'
 
 // Shared types (from shared package)
-import { PlayerData, TeamData, COLLECTIONS } from "@mwl/shared";
+import { PlayerData, TeamData, COLLECTIONS } from '@mwl/shared'
 ```
 
 ## Development Workflow
@@ -240,25 +256,25 @@ Each feature and shared module should have an `index.ts` file that exports its p
 
 ```typescript
 // features/auth/index.ts
-export { AuthModal } from "./auth-modal";
-export { LoginForm } from "./login-form";
-export { useAuth } from "./hooks/use-auth";
+export { AuthModal } from './auth-modal'
+export { LoginForm } from './login-form'
+export { useAuth } from './hooks/use-auth'
 ```
 
 ### 3. Import Organization
 
 ```typescript
 // External libraries
-import React from "react";
-import { collection, query } from "firebase/firestore";
+import React from 'react'
+import { collection, query } from 'firebase/firestore'
 
 // Internal imports (absolute paths)
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/features/auth";
-import { PlayerData } from "@mwl/shared";
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/features/auth'
+import { PlayerData } from '@mwl/shared'
 
 // Relative imports (only for same feature)
-import { AuthForm } from "./auth-form";
+import { AuthForm } from './auth-form'
 ```
 
 This structure ensures a maintainable, scalable, and type-safe Firebase application that follows modern development best practices.
@@ -268,12 +284,12 @@ This structure ensures a maintainable, scalable, and type-safe Firebase applicat
 ```typescript
 // Shared utilities in shared/utils/
 export const formatDate = (date: Date) => {
-  // Utility logic
-};
+	// Utility logic
+}
 
 // Types and interfaces
 export interface UserData {
-  // Interface definition
+	// Interface definition
 }
 ```
 

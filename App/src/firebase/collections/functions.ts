@@ -10,6 +10,107 @@ import { httpsCallable } from 'firebase/functions'
 import { functions } from '../app'
 
 //////////////////////////////////////////////////////////////////////////////
+// PLAYER FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////
+
+interface CreatePlayerRequest {
+	firstname: string
+	lastname: string
+	email: string
+	seasonId: string
+}
+
+interface CreatePlayerResponse {
+	success: boolean
+	playerId: string
+	message: string
+}
+
+/**
+ * Creates a new player profile via Firebase Function
+ * Replaces the complex client-side createPlayer function
+ *
+ * This function ensures all security validations are performed server-side:
+ * - Authentication verification
+ * - Email matching
+ * - Document ID matches user UID
+ * - Admin field set to false
+ * - All required fields validated
+ */
+export const createPlayerViaFunction = async (
+	data: CreatePlayerRequest
+): Promise<CreatePlayerResponse> => {
+	const createPlayer = httpsCallable<CreatePlayerRequest, CreatePlayerResponse>(
+		functions,
+		'createPlayer'
+	)
+	const result = await createPlayer(data)
+	return result.data
+}
+
+interface UpdatePlayerRequest {
+	playerId?: string // Optional - defaults to authenticated user
+	firstname?: string
+	lastname?: string
+}
+
+interface UpdatePlayerResponse {
+	success: boolean
+	playerId: string
+	message: string
+}
+
+/**
+ * Updates a player profile via Firebase Function
+ *
+ * Security features:
+ * - Users can only update their own profile (unless admin)
+ * - Only safe fields can be updated (firstname, lastname)
+ * - Email and admin status cannot be changed
+ * - Server-side validation of all inputs
+ */
+export const updatePlayerViaFunction = async (
+	data: UpdatePlayerRequest
+): Promise<UpdatePlayerResponse> => {
+	const updatePlayer = httpsCallable<UpdatePlayerRequest, UpdatePlayerResponse>(
+		functions,
+		'updatePlayer'
+	)
+	const result = await updatePlayer(data)
+	return result.data
+}
+
+interface DeletePlayerRequest {
+	playerId?: string // Optional - defaults to authenticated user
+	adminOverride?: boolean // Allow admin to force delete
+}
+
+interface DeletePlayerResponse {
+	success: boolean
+	playerId: string
+	message: string
+	warnings?: string[]
+}
+
+/**
+ * Deletes a player profile via Firebase Function
+ *
+ * Security features:
+ * - Users can only delete their own profile (unless admin)
+ * - Admins can delete any player with adminOverride flag
+ * - Checks for team associations before deletion
+ * - Provides audit logging and warnings
+ */
+export const deletePlayerViaFunction = async (
+	data: DeletePlayerRequest = {}
+): Promise<DeletePlayerResponse> => {
+	const deletePlayer = httpsCallable<DeletePlayerRequest, DeletePlayerResponse>(
+		functions,
+		'deletePlayer'
+	)
+	const result = await deletePlayer(data)
+	return result.data
+} //////////////////////////////////////////////////////////////////////////////
 // TEAM FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////
 
@@ -53,39 +154,69 @@ interface DeleteTeamResponse {
  * Replaces the complex client-side deleteTeam function
  */
 export const deleteTeamViaFunction = async (
-	data: DeleteTeamRequest
+	teamId: string
 ): Promise<DeleteTeamResponse> => {
 	const deleteTeam = httpsCallable<DeleteTeamRequest, DeleteTeamResponse>(
 		functions,
 		'deleteTeam'
 	)
-	const result = await deleteTeam(data)
+	const result = await deleteTeam({ teamId })
 	return result.data
 }
 
-interface ManagePlayerRequest {
+interface ManageTeamPlayerRequest {
 	teamId: string
 	playerId: string
 	action: 'promote' | 'demote' | 'remove'
 }
 
-interface ManagePlayerResponse {
+interface ManageTeamPlayerResponse {
 	success: boolean
-	action: string
+	message: string
+	teamId: string
+	playerId: string
 }
 
 /**
- * Manages team players (promote, demote, remove) via Firebase Function
+ * Manages team players (promote/demote/remove) via Firebase Function
  * Replaces promoteToCaptain, demoteFromCaptain, removeFromTeam functions
  */
 export const manageTeamPlayerViaFunction = async (
-	data: ManagePlayerRequest
-): Promise<ManagePlayerResponse> => {
+	data: ManageTeamPlayerRequest
+): Promise<ManageTeamPlayerResponse> => {
 	const manageTeamPlayer = httpsCallable<
-		ManagePlayerRequest,
-		ManagePlayerResponse
+		ManageTeamPlayerRequest,
+		ManageTeamPlayerResponse
 	>(functions, 'manageTeamPlayer')
 	const result = await manageTeamPlayer(data)
+	return result.data
+}
+
+interface EditTeamRequest {
+	teamId: string
+	name?: string
+	logo?: string
+	storagePath?: string
+}
+
+interface EditTeamResponse {
+	success: boolean
+	message: string
+	teamId: string
+}
+
+/**
+ * Edits team information via Firebase Function
+ * Replaces the client-side editTeam function
+ */
+export const editTeamViaFunction = async (
+	data: EditTeamRequest
+): Promise<EditTeamResponse> => {
+	const editTeam = httpsCallable<EditTeamRequest, EditTeamResponse>(
+		functions,
+		'editTeam'
+	)
+	const result = await editTeam(data)
 	return result.data
 }
 
@@ -116,6 +247,32 @@ export const createOfferViaFunction = async (
 		'createOffer'
 	)
 	const result = await createOffer(data)
+	return result.data
+}
+
+interface UpdateOfferStatusRequest {
+	offerId: string
+	status: 'accepted' | 'rejected'
+}
+
+interface UpdateOfferStatusResponse {
+	success: boolean
+	message: string
+	offerId: string
+}
+
+/**
+ * Updates offer status (accept/reject) via Firebase Function
+ * Replaces acceptOffer and rejectOffer functions
+ */
+export const updateOfferStatusViaFunction = async (
+	data: UpdateOfferStatusRequest
+): Promise<UpdateOfferStatusResponse> => {
+	const updateOfferStatus = httpsCallable<
+		UpdateOfferStatusRequest,
+		UpdateOfferStatusResponse
+	>(functions, 'updateOfferStatus')
+	const result = await updateOfferStatus(data)
 	return result.data
 }
 
@@ -184,6 +341,53 @@ export const removeFromTeam = async (
 		teamId: teamRef.id,
 		playerId: playerRef.id,
 		action: 'remove',
+	})
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// DEPRECATED CLIENT-SIDE FUNCTION REPLACEMENTS
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @deprecated Use updateOfferStatusViaFunction instead
+ * Accepts an offer (invitation or request)
+ */
+export const acceptOffer = async (offerRef: { id: string }) => {
+	return updateOfferStatusViaFunction({
+		offerId: offerRef.id,
+		status: 'accepted',
+	})
+}
+
+/**
+ * @deprecated Use updateOfferStatusViaFunction instead
+ * Rejects an offer (invitation or request)
+ */
+export const rejectOffer = async (offerRef: { id: string }) => {
+	return updateOfferStatusViaFunction({
+		offerId: offerRef.id,
+		status: 'rejected',
+	})
+}
+
+/**
+ * @deprecated Use editTeamViaFunction instead
+ * Edits team information (name, logo, storage path)
+ */
+export const editTeam = async (
+	teamRef: { id: string },
+	name?: string,
+	logo?: string,
+	storagePath?: string
+) => {
+	const updateData: any = {}
+	if (name !== undefined) updateData.name = name
+	if (logo !== undefined) updateData.logo = logo
+	if (storagePath !== undefined) updateData.storagePath = storagePath
+
+	return editTeamViaFunction({
+		teamId: teamRef.id,
+		...updateData,
 	})
 }
 

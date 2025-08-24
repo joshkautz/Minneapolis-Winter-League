@@ -1,48 +1,60 @@
-# Firebase Collections
+# Firebase Collections Guide
 
-This directory contains organized Firestore operations split by domain/entity type. This structure improves maintainability, testability, and makes it easier to understand the relationships between different parts of the application.
+**⚠️ IMPORTANT: This directory structure is now DEPRECATED in favor of secure Firebase Functions.**
 
-## Structure
+## Migration Status: ✅ Complete
 
-### `/collections/`
+All write operations have been migrated from client-side Firestore operations to secure Firebase Functions. This guide documents the old structure and shows the new Function-based approach.
 
-Contains domain-specific Firestore operations:
+## Old Structure (Pre-Migration)
 
-#### `players.ts`
+### `/collections/` - **DEPRECATED**
 
-Player-related operations:
+Previously contained domain-specific Firestore operations that are now security vulnerabilities:
 
-- `createPlayer` - Creates a new player document for registered users
+#### `players.ts` - **DEPRECATED** ❌
+
+Old player operations (now handled by Functions):
+
+- ~~`createPlayer`~~ → `createPlayerViaFunction`
+- ~~`updatePlayer`~~ → `updatePlayerViaFunction`
+- ~~`promoteToCaptain`~~ → `manageTeamPlayerViaFunction({ action: 'promote' })`
+- ~~`demoteFromCaptain`~~ → `manageTeamPlayerViaFunction({ action: 'demote' })`
+- ~~`removeFromTeam`~~ → `manageTeamPlayerViaFunction({ action: 'remove' })`
+
+**Still valid** (read operations):
+
 - `getPlayerSnapshot` - Gets a player document snapshot by reference
 - `getPlayerRef` - Gets a player document reference from authenticated user
 - `getPlayersQuery` - Creates a query to search for players by name
-- `updatePlayer` - Updates a player document with new data
-- `promoteToCaptain` - Promotes a player to captain status
-- `demoteFromCaptain` - Demotes a player from captain status
-- `removeFromTeam` - Removes a player from a team
 
-#### `teams.ts`
+#### `teams.ts` - **DEPRECATED** ❌
 
-Team-related operations:
+Old team operations (now handled by Functions):
 
-- `createTeam` - Creates a new team and assigns a captain
-- `rolloverTeam` - Creates a new team with existing team ID (for rollovers)
-- `editTeam` - Edits team information (name, logo, storage path)
-- `deleteTeam` - Deletes a team and cleans up all related data
+- ~~`createTeam`~~ → `createTeamViaFunction`
+- ~~`editTeam`~~ → `editTeamViaFunction`
+- ~~`deleteTeam`~~ → `deleteTeamViaFunction`
+
+**Still valid** (read operations):
+
 - `getTeamById` - Gets a team document reference by ID
 - `teamsQuery` - Creates a query for multiple teams by their references
 - `teamsHistoryQuery` - Creates a query for teams with the same team ID
 - `currentSeasonTeamsQuery` - Creates a query for all teams in a specific season
 - `teamsBySeasonQuery` - Creates a query for teams by season reference
 
-#### `offers.ts`
+#### `offers.ts` - **DEPRECATED** ❌
 
-Offer-related operations (invitations and requests):
+Old offer operations (now handled by Functions):
 
-- `acceptOffer` - Accepts an offer (invitation or request)
-- `rejectOffer` - Rejects an offer (invitation or request)
-- `invitePlayer` - Creates an invitation for a player to join a team
-- `requestToJoinTeam` - Creates a request for a player to join a team
+- ~~`acceptOffer`~~ → `updateOfferStatusViaFunction({ status: 'accepted' })`
+- ~~`rejectOffer`~~ → `updateOfferStatusViaFunction({ status: 'rejected' })`
+- ~~`invitePlayer`~~ → `createOfferViaFunction({ type: 'invitation' })`
+- ~~`requestToJoinTeam`~~ → `createOfferViaFunction({ type: 'request' })`
+
+**Still valid** (read operations):
+
 - `outgoingOffersQuery` - Creates a query for outgoing offers
 - `incomingOffersQuery` - Creates a query for incoming offers
 - `offersForPlayerByTeamQuery` - Creates a query for offers between specific player and team

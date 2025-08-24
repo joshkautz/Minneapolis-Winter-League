@@ -5,10 +5,11 @@
  * validation and side effects that are too complex for security rules alone.
  */
 
-import { onCall } from 'firebase-functions/v2/https'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions'
+import { OfferData, OfferStatus, OfferType, Collections } from '@mwl/shared'
 
 const firestore = getFirestore()
 
@@ -326,6 +327,147 @@ export const cleanupOffers = onCall(
 			logger.error('Error cleaning up offers:', error)
 			throw new Error(
 				error instanceof Error ? error.message : 'Failed to cleanup offers'
+			)
+		}
+	}
+)
+
+//////////////////////////////////////////////////////////////////////////////
+// OFFER STATUS UPDATE (Accept/Reject)
+//////////////////////////////////////////////////////////////////////////////
+
+interface UpdateOfferStatusRequest {
+	offerId: string
+	status: 'accepted' | 'rejected'
+}
+
+/**
+ * Updates offer status (accept/reject) with proper authorization
+ * Replaces client-side acceptOffer and rejectOffer functions
+ *
+ * Security validations:
+ * - User must be authenticated and email verified
+ * - User must be authorized for this offer (player for invitation, captain for request)
+ * - Offer must exist and be in pending status
+ * - Atomic transaction with proper cleanup
+ */
+export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
+	{ cors: true },
+	async (request) => {
+		const { data, auth } = request
+
+		// Validate authentication
+		if (!auth || !auth.uid) {
+			throw new HttpsError('unauthenticated', 'User must be authenticated')
+		}
+
+		if (!auth.token.email_verified) {
+			throw new HttpsError('permission-denied', 'Email verification required')
+		}
+
+		const { offerId, status } = data
+
+		// Validate inputs
+		if (!offerId || !status) {
+			throw new HttpsError(
+				'invalid-argument',
+				'Offer ID and status are required'
+			)
+		}
+
+		if (!['accepted', 'rejected'].includes(status)) {
+			throw new HttpsError(
+				'invalid-argument',
+				'Status must be "accepted" or "rejected"'
+			)
+		}
+
+		try {
+			return await firestore.runTransaction(async (transaction) => {
+				// Get offer document
+				const offerRef = firestore.collection(Collections.OFFERS).doc(offerId)
+				const offerDoc = await transaction.get(offerRef)
+
+				if (!offerDoc.exists) {
+					throw new HttpsError('not-found', 'Offer not found')
+				}
+
+				const offerData = offerDoc.data() as OfferData
+
+				// Validate offer is pending
+				if (offerData.status !== OfferStatus.PENDING) {
+					throw new HttpsError(
+						'failed-precondition',
+						'Offer is no longer pending'
+					)
+				}
+
+				// Get team document for authorization check
+				const teamRef = firestore.doc(offerData.team.path)
+				const teamDoc = await transaction.get(teamRef)
+
+				if (!teamDoc.exists) {
+					throw new HttpsError('not-found', 'Team not found')
+				}
+
+				const teamData = teamDoc.data()!
+
+				// Authorization check based on offer type
+				let isAuthorized = false
+
+				if (offerData.type === OfferType.INVITATION) {
+					// Player can accept/reject invitations to join their team
+					isAuthorized = auth.uid === offerData.player.id
+				} else if (offerData.type === OfferType.REQUEST) {
+					// Captain can accept/reject requests to join their team
+					isAuthorized = teamData.roster?.some(
+						(member: any) => member.captain && member.player.id === auth.uid
+					)
+				}
+
+				if (!isAuthorized) {
+					throw new HttpsError(
+						'permission-denied',
+						'Not authorized to modify this offer'
+					)
+				}
+
+				// Update offer status
+				const newStatus =
+					status === 'accepted' ? OfferStatus.ACCEPTED : OfferStatus.REJECTED
+				transaction.update(offerRef, { status: newStatus })
+
+				// If accepting, the onOfferUpdated trigger will handle the team joining logic
+				// If rejecting, just update status and let the trigger delete it
+
+				logger.info('Offer status updated', {
+					offerId,
+					status,
+					updatedBy: auth.uid,
+					offerType: offerData.type,
+				})
+
+				return {
+					success: true,
+					message: `Offer ${status} successfully`,
+					offerId,
+				}
+			})
+		} catch (error) {
+			if (error instanceof HttpsError) {
+				throw error
+			}
+
+			logger.error('Error updating offer status:', {
+				error,
+				offerId,
+				status,
+				userId: auth.uid,
+			})
+
+			throw new HttpsError(
+				'internal',
+				'Failed to update offer status. Please try again.'
 			)
 		}
 	}

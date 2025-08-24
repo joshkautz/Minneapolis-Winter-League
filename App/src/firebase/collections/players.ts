@@ -28,6 +28,18 @@ import type {
 
 /**
  * Creates a new player document for a registered user
+ *
+ * @deprecated This function performs client-side validation which can be bypassed.
+ * Use `createPlayerViaFunction` from '@/firebase/collections/functions' instead,
+ * which performs all validations server-side via Firebase Functions for better security.
+ *
+ * The Firebase Function ensures:
+ * - Server-side authentication verification
+ * - Email matches authenticated user
+ * - Document ID matches user UID
+ * - Admin field is always false
+ * - All required fields are validated
+ * - Cannot be manipulated client-side
  */
 export const createPlayer = (
 	res: UserCredential | undefined,
@@ -36,6 +48,10 @@ export const createPlayer = (
 	email: string,
 	season: QueryDocumentSnapshot<SeasonData, DocumentData> | undefined
 ): Promise<void> => {
+	console.warn(
+		'⚠️  createPlayer is deprecated. Use createPlayerViaFunction for better security.'
+	)
+
 	if (!res) {
 		return Promise.resolve()
 	}
@@ -50,6 +66,7 @@ export const createPlayer = (
 		email: email,
 		seasons: [
 			{
+				banned: false, // Add missing field for consistency
 				captain: false,
 				paid: false,
 				season: season.ref,
@@ -154,11 +171,25 @@ export const getPlayersQuery = (
 
 /**
  * Updates a player document with new data
+ *
+ * @deprecated This function performs client-side updates which can be bypassed.
+ * Use `updatePlayerViaFunction` from '@/firebase/collections/functions' instead,
+ * which performs all validations server-side via Firebase Functions for better security.
+ *
+ * The Firebase Function ensures:
+ * - Server-side authentication verification
+ * - Permission checks (users can only update their own profile unless admin)
+ * - Field validation and sanitization
+ * - Audit logging of all changes
+ * - Cannot be manipulated client-side
  */
 export const updatePlayer = (
 	authValue: User | null | undefined,
 	data: UpdateData<PlayerData>
 ): Promise<void> => {
+	console.warn(
+		'⚠️  updatePlayer is deprecated. Use updatePlayerViaFunction for better security.'
+	)
 	return updateDoc(doc(firestore, Collections.PLAYERS, authValue!.uid), data)
 }
 

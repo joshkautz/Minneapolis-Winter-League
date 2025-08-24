@@ -8,7 +8,7 @@
  */
 
 import { onCall } from 'firebase-functions/v2/https'
-import { getFirestore, FieldValue, Transaction } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -452,3 +452,109 @@ function handleRemoveFromTeam(
 
 	return { success: true, action: 'removed' }
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// TEAM EDITING (Name, Logo, Storage Path)
+//////////////////////////////////////////////////////////////////////////////
+
+interface EditTeamRequest {
+	teamId: string
+	name?: string
+	logo?: string
+	storagePath?: string
+}
+
+/**
+ * Edits team information (name, logo, storage path)
+ * Replaces client-side editTeam function
+ *
+ * Security validations:
+ * - User must be authenticated and email verified
+ * - User must be a captain of the team
+ * - At least one field must be provided to update
+ */
+export const editTeam = onCall<EditTeamRequest>(
+	{ region: 'us-central1' },
+	async (request) => {
+		// Validate authentication
+		if (!request.auth) {
+			throw new Error('Authentication required')
+		}
+
+		if (!request.auth.token.email_verified) {
+			throw new Error('Email verification required')
+		}
+
+		const { teamId, name, logo, storagePath } = request.data
+		const userId = request.auth.uid
+
+		if (!teamId) {
+			throw new Error('Team ID is required')
+		}
+
+		if (!name && !logo && !storagePath) {
+			throw new Error('At least one field to update is required')
+		}
+
+		try {
+			return await firestore.runTransaction(async (transaction) => {
+				// Get team document
+				const teamRef = firestore.collection('teams').doc(teamId)
+				const teamDoc = await transaction.get(teamRef)
+
+				if (!teamDoc.exists) {
+					throw new Error('Team not found')
+				}
+
+				const teamData = teamDoc.data()!
+
+				// Check if user is a captain of this team
+				const userIsCaptain = teamData.roster?.some(
+					(member: any) => member.captain && member.player.id === userId
+				)
+
+				if (!userIsCaptain) {
+					throw new Error('Only team captains can edit team information')
+				}
+
+				// Prepare update data (only include provided fields)
+				const updateData: any = {}
+
+				if (name !== undefined) {
+					updateData.name = name
+				}
+				if (logo !== undefined) {
+					updateData.logo = logo
+				}
+				if (storagePath !== undefined) {
+					updateData.storagePath = storagePath
+				}
+
+				// Update team document
+				transaction.update(teamRef, updateData)
+
+				logger.info('Team information updated', {
+					teamId,
+					updatedFields: Object.keys(updateData),
+					updatedBy: userId,
+				})
+
+				return {
+					success: true,
+					message: 'Team information updated successfully',
+					teamId,
+				}
+			})
+		} catch (error) {
+			logger.error('Error editing team:', {
+				error,
+				teamId,
+				userId,
+			})
+
+			throw new Error(
+				error instanceof Error ? error.message : 'Failed to edit team'
+			)
+		}
+	}
+)

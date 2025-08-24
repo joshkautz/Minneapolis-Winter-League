@@ -2,37 +2,65 @@
 
 This directory contains comprehensive documentation for the Minneapolis Winter League application.
 
-## Getting Started
+## 🚀 Getting Started
 
 - [Development Setup Guide](./DEVELOPMENT_SETUP.md) - Complete setup instructions for local development
 - [Environment Variables](./ENVIRONMENT_VARIABLES.md) - Configuration and environment variable reference
-
-## Architecture & Design
-
 - [Project Structure](./PROJECT_STRUCTURE.md) - Codebase organization and file structure
+
+## 🏗️ Architecture & Security
+
+- [Firebase Functions Migration Status](./FIREBASE_FUNCTIONS_MIGRATION_STATUS.md) - Complete migration status and security improvements
+- [Security Migration Guide](./SECURITY_MIGRATION.md) - Migration from client-side to secure Functions architecture
+- [Security Guidelines](./SECURITY.md) - Security practices and Firebase rules
 - [Authentication System](./AUTHENTICATION_SYSTEM.md) - Auth system architecture and components
-- [Bundle Optimization](./BUNDLE_OPTIMIZATION.md) - Performance optimization strategies
 
-## Development Guides
+## 🔥 Firebase Integration
 
+- [Firebase Migration Guide](./FIREBASE_MIGRATION.md) - General Firebase migration documentation
+- [Firebase Collections Guide](./FIREBASE_COLLECTIONS_README.md) - Collection structure and usage
+- [Player Function Documentation](./PLAYER_FUNCTION_DOCUMENTATION.md) - Player management Functions API
+
+## 📦 Shared Packages & Types
+
+- [Shared Package Documentation](./SHARED_PACKAGE_README.md) - @mwl/shared package usage and structure
+- [Shared Types Migration](./SHARED_TYPES_MIGRATION.md) - TypeScript shared types implementation
 - [TypeScript Improvements](./TYPESCRIPT_IMPROVEMENTS.md) - Type safety enhancements and patterns
+
+## ✅ Validation & Data
+
 - [Zod Validation Analysis](./ZOD_VALIDATION_ANALYSIS.md) - Data validation patterns and usage
 - [Zod Advanced Usage Examples](./ZOD_ADVANCED_USAGE_EXAMPLES.md) - Advanced validation techniques
 
-## Operations
+## ⚡ Performance & Optimization
 
-- [Security Guidelines](./SECURITY.md) - Security practices and Firebase rules
+- [Bundle Optimization](./BUNDLE_OPTIMIZATION.md) - Performance optimization strategies
 
-## Quick Reference
+## 🛠️ Development Tools
+
+- [Emulator Data Documentation](./EMULATOR_DATA_README.md) - Firebase emulator test data management
+
+## 📋 Quick Reference
+
+### Architecture Status
+
+| Component            | Status      | Security Level  |
+| -------------------- | ----------- | --------------- |
+| ✅ Player Management | Complete    | Functions-only  |
+| ✅ Team Management   | Complete    | Functions-only  |
+| ✅ Offer System      | Complete    | Functions-only  |
+| ✅ Authentication    | Stable      | Firebase Auth   |
+| ✅ Firestore Rules   | Locked Down | Deny all writes |
+| 🟡 Payment System    | Secure      | User-scoped     |
 
 ### Common Commands
 
 ```bash
-# Development
+# Development Environment
 npm run dev                    # Start emulators with test data
 cd App && npm run dev:emulators # Start React app with emulators
 
-# Build
+# Production Builds
 cd App && npm run build        # Production build
 cd App && npm run build:staging # Staging build
 
@@ -40,14 +68,31 @@ cd App && npm run build:staging # Staging build
 npm run dev:clean             # Start clean emulators
 npm run emulators:export      # Save emulator data
 npm run emulators:clear       # Clear all data
+
+# Functions Development
+cd Functions && npm run build  # Build Functions
+cd Functions && npm run deploy # Deploy Functions
 ```
 
 ### Key Technologies
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Backend**: Firebase (Auth, Firestore, Functions, Storage)
-- **UI**: shadcn/ui + Tailwind CSS
-- **Validation**: Zod schemas
+- **Frontend**: React 18 + TypeScript + Vite + shadcn/ui + Tailwind CSS
+- **Backend**: Firebase Functions Gen 2 + Firestore + Auth + Storage + Hosting
+- **Security**: Functions-first architecture with strict Firestore rules
+- **Validation**: Zod schemas with shared types via @mwl/shared
+- **Payments**: Stripe integration with Firebase Extensions
+- **Development**: Firebase Emulators + Hot Module Replacement
+
+### Documentation Categories
+
+| Category         | Purpose            | Key Documents                                             |
+| ---------------- | ------------------ | --------------------------------------------------------- |
+| **Setup**        | Getting started    | Development Setup, Environment Variables                  |
+| **Architecture** | System design      | Firebase Migration, Security Migration, Project Structure |
+| **Security**     | Security practices | Security Guidelines, Functions Migration Status           |
+| **Development**  | Daily development  | TypeScript Improvements, Validation Patterns              |
+| **Reference**    | API & tools        | Player Functions, Shared Package, Emulator Data           |
+
 - **Development**: Firebase Emulators + Hot Reload
 
 ### Development URLs
