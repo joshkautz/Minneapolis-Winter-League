@@ -1,16 +1,15 @@
 {
-	"name": "@mwl/shared",
-	"version": "2.0.0",
+	"name": "@minneapolis-winter-league/shared",
+	"version": "3.0.0",
 	"private": true,
 	"type": "module",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"scripts": {
 		"build": "tsc",
-		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"format:fix": "prettier --write .",
-		"lint": "eslint .",
+		"lint:check": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"clean": "rm -rf dist"
 	},

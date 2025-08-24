@@ -1,4 +1,4 @@
-# @mwl/shared
+# @minneapolis-winter-league/shared
 
 Shared TypeScript types and utilities for the Minneapolis Winter League application.
 
@@ -18,13 +18,17 @@ This package contains common type definitions, validation utilities, and constan
 ### Importing Types
 
 ```typescript
-import { PlayerData, TeamData, SeasonData } from '@mwl/shared'
+import {
+	PlayerData,
+	TeamData,
+	SeasonData,
+} from '@minneapolis-winter-league/shared'
 ```
 
 ### Using Type Guards
 
 ```typescript
-import { isPlayerData } from '@mwl/shared'
+import { isPlayerData } from '@minneapolis-winter-league/shared'
 
 if (isPlayerData(someData)) {
 	// TypeScript knows someData is PlayerData
@@ -35,7 +39,7 @@ if (isPlayerData(someData)) {
 ### Using Constants
 
 ```typescript
-import { COLLECTIONS, FIELDS } from '@mwl/shared'
+import { COLLECTIONS, FIELDS } from '@minneapolis-winter-league/shared'
 
 const playersCollection = firestore.collection(COLLECTIONS.PLAYERS)
 ```

@@ -8,9 +8,9 @@ This Firebase project follows modern best practices for full-stack TypeScript de
 Minneapolis-Winter-League/
 ├── App/                    # React frontend application (client-side)
 ├── Functions/              # Firebase Cloud Functions (server-side business logic)
-├── Shared/                 # Shared TypeScript types and validation (@mwl/shared)
+├── Shared/                 # Shared TypeScript types and validation (@minneapolis-winter-league/shared)
 ├── docs/                   # Comprehensive project documentation
-├── emulator-data/          # Firebase emulator test data
+├── .emulator/          # Firebase emulator test data
 ├── firebase.json           # Firebase project configuration
 ├── firestore.rules        # Firestore security rules (Functions-only writes)
 ├── package.json           # Root workspace configuration
@@ -149,7 +149,7 @@ import { AuthContextProvider } from '@/providers'
 import { Button } from '@/components/ui/button'
 
 // Shared types (from shared package)
-import { PlayerData, TeamData } from '@mwl/shared'
+import { PlayerData, TeamData } from '@minneapolis-winter-league/shared'
 ```
 
 ### Backend (Functions/)
@@ -160,7 +160,11 @@ import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 
 // Shared types (from shared package)
-import { PlayerData, TeamData, COLLECTIONS } from '@mwl/shared'
+import {
+	PlayerData,
+	TeamData,
+	COLLECTIONS,
+} from '@minneapolis-winter-league/shared'
 ```
 
 ## Development Workflow
@@ -271,7 +275,7 @@ import { collection, query } from 'firebase/firestore'
 // Internal imports (absolute paths)
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth'
-import { PlayerData } from '@mwl/shared'
+import { PlayerData } from '@minneapolis-winter-league/shared'
 
 // Relative imports (only for same feature)
 import { AuthForm } from './auth-form'

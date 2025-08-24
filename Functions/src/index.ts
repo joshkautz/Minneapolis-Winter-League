@@ -44,7 +44,7 @@ import {
 	COLLECTIONS,
 	FIELDS,
 	REGION,
-} from '@mwl/shared'
+} from '@minneapolis-winter-league/shared'
 
 const DROPBOX_SIGN_API_KEY = 'DROPBOX_SIGN_API_KEY'
 const DROPBOX_TEMPLATE_ID = '2ea9b881ec6798e7c6122ebaa51baf50689c573c'

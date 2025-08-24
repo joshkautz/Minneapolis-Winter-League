@@ -9,7 +9,12 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions'
-import { OfferData, OfferStatus, OfferType, Collections } from '@mwl/shared'
+import {
+	OfferData,
+	OfferStatus,
+	OfferType,
+	Collections,
+} from '@minneapolis-winter-league/shared'
 
 const firestore = getFirestore()
 

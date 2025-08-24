@@ -57,7 +57,7 @@ cd App && npm run dev:emulators # Start React app (new terminal)
 │   └── src/offerFunctions.ts     # Invitation/request workflow
 ├── Shared/                  # Shared TypeScript types and validation
 ├── docs/                    # Complete documentation
-└── emulator-data/           # Development test data
+└── .emulator/           # Development test data
 ```
 
 ## 🔐 Security Features
@@ -103,7 +103,7 @@ npm run deploy              # Deploy to Firebase
 
 - ✅ **Security Migration Complete**: All operations moved to secure Firebase Functions
 - ✅ **TypeScript Strict Mode**: Full type safety across codebase
-- ✅ **Shared Package**: Centralized types and validation with @mwl/shared
+- ✅ **Shared Package**: Centralized types and validation with @minneapolis-winter-league/shared
 - ✅ **Firebase Functions Gen 2**: Modern serverless architecture
 - ✅ **Zero Client-Side Writes**: Complete security lockdown
 

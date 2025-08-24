@@ -1,13 +1,12 @@
 {
-	"name": "app",
-	"version": "2.0.0",
+	"name": "@minneapolis-winter-league/app",
+	"version": "3.0.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"format:fix": "prettier --write .",
-		"lint": "eslint .",
+		"lint:check": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"build": "tsc && vite build",
 		"build:staging": "vite build --mode staging",
@@ -19,7 +18,7 @@
 	"dependencies": {
 		"@dropbox/sign": "^1.10.0",
 		"@hookform/resolvers": "^5.2.1",
-		"@mwl/shared": "file:../Shared",
+		"@minneapolis-winter-league/shared": "file:../Shared",
 		"@radix-ui/react-accordion": "^1.2.12",
 		"@radix-ui/react-alert-dialog": "^1.1.15",
 		"@radix-ui/react-aspect-ratio": "^1.1.7",

@@ -1,4 +1,4 @@
-// Import shared types from the @mwl/shared package
+// Import shared types from the @minneapolis-winter-league/shared package
 import {
 	PlayerData,
 	TeamData,
@@ -11,7 +11,7 @@ import {
 	OfferType,
 	OfferDirection,
 	Collections,
-} from '@mwl/shared'
+} from '@minneapolis-winter-league/shared'
 
 // Re-export for backward compatibility
 export type {

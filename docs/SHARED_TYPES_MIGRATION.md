@@ -4,7 +4,7 @@ This guide explains how to migrate existing code to use the new shared types pac
 
 ## Overview
 
-The shared types package (`@mwl/shared`) provides:
+The shared types package (`@minneapolis-winter-league/shared`) provides:
 
 - Consistent type definitions across frontend and backend
 - Type guards and validation utilities
@@ -17,7 +17,7 @@ The shared package is already configured in both App and Functions `package.json
 ```json
 {
 	"dependencies": {
-		"@mwl/shared": "file:../Shared"
+		"@minneapolis-winter-league/shared": "file:../Shared"
 	}
 }
 ```
@@ -47,7 +47,12 @@ interface TeamData extends DocumentData {
 
 ```typescript
 // Functions/src/index.ts
-import { PlayerData, TeamData, COLLECTIONS, FIELDS } from '@mwl/shared'
+import {
+	PlayerData,
+	TeamData,
+	COLLECTIONS,
+	FIELDS,
+} from '@minneapolis-winter-league/shared'
 ```
 
 ### 2. Update Imports in App
@@ -67,7 +72,11 @@ export interface PlayerData extends DocumentData {
 
 ```typescript
 // App/src/components/SomeComponent.tsx
-import { PlayerData, TeamData, isPlayerData } from '@mwl/shared'
+import {
+	PlayerData,
+	TeamData,
+	isPlayerData,
+} from '@minneapolis-winter-league/shared'
 ```
 
 ### 3. Replace Constants
@@ -85,7 +94,7 @@ const COLLECTIONS = {
 **After:**
 
 ```typescript
-import { COLLECTIONS, FIELDS } from '@mwl/shared'
+import { COLLECTIONS, FIELDS } from '@minneapolis-winter-league/shared'
 ```
 
 ### 4. Use Type Guards
@@ -102,7 +111,7 @@ if (data && typeof data.admin === 'boolean') {
 **After:**
 
 ```typescript
-import { isPlayerData } from '@mwl/shared'
+import { isPlayerData } from '@minneapolis-winter-league/shared'
 
 if (isPlayerData(data)) {
 	// TypeScript knows data is PlayerData
@@ -115,13 +124,13 @@ if (isPlayerData(data)) {
 ### Functions/src/index.ts
 
 - Remove local interface definitions
-- Import types from `@mwl/shared`
+- Import types from `@minneapolis-winter-league/shared`
 - Update COLLECTIONS and FIELDS usage
 
 ### App/src/shared/utils/interfaces.ts
 
 - Remove duplicate type definitions
-- Re-export from `@mwl/shared` if needed for backward compatibility
+- Re-export from `@minneapolis-winter-league/shared` if needed for backward compatibility
 
 ### App/src/firebase/firestore.ts
 
@@ -162,7 +171,7 @@ import {
 	SeasonData,
 	COLLECTIONS,
 	FIELDS,
-} from '@mwl/shared'
+} from '@minneapolis-winter-league/shared'
 ```
 
 ## Benefits After Migration

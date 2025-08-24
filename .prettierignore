@@ -15,7 +15,7 @@ build/
 
 # Firebase
 .firebase/
-emulator-data/
+.emulator/
 *-debug.log
 
 # IDE

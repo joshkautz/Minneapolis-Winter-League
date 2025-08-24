@@ -13,7 +13,7 @@ All markdown documentation has been successfully moved to the `/docs` directory 
 | `Shared/README.md`                       | `docs/SHARED_PACKAGE_README.md`         | ✅ Moved                            |
 | `App/src/firebase/collections/README.md` | `docs/FIREBASE_COLLECTIONS_README.md`   | ✅ Updated with deprecation notices |
 | `App/src/firebase/MIGRATION.md`          | `docs/FIREBASE_MIGRATION.md`            | ✅ Moved                            |
-| `emulator-data/README.md`                | `docs/EMULATOR_DATA_README.md`          | ✅ Moved                            |
+| `.emulator/README.md`                    | `docs/EMULATOR_DATA_README.md`          | ✅ Moved                            |
 
 ## Files Updated
 
@@ -41,7 +41,7 @@ docs/
 ├── FIREBASE_MIGRATION.md                  # 🔥 Firebase migration docs
 ├── FIREBASE_COLLECTIONS_README.md         # 📄 Collections guide (deprecated)
 ├── PLAYER_FUNCTION_DOCUMENTATION.md       # 👤 Player Functions API
-├── SHARED_PACKAGE_README.md               # 📦 @mwl/shared package docs
+├── SHARED_PACKAGE_README.md               # 📦 @minneapolis-winter-league/shared package docs
 ├── SHARED_TYPES_MIGRATION.md              # 🔄 TypeScript shared types
 ├── TYPESCRIPT_IMPROVEMENTS.md             # 📝 TypeScript enhancements
 ├── ZOD_VALIDATION_ANALYSIS.md             # ✅ Validation patterns
@@ -72,7 +72,7 @@ docs/
 
 ### 📦 **For Integration**
 
-- `SHARED_PACKAGE_README.md` - Using @mwl/shared
+- `SHARED_PACKAGE_README.md` - Using @minneapolis-winter-league/shared
 - `PLAYER_FUNCTION_DOCUMENTATION.md` - Functions API
 - `FIREBASE_COLLECTIONS_README.md` - What's deprecated
 

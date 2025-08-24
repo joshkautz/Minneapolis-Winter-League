@@ -4,7 +4,7 @@
  * Reusable validation functions and schemas for forms
  *
  * This module provides Zod validation schemas that are aligned with the shared types
- * from @mwl/shared. Key improvements include:
+ * from @minneapolis-winter-league/shared. Key improvements include:
  *
  * - Uses shared enum types (OfferCreator, OfferStatus) for consistency
  * - Schemas designed to be compatible with shared TypeScript interfaces
@@ -17,7 +17,7 @@
  */
 
 import { z } from 'zod'
-import { OfferType, OfferStatus } from '@mwl/shared'
+import { OfferType, OfferStatus } from '@minneapolis-winter-league/shared'
 
 // Common validation schemas with advanced features
 export const emailSchema = z

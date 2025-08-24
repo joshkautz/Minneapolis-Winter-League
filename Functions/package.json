@@ -1,6 +1,6 @@
 {
-	"name": "functions",
-	"version": "2.0.0",
+	"name": "@minneapolis-winter-league/functions",
+	"version": "3.0.0",
 	"private": true,
 	"type": "module",
 	"main": "dist/index.js",
@@ -8,16 +8,15 @@
 		"node": "20"
 	},
 	"scripts": {
-		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"format:fix": "prettier --write .",
-		"lint": "eslint .",
+		"lint:check": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"build": "tsc"
 	},
 	"dependencies": {
 		"@dropbox/sign": "^1.10.0",
-		"@mwl/shared": "file:../Shared",
+		"@minneapolis-winter-league/shared": "file:../Shared",
 		"firebase-admin": "^13.4.0",
 		"firebase-functions": "^6.4.0"
 	},

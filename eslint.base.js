@@ -21,7 +21,7 @@ const baseConfig = [
 			'**/dist/**',
 			'**/build/**',
 			'**/.firebase/**',
-			'**/emulator-data/**',
+			'**/.emulator/**',
 			'**/coverage/**',
 		],
 	},

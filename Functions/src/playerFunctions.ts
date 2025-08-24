@@ -5,7 +5,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions'
-import { PlayerData, Collections } from '@mwl/shared'
+import { PlayerData, Collections } from '@minneapolis-winter-league/shared'
 
 const firestore = getFirestore()
 

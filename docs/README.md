@@ -19,11 +19,12 @@ This directory contains comprehensive documentation for the Minneapolis Winter L
 
 - [Firebase Migration Guide](./FIREBASE_MIGRATION.md) - General Firebase migration documentation
 - [Firebase Collections Guide](./FIREBASE_COLLECTIONS_README.md) - Collection structure and usage
+- [Firestore Indexes Documentation](./FIRESTORE_INDEXES.md) - Index configuration, performance, and optimization
 - [Player Function Documentation](./PLAYER_FUNCTION_DOCUMENTATION.md) - Player management Functions API
 
 ## 📦 Shared Packages & Types
 
-- [Shared Package Documentation](./SHARED_PACKAGE_README.md) - @mwl/shared package usage and structure
+- [Shared Package Documentation](./SHARED_PACKAGE_README.md) - @minneapolis-winter-league/shared package usage and structure
 - [Shared Types Migration](./SHARED_TYPES_MIGRATION.md) - TypeScript shared types implementation
 - [TypeScript Improvements](./TYPESCRIPT_IMPROVEMENTS.md) - Type safety enhancements and patterns
 
@@ -79,7 +80,7 @@ cd Functions && npm run deploy # Deploy Functions
 - **Frontend**: React 18 + TypeScript + Vite + shadcn/ui + Tailwind CSS
 - **Backend**: Firebase Functions Gen 2 + Firestore + Auth + Storage + Hosting
 - **Security**: Functions-first architecture with strict Firestore rules
-- **Validation**: Zod schemas with shared types via @mwl/shared
+- **Validation**: Zod schemas with shared types via @minneapolis-winter-league/shared
 - **Payments**: Stripe integration with Firebase Extensions
 - **Development**: Firebase Emulators + Hot Module Replacement
 
@@ -90,6 +91,7 @@ cd Functions && npm run deploy # Deploy Functions
 | **Setup**        | Getting started    | Development Setup, Environment Variables                  |
 | **Architecture** | System design      | Firebase Migration, Security Migration, Project Structure |
 | **Security**     | Security practices | Security Guidelines, Functions Migration Status           |
+| **Firebase**     | Database & queries | Collections Guide, Firestore Indexes, Functions API       |
 | **Development**  | Daily development  | TypeScript Improvements, Validation Patterns              |
 | **Reference**    | API & tools        | Player Functions, Shared Package, Emulator Data           |
 
@@ -119,6 +121,7 @@ When updating documentation:
 | Development Setup       | Current      | ✅ Updated |
 | Environment Variables   | Current      | ✅ Updated |
 | Authentication System   | Current      | ✅ Current |
+| Firestore Indexes       | Aug 2025     | ✅ New     |
 | Project Structure       | Current      | ✅ Current |
 | Bundle Optimization     | Current      | ✅ Current |
 | TypeScript Improvements | Current      | ✅ Current |

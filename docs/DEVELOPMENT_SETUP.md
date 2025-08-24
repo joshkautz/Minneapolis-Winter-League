@@ -72,9 +72,9 @@ cd App && npm run dev:emulators
 Minneapolis-Winter-League/
 ├── App/                    # React frontend (Vite + TypeScript)
 ├── Functions/              # Firebase Cloud Functions (Gen 2)
-├── Shared/                 # Shared types & validation (@mwl/shared)
+├── Shared/                 # Shared types & validation (@minneapolis-winter-league/shared)
 ├── docs/                   # Documentation
-├── emulator-data/          # Test data for emulators
+├── .emulator/          # Test data for emulators
 └── firebase.json           # Firebase configuration
 ```
 
