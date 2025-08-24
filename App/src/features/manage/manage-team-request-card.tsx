@@ -30,7 +30,8 @@ export const ManageTeamRequestCard = () => {
 		) =>
 			requestToJoinTeam(
 				authenticatedUserDocumentSnapshot,
-				teamQueryDocumentSnapshot
+				teamQueryDocumentSnapshot,
+				authenticatedUserDocumentSnapshot
 			)
 				?.then(() => {
 					toast.success('Request sent', {

@@ -93,9 +93,16 @@ export const requestToJoinTeam = (
 	playerDocumentSnapshot:
 		| DocumentSnapshot<PlayerData, DocumentData>
 		| undefined,
-	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamData, DocumentData>
+	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamData, DocumentData>,
+	authenticatedUserDocumentSnapshot:
+		| DocumentSnapshot<PlayerData, DocumentData>
+		| undefined
 ) => {
-	if (!playerDocumentSnapshot || !teamQueryDocumentSnapshot) {
+	if (
+		!playerDocumentSnapshot ||
+		!teamQueryDocumentSnapshot ||
+		!authenticatedUserDocumentSnapshot
+	) {
 		return
 	}
 	return addDoc(
@@ -105,10 +112,12 @@ export const requestToJoinTeam = (
 		>,
 		{
 			type: OfferType.REQUEST,
-			creator: `${playerDocumentSnapshot.data()?.firstname} ${playerDocumentSnapshot.data()?.lastname}`,
+			creator: `${authenticatedUserDocumentSnapshot.data()?.firstname} ${authenticatedUserDocumentSnapshot.data()?.lastname}`,
 			player: playerDocumentSnapshot.ref,
-			team: teamQueryDocumentSnapshot.ref,
+			playerName: `${playerDocumentSnapshot.data()?.firstname} ${playerDocumentSnapshot.data()?.lastname}`,
 			status: OfferStatus.PENDING,
+			team: teamQueryDocumentSnapshot.ref,
+			teamName: teamQueryDocumentSnapshot.data()?.name,
 		}
 	)
 }
