@@ -51,7 +51,7 @@
 		"uuid": "^11.1.0",
 		"vite-plugin-eslint": "^1.8.1",
 		"vitest": "^3.2.4",
-		"zod": "^3.25.41"
+		"zod": "^4.1.1"
 	},
 	"browserslist": {
 		"production": [
