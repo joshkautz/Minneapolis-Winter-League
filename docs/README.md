@@ -1,45 +1,53 @@
 # Documentation Index
 
-This directory contains comprehensive documentation for the Minneapolis Winter League application.
+This directory contains comprehensive documentation for the Minneapolis Winter League application, organized by component and functionality.
 
-## 🚀 Getting Started
+## � Documentation Structure
 
-- [Development Setup Guide](./DEVELOPMENT_SETUP.md) - Complete setup instructions for local development
-- [Environment Variables](./ENVIRONMENT_VARIABLES.md) - Configuration and environment variable reference
-- [Project Structure](./PROJECT_STRUCTURE.md) - Codebase organization and file structure
+### 🖥️ [App Documentation](./app/)
+Frontend React application documentation, including components, features, and user interface.
 
-## 🏗️ Architecture & Security
+### ⚡ [Functions Documentation](./functions/)
+Firebase Cloud Functions documentation, including API references, triggers, and backend logic.
 
-- [Firebase Functions Migration Status](./FIREBASE_FUNCTIONS_MIGRATION_STATUS.md) - Complete migration status and security improvements
-- [Security Migration Guide](./SECURITY_MIGRATION.md) - Migration from client-side to secure Functions architecture
-- [Security Guidelines](./SECURITY.md) - Security practices and Firebase rules
-- [Authentication System](./AUTHENTICATION_SYSTEM.md) - Auth system architecture and components
+### 📦 [Shared Package Documentation](./shared/)
+Shared TypeScript types and validation schemas used across all packages.
 
-## 🔥 Firebase Integration
+### 🔥 [Firebase Infrastructure](./firebase/)
+Firebase services configuration, security rules, and database documentation.
 
-- [Firebase Migration Guide](./FIREBASE_MIGRATION.md) - General Firebase migration documentation
-- [Firebase Collections Guide](./FIREBASE_COLLECTIONS_README.md) - Collection structure and usage
-- [Firestore Indexes Documentation](./FIRESTORE_INDEXES.md) - Index configuration, performance, and optimization
-- [Player Function Documentation](./PLAYER_FUNCTION_DOCUMENTATION.md) - Player management Functions API
+### 🚀 [Setup & Development](./setup/)
+Development environment setup, deployment guides, and workflow documentation.
 
-## 📦 Shared Packages & Types
+## 🏗️ Project Architecture
 
-- [Shared Package Documentation](./SHARED_PACKAGE_README.md) - @minneapolis-winter-league/shared package usage and structure
-- [Shared Types Migration](./SHARED_TYPES_MIGRATION.md) - TypeScript shared types implementation
-- [TypeScript Improvements](./TYPESCRIPT_IMPROVEMENTS.md) - Type safety enhancements and patterns
+The Minneapolis Winter League is built as a modular TypeScript monorepo:
 
-## ✅ Validation & Data
+```
+Minneapolis-Winter-League/
+├── App/                    # React frontend (Vite + TypeScript)
+├── Functions/              # Firebase Cloud Functions
+├── Shared/                # Shared types and validation
+├── docs/                  # This documentation
+└── emulator-data/         # Firebase emulator test data
+```
 
-- [Zod Validation Analysis](./ZOD_VALIDATION_ANALYSIS.md) - Data validation patterns and usage
-- [Zod Advanced Usage Examples](./ZOD_ADVANCED_USAGE_EXAMPLES.md) - Advanced validation techniques
+## 🚀 Quick Start
 
-## ⚡ Performance & Optimization
+1. **[Development Setup](./setup/DEVELOPMENT_SETUP.md)** - Get your environment ready
+2. **[Project Structure](./PROJECT_STRUCTURE.md)** - Understand the codebase organization  
+3. **[Authentication System](./firebase/AUTHENTICATION_SYSTEM.md)** - Learn the auth flow
+4. **[App Components](./app/)** - Explore the frontend architecture
+5. **[Functions API](./functions/)** - Understand the backend logic
 
-- [Bundle Optimization](./BUNDLE_OPTIMIZATION.md) - Performance optimization strategies
+## 🔒 Security Architecture
 
-## 🛠️ Development Tools
+The application uses a **functions-first security model**:
 
-- [Emulator Data Documentation](./EMULATOR_DATA_README.md) - Firebase emulator test data management
+- **Client**: Read-only access with minimal permissions
+- **Functions**: All writes and sensitive operations  
+- **Validation**: Server-side validation with Zod schemas
+- **Authentication**: Firebase Auth with custom claims
 
 ## 📋 Quick Reference
 

@@ -1,0 +1,113 @@
+/**
+ * Shared utility functions for Firebase Functions
+ */
+
+import { getFirestore } from 'firebase-admin/firestore'
+import { Collections, SeasonDocument } from '@minneapolis-winter-league/shared'
+import { logger } from 'firebase-functions/v2'
+
+/**
+ * Gets the current season (most recent by dateStart)
+ */
+export async function getCurrentSeason(): Promise<SeasonDocument | null> {
+	try {
+		const firestore = getFirestore()
+		const seasonsSnapshot = await firestore
+			.collection(Collections.SEASONS)
+			.orderBy('dateStart', 'desc')
+			.limit(1)
+			.get()
+
+		if (seasonsSnapshot.empty) {
+			logger.warn('No seasons found in database')
+			return null
+		}
+
+		return seasonsSnapshot.docs[0].data() as SeasonDocument
+	} catch (error) {
+		logger.error('Error getting current season:', error)
+		throw new Error('Failed to get current season')
+	}
+}
+
+/**
+ * Gets the current season document reference
+ */
+export async function getCurrentSeasonRef() {
+	const firestore = getFirestore()
+	const seasonsSnapshot = await firestore
+		.collection(Collections.SEASONS)
+		.orderBy('dateStart', 'desc')
+		.limit(1)
+		.get()
+
+	if (seasonsSnapshot.empty) {
+		throw new Error('No current season found')
+	}
+
+	return seasonsSnapshot.docs[0].ref
+}
+
+/**
+ * Checks if a player is registered (paid and signed) for the current season
+ */
+export function isPlayerRegisteredForSeason(
+	playerData: any,
+	seasonId: string
+): boolean {
+	const seasonData = playerData.seasons?.find(
+		(season: any) => season.season.id === seasonId
+	)
+
+	return Boolean(seasonData?.paid && seasonData?.signed)
+}
+
+/**
+ * Counts registered players on a team for the current season
+ */
+export async function countRegisteredPlayersOnTeam(
+	teamRoster: any[],
+	seasonId: string
+): Promise<number> {
+	// Get all player documents
+	const playerPromises = teamRoster.map(member => member.player.get())
+	const playerDocs = await Promise.all(playerPromises)
+
+	// Count registered players
+	return playerDocs.filter(playerDoc => {
+		const playerData = playerDoc.data()
+		return isPlayerRegisteredForSeason(playerData, seasonId)
+	}).length
+}
+
+/**
+ * Standardized error handler for Firebase Functions
+ */
+export function handleFunctionError(
+	error: unknown,
+	context: string,
+	metadata?: Record<string, any>
+): Error {
+	const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+	
+	logger.error(`Error in ${context}:`, {
+		error: errorMessage,
+		stack: error instanceof Error ? error.stack : undefined,
+		...metadata,
+	})
+
+	return new Error(`${context} failed: ${errorMessage}`)
+}
+
+/**
+ * Validates that a user is authenticated and has a verified email
+ */
+export function validateAuthentication(auth: any): void {
+	if (!auth?.uid) {
+		throw new Error('Authentication required')
+	}
+
+	if (!auth.token?.email_verified) {
+		throw new Error('Email verification required')
+	}
+}
