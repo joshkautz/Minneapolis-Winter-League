@@ -39,9 +39,9 @@ if (isPlayerData(someData)) {
 ### Using Constants
 
 ```typescript
-import { COLLECTIONS, FIELDS } from '@minneapolis-winter-league/shared'
+import { Collections } from '@minneapolis-winter-league/shared'
 
-const playersCollection = firestore.collection(COLLECTIONS.PLAYERS)
+const playersCollection = firestore.collection(Collections.PLAYERS)
 ```
 
 ## Development

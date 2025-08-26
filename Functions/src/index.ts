@@ -35,15 +35,13 @@ import {
 
 // Import shared data structure interfaces and constants only
 import {
-	PlayerData,
-	TeamData,
-	SeasonData,
-	OfferData,
-	WaiverData,
+	PlayerDocument,
+	TeamDocument,
+	SeasonDocument,
+	OfferDocument,
+	WaiverDocument,
 	OfferStatus,
-	COLLECTIONS,
-	FIELDS,
-	REGION,
+	Collections,
 } from '@minneapolis-winter-league/shared'
 
 const DROPBOX_SIGN_API_KEY = 'DROPBOX_SIGN_API_KEY'
@@ -59,20 +57,20 @@ initializeApp()
  */
 
 export const OnUserDeleted = v1
-	.region(REGION)
+	.region('us-central1')
 	.auth.user()
 	.onDelete((user) => {
 		try {
 			const firestore = getFirestore()
 
 			const playerDocumentReference = firestore
-				.collection(COLLECTIONS.PLAYERS)
-				.doc(user.uid) as DocumentReference<PlayerData, DocumentData>
+				.collection(Collections.PLAYERS)
+				.doc(user.uid) as DocumentReference<PlayerDocument, DocumentData>
 
 			// Delete all the offers for the player.
 			const offersDeletionPromises = firestore
-				.collection(COLLECTIONS.OFFERS)
-				.where(FIELDS.PLAYER, '==', playerDocumentReference)
+				.collection(Collections.OFFERS)
+				.where('player', '==', playerDocumentReference)
 				.get()
 				.then((offers) => offers.docs.map((offer) => offer.ref.delete()))
 
@@ -113,13 +111,13 @@ export const OnUserDeleted = v1
  */
 
 export const OnOfferAccepted = onDocumentUpdated(
-	{ document: 'offers/{offerId}', region: REGION },
+	{ document: 'offers/{offerId}', region: 'us-central1' },
 	async (event) => {
 		try {
 			const firestore = getFirestore()
 
-			const newValue = event.data?.after.data() as OfferData
-			const previousValue = event.data?.before.data() as OfferData
+			const newValue = event.data?.after.data() as OfferDocument
+			const previousValue = event.data?.before.data() as OfferDocument
 
 			if (
 				previousValue.status === OfferStatus.PENDING &&
@@ -130,8 +128,8 @@ export const OnOfferAccepted = onDocumentUpdated(
 
 				// Update player document - Add team to the player's current season.
 				const updatePlayerPromise = (
-					firestore.collection(COLLECTIONS.SEASONS) as CollectionReference<
-						SeasonData,
+					firestore.collection(Collections.SEASONS) as CollectionReference<
+						SeasonDocument,
 						DocumentData
 					>
 				)
@@ -179,9 +177,9 @@ export const OnOfferAccepted = onDocumentUpdated(
 				// Delete all the offers for the player.
 				const offersDeletionPromises = (
 					firestore
-						.collection(COLLECTIONS.OFFERS)
-						.where(FIELDS.PLAYER, '==', playerDocumentReference) as Query<
-						OfferData,
+						.collection(Collections.OFFERS)
+						.where('player', '==', playerDocumentReference) as Query<
+						OfferDocument,
 						DocumentData
 					>
 				)
@@ -214,11 +212,11 @@ export const OnOfferAccepted = onDocumentUpdated(
  * Firebase Documentation: {@link https://firebase.google.com/docs/functions/firestore-events?gen=1st#trigger_a_function_when_a_document_is_updated_2 Trigger a function when a document is updated.}
  */
 export const OnOfferRejected = onDocumentUpdated(
-	{ document: 'offers/{offerId}', region: REGION },
+	{ document: 'offers/{offerId}', region: 'us-central1' },
 	async (event) => {
 		try {
-			const newValue = event.data?.after.data() as OfferData
-			const previousValue = event.data?.before.data() as OfferData
+			const newValue = event.data?.after.data() as OfferDocument
+			const previousValue = event.data?.before.data() as OfferDocument
 
 			if (
 				newValue.status === OfferStatus.REJECTED &&
@@ -243,7 +241,7 @@ export const OnOfferRejected = onDocumentUpdated(
  */
 
 export const OnPaymentCreated = onDocumentCreated(
-	{ document: 'customers/{uid}/payments/{sid}', region: REGION },
+	{ document: 'customers/{uid}/payments/{sid}', region: 'us-central1' },
 	async (event) => {
 		try {
 			const firestore = getFirestore()
@@ -261,15 +259,18 @@ export const OnPaymentCreated = onDocumentCreated(
 
 			return (
 				firestore
-					.collection(COLLECTIONS.PLAYERS)
-					.doc(event.params.uid) as DocumentReference<PlayerData, DocumentData>
+					.collection(Collections.PLAYERS)
+					.doc(event.params.uid) as DocumentReference<
+					PlayerDocument,
+					DocumentData
+				>
 			)
 				.get()
 				.then((playerDocumentSnapshot) =>
 					Promise.all([
 						(
-							firestore.collection(COLLECTIONS.SEASONS) as CollectionReference<
-								SeasonData,
+							firestore.collection(Collections.SEASONS) as CollectionReference<
+								SeasonDocument,
 								DocumentData
 							>
 						).get(),
@@ -332,11 +333,11 @@ export const OnPaymentCreated = onDocumentCreated(
 				.then(([dropboxResponse, playerDocumentSnapshot]) =>
 					Promise.all([
 						firestore
-							.collection(COLLECTIONS.WAIVERS)
+							.collection(Collections.WAIVERS)
 							.doc(dropboxResponse.body.signatureRequest!.signatureRequestId!)
 							.set({
 								player: firestore
-									.collection(COLLECTIONS.PLAYERS)
+									.collection(Collections.PLAYERS)
 									.doc(playerDocumentSnapshot.id),
 							}),
 					])
@@ -355,21 +356,21 @@ export const OnPaymentCreated = onDocumentCreated(
  */
 
 export const SetTeamRegistered_OnPlayerChange = onDocumentUpdated(
-	{ document: 'players/{playerId}', region: REGION },
+	{ document: 'players/{playerId}', region: 'us-central1' },
 
 	async (event) => {
 		try {
 			const firestore = getFirestore()
 
 			const seasonQuerySnapshot = await (
-				firestore.collection(COLLECTIONS.SEASONS) as CollectionReference<
-					SeasonData,
+				firestore.collection(Collections.SEASONS) as CollectionReference<
+					SeasonDocument,
 					DocumentData
 				>
 			).get()
 
-			const playersNewCurrentSeasonData = (
-				event.data?.after.data() as PlayerData
+			const playersNewCurrentSeasonDocument = (
+				event.data?.after.data() as PlayerDocument
 			).seasons.find(
 				(item) =>
 					item.season.id ==
@@ -380,8 +381,8 @@ export const SetTeamRegistered_OnPlayerChange = onDocumentUpdated(
 						.find((season) => season)?.id
 			)
 
-			const playersOldCurrentSeasonData = (
-				event.data?.before.data() as PlayerData
+			const playersOldCurrentSeasonDocument = (
+				event.data?.before.data() as PlayerDocument
 			).seasons.find(
 				(item) =>
 					item.season.id ==
@@ -392,16 +393,18 @@ export const SetTeamRegistered_OnPlayerChange = onDocumentUpdated(
 						.find((season) => season)?.id
 			)
 
-			if (!playersNewCurrentSeasonData || !playersOldCurrentSeasonData) return
+			if (!playersNewCurrentSeasonDocument || !playersOldCurrentSeasonDocument)
+				return
 
-			if (!playersNewCurrentSeasonData.team) return
+			if (!playersNewCurrentSeasonDocument.team) return
 
 			if (
-				playersNewCurrentSeasonData.signed !=
-					playersOldCurrentSeasonData.signed ||
-				playersNewCurrentSeasonData.paid != playersOldCurrentSeasonData.paid
+				playersNewCurrentSeasonDocument.signed !=
+					playersOldCurrentSeasonDocument.signed ||
+				playersNewCurrentSeasonDocument.paid !=
+					playersOldCurrentSeasonDocument.paid
 			) {
-				const promises = (await playersNewCurrentSeasonData.team.get())
+				const promises = (await playersNewCurrentSeasonDocument.team.get())
 					.data()
 					?.roster.map((item) => item.player.get())
 
@@ -441,11 +444,11 @@ export const SetTeamRegistered_OnPlayerChange = onDocumentUpdated(
 				console.log(`There are ${registeredPlayers.length} registered players`)
 
 				if (registeredPlayers.length >= 10) {
-					return playersNewCurrentSeasonData.team.update({
+					return playersNewCurrentSeasonDocument.team.update({
 						registered: true,
 					})
 				} else {
-					return playersNewCurrentSeasonData.team.update({
+					return playersNewCurrentSeasonDocument.team.update({
 						registered: false,
 					})
 				}
@@ -466,22 +469,22 @@ export const SetTeamRegistered_OnPlayerChange = onDocumentUpdated(
  */
 
 export const SetTeamRegistered_OnTeamChange = onDocumentUpdated(
-	{ document: 'teams/{teamId}', region: REGION },
+	{ document: 'teams/{teamId}', region: 'us-central1' },
 	async (event) => {
 		try {
 			const firestore = getFirestore()
 
 			const seasonQuerySnapshot = await (
-				firestore.collection(COLLECTIONS.SEASONS) as CollectionReference<
-					SeasonData,
+				firestore.collection(Collections.SEASONS) as CollectionReference<
+					SeasonDocument,
 					DocumentData
 				>
 			).get()
 
-			const newValue = event.data?.after.data() as TeamData
-			const previousValue = event.data?.before.data() as TeamData
+			const newValue = event.data?.after.data() as TeamDocument
+			const previousValue = event.data?.before.data() as TeamDocument
 			const teamRef = event.data?.after.ref as DocumentReference<
-				TeamData,
+				TeamDocument,
 				DocumentData
 			>
 			if (!teamRef) return
@@ -554,11 +557,11 @@ export const SetTeamRegistered_OnTeamChange = onDocumentUpdated(
  */
 
 export const SetTeamRegisteredDate_OnTeamRegisteredChange = onDocumentUpdated(
-	{ document: 'teams/{teamId}', region: REGION },
+	{ document: 'teams/{teamId}', region: 'us-central1' },
 	async (event) => {
 		try {
-			const newValue = event.data?.after.data() as TeamData
-			const previousValue = event.data?.before.data() as TeamData
+			const newValue = event.data?.after.data() as TeamDocument
+			const previousValue = event.data?.before.data() as TeamDocument
 			const teamRef = event.data?.after.ref
 
 			if (newValue.registered != previousValue.registered) {
@@ -583,7 +586,7 @@ export const SetTeamRegisteredDate_OnTeamRegisteredChange = onDocumentUpdated(
  */
 
 export const dropboxSignHandleWebhookEvents = onRequest(
-	{ region: REGION },
+	{ region: 'us-central1' },
 	async (req, resp) => {
 		try {
 			const firestore = getFirestore()
@@ -609,9 +612,9 @@ export const dropboxSignHandleWebhookEvents = onRequest(
 							// Update player document - Add team to the player's current season.
 							await (
 								firestore
-									.collection(COLLECTIONS.WAIVERS)
+									.collection(Collections.WAIVERS)
 									.doc(signatureRequestId) as DocumentReference<
-									WaiverData,
+									WaiverDocument,
 									DocumentData
 								>
 							)
@@ -621,8 +624,8 @@ export const dropboxSignHandleWebhookEvents = onRequest(
 										waiverDocumentSnapshot,
 										(
 											firestore.collection(
-												COLLECTIONS.SEASONS
-											) as CollectionReference<SeasonData, DocumentData>
+												Collections.SEASONS
+											) as CollectionReference<SeasonDocument, DocumentData>
 										).get(),
 									])
 								)
@@ -684,7 +687,7 @@ export const dropboxSignHandleWebhookEvents = onRequest(
 
 export const dropboxSignSendReminderEmail = onCall(
 	{
-		region: REGION,
+		region: 'us-central1',
 		cors: ['https://mplswinterleague.com'],
 	},
 	async (req) => {
@@ -697,8 +700,8 @@ export const dropboxSignSendReminderEmail = onCall(
 
 		return (
 			firestore
-				.collection(COLLECTIONS.PLAYERS)
-				.doc(req.auth?.uid) as DocumentReference<PlayerData, DocumentData>
+				.collection(Collections.PLAYERS)
+				.doc(req.auth?.uid) as DocumentReference<PlayerDocument, DocumentData>
 		)
 			.get()
 			.then((playerDocumentSnapshot) =>
@@ -706,9 +709,9 @@ export const dropboxSignSendReminderEmail = onCall(
 					playerDocumentSnapshot,
 					(
 						firestore
-							.collection(COLLECTIONS.WAIVERS)
-							.where(FIELDS.PLAYER, '==', playerDocumentSnapshot.ref) as Query<
-							WaiverData,
+							.collection(Collections.WAIVERS)
+							.where('player', '==', playerDocumentSnapshot.ref) as Query<
+							WaiverDocument,
 							DocumentData
 						>
 					).get(),

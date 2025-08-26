@@ -163,7 +163,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import {
 	PlayerData,
 	TeamData,
-	COLLECTIONS,
+	Collections,
 } from '@minneapolis-winter-league/shared'
 ```
 

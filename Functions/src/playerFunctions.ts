@@ -5,7 +5,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions'
-import { PlayerData, Collections } from '@minneapolis-winter-league/shared'
+import { PlayerDocument, Collections } from '@minneapolis-winter-league/shared'
 
 const firestore = getFirestore()
 
@@ -27,7 +27,7 @@ interface CreatePlayerRequest {
  * - Email must match authenticated user's email
  * - Document ID must match authenticated user's UID
  * - Admin field is automatically set to false
- * - All required PlayerData fields must be provided
+ * - All required PlayerDocument fields must be provided
  * - Season must exist and be valid
  */
 export const createPlayer = onCall<CreatePlayerRequest>(
@@ -121,7 +121,7 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 			}
 
 			// Create player data with all required fields
-			const playerData: PlayerData = {
+			const playerData: PlayerDocument = {
 				admin: false, // Always false for new players - security requirement
 				email: email,
 				firstname: trimmedFirstname,
@@ -287,7 +287,7 @@ export const updatePlayer = onCall<UpdatePlayerRequest>(
 			}
 
 			// Prepare update data (only include defined fields)
-			const updateData: Partial<PlayerData> = {}
+			const updateData: Partial<PlayerDocument> = {}
 			if (firstname !== undefined) {
 				updateData.firstname = firstname.trim()
 			}
@@ -415,7 +415,7 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 				)
 			}
 
-			const playerData = playerDoc.data() as PlayerData
+			const playerData = playerDoc.data() as PlayerDocument
 
 			// Check for active team associations
 			const activeTeams =

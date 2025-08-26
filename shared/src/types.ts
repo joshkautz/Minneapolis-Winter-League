@@ -5,37 +5,41 @@
  * and backend (Functions) of the Minneapolis Winter League application.
  */
 
-import { DocumentReference, DocumentData, Timestamp } from 'firebase/firestore'
+import {
+	DocumentReference,
+	DocumentData,
+	Timestamp,
+} from 'firebase-admin/firestore'
 
 /////////////////////////////////////////////////////////////////
 /////////////////////////// Enums ///////////////////////////////
 /////////////////////////////////////////////////////////////////
 
 export enum Collections {
-	PLAYERS = 'players',
-	OFFERS = 'offers',
 	GAMES = 'games',
-	TEAMS = 'teams',
+	OFFERS = 'offers',
+	PLAYERS = 'players',
 	SEASONS = 'seasons',
+	TEAMS = 'teams',
 	WAIVERS = 'waivers',
 }
 
 export enum OfferStatus {
-	PENDING = 'pending',
 	ACCEPTED = 'accepted',
+	PENDING = 'pending',
 	REJECTED = 'rejected',
 }
 
 export enum OfferType {
-	REQUEST = 'request',
 	INVITATION = 'invitation',
+	REQUEST = 'request',
 }
 
 export enum OfferDirection {
-	OUTGOING_INVITE = 'outgoingInvite',
-	OUTGOING_REQUEST = 'outgoingRequest',
 	INCOMING_INVITE = 'incomingInvite',
 	INCOMING_REQUEST = 'incomingRequest',
+	OUTGOING_INVITE = 'outgoingInvite',
+	OUTGOING_REQUEST = 'outgoingRequest',
 }
 
 export enum GameType {
@@ -44,13 +48,13 @@ export enum GameType {
 }
 
 /////////////////////////////////////////////////////////////////
-//////////////////////// Core Data Types ////////////////////////
+//////////////////////// Firestore Document Types ///////////////
 /////////////////////////////////////////////////////////////////
 
 /**
- * Player data structure representing a user in the system
+ * Player document structure representing a user in the system
  */
-export interface PlayerData extends DocumentData {
+export interface PlayerDocument extends DocumentData {
 	/** Whether the player has admin privileges */
 	admin: boolean
 	/** Player's email address */
@@ -60,13 +64,13 @@ export interface PlayerData extends DocumentData {
 	/** Player's last name */
 	lastname: string
 	/** Array of season participation data */
-	seasons: PlayerSeasonData[]
+	seasons: PlayerSeason[]
 }
 
 /**
  * Player's participation data for a specific season
  */
-export interface PlayerSeasonData {
+export interface PlayerSeason {
 	/** Whether the player is banned from the season */
 	banned: boolean
 	/** Whether the player is a team captain */
@@ -74,17 +78,17 @@ export interface PlayerSeasonData {
 	/** Whether the player has paid for the season */
 	paid: boolean
 	/** Reference to the season document */
-	season: DocumentReference<SeasonData, DocumentData>
+	season: DocumentReference<SeasonDocument, DocumentData>
 	/** Whether the player has signed the waiver */
 	signed: boolean
 	/** Reference to the team document (null if not on a team) */
-	team: DocumentReference<TeamData, DocumentData> | null
+	team: DocumentReference<TeamDocument, DocumentData> | null
 }
 
 /**
- * Team data structure representing a team in the system
+ * Team document structure representing a team in the system
  */
-export interface TeamData extends DocumentData {
+export interface TeamDocument extends DocumentData {
 	/** URL or path to team logo (nullable) */
 	logo: string | null
 	/** Team name */
@@ -96,9 +100,9 @@ export interface TeamData extends DocumentData {
 	/** Timestamp when team became registered */
 	registeredDate: Timestamp
 	/** Array of team roster entries */
-	roster: TeamRosterEntry[]
+	roster: TeamRosterPlayer[]
 	/** Reference to the season document */
-	season: DocumentReference<SeasonData, DocumentData>
+	season: DocumentReference<SeasonDocument, DocumentData>
 	/** Storage path for team-related files (nullable) */
 	storagePath: string | null
 	/** Unique team identifier */
@@ -108,57 +112,57 @@ export interface TeamData extends DocumentData {
 /**
  * Individual entry in a team's roster
  */
-export interface TeamRosterEntry {
+export interface TeamRosterPlayer {
 	/** Whether this player is a team captain */
 	captain: boolean
 	/** Reference to the player document */
-	player: DocumentReference<PlayerData, DocumentData>
+	player: DocumentReference<PlayerDocument, DocumentData>
 }
 
 /**
- * Season data structure representing a season in the system
+ * Season document structure representing a season in the system
  */
-export interface SeasonData extends DocumentData {
+export interface SeasonDocument extends DocumentData {
 	/** Season end date */
 	dateEnd: Timestamp
 	/** Season start date */
 	dateStart: Timestamp
 	/** Season name/title */
 	name: string
-	/** Registration deadline */
+	/** Registration end date */
 	registrationEnd: Timestamp
-	/** Registration opening date */
+	/** Registration start date */
 	registrationStart: Timestamp
 	/** Array of team references participating in this season */
-	teams: DocumentReference<TeamData, DocumentData>[]
+	teams: DocumentReference<TeamDocument, DocumentData>[]
 }
 
 /**
- * Offer/invitation data structure
+ * Offer/invitation document structure
  */
-export interface OfferData extends DocumentData {
-	/** Type of offer: request or invitation */
-	type: OfferType
+export interface OfferDocument extends DocumentData {
 	/** Display name of the offer creator */
 	creator: string
 	/** Reference to the player being invited/requested */
-	player: DocumentReference<PlayerData, DocumentData>
+	player: DocumentReference<PlayerDocument, DocumentData>
 	/** Resolved player name for display (optional, populated by frontend) */
 	playerName: string
 	/** Current status of the offer */
 	status: OfferStatus
 	/** Reference to the team making/receiving the offer */
-	team: DocumentReference<TeamData, DocumentData>
+	team: DocumentReference<TeamDocument, DocumentData>
 	/** Resolved team name for display (optional, populated by frontend) */
 	teamName: string
+	/** Type of offer: request or invitation */
+	type: OfferType
 }
 
 /**
- * Game data structure
+ * Game document structure
  */
-export interface GameData extends DocumentData {
+export interface GameDocument extends DocumentData {
 	/** Reference to the away team */
-	away: DocumentReference<TeamData, DocumentData>
+	away: DocumentReference<TeamDocument, DocumentData>
 	/** Away team's score */
 	awayScore: number
 	/** Game date and time */
@@ -166,37 +170,37 @@ export interface GameData extends DocumentData {
 	/** Field number where game is played */
 	field: number
 	/** Reference to the home team */
-	home: DocumentReference<TeamData, DocumentData>
+	home: DocumentReference<TeamDocument, DocumentData>
 	/** Home team's score */
 	homeScore: number
 	/** Reference to the season this game belongs to */
-	season: DocumentReference<SeasonData, DocumentData>
+	season: DocumentReference<SeasonDocument, DocumentData>
 	/** Type of game: regular season or playoff */
 	type: GameType
 }
 
 /**
- * Waiver data structure
+ * Waiver document structure
  */
-export interface WaiverData extends DocumentData {
+export interface WaiverDocument extends DocumentData {
 	/** Reference to the player who signed the waiver */
-	player: DocumentReference<PlayerData, DocumentData>
+	player: DocumentReference<PlayerDocument, DocumentData>
 	/** Dropbox Sign signature request ID (optional) */
 	signatureRequestId: string
 }
 
 /**
- * Stripe checkout session data structure
+ * Stripe checkout session document structure
  */
-export interface CheckoutSessionData extends DocumentData {
+export interface CheckoutSessionDocument extends DocumentData {
 	/** URL to redirect to on cancellation */
 	cancel_url: string
-	/** Error information if session creation failed */
-	error: { message: string }
 	/** Client identifier */
 	client: string
 	/** Session creation timestamp */
 	created: Timestamp
+	/** Error information if session creation failed */
+	error: { message: string }
 	/** Checkout session mode */
 	mode: string
 	/** Price identifier */
@@ -208,36 +212,3 @@ export interface CheckoutSessionData extends DocumentData {
 	/** Checkout session URL */
 	url: string
 }
-
-/////////////////////////////////////////////////////////////////
-///////////////////////// Constants /////////////////////////////
-/////////////////////////////////////////////////////////////////
-
-/**
- * Firebase collection names
- */
-export const COLLECTIONS = {
-	SEASONS: 'seasons',
-	WAIVERS: 'waivers',
-	OFFERS: 'offers',
-	PLAYERS: 'players',
-	TEAMS: 'teams',
-	GAMES: 'games',
-} as const
-
-/**
- * Common field names used in Firestore queries
- */
-export const FIELDS = {
-	PLAYER: 'player',
-	TEAM: 'team',
-	PAID: 'paid',
-	SIGNED: 'signed',
-	SIGNATUREREQUESTID: 'signatureRequestId',
-	SEASON: 'season',
-} as const
-
-/**
- * Firebase Functions region
- */
-export const REGION = 'us-central1' as const

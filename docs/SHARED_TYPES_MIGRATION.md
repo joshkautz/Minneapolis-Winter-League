@@ -50,8 +50,7 @@ interface TeamData extends DocumentData {
 import {
 	PlayerData,
 	TeamData,
-	COLLECTIONS,
-	FIELDS,
+	Collections,
 } from '@minneapolis-winter-league/shared'
 ```
 
@@ -84,7 +83,7 @@ import {
 **Before:**
 
 ```typescript
-const COLLECTIONS = {
+const Collections = {
 	SEASONS: 'seasons',
 	PLAYERS: 'players',
 	// ...
@@ -94,7 +93,7 @@ const COLLECTIONS = {
 **After:**
 
 ```typescript
-import { COLLECTIONS, FIELDS } from '@minneapolis-winter-league/shared'
+import { Collections } from '@minneapolis-winter-league/shared'
 ```
 
 ### 4. Use Type Guards
@@ -125,7 +124,7 @@ if (isPlayerData(data)) {
 
 - Remove local interface definitions
 - Import types from `@minneapolis-winter-league/shared`
-- Update COLLECTIONS and FIELDS usage
+- Update Collections usage
 
 ### App/src/shared/utils/interfaces.ts
 
@@ -156,7 +155,7 @@ interface PlayerData extends DocumentData {
 	}[]
 }
 
-const COLLECTIONS = {
+const Collections = {
 	SEASONS: 'seasons',
 	PLAYERS: 'players',
 }
@@ -169,8 +168,7 @@ import {
 	PlayerData,
 	TeamData,
 	SeasonData,
-	COLLECTIONS,
-	FIELDS,
+	Collections,
 } from '@minneapolis-winter-league/shared'
 ```
 

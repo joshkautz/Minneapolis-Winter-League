@@ -10,7 +10,7 @@ import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions'
 import {
-	OfferData,
+	OfferDocument,
 	OfferStatus,
 	OfferType,
 	Collections,
@@ -397,7 +397,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 					throw new HttpsError('not-found', 'Offer not found')
 				}
 
-				const offerData = offerDoc.data() as OfferData
+				const offerData = offerDoc.data() as OfferDocument
 
 				// Validate offer is pending
 				if (offerData.status !== OfferStatus.PENDING) {

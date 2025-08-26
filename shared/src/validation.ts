@@ -3,21 +3,25 @@
  */
 
 import {
-	PlayerData,
-	TeamData,
-	SeasonData,
-	OfferData,
-	GameData,
-	WaiverData,
+	PlayerDocument,
+	PlayerSeason,
+	TeamDocument,
+	TeamRosterPlayer,
+	SeasonDocument,
+	OfferDocument,
+	GameDocument,
+	WaiverDocument,
+	CheckoutSessionDocument,
 	OfferStatus,
 	OfferType,
+	GameType,
 	Collections,
 } from './types.js'
 
 /**
- * Type guard to check if an object is PlayerData
+ * Type guard to check if an object is PlayerDocument
  */
-export function isPlayerData(obj: any): obj is PlayerData {
+export function isPlayerDocument(obj: any): obj is PlayerDocument {
 	return (
 		obj &&
 		typeof obj.admin === 'boolean' &&
@@ -29,44 +33,129 @@ export function isPlayerData(obj: any): obj is PlayerData {
 }
 
 /**
- * Type guard to check if an object is TeamData
+ * Type guard to check if an object is PlayerSeason
  */
-export function isTeamData(obj: any): obj is TeamData {
+export function isPlayerSeason(obj: any): obj is PlayerSeason {
 	return (
 		obj &&
-		typeof obj.name === 'string' &&
-		typeof obj.registered === 'boolean' &&
-		typeof obj.teamId === 'string' &&
-		Array.isArray(obj.roster)
+		typeof obj.banned === 'boolean' &&
+		typeof obj.captain === 'boolean' &&
+		typeof obj.paid === 'boolean' &&
+		typeof obj.signed === 'boolean' &&
+		obj.season &&
+		typeof obj.season === 'object' &&
+		'id' in obj.season &&
+		(obj.team === null ||
+			(obj.team && typeof obj.team === 'object' && 'id' in obj.team))
 	)
 }
 
 /**
- * Type guard to check if an object is SeasonData
+ * Type guard to check if an object is TeamDocument
  */
-export function isSeasonData(obj: any): obj is SeasonData {
+export function isTeamDocument(obj: any): obj is TeamDocument {
 	return (
 		obj &&
+		(obj.logo === null || typeof obj.logo === 'string') &&
 		typeof obj.name === 'string' &&
-		obj.dateStart &&
+		(obj.placement === null || typeof obj.placement === 'number') &&
+		typeof obj.registered === 'boolean' &&
+		obj.registeredDate &&
+		Array.isArray(obj.roster) &&
+		obj.season &&
+		typeof obj.season === 'object' &&
+		'id' in obj.season &&
+		(obj.storagePath === null || typeof obj.storagePath === 'string') &&
+		typeof obj.teamId === 'string'
+	)
+}
+
+/**
+ * Type guard to check if an object is SeasonDocument
+ */
+export function isSeasonDocument(obj: any): obj is SeasonDocument {
+	return (
+		obj &&
 		obj.dateEnd &&
-		obj.registrationStart &&
+		typeof obj.dateEnd === 'object' &&
+		obj.dateStart &&
+		typeof obj.dateStart === 'object' &&
+		typeof obj.name === 'string' &&
 		obj.registrationEnd &&
+		typeof obj.registrationEnd === 'object' &&
+		obj.registrationStart &&
+		typeof obj.registrationStart === 'object' &&
 		Array.isArray(obj.teams)
 	)
 }
 
 /**
- * Type guard to check if an object is OfferData
+ * Type guard to check if an object is OfferDocument
  */
-export function isOfferData(obj: any): obj is OfferData {
+export function isOfferDocument(obj: any): obj is OfferDocument {
 	return (
 		obj &&
 		Object.values(OfferType).includes(obj.type) &&
-		Object.values(OfferStatus).includes(obj.status) &&
 		typeof obj.creator === 'string' &&
 		obj.player &&
-		obj.team
+		typeof obj.player === 'object' &&
+		'id' in obj.player &&
+		typeof obj.playerName === 'string' &&
+		Object.values(OfferStatus).includes(obj.status) &&
+		obj.team &&
+		typeof obj.team === 'object' &&
+		'id' in obj.team &&
+		typeof obj.teamName === 'string'
+	)
+}
+
+/**
+ * Type guard to check if an object is TeamRosterPlayer
+ */
+export function isTeamRosterPlayer(obj: any): obj is TeamRosterPlayer {
+	return obj && typeof obj.captain === 'boolean' && obj.player
+}
+
+/**
+ * Type guard to check if an object is GameDocument
+ */
+export function isGameDocument(obj: any): obj is GameDocument {
+	return (
+		obj &&
+		obj.away &&
+		typeof obj.awayScore === 'number' &&
+		obj.date &&
+		typeof obj.field === 'number' &&
+		obj.home &&
+		typeof obj.homeScore === 'number' &&
+		obj.season &&
+		Object.values(GameType).includes(obj.type)
+	)
+}
+
+/**
+ * Type guard to check if an object is WaiverDocument
+ */
+export function isWaiverDocument(obj: any): obj is WaiverDocument {
+	return obj && obj.player && typeof obj.signatureRequestId === 'string'
+}
+
+/**
+ * Type guard to check if an object is CheckoutSessionDocument
+ */
+export function isCheckoutSessionDocument(
+	obj: any
+): obj is CheckoutSessionDocument {
+	return (
+		obj &&
+		typeof obj.cancel_url === 'string' &&
+		typeof obj.client === 'string' &&
+		obj.created &&
+		typeof obj.mode === 'string' &&
+		typeof obj.price === 'string' &&
+		typeof obj.sessionId === 'string' &&
+		typeof obj.success_url === 'string' &&
+		typeof obj.url === 'string'
 	)
 }
 
