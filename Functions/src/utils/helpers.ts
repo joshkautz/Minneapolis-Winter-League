@@ -70,11 +70,11 @@ export async function countRegisteredPlayersOnTeam(
 	seasonId: string
 ): Promise<number> {
 	// Get all player documents
-	const playerPromises = teamRoster.map(member => member.player.get())
+	const playerPromises = teamRoster.map((member) => member.player.get())
 	const playerDocs = await Promise.all(playerPromises)
 
 	// Count registered players
-	return playerDocs.filter(playerDoc => {
+	return playerDocs.filter((playerDoc) => {
 		const playerData = playerDoc.data()
 		return isPlayerRegisteredForSeason(playerData, seasonId)
 	}).length
@@ -89,7 +89,7 @@ export function handleFunctionError(
 	metadata?: Record<string, any>
 ): Error {
 	const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-	
+
 	logger.error(`Error in ${context}:`, {
 		error: errorMessage,
 		stack: error instanceof Error ? error.stack : undefined,

@@ -5,18 +5,23 @@ This directory contains comprehensive documentation for the Minneapolis Winter L
 ## � Documentation Structure
 
 ### 🖥️ [App Documentation](./app/)
+
 Frontend React application documentation, including components, features, and user interface.
 
 ### ⚡ [Functions Documentation](./functions/)
+
 Firebase Cloud Functions documentation, including API references, triggers, and backend logic.
 
 ### 📦 [Shared Package Documentation](./shared/)
+
 Shared TypeScript types and validation schemas used across all packages.
 
 ### 🔥 [Firebase Infrastructure](./firebase/)
+
 Firebase services configuration, security rules, and database documentation.
 
 ### 🚀 [Setup & Development](./setup/)
+
 Development environment setup, deployment guides, and workflow documentation.
 
 ## 🏗️ Project Architecture
@@ -35,7 +40,7 @@ Minneapolis-Winter-League/
 ## 🚀 Quick Start
 
 1. **[Development Setup](./setup/DEVELOPMENT_SETUP.md)** - Get your environment ready
-2. **[Project Structure](./PROJECT_STRUCTURE.md)** - Understand the codebase organization  
+2. **[Project Structure](./PROJECT_STRUCTURE.md)** - Understand the codebase organization
 3. **[Authentication System](./firebase/AUTHENTICATION_SYSTEM.md)** - Learn the auth flow
 4. **[App Components](./app/)** - Explore the frontend architecture
 5. **[Functions API](./functions/)** - Understand the backend logic
@@ -45,7 +50,7 @@ Minneapolis-Winter-League/
 The application uses a **functions-first security model**:
 
 - **Client**: Read-only access with minimal permissions
-- **Functions**: All writes and sensitive operations  
+- **Functions**: All writes and sensitive operations
 - **Validation**: Server-side validation with Zod schemas
 - **Authentication**: Firebase Auth with custom claims
 

@@ -14,39 +14,41 @@ import {
 	EventCallbackRequestEvent,
 	HttpError,
 } from '@dropbox/sign'
-import { 
-	Collections, 
-	PlayerDocument, 
+import {
+	Collections,
+	PlayerDocument,
 	WaiverDocument,
 } from '@minneapolis-winter-league/shared'
-import { 
-	DROPBOX_SIGN_CONFIG, 
-	FIREBASE_CONFIG, 
-	EMAIL_CONFIG 
+import {
+	DROPBOX_SIGN_CONFIG,
+	FIREBASE_CONFIG,
+	EMAIL_CONFIG,
 } from '../config/constants.js'
-import { 
-	getCurrentSeason, 
-	handleFunctionError, 
-	validateAuthentication 
+import {
+	getCurrentSeason,
+	handleFunctionError,
+	validateAuthentication,
 } from '../utils/helpers.js'
 
 /**
  * When a payment is created and succeeded, update the player's paid status
  * and send them a Dropbox signature request for the waiver
- * 
+ *
  * @see https://firebase.google.com/docs/functions/firestore-events#trigger_a_function_when_a_new_document_is_created
  */
 export const onPaymentCreated = onDocumentCreated(
-	{ 
-		document: 'customers/{uid}/payments/{sid}', 
-		region: FIREBASE_CONFIG.REGION 
+	{
+		document: 'customers/{uid}/payments/{sid}',
+		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {
 		const { uid, sid } = event.params
-		
+
 		try {
-			logger.info(`Processing payment creation for user: ${uid}, payment: ${sid}`)
-			
+			logger.info(
+				`Processing payment creation for user: ${uid}, payment: ${sid}`
+			)
+
 			const firestore = getFirestore()
 			const dropbox = new SignatureRequestApi()
 			dropbox.username = DROPBOX_SIGN_CONFIG.API_KEY
@@ -61,14 +63,16 @@ export const onPaymentCreated = onDocumentCreated(
 
 			const paymentData = paymentDoc.data()
 			if (!paymentData || paymentData.status !== 'succeeded') {
-				logger.info(`Payment not succeeded, skipping waiver creation for ${uid}`)
+				logger.info(
+					`Payment not succeeded, skipping waiver creation for ${uid}`
+				)
 				return
 			}
 
 			// Get current season and player data
 			const [currentSeason, playerDoc] = await Promise.all([
 				getCurrentSeason(),
-				firestore.collection(Collections.PLAYERS).doc(uid).get()
+				firestore.collection(Collections.PLAYERS).doc(uid).get(),
 			])
 
 			if (!currentSeason) {
@@ -82,11 +86,12 @@ export const onPaymentCreated = onDocumentCreated(
 			const playerData = playerDoc.data() as PlayerDocument
 
 			// Update player's paid status for current season
-			const updatedSeasons = playerData.seasons?.map(season => 
-				season.season.id === currentSeason.id
-					? { ...season, paid: true }
-					: season
-			) || []
+			const updatedSeasons =
+				playerData.seasons?.map((season) =>
+					season.season.id === currentSeason.id
+						? { ...season, paid: true }
+						: season
+				) || []
 
 			await playerDoc.ref.update({ seasons: updatedSeasons })
 
@@ -95,11 +100,13 @@ export const onPaymentCreated = onDocumentCreated(
 				templateIds: [DROPBOX_SIGN_CONFIG.TEMPLATE_ID],
 				subject: EMAIL_CONFIG.WAIVER_SUBJECT,
 				message: EMAIL_CONFIG.WAIVER_MESSAGE,
-				signers: [{
-					role: 'Participant',
-					name: `${playerData.firstname} ${playerData.lastname}`,
-					emailAddress: playerData.email,
-				}],
+				signers: [
+					{
+						role: 'Participant',
+						name: `${playerData.firstname} ${playerData.lastname}`,
+						emailAddress: playerData.email,
+					},
+				],
 				signingOptions: {
 					draw: true,
 					type: true,
@@ -121,8 +128,9 @@ export const onPaymentCreated = onDocumentCreated(
 					})
 			}
 
-			logger.info(`Successfully processed payment and created waiver for user: ${uid}`)
-
+			logger.info(
+				`Successfully processed payment and created waiver for user: ${uid}`
+			)
 		} catch (error) {
 			throw handleFunctionError(error, 'onPaymentCreated', { uid, sid })
 		}
@@ -132,7 +140,7 @@ export const onPaymentCreated = onDocumentCreated(
 /**
  * Webhook handler for Dropbox Sign events
  * Updates player's signed status when waiver is signed
- * 
+ *
  * @see https://firebase.google.com/docs/functions/http-events#trigger_a_function_with_an_http_request
  */
 export const dropboxSignWebhook = onRequest(
@@ -152,15 +160,21 @@ export const dropboxSignWebhook = onRequest(
 			const callbackEvent = EventCallbackRequest.init(callbackData)
 
 			// Verify that the callback came from Dropbox Sign
-			if (!EventCallbackHelper.isValid(DROPBOX_SIGN_CONFIG.API_KEY, callbackEvent)) {
+			if (
+				!EventCallbackHelper.isValid(DROPBOX_SIGN_CONFIG.API_KEY, callbackEvent)
+			) {
 				logger.warn('Invalid Dropbox Sign webhook signature')
 				resp.status(401).send('Invalid signature')
 				return
 			}
 
 			// Handle signature request signed event
-			if (callbackEvent.event.eventType === EventCallbackRequestEvent.EventTypeEnum.SignatureRequestSigned) {
-				const signatureRequestId = callbackEvent.signatureRequest?.signatureRequestId
+			if (
+				callbackEvent.event.eventType ===
+				EventCallbackRequestEvent.EventTypeEnum.SignatureRequestSigned
+			) {
+				const signatureRequestId =
+					callbackEvent.signatureRequest?.signatureRequestId
 
 				if (signatureRequestId) {
 					await handleWaiverSigned(signatureRequestId)
@@ -168,7 +182,6 @@ export const dropboxSignWebhook = onRequest(
 			}
 
 			resp.status(200).send('Webhook processed successfully')
-
 		} catch (error) {
 			logger.error('Error processing Dropbox Sign webhook:', error)
 			resp.status(500).send('Internal server error')
@@ -190,7 +203,9 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 			.get()
 
 		if (!waiverDoc.exists) {
-			logger.warn(`Waiver document not found for signature request: ${signatureRequestId}`)
+			logger.warn(
+				`Waiver document not found for signature request: ${signatureRequestId}`
+			)
 			return
 		}
 
@@ -200,7 +215,7 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 		// Get current season and player data
 		const [currentSeason, playerDoc] = await Promise.all([
 			getCurrentSeason(),
-			playerRef.get()
+			playerRef.get(),
 		])
 
 		if (!currentSeason || !playerDoc.exists) {
@@ -210,11 +225,12 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 		const playerData = playerDoc.data() as PlayerDocument
 
 		// Update player's signed status for current season
-		const updatedSeasons = playerData.seasons?.map(season => 
-			season.season.id === currentSeason.id
-				? { ...season, signed: true }
-				: season
-		) || []
+		const updatedSeasons =
+			playerData.seasons?.map((season) =>
+				season.season.id === currentSeason.id
+					? { ...season, signed: true }
+					: season
+			) || []
 
 		await playerRef.update({ seasons: updatedSeasons })
 
@@ -222,15 +238,16 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 			playerId: playerRef.id,
 			signatureRequestId,
 		})
-
 	} catch (error) {
-		throw handleFunctionError(error, 'handleWaiverSigned', { signatureRequestId })
+		throw handleFunctionError(error, 'handleWaiverSigned', {
+			signatureRequestId,
+		})
 	}
 }
 
 /**
  * Re-send waiver email reminder to a player
- * 
+ *
  * @see https://firebase.google.com/docs/functions/callable#write_and_deploy_the_callable_function
  */
 export const resendWaiverEmail = onCall(
@@ -286,9 +303,8 @@ export const resendWaiverEmail = onCall(
 
 			return {
 				success: true,
-				message: 'Reminder email sent successfully'
+				message: 'Reminder email sent successfully',
 			}
-
 		} catch (error) {
 			if (error instanceof HttpError) {
 				logger.error('Dropbox Sign API error:', error.body)
@@ -296,7 +312,7 @@ export const resendWaiverEmail = onCall(
 			}
 
 			throw handleFunctionError(error, 'resendWaiverEmail', {
-				uid: request.auth?.uid
+				uid: request.auth?.uid,
 			})
 		}
 	}

@@ -1,10 +1,10 @@
 /**
  * Firebase Functions Entry Point
- * 
+ *
  * This file serves as the main entry point for all Firebase Functions.
  * Functions are organized into separate modules by functionality:
  * - Authentication triggers
- * - Payment and waiver triggers  
+ * - Payment and waiver triggers
  * - Team registration triggers
  * - Player management functions
  * - Team management functions
@@ -25,17 +25,17 @@ initializeApp()
 export { userDeleted } from './triggers/authTriggers.js'
 
 // Payment and waiver triggers
-export { 
+export {
 	onPaymentCreated,
 	dropboxSignWebhook,
-	resendWaiverEmail 
+	resendWaiverEmail,
 } from './triggers/paymentTriggers.js'
 
 // Team registration triggers
 export {
 	updateTeamRegistrationOnPlayerChange,
 	updateTeamRegistrationOnRosterChange,
-	updateTeamRegistrationDate
+	updateTeamRegistrationDate,
 } from './triggers/teamTriggers.js'
 
 //////////////////////////////////////////////////////////////////////////////
@@ -43,11 +43,7 @@ export {
 //////////////////////////////////////////////////////////////////////////////
 
 // Player management functions
-export { 
-	createPlayer, 
-	updatePlayer, 
-	deletePlayer 
-} from './playerFunctions.js'
+export { createPlayer, updatePlayer, deletePlayer } from './playerFunctions.js'
 
 // Team management functions
 export {

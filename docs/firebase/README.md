@@ -118,9 +118,10 @@ Required for complex queries:
 
 ```javascript
 // Example: Query players by season and status
-players.where('season', '==', '2024-25')
-       .where('status', '==', 'active')
-       .orderBy('lastName')
+players
+	.where('season', '==', '2024-25')
+	.where('status', '==', 'active')
+	.orderBy('lastName')
 ```
 
 ### Index Configuration

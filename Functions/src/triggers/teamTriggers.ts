@@ -5,33 +5,27 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { 
-	PlayerDocument, 
-	TeamDocument 
-} from '@minneapolis-winter-league/shared'
-import { 
-	FIREBASE_CONFIG, 
-	TEAM_CONFIG 
-} from '../config/constants.js'
-import { 
-	getCurrentSeason, 
+import { PlayerDocument, TeamDocument } from '@minneapolis-winter-league/shared'
+import { FIREBASE_CONFIG, TEAM_CONFIG } from '../config/constants.js'
+import {
+	getCurrentSeason,
 	countRegisteredPlayersOnTeam,
-	handleFunctionError 
+	handleFunctionError,
 } from '../utils/helpers.js'
 
 /**
  * When a player's payment/waiver status changes, update their team's registration status
- * 
+ *
  * @see https://firebase.google.com/docs/functions/firestore-events#trigger_a_function_when_a_document_is_updated
  */
 export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
-	{ 
-		document: 'players/{playerId}', 
-		region: FIREBASE_CONFIG.REGION 
+	{
+		document: 'players/{playerId}',
+		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {
 		const playerId = event.params.playerId
-		
+
 		try {
 			const beforeData = event.data?.before.data() as PlayerDocument
 			const afterData = event.data?.after.data() as PlayerDocument
@@ -48,10 +42,10 @@ export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
 
 			// Find current season data for this player
 			const beforeSeasonData = beforeData.seasons?.find(
-				season => season.season.id === currentSeason.id
+				(season) => season.season.id === currentSeason.id
 			)
 			const afterSeasonData = afterData.seasons?.find(
-				season => season.season.id === currentSeason.id
+				(season) => season.season.id === currentSeason.id
 			)
 
 			if (!beforeSeasonData || !afterSeasonData || !afterSeasonData.team) {
@@ -64,7 +58,7 @@ export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
 
 			if (paymentChanged || waiverChanged) {
 				await updateTeamRegistrationStatus(
-					afterSeasonData.team, 
+					afterSeasonData.team,
 					currentSeason.id
 				)
 
@@ -75,26 +69,27 @@ export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
 					waiverChanged,
 				})
 			}
-
 		} catch (error) {
-			throw handleFunctionError(error, 'updateTeamRegistrationOnPlayerChange', { playerId })
+			throw handleFunctionError(error, 'updateTeamRegistrationOnPlayerChange', {
+				playerId,
+			})
 		}
 	}
 )
 
 /**
  * When a team roster changes, update the team's registration status
- * 
+ *
  * @see https://firebase.google.com/docs/functions/firestore-events#trigger_a_function_when_a_document_is_updated
  */
 export const updateTeamRegistrationOnRosterChange = onDocumentUpdated(
-	{ 
-		document: 'teams/{teamId}', 
-		region: FIREBASE_CONFIG.REGION 
+	{
+		document: 'teams/{teamId}',
+		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {
 		const teamId = event.params.teamId
-		
+
 		try {
 			const beforeData = event.data?.before.data() as TeamDocument
 			const afterData = event.data?.after.data() as TeamDocument
@@ -105,7 +100,8 @@ export const updateTeamRegistrationOnRosterChange = onDocumentUpdated(
 			}
 
 			// Check if roster size changed
-			const rosterSizeChanged = beforeData.roster.length !== afterData.roster.length
+			const rosterSizeChanged =
+				beforeData.roster.length !== afterData.roster.length
 
 			if (rosterSizeChanged) {
 				const currentSeason = await getCurrentSeason()
@@ -122,26 +118,27 @@ export const updateTeamRegistrationOnRosterChange = onDocumentUpdated(
 					newRosterSize: afterData.roster.length,
 				})
 			}
-
 		} catch (error) {
-			throw handleFunctionError(error, 'updateTeamRegistrationOnRosterChange', { teamId })
+			throw handleFunctionError(error, 'updateTeamRegistrationOnRosterChange', {
+				teamId,
+			})
 		}
 	}
 )
 
 /**
  * When a team's registration status changes, update the registeredDate
- * 
+ *
  * @see https://firebase.google.com/docs/functions/firestore-events#trigger_a_function_when_a_document_is_updated
  */
 export const updateTeamRegistrationDate = onDocumentUpdated(
-	{ 
-		document: 'teams/{teamId}', 
-		region: FIREBASE_CONFIG.REGION 
+	{
+		document: 'teams/{teamId}',
+		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {
 		const teamId = event.params.teamId
-		
+
 		try {
 			const beforeData = event.data?.before.data() as TeamDocument
 			const afterData = event.data?.after.data() as TeamDocument
@@ -162,7 +159,6 @@ export const updateTeamRegistrationDate = onDocumentUpdated(
 					registered: afterData.registered,
 				})
 			}
-
 		} catch (error) {
 			throw handleFunctionError(error, 'updateTeamRegistrationDate', { teamId })
 		}
@@ -173,7 +169,7 @@ export const updateTeamRegistrationDate = onDocumentUpdated(
  * Helper function to update a team's registration status
  */
 async function updateTeamRegistrationStatus(
-	teamRef: any, 
+	teamRef: any,
 	seasonId: string
 ): Promise<void> {
 	try {
@@ -187,12 +183,13 @@ async function updateTeamRegistrationStatus(
 
 		// Count registered players on the team
 		const registeredCount = await countRegisteredPlayersOnTeam(
-			teamData.roster, 
+			teamData.roster,
 			seasonId
 		)
 
 		// Determine if team should be registered
-		const shouldBeRegistered = registeredCount >= TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
+		const shouldBeRegistered =
+			registeredCount >= TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
 
 		// Update registration status if it changed
 		if (teamData.registered !== shouldBeRegistered) {
@@ -206,7 +203,6 @@ async function updateTeamRegistrationStatus(
 				registered: shouldBeRegistered,
 			})
 		}
-
 	} catch (error) {
 		throw handleFunctionError(error, 'updateTeamRegistrationStatus', {
 			teamId: teamRef.id,

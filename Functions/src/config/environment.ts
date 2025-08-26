@@ -20,7 +20,8 @@ export function getEnvironmentConfig(): EnvironmentConfig {
 
 	// In development, allow fallback to placeholder
 	if (!dropboxSignApiKey && nodeEnv === 'production') {
-		const error = 'DROPBOX_SIGN_API_KEY environment variable is required in production'
+		const error =
+			'DROPBOX_SIGN_API_KEY environment variable is required in production'
 		logger.error(error)
 		throw new Error(error)
 	}

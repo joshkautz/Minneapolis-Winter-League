@@ -14,67 +14,65 @@ import { handleFunctionError } from '../utils/helpers.js'
  * - Delete the player document
  * - Remove player from all team rosters
  * - Delete all related offers
- * 
+ *
  * @see https://firebase.google.com/docs/functions/auth-events#trigger_a_function_on_user_deletion
  */
-export const userDeleted = auth
-	.user()
-	.onDelete(async (user: UserRecord) => {
-		const { uid } = user
-		
-		try {
-			logger.info(`Processing user deletion for UID: ${uid}`)
-			
-			const firestore = getFirestore()
-			const playerRef = firestore.collection(Collections.PLAYERS).doc(uid)
+export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
+	const { uid } = user
 
-			// Get player data to find associated teams (outside transaction first)
-			const playerDoc = await playerRef.get()
-			
-			if (!playerDoc.exists) {
-				logger.warn(`Player document not found for UID: ${uid}`)
-				return
-			}
+	try {
+		logger.info(`Processing user deletion for UID: ${uid}`)
 
-			const playerData = playerDoc.data()
+		const firestore = getFirestore()
+		const playerRef = firestore.collection(Collections.PLAYERS).doc(uid)
 
-			// Use a transaction to ensure data consistency
-			await firestore.runTransaction(async (transaction) => {
-				// Remove player from all teams they've been on
-				if (playerData?.seasons) {
-					for (const season of playerData.seasons) {
-						if (season.team) {
-							const teamDocSnapshot = await season.team.get()
-							if (teamDocSnapshot.exists) {
-								const teamData = teamDocSnapshot.data()
-								const updatedRoster = teamData?.roster?.filter(
+		// Get player data to find associated teams (outside transaction first)
+		const playerDoc = await playerRef.get()
+
+		if (!playerDoc.exists) {
+			logger.warn(`Player document not found for UID: ${uid}`)
+			return
+		}
+
+		const playerData = playerDoc.data()
+
+		// Use a transaction to ensure data consistency
+		await firestore.runTransaction(async (transaction) => {
+			// Remove player from all teams they've been on
+			if (playerData?.seasons) {
+				for (const season of playerData.seasons) {
+					if (season.team) {
+						const teamDocSnapshot = await season.team.get()
+						if (teamDocSnapshot.exists) {
+							const teamData = teamDocSnapshot.data()
+							const updatedRoster =
+								teamData?.roster?.filter(
 									(member: any) => member.player.id !== uid
 								) || []
-								
-								transaction.update(season.team, { roster: updatedRoster })
-							}
+
+							transaction.update(season.team, { roster: updatedRoster })
 						}
 					}
 				}
+			}
 
-				// Delete the player document
-				transaction.delete(playerRef)
-			})
+			// Delete the player document
+			transaction.delete(playerRef)
+		})
 
-			// Delete all offers for this player (done outside transaction to avoid conflicts)
-			const offersQuery = await firestore
-				.collection(Collections.OFFERS)
-				.where('player', '==', playerRef)
-				.get()
+		// Delete all offers for this player (done outside transaction to avoid conflicts)
+		const offersQuery = await firestore
+			.collection(Collections.OFFERS)
+			.where('player', '==', playerRef)
+			.get()
 
-			const deletePromises = offersQuery.docs.map(doc => doc.ref.delete())
-			await Promise.all(deletePromises)
+		const deletePromises = offersQuery.docs.map((doc) => doc.ref.delete())
+		await Promise.all(deletePromises)
 
-			logger.info(`Successfully cleaned up data for deleted user: ${uid}`, {
-				deletedOffers: deletePromises.length,
-			})
-
-		} catch (error) {
-			throw handleFunctionError(error, 'userDeleted', { uid })
-		}
-	})
+		logger.info(`Successfully cleaned up data for deleted user: ${uid}`, {
+			deletedOffers: deletePromises.length,
+		})
+	} catch (error) {
+		throw handleFunctionError(error, 'userDeleted', { uid })
+	}
+})
