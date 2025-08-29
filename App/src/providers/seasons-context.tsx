@@ -30,7 +30,9 @@ interface SeasonsContextValue {
 		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
 		| undefined
 	setSelectedSeasonQueryDocumentSnapshot: Dispatch<
-		SetStateAction<QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined>
+		SetStateAction<
+			QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined
+		>
 	>
 }
 
@@ -62,12 +64,16 @@ export const SeasonsContextProvider: React.FC<SeasonsContextProviderProps> = ({
 	const [
 		selectedSeasonQueryDocumentSnapshot,
 		setSelectedSeasonQueryDocumentSnapshot,
-	] = useState<QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined>()
+	] = useState<
+		QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined
+	>()
 
 	const [
 		currentSeasonQueryDocumentSnapshot,
 		setCurrentSeasonQueryDocumentSnapshot,
-	] = useState<QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined>()
+	] = useState<
+		QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined
+	>()
 
 	const getMostRecentSeason = useCallback(():
 		| QueryDocumentSnapshot<SeasonDocument, DocumentData>

@@ -6,7 +6,11 @@ import { onDocumentCreated } from 'firebase-functions/v2/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerDocument } from '@minneapolis-winter-league/shared'
-import { FIREBASE_CONFIG, DROPBOX_SIGN_CONFIG, EMAIL_CONFIG } from '../../config/constants.js'
+import {
+	FIREBASE_CONFIG,
+	DROPBOX_SIGN_CONFIG,
+	EMAIL_CONFIG,
+} from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
 import { getCurrentSeason } from '../../shared/database.js'
 import { SignatureRequestApi, SubSigningOptions } from '@dropbox/sign'
@@ -101,7 +105,8 @@ export const onPaymentCreated = onDocumentCreated(
 				await firestore.collection(Collections.WAIVERS).add({
 					player: playerDoc.ref,
 					season: currentSeason.id,
-					signatureRequestId: signatureResponse.body.signatureRequest.signatureRequestId,
+					signatureRequestId:
+						signatureResponse.body.signatureRequest.signatureRequestId,
 					status: 'pending',
 					createdAt: new Date(),
 				})

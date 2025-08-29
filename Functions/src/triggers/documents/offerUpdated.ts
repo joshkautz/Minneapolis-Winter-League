@@ -41,7 +41,7 @@ export const onOfferUpdated = onDocumentUpdated(
 				// Get offer data
 				const offerRef = firestore.collection(Collections.OFFERS).doc(offerId)
 				const offerDoc = await transaction.get(offerRef)
-				
+
 				if (!offerDoc.exists) {
 					throw new Error('Offer not found')
 				}
@@ -50,7 +50,7 @@ export const onOfferUpdated = onDocumentUpdated(
 				if (!offerData) {
 					throw new Error('Invalid offer data')
 				}
-				
+
 				const { player: playerRef, team: teamRef, type } = offerData
 
 				// Get player and team documents
@@ -86,7 +86,9 @@ export const onOfferUpdated = onDocumentUpdated(
 				transaction.update(teamRef, { roster: updatedRoster })
 
 				// Update player's season data
-				const seasonRef = firestore.collection(Collections.SEASONS).doc(currentSeason.id)
+				const seasonRef = firestore
+					.collection(Collections.SEASONS)
+					.doc(currentSeason.id)
 				const newSeasonData = {
 					season: seasonRef,
 					team: teamRef,

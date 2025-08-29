@@ -5,7 +5,12 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, TeamDocument } from '@minneapolis-winter-league/shared'
+import {
+	Collections,
+	TeamDocument,
+	PlayerDocument,
+	PlayerSeason,
+} from '@minneapolis-winter-league/shared'
 import { validateAuthentication } from '../../shared/auth.js'
 
 interface CreateTeamRequest {
@@ -51,26 +56,26 @@ export const createTeam = onCall<CreateTeamRequest>(
 
 			// Check if player is already on a team for this season
 			const existingSeasonData = playerDocument?.seasons?.find(
-				(season: any) => season.season.id === seasonId
+				(season: PlayerSeason) => season.season.id === seasonId
 			)
 
 			if (existingSeasonData?.team) {
 				throw new Error('Player is already on a team for this season')
 			}
 
-			// Create team document
+			// Create team document - Note: roster player refs are Firebase Admin SDK refs
 			const teamDocument: Partial<TeamDocument> = {
 				name: name.trim(),
 				logo: logo || '',
 				storagePath: storagePath || '',
 				roster: [
 					{
-						player: playerRef as any,
+						player: playerRef, // Type assertion needed for Firebase Admin SDK compatibility
 						captain: true,
 					},
-				],
+				] as TeamDocument['roster'],
 				registered: false,
-				registeredDate: undefined as any,
+				// registeredDate will be set when team becomes registered
 			}
 
 			const teamRef = await firestore
@@ -78,17 +83,18 @@ export const createTeam = onCall<CreateTeamRequest>(
 				.add(teamDocument)
 
 			// Update player's season data to include team
-			const updatedSeasons = playerDocument?.seasons?.map((season: any) =>
-				season.season.id === seasonId
-					? { ...season, team: teamRef, captain: true }
-					: season
-			) || []
+			const updatedSeasons =
+				playerDocument?.seasons?.map((season: PlayerSeason) =>
+					season.season.id === seasonId
+						? { ...season, team: teamRef, captain: true }
+						: season
+				) || []
 
 			// If no season entry exists, create one
 			if (!existingSeasonData) {
 				updatedSeasons.push({
-					season: seasonRef as any,
-					team: teamRef as any,
+					season: seasonRef, // Firebase admin SDK DocumentReference
+					team: teamRef, // Firebase admin SDK DocumentReference
 					captain: true,
 					paid: false,
 					signed: false,

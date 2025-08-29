@@ -54,11 +54,12 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 						const playerDoc = await member.player.get()
 						if (playerDoc.exists) {
 							const playerDocument = playerDoc.data()
-							const updatedSeasons = playerDocument?.seasons?.map((season: any) =>
-								season.team?.id === teamId
-									? { ...season, team: null, captain: false }
-									: season
-							) || []
+							const updatedSeasons =
+								playerDocument?.seasons?.map((season: any) =>
+									season.team?.id === teamId
+										? { ...season, team: null, captain: false }
+										: season
+								) || []
 
 							transaction.update(member.player, { seasons: updatedSeasons })
 						}

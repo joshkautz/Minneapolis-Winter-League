@@ -41,7 +41,9 @@ export const createOffer = onCall<CreateOfferRequest>(
 				}
 
 				// Get player and team documents
-				const playerRef = firestore.collection(Collections.PLAYERS).doc(playerId)
+				const playerRef = firestore
+					.collection(Collections.PLAYERS)
+					.doc(playerId)
 				const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
 
 				const [playerDoc, teamDoc] = await Promise.all([
@@ -90,7 +92,9 @@ export const createOffer = onCall<CreateOfferRequest>(
 					.get()
 
 				if (!existingOffersQuery.empty) {
-					throw new Error('A pending offer already exists between this player and team')
+					throw new Error(
+						'A pending offer already exists between this player and team'
+					)
 				}
 
 				// Create offer document
@@ -105,7 +109,9 @@ export const createOffer = onCall<CreateOfferRequest>(
 					expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
 				}
 
-				const offerRef = await firestore.collection(Collections.OFFERS).add(offerData)
+				const offerRef = await firestore
+					.collection(Collections.OFFERS)
+					.add(offerData)
 
 				logger.info(`Successfully created offer: ${offerRef.id}`, {
 					type,

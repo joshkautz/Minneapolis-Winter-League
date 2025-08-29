@@ -13,7 +13,7 @@ import type { Query, DocumentData } from '../types'
  */
 export const seasonsQuery = (): Query<SeasonDocument, DocumentData> => {
 	return query(
-		collection(firestore, Collections.SEASONS) as any, 
+		collection(firestore, Collections.SEASONS) as any,
 		orderBy('dateStart', 'desc')
 	) as Query<SeasonDocument, DocumentData>
 }

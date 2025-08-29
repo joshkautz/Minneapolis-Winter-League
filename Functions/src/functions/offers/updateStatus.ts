@@ -74,7 +74,9 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 				if (offerData.type === 'invitation') {
 					// Player can accept/reject invitations sent to them
 					if (auth!.uid !== offerData.player.id) {
-						throw new Error('Only the invited player can respond to this invitation')
+						throw new Error(
+							'Only the invited player can respond to this invitation'
+						)
 					}
 				} else if (offerData.type === 'request') {
 					// Team captains can accept/reject requests to their team

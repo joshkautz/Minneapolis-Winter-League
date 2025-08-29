@@ -5,7 +5,7 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '@minneapolis-winter-league/shared'
+import { Collections, PlayerSeason } from '@minneapolis-winter-league/shared'
 import { validateAuthentication, validateAdminUser } from '../../shared/auth.js'
 
 /**
@@ -45,14 +45,16 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 			if (!adminOverride) {
 				throw new Error('Admin override required to delete other players')
 			}
-			
+
 			const firestore = getFirestore()
 			await validateAdminUser(auth, firestore)
 		}
 
 		try {
 			const firestore = getFirestore()
-			const playerRef = firestore.collection(Collections.PLAYERS).doc(targetPlayerId)
+			const playerRef = firestore
+				.collection(Collections.PLAYERS)
+				.doc(targetPlayerId)
 
 			// Check if player exists
 			const playerDoc = await playerRef.get()
@@ -63,12 +65,14 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 			const playerDocument = playerDoc.data()
 
 			// Check for team associations
-			const hasTeamAssociations = playerDocument?.seasons?.some((season: any) => season.team)
-			
+			const hasTeamAssociations = playerDocument?.seasons?.some(
+				(season: PlayerSeason) => season.team
+			)
+
 			if (hasTeamAssociations && !adminOverride) {
 				throw new Error(
 					'Player has team associations. Admin override required for deletion. ' +
-					'Note: This will remove the player from all teams and delete all offers.'
+						'Note: This will remove the player from all teams and delete all offers.'
 				)
 			}
 

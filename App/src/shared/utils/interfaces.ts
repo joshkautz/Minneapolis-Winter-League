@@ -9,7 +9,7 @@ export type {
 	WaiverDocument,
 } from '@minneapolis-winter-league/shared'
 
-export { 
+export {
 	Collections,
 	OfferStatus,
 	OfferType,

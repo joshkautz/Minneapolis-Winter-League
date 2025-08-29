@@ -380,7 +380,7 @@ export const editTeam = async (
 	logo?: string,
 	storagePath?: string
 ) => {
-	const updateData: any = {}
+	const updateData: Partial<EditTeamRequest> = {}
 	if (name !== undefined) updateData.name = name
 	if (logo !== undefined) updateData.logo = logo
 	if (storagePath !== undefined) updateData.storagePath = storagePath
@@ -392,8 +392,8 @@ export const editTeam = async (
 }
 
 export const invitePlayer = async (
-	playerSnapshot: { id: string; data: () => any },
-	teamSnapshot: { id: string; data: () => any }
+	playerSnapshot: { id: string; data: () => unknown },
+	teamSnapshot: { id: string; data: () => unknown }
 ) => {
 	return createOfferViaFunction({
 		playerId: playerSnapshot.id,

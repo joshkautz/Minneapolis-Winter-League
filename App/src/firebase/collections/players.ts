@@ -16,7 +16,12 @@ import {
 
 import { firestore } from '../app'
 import { User, UserCredential } from '../auth'
-import { PlayerDocument, SeasonDocument, TeamDocument, Collections } from '@/shared/utils'
+import {
+	PlayerDocument,
+	SeasonDocument,
+	TeamDocument,
+	Collections,
+} from '@/shared/utils'
 import type {
 	DocumentReference,
 	DocumentSnapshot,

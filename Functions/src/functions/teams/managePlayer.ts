@@ -5,7 +5,13 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '@minneapolis-winter-league/shared'
+import {
+	Collections,
+	TeamDocument,
+	PlayerDocument,
+	TeamRosterPlayer,
+	PlayerSeason,
+} from '@minneapolis-winter-league/shared'
 import { validateAuthentication } from '../../shared/auth.js'
 import { getCurrentSeason } from '../../shared/database.js'
 
@@ -42,7 +48,9 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 
 				// Get team and player documents
 				const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
-				const playerRef = firestore.collection(Collections.PLAYERS).doc(playerId)
+				const playerRef = firestore
+					.collection(Collections.PLAYERS)
+					.doc(playerId)
 
 				const [teamDoc, playerDoc] = await Promise.all([
 					transaction.get(teamRef),
@@ -53,12 +61,13 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 					throw new Error('Team or player not found')
 				}
 
-				const teamDocument = teamDoc.data()
-				const playerDocument = playerDoc.data()
+				const teamDocument = teamDoc.data() as TeamDocument
+				const playerDocument = playerDoc.data() as PlayerDocument
 
 				// Check if user is a captain of this team
 				const userIsCaptain = teamDocument?.roster?.some(
-					(member: any) => member.player.id === userId && member.captain
+					(member: TeamRosterPlayer) =>
+						member.player.id === userId && member.captain
 				)
 
 				if (!userIsCaptain) {
@@ -115,27 +124,25 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 
 // Helper functions for player management
 function handlePromoteToCaptain(
-	transaction: any,
-	teamRef: any,
-	teamDocument: any,
-	playerRef: any,
-	playerDocument: any
+	transaction: FirebaseFirestore.Transaction,
+	teamRef: FirebaseFirestore.DocumentReference,
+	teamDocument: TeamDocument,
+	playerRef: FirebaseFirestore.DocumentReference,
+	playerDocument: PlayerDocument
 ) {
 	// Update team roster
-	const updatedRoster = teamDocument.roster?.map((member: any) =>
-		member.player.id === playerRef.id
-			? { ...member, captain: true }
-			: member
-	) || []
+	const updatedRoster =
+		teamDocument.roster?.map((member: TeamRosterPlayer) =>
+			member.player.id === playerRef.id ? { ...member, captain: true } : member
+		) || []
 
 	transaction.update(teamRef, { roster: updatedRoster })
 
 	// Update player seasons
-	const updatedSeasons = playerDocument.seasons?.map((season: any) =>
-		season.team?.id === teamRef.id
-			? { ...season, captain: true }
-			: season
-	) || []
+	const updatedSeasons =
+		playerDocument.seasons?.map((season: PlayerSeason) =>
+			season.team?.id === teamRef.id ? { ...season, captain: true } : season
+		) || []
 
 	transaction.update(playerRef, { seasons: updatedSeasons })
 
@@ -144,37 +151,43 @@ function handlePromoteToCaptain(
 		playerId: playerRef.id,
 	})
 
-	return { success: true, action: 'promoted', message: 'Player promoted to captain' }
+	return {
+		success: true,
+		action: 'promoted',
+		message: 'Player promoted to captain',
+	}
 }
 
 function handleDemoteFromCaptain(
-	transaction: any,
-	teamRef: any,
-	teamDocument: any,
-	playerRef: any,
-	playerDocument: any
+	transaction: FirebaseFirestore.Transaction,
+	teamRef: FirebaseFirestore.DocumentReference,
+	teamDocument: TeamDocument,
+	playerRef: FirebaseFirestore.DocumentReference,
+	playerDocument: PlayerDocument
 ) {
 	// Check if this is the last captain
-	const captainCount = teamDocument.roster?.filter((member: any) => member.captain).length || 0
+	const captainCount =
+		teamDocument.roster?.filter((member: TeamRosterPlayer) => member.captain)
+			.length || 0
 	if (captainCount <= 1) {
-		throw new Error('Cannot demote the last captain. Promote another player first.')
+		throw new Error(
+			'Cannot demote the last captain. Promote another player first.'
+		)
 	}
 
 	// Update team roster
-	const updatedRoster = teamDocument.roster?.map((member: any) =>
-		member.player.id === playerRef.id
-			? { ...member, captain: false }
-			: member
-	) || []
+	const updatedRoster =
+		teamDocument.roster?.map((member: TeamRosterPlayer) =>
+			member.player.id === playerRef.id ? { ...member, captain: false } : member
+		) || []
 
 	transaction.update(teamRef, { roster: updatedRoster })
 
 	// Update player seasons
-	const updatedSeasons = playerDocument.seasons?.map((season: any) =>
-		season.team?.id === teamRef.id
-			? { ...season, captain: false }
-			: season
-	) || []
+	const updatedSeasons =
+		playerDocument.seasons?.map((season: PlayerSeason) =>
+			season.team?.id === teamRef.id ? { ...season, captain: false } : season
+		) || []
 
 	transaction.update(playerRef, { seasons: updatedSeasons })
 
@@ -183,42 +196,52 @@ function handleDemoteFromCaptain(
 		playerId: playerRef.id,
 	})
 
-	return { success: true, action: 'demoted', message: 'Player demoted from captain' }
+	return {
+		success: true,
+		action: 'demoted',
+		message: 'Player demoted from captain',
+	}
 }
 
 function handleRemoveFromTeam(
-	transaction: any,
-	teamRef: any,
-	teamDocument: any,
-	playerRef: any,
-	playerDocument: any,
+	transaction: FirebaseFirestore.Transaction,
+	teamRef: FirebaseFirestore.DocumentReference,
+	teamDocument: TeamDocument,
+	playerRef: FirebaseFirestore.DocumentReference,
+	playerDocument: PlayerDocument,
 	playerId: string,
 	seasonId: string
 ) {
 	// Check if this is the last captain
 	const playerIsCaptain = teamDocument.roster?.find(
-		(member: any) => member.player.id === playerId
+		(member: TeamRosterPlayer) => member.player.id === playerId
 	)?.captain
 
-	const captainCount = teamDocument.roster?.filter((member: any) => member.captain).length || 0
-	
+	const captainCount =
+		teamDocument.roster?.filter((member: TeamRosterPlayer) => member.captain)
+			.length || 0
+
 	if (playerIsCaptain && captainCount <= 1) {
-		throw new Error('Cannot remove the last captain. Promote another player first.')
+		throw new Error(
+			'Cannot remove the last captain. Promote another player first.'
+		)
 	}
 
 	// Remove player from team roster
-	const updatedRoster = teamDocument.roster?.filter(
-		(member: any) => member.player.id !== playerId
-	) || []
+	const updatedRoster =
+		teamDocument.roster?.filter(
+			(member: TeamRosterPlayer) => member.player.id !== playerId
+		) || []
 
 	transaction.update(teamRef, { roster: updatedRoster })
 
 	// Update player seasons
-	const updatedSeasons = playerDocument.seasons?.map((season: any) =>
-		season.season.id === seasonId
-			? { ...season, team: null, captain: false }
-			: season
-	) || []
+	const updatedSeasons =
+		playerDocument.seasons?.map((season: PlayerSeason) =>
+			season.season.id === seasonId
+				? { ...season, team: null, captain: false }
+				: season
+		) || []
 
 	transaction.update(playerRef, { seasons: updatedSeasons })
 
@@ -227,5 +250,9 @@ function handleRemoveFromTeam(
 		playerId: playerRef.id,
 	})
 
-	return { success: true, action: 'removed', message: 'Player removed from team' }
+	return {
+		success: true,
+		action: 'removed',
+		message: 'Player removed from team',
+	}
 }

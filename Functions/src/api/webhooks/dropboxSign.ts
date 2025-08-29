@@ -81,7 +81,9 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 			.get()
 
 		if (waiverQuery.empty) {
-			logger.warn(`No waiver found for signature request: ${signatureRequestId}`)
+			logger.warn(
+				`No waiver found for signature request: ${signatureRequestId}`
+			)
 			return
 		}
 
@@ -108,8 +110,12 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 			await playerDoc.ref.update({ seasons: updatedSeasons })
 		}
 
-		logger.info(`Successfully processed waiver signing for: ${signatureRequestId}`)
+		logger.info(
+			`Successfully processed waiver signing for: ${signatureRequestId}`
+		)
 	} catch (error) {
-		throw handleFunctionError(error, 'handleWaiverSigned', { signatureRequestId })
+		throw handleFunctionError(error, 'handleWaiverSigned', {
+			signatureRequestId,
+		})
 	}
 }

@@ -4,7 +4,7 @@ import { DocumentData, DocumentReference } from '@/firebase/firestore'
 
 export interface NotificationCardItemProps {
 	type: OfferDirection
-	data: OfferDocument | any
+	data: OfferDocument
 	statusColor?: string
 	message?: string
 	actionOptions: {

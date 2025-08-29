@@ -17,7 +17,7 @@ export const cleanupOffers = onCall(
 	async (request) => {
 		// Validate authentication and admin privileges
 		validateAuthentication(request.auth)
-		
+
 		const firestore = getFirestore()
 		await validateAdminUser(request.auth, firestore)
 
@@ -32,7 +32,9 @@ export const cleanupOffers = onCall(
 				.where('expiresAt', '<', now)
 				.get()
 
-			const expiredDeletes = expiredOffersQuery.docs.map((doc) => doc.ref.delete())
+			const expiredDeletes = expiredOffersQuery.docs.map((doc) =>
+				doc.ref.delete()
+			)
 			await Promise.all(expiredDeletes)
 			totalDeleted += expiredDeletes.length
 
@@ -48,13 +50,13 @@ export const cleanupOffers = onCall(
 
 			for (const offerDoc of pendingOffersQuery.docs) {
 				const offerData = offerDoc.data()
-				
+
 				// Get player data to check if they're already on a team
 				const playerDoc = await offerData.player.get()
 				if (playerDoc.exists) {
 					const playerDocument = playerDoc.data()
 					const hasTeamForSeason = playerDocument?.seasons?.some(
-						(season: any) => 
+						(season: any) =>
 							season.season.id === offerData.season && season.team
 					)
 
@@ -80,7 +82,7 @@ export const cleanupOffers = onCall(
 
 			for (const offerDoc of allOffersQuery.docs) {
 				const offerData = offerDoc.data()
-				
+
 				try {
 					const [playerDoc, teamDoc] = await Promise.all([
 						offerData.player.get(),

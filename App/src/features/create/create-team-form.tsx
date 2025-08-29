@@ -11,7 +11,7 @@ import { useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { errorHandler, logger } from '@/shared/utils'
+import { errorHandler, logger, ErrorType } from '@/shared/utils'
 import { teamFormSchema, type TeamFormData } from '@/shared/utils/validation'
 
 type CreateTeamSchema = TeamFormData
@@ -70,7 +70,7 @@ export const CreateTeamForm = ({
 				)
 				errorHandler.handle(
 					error,
-					'unexpected' as any,
+					ErrorType.UNEXPECTED,
 					'CreateTeamForm.onCreateSubmit'
 				)
 				handleResult({

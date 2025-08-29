@@ -12,7 +12,9 @@ import { Timestamp } from '@firebase/firestore'
 export const formatTimestamp = (
 	timestamp: Timestamp | undefined
 ): string | undefined => {
-	if (!timestamp) {return undefined}
+	if (!timestamp) {
+		return undefined
+	}
 
 	const date = new Date(timestamp.seconds * 1000)
 	return date.toLocaleDateString('en-US', {
@@ -53,7 +55,9 @@ export const formatDateTime = (date: Date): string => {
 export const formatTimestampWithTime = (
 	timestamp: Timestamp | undefined
 ): string | undefined => {
-	if (!timestamp) {return undefined}
+	if (!timestamp) {
+		return undefined
+	}
 
 	const date = new Date(timestamp.seconds * 1000)
 	return formatDateTime(date)

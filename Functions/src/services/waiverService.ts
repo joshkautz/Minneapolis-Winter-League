@@ -5,8 +5,12 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '@minneapolis-winter-league/shared'
-import { FIREBASE_CONFIG, DROPBOX_SIGN_CONFIG, EMAIL_CONFIG } from '../config/constants.js'
+import { Collections, PlayerSeason } from '@minneapolis-winter-league/shared'
+import {
+	FIREBASE_CONFIG,
+	DROPBOX_SIGN_CONFIG,
+	EMAIL_CONFIG,
+} from '../config/constants.js'
 import { validateAuthentication } from '../shared/auth.js'
 import { SignatureRequestApi, SubSigningOptions } from '@dropbox/sign'
 
@@ -43,8 +47,8 @@ export const resendWaiverEmail = onCall(
 			}
 
 			// Check if player has already paid
-			const currentSeason = playerDocument.seasons?.find((season: any) => 
-				season.paid && !season.signed
+			const currentSeason = playerDocument.seasons?.find(
+				(season: PlayerSeason) => season.paid && !season.signed
 			)
 
 			if (!currentSeason) {
@@ -80,7 +84,8 @@ export const resendWaiverEmail = onCall(
 
 			return {
 				success: true,
-				signatureRequestId: signatureResponse.body.signatureRequest?.signatureRequestId,
+				signatureRequestId:
+					signatureResponse.body.signatureRequest?.signatureRequestId,
 				message: 'Waiver email sent successfully',
 			}
 		} catch (error) {

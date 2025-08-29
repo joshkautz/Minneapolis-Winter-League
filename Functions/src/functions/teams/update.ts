@@ -17,7 +17,7 @@ interface EditTeamRequest {
 
 /**
  * Edits team information (name, logo, storage path)
- * 
+ *
  * Security validations:
  * - User must be authenticated and email verified
  * - User must be a captain of the team
