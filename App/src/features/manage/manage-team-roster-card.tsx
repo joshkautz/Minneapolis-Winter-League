@@ -1,4 +1,4 @@
-import { DocumentData, DocumentReference } from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase/firestore'
 import { useTeamsContext } from '@/providers'
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { NotificationCard } from '@/shared/components'
@@ -120,7 +120,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 				(
 					item: {
 						captain: boolean
-						player: DocumentReference<PlayerDocument, DocumentData>
+						player: DocumentReference<PlayerDocument>
 					},
 					index: number
 				) => (

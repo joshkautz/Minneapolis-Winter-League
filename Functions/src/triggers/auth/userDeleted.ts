@@ -6,7 +6,7 @@ import { auth } from 'firebase-functions/v1'
 import { UserRecord } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '@minneapolis-winter-league/shared'
+import { Collections } from '../../types.js'
 import { handleFunctionError } from '../../shared/errors.js'
 
 /**

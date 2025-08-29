@@ -8,7 +8,6 @@ import { useCollection } from 'react-firebase-hooks/firestore'
 import {
 	outgoingOffersQuery,
 	incomingOffersQuery,
-	DocumentData,
 	FirestoreError,
 	QuerySnapshot,
 } from '@/firebase/firestore'
@@ -17,14 +16,10 @@ import { OfferDocument } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 
 interface OffersProps {
-	outgoingOffersQuerySnapshot:
-		| QuerySnapshot<OfferDocument, DocumentData>
-		| undefined
+	outgoingOffersQuerySnapshot: QuerySnapshot<OfferDocument> | undefined
 	outgoingOffersQuerySnapshotLoading: boolean
 	outgoingOffersQuerySnapshotError: FirestoreError | undefined
-	incomingOffersQuerySnapshot:
-		| QuerySnapshot<OfferDocument, DocumentData>
-		| undefined
+	incomingOffersQuerySnapshot: QuerySnapshot<OfferDocument> | undefined
 	incomingOffersQuerySnapshotLoading: boolean
 	incomingOffersQuerySnapshotError: FirestoreError | undefined
 }
@@ -72,12 +67,12 @@ export const OffersContextProvider: React.FC<PropsWithChildren> = ({
 		<OffersContext.Provider
 			value={{
 				outgoingOffersQuerySnapshot: outgoingOffersQuerySnapshot as
-					| QuerySnapshot<OfferDocument, DocumentData>
+					| QuerySnapshot<OfferDocument>
 					| undefined,
 				outgoingOffersQuerySnapshotLoading: outgoingOffersQuerySnapshotLoading,
 				outgoingOffersQuerySnapshotError: outgoingOffersQuerySnapshotError,
 				incomingOffersQuerySnapshot: incomingOffersQuerySnapshot as
-					| QuerySnapshot<OfferDocument, DocumentData>
+					| QuerySnapshot<OfferDocument>
 					| undefined,
 				incomingOffersQuerySnapshotLoading: incomingOffersQuerySnapshotLoading,
 				incomingOffersQuerySnapshotError: incomingOffersQuerySnapshotError,

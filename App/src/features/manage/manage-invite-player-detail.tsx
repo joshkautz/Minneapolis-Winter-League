@@ -1,5 +1,4 @@
 import {
-	DocumentData,
 	DocumentSnapshot,
 	QueryDocumentSnapshot,
 	offersForPlayerByTeamQuery,
@@ -20,22 +19,15 @@ export const ManageInvitePlayerDetail = ({
 	statusColor,
 	handleInvite,
 }: {
-	teamQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<TeamDocument, DocumentData>
-		| undefined
-	playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument, DocumentData>
+	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined
+	playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>
 	statusColor?: string
 	message?: string
 	handleInvite: (
-		playerQueryDocumentSnapshot: QueryDocumentSnapshot<
-			PlayerDocument,
-			DocumentData
-		>,
-		teamQueryDocumentSnapshot:
-			| QueryDocumentSnapshot<TeamDocument, DocumentData>
-			| undefined,
+		playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
+		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined,
 		authenticatedUserDocumentSnapshot:
-			| DocumentSnapshot<PlayerDocument, DocumentData>
+			| DocumentSnapshot<PlayerDocument>
 			| undefined
 	) => void
 }) => {

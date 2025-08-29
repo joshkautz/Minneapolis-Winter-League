@@ -6,7 +6,7 @@ import {
 	useSeasonsContext,
 } from '@/providers'
 import { logger } from '@/shared/utils'
-import type { PlayerSeason } from '@minneapolis-winter-league/shared'
+import type { PlayerSeason } from '@/types'
 
 /**
  * Custom hook for top navigation logic

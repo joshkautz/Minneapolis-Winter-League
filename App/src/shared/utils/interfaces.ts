@@ -1,4 +1,4 @@
-// Import and re-export shared types from the @minneapolis-winter-league/shared package
+// Import and re-export types from the local types file
 export type {
 	PlayerDocument,
 	TeamDocument,
@@ -7,11 +7,16 @@ export type {
 	CheckoutSessionDocument,
 	GameDocument,
 	WaiverDocument,
-} from '@minneapolis-winter-league/shared'
+	DocumentData,
+	PlayerSeason,
+	TeamRosterPlayer,
+	Timestamp,
+} from '../../types'
 
 export {
 	Collections,
 	OfferStatus,
 	OfferType,
 	OfferDirection,
-} from '@minneapolis-winter-league/shared'
+	GameType,
+} from '../../types'

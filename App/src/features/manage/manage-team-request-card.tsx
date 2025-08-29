@@ -1,5 +1,5 @@
 import {
-	DocumentData,
+	
 	DocumentSnapshot,
 	QueryDocumentSnapshot,
 	requestToJoinTeam,
@@ -23,10 +23,10 @@ export const ManageTeamRequestCard = () => {
 	const handleRequest = useCallback(
 		(
 			authenticatedUserDocumentSnapshot:
-				| DocumentSnapshot<PlayerDocument, DocumentData>
+				| DocumentSnapshot<PlayerDocument>
 				| undefined,
 
-			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument, DocumentData>
+			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument>
 		) =>
 			requestToJoinTeam(
 				authenticatedUserDocumentSnapshot,

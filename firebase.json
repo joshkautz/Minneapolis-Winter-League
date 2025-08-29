@@ -11,7 +11,6 @@
 			"tsconfig.json"
 		],
 		"predeploy": [
-			"npm run build:shared",
 			"npm install --prefix Functions",
 			"npm run build --prefix Functions"
 		]
@@ -64,7 +63,6 @@
 			}
 		],
 		"predeploy": [
-			"npm run build:shared",
 			"npm install --prefix App",
 			"npm run build --prefix App"
 		],

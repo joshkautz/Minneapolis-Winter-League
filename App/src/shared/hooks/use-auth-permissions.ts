@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useAuthContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
-import type { PlayerSeason } from '@minneapolis-winter-league/shared'
+import type { PlayerSeason } from '@/types'
 
 /**
  * Custom hook for checking user authentication permissions

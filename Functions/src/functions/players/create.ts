@@ -5,7 +5,7 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument } from '@minneapolis-winter-league/shared'
+import { Collections, PlayerDocument } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 
 /**

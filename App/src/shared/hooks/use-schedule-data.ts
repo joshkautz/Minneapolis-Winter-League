@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { DocumentData, QueryDocumentSnapshot } from '@/firebase/firestore'
+import { QueryDocumentSnapshot } from '@/firebase/firestore'
 import { GameDocument } from '@/shared/utils'
 import { useGamesContext } from '@/providers'
 
@@ -19,27 +19,20 @@ export const useScheduleData = () => {
 
 		gamesQuerySnapshot?.docs
 			.sort((a, b) => a.data().date.seconds - b.data().date.seconds)
-			.forEach(
-				(
-					queryDocumentSnapshot: QueryDocumentSnapshot<
-						GameDocument,
-						DocumentData
-					>
-				) => {
-					const currentTimestamp = queryDocumentSnapshot.data().date.seconds
-					if (previousTimestamp == 0) {
-						previousTimestamp = currentTimestamp
-					}
-					if (previousTimestamp !== currentTimestamp) {
-						previousTimestamp = currentTimestamp
-						index++
-					}
-					if (!result[index]) {
-						result[index] = []
-					}
-					result[index].push(queryDocumentSnapshot.data())
+			.forEach((queryDocumentSnapshot: QueryDocumentSnapshot<GameDocument>) => {
+				const currentTimestamp = queryDocumentSnapshot.data().date.seconds
+				if (previousTimestamp == 0) {
+					previousTimestamp = currentTimestamp
 				}
-			)
+				if (previousTimestamp !== currentTimestamp) {
+					previousTimestamp = currentTimestamp
+					index++
+				}
+				if (!result[index]) {
+					result[index] = []
+				}
+				result[index].push(queryDocumentSnapshot.data())
+			})
 		return result
 	}, [gamesQuerySnapshot])
 

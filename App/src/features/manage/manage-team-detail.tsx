@@ -1,7 +1,6 @@
 import {
-	DocumentData,
-	DocumentSnapshot,
 	QueryDocumentSnapshot,
+	DocumentSnapshot,
 	offersForPlayerByTeamQuery,
 } from '@/firebase/firestore'
 import { useCollection } from 'react-firebase-hooks/firestore'
@@ -17,15 +16,12 @@ export const ManageTeamDetail = ({
 }: {
 	handleRequest: (
 		authenticatedUserDocumentSnapshot:
-			| DocumentSnapshot<PlayerDocument, DocumentData>
+			| DocumentSnapshot<PlayerDocument>
 			| undefined,
-		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument, DocumentData>
+		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument>
 	) => Promise<void> | undefined
-	currentSeasonTeamsQueryDocumentSnapshot: QueryDocumentSnapshot<
-		TeamDocument,
-		DocumentData
-	>
-	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument, DocumentData> | undefined
+	currentSeasonTeamsQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument>
+	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument> | undefined
 }) => {
 	const [offersForPlayerByTeamQuerySnapshot] = useCollection(
 		offersForPlayerByTeamQuery(

@@ -7,7 +7,6 @@ import { useCollection } from 'react-firebase-hooks/firestore'
 // Winter League
 import {
 	currentSeasonTeamsQuery,
-	DocumentData,
 	FirestoreError,
 	QuerySnapshot,
 	teamsQuery,
@@ -17,18 +16,14 @@ import { useSeasonsContext } from './seasons-context'
 import { useAuthContext } from './auth-context'
 
 interface TeamProps {
-	currentSeasonTeamsQuerySnapshot:
-		| QuerySnapshot<TeamDocument, DocumentData>
-		| undefined
+	currentSeasonTeamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
 	currentSeasonTeamsQuerySnapshotLoading: boolean
 	currentSeasonTeamsQuerySnapshotError: FirestoreError | undefined
-	selectedSeasonTeamsQuerySnapshot:
-		| QuerySnapshot<TeamDocument, DocumentData>
-		| undefined
+	selectedSeasonTeamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
 	selectedSeasonTeamsQuerySnapshotLoading: boolean
 	selectedSeasonTeamsQuerySnapshotError: FirestoreError | undefined
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot:
-		| QuerySnapshot<TeamDocument, DocumentData>
+		| QuerySnapshot<TeamDocument>
 		| undefined
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotLoading: boolean
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError:

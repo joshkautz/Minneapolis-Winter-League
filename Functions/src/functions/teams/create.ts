@@ -8,9 +8,8 @@ import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
 	TeamDocument,
-	PlayerDocument,
 	PlayerSeason,
-} from '@minneapolis-winter-league/shared'
+} from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 
 interface CreateTeamRequest {

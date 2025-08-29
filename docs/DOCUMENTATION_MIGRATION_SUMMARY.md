@@ -41,8 +41,6 @@ docs/
 ├── FIREBASE_MIGRATION.md                  # 🔥 Firebase migration docs
 ├── FIREBASE_COLLECTIONS_README.md         # 📄 Collections guide (deprecated)
 ├── PLAYER_FUNCTION_DOCUMENTATION.md       # 👤 Player Functions API
-├── SHARED_PACKAGE_README.md               # 📦 @minneapolis-winter-league/shared package docs
-├── SHARED_TYPES_MIGRATION.md              # 🔄 TypeScript shared types
 ├── TYPESCRIPT_IMPROVEMENTS.md             # 📝 TypeScript enhancements
 ├── ZOD_VALIDATION_ANALYSIS.md             # ✅ Validation patterns
 ├── ZOD_ADVANCED_USAGE_EXAMPLES.md         # 🚀 Advanced Zod techniques
@@ -72,7 +70,6 @@ docs/
 
 ### 📦 **For Integration**
 
-- `SHARED_PACKAGE_README.md` - Using @minneapolis-winter-league/shared
 - `PLAYER_FUNCTION_DOCUMENTATION.md` - Functions API
 - `FIREBASE_COLLECTIONS_README.md` - What's deprecated
 

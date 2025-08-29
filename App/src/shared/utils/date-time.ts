@@ -4,7 +4,7 @@
  * Reusable functions for formatting and manipulating dates
  */
 
-import { Timestamp } from '@firebase/firestore'
+import { Timestamp } from '@/types'
 
 /**
  * Format a Firebase Timestamp to a readable date string

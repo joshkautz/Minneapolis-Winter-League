@@ -5,7 +5,7 @@ import { useOffer } from '@/shared/hooks'
 import { useTeamsContext } from '@/providers'
 import {
 	DocumentReference,
-	DocumentData,
+	
 	rejectOffer,
 	acceptOffer,
 } from '@/firebase/firestore'
@@ -29,7 +29,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 		useOffer(incomingOffersQuerySnapshot, currentSeasonTeamsQuerySnapshot)
 
 	const handleReject = (
-		offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
+		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
 		rejectOffer(offerDocumentReference)
 			.then(() => {
@@ -45,7 +45,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 	}
 
 	const handleAccept = (
-		offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
+		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
 		acceptOffer(offerDocumentReference)
 			.then(() => {
@@ -61,7 +61,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 	}
 
 	const handleCancel = (
-		offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
+		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
 		rejectOffer(offerDocumentReference)
 			.then(() => {

@@ -5,7 +5,7 @@
 import { onRequest } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '@minneapolis-winter-league/shared'
+import { Collections } from '../../types.js'
 import { FIREBASE_CONFIG, DROPBOX_SIGN_CONFIG } from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
 import {

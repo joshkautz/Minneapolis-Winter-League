@@ -6,7 +6,7 @@ import { Timestamp } from '@firebase/firestore'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { ProfileForm } from './profile-form'
 import { ProfileActions } from './profile-actions'
-import type { PlayerSeason } from '@minneapolis-winter-league/shared'
+import type { PlayerSeason } from '@/types'
 
 export const Profile = () => {
 	const {

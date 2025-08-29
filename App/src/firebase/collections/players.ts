@@ -5,14 +5,16 @@
 import {
 	doc,
 	getDoc,
-	setDoc,
 	updateDoc,
 	query,
 	where,
 	collection,
-	or,
-	and,
-} from 'firebase/firestore'
+	DocumentSnapshot,
+	QueryDocumentSnapshot,
+	DocumentReference,
+	Query,
+} from '@/firebase/adapter'
+import { setDoc, or, and, UpdateData } from 'firebase/firestore'
 
 import { firestore } from '../app'
 import { User, UserCredential } from '../auth'
@@ -21,19 +23,9 @@ import {
 	SeasonDocument,
 	TeamDocument,
 	Collections,
-} from '@/shared/utils'
-import type {
-	DocumentReference,
-	DocumentSnapshot,
-	QueryDocumentSnapshot,
-	Query,
-	UpdateData,
-	DocumentData,
-} from '../types'
-import type {
 	PlayerSeason,
 	TeamRosterPlayer,
-} from '@minneapolis-winter-league/shared'
+} from '@/shared/utils'
 
 /**
  * Creates a new player document for a registered user
@@ -55,7 +47,7 @@ export const createPlayer = (
 	firstname: string,
 	lastname: string,
 	email: string,
-	season: QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined
+	season: QueryDocumentSnapshot<SeasonDocument> | undefined
 ): Promise<void> => {
 	console.warn(
 		'⚠️  createPlayer is deprecated. Use createPlayerViaFunction for better security.'
@@ -90,8 +82,8 @@ export const createPlayer = (
  * Gets a player document snapshot by reference
  */
 export const getPlayerSnapshot = (
-	playerRef: DocumentReference<PlayerDocument, DocumentData>
-): Promise<DocumentSnapshot<PlayerDocument, DocumentData>> => {
+	playerRef: DocumentReference<PlayerDocument>
+): Promise<DocumentSnapshot<PlayerDocument>> => {
 	return getDoc(playerRef)
 }
 
@@ -100,7 +92,7 @@ export const getPlayerSnapshot = (
  */
 export const getPlayerRef = (
 	authValue: User | null | undefined
-): DocumentReference<PlayerDocument, DocumentData> | undefined => {
+): DocumentReference<PlayerDocument> | undefined => {
 	if (!authValue) {
 		return undefined
 	}
@@ -108,7 +100,7 @@ export const getPlayerRef = (
 		firestore,
 		Collections.PLAYERS,
 		authValue.uid
-	) as DocumentReference<PlayerDocument, DocumentData>
+	) as DocumentReference<PlayerDocument>
 }
 
 /**
@@ -116,7 +108,7 @@ export const getPlayerRef = (
  */
 export const getPlayersQuery = (
 	search: string
-): Query<PlayerDocument, DocumentData> | undefined => {
+): Query<PlayerDocument> | undefined => {
 	if (search === '') {
 		return undefined
 	}
@@ -144,7 +136,7 @@ export const getPlayersQuery = (
 				'<=',
 				lastname.charAt(0).toUpperCase() + lastname.slice(1) + '\uf8ff'
 			)
-		) as Query<PlayerDocument, DocumentData>
+		) as Query<PlayerDocument>
 	} else {
 		return query(
 			collection(firestore, Collections.PLAYERS),
@@ -174,7 +166,7 @@ export const getPlayersQuery = (
 					)
 				)
 			)
-		) as Query<PlayerDocument, DocumentData>
+		) as Query<PlayerDocument>
 	}
 }
 
@@ -206,9 +198,9 @@ export const updatePlayer = (
  * Promotes a player to captain status for a specific season and team
  */
 export const promoteToCaptain = async (
-	playerRef: DocumentReference<PlayerDocument, DocumentData> | undefined,
-	teamRef: DocumentReference<TeamDocument, DocumentData> | undefined,
-	seasonRef: DocumentReference<SeasonDocument, DocumentData> | undefined
+	playerRef: DocumentReference<PlayerDocument> | undefined,
+	teamRef: DocumentReference<TeamDocument> | undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined
 ) => {
 	if (!playerRef || !teamRef || !seasonRef) {
 		return
@@ -249,9 +241,9 @@ export const promoteToCaptain = async (
  * Demotes a player from captain status for a specific season and team
  */
 export const demoteFromCaptain = async (
-	playerRef: DocumentReference<PlayerDocument, DocumentData> | undefined,
-	teamRef: DocumentReference<TeamDocument, DocumentData> | undefined,
-	seasonRef: DocumentReference<SeasonDocument, DocumentData> | undefined
+	playerRef: DocumentReference<PlayerDocument> | undefined,
+	teamRef: DocumentReference<TeamDocument> | undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined
 ) => {
 	if (!playerRef || !teamRef || !seasonRef) {
 		return
@@ -301,9 +293,9 @@ export const demoteFromCaptain = async (
  * Removes a player from a team
  */
 export const removeFromTeam = async (
-	playerRef: DocumentReference<PlayerDocument, DocumentData> | undefined,
-	teamRef: DocumentReference<TeamDocument, DocumentData> | undefined,
-	seasonRef: DocumentReference<SeasonDocument, DocumentData> | undefined
+	playerRef: DocumentReference<PlayerDocument> | undefined,
+	teamRef: DocumentReference<TeamDocument> | undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined
 ) => {
 	if (!playerRef || !teamRef || !seasonRef) {
 		return
@@ -341,7 +333,8 @@ export const removeFromTeam = async (
 			seasons: playerDocumentSnapshot
 				.data()
 				?.seasons.map((item: PlayerSeason) => ({
-					captain: item.season.id === seasonRef.id ? false : item.team,
+					banned: item.banned,
+					captain: item.season.id === seasonRef.id ? false : item.captain,
 					paid: item.paid,
 					season: item.season,
 					signed: item.signed,

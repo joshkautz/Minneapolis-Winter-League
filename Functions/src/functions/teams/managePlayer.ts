@@ -11,7 +11,7 @@ import {
 	PlayerDocument,
 	TeamRosterPlayer,
 	PlayerSeason,
-} from '@minneapolis-winter-league/shared'
+} from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 import { getCurrentSeason } from '../../shared/database.js'
 

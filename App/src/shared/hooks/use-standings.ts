@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { DocumentData, QuerySnapshot } from '@/firebase/firestore'
+import { QuerySnapshot } from '@/firebase/firestore'
 import { GameDocument } from '@/shared/utils'
 
 export type TeamStanding = {
@@ -11,7 +11,7 @@ export type TeamStanding = {
 }
 
 export const useStandings = (
-	gamesQuerySnapshot: QuerySnapshot<GameDocument, DocumentData> | undefined
+	gamesQuerySnapshot: QuerySnapshot<GameDocument> | undefined
 ) => {
 	const standings = useMemo(() => {
 		const result: {

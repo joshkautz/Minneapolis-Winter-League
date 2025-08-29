@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { stripeRegistration } from '@/firebase/firestore'
 import { formatTimestamp } from '@/shared/utils'
 import { User } from 'firebase/auth'
-import { QueryDocumentSnapshot, DocumentData } from '@/firebase/firestore'
+import { QueryDocumentSnapshot } from '@/firebase/firestore'
 import { SeasonDocument } from '@/shared/utils'
 
 interface PaymentSectionProps {
@@ -17,7 +17,7 @@ interface PaymentSectionProps {
 	isAuthenticatedUserBanned: boolean
 	isAuthenticatedUserPaid: boolean
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
+		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
 }
 

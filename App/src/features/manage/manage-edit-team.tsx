@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { v4 as uuidv4 } from 'uuid'
 import { ReloadIcon } from '@radix-ui/react-icons'
-import { editTeam } from '@/firebase/firestore'
+import { editTeam, convertRef } from '@/firebase/firestore'
 import { StorageReference, ref, storage } from '@/firebase/storage'
 import { useTeamsContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
@@ -24,7 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { FocusScope } from '@radix-ui/react-focus-scope'
 import { logger, errorHandler, ErrorType } from '@/shared/utils'
 import { teamFormSchema, type TeamFormData } from '@/shared/utils/validation'
-import type { PlayerSeason } from '@minneapolis-winter-league/shared'
+import type { PlayerSeason } from '@/types'
 
 type ManageEditTeamSchema = TeamFormData
 
@@ -106,7 +106,7 @@ export const ManageEditTeam = ({
 			return
 		}
 		editTeam(
-			team?.ref,
+			convertRef(team?.ref),
 			editedTeamDocument.name,
 			downloadUrl,
 			editedTeamDocument.storageRef?.fullPath
@@ -145,19 +145,25 @@ export const ManageEditTeam = ({
 							contentType: 'image/jpeg',
 						}).then((result) => {
 							setStorageRef(result?.ref)
-							setEditedTeamDocument({ name: data.name, storageRef: result?.ref })
+							setEditedTeamDocument({
+								name: data.name,
+								storageRef: result?.ref,
+							})
 						})
 					} else {
 						uploadFile(ref(storage, `teams/${uuidv4()}`), uploadedFile, {
 							contentType: 'image/jpeg',
 						}).then((result) => {
 							setStorageRef(result?.ref)
-							setEditedTeamDocument({ name: data.name, storageRef: result?.ref })
+							setEditedTeamDocument({
+								name: data.name,
+								storageRef: result?.ref,
+							})
 						})
 					}
 				} else {
 					if (storageRef) {
-						editTeam(team?.ref, data.name, undefined, undefined)
+						editTeam(convertRef(team?.ref), data.name, undefined, undefined)
 							.then(() => {
 								setIsLoading(false)
 								toast.success('Team Edited', {
@@ -182,7 +188,7 @@ export const ManageEditTeam = ({
 								})
 							})
 					} else {
-						editTeam(team?.ref, data.name, undefined, undefined)
+						editTeam(convertRef(team?.ref), data.name, undefined, undefined)
 							.then(() => {
 								setIsLoading(false)
 								toast.success('Team Edited', {

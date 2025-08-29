@@ -1,5 +1,5 @@
 /**
- * Shared validation utilities and type guards
+ * Validation utilities and type guards for Functions
  */
 
 import {
@@ -164,7 +164,7 @@ export function isCheckoutSessionDocument(
  */
 export function isValidCollection(
 	collection: string
-): collection is keyof typeof Collections {
+): collection is Collections {
 	return Object.values(Collections).includes(collection as Collections)
 }
 

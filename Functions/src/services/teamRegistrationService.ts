@@ -3,7 +3,7 @@
  */
 
 import { logger } from 'firebase-functions/v2'
-import { TeamDocument } from '@minneapolis-winter-league/shared'
+import { TeamDocument } from '../types.js'
 import { TEAM_CONFIG } from '../config/constants.js'
 import { countRegisteredPlayersOnTeam } from '../shared/database.js'
 

@@ -4,7 +4,7 @@
 
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { logger } from 'firebase-functions/v2'
-import { TeamDocument } from '@minneapolis-winter-league/shared'
+import { TeamDocument } from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { getCurrentSeason } from '../../shared/database.js'
 import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'

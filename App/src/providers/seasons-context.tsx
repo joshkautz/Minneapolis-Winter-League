@@ -10,7 +10,6 @@ import React, {
 } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import {
-	DocumentData,
 	QuerySnapshot,
 	seasonsQuery,
 	FirestoreError,
@@ -20,19 +19,17 @@ import { SeasonDocument } from '@/shared/utils'
 
 interface SeasonsContextValue {
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
+		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
 	currentSeasonQueryDocumentSnapshotLoading: boolean
-	seasonsQuerySnapshot: QuerySnapshot<SeasonDocument, DocumentData> | undefined
+	seasonsQuerySnapshot: QuerySnapshot<SeasonDocument> | undefined
 	seasonsQuerySnapshotLoading: boolean
 	seasonsQuerySnapshotError: FirestoreError | undefined
 	selectedSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
+		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
 	setSelectedSeasonQueryDocumentSnapshot: Dispatch<
-		SetStateAction<
-			QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined
-		>
+		SetStateAction<QueryDocumentSnapshot<SeasonDocument> | undefined>
 	>
 }
 
@@ -64,19 +61,15 @@ export const SeasonsContextProvider: React.FC<SeasonsContextProviderProps> = ({
 	const [
 		selectedSeasonQueryDocumentSnapshot,
 		setSelectedSeasonQueryDocumentSnapshot,
-	] = useState<
-		QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined
-	>()
+	] = useState<QueryDocumentSnapshot<SeasonDocument> | undefined>()
 
 	const [
 		currentSeasonQueryDocumentSnapshot,
 		setCurrentSeasonQueryDocumentSnapshot,
-	] = useState<
-		QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined
-	>()
+	] = useState<QueryDocumentSnapshot<SeasonDocument> | undefined>()
 
 	const getMostRecentSeason = useCallback(():
-		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
+		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined => {
 		return seasonsQuerySnapshot?.docs
 			.sort((a, b) => b.data().dateStart.seconds - a.data().dateStart.seconds)

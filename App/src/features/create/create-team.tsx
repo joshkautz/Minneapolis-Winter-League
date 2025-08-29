@@ -5,6 +5,7 @@ import { CreateTeamForm } from './create-team-form'
 import { RolloverTeamForm } from './rollover-team-form'
 import { TeamCreationStatusCard, TeamCreationFormWrapper } from './components'
 import { useTeamCreation } from './hooks'
+import { convertToClientTimestamp } from '@/firebase/firestore'
 
 export const CreateTeam: React.FC = () => {
 	const {
@@ -40,7 +41,11 @@ export const CreateTeam: React.FC = () => {
 				<TeamCreationStatusCard
 					isRostered={isRostered}
 					isRegistrationOpen={isRegistrationOpen}
-					{...(registrationStartDate && { registrationStartDate })}
+					{...(registrationStartDate && {
+						registrationStartDate: convertToClientTimestamp(
+							registrationStartDate
+						),
+					})}
 				/>
 			</div>
 		)

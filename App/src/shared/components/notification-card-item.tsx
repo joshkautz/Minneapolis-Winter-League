@@ -1,6 +1,6 @@
 import { cn, OfferDocument, OfferDirection } from '@/shared/utils'
 import { Button } from '@/components/ui/button'
-import { DocumentData, DocumentReference } from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase/firestore'
 
 export interface NotificationCardItemProps {
 	type: OfferDirection
@@ -10,7 +10,7 @@ export interface NotificationCardItemProps {
 	actionOptions: {
 		title: string
 		action: (
-			offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
+			offerDocumentReference: DocumentReference<OfferDocument>
 		) => void
 	}[]
 }

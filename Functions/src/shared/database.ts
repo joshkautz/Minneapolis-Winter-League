@@ -9,7 +9,7 @@ import {
 	PlayerDocument,
 	PlayerSeason,
 	TeamRosterPlayer,
-} from '@minneapolis-winter-league/shared'
+} from '../types.js'
 import { logger } from 'firebase-functions/v2'
 
 /**

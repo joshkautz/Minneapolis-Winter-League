@@ -8,7 +8,7 @@ import { ManageTeamRosterCard } from './manage-team-roster-card'
 import { ManageCaptainActions } from './manage-captain-actions'
 import { ManageNonCaptainActions } from './manage-non-captain-actions'
 import { ManageCaptainsOffersPanel } from './manage-captains-offers-panel'
-import type { PlayerSeason } from '@minneapolis-winter-league/shared'
+import type { PlayerSeason } from '@/types'
 import { ManageNonCaptainsOffersPanel } from './manage-non-captains-offers-panel'
 
 export const ManageTeam = () => {

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CitySvg } from './city-svg'
 import { SparklesCore } from './particles'
-import type { PlayerSeason } from '@minneapolis-winter-league/shared'
+import type { PlayerSeason } from '@/types'
 import { RegistrationCountdown } from './registration-countdown'
 
 export const HeroSection = () => {

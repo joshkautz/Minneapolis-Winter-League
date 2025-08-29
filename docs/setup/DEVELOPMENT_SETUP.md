@@ -40,9 +40,6 @@ cd App && npm install && cd ..
 
 # Install Functions dependencies
 cd Functions && npm install && cd ..
-
-# Install Shared package dependencies
-cd Shared && npm install && cd ..
 ```
 
 ### 3. Start Development Environment
@@ -72,9 +69,8 @@ cd App && npm run dev:emulators
 Minneapolis-Winter-League/
 ├── App/                    # React frontend (Vite + TypeScript)
 ├── Functions/              # Firebase Cloud Functions (Gen 2)
-├── Shared/                 # Shared types & validation (@minneapolis-winter-league/shared)
 ├── docs/                   # Documentation
-├── .emulator/          # Test data for emulators
+├── .emulator/              # Test data for emulators
 └── firebase.json           # Firebase configuration
 ```
 
@@ -127,8 +123,8 @@ cd App && npm run type-check
 # Check Functions types
 cd Functions && npm run build
 
-# Check Shared package types
-cd Shared && npm run build
+# Check Functions build
+cd Functions && npm run build
 ```
 
 ## Environment Configuration
@@ -199,15 +195,6 @@ npm run build             # Build TypeScript Functions
 npm run serve             # Serve Functions in emulator
 npm run deploy            # Deploy to Firebase (requires auth)
 npm run logs              # View Function logs
-```
-
-### Shared Package Commands
-
-```bash
-cd Shared/
-
-npm run build             # Build TypeScript package
-npm run type-check        # Check types
 ```
 
 ## Testing

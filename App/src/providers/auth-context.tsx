@@ -26,7 +26,6 @@ import {
 	getPlayerRef,
 	FirestoreError,
 	DocumentSnapshot,
-	DocumentData,
 } from '@/firebase/firestore'
 import { PlayerDocument } from '@/shared/utils'
 
@@ -34,9 +33,7 @@ interface AuthContextValue {
 	authStateUser: User | null | undefined
 	authStateLoading: boolean
 	authStateError: Error | undefined
-	authenticatedUserSnapshot:
-		| DocumentSnapshot<PlayerDocument, DocumentData>
-		| undefined
+	authenticatedUserSnapshot: DocumentSnapshot<PlayerDocument> | undefined
 	authenticatedUserSnapshotLoading: boolean
 	authenticatedUserSnapshotError: FirestoreError | undefined
 	createUserWithEmailAndPassword: (
@@ -115,7 +112,7 @@ export const AuthContextProvider: React.FC<PropsWithChildren> = ({
 		authStateLoading,
 		authStateError,
 		authenticatedUserSnapshot: authenticatedUserSnapshot as
-			| DocumentSnapshot<PlayerDocument, DocumentData>
+			| DocumentSnapshot<PlayerDocument>
 			| undefined,
 		authenticatedUserSnapshotLoading,
 		authenticatedUserSnapshotError,

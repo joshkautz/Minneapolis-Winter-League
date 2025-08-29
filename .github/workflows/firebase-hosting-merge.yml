@@ -28,9 +28,6 @@ jobs:
         working-directory: ./App
         run: npm ci
 
-      - name: Build shared types
-        run: npm run build:shared
-
       - name: Format App
         working-directory: ./App
         run: npx prettier . --check
@@ -87,9 +84,6 @@ jobs:
       - name: Install Functions dependencies
         working-directory: ./Functions
         run: npm ci
-
-      - name: Build shared types
-        run: npm run build:shared
 
       - name: Format Functions
         working-directory: ./Functions

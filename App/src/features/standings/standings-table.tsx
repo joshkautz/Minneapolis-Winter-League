@@ -7,7 +7,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { QuerySnapshot, DocumentData } from '@/firebase/firestore'
+import { QuerySnapshot } from '@/firebase/firestore'
 import { TeamDocument } from '@/shared/utils'
 import { TeamStanding } from '@/shared/hooks'
 import { cn } from '@/shared/utils'
@@ -20,7 +20,7 @@ export const StandingsTable = ({
 	standings: {
 		[key: string]: TeamStanding
 	}
-	teamsQuerySnapshot: QuerySnapshot<TeamDocument, DocumentData> | undefined
+	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
 }) => {
 	const getColor = (gamesPlayed: number, pointDiff: number) => {
 		if (pointDiff > gamesPlayed * 5) {

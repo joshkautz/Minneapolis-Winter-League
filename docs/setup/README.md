@@ -41,7 +41,6 @@ cd Minneapolis-Winter-League
 npm install                    # Root dependencies
 cd App && npm install         # React app
 cd ../Functions && npm install # Firebase Functions
-cd ../Shared && npm install   # Shared package
 ```
 
 ### Development Environment
@@ -63,19 +62,9 @@ npm run dev
 Minneapolis-Winter-League/
 ├── App/                    # React frontend application
 ├── Functions/              # Firebase Cloud Functions
-├── Shared/                # Shared TypeScript types and validation
-├── docs/                  # Documentation (this directory)
-├── .emulator/         # Firebase emulator test data
-└── *.json                 # Firebase and project configuration
-```
-
-### Package Dependencies
-
-```
-Shared Package (Base)
-    ↑
-    ├── App (Consumer)
-    └── Functions (Consumer)
+├── docs/                   # Documentation (this directory)
+├── .emulator/              # Firebase emulator test data
+└── *.json                  # Firebase and project configuration
 ```
 
 ## 🔧 Development Workflow
@@ -91,11 +80,6 @@ Shared Package (Base)
 ### Package Development
 
 ```bash
-# Shared package changes
-cd Shared
-npm run build              # Build TypeScript
-npm run test              # Run validation tests
-
 # Functions development
 cd Functions
 npm run build             # Compile TypeScript
@@ -154,7 +138,6 @@ firebase deploy --only firestore   # Just Firestore rules
 
 - [ ] All tests passing
 - [ ] TypeScript compilation successful
-- [ ] Shared package version updated (if needed)
 - [ ] Environment variables configured
 - [ ] Firebase project selected correctly
 

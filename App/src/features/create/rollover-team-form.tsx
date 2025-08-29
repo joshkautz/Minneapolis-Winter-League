@@ -9,7 +9,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { DocumentData, QueryDocumentSnapshot } from '@/firebase/firestore'
+import { QueryDocumentSnapshot } from '@/firebase/firestore'
 import { TeamDocument, errorHandler, logger } from '@/shared/utils'
 import { useSeasonsContext } from '@/providers'
 
@@ -55,9 +55,7 @@ export const RolloverTeamForm = ({
 	const [
 		selectedTeamQueryDocumentSnapshot,
 		setSelectedTeamQueryDocumentSnapshot,
-	] = useState<QueryDocumentSnapshot<TeamDocument, DocumentData> | undefined>(
-		undefined
-	)
+	] = useState<QueryDocumentSnapshot<TeamDocument> | undefined>(undefined)
 
 	useEffect(() => {
 		const defaultTeamQueryDocumentSnapshot =

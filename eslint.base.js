@@ -5,10 +5,9 @@ import globals from 'globals'
 /**
  * Shared ESLint configuration for Minneapolis Winter League
  *
- * This configuration provides consistent linting rules across all packages:
+ * This configuration provides consistent linting rules across packages:
  * - App (React frontend)
  * - Functions (Node.js backend)
- * - Shared (TypeScript library)
  *
  * Rules are balanced for development productivity while maintaining code quality.
  */
@@ -63,7 +62,7 @@ const baseConfig = [
 	},
 ]
 
-// Node.js specific configuration (for Functions and Shared)
+// Node.js specific configuration (for Functions)
 const nodeConfig = {
 	languageOptions: {
 		globals: {

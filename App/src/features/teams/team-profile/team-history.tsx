@@ -1,6 +1,6 @@
 import { NotificationCard } from '@/shared/components'
 import {
-	DocumentData,
+	
 	DocumentSnapshot,
 	QuerySnapshot,
 } from '@/firebase/firestore'
@@ -26,8 +26,8 @@ export const TeamHistory = ({
 	teamDocumentSnapshot,
 	historyQuerySnapshot,
 }: {
-	teamDocumentSnapshot: DocumentSnapshot<TeamDocument, DocumentData> | undefined
-	historyQuerySnapshot: QuerySnapshot<TeamDocument, DocumentData>
+	teamDocumentSnapshot: DocumentSnapshot<TeamDocument> | undefined
+	historyQuerySnapshot: QuerySnapshot<TeamDocument>
 }) => {
 	const { seasonsQuerySnapshot } = useSeasonsContext()
 

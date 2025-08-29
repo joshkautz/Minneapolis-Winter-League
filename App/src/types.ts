@@ -1,15 +1,25 @@
 /**
- * Shared TypeScript types and interfaces for Minneapolis Winter League
+ * TypeScript types and interfaces for Minneapolis Winter League App
  *
- * This module contains all the common data types used across both the frontend (App)
- * and backend (Functions) of the Minneapolis Winter League application.
+ * This module contains all the common data types used in the frontend (App)
+ * of the Minneapolis Winter League application, specifically designed for
+ * Firebase Client SDK compatibility.
  */
 
 import {
-	DocumentReference,
-	DocumentData,
-	Timestamp,
-} from 'firebase-admin/firestore'
+	DocumentReference as ClientDocumentReference,
+	DocumentData as ClientDocumentData,
+	Timestamp as ClientTimestamp,
+} from 'firebase/firestore'
+
+/////////////////////////////////////////////////////////////////
+//////////////////////// Firebase Types /////////////////////////
+/////////////////////////////////////////////////////////////////
+
+// Firebase Client SDK compatible types
+export type DocumentData = ClientDocumentData
+export type DocumentReference<T = DocumentData> = ClientDocumentReference<T>
+export type Timestamp = ClientTimestamp
 
 /////////////////////////////////////////////////////////////////
 /////////////////////////// Enums ///////////////////////////////
@@ -78,11 +88,11 @@ export interface PlayerSeason {
 	/** Whether the player has paid for the season */
 	paid: boolean
 	/** Reference to the season document */
-	season: DocumentReference<SeasonDocument, DocumentData>
+	season: DocumentReference<SeasonDocument>
 	/** Whether the player has signed the waiver */
 	signed: boolean
 	/** Reference to the team document (null if not on a team) */
-	team: DocumentReference<TeamDocument, DocumentData> | null
+	team: DocumentReference<TeamDocument> | null
 }
 
 /**
@@ -102,7 +112,7 @@ export interface TeamDocument extends DocumentData {
 	/** Array of team roster entries */
 	roster: TeamRosterPlayer[]
 	/** Reference to the season document */
-	season: DocumentReference<SeasonDocument, DocumentData>
+	season: DocumentReference<SeasonDocument>
 	/** Storage path for team-related files (nullable) */
 	storagePath: string | null
 	/** Unique team identifier */
@@ -116,7 +126,7 @@ export interface TeamRosterPlayer {
 	/** Whether this player is a team captain */
 	captain: boolean
 	/** Reference to the player document */
-	player: DocumentReference<PlayerDocument, DocumentData>
+	player: DocumentReference<PlayerDocument>
 }
 
 /**
@@ -134,7 +144,7 @@ export interface SeasonDocument extends DocumentData {
 	/** Registration start date */
 	registrationStart: Timestamp
 	/** Array of team references participating in this season */
-	teams: DocumentReference<TeamDocument, DocumentData>[]
+	teams: DocumentReference<TeamDocument>[]
 }
 
 /**
@@ -144,13 +154,13 @@ export interface OfferDocument extends DocumentData {
 	/** Display name of the offer creator */
 	creator: string
 	/** Reference to the player being invited/requested */
-	player: DocumentReference<PlayerDocument, DocumentData>
+	player: DocumentReference<PlayerDocument>
 	/** Resolved player name for display (optional, populated by frontend) */
 	playerName: string
 	/** Current status of the offer */
 	status: OfferStatus
 	/** Reference to the team making/receiving the offer */
-	team: DocumentReference<TeamDocument, DocumentData>
+	team: DocumentReference<TeamDocument>
 	/** Resolved team name for display (optional, populated by frontend) */
 	teamName: string
 	/** Type of offer: request or invitation */
@@ -162,7 +172,7 @@ export interface OfferDocument extends DocumentData {
  */
 export interface GameDocument extends DocumentData {
 	/** Reference to the away team */
-	away: DocumentReference<TeamDocument, DocumentData>
+	away: DocumentReference<TeamDocument>
 	/** Away team's score */
 	awayScore: number
 	/** Game date and time */
@@ -170,11 +180,11 @@ export interface GameDocument extends DocumentData {
 	/** Field number where game is played */
 	field: number
 	/** Reference to the home team */
-	home: DocumentReference<TeamDocument, DocumentData>
+	home: DocumentReference<TeamDocument>
 	/** Home team's score */
 	homeScore: number
 	/** Reference to the season this game belongs to */
-	season: DocumentReference<SeasonDocument, DocumentData>
+	season: DocumentReference<SeasonDocument>
 	/** Type of game: regular season or playoff */
 	type: GameType
 }
@@ -184,7 +194,7 @@ export interface GameDocument extends DocumentData {
  */
 export interface WaiverDocument extends DocumentData {
 	/** Reference to the player who signed the waiver */
-	player: DocumentReference<PlayerDocument, DocumentData>
+	player: DocumentReference<PlayerDocument>
 	/** Dropbox Sign signature request ID (optional) */
 	signatureRequestId: string
 }

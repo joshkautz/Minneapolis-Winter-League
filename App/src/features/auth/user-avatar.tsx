@@ -16,7 +16,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { errorHandler, logger } from '@/shared/utils'
-import type { PlayerSeason } from '@minneapolis-winter-league/shared'
+import type { PlayerSeason } from '@/types'
 
 const getInitials = (
 	firstName: string | undefined,

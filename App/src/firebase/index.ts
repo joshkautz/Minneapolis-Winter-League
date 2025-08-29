@@ -55,17 +55,36 @@ export { seasonsQuery } from './collections/seasons'
 // Payment operations
 export { stripeRegistration } from './collections/payments'
 
-// Re-export Firebase types for convenience
-export type {
-	DocumentData,
-	FirestoreError,
-	DocumentSnapshot,
-	QuerySnapshot,
-	DocumentReference,
-	QueryDocumentSnapshot,
-	Query,
-	UpdateData,
-	CollectionReference,
-} from './types'
+// Re-export Firebase adapter functions for clean architecture
+export {
+	addDoc,
+	updateDoc,
+	deleteDoc,
+	getDoc,
+	getDocs,
+	doc,
+	collection,
+	query,
+	where,
+	orderBy,
+	documentId,
+	convertRef,
+	convertAdminRefToClient,
+} from './adapter'
 
-export { Timestamp } from './types'
+// Re-export timestamp functions
+export { convertToClientTimestamp } from './timestamp-adapter'
+
+// Re-export Firebase types for convenience
+export type { DocumentData, Timestamp } from '@/shared/utils'
+
+// Re-export Firebase client SDK types that are still needed
+export type {
+	QueryDocumentSnapshot,
+	DocumentSnapshot,
+	Query,
+	CollectionReference,
+	QuerySnapshot,
+	FirestoreError,
+	DocumentReference,
+} from './adapter'

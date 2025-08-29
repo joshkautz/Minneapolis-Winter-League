@@ -17,7 +17,7 @@
  */
 
 import { z } from 'zod'
-import { OfferType, OfferStatus } from '@minneapolis-winter-league/shared'
+import { OfferType, OfferStatus } from '@/types'
 
 // Common validation schemas with advanced features
 export const emailSchema = z

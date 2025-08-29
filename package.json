@@ -5,17 +5,16 @@
 	"type": "module",
 	"workspaces": [
 		"App",
-		"Functions",
-		"Shared"
+		"Functions"
 	],
 	"scripts": {
 		"dev": "npm run build && npm run emulators:start",
-		"build": "npm run build --workspace=App && npm run build --workspace=Functions && npm run build --workspace=Shared",
-		"format:check": "npm run format:check --workspace=App && npm run format:check --workspace=Functions && npm run format:check --workspace=Shared",
-		"format:fix": "npm run format:fix --workspace=App && npm run format:fix --workspace=Functions && npm run format:fix --workspace=Shared",
-		"lint:check": "npm run lint:check --workspace=App && npm run lint:check --workspace=Functions && npm run lint:check --workspace=Shared",
-		"lint:fix": "npm run lint:fix --workspace=App && npm run lint:fix --workspace=Functions && npm run lint:fix --workspace=Shared",
-		"test": "npm run test --workspace=App && npm run test --workspace=Functions && npm run test --workspace=Shared",
+		"build": "npm run build --workspace=App && npm run build --workspace=Functions",
+		"format:check": "npm run format:check --workspace=App && npm run format:check --workspace=Functions",
+		"format:fix": "npm run format:fix --workspace=App && npm run format:fix --workspace=Functions",
+		"lint:check": "npm run lint:check --workspace=App && npm run lint:check --workspace=Functions",
+		"lint:fix": "npm run lint:fix --workspace=App && npm run lint:fix --workspace=Functions",
+		"test": "npm run test --workspace=App && npm run test --workspace=Functions",
 		"emulators:start": "firebase emulators:start --import ./.emulator --export-on-exit ./.emulator",
 		"emulators:export": "firebase emulators:export ./.emulator",
 		"emulators:clear": "rm -rf ./.emulator && mkdir -p ./.emulator",

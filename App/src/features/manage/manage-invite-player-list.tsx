@@ -1,5 +1,4 @@
 import {
-	DocumentData,
 	invitePlayer,
 	getPlayersQuery,
 	QueryDocumentSnapshot,
@@ -16,7 +15,7 @@ import { useDebounce } from '@/shared/hooks'
 import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
 import { useAuthContext } from '@/providers'
-import type { PlayerSeason } from '@minneapolis-winter-league/shared'
+import type { PlayerSeason } from '@/types'
 
 export const ManageInvitePlayerList = () => {
 	const [search, setSearch] = useState('')
@@ -55,15 +54,12 @@ export const ManageInvitePlayerList = () => {
 
 	const handleInvite = useCallback(
 		(
-			playerQueryDocumentSnapshot: QueryDocumentSnapshot<
-				PlayerDocument,
-				DocumentData
-			>,
+			playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
 			teamQueryDocumentSnapshot:
-				| QueryDocumentSnapshot<TeamDocument, DocumentData>
+				| QueryDocumentSnapshot<TeamDocument>
 				| undefined,
 			authenticatedUserDocumentSnapshot:
-				| DocumentSnapshot<PlayerDocument, DocumentData>
+				| DocumentSnapshot<PlayerDocument>
 				| undefined
 		) => {
 			invitePlayer(

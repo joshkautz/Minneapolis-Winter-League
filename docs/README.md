@@ -12,9 +12,7 @@ Frontend React application documentation, including components, features, and us
 
 Firebase Cloud Functions documentation, including API references, triggers, and backend logic.
 
-### 📦 [Shared Package Documentation](./shared/)
 
-Shared TypeScript types and validation schemas used across all packages.
 
 ### 🔥 [Firebase Infrastructure](./firebase/)
 
@@ -26,15 +24,14 @@ Development environment setup, deployment guides, and workflow documentation.
 
 ## 🏗️ Project Architecture
 
-The Minneapolis Winter League is built as a modular TypeScript monorepo:
+The Minneapolis Winter League is built as a modular TypeScript project:
 
 ```
 Minneapolis-Winter-League/
 ├── App/                    # React frontend (Vite + TypeScript)
 ├── Functions/              # Firebase Cloud Functions
-├── Shared/                # Shared types and validation
-├── docs/                  # This documentation
-└── .emulator/         # Firebase emulator test data
+├── docs/                   # This documentation
+└── .emulator/             # Firebase emulator test data
 ```
 
 ## 🚀 Quick Start
@@ -93,7 +90,7 @@ cd Functions && npm run deploy # Deploy Functions
 - **Frontend**: React 18 + TypeScript + Vite + shadcn/ui + Tailwind CSS
 - **Backend**: Firebase Functions Gen 2 + Firestore + Auth + Storage + Hosting
 - **Security**: Functions-first architecture with strict Firestore rules
-- **Validation**: Zod schemas with shared types via @minneapolis-winter-league/shared
+- **Validation**: Zod schemas with project-specific types
 - **Payments**: Stripe integration with Firebase Extensions
 - **Development**: Firebase Emulators + Hot Module Replacement
 
@@ -106,7 +103,7 @@ cd Functions && npm run deploy # Deploy Functions
 | **Security**     | Security practices | Security Guidelines, Functions Migration Status           |
 | **Firebase**     | Database & queries | Collections Guide, Firestore Indexes, Functions API       |
 | **Development**  | Daily development  | TypeScript Improvements, Validation Patterns              |
-| **Reference**    | API & tools        | Player Functions, Shared Package, Emulator Data           |
+| **Reference**    | API & tools        | Player Functions, Emulator Data           |
 
 - **Development**: Firebase Emulators + Hot Reload
 

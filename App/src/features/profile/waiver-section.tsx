@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { sendDropboxEmail } from '@/firebase/functions'
 import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
 import { formatTimestamp, SeasonDocument } from '@/shared/utils'
-import { QueryDocumentSnapshot, DocumentData } from '@/firebase/firestore'
+import { QueryDocumentSnapshot } from '@/firebase/firestore'
 
 interface WaiverSectionProps {
 	isAuthenticatedUserSigned: boolean | undefined
@@ -16,7 +16,7 @@ interface WaiverSectionProps {
 	isAuthenticatedUserPaid: boolean | undefined
 	isAuthenticatedUserBanned: boolean
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
+		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
 }
 

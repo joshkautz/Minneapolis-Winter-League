@@ -8,7 +8,7 @@ import { firestore } from '../app'
 import { User } from '../auth'
 import { Products } from '../stripe'
 import { CheckoutSessionDocument } from '@/shared/utils'
-import type { DocumentReference, DocumentData } from '../types'
+import type { DocumentReference } from '@/firebase/adapter'
 
 /**
  * Creates a Stripe checkout session for winter league registration
@@ -30,7 +30,7 @@ export const stripeRegistration = async (
 				success_url: window.location.href,
 				cancel_url: window.location.href,
 			}
-		) as Promise<DocumentReference<CheckoutSessionDocument, DocumentData>>
+		) as Promise<DocumentReference<CheckoutSessionDocument>>
 	).then((checkoutSessionDocumentReference) => {
 		// Listen for the URL of the Checkout Session
 		onSnapshot(

@@ -5,7 +5,7 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument } from '@minneapolis-winter-league/shared'
+import { Collections, PlayerDocument } from '../../types.js'
 import {
 	FIREBASE_CONFIG,
 	DROPBOX_SIGN_CONFIG,

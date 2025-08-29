@@ -1,6 +1,6 @@
 import {
 	DocumentReference,
-	DocumentData,
+	convertRef,
 	promoteToCaptain,
 	demoteFromCaptain,
 	removeFromTeam,
@@ -28,17 +28,17 @@ import { logger, errorHandler } from '@/shared/utils'
 import type {
 	PlayerSeason,
 	TeamRosterPlayer,
-} from '@minneapolis-winter-league/shared'
+} from '@/types'
 
 export const ManageTeamRosterPlayer = ({
 	playerRef,
 }: {
-	playerRef: DocumentReference<PlayerDocument, DocumentData>
+	playerRef: DocumentReference<PlayerDocument>
 }) => {
 	const { authenticatedUserSnapshot } = useAuthContext()
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
-	const [playerSnapshot] = useDocument(playerRef)
+	const [playerSnapshot] = useDocument(playerRef as any)
 
 	const team = useMemo(
 		() =>
@@ -107,8 +107,8 @@ export const ManageTeamRosterPlayer = ({
 		() =>
 			demoteFromCaptain(
 				playerRef,
-				team?.ref,
-				currentSeasonQueryDocumentSnapshot?.ref
+				convertRef(team?.ref),
+				convertRef(currentSeasonQueryDocumentSnapshot?.ref)
 			)
 				.then(() => {
 					logger.userAction('captain_demoted', 'ManageTeamRosterPlayer', {
@@ -152,8 +152,8 @@ export const ManageTeamRosterPlayer = ({
 		() =>
 			promoteToCaptain(
 				playerRef,
-				team?.ref,
-				currentSeasonQueryDocumentSnapshot?.ref
+				convertRef(team?.ref),
+				convertRef(currentSeasonQueryDocumentSnapshot?.ref)
 			)
 				.then(() => {
 					logger.userAction('captain_promoted', 'ManageTeamRosterPlayer', {
@@ -193,8 +193,8 @@ export const ManageTeamRosterPlayer = ({
 	const removeFromTeamOnClickHandler = useCallback(async () => {
 		removeFromTeam(
 			playerRef,
-			team?.ref,
-			currentSeasonQueryDocumentSnapshot?.ref
+			convertRef(team?.ref),
+			convertRef(currentSeasonQueryDocumentSnapshot?.ref)
 		)
 			.then(() => {
 				toast.success(

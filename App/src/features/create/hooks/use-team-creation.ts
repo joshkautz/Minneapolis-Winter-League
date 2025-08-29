@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Timestamp } from '@firebase/firestore'
 import { useAuthContext, useSeasonsContext } from '@/providers'
-import type { PlayerSeason } from '@minneapolis-winter-league/shared'
+import type { PlayerSeason } from '@/types'
 
 interface TeamCreationData {
 	name: string | undefined

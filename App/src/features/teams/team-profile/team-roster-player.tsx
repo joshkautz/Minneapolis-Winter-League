@@ -1,9 +1,9 @@
-import { DocumentReference, DocumentData } from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase/firestore'
 
 import { StarFilledIcon } from '@radix-ui/react-icons'
 import { useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PlayerDocument, SeasonDocument } from '@/shared/utils'
+import { PlayerDocument, SeasonDocument, PlayerSeason } from '@/shared/utils'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { Badge } from '@/components/ui/badge'
 
@@ -11,16 +11,17 @@ export const TeamRosterPlayer = ({
 	playerRef,
 	seasonRef,
 }: {
-	playerRef: DocumentReference<PlayerDocument, DocumentData>
-	seasonRef: DocumentReference<SeasonDocument, DocumentData> | undefined
+	playerRef: DocumentReference<PlayerDocument>
+	seasonRef: DocumentReference<SeasonDocument> | undefined
 }) => {
-	const [playerSnapshot] = useDocument(playerRef)
+	const [playerSnapshot] = useDocument(playerRef as any)
 
 	const isPlayerCaptain = useMemo(
 		() =>
 			playerSnapshot
 				?.data()
-				?.seasons.find((item) => item.season.id === seasonRef?.id)?.captain,
+				?.seasons.find((item: PlayerSeason) => item.season.id === seasonRef?.id)
+				?.captain,
 		[playerSnapshot]
 	)
 
@@ -28,7 +29,8 @@ export const TeamRosterPlayer = ({
 		() =>
 			playerSnapshot
 				?.data()
-				?.seasons.find((item) => item.season.id === seasonRef?.id)?.paid,
+				?.seasons.find((item: PlayerSeason) => item.season.id === seasonRef?.id)
+				?.paid,
 		[playerSnapshot]
 	)
 
@@ -36,7 +38,8 @@ export const TeamRosterPlayer = ({
 		() =>
 			playerSnapshot
 				?.data()
-				?.seasons.find((item) => item.season.id === seasonRef?.id)?.signed,
+				?.seasons.find((item: PlayerSeason) => item.season.id === seasonRef?.id)
+				?.signed,
 		[playerSnapshot]
 	)
 

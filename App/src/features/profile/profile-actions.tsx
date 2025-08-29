@@ -2,7 +2,7 @@ import { EmailVerificationSection } from './email-verification-section'
 import { PaymentSection } from './payment-section'
 import { WaiverSection } from './waiver-section'
 import { User } from 'firebase/auth'
-import { QueryDocumentSnapshot, DocumentData } from '@/firebase/firestore'
+import { QueryDocumentSnapshot } from '@/firebase/firestore'
 import { SeasonDocument } from '@/shared/utils'
 
 interface ProfileActionsProps {
@@ -15,7 +15,7 @@ interface ProfileActionsProps {
 	isAuthenticatedUserPaid: boolean
 	isAuthenticatedUserSigned: boolean
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
+		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
 	sendEmailVerification: () => Promise<boolean>
 }

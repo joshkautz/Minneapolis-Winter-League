@@ -1,11 +1,11 @@
 import { getPlayerSnapshot } from '@/firebase/firestore'
-import { QuerySnapshot, DocumentData } from '@firebase/firestore'
+import { QuerySnapshot, QueryDocumentSnapshot } from '@firebase/firestore'
 import { useEffect, useState } from 'react'
 import { OfferDocument, TeamDocument } from '@/shared/utils'
 
 export const useOffer = (
-	offersQuerySnapshot: QuerySnapshot<OfferDocument, DocumentData> | undefined,
-	teamsQuerySnapshot: QuerySnapshot<TeamDocument, DocumentData> | undefined
+	offersQuerySnapshot: QuerySnapshot<OfferDocument> | undefined,
+	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
 ) => {
 	const [offers, setOffers] = useState<OfferDocument[] | undefined>()
 	const [offersLoading, setOffersLoading] = useState<boolean>(true)
@@ -19,22 +19,26 @@ export const useOffer = (
 		setOffersLoading(true)
 
 		Promise.all(
-			offersQuerySnapshot.docs.map(async (offer: DocumentData, index: number) =>
-				getPlayerSnapshot(offer.data().player).then(
-					(playerSnapshot) =>
-						({
-							...offer.data(),
-							playerName: `${
-								playerSnapshot.data()?.firstname
-							} ${playerSnapshot.data()?.lastname}`,
-							teamName: teamsQuerySnapshot?.docs
-								.find((team) => team.id == offer.data().team.id)
-								?.data().name,
-							ref: offersQuerySnapshot.docs[index].ref,
-						}) as OfferDocument
-				)
+			offersQuerySnapshot.docs.map(
+				async (offer: QueryDocumentSnapshot<OfferDocument>, index: number) =>
+					getPlayerSnapshot(offer.data().player).then(
+						(playerSnapshot) =>
+							({
+								...offer.data(),
+								playerName: `${
+									playerSnapshot.data()?.firstname
+								} ${playerSnapshot.data()?.lastname}`,
+								teamName: teamsQuerySnapshot?.docs
+									.find(
+										(team: QueryDocumentSnapshot<TeamDocument>) =>
+											team.id == offer.data().team.id
+									)
+									?.data().name,
+								ref: offersQuerySnapshot.docs[index].ref,
+							}) as OfferDocument
+					)
 			)
-		).then((updatedOffers) => {
+		).then((updatedOffers: OfferDocument[]) => {
 			setOffersLoading(false)
 			setOffers(updatedOffers)
 		})

@@ -13,8 +13,8 @@ import {
 	getDocs,
 	collection,
 	documentId,
-} from 'firebase/firestore'
-import { Timestamp } from 'firebase/firestore'
+	TimestampNow,
+} from '../adapter'
 import { v4 as uuidv4 } from 'uuid'
 
 import { firestore } from '../app'
@@ -25,30 +25,27 @@ import {
 	TeamDocument,
 	OfferDocument,
 	Collections,
+	DocumentData,
+	PlayerSeason,
+	TeamRosterPlayer,
 } from '@/shared/utils'
+import type { DocumentReference } from '@/firebase/adapter'
 import type {
-	DocumentReference,
 	QueryDocumentSnapshot,
 	Query,
 	QuerySnapshot,
 	CollectionReference,
-	DocumentData,
-} from '../types'
-import type {
-	PlayerSeason,
-	TeamRosterPlayer,
-	TeamDocument,
-} from '@minneapolis-winter-league/shared'
+} from 'firebase/firestore'
 
 /**
  * Creates a new team and assigns a captain
  * Audited: September 4, 2024
  */
 export const createTeam = async (
-	playerRef: DocumentReference<PlayerDocument, DocumentData> | undefined,
+	playerRef: DocumentReference<PlayerDocument> | undefined,
 	name: string | undefined,
 	logo: string | undefined,
-	seasonRef: DocumentReference<SeasonDocument, DocumentData> | undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined,
 	storagePath: string | undefined
 ) => {
 	if (!playerRef || !name || !seasonRef) {
@@ -67,7 +64,7 @@ export const createTeam = async (
 				name: name,
 				placement: null,
 				registered: false,
-				registeredDate: Timestamp.now(),
+				registeredDate: TimestampNow(),
 				roster: [{ captain: true, player: playerRef }],
 				season: seasonRef,
 				storagePath: storagePath ? storagePath : null,
@@ -124,10 +121,10 @@ export const createTeam = async (
  * Creates a new team with an existing team ID (for rollovers)
  */
 export const rolloverTeam = async (
-	playerRef: DocumentReference<PlayerDocument, DocumentData> | undefined,
+	playerRef: DocumentReference<PlayerDocument> | undefined,
 	name: string | undefined,
 	logo: string | undefined,
-	seasonRef: DocumentReference<SeasonDocument, DocumentData> | undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined,
 	storagePath: string | undefined,
 	teamId: string | undefined
 ) => {
@@ -143,13 +140,13 @@ export const rolloverTeam = async (
 			name: name,
 			placement: null,
 			registered: false,
-			registeredDate: Timestamp.now(),
+			registeredDate: TimestampNow(),
 			roster: [{ captain: true, player: playerRef }],
 			season: seasonRef,
 			storagePath: storagePath ? storagePath : null,
 			teamId: teamId,
 		}
-	)) as DocumentReference<TeamDocument, DocumentData>
+	)) as DocumentReference<TeamDocument>
 
 	// Get the player document so we can update the player document
 	const playerDocumentSnapshot = await getDoc(playerRef)
@@ -182,7 +179,7 @@ export const rolloverTeam = async (
  * Edits team information (name, logo, storage path)
  */
 export const editTeam = async (
-	teamRef: DocumentReference<TeamDocument, DocumentData> | undefined,
+	teamRef: DocumentReference<TeamDocument> | undefined,
 	name: string | undefined,
 	logo: string | undefined,
 	storagePath: string | undefined
@@ -207,8 +204,8 @@ export const editTeam = async (
  * Audited: September 4, 2024
  */
 export const deleteTeam = async (
-	teamRef: DocumentReference<TeamDocument, DocumentData> | undefined,
-	seasonRef: DocumentReference<SeasonDocument, DocumentData> | undefined
+	teamRef: DocumentReference<TeamDocument> | undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined
 ) => {
 	if (!teamRef || !seasonRef) {
 		return
@@ -221,7 +218,7 @@ export const deleteTeam = async (
 					collection(firestore, Collections.OFFERS),
 					where('team', '==', teamRef)
 				)
-			) as Promise<QuerySnapshot<OfferDocument, DocumentData>>
+			) as Promise<QuerySnapshot<OfferDocument>>
 		)
 			// Delete all offers involving this team
 			.then((offersQuerySnapshot) =>
@@ -238,7 +235,8 @@ export const deleteTeam = async (
 								seasons: (
 									playerDocumentSnapshot.data() as PlayerDocument
 								)?.seasons.map((item: PlayerSeason) => ({
-									captain: item.season.id === seasonRef.id ? false : item.team,
+									banned: item.banned,
+									captain: item.season.id === seasonRef.id ? false : item.captain,
 									paid: item.paid,
 									season: item.season,
 									signed: item.signed,
@@ -273,23 +271,24 @@ export const deleteTeam = async (
  */
 export const getTeamById = (
 	id: string | undefined
-): DocumentReference<TeamDocument, DocumentData> | undefined => {
+): DocumentReference<TeamDocument> | undefined => {
 	if (!id) {
 		return
 	}
 
-	return doc(firestore, Collections.TEAMS, id) as DocumentReference<
-		TeamDocument,
-		DocumentData
-	>
+	return doc(
+		firestore,
+		Collections.TEAMS,
+		id
+	) as DocumentReference<TeamDocument>
 }
 
 /**
  * Creates a query for multiple teams by their references
  */
 export const teamsQuery = (
-	teams: (DocumentReference<TeamDocument, DocumentData> | null)[] | undefined
-): Query<TeamDocument, DocumentData> | undefined => {
+	teams: (DocumentReference<TeamDocument> | null)[] | undefined
+): Query<TeamDocument> | undefined => {
 	if (!teams || !teams.length) {
 		return
 	}
@@ -297,7 +296,7 @@ export const teamsQuery = (
 	return query(
 		collection(firestore, Collections.TEAMS),
 		where(documentId(), 'in', teams)
-	) as Query<TeamDocument, DocumentData>
+	) as Query<TeamDocument>
 }
 
 /**
@@ -305,7 +304,7 @@ export const teamsQuery = (
  */
 export const teamsHistoryQuery = (
 	id: string | undefined
-): Query<TeamDocument, DocumentData> | undefined => {
+): Query<TeamDocument> | undefined => {
 	if (!id) {
 		return undefined
 	}
@@ -313,15 +312,15 @@ export const teamsHistoryQuery = (
 	return query(
 		collection(firestore, Collections.TEAMS),
 		where('teamId', '==', id)
-	) as Query<TeamDocument, DocumentData>
+	) as Query<TeamDocument>
 }
 
 /**
  * Creates a query for all teams in a specific season
  */
 export const currentSeasonTeamsQuery = (
-	seasonSnapshot: QueryDocumentSnapshot<SeasonDocument, DocumentData> | undefined
-): Query<TeamDocument, DocumentData> | undefined => {
+	seasonSnapshot: QueryDocumentSnapshot<SeasonDocument> | undefined
+): Query<TeamDocument> | undefined => {
 	if (!seasonSnapshot) {
 		return undefined
 	}
@@ -329,20 +328,20 @@ export const currentSeasonTeamsQuery = (
 	return query(
 		collection(firestore, Collections.TEAMS),
 		where('season', '==', seasonSnapshot.ref)
-	) as Query<TeamDocument, DocumentData>
+	) as Query<TeamDocument>
 }
 
 /**
  * Creates a query for teams by season reference
  */
 export const teamsBySeasonQuery = (
-	seasonRef: DocumentReference<SeasonDocument, DocumentData> | undefined
-): Query<TeamDocument, DocumentData> | undefined => {
+	seasonRef: DocumentReference<SeasonDocument> | undefined
+): Query<TeamDocument> | undefined => {
 	if (!seasonRef) {
 		return
 	}
 	return query(
 		collection(firestore, Collections.TEAMS),
 		where('season', '==', seasonRef)
-	) as Query<TeamDocument, DocumentData>
+	) as Query<TeamDocument>
 }

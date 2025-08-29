@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { deleteTeam, removeFromTeam } from '@/firebase/firestore'
+import { deleteTeam, removeFromTeam, convertRef } from '@/firebase/firestore'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ManageEditTeamDialog } from './manage-edit-team-dialog'
-import type { PlayerSeason } from '@minneapolis-winter-league/shared'
+import type { PlayerSeason } from '@/types'
 import { errorHandler, logger } from '@/shared/utils'
 import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
@@ -46,9 +46,9 @@ export const ManageCaptainActions = () => {
 
 	const removeFromTeamOnClickHandler = useCallback(async () => {
 		removeFromTeam(
-			authenticatedUserSnapshot?.ref,
-			teamQueryDocumentSnapshot?.ref,
-			currentSeasonQueryDocumentSnapshot?.ref
+			convertRef(authenticatedUserSnapshot?.ref),
+			convertRef(teamQueryDocumentSnapshot?.ref),
+			convertRef(currentSeasonQueryDocumentSnapshot?.ref)
 		)
 			.then(() => {
 				logger.userAction('team_left', 'ManageCaptainActions', {
@@ -84,8 +84,8 @@ export const ManageCaptainActions = () => {
 
 	const deleteTeamOnClickHandler = useCallback(async () => {
 		deleteTeam(
-			teamQueryDocumentSnapshot?.ref,
-			currentSeasonQueryDocumentSnapshot?.ref
+			convertRef(teamQueryDocumentSnapshot?.ref),
+			convertRef(currentSeasonQueryDocumentSnapshot?.ref)
 		)
 			.then(() => {
 				logger.userAction('team_deleted', 'ManageCaptainActions', {

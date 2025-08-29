@@ -15,7 +15,7 @@ import { useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { updatePlayer } from '@/firebase/firestore'
 import { User } from 'firebase/auth'
-import { DocumentSnapshot, DocumentData } from '@/firebase/firestore'
+import { DocumentSnapshot } from '@/firebase/firestore'
 import { PlayerDocument } from '@/shared/utils'
 import {
 	profileFormSchema,
@@ -25,7 +25,7 @@ import {
 interface ProfileFormProps {
 	authStateUser: User | null | undefined
 	authenticatedUserSnapshot:
-		| DocumentSnapshot<PlayerDocument, DocumentData>
+		| DocumentSnapshot<PlayerDocument>
 		| undefined
 }
 

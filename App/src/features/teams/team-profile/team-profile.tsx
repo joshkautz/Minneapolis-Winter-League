@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom'
 import { NotificationCard } from '@/shared/components'
 import {
 	DocumentReference,
-	DocumentData,
 	gamesByTeamQuery,
 	teamsHistoryQuery,
 	getTeamById,
@@ -38,7 +37,7 @@ const RESULT = {
 } as const
 
 const formatGameResult = (
-	team: DocumentSnapshot<TeamDocument, DocumentData> | undefined,
+	team: DocumentSnapshot<TeamDocument> | undefined,
 	gameData: GameDocument
 ) => {
 	const { homeScore, awayScore } = gameData
@@ -157,7 +156,7 @@ export const TeamProfile = () => {
 						(
 							item: {
 								captain: boolean
-								player: DocumentReference<PlayerDocument, DocumentData>
+								player: DocumentReference<PlayerDocument>
 							},
 							index: number
 						) => (
