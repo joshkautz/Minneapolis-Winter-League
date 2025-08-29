@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { deleteTeam, removeFromTeam, convertRef } from '@/firebase/firestore'
+import { deleteTeam, removeFromTeam } from '@/firebase/firestore'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
@@ -46,9 +46,9 @@ export const ManageCaptainActions = () => {
 
 	const removeFromTeamOnClickHandler = useCallback(async () => {
 		removeFromTeam(
-			convertRef(authenticatedUserSnapshot?.ref),
-			convertRef(teamQueryDocumentSnapshot?.ref),
-			convertRef(currentSeasonQueryDocumentSnapshot?.ref)
+			authenticatedUserSnapshot?.ref,
+			teamQueryDocumentSnapshot?.ref,
+			currentSeasonQueryDocumentSnapshot?.ref
 		)
 			.then(() => {
 				logger.userAction('team_left', 'ManageCaptainActions', {
@@ -84,8 +84,8 @@ export const ManageCaptainActions = () => {
 
 	const deleteTeamOnClickHandler = useCallback(async () => {
 		deleteTeam(
-			convertRef(teamQueryDocumentSnapshot?.ref),
-			convertRef(currentSeasonQueryDocumentSnapshot?.ref)
+			teamQueryDocumentSnapshot?.ref,
+			currentSeasonQueryDocumentSnapshot?.ref
 		)
 			.then(() => {
 				logger.userAction('team_deleted', 'ManageCaptainActions', {

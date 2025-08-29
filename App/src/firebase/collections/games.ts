@@ -11,8 +11,7 @@ import {
 	TeamDocument,
 	Collections,
 } from '@/shared/utils'
-import type { DocumentReference } from '@/firebase/adapter'
-import type { QueryDocumentSnapshot, Query } from 'firebase/firestore'
+import type { DocumentReference, QueryDocumentSnapshot, Query } from 'firebase/firestore'
 
 /**
  * Creates a query for regular season games in a specific season

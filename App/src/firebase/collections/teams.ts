@@ -13,8 +13,8 @@ import {
 	getDocs,
 	collection,
 	documentId,
-	TimestampNow,
-} from '../adapter'
+	Timestamp,
+} from 'firebase/firestore'
 import { v4 as uuidv4 } from 'uuid'
 
 import { firestore } from '../app'
@@ -29,8 +29,8 @@ import {
 	PlayerSeason,
 	TeamRosterPlayer,
 } from '@/shared/utils'
-import type { DocumentReference } from '@/firebase/adapter'
 import type {
+	DocumentReference,
 	QueryDocumentSnapshot,
 	Query,
 	QuerySnapshot,
@@ -64,7 +64,7 @@ export const createTeam = async (
 				name: name,
 				placement: null,
 				registered: false,
-				registeredDate: TimestampNow(),
+				registeredDate: Timestamp.now(),
 				roster: [{ captain: true, player: playerRef }],
 				season: seasonRef,
 				storagePath: storagePath ? storagePath : null,
@@ -138,7 +138,7 @@ export const rolloverTeam = async (
 			name: name,
 			placement: null,
 			registered: false,
-			registeredDate: TimestampNow(),
+			registeredDate: Timestamp.now(),
 			roster: [{ captain: true, player: playerRef }],
 			season: seasonRef,
 			storagePath: storagePath ? storagePath : null,

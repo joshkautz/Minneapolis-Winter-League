@@ -16,8 +16,8 @@ import {
 	DocumentData,
 	PlayerSeason,
 } from '@/shared/utils'
-import type { DocumentReference } from '@/firebase/adapter'
 import type {
+	DocumentReference,
 	DocumentSnapshot,
 	QueryDocumentSnapshot,
 	Query,

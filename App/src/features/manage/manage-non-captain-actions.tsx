@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import { removeFromTeam, convertRef } from '@/firebase/firestore'
+import { removeFromTeam } from '@/firebase/firestore'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
@@ -42,9 +42,9 @@ export const ManageNonCaptainActions = () => {
 
 	const removeFromTeamOnClickHandler = useCallback(async () => {
 		removeFromTeam(
-			convertRef(authenticatedUserSnapshot?.ref),
-			convertRef(teamQueryDocumentSnapshot?.ref),
-			convertRef(currentSeasonQueryDocumentSnapshot?.ref)
+			authenticatedUserSnapshot?.ref,
+			teamQueryDocumentSnapshot?.ref,
+			currentSeasonQueryDocumentSnapshot?.ref
 		)
 			.then(() => {
 				toast.success(

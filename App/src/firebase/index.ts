@@ -55,26 +55,6 @@ export { seasonsQuery } from './collections/seasons'
 // Payment operations
 export { stripeRegistration } from './collections/payments'
 
-// Re-export Firebase adapter functions for clean architecture
-export {
-	addDoc,
-	updateDoc,
-	deleteDoc,
-	getDoc,
-	getDocs,
-	doc,
-	collection,
-	query,
-	where,
-	orderBy,
-	documentId,
-	convertRef,
-	convertAdminRefToClient,
-} from './adapter'
-
-// Re-export timestamp functions
-export { convertToClientTimestamp } from './timestamp-adapter'
-
 // Re-export Firebase types for convenience
 export type { DocumentData, Timestamp } from '@/shared/utils'
 
@@ -87,4 +67,4 @@ export type {
 	QuerySnapshot,
 	FirestoreError,
 	DocumentReference,
-} from './adapter'
+} from 'firebase/firestore'

@@ -9,12 +9,17 @@ import {
 	query,
 	where,
 	collection,
+	setDoc, 
+	or, 
+	and,
+} from 'firebase/firestore'
+import type {
 	DocumentSnapshot,
 	QueryDocumentSnapshot,
 	DocumentReference,
 	Query,
-} from '@/firebase/adapter'
-import { setDoc, or, and, UpdateData } from 'firebase/firestore'
+	UpdateData,
+} from 'firebase/firestore'
 
 import { firestore } from '../app'
 import { User, UserCredential } from '../auth'

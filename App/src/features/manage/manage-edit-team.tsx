@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { v4 as uuidv4 } from 'uuid'
 import { ReloadIcon } from '@radix-ui/react-icons'
-import { editTeam, convertRef } from '@/firebase/firestore'
+import { editTeam } from '@/firebase/firestore'
 import { StorageReference, ref, storage } from '@/firebase/storage'
 import { useTeamsContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
@@ -106,7 +106,7 @@ export const ManageEditTeam = ({
 			return
 		}
 		editTeam(
-			convertRef(team?.ref),
+			team?.ref,
 			editedTeamDocument.name,
 			downloadUrl,
 			editedTeamDocument.storageRef?.fullPath
@@ -163,7 +163,7 @@ export const ManageEditTeam = ({
 					}
 				} else {
 					if (storageRef) {
-						editTeam(convertRef(team?.ref), data.name, undefined, undefined)
+						editTeam(team?.ref, data.name, undefined, undefined)
 							.then(() => {
 								setIsLoading(false)
 								toast.success('Team Edited', {
@@ -188,7 +188,7 @@ export const ManageEditTeam = ({
 								})
 							})
 					} else {
-						editTeam(convertRef(team?.ref), data.name, undefined, undefined)
+						editTeam(team?.ref, data.name, undefined, undefined)
 							.then(() => {
 								setIsLoading(false)
 								toast.success('Team Edited', {

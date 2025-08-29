@@ -8,7 +8,7 @@ import { firestore } from '../app'
 import { User } from '../auth'
 import { Products } from '../stripe'
 import { CheckoutSessionDocument } from '@/shared/utils'
-import type { DocumentReference } from '@/firebase/adapter'
+import type { DocumentReference } from 'firebase/firestore'
 
 /**
  * Creates a Stripe checkout session for winter league registration
