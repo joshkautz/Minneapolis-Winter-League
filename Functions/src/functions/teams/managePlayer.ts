@@ -53,11 +53,11 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 					throw new Error('Team or player not found')
 				}
 
-				const teamData = teamDoc.data()
-				const playerData = playerDoc.data()
+				const teamDocument = teamDoc.data()
+				const playerDocument = playerDoc.data()
 
 				// Check if user is a captain of this team
-				const userIsCaptain = teamData?.roster?.some(
+				const userIsCaptain = teamDocument?.roster?.some(
 					(member: any) => member.player.id === userId && member.captain
 				)
 
@@ -71,25 +71,25 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 						return handlePromoteToCaptain(
 							transaction,
 							teamRef,
-							teamData,
+							teamDocument,
 							playerRef,
-							playerData
+							playerDocument
 						)
 					case 'demote':
 						return handleDemoteFromCaptain(
 							transaction,
 							teamRef,
-							teamData,
+							teamDocument,
 							playerRef,
-							playerData
+							playerDocument
 						)
 					case 'remove':
 						return handleRemoveFromTeam(
 							transaction,
 							teamRef,
-							teamData,
+							teamDocument,
 							playerRef,
-							playerData,
+							playerDocument,
 							playerId,
 							currentSeason.id
 						)
@@ -117,12 +117,12 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 function handlePromoteToCaptain(
 	transaction: any,
 	teamRef: any,
-	teamData: any,
+	teamDocument: any,
 	playerRef: any,
-	playerData: any
+	playerDocument: any
 ) {
 	// Update team roster
-	const updatedRoster = teamData.roster?.map((member: any) =>
+	const updatedRoster = teamDocument.roster?.map((member: any) =>
 		member.player.id === playerRef.id
 			? { ...member, captain: true }
 			: member
@@ -131,7 +131,7 @@ function handlePromoteToCaptain(
 	transaction.update(teamRef, { roster: updatedRoster })
 
 	// Update player seasons
-	const updatedSeasons = playerData.seasons?.map((season: any) =>
+	const updatedSeasons = playerDocument.seasons?.map((season: any) =>
 		season.team?.id === teamRef.id
 			? { ...season, captain: true }
 			: season
@@ -150,18 +150,18 @@ function handlePromoteToCaptain(
 function handleDemoteFromCaptain(
 	transaction: any,
 	teamRef: any,
-	teamData: any,
+	teamDocument: any,
 	playerRef: any,
-	playerData: any
+	playerDocument: any
 ) {
 	// Check if this is the last captain
-	const captainCount = teamData.roster?.filter((member: any) => member.captain).length || 0
+	const captainCount = teamDocument.roster?.filter((member: any) => member.captain).length || 0
 	if (captainCount <= 1) {
 		throw new Error('Cannot demote the last captain. Promote another player first.')
 	}
 
 	// Update team roster
-	const updatedRoster = teamData.roster?.map((member: any) =>
+	const updatedRoster = teamDocument.roster?.map((member: any) =>
 		member.player.id === playerRef.id
 			? { ...member, captain: false }
 			: member
@@ -170,7 +170,7 @@ function handleDemoteFromCaptain(
 	transaction.update(teamRef, { roster: updatedRoster })
 
 	// Update player seasons
-	const updatedSeasons = playerData.seasons?.map((season: any) =>
+	const updatedSeasons = playerDocument.seasons?.map((season: any) =>
 		season.team?.id === teamRef.id
 			? { ...season, captain: false }
 			: season
@@ -189,32 +189,32 @@ function handleDemoteFromCaptain(
 function handleRemoveFromTeam(
 	transaction: any,
 	teamRef: any,
-	teamData: any,
+	teamDocument: any,
 	playerRef: any,
-	playerData: any,
+	playerDocument: any,
 	playerId: string,
 	seasonId: string
 ) {
 	// Check if this is the last captain
-	const playerIsCaptain = teamData.roster?.find(
+	const playerIsCaptain = teamDocument.roster?.find(
 		(member: any) => member.player.id === playerId
 	)?.captain
 
-	const captainCount = teamData.roster?.filter((member: any) => member.captain).length || 0
+	const captainCount = teamDocument.roster?.filter((member: any) => member.captain).length || 0
 	
 	if (playerIsCaptain && captainCount <= 1) {
 		throw new Error('Cannot remove the last captain. Promote another player first.')
 	}
 
 	// Remove player from team roster
-	const updatedRoster = teamData.roster?.filter(
+	const updatedRoster = teamDocument.roster?.filter(
 		(member: any) => member.player.id !== playerId
 	) || []
 
 	transaction.update(teamRef, { roster: updatedRoster })
 
 	// Update player seasons
-	const updatedSeasons = playerData.seasons?.map((season: any) =>
+	const updatedSeasons = playerDocument.seasons?.map((season: any) =>
 		season.season.id === seasonId
 			? { ...season, team: null, captain: false }
 			: season

@@ -52,10 +52,10 @@ export async function getCurrentSeasonRef() {
  * Checks if a player is registered (paid and signed) for the current season
  */
 export function isPlayerRegisteredForSeason(
-	playerData: any,
+	playerDocument: any,
 	seasonId: string
 ): boolean {
-	const seasonData = playerData.seasons?.find(
+	const seasonData = playerDocument.seasons?.find(
 		(season: any) => season.season.id === seasonId
 	)
 
@@ -75,7 +75,7 @@ export async function countRegisteredPlayersOnTeam(
 
 	// Count registered players
 	return playerDocs.filter((playerDoc) => {
-		const playerData = playerDoc.data()
-		return isPlayerRegisteredForSeason(playerData, seasonId)
+		const playerDocument = playerDoc.data()
+		return isPlayerRegisteredForSeason(playerDocument, seasonId)
 	}).length
 }

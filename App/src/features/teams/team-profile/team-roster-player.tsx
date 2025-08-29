@@ -3,7 +3,7 @@ import { DocumentReference, DocumentData } from '@/firebase/firestore'
 import { StarFilledIcon } from '@radix-ui/react-icons'
 import { useMemo } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PlayerData, SeasonData } from '@/shared/utils'
+import { PlayerDocument, SeasonDocument } from '@/shared/utils'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { Badge } from '@/components/ui/badge'
 
@@ -11,8 +11,8 @@ export const TeamRosterPlayer = ({
 	playerRef,
 	seasonRef,
 }: {
-	playerRef: DocumentReference<PlayerData, DocumentData>
-	seasonRef: DocumentReference<SeasonData, DocumentData> | undefined
+	playerRef: DocumentReference<PlayerDocument, DocumentData>
+	seasonRef: DocumentReference<SeasonDocument, DocumentData> | undefined
 }) => {
 	const [playerSnapshot] = useDocument(playerRef)
 

@@ -1,4 +1,4 @@
-import { GameData } from '@/shared/utils'
+import { GameDocument } from '@/shared/utils'
 import {
 	Card,
 	CardContent,
@@ -19,7 +19,7 @@ export const ScheduleCard = ({
 	games,
 	title,
 }: {
-	games: GameData[]
+	games: GameDocument[]
 	title: string
 }) => {
 	const { selectedSeasonTeamsQuerySnapshot } = useTeamsContext()

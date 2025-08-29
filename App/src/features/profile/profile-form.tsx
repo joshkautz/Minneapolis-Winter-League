@@ -16,7 +16,7 @@ import { toast } from 'sonner'
 import { updatePlayer } from '@/firebase/firestore'
 import { User } from 'firebase/auth'
 import { DocumentSnapshot, DocumentData } from '@/firebase/firestore'
-import { PlayerData } from '@/shared/utils'
+import { PlayerDocument } from '@/shared/utils'
 import {
 	profileFormSchema,
 	type ProfileFormData,
@@ -25,7 +25,7 @@ import {
 interface ProfileFormProps {
 	authStateUser: User | null | undefined
 	authenticatedUserSnapshot:
-		| DocumentSnapshot<PlayerData, DocumentData>
+		| DocumentSnapshot<PlayerDocument, DocumentData>
 		| undefined
 }
 

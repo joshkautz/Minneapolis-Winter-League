@@ -83,8 +83,8 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 						throw new Error('Team not found')
 					}
 
-					const teamData = teamDoc.data()
-					const userIsCaptain = teamData?.roster?.some(
+					const teamDocument = teamDoc.data()
+					const userIsCaptain = teamDocument?.roster?.some(
 						(member: any) => member.player.id === auth!.uid && member.captain
 					)
 

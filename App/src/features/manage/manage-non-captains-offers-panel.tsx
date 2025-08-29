@@ -1,4 +1,4 @@
-import { OfferData, OfferDirection } from '@/shared/utils'
+import { OfferDocument, OfferDirection } from '@/shared/utils'
 import { NotificationCard } from '@/shared/components'
 import { useOffersContext } from '@/providers'
 import { useOffer } from '@/shared/hooks'
@@ -29,7 +29,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 		useOffer(incomingOffersQuerySnapshot, currentSeasonTeamsQuerySnapshot)
 
 	const handleReject = (
-		offerDocumentReference: DocumentReference<OfferData, DocumentData>
+		offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
 	) => {
 		rejectOffer(offerDocumentReference)
 			.then(() => {
@@ -45,7 +45,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 	}
 
 	const handleAccept = (
-		offerDocumentReference: DocumentReference<OfferData, DocumentData>
+		offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
 	) => {
 		acceptOffer(offerDocumentReference)
 			.then(() => {
@@ -61,7 +61,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 	}
 
 	const handleCancel = (
-		offerDocumentReference: DocumentReference<OfferData, DocumentData>
+		offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
 	) => {
 		rejectOffer(offerDocumentReference)
 			.then(() => {
@@ -93,7 +93,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 						<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
 					</div>
 				) : (
-					incomingInvites?.map((incomingInvite: OfferData) => (
+					incomingInvites?.map((incomingInvite: OfferDocument) => (
 						<NotificationCardItem
 							key={`incomingInvite-row-${incomingInvite.ref.id}`}
 							type={OfferDirection.INCOMING_INVITE}
@@ -114,7 +114,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 						<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
 					</div>
 				) : (
-					outgoingRequests?.map((outgoingRequest: OfferData) => (
+					outgoingRequests?.map((outgoingRequest: OfferDocument) => (
 						<NotificationCardItem
 							key={`outgoingRequest-row-${outgoingRequest.ref.id}`}
 							type={OfferDirection.OUTGOING_REQUEST}

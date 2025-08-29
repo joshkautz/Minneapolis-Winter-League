@@ -7,7 +7,7 @@ import { addDoc, collection, onSnapshot } from 'firebase/firestore'
 import { firestore } from '../app'
 import { User } from '../auth'
 import { Products } from '../stripe'
-import { CheckoutSessionData } from '@/shared/utils'
+import { CheckoutSessionDocument } from '@/shared/utils'
 import type { DocumentReference, DocumentData } from '../types'
 
 /**
@@ -30,7 +30,7 @@ export const stripeRegistration = async (
 				success_url: window.location.href,
 				cancel_url: window.location.href,
 			}
-		) as Promise<DocumentReference<CheckoutSessionData, DocumentData>>
+		) as Promise<DocumentReference<CheckoutSessionDocument, DocumentData>>
 	).then((checkoutSessionDocumentReference) => {
 		// Listen for the URL of the Checkout Session
 		onSnapshot(

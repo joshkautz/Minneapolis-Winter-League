@@ -47,10 +47,10 @@ export const createTeam = onCall<CreateTeamRequest>(
 				throw new Error('Player profile not found')
 			}
 
-			const playerData = playerDoc.data()
+			const playerDocument = playerDoc.data()
 
 			// Check if player is already on a team for this season
-			const existingSeasonData = playerData?.seasons?.find(
+			const existingSeasonData = playerDocument?.seasons?.find(
 				(season: any) => season.season.id === seasonId
 			)
 
@@ -59,7 +59,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 			}
 
 			// Create team document
-			const teamData: Partial<TeamDocument> = {
+			const teamDocument: Partial<TeamDocument> = {
 				name: name.trim(),
 				logo: logo || '',
 				storagePath: storagePath || '',
@@ -75,10 +75,10 @@ export const createTeam = onCall<CreateTeamRequest>(
 
 			const teamRef = await firestore
 				.collection(Collections.TEAMS)
-				.add(teamData)
+				.add(teamDocument)
 
 			// Update player's season data to include team
-			const updatedSeasons = playerData?.seasons?.map((season: any) =>
+			const updatedSeasons = playerDocument?.seasons?.map((season: any) =>
 				season.season.id === seasonId
 					? { ...season, team: teamRef, captain: true }
 					: season

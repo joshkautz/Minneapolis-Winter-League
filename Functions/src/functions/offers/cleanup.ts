@@ -52,8 +52,8 @@ export const cleanupOffers = onCall(
 				// Get player data to check if they're already on a team
 				const playerDoc = await offerData.player.get()
 				if (playerDoc.exists) {
-					const playerData = playerDoc.data()
-					const hasTeamForSeason = playerData?.seasons?.some(
+					const playerDocument = playerDoc.data()
+					const hasTeamForSeason = playerDocument?.seasons?.some(
 						(season: any) => 
 							season.season.id === offerData.season && season.team
 					)

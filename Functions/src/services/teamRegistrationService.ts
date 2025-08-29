@@ -21,11 +21,11 @@ export async function updateTeamRegistrationStatus(
 			return
 		}
 
-		const teamData = teamDoc.data() as TeamDocument
+		const teamDocument = teamDoc.data() as TeamDocument
 
 		// Count registered players on the team
 		const registeredCount = await countRegisteredPlayersOnTeam(
-			teamData.roster,
+			teamDocument.roster,
 			seasonId
 		)
 
@@ -34,7 +34,7 @@ export async function updateTeamRegistrationStatus(
 			registeredCount >= TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
 
 		// Update registration status if it changed
-		if (teamData.registered !== shouldBeRegistered) {
+		if (teamDocument.registered !== shouldBeRegistered) {
 			await teamRef.update({
 				registered: shouldBeRegistered,
 				registeredDate: shouldBeRegistered ? new Date() : null,

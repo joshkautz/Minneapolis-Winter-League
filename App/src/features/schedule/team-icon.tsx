@@ -1,12 +1,12 @@
 import { QueryDocumentSnapshot, DocumentData } from '@/firebase/firestore'
-import { TeamData } from '@/shared/utils'
+import { TeamDocument } from '@/shared/utils'
 import { cn } from '@/shared/utils'
 import { Link } from 'react-router-dom'
 
 export const TeamIcon = ({
 	team,
 }: {
-	team: QueryDocumentSnapshot<TeamData, DocumentData> | undefined
+	team: QueryDocumentSnapshot<TeamDocument, DocumentData> | undefined
 }) => {
 	if (!team) {
 		return (

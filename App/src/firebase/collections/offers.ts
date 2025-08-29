@@ -6,12 +6,12 @@ import { addDoc, updateDoc, query, where, collection } from 'firebase/firestore'
 
 import { firestore } from '../app'
 import {
-	OfferData,
+	OfferDocument,
 	OfferStatus,
 	OfferType,
-	PlayerData,
-	TeamData,
-	SeasonData,
+	PlayerDocument,
+	TeamDocument,
+	SeasonDocument,
 	Collections,
 } from '@/shared/utils'
 import type {
@@ -28,7 +28,7 @@ import type { PlayerSeason } from '@minneapolis-winter-league/shared'
  * Accepts an offer (invitation or request)
  */
 export const acceptOffer = (
-	offerDocumentReference: DocumentReference<OfferData, DocumentData>
+	offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
 ): Promise<void> => {
 	return updateDoc(offerDocumentReference, {
 		status: OfferStatus.ACCEPTED,
@@ -39,7 +39,7 @@ export const acceptOffer = (
  * Rejects an offer (invitation or request)
  */
 export const rejectOffer = (
-	offerDocumentReference: DocumentReference<OfferData, DocumentData>
+	offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
 ): Promise<void> => {
 	return updateDoc(offerDocumentReference, {
 		status: OfferStatus.REJECTED,
@@ -51,13 +51,13 @@ export const rejectOffer = (
  */
 export const invitePlayer = (
 	playerQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<PlayerData, DocumentData>
+		| QueryDocumentSnapshot<PlayerDocument, DocumentData>
 		| undefined,
 	teamQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<TeamData, DocumentData>
+		| QueryDocumentSnapshot<TeamDocument, DocumentData>
 		| undefined,
 	authenticatedUserDocumentSnapshot:
-		| DocumentSnapshot<PlayerData, DocumentData>
+		| DocumentSnapshot<PlayerDocument, DocumentData>
 		| undefined
 ) => {
 	if (
@@ -69,7 +69,7 @@ export const invitePlayer = (
 	}
 	return addDoc(
 		collection(firestore, Collections.OFFERS) as CollectionReference<
-			OfferData,
+			OfferDocument,
 			DocumentData
 		>,
 		{
@@ -92,11 +92,11 @@ export const invitePlayer = (
  */
 export const requestToJoinTeam = (
 	playerDocumentSnapshot:
-		| DocumentSnapshot<PlayerData, DocumentData>
+		| DocumentSnapshot<PlayerDocument, DocumentData>
 		| undefined,
-	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamData, DocumentData>,
+	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument, DocumentData>,
 	authenticatedUserDocumentSnapshot:
-		| DocumentSnapshot<PlayerData, DocumentData>
+		| DocumentSnapshot<PlayerDocument, DocumentData>
 		| undefined
 ) => {
 	if (
@@ -108,7 +108,7 @@ export const requestToJoinTeam = (
 	}
 	return addDoc(
 		collection(firestore, Collections.OFFERS) as CollectionReference<
-			OfferData,
+			OfferDocument,
 			DocumentData
 		>,
 		{
@@ -128,12 +128,12 @@ export const requestToJoinTeam = (
  */
 export const outgoingOffersQuery = (
 	playerDocumentSnapshot:
-		| DocumentSnapshot<PlayerData, DocumentData>
+		| DocumentSnapshot<PlayerDocument, DocumentData>
 		| undefined,
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonData, DocumentData>
+		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
 		| undefined
-): Query<OfferData, DocumentData> | undefined => {
+): Query<OfferDocument, DocumentData> | undefined => {
 	if (!playerDocumentSnapshot || !currentSeasonQueryDocumentSnapshot) {
 		return undefined
 	}
@@ -160,7 +160,7 @@ export const outgoingOffersQuery = (
 			collection(firestore, Collections.OFFERS),
 			where('team', '==', team),
 			where('type', '==', OfferType.INVITATION)
-		) as Query<OfferData, DocumentData>
+		) as Query<OfferDocument, DocumentData>
 	}
 
 	// If the user is a player, show all their requests to join teams
@@ -168,7 +168,7 @@ export const outgoingOffersQuery = (
 		collection(firestore, Collections.OFFERS),
 		where('player', '==', playerDocumentSnapshot.ref),
 		where('type', '==', OfferType.REQUEST)
-	) as Query<OfferData, DocumentData>
+	) as Query<OfferDocument, DocumentData>
 }
 
 /**
@@ -176,12 +176,12 @@ export const outgoingOffersQuery = (
  */
 export const incomingOffersQuery = (
 	playerDocumentSnapshot:
-		| DocumentSnapshot<PlayerData, DocumentData>
+		| DocumentSnapshot<PlayerDocument, DocumentData>
 		| undefined,
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonData, DocumentData>
+		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
 		| undefined
-): Query<OfferData, DocumentData> | undefined => {
+): Query<OfferDocument, DocumentData> | undefined => {
 	if (!playerDocumentSnapshot || !currentSeasonQueryDocumentSnapshot) {
 		return undefined
 	}
@@ -208,7 +208,7 @@ export const incomingOffersQuery = (
 			collection(firestore, Collections.OFFERS),
 			where('team', '==', team),
 			where('type', '==', OfferType.REQUEST)
-		) as Query<OfferData, DocumentData>
+		) as Query<OfferDocument, DocumentData>
 	}
 
 	// If the user is a player, show all their invitations to join teams
@@ -216,7 +216,7 @@ export const incomingOffersQuery = (
 		collection(firestore, Collections.OFFERS),
 		where('player', '==', playerDocumentSnapshot.ref),
 		where('type', '==', OfferType.INVITATION)
-	) as Query<OfferData, DocumentData>
+	) as Query<OfferDocument, DocumentData>
 }
 
 /**
@@ -224,10 +224,10 @@ export const incomingOffersQuery = (
  */
 export const offersForPlayerByTeamQuery = (
 	playerDocumentSnapshot:
-		| DocumentSnapshot<PlayerData, DocumentData>
+		| DocumentSnapshot<PlayerDocument, DocumentData>
 		| undefined,
 	teamQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<TeamData, DocumentData>
+		| QueryDocumentSnapshot<TeamDocument, DocumentData>
 		| undefined
 ) => {
 	if (!playerDocumentSnapshot || !teamQueryDocumentSnapshot) {
@@ -237,5 +237,5 @@ export const offersForPlayerByTeamQuery = (
 		collection(firestore, Collections.OFFERS),
 		where('player', '==', playerDocumentSnapshot.ref),
 		where('team', '==', teamQueryDocumentSnapshot.ref)
-	) as Query<OfferData, DocumentData>
+	) as Query<OfferDocument, DocumentData>
 }

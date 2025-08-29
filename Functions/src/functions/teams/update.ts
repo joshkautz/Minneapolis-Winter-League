@@ -50,10 +50,10 @@ export const updateTeam = onCall<EditTeamRequest>(
 				throw new Error('Team not found')
 			}
 
-			const teamData = teamDoc.data()
+			const teamDocument = teamDoc.data()
 
 			// Check if user is a captain of this team
-			const userIsCaptain = teamData?.roster?.some(
+			const userIsCaptain = teamDocument?.roster?.some(
 				(member: any) => member.player.id === userId && member.captain
 			)
 

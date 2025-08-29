@@ -10,13 +10,13 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { DocumentData, QueryDocumentSnapshot } from '@/firebase/firestore'
-import { TeamData, errorHandler, logger } from '@/shared/utils'
+import { TeamDocument, errorHandler, logger } from '@/shared/utils'
 import { useSeasonsContext } from '@/providers'
 
 interface RolloverTeamFormProps {
 	isSubmitting: boolean
 	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
-	setNewTeamData: React.Dispatch<
+	setNewTeamDocument: React.Dispatch<
 		React.SetStateAction<
 			| {
 					name: string | undefined
@@ -41,7 +41,7 @@ interface RolloverTeamFormProps {
 export const RolloverTeamForm = ({
 	isSubmitting,
 	setIsSubmitting,
-	setNewTeamData,
+	setNewTeamDocument,
 	handleResult,
 }: RolloverTeamFormProps) => {
 	const {
@@ -55,7 +55,7 @@ export const RolloverTeamForm = ({
 	const [
 		selectedTeamQueryDocumentSnapshot,
 		setSelectedTeamQueryDocumentSnapshot,
-	] = useState<QueryDocumentSnapshot<TeamData, DocumentData> | undefined>(
+	] = useState<QueryDocumentSnapshot<TeamDocument, DocumentData> | undefined>(
 		undefined
 	)
 
@@ -110,7 +110,7 @@ export const RolloverTeamForm = ({
 	const onRolloverSubmit = useCallback(async () => {
 		try {
 			setIsSubmitting(true)
-			setNewTeamData({
+			setNewTeamDocument({
 				name: selectedTeamQueryDocumentSnapshot?.data().name,
 				teamId: selectedTeamQueryDocumentSnapshot?.data().teamId,
 			})
@@ -132,7 +132,7 @@ export const RolloverTeamForm = ({
 		}
 	}, [
 		selectedTeamQueryDocumentSnapshot,
-		setNewTeamData,
+		setNewTeamDocument,
 		handleResult,
 		setIsSubmitting,
 	])

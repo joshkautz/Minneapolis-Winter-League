@@ -1,5 +1,5 @@
-// Import shared types from the @minneapolis-winter-league/shared package
-import {
+// Import and re-export shared types from the @minneapolis-winter-league/shared package
+export type {
 	PlayerDocument,
 	TeamDocument,
 	SeasonDocument,
@@ -7,20 +7,11 @@ import {
 	CheckoutSessionDocument,
 	GameDocument,
 	WaiverDocument,
+} from '@minneapolis-winter-league/shared'
+
+export { 
+	Collections,
 	OfferStatus,
 	OfferType,
 	OfferDirection,
-	Collections,
 } from '@minneapolis-winter-league/shared'
-
-// Re-export for backward compatibility with Data suffix naming
-export type PlayerData = PlayerDocument
-export type TeamData = TeamDocument
-export type SeasonData = SeasonDocument
-export type OfferData = OfferDocument
-export type CheckoutSessionData = CheckoutSessionDocument
-export type GameData = GameDocument
-export type WaiverData = WaiverDocument
-
-// Re-export enums as values (not just types)
-export { OfferStatus, OfferType, OfferDirection, Collections }

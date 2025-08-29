@@ -15,7 +15,7 @@ export const CreateTeam: React.FC = () => {
 		isRostered,
 		isRegistrationOpen,
 		currentSeasonQueryDocumentSnapshot,
-		setNewTeamData,
+		setNewTeamDocument,
 		setIsSubmitting,
 		handleResult,
 		toggleRolloverMode,
@@ -58,14 +58,14 @@ export const CreateTeam: React.FC = () => {
 					<RolloverTeamForm
 						isSubmitting={isSubmitting}
 						setIsSubmitting={setIsSubmitting}
-						setNewTeamData={setNewTeamData}
+						setNewTeamDocument={setNewTeamDocument}
 						handleResult={handleResult}
 					/>
 				) : (
 					<CreateTeamForm
 						isSubmitting={isSubmitting}
 						setIsSubmitting={setIsSubmitting}
-						setNewTeamData={setNewTeamData}
+						setNewTeamDocument={setNewTeamDocument}
 						handleResult={handleResult}
 					/>
 				)}

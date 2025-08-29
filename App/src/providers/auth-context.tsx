@@ -28,14 +28,14 @@ import {
 	DocumentSnapshot,
 	DocumentData,
 } from '@/firebase/firestore'
-import { PlayerData } from '@/shared/utils'
+import { PlayerDocument } from '@/shared/utils'
 
 interface AuthContextValue {
 	authStateUser: User | null | undefined
 	authStateLoading: boolean
 	authStateError: Error | undefined
 	authenticatedUserSnapshot:
-		| DocumentSnapshot<PlayerData, DocumentData>
+		| DocumentSnapshot<PlayerDocument, DocumentData>
 		| undefined
 	authenticatedUserSnapshotLoading: boolean
 	authenticatedUserSnapshotError: FirestoreError | undefined
@@ -115,7 +115,7 @@ export const AuthContextProvider: React.FC<PropsWithChildren> = ({
 		authStateLoading,
 		authStateError,
 		authenticatedUserSnapshot: authenticatedUserSnapshot as
-			| DocumentSnapshot<PlayerData, DocumentData>
+			| DocumentSnapshot<PlayerDocument, DocumentData>
 			| undefined,
 		authenticatedUserSnapshotLoading,
 		authenticatedUserSnapshotError,

@@ -1,4 +1,4 @@
-import { OfferData, OfferDirection } from '@/shared/utils'
+import { OfferDocument, OfferDirection } from '@/shared/utils'
 import { NotificationCard } from '@/shared/components'
 import { useOffersContext } from '@/providers'
 import { useOffer } from '@/shared/hooks'
@@ -29,7 +29,7 @@ export const ManageCaptainsOffersPanel = () => {
 		useOffer(incomingOffersQuerySnapshot, currentSeasonTeamsQuerySnapshot)
 
 	const handleReject = (
-		offerDocumentReference: DocumentReference<OfferData, DocumentData>
+		offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
 	) => {
 		rejectOffer(offerDocumentReference)
 			.then(() => {
@@ -45,7 +45,7 @@ export const ManageCaptainsOffersPanel = () => {
 	}
 
 	const handleAccept = (
-		offerDocumentReference: DocumentReference<OfferData, DocumentData>
+		offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
 	) => {
 		acceptOffer(offerDocumentReference)
 			.then(() => {
@@ -61,7 +61,7 @@ export const ManageCaptainsOffersPanel = () => {
 	}
 
 	const handleCancel = (
-		offerDocumentReference: DocumentReference<OfferData, DocumentData>
+		offerDocumentReference: DocumentReference<OfferDocument, DocumentData>
 	) => {
 		rejectOffer(offerDocumentReference)
 			.then(() => {
@@ -93,7 +93,7 @@ export const ManageCaptainsOffersPanel = () => {
 						<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
 					</div>
 				) : (
-					incomingRequests?.map((incomingRequest: OfferData) => (
+					incomingRequests?.map((incomingRequest: OfferDocument) => (
 						<NotificationCardItem
 							key={`incomingRequest-row-${incomingRequest.ref.id}`}
 							type={OfferDirection.INCOMING_REQUEST}
@@ -114,7 +114,7 @@ export const ManageCaptainsOffersPanel = () => {
 						<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
 					</div>
 				) : (
-					outgoingInvites?.map((outgoingInvite: OfferData) => (
+					outgoingInvites?.map((outgoingInvite: OfferDocument) => (
 						<NotificationCardItem
 							key={`outgoingInvite-row-${outgoingInvite.ref.id}`}
 							type={OfferDirection.OUTGOING_INVITE}

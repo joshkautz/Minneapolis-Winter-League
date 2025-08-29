@@ -13,19 +13,19 @@ import {
 	FirestoreError,
 	QuerySnapshot,
 } from '@/firebase/firestore'
-import { GameData } from '@/shared/utils'
+import { GameDocument } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 
 interface GameProps {
-	gamesQuerySnapshot: QuerySnapshot<GameData, DocumentData> | undefined
+	gamesQuerySnapshot: QuerySnapshot<GameDocument, DocumentData> | undefined
 	gamesQuerySnapshotLoading: boolean
 	gamesQuerySnapshotError: FirestoreError | undefined
 	regularSeasonGamesQuerySnapshot:
-		| QuerySnapshot<GameData, DocumentData>
+		| QuerySnapshot<GameDocument, DocumentData>
 		| undefined
 	regularSeasonGamesQuerySnapshotLoading: boolean
 	regularSeasonGamesQuerySnapshotError: FirestoreError | undefined
-	playoffGamesQuerySnapshot: QuerySnapshot<GameData, DocumentData> | undefined
+	playoffGamesQuerySnapshot: QuerySnapshot<GameDocument, DocumentData> | undefined
 	playoffGamesQuerySnapshotLoading: boolean
 	playoffGamesQuerySnapshotError: FirestoreError | undefined
 }

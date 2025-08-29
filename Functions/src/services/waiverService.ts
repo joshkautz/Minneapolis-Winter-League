@@ -37,13 +37,13 @@ export const resendWaiverEmail = onCall(
 				throw new Error('Player not found')
 			}
 
-			const playerData = playerDoc.data()
-			if (!playerData) {
+			const playerDocument = playerDoc.data()
+			if (!playerDocument) {
 				throw new Error('Invalid player data')
 			}
 
 			// Check if player has already paid
-			const currentSeason = playerData.seasons?.find((season: any) => 
+			const currentSeason = playerDocument.seasons?.find((season: any) => 
 				season.paid && !season.signed
 			)
 
@@ -62,8 +62,8 @@ export const resendWaiverEmail = onCall(
 				signers: [
 					{
 						role: 'Participant',
-						name: `${playerData.firstname} ${playerData.lastname}`,
-						emailAddress: playerData.email,
+						name: `${playerDocument.firstname} ${playerDocument.lastname}`,
+						emailAddress: playerDocument.email,
 					},
 				],
 				signingOptions: {

@@ -7,7 +7,7 @@ import {
 import { cn } from '@/shared/utils'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Button } from '@/components/ui/button'
-import { PlayerData, TeamData } from '@/shared/utils'
+import { PlayerDocument, TeamDocument } from '@/shared/utils'
 import { Badge } from '@/components/ui/badge'
 import { useTeamsContext } from '@/providers'
 import { useMemo } from 'react'
@@ -21,21 +21,21 @@ export const ManageInvitePlayerDetail = ({
 	handleInvite,
 }: {
 	teamQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<TeamData, DocumentData>
+		| QueryDocumentSnapshot<TeamDocument, DocumentData>
 		| undefined
-	playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerData, DocumentData>
+	playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument, DocumentData>
 	statusColor?: string
 	message?: string
 	handleInvite: (
 		playerQueryDocumentSnapshot: QueryDocumentSnapshot<
-			PlayerData,
+			PlayerDocument,
 			DocumentData
 		>,
 		teamQueryDocumentSnapshot:
-			| QueryDocumentSnapshot<TeamData, DocumentData>
+			| QueryDocumentSnapshot<TeamDocument, DocumentData>
 			| undefined,
 		authenticatedUserDocumentSnapshot:
-			| DocumentSnapshot<PlayerData, DocumentData>
+			| DocumentSnapshot<PlayerDocument, DocumentData>
 			| undefined
 	) => void
 }) => {

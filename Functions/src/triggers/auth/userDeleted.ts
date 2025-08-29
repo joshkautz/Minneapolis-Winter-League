@@ -34,19 +34,19 @@ export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 			return
 		}
 
-		const playerData = playerDoc.data()
+		const playerDocument = playerDoc.data()
 
 		// Use a transaction to ensure data consistency
 		await firestore.runTransaction(async (transaction) => {
 			// Remove player from all teams they've been on
-			if (playerData?.seasons) {
-				for (const season of playerData.seasons) {
+			if (playerDocument?.seasons) {
+				for (const season of playerDocument.seasons) {
 					if (season.team) {
 						const teamDocSnapshot = await season.team.get()
 						if (teamDocSnapshot.exists) {
-							const teamData = teamDocSnapshot.data()
+							const teamDocument = teamDocSnapshot.data()
 							const updatedRoster =
-								teamData?.roster?.filter(
+								teamDocument?.roster?.filter(
 									(member: any) => member.player.id !== uid
 								) || []
 

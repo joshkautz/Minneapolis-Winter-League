@@ -27,7 +27,7 @@ interface UseTeamCreationReturn {
 	currentSeasonQueryDocumentSnapshot: ReturnType<
 		typeof useSeasonsContext
 	>['currentSeasonQueryDocumentSnapshot']
-	setNewTeamData: React.Dispatch<
+	setNewTeamDocument: React.Dispatch<
 		React.SetStateAction<TeamCreationData | undefined>
 	>
 	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
@@ -50,7 +50,7 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		seasonsQuerySnapshotLoading,
 	} = useSeasonsContext()
 
-	const [newTeamData, setNewTeamData] = useState<TeamCreationData>()
+	const [newTeamDocument, setNewTeamDocument] = useState<TeamCreationData>()
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 	const [rolloverMode, setRolloverMode] = useState(false)
 
@@ -120,7 +120,7 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 
 	// TODO: Implement team creation logic when firebase functions are available
 	// Effect for handling team creation
-	if (newTeamData) {
+	if (newTeamDocument) {
 		// Team creation logic will be implemented here
 	}
 
@@ -135,7 +135,7 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		currentSeasonQueryDocumentSnapshot,
 
 		// Actions
-		setNewTeamData,
+		setNewTeamDocument,
 		setIsSubmitting,
 		handleResult,
 		toggleRolloverMode,

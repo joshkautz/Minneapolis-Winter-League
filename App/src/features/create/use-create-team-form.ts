@@ -10,7 +10,7 @@ export type CreateTeamFormData = TeamFormData
 interface UseCreateTeamFormProps {
 	isSubmitting: boolean
 	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
-	setNewTeamData: React.Dispatch<
+	setNewTeamDocument: React.Dispatch<
 		React.SetStateAction<
 			| {
 					name: string | undefined
@@ -46,7 +46,7 @@ interface UseCreateTeamFormProps {
 export const useCreateTeamForm = ({
 	isSubmitting,
 	setIsSubmitting,
-	setNewTeamData,
+	setNewTeamDocument,
 	handleResult,
 	uploadFile,
 }: UseCreateTeamFormProps) => {
@@ -83,7 +83,7 @@ export const useCreateTeamForm = ({
 					storageRef = result?.ref
 				}
 
-				setNewTeamData({
+				setNewTeamDocument({
 					name: data.name,
 					storageRef,
 					teamId,
@@ -111,7 +111,7 @@ export const useCreateTeamForm = ({
 			isSubmitting,
 			setIsSubmitting,
 			blob,
-			setNewTeamData,
+			setNewTeamDocument,
 			handleResult,
 			uploadFile,
 		]

@@ -63,11 +63,11 @@ export const onOfferUpdated = onDocumentUpdated(
 					throw new Error('Player or team not found')
 				}
 
-				const playerData = playerDoc.data()
-				const teamData = teamDoc.data()
+				const playerDocument = playerDoc.data()
+				const teamDocument = teamDoc.data()
 
 				// Check if player is already on a team for current season
-				const currentSeasonData = playerData.seasons?.find(
+				const currentSeasonData = playerDocument.seasons?.find(
 					(season: any) => season.season.id === currentSeason.id
 				)
 
@@ -82,7 +82,7 @@ export const onOfferUpdated = onDocumentUpdated(
 					dateJoined: new Date(),
 				}
 
-				const updatedRoster = [...(teamData.roster || []), newRosterMember]
+				const updatedRoster = [...(teamDocument.roster || []), newRosterMember]
 				transaction.update(teamRef, { roster: updatedRoster })
 
 				// Update player's season data
@@ -95,8 +95,8 @@ export const onOfferUpdated = onDocumentUpdated(
 					signed: false,
 				}
 
-				const updatedSeasons = playerData.seasons
-					? [...playerData.seasons, newSeasonData]
+				const updatedSeasons = playerDocument.seasons
+					? [...playerDocument.seasons, newSeasonData]
 					: [newSeasonData]
 
 				transaction.update(playerRef, { seasons: updatedSeasons })

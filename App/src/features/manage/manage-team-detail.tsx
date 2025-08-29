@@ -7,7 +7,7 @@ import {
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { PlayerData, TeamData } from '@/shared/utils'
+import { PlayerDocument, TeamDocument } from '@/shared/utils'
 import { Link } from 'react-router-dom'
 
 export const ManageTeamDetail = ({
@@ -17,15 +17,15 @@ export const ManageTeamDetail = ({
 }: {
 	handleRequest: (
 		authenticatedUserDocumentSnapshot:
-			| DocumentSnapshot<PlayerData, DocumentData>
+			| DocumentSnapshot<PlayerDocument, DocumentData>
 			| undefined,
-		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamData, DocumentData>
+		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument, DocumentData>
 	) => Promise<void> | undefined
 	currentSeasonTeamsQueryDocumentSnapshot: QueryDocumentSnapshot<
-		TeamData,
+		TeamDocument,
 		DocumentData
 	>
-	playerDocumentSnapshot: DocumentSnapshot<PlayerData, DocumentData> | undefined
+	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument, DocumentData> | undefined
 }) => {
 	const [offersForPlayerByTeamQuerySnapshot] = useCollection(
 		offersForPlayerByTeamQuery(

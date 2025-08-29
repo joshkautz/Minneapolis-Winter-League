@@ -1,4 +1,4 @@
-import { PlayerData } from '@/shared/utils'
+import { PlayerDocument } from '@/shared/utils'
 import {
 	DocumentData,
 	FirestoreError,
@@ -9,10 +9,10 @@ import {
 import { useEffect, useState } from 'react'
 
 export const usePlayersSearch = (
-	playersQuery: Query<PlayerData, DocumentData> | undefined
+	playersQuery: Query<PlayerDocument, DocumentData> | undefined
 ) => {
 	const [playersQuerySnapshot, setPlayersQuerySnapshot] = useState<
-		QuerySnapshot<PlayerData, DocumentData> | undefined
+		QuerySnapshot<PlayerDocument, DocumentData> | undefined
 	>()
 	const [playersQuerySnapshotLoading, setPlayersQuerySnapshotLoading] =
 		useState<boolean>(true)

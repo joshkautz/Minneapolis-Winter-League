@@ -97,9 +97,9 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 		// Update player's signed status
 		const playerDoc = await waiverData.player.get()
 		if (playerDoc.exists) {
-			const playerData = playerDoc.data()
+			const playerDocument = playerDoc.data()
 			const updatedSeasons =
-				playerData.seasons?.map((season: any) =>
+				playerDocument.seasons?.map((season: any) =>
 					season.season.id === waiverData.season
 						? { ...season, signed: true }
 						: season

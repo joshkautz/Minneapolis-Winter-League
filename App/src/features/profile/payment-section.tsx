@@ -7,7 +7,7 @@ import { stripeRegistration } from '@/firebase/firestore'
 import { formatTimestamp } from '@/shared/utils'
 import { User } from 'firebase/auth'
 import { QueryDocumentSnapshot, DocumentData } from '@/firebase/firestore'
-import { SeasonData } from '@/shared/utils'
+import { SeasonDocument } from '@/shared/utils'
 
 interface PaymentSectionProps {
 	authStateUser: User | null | undefined
@@ -17,7 +17,7 @@ interface PaymentSectionProps {
 	isAuthenticatedUserBanned: boolean
 	isAuthenticatedUserPaid: boolean
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonData, DocumentData>
+		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
 		| undefined
 }
 

@@ -35,10 +35,10 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 				throw new Error('Team not found')
 			}
 
-			const teamData = teamDoc.data()
+			const teamDocument = teamDoc.data()
 
 			// Check if user is a captain of this team
-			const userIsCaptain = teamData?.roster?.some(
+			const userIsCaptain = teamDocument?.roster?.some(
 				(member: any) => member.player.id === userId && member.captain
 			)
 
@@ -49,12 +49,12 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 			// Use transaction to ensure data consistency
 			await firestore.runTransaction(async (transaction) => {
 				// Remove team from all players' season data
-				if (teamData?.roster) {
-					for (const member of teamData.roster) {
+				if (teamDocument?.roster) {
+					for (const member of teamDocument.roster) {
 						const playerDoc = await member.player.get()
 						if (playerDoc.exists) {
-							const playerData = playerDoc.data()
-							const updatedSeasons = playerData?.seasons?.map((season: any) =>
+							const playerDocument = playerDoc.data()
+							const updatedSeasons = playerDocument?.seasons?.map((season: any) =>
 								season.team?.id === teamId
 									? { ...season, team: null, captain: false }
 									: season
@@ -80,9 +80,9 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 			})
 
 			logger.info(`Successfully deleted team: ${teamId}`, {
-				teamName: teamData?.name,
+				teamName: teamDocument?.name,
 				deletedBy: userId,
-				rosterSize: teamData?.roster?.length || 0,
+				rosterSize: teamDocument?.roster?.length || 0,
 			})
 
 			return {

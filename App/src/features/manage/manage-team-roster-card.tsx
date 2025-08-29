@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { NotificationCard } from '@/shared/components'
 import { ManageTeamRosterPlayer } from './manage-team-roster-player'
 import { useAuthContext } from '@/providers'
-import { PlayerData } from '@/shared/utils'
+import { PlayerDocument } from '@/shared/utils'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { useSeasonsContext } from '@/providers'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -120,7 +120,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 				(
 					item: {
 						captain: boolean
-						player: DocumentReference<PlayerData, DocumentData>
+						player: DocumentReference<PlayerDocument, DocumentData>
 					},
 					index: number
 				) => (

@@ -19,7 +19,7 @@ type CreateTeamSchema = TeamFormData
 interface CreateFormProps {
 	isSubmitting: boolean
 	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
-	setNewTeamData: React.Dispatch<
+	setNewTeamDocument: React.Dispatch<
 		React.SetStateAction<
 			| {
 					name: string | undefined
@@ -44,7 +44,7 @@ interface CreateFormProps {
 export const CreateTeamForm = ({
 	isSubmitting,
 	setIsSubmitting,
-	setNewTeamData,
+	setNewTeamDocument,
 	handleResult,
 }: CreateFormProps) => {
 	const form = useForm<CreateTeamSchema>({
@@ -55,7 +55,7 @@ export const CreateTeamForm = ({
 		async (data: CreateTeamSchema) => {
 			try {
 				setIsSubmitting(true)
-				setNewTeamData({
+				setNewTeamDocument({
 					name: data.name,
 					teamId: undefined,
 				})
@@ -83,7 +83,7 @@ export const CreateTeamForm = ({
 				setIsSubmitting(false)
 			}
 		},
-		[setNewTeamData, handleResult, setIsSubmitting]
+		[setNewTeamDocument, handleResult, setIsSubmitting]
 	)
 
 	return (

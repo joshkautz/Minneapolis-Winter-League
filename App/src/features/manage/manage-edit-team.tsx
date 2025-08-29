@@ -42,7 +42,7 @@ export const ManageEditTeam = ({
 	const [storageRef, setStorageRef] = useState<StorageReference>()
 	const [uploadFile] = useUploadFile()
 	const [downloadUrl] = useDownloadURL(storageRef)
-	const [editedTeamData, setEditedTeamData] = useState<{
+	const [editedTeamDocument, setEditedTeamDocument] = useState<{
 		name: string
 		storageRef: StorageReference | undefined
 	}>()
@@ -102,19 +102,19 @@ export const ManageEditTeam = ({
 		if (!downloadUrl) {
 			return
 		}
-		if (!editedTeamData) {
+		if (!editedTeamDocument) {
 			return
 		}
 		editTeam(
 			team?.ref,
-			editedTeamData.name,
+			editedTeamDocument.name,
 			downloadUrl,
-			editedTeamData.storageRef?.fullPath
+			editedTeamDocument.storageRef?.fullPath
 		)
 			.then(() => {
 				setIsLoading(false)
 				toast.success('Team Edited', {
-					description: `Changes have been saved, ${editedTeamData.name}!`,
+					description: `Changes have been saved, ${editedTeamDocument.name}!`,
 				})
 				closeDialog()
 			})
@@ -133,7 +133,7 @@ export const ManageEditTeam = ({
 					fallbackMessage: 'Failed to save team changes. Please try again.',
 				})
 			})
-	}, [downloadUrl, editedTeamData, team, editTeam, setIsLoading])
+	}, [downloadUrl, editedTeamDocument, team, editTeam, setIsLoading])
 
 	const onSubmit = useCallback(
 		async (data: ManageEditTeamSchema) => {
@@ -145,14 +145,14 @@ export const ManageEditTeam = ({
 							contentType: 'image/jpeg',
 						}).then((result) => {
 							setStorageRef(result?.ref)
-							setEditedTeamData({ name: data.name, storageRef: result?.ref })
+							setEditedTeamDocument({ name: data.name, storageRef: result?.ref })
 						})
 					} else {
 						uploadFile(ref(storage, `teams/${uuidv4()}`), uploadedFile, {
 							contentType: 'image/jpeg',
 						}).then((result) => {
 							setStorageRef(result?.ref)
-							setEditedTeamData({ name: data.name, storageRef: result?.ref })
+							setEditedTeamDocument({ name: data.name, storageRef: result?.ref })
 						})
 					}
 				} else {
@@ -230,7 +230,7 @@ export const ManageEditTeam = ({
 			storageRef,
 			uploadFile,
 			setIsLoading,
-			setEditedTeamData,
+			setEditedTeamDocument,
 			uuidv4,
 			storage,
 			ref,

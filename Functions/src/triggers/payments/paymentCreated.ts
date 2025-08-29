@@ -62,11 +62,11 @@ export const onPaymentCreated = onDocumentCreated(
 				throw new Error(`Player document not found for UID: ${uid}`)
 			}
 
-			const playerData = playerDoc.data() as PlayerDocument
+			const playerDocument = playerDoc.data() as PlayerDocument
 
 			// Update player's paid status for current season
 			const updatedSeasons =
-				playerData.seasons?.map((season) =>
+				playerDocument.seasons?.map((season) =>
 					season.season.id === currentSeason.id
 						? { ...season, paid: true }
 						: season
@@ -82,8 +82,8 @@ export const onPaymentCreated = onDocumentCreated(
 				signers: [
 					{
 						role: 'Participant',
-						name: `${playerData.firstname} ${playerData.lastname}`,
-						emailAddress: playerData.email,
+						name: `${playerDocument.firstname} ${playerDocument.lastname}`,
+						emailAddress: playerDocument.email,
 					},
 				],
 				signingOptions: {

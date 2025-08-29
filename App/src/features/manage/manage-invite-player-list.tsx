@@ -8,7 +8,7 @@ import {
 import { useCallback, useMemo, useState } from 'react'
 import { NotificationCard } from '@/shared/components'
 import { toast } from 'sonner'
-import { PlayerData, TeamData } from '@/shared/utils'
+import { PlayerDocument, TeamDocument } from '@/shared/utils'
 import { ManageInvitePlayerDetail } from './manage-invite-player-detail'
 import { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
 import { usePlayersSearch } from '@/shared/hooks'
@@ -56,14 +56,14 @@ export const ManageInvitePlayerList = () => {
 	const handleInvite = useCallback(
 		(
 			playerQueryDocumentSnapshot: QueryDocumentSnapshot<
-				PlayerData,
+				PlayerDocument,
 				DocumentData
 			>,
 			teamQueryDocumentSnapshot:
-				| QueryDocumentSnapshot<TeamData, DocumentData>
+				| QueryDocumentSnapshot<TeamDocument, DocumentData>
 				| undefined,
 			authenticatedUserDocumentSnapshot:
-				| DocumentSnapshot<PlayerData, DocumentData>
+				| DocumentSnapshot<PlayerDocument, DocumentData>
 				| undefined
 		) => {
 			invitePlayer(

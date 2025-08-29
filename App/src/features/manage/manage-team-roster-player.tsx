@@ -17,7 +17,7 @@ import { useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuthContext } from '@/providers'
-import { PlayerData } from '@/shared/utils'
+import { PlayerDocument } from '@/shared/utils'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { DestructiveConfirmationDialog } from '@/shared/components'
 import { toast } from 'sonner'
@@ -33,7 +33,7 @@ import type {
 export const ManageTeamRosterPlayer = ({
 	playerRef,
 }: {
-	playerRef: DocumentReference<PlayerData, DocumentData>
+	playerRef: DocumentReference<PlayerDocument, DocumentData>
 }) => {
 	const { authenticatedUserSnapshot } = useAuthContext()
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()

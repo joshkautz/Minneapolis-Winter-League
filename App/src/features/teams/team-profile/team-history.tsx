@@ -5,7 +5,7 @@ import {
 	QuerySnapshot,
 } from '@/firebase/firestore'
 import { useSeasonsContext } from '@/providers'
-import { TeamData } from '@/shared/utils'
+import { TeamDocument } from '@/shared/utils'
 
 const formatPlacement = (placement: number | null) => {
 	switch (placement) {
@@ -26,8 +26,8 @@ export const TeamHistory = ({
 	teamDocumentSnapshot,
 	historyQuerySnapshot,
 }: {
-	teamDocumentSnapshot: DocumentSnapshot<TeamData, DocumentData> | undefined
-	historyQuerySnapshot: QuerySnapshot<TeamData, DocumentData>
+	teamDocumentSnapshot: DocumentSnapshot<TeamDocument, DocumentData> | undefined
+	historyQuerySnapshot: QuerySnapshot<TeamDocument, DocumentData>
 }) => {
 	const { seasonsQuerySnapshot } = useSeasonsContext()
 

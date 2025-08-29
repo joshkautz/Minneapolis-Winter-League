@@ -53,13 +53,13 @@ export const createOffer = onCall<CreateOfferRequest>(
 					throw new Error('Player or team not found')
 				}
 
-				const playerData = playerDoc.data()
-				const teamData = teamDoc.data()
+				const playerDocument = playerDoc.data()
+				const teamDocument = teamDoc.data()
 
 				// Validate authorization based on offer type
 				if (type === 'invitation') {
 					// User must be a captain of the team
-					const userIsCaptain = teamData?.roster?.some(
+					const userIsCaptain = teamDocument?.roster?.some(
 						(member: any) => member.player.id === userId && member.captain
 					)
 					if (!userIsCaptain) {
@@ -73,7 +73,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 				}
 
 				// Check if player is already on a team for current season
-				const currentSeasonData = playerData?.seasons?.find(
+				const currentSeasonData = playerDocument?.seasons?.find(
 					(season: any) => season.season.id === currentSeason.id
 				)
 

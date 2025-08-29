@@ -9,7 +9,7 @@ import { useCallback } from 'react'
 import { NotificationCard } from '@/shared/components'
 import { useAuthContext } from '@/providers'
 import { toast } from 'sonner'
-import { PlayerData, TeamData } from '@/shared/utils'
+import { PlayerDocument, TeamDocument } from '@/shared/utils'
 import { ManageTeamDetail } from './manage-team-detail'
 import { ReloadIcon } from '@radix-ui/react-icons'
 
@@ -23,10 +23,10 @@ export const ManageTeamRequestCard = () => {
 	const handleRequest = useCallback(
 		(
 			authenticatedUserDocumentSnapshot:
-				| DocumentSnapshot<PlayerData, DocumentData>
+				| DocumentSnapshot<PlayerDocument, DocumentData>
 				| undefined,
 
-			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamData, DocumentData>
+			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument, DocumentData>
 		) =>
 			requestToJoinTeam(
 				authenticatedUserDocumentSnapshot,

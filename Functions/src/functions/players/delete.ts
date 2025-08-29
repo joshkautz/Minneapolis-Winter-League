@@ -60,10 +60,10 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 				throw new Error('Player not found')
 			}
 
-			const playerData = playerDoc.data()
+			const playerDocument = playerDoc.data()
 
 			// Check for team associations
-			const hasTeamAssociations = playerData?.seasons?.some((season: any) => season.team)
+			const hasTeamAssociations = playerDocument?.seasons?.some((season: any) => season.team)
 			
 			if (hasTeamAssociations && !adminOverride) {
 				throw new Error(
@@ -79,8 +79,8 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 			logger.info(`Successfully deleted player: ${targetPlayerId}`, {
 				deletedBy: auth!.uid,
 				playerData: {
-					email: playerData?.email,
-					name: `${playerData?.firstname} ${playerData?.lastname}`,
+					email: playerDocument?.email,
+					name: `${playerDocument?.firstname} ${playerDocument?.lastname}`,
 				},
 				adminOverride,
 			})

@@ -10,7 +10,7 @@ import {
 	DocumentSnapshot,
 	teamsBySeasonQuery,
 } from '@/firebase/firestore'
-import { GameData, PlayerData, TeamData } from '@/shared/utils'
+import { GameDocument, PlayerDocument, TeamDocument } from '@/shared/utils'
 import { TeamRosterPlayer } from './team-roster-player'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from '@firebase/firestore'
@@ -38,8 +38,8 @@ const RESULT = {
 } as const
 
 const formatGameResult = (
-	team: DocumentSnapshot<TeamData, DocumentData> | undefined,
-	gameData: GameData
+	team: DocumentSnapshot<TeamDocument, DocumentData> | undefined,
+	gameData: GameDocument
 ) => {
 	const { homeScore, awayScore } = gameData
 	const opponent = team?.id == gameData.home.id ? OPPONENT.AWAY : OPPONENT.HOME
@@ -157,7 +157,7 @@ export const TeamProfile = () => {
 						(
 							item: {
 								captain: boolean
-								player: DocumentReference<PlayerData, DocumentData>
+								player: DocumentReference<PlayerDocument, DocumentData>
 							},
 							index: number
 						) => (

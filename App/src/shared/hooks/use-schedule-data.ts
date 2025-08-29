@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { DocumentData, QueryDocumentSnapshot } from '@/firebase/firestore'
-import { GameData } from '@/shared/utils'
+import { GameDocument } from '@/shared/utils'
 import { useGamesContext } from '@/providers'
 
 /**
@@ -12,8 +12,8 @@ import { useGamesContext } from '@/providers'
 export const useScheduleData = () => {
 	const { gamesQuerySnapshot } = useGamesContext()
 
-	const rounds: GameData[][] = useMemo(() => {
-		const result: GameData[][] = []
+	const rounds: GameDocument[][] = useMemo(() => {
+		const result: GameDocument[][] = []
 		let index: number = 0
 		let previousTimestamp: number = 0
 
@@ -21,7 +21,7 @@ export const useScheduleData = () => {
 			.sort((a, b) => a.data().date.seconds - b.data().date.seconds)
 			.forEach(
 				(
-					queryDocumentSnapshot: QueryDocumentSnapshot<GameData, DocumentData>
+					queryDocumentSnapshot: QueryDocumentSnapshot<GameDocument, DocumentData>
 				) => {
 					const currentTimestamp = queryDocumentSnapshot.data().date.seconds
 					if (previousTimestamp == 0) {

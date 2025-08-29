@@ -12,23 +12,23 @@ import {
 	QuerySnapshot,
 	teamsQuery,
 } from '@/firebase/firestore'
-import { TeamData } from '@/shared/utils'
+import { TeamDocument } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 import { useAuthContext } from './auth-context'
 
 interface TeamProps {
 	currentSeasonTeamsQuerySnapshot:
-		| QuerySnapshot<TeamData, DocumentData>
+		| QuerySnapshot<TeamDocument, DocumentData>
 		| undefined
 	currentSeasonTeamsQuerySnapshotLoading: boolean
 	currentSeasonTeamsQuerySnapshotError: FirestoreError | undefined
 	selectedSeasonTeamsQuerySnapshot:
-		| QuerySnapshot<TeamData, DocumentData>
+		| QuerySnapshot<TeamDocument, DocumentData>
 		| undefined
 	selectedSeasonTeamsQuerySnapshotLoading: boolean
 	selectedSeasonTeamsQuerySnapshotError: FirestoreError | undefined
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot:
-		| QuerySnapshot<TeamData, DocumentData>
+		| QuerySnapshot<TeamDocument, DocumentData>
 		| undefined
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotLoading: boolean
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError:

@@ -5,7 +5,7 @@ import { CheckCircledIcon, ReloadIcon } from '@radix-ui/react-icons'
 import { toast } from 'sonner'
 import { sendDropboxEmail } from '@/firebase/functions'
 import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
-import { formatTimestamp, SeasonData } from '@/shared/utils'
+import { formatTimestamp, SeasonDocument } from '@/shared/utils'
 import { QueryDocumentSnapshot, DocumentData } from '@/firebase/firestore'
 
 interface WaiverSectionProps {
@@ -16,7 +16,7 @@ interface WaiverSectionProps {
 	isAuthenticatedUserPaid: boolean | undefined
 	isAuthenticatedUserBanned: boolean
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonData, DocumentData>
+		| QueryDocumentSnapshot<SeasonDocument, DocumentData>
 		| undefined
 }
 

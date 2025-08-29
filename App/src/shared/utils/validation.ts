@@ -245,11 +245,11 @@ export type PaginationData = z.infer<typeof paginationSchema>
 // Type exports for data model schemas - these are designed to be compatible with shared types
 // Note: DocumentReference fields use z.unknown() since Firebase types can't be validated at runtime
 export type PlayerSeasonSchemaType = z.infer<typeof playerSeasonSchema>
-export type PlayerDataSchemaType = z.infer<typeof playerDataSchema>
+export type PlayerDocumentSchemaType = z.infer<typeof playerDataSchema>
 export type TeamRosterItemSchemaType = z.infer<typeof teamRosterItemSchema>
-export type TeamDataSchemaType = z.infer<typeof teamDataSchema>
-export type SeasonDataSchemaType = z.infer<typeof seasonDataSchema>
-export type OfferDataSchemaType = z.infer<typeof offerDataSchema>
+export type TeamDocumentSchemaType = z.infer<typeof teamDataSchema>
+export type SeasonDocumentSchemaType = z.infer<typeof seasonDataSchema>
+export type OfferDocumentSchemaType = z.infer<typeof offerDataSchema>
 
 // Advanced form schemas with conditional validation
 export const teamRegistrationSchema = z
@@ -379,44 +379,44 @@ export const offerDataSchema = z.object({
 })
 
 // Runtime validation helpers for API responses - with proper typing
-export const validatePlayerData = (data: unknown): PlayerDataSchemaType => {
+export const validatePlayerDocument = (data: unknown): PlayerDocumentSchemaType => {
 	return playerDataSchema.parse(data)
 }
 
-export const validateTeamData = (data: unknown): TeamDataSchemaType => {
+export const validateTeamDocument = (data: unknown): TeamDocumentSchemaType => {
 	return teamDataSchema.parse(data)
 }
 
-export const validateSeasonData = (data: unknown): SeasonDataSchemaType => {
+export const validateSeasonDocument = (data: unknown): SeasonDocumentSchemaType => {
 	return seasonDataSchema.parse(data)
 }
 
-export const validateOfferData = (data: unknown): OfferDataSchemaType => {
+export const validateOfferDocument = (data: unknown): OfferDocumentSchemaType => {
 	return offerDataSchema.parse(data)
 }
 
 // Safe parsing helpers - with proper typing
-export const safeParsePlayerData = (
+export const safeParsePlayerDocument = (
 	data: unknown
-): z.SafeParseReturnType<unknown, PlayerDataSchemaType> => {
+): z.SafeParseReturnType<unknown, PlayerDocumentSchemaType> => {
 	return playerDataSchema.safeParse(data)
 }
 
-export const safeParseTeamData = (
+export const safeParseTeamDocument = (
 	data: unknown
-): z.SafeParseReturnType<unknown, TeamDataSchemaType> => {
+): z.SafeParseReturnType<unknown, TeamDocumentSchemaType> => {
 	return teamDataSchema.safeParse(data)
 }
 
-export const safeParseSeasonData = (
+export const safeParseSeasonDocument = (
 	data: unknown
-): z.SafeParseReturnType<unknown, SeasonDataSchemaType> => {
+): z.SafeParseReturnType<unknown, SeasonDocumentSchemaType> => {
 	return seasonDataSchema.safeParse(data)
 }
 
-export const safeParseOfferData = (
+export const safeParseOfferDocument = (
 	data: unknown
-): z.SafeParseReturnType<unknown, OfferDataSchemaType> => {
+): z.SafeParseReturnType<unknown, OfferDocumentSchemaType> => {
 	return offerDataSchema.safeParse(data)
 }
 
