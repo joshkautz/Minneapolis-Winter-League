@@ -1,5 +1,5 @@
 /**
- * Shared utility functions for Firebase Functions
+ * Database utilities for Firebase Functions
  */
 
 import { getFirestore } from 'firebase-admin/firestore'
@@ -78,36 +78,4 @@ export async function countRegisteredPlayersOnTeam(
 		const playerData = playerDoc.data()
 		return isPlayerRegisteredForSeason(playerData, seasonId)
 	}).length
-}
-
-/**
- * Standardized error handler for Firebase Functions
- */
-export function handleFunctionError(
-	error: unknown,
-	context: string,
-	metadata?: Record<string, any>
-): Error {
-	const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-
-	logger.error(`Error in ${context}:`, {
-		error: errorMessage,
-		stack: error instanceof Error ? error.stack : undefined,
-		...metadata,
-	})
-
-	return new Error(`${context} failed: ${errorMessage}`)
-}
-
-/**
- * Validates that a user is authenticated and has a verified email
- */
-export function validateAuthentication(auth: any): void {
-	if (!auth?.uid) {
-		throw new Error('Authentication required')
-	}
-
-	if (!auth.token?.email_verified) {
-		throw new Error('Email verification required')
-	}
 }

@@ -7,7 +7,7 @@ import { UserRecord } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections } from '@minneapolis-winter-league/shared'
-import { handleFunctionError } from '../utils/helpers.js'
+import { handleFunctionError } from '../../shared/errors.js'
 
 /**
  * When a user is deleted via Firebase Authentication, clean up all related data

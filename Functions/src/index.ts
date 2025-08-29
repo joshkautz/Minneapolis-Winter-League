@@ -2,14 +2,31 @@
  * Firebase Functions Entry Point
  *
  * This file serves as the main entry point for all Firebase Functions.
- * Functions are organized into separate modules by functionality:
- * - Authentication triggers
- * - Payment and waiver triggers
- * - Team registration triggers
- * - Player management functions
- * - Team management functions
- * - Offer management functions
- * - Storage functions
+ * Functions are organized by type and domain:
+ * 
+ * TRIGGERS:
+ * - Authentication triggers (user lifecycle events)
+ * - Document triggers (Firestore document changes)
+ * - Payment triggers (payment processing events)
+ * 
+ * API ENDPOINTS:
+ * - Webhooks (external service callbacks)
+ * 
+ * CALLABLE FUNCTIONS:
+ * - Player management (CRUD operations)
+ * - Team management (CRUD operations)
+ * - Offer management (invitation/request system)
+ * - Storage management (file upload/download)
+ * 
+ * SERVICES:
+ * - Waiver management (signature requests)
+ * - Team registration (status management)
+ * 
+ * This organization provides:
+ * - Clear separation of concerns
+ * - Easy to find and maintain functions
+ * - Consistent naming conventions
+ * - Type safety and error handling
  */
 
 import { initializeApp } from './initializeApp.js'
@@ -22,48 +39,54 @@ initializeApp()
 //////////////////////////////////////////////////////////////////////////////
 
 // Authentication triggers
-export { userDeleted } from './triggers/authTriggers.js'
+export { userDeleted } from './triggers/auth/userDeleted.js'
 
-// Payment and waiver triggers
+// Document triggers
+export { onOfferUpdated } from './triggers/documents/offerUpdated.js'
+export { updateTeamRegistrationOnPlayerChange } from './triggers/documents/playerUpdated.js'
 export {
-	onPaymentCreated,
-	dropboxSignWebhook,
-	resendWaiverEmail,
-} from './triggers/paymentTriggers.js'
-
-// Team registration triggers
-export {
-	updateTeamRegistrationOnPlayerChange,
 	updateTeamRegistrationOnRosterChange,
 	updateTeamRegistrationDate,
-} from './triggers/teamTriggers.js'
+} from './triggers/documents/teamUpdated.js'
+
+// Payment triggers
+export { onPaymentCreated } from './triggers/payments/paymentCreated.js'
+
+//////////////////////////////////////////////////////////////////////////////
+// API ENDPOINTS
+//////////////////////////////////////////////////////////////////////////////
+
+// Webhooks
+export { dropboxSignWebhook } from './api/webhooks/dropboxSign.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // CALLABLE FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////
 
 // Player management functions
-export { createPlayer, updatePlayer, deletePlayer } from './playerFunctions.js'
+export { createPlayer } from './functions/players/create.js'
+export { updatePlayer } from './functions/players/update.js'
+export { deletePlayer } from './functions/players/delete.js'
 
 // Team management functions
-export {
-	createTeam,
-	deleteTeam,
-	manageTeamPlayer,
-	editTeam,
-} from './teamFunctions.js'
+export { createTeam } from './functions/teams/create.js'
+export { updateTeam } from './functions/teams/update.js'
+export { deleteTeam } from './functions/teams/delete.js'
+export { manageTeamPlayer } from './functions/teams/managePlayer.js'
 
 // Offer management functions
-export {
-	createOffer,
-	cleanupOffers,
-	onOfferUpdated,
-	updateOfferStatus,
-} from './offerFunctions.js'
+export { createOffer } from './functions/offers/create.js'
+export { updateOfferStatus } from './functions/offers/updateStatus.js'
+export { cleanupOffers } from './functions/offers/cleanup.js'
 
 // Storage functions
-export {
-	getUploadUrl,
-	getDownloadUrl,
-	getFileMetadata,
-} from './storageFunctions.js'
+export { getUploadUrl } from './functions/storage/getUploadUrl.js'
+export { getDownloadUrl } from './functions/storage/getDownloadUrl.js'
+export { getFileMetadata } from './functions/storage/getFileMetadata.js'
+
+//////////////////////////////////////////////////////////////////////////////
+// SERVICES
+//////////////////////////////////////////////////////////////////////////////
+
+// Waiver service
+export { resendWaiverEmail } from './services/waiverService.js'

@@ -1,0 +1,97 @@
+/**
+ * Waiver management service
+ */
+
+import { onCall } from 'firebase-functions/v2/https'
+import { getFirestore } from 'firebase-admin/firestore'
+import { logger } from 'firebase-functions/v2'
+import { Collections } from '@minneapolis-winter-league/shared'
+import { FIREBASE_CONFIG, DROPBOX_SIGN_CONFIG, EMAIL_CONFIG } from '../config/constants.js'
+import { validateAuthentication } from '../shared/auth.js'
+import { SignatureRequestApi, SubSigningOptions } from '@dropbox/sign'
+
+/**
+ * Re-send waiver email reminder to a player
+ *
+ * @see https://firebase.google.com/docs/functions/callable#write_and_deploy_the_callable_function
+ */
+export const resendWaiverEmail = onCall(
+	{
+		region: FIREBASE_CONFIG.REGION,
+		cors: ['https://mplswinterleague.com'],
+	},
+	async (request) => {
+		try {
+			validateAuthentication(request.auth)
+
+			const firestore = getFirestore()
+			const playerId = request.auth!.uid
+
+			// Get player data
+			const playerDoc = await firestore
+				.collection(Collections.PLAYERS)
+				.doc(playerId)
+				.get()
+
+			if (!playerDoc.exists) {
+				throw new Error('Player not found')
+			}
+
+			const playerData = playerDoc.data()
+			if (!playerData) {
+				throw new Error('Invalid player data')
+			}
+
+			// Check if player has already paid
+			const currentSeason = playerData.seasons?.find((season: any) => 
+				season.paid && !season.signed
+			)
+
+			if (!currentSeason) {
+				throw new Error('No pending waiver found for player')
+			}
+
+			// Send Dropbox signature request
+			const dropbox = new SignatureRequestApi()
+			dropbox.username = DROPBOX_SIGN_CONFIG.API_KEY
+
+			const signatureResponse = await dropbox.signatureRequestSendWithTemplate({
+				templateIds: [DROPBOX_SIGN_CONFIG.TEMPLATE_ID],
+				subject: EMAIL_CONFIG.WAIVER_SUBJECT,
+				message: EMAIL_CONFIG.WAIVER_MESSAGE,
+				signers: [
+					{
+						role: 'Participant',
+						name: `${playerData.firstname} ${playerData.lastname}`,
+						emailAddress: playerData.email,
+					},
+				],
+				signingOptions: {
+					draw: true,
+					type: true,
+					upload: true,
+					phone: false,
+					defaultType: SubSigningOptions.DefaultTypeEnum.Type,
+				},
+				testMode: DROPBOX_SIGN_CONFIG.TEST_MODE,
+			})
+
+			logger.info(`Resent waiver email to player: ${playerId}`)
+
+			return {
+				success: true,
+				signatureRequestId: signatureResponse.body.signatureRequest?.signatureRequestId,
+				message: 'Waiver email sent successfully',
+			}
+		} catch (error) {
+			logger.error('Error resending waiver email:', {
+				playerId: request.auth?.uid,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			})
+
+			throw new Error(
+				error instanceof Error ? error.message : 'Failed to resend waiver email'
+			)
+		}
+	}
+)

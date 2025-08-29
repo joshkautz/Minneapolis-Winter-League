@@ -137,7 +137,7 @@ Key configuration constants are defined in `config/constants.ts`:
 ### Testing
 
 - Test functions locally using Firebase emulator
-- Use test data from `emulator-data/` directory
+- Use test data from `.emulator/` directory
 - Validate authentication flows
 - Test error scenarios and edge cases
 

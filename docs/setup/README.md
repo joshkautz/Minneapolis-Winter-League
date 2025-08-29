@@ -65,7 +65,7 @@ Minneapolis-Winter-League/
 ├── Functions/              # Firebase Cloud Functions
 ├── Shared/                # Shared TypeScript types and validation
 ├── docs/                  # Documentation (this directory)
-├── emulator-data/         # Firebase emulator test data
+├── .emulator/         # Firebase emulator test data
 └── *.json                 # Firebase and project configuration
 ```
 

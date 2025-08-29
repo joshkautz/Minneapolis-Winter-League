@@ -106,7 +106,7 @@ firebase emulators:start
 
 ### Test Data
 
-- **Seed data**: Located in `/emulator-data/`
+- **Seed data**: Located in `/.emulator/`
 - **Import/Export**: Automated data management
 - **Reset**: Fresh start for each development session
 

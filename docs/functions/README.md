@@ -28,14 +28,17 @@ src/
 ### Trigger Functions (Event-driven)
 
 #### Authentication Triggers (`triggers/authTriggers.ts`)
+
 - **`userDeleted`** - Cleans up all player data when a user account is deleted
 
 #### Payment & Waiver Triggers (`triggers/paymentTriggers.ts`)
+
 - **`onPaymentCreated`** - Processes successful payments and creates waiver requests
 - **`dropboxSignWebhook`** - Handles Dropbox Sign webhook events for waiver signing
 - **`resendWaiverEmail`** - Allows players to request waiver email reminders
 
 #### Team Registration Triggers (`triggers/teamTriggers.ts`)
+
 - **`updateTeamRegistrationOnPlayerChange`** - Updates team status when player payment/waiver changes
 - **`updateTeamRegistrationOnRosterChange`** - Updates team status when roster changes
 - **`updateTeamRegistrationDate`** - Timestamps registration status changes
@@ -43,23 +46,27 @@ src/
 ### Callable Functions (Client-invoked)
 
 #### Player Management (`playerFunctions.ts`)
+
 - **`createPlayer`** - Creates new player profiles
 - **`updatePlayer`** - Updates player information
 - **`deletePlayer`** - Deletes player profiles (admin only)
 
 #### Team Management (`teamFunctions.ts`)
+
 - **`createTeam`** - Creates new teams
 - **`deleteTeam`** - Deletes teams (captain only)
 - **`manageTeamPlayer`** - Manages team roster (promote/demote/remove players)
 - **`editTeam`** - Updates team information
 
 #### Offer Management (`offerFunctions.ts`)
+
 - **`createOffer`** - Creates team invitations/requests
 - **`updateOfferStatus`** - Accepts/rejects offers
 - **`onOfferUpdated`** - Processes offer status changes
 - **`cleanupOffers`** - Removes stale offers (admin only)
 
 #### Storage Functions (`storageFunctions.ts`)
+
 - **`getUploadUrl`** - Generates signed upload URLs
 - **`getDownloadUrl`** - Generates signed download URLs
 - **`getFileMetadata`** - Retrieves file metadata
@@ -69,12 +76,14 @@ src/
 ### Environment Variables
 
 Required environment variables:
+
 - **`DROPBOX_SIGN_API_KEY`** - Dropbox Sign API key for waiver management
 - **`NODE_ENV`** - Environment (development/production)
 
 ### Constants
 
 Key configuration constants are defined in `config/constants.ts`:
+
 - Dropbox Sign settings (API key, template ID, test mode)
 - Firebase settings (region, CORS origins)
 - Business logic settings (minimum players for team registration)
@@ -83,17 +92,20 @@ Key configuration constants are defined in `config/constants.ts`:
 ## Best Practices Implemented
 
 ### Security
+
 - All functions validate authentication and authorization
 - Input validation on all user data
 - Environment variable validation
 - Proper error handling and logging
 
 ### Performance
+
 - Efficient Firestore queries with proper indexing
 - Transaction usage for data consistency
 - Minimal function cold starts through proper imports
 
 ### Maintainability
+
 - Modular organization by functionality
 - Shared utilities to reduce code duplication
 - Comprehensive TypeScript typing
@@ -101,6 +113,7 @@ Key configuration constants are defined in `config/constants.ts`:
 - Clear documentation and comments
 
 ### Firebase Best Practices
+
 - Gen 2 functions for new features (better performance)
 - Gen 1 functions only where necessary (auth triggers)
 - Proper function naming conventions
@@ -113,7 +126,7 @@ Key configuration constants are defined in `config/constants.ts`:
 
 1. **Determine function type**: Trigger (event-driven) or Callable (client-invoked)
 2. **Choose appropriate file**: Add to existing file or create new module
-3. **Follow naming conventions**: 
+3. **Follow naming conventions**:
    - Triggers: `onEventHappened` or `updateSomethingOnChange`
    - Callables: `actionResource` (e.g., `createPlayer`, `updateTeam`)
 4. **Add comprehensive validation**: Authentication, input validation, business rules
@@ -124,7 +137,7 @@ Key configuration constants are defined in `config/constants.ts`:
 ### Testing
 
 - Test functions locally using Firebase emulator
-- Use test data from `emulator-data/` directory
+- Use test data from `.emulator/` directory
 - Validate authentication flows
 - Test error scenarios and edge cases
 
@@ -139,6 +152,7 @@ firebase deploy --only functions:functionName
 ## Error Handling
 
 All functions use standardized error handling:
+
 - Comprehensive logging with context
 - Proper HTTP status codes for callable functions
 - Graceful degradation where possible
@@ -147,6 +161,7 @@ All functions use standardized error handling:
 ## Monitoring
 
 Functions include logging for:
+
 - Function execution start/completion
 - Business logic events (user creation, team registration, etc.)
 - Errors with full context

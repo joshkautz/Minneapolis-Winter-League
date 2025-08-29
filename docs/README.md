@@ -34,7 +34,7 @@ Minneapolis-Winter-League/
 ├── Functions/              # Firebase Cloud Functions
 ├── Shared/                # Shared types and validation
 ├── docs/                  # This documentation
-└── emulator-data/         # Firebase emulator test data
+└── .emulator/         # Firebase emulator test data
 ```
 
 ## 🚀 Quick Start
