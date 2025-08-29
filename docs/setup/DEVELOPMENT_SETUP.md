@@ -6,7 +6,7 @@ Complete setup instructions for developing the Minneapolis Winter League applica
 
 ### Required Software
 
-- **Node.js 18+** ([Download](https://nodejs.org/))
+- **Node.js 22+** ([Download](https://nodejs.org/))
 - **npm** (comes with Node.js) or **yarn**
 - **Git** ([Download](https://git-scm.com/))
 - **Firebase CLI** (`npm install -g firebase-tools`)

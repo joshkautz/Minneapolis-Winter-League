@@ -79,10 +79,7 @@ export const ManageInvitePlayerDetail = ({
 					size={'sm'}
 					variant={'outline'}
 					onClick={() => {
-						handleInvite(
-							playerQueryDocumentSnapshot,
-							teamQueryDocumentSnapshot
-						)
+						handleInvite(playerQueryDocumentSnapshot, teamQueryDocumentSnapshot)
 					}}
 				>
 					Invite

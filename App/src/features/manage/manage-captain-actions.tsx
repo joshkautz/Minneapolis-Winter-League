@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
-import { deleteTeamViaFunction, manageTeamPlayerViaFunction } from '@/firebase/collections/functions'
+import {
+	deleteTeamViaFunction,
+	manageTeamPlayerViaFunction,
+} from '@/firebase/collections/functions'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
@@ -81,10 +84,7 @@ export const ManageCaptainActions = () => {
 				fallbackMessage: 'Failed to leave team. Please try again.',
 			})
 		}
-	}, [
-		authenticatedUserSnapshot,
-		teamQueryDocumentSnapshot,
-	])
+	}, [authenticatedUserSnapshot, teamQueryDocumentSnapshot])
 
 	const deleteTeamOnClickHandler = useCallback(async () => {
 		if (!teamQueryDocumentSnapshot?.id) {
@@ -119,10 +119,7 @@ export const ManageCaptainActions = () => {
 				fallbackMessage: 'Failed to delete team. Please try again.',
 			})
 		}
-	}, [
-		authenticatedUserSnapshot,
-		teamQueryDocumentSnapshot,
-	])
+	}, [authenticatedUserSnapshot, teamQueryDocumentSnapshot])
 
 	return (
 		<div className='absolute right-6 top-6'>

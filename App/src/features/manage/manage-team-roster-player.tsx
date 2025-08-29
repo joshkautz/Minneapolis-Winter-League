@@ -1,6 +1,4 @@
-import {
-	DocumentReference,
-} from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase/firestore'
 import { manageTeamPlayerViaFunction } from '@/firebase/collections/functions'
 import {
 	DropdownMenu,
@@ -97,104 +95,98 @@ export const ManageTeamRosterPlayer = ({
 		[playerSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
-	const demoteFromCaptainOnClickHandler = useCallback(
-		async () => {
-			if (!playerSnapshot?.id || !team?.id) {
-				toast.error('Missing required data to demote captain')
-				return
-			}
+	const demoteFromCaptainOnClickHandler = useCallback(async () => {
+		if (!playerSnapshot?.id || !team?.id) {
+			toast.error('Missing required data to demote captain')
+			return
+		}
 
-			try {
-				await manageTeamPlayerViaFunction({
-					teamId: team.id,
-					playerId: playerSnapshot.id,
-					action: 'demote',
-				})
+		try {
+			await manageTeamPlayerViaFunction({
+				teamId: team.id,
+				playerId: playerSnapshot.id,
+				action: 'demote',
+			})
 
-				logger.userAction('captain_demoted', 'ManageTeamRosterPlayer', {
+			logger.userAction('captain_demoted', 'ManageTeamRosterPlayer', {
+				playerId: playerSnapshot?.id,
+				teamId: team?.id,
+				playerName: playerSnapshot?.data()?.firstname,
+			})
+			logger.firebase('demoteFromCaptain', 'teams', undefined, {
+				playerId: playerSnapshot?.id,
+				teamId: team?.id,
+			})
+			toast.success(
+				`${
+					playerSnapshot?.data()?.firstname ?? 'Player'
+				} is no longer a team captain`,
+				{
+					description:
+						'They are still on your roster. You may be promote them back at any time.',
+				}
+			)
+		} catch (error) {
+			logger.error(
+				'Demote captain failed',
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					component: 'ManageTeamRosterPlayer',
+					action: 'demote_captain',
 					playerId: playerSnapshot?.id,
 					teamId: team?.id,
-					playerName: playerSnapshot?.data()?.firstname,
-				})
-				logger.firebase('demoteFromCaptain', 'teams', undefined, {
-					playerId: playerSnapshot?.id,
-					teamId: team?.id,
-				})
-				toast.success(
-					`${
-						playerSnapshot?.data()?.firstname ?? 'Player'
-					} is no longer a team captain`,
-					{
-						description:
-							'They are still on your roster. You may be promote them back at any time.',
-					}
-				)
-			} catch (error) {
-				logger.error(
-					'Demote captain failed',
-					error instanceof Error ? error : new Error(String(error)),
-					{
-						component: 'ManageTeamRosterPlayer',
-						action: 'demote_captain',
-						playerId: playerSnapshot?.id,
-						teamId: team?.id,
-					}
-				)
+				}
+			)
 			errorHandler.handleFirebase(error, 'demote_captain', 'teams', {
 				fallbackMessage: 'Unable to demote captain. Please try again.',
 			})
 		}
-	},
-	[team, playerSnapshot]
-)
+	}, [team, playerSnapshot])
 
-	const promoteToCaptainOnClickHandler = useCallback(
-		async () => {
-			if (!playerSnapshot?.id || !team?.id) {
-				toast.error('Missing required data to promote captain')
-				return
-			}
+	const promoteToCaptainOnClickHandler = useCallback(async () => {
+		if (!playerSnapshot?.id || !team?.id) {
+			toast.error('Missing required data to promote captain')
+			return
+		}
 
-			try {
-				await manageTeamPlayerViaFunction({
-					teamId: team.id,
-					playerId: playerSnapshot.id,
-					action: 'promote',
-				})
+		try {
+			await manageTeamPlayerViaFunction({
+				teamId: team.id,
+				playerId: playerSnapshot.id,
+				action: 'promote',
+			})
 
-				logger.userAction('captain_promoted', 'ManageTeamRosterPlayer', {
+			logger.userAction('captain_promoted', 'ManageTeamRosterPlayer', {
+				playerId: playerSnapshot?.id,
+				teamId: team?.id,
+				playerName: playerSnapshot?.data()?.firstname,
+			})
+			logger.firebase('promoteToCaptain', 'teams', undefined, {
+				playerId: playerSnapshot?.id,
+				teamId: team?.id,
+			})
+			toast.success('Congratulations', {
+				description: `${
+					playerSnapshot?.data()?.firstname ?? 'Player'
+				} has been promoted to team captain.`,
+			})
+		} catch (error) {
+			logger.error(
+				'Promote captain failed',
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					component: 'ManageTeamRosterPlayer',
+					action: 'promote_captain',
 					playerId: playerSnapshot?.id,
 					teamId: team?.id,
-					playerName: playerSnapshot?.data()?.firstname,
-				})
-				logger.firebase('promoteToCaptain', 'teams', undefined, {
-					playerId: playerSnapshot?.id,
-					teamId: team?.id,
-				})
-				toast.success('Congratulations', {
-					description: `${
-						playerSnapshot?.data()?.firstname ?? 'Player'
-					} has been promoted to team captain.`,
-				})
-			} catch (error) {
-				logger.error(
-					'Promote captain failed',
-					error instanceof Error ? error : new Error(String(error)),
-					{
-						component: 'ManageTeamRosterPlayer',
-						action: 'promote_captain',
-						playerId: playerSnapshot?.id,
-						teamId: team?.id,
-					}
-				)
+				}
+			)
 			errorHandler.handleFirebase(error, 'promote_captain', 'teams', {
 				fallbackMessage:
 					'Unable to promote captain. Ensure your email is verified and try again.',
 			})
 		}
-	},
-	[team, playerSnapshot]
-)
+	}, [team, playerSnapshot])
 
 	const removeFromTeamOnClickHandler = useCallback(async () => {
 		if (!playerSnapshot?.id || !team?.id) {

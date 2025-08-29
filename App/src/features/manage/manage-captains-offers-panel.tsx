@@ -3,9 +3,7 @@ import { NotificationCard } from '@/shared/components'
 import { useOffersContext } from '@/providers'
 import { useOffer } from '@/shared/hooks'
 import { useTeamsContext } from '@/providers'
-import {
-	DocumentReference,
-} from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase/firestore'
 import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
 import { ReloadIcon } from '@radix-ui/react-icons'

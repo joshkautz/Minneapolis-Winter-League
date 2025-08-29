@@ -1,7 +1,4 @@
-import {
-	getPlayersQuery,
-	QueryDocumentSnapshot,
-} from '@/firebase/firestore'
+import { getPlayersQuery, QueryDocumentSnapshot } from '@/firebase/firestore'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { useCallback, useMemo, useState } from 'react'
 import { NotificationCard } from '@/shared/components'
@@ -54,9 +51,7 @@ export const ManageInvitePlayerList = () => {
 	const handleInvite = useCallback(
 		(
 			playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
-			teamQueryDocumentSnapshot:
-				| QueryDocumentSnapshot<TeamDocument>
-				| undefined
+			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined
 		) => {
 			if (!playerQueryDocumentSnapshot?.id || !teamQueryDocumentSnapshot?.id) {
 				toast.error('Missing required data to send invite')

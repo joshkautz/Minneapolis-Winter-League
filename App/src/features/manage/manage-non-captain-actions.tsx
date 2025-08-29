@@ -76,10 +76,7 @@ export const ManageNonCaptainActions = () => {
 				fallbackMessage: 'Unable to leave team. Please try again.',
 			})
 		}
-	}, [
-		authenticatedUserSnapshot,
-		teamQueryDocumentSnapshot,
-	])
+	}, [authenticatedUserSnapshot, teamQueryDocumentSnapshot])
 
 	return (
 		<div className='absolute right-6 top-6'>

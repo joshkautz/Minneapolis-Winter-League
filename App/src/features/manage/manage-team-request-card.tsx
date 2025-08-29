@@ -1,7 +1,4 @@
-import {
-	DocumentSnapshot,
-	QueryDocumentSnapshot,
-} from '@/firebase/firestore'
+import { DocumentSnapshot, QueryDocumentSnapshot } from '@/firebase/firestore'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { useTeamsContext } from '@/providers'
 import { useCallback } from 'react'
@@ -27,7 +24,10 @@ export const ManageTeamRequestCard = () => {
 
 			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument>
 		) => {
-			if (!authenticatedUserDocumentSnapshot?.id || !teamQueryDocumentSnapshot?.id) {
+			if (
+				!authenticatedUserDocumentSnapshot?.id ||
+				!teamQueryDocumentSnapshot?.id
+			) {
 				toast.error('Missing required data to send request')
 				return
 			}
