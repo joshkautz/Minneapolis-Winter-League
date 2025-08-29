@@ -1,5 +1,4 @@
 import {
-	DocumentSnapshot,
 	QueryDocumentSnapshot,
 	offersForPlayerByTeamQuery,
 } from '@/firebase/firestore'
@@ -11,7 +10,6 @@ import { Badge } from '@/components/ui/badge'
 import { useTeamsContext } from '@/providers'
 import { useMemo } from 'react'
 import { useSeasonsContext } from '@/providers'
-import { useAuthContext } from '@/providers'
 
 export const ManageInvitePlayerDetail = ({
 	teamQueryDocumentSnapshot,
@@ -25,10 +23,7 @@ export const ManageInvitePlayerDetail = ({
 	message?: string
 	handleInvite: (
 		playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
-		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined,
-		authenticatedUserDocumentSnapshot:
-			| DocumentSnapshot<PlayerDocument>
-			| undefined
+		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined
 	) => void
 }) => {
 	const [offersForPlayerByTeamQuerySnapshot] = useCollection(
@@ -37,7 +32,6 @@ export const ManageInvitePlayerDetail = ({
 			teamQueryDocumentSnapshot
 		)
 	)
-	const { authenticatedUserSnapshot } = useAuthContext()
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
@@ -87,8 +81,7 @@ export const ManageInvitePlayerDetail = ({
 					onClick={() => {
 						handleInvite(
 							playerQueryDocumentSnapshot,
-							teamQueryDocumentSnapshot,
-							authenticatedUserSnapshot
+							teamQueryDocumentSnapshot
 						)
 					}}
 				>

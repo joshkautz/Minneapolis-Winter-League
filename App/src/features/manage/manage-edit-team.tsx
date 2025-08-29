@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { v4 as uuidv4 } from 'uuid'
 import { ReloadIcon } from '@radix-ui/react-icons'
-import { editTeam } from '@/firebase/firestore'
+import { editTeamViaFunction } from '@/firebase/collections/functions'
 import { StorageReference, ref, storage } from '@/firebase/storage'
 import { useTeamsContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
@@ -102,23 +102,24 @@ export const ManageEditTeam = ({
 		if (!downloadUrl) {
 			return
 		}
-		if (!editedTeamDocument) {
+		if (!editedTeamDocument || !team?.id) {
 			return
 		}
-		editTeam(
-			team?.ref,
-			editedTeamDocument.name,
-			downloadUrl,
-			editedTeamDocument.storageRef?.fullPath
-		)
-			.then(() => {
+
+		const updateTeam = async () => {
+			try {
+				await editTeamViaFunction({
+					teamId: team.id,
+					name: editedTeamDocument.name,
+					logo: downloadUrl,
+					storagePath: editedTeamDocument.storageRef?.fullPath,
+				})
 				setIsLoading(false)
 				toast.success('Team Edited', {
 					description: `Changes have been saved, ${editedTeamDocument.name}!`,
 				})
 				closeDialog()
-			})
-			.catch((error) => {
+			} catch (error) {
 				setIsLoading(false)
 				logger.error(
 					'Edit team with logo failed',
@@ -132,8 +133,11 @@ export const ManageEditTeam = ({
 				errorHandler.handleFirebase(error, 'edit_team', 'teams', {
 					fallbackMessage: 'Failed to save team changes. Please try again.',
 				})
-			})
-	}, [downloadUrl, editedTeamDocument, team, editTeam, setIsLoading])
+			}
+		}
+
+		updateTeam()
+	}, [downloadUrl, editedTeamDocument, team, setIsLoading])
 
 	const onSubmit = useCallback(
 		async (data: ManageEditTeamSchema) => {
@@ -162,56 +166,60 @@ export const ManageEditTeam = ({
 						})
 					}
 				} else {
-					if (storageRef) {
-						editTeam(team?.ref, data.name, undefined, undefined)
-							.then(() => {
-								setIsLoading(false)
-								toast.success('Team Edited', {
-									description: `Changes have been saved, ${data.name}!`,
-								})
-								closeDialog()
+					if (storageRef && team?.id) {
+						try {
+							await editTeamViaFunction({
+								teamId: team.id,
+								name: data.name,
 							})
-							.catch((error) => {
-								setIsLoading(false)
-								logger.error(
-									'Edit team (no file) failed',
-									error instanceof Error ? error : new Error(String(error)),
-									{
-										component: 'ManageEditTeam',
-										action: 'edit_team_no_file',
-										teamId: team?.id,
-									}
-								)
-								errorHandler.handleFirebase(error, 'edit_team', 'teams', {
-									fallbackMessage:
-										'Failed to save team changes. Please try again.',
-								})
+							setIsLoading(false)
+							toast.success('Team Edited', {
+								description: `Changes have been saved, ${data.name}!`,
 							})
-					} else {
-						editTeam(team?.ref, data.name, undefined, undefined)
-							.then(() => {
-								setIsLoading(false)
-								toast.success('Team Edited', {
-									description: `Changes have been saved, ${data.name}!`,
-								})
-								closeDialog()
+							closeDialog()
+						} catch (error) {
+							setIsLoading(false)
+							logger.error(
+								'Edit team (no file) failed',
+								error instanceof Error ? error : new Error(String(error)),
+								{
+									component: 'ManageEditTeam',
+									action: 'edit_team_no_file',
+									teamId: team?.id,
+								}
+							)
+							errorHandler.handleFirebase(error, 'edit_team', 'teams', {
+								fallbackMessage:
+									'Failed to save team changes. Please try again.',
 							})
-							.catch((error) => {
-								setIsLoading(false)
-								logger.error(
-									'Edit team (else case) failed',
-									error instanceof Error ? error : new Error(String(error)),
-									{
-										component: 'ManageEditTeam',
-										action: 'edit_team_else',
-										teamId: team?.id,
-									}
-								)
-								errorHandler.handleFirebase(error, 'edit_team', 'teams', {
-									fallbackMessage:
-										'Failed to save team changes. Please try again.',
-								})
+						}
+					} else if (team?.id) {
+						try {
+							await editTeamViaFunction({
+								teamId: team.id,
+								name: data.name,
 							})
+							setIsLoading(false)
+							toast.success('Team Edited', {
+								description: `Changes have been saved, ${data.name}!`,
+							})
+							closeDialog()
+						} catch (error) {
+							setIsLoading(false)
+							logger.error(
+								'Edit team (else case) failed',
+								error instanceof Error ? error : new Error(String(error)),
+								{
+									component: 'ManageEditTeam',
+									action: 'edit_team_else',
+									teamId: team?.id,
+								}
+							)
+							errorHandler.handleFirebase(error, 'edit_team', 'teams', {
+								fallbackMessage:
+									'Failed to save team changes. Please try again.',
+							})
+						}
 					}
 				}
 			} catch (error) {

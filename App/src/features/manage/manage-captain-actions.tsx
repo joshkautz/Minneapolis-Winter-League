@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { deleteTeam, removeFromTeam } from '@/firebase/firestore'
+import { deleteTeamViaFunction, manageTeamPlayerViaFunction } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
@@ -45,78 +45,83 @@ export const ManageCaptainActions = () => {
 	const [open, setOpen] = useState(false)
 
 	const removeFromTeamOnClickHandler = useCallback(async () => {
-		removeFromTeam(
-			authenticatedUserSnapshot?.ref,
-			teamQueryDocumentSnapshot?.ref,
-			currentSeasonQueryDocumentSnapshot?.ref
-		)
-			.then(() => {
-				logger.userAction('team_left', 'ManageCaptainActions', {
-					teamId: teamQueryDocumentSnapshot?.id,
-					userId: authenticatedUserSnapshot?.id,
-				})
-				logger.firebase('removeFromTeam', 'teams', undefined, {
-					teamId: teamQueryDocumentSnapshot?.id,
-				})
-				toast.success('Success', {
-					description: 'You have left the team.',
-				})
+		if (!authenticatedUserSnapshot?.id || !teamQueryDocumentSnapshot?.id) {
+			toast.error('Missing required data to leave team')
+			return
+		}
+
+		try {
+			await manageTeamPlayerViaFunction({
+				teamId: teamQueryDocumentSnapshot.id,
+				playerId: authenticatedUserSnapshot.id,
+				action: 'remove',
 			})
-			.catch((error) => {
-				logger.error(
-					'Leave team failed',
-					error instanceof Error ? error : new Error(String(error)),
-					{
-						component: 'ManageCaptainActions',
-						action: 'leave_team',
-						teamId: teamQueryDocumentSnapshot?.id,
-					}
-				)
-				errorHandler.handleFirebase(error, 'leave_team', 'teams', {
-					fallbackMessage: 'Failed to leave team. Please try again.',
-				})
+
+			logger.userAction('team_left', 'ManageCaptainActions', {
+				teamId: teamQueryDocumentSnapshot?.id,
+				userId: authenticatedUserSnapshot?.id,
 			})
+			logger.firebase('removeFromTeam', 'teams', undefined, {
+				teamId: teamQueryDocumentSnapshot?.id,
+			})
+			toast.success('Success', {
+				description: 'You have left the team.',
+			})
+		} catch (error) {
+			logger.error(
+				'Leave team failed',
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					component: 'ManageCaptainActions',
+					action: 'leave_team',
+					teamId: teamQueryDocumentSnapshot?.id,
+				}
+			)
+			errorHandler.handleFirebase(error, 'leave_team', 'teams', {
+				fallbackMessage: 'Failed to leave team. Please try again.',
+			})
+		}
 	}, [
 		authenticatedUserSnapshot,
 		teamQueryDocumentSnapshot,
-		currentSeasonQueryDocumentSnapshot,
 	])
 
 	const deleteTeamOnClickHandler = useCallback(async () => {
-		deleteTeam(
-			teamQueryDocumentSnapshot?.ref,
-			currentSeasonQueryDocumentSnapshot?.ref
-		)
-			.then(() => {
-				logger.userAction('team_deleted', 'ManageCaptainActions', {
-					teamId: teamQueryDocumentSnapshot?.id,
-					userId: authenticatedUserSnapshot?.id,
-				})
-				logger.firebase('deleteTeam', 'teams', undefined, {
-					teamId: teamQueryDocumentSnapshot?.id,
-				})
-				toast.success('Success', {
-					description: 'Team has been deleted.',
-				})
+		if (!teamQueryDocumentSnapshot?.id) {
+			toast.error('Missing team data to delete team')
+			return
+		}
+
+		try {
+			await deleteTeamViaFunction(teamQueryDocumentSnapshot.id)
+
+			logger.userAction('team_deleted', 'ManageCaptainActions', {
+				teamId: teamQueryDocumentSnapshot?.id,
+				userId: authenticatedUserSnapshot?.id,
 			})
-			.catch((error) => {
-				logger.error(
-					'Delete team failed',
-					error instanceof Error ? error : new Error(String(error)),
-					{
-						component: 'ManageCaptainActions',
-						action: 'delete_team',
-						teamId: teamQueryDocumentSnapshot?.id,
-					}
-				)
-				errorHandler.handleFirebase(error, 'delete_team', 'teams', {
-					fallbackMessage: 'Failed to delete team. Please try again.',
-				})
+			logger.firebase('deleteTeam', 'teams', undefined, {
+				teamId: teamQueryDocumentSnapshot?.id,
 			})
+			toast.success('Success', {
+				description: 'Team has been deleted.',
+			})
+		} catch (error) {
+			logger.error(
+				'Delete team failed',
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					component: 'ManageCaptainActions',
+					action: 'delete_team',
+					teamId: teamQueryDocumentSnapshot?.id,
+				}
+			)
+			errorHandler.handleFirebase(error, 'delete_team', 'teams', {
+				fallbackMessage: 'Failed to delete team. Please try again.',
+			})
+		}
 	}, [
 		authenticatedUserSnapshot,
 		teamQueryDocumentSnapshot,
-		currentSeasonQueryDocumentSnapshot,
 	])
 
 	return (

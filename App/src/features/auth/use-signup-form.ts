@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
-import { createPlayer } from '@/firebase/firestore'
+import { createPlayerViaFunction } from '@/firebase/collections/functions'
 import { logger } from '@/shared/utils'
 import {
 	signupFormSchema,
@@ -59,13 +59,12 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 				sendEmailVerification()
 
 				// Create player document
-				await createPlayer(
-					credential,
-					data.firstName,
-					data.lastName,
-					data.email,
-					currentSeasonQueryDocumentSnapshot
-				)
+				await createPlayerViaFunction({
+					firstname: data.firstName,
+					lastname: data.lastName,
+					email: data.email,
+					seasonId: currentSeasonQueryDocumentSnapshot?.id || '',
+				})
 
 				logger.firebase('create', 'players', undefined, {
 					userId: credential.user.uid,

@@ -75,12 +75,12 @@ export const invitePlayer = (
 			creator: `${(authenticatedUserDocumentSnapshot.data() as PlayerDocument | undefined)?.firstname || ''} ${(authenticatedUserDocumentSnapshot.data() as PlayerDocument | undefined)?.lastname || ''}`,
 			player: playerQueryDocumentSnapshot.ref,
 			playerName:
-				((playerQueryDocumentSnapshot.data() as PlayerDocument | undefined)?.firstname || '') +
+				(playerQueryDocumentSnapshot.data()?.firstname || '') +
 				' ' +
-				((playerQueryDocumentSnapshot.data() as PlayerDocument | undefined)?.lastname || ''),
+				(playerQueryDocumentSnapshot.data()?.lastname || ''),
 			status: OfferStatus.PENDING,
 			team: teamQueryDocumentSnapshot.ref,
-			teamName: (teamQueryDocumentSnapshot.data() as TeamDocument | undefined)?.name || '',
+			teamName: teamQueryDocumentSnapshot.data()?.name || '',
 		}
 	)
 }
@@ -114,7 +114,7 @@ export const requestToJoinTeam = (
 			playerName: `${(playerDocumentSnapshot.data() as PlayerDocument | undefined)?.firstname || ''} ${(playerDocumentSnapshot.data() as PlayerDocument | undefined)?.lastname || ''}`,
 			status: OfferStatus.PENDING,
 			team: teamQueryDocumentSnapshot.ref,
-			teamName: (teamQueryDocumentSnapshot.data() as TeamDocument | undefined)?.name || '',
+			teamName: teamQueryDocumentSnapshot.data()?.name || '',
 		}
 	)
 }
@@ -132,14 +132,16 @@ export const outgoingOffersQuery = (
 		return undefined
 	}
 
-	const isCaptain = (playerDocumentSnapshot.data() as PlayerDocument | undefined)
+	const isCaptain = playerDocumentSnapshot
+		.data()
 		?.seasons.some(
 			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 				item.captain
 		)
 
-	const team = (playerDocumentSnapshot.data() as PlayerDocument | undefined)
+	const team = playerDocumentSnapshot
+		.data()
 		?.seasons.find(
 			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
@@ -176,14 +178,16 @@ export const incomingOffersQuery = (
 		return undefined
 	}
 
-	const isCaptain = (playerDocumentSnapshot.data() as PlayerDocument | undefined)
+	const isCaptain = playerDocumentSnapshot
+		.data()
 		?.seasons.some(
 			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 				item.captain
 		)
 
-	const team = (playerDocumentSnapshot.data() as PlayerDocument | undefined)
+	const team = playerDocumentSnapshot
+		.data()
 		?.seasons.find(
 			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&

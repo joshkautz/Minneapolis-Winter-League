@@ -5,9 +5,8 @@ import { useOffer } from '@/shared/hooks'
 import { useTeamsContext } from '@/providers'
 import {
 	DocumentReference,
-	rejectOffer,
-	acceptOffer,
 } from '@/firebase/firestore'
+import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { getInviteMessage, getRequestMessage } from '@/shared/utils'
@@ -27,52 +26,58 @@ export const ManageCaptainsOffersPanel = () => {
 	const { offers: incomingRequests, offersLoading: incomingRequestsLoading } =
 		useOffer(incomingOffersQuerySnapshot, currentSeasonTeamsQuerySnapshot)
 
-	const handleReject = (
+	const handleReject = async (
 		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
-		rejectOffer(offerDocumentReference)
-			.then(() => {
-				toast.success('Success', {
-					description: 'Request rejected',
-				})
+		try {
+			await updateOfferStatusViaFunction({
+				offerId: offerDocumentReference.id,
+				status: 'rejected',
 			})
-			.catch(() => {
-				toast.error('Failure', {
-					description: 'Request not rejected',
-				})
+			toast.success('Success', {
+				description: 'Request rejected',
 			})
+		} catch {
+			toast.error('Failure', {
+				description: 'Request not rejected',
+			})
+		}
 	}
 
-	const handleAccept = (
+	const handleAccept = async (
 		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
-		acceptOffer(offerDocumentReference)
-			.then(() => {
-				toast.success('Success', {
-					description: 'Request accepted',
-				})
+		try {
+			await updateOfferStatusViaFunction({
+				offerId: offerDocumentReference.id,
+				status: 'accepted',
 			})
-			.catch(() => {
-				toast.error('Failure', {
-					description: 'Request not accepted',
-				})
+			toast.success('Success', {
+				description: 'Request accepted',
 			})
+		} catch {
+			toast.error('Failure', {
+				description: 'Request not accepted',
+			})
+		}
 	}
 
-	const handleCancel = (
+	const handleCancel = async (
 		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
-		rejectOffer(offerDocumentReference)
-			.then(() => {
-				toast.success('Success', {
-					description: 'Invite canceled',
-				})
+		try {
+			await updateOfferStatusViaFunction({
+				offerId: offerDocumentReference.id,
+				status: 'rejected',
 			})
-			.catch(() => {
-				toast.error('Failure', {
-					description: 'Invite not canceled',
-				})
+			toast.success('Success', {
+				description: 'Invite canceled',
 			})
+		} catch {
+			toast.error('Failure', {
+				description: 'Invite not canceled',
+			})
+		}
 	}
 
 	const outgoingActions = [{ title: 'Cancel', action: handleCancel }]

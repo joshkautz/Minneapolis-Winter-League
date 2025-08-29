@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import { removeFromTeam } from '@/firebase/firestore'
+import { manageTeamPlayerViaFunction } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
@@ -41,40 +41,44 @@ export const ManageNonCaptainActions = () => {
 	)
 
 	const removeFromTeamOnClickHandler = useCallback(async () => {
-		removeFromTeam(
-			authenticatedUserSnapshot?.ref,
-			teamQueryDocumentSnapshot?.ref,
-			currentSeasonQueryDocumentSnapshot?.ref
-		)
-			.then(() => {
-				toast.success(
-					`${
-						authenticatedUserSnapshot?.data()?.firstname ?? 'Player'
-					} has left the team`,
-					{
-						description: 'Send player invites to build up your roster.',
-					}
-				)
+		if (!authenticatedUserSnapshot?.id || !teamQueryDocumentSnapshot?.id) {
+			toast.error('Missing required data to leave team')
+			return
+		}
+
+		try {
+			await manageTeamPlayerViaFunction({
+				teamId: teamQueryDocumentSnapshot.id,
+				playerId: authenticatedUserSnapshot.id,
+				action: 'remove',
 			})
-			.catch((error) => {
-				logger.error(
-					'Leave team failed',
-					error instanceof Error ? error : new Error(String(error)),
-					{
-						component: 'ManageNonCaptainActions',
-						action: 'leave_team',
-						teamId: teamQueryDocumentSnapshot?.id,
-						userId: authenticatedUserSnapshot?.id,
-					}
-				)
-				errorHandler.handleFirebase(error, 'leave_team', 'teams', {
-					fallbackMessage: 'Unable to leave team. Please try again.',
-				})
+
+			toast.success(
+				`${
+					authenticatedUserSnapshot?.data()?.firstname ?? 'Player'
+				} has left the team`,
+				{
+					description: 'Send player invites to build up your roster.',
+				}
+			)
+		} catch (error) {
+			logger.error(
+				'Leave team failed',
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					component: 'ManageNonCaptainActions',
+					action: 'leave_team',
+					teamId: teamQueryDocumentSnapshot?.id,
+					userId: authenticatedUserSnapshot?.id,
+				}
+			)
+			errorHandler.handleFirebase(error, 'leave_team', 'teams', {
+				fallbackMessage: 'Unable to leave team. Please try again.',
 			})
+		}
 	}, [
 		authenticatedUserSnapshot,
 		teamQueryDocumentSnapshot,
-		currentSeasonQueryDocumentSnapshot,
 	])
 
 	return (

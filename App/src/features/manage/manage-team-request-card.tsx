@@ -1,9 +1,8 @@
 import {
-	
 	DocumentSnapshot,
 	QueryDocumentSnapshot,
-	requestToJoinTeam,
 } from '@/firebase/firestore'
+import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { useTeamsContext } from '@/providers'
 import { useCallback } from 'react'
 import { NotificationCard } from '@/shared/components'
@@ -21,19 +20,24 @@ export const ManageTeamRequestCard = () => {
 	} = useTeamsContext()
 
 	const handleRequest = useCallback(
-		(
+		async (
 			authenticatedUserDocumentSnapshot:
 				| DocumentSnapshot<PlayerDocument>
 				| undefined,
 
 			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument>
-		) =>
-			requestToJoinTeam(
-				authenticatedUserDocumentSnapshot,
-				teamQueryDocumentSnapshot,
-				authenticatedUserDocumentSnapshot
-			)
-				?.then(() => {
+		) => {
+			if (!authenticatedUserDocumentSnapshot?.id || !teamQueryDocumentSnapshot?.id) {
+				toast.error('Missing required data to send request')
+				return
+			}
+
+			createOfferViaFunction({
+				playerId: authenticatedUserDocumentSnapshot.id,
+				teamId: teamQueryDocumentSnapshot.id,
+				type: 'request',
+			})
+				.then(() => {
 					toast.success('Request sent', {
 						description: 'you requested to join',
 					})
@@ -43,7 +47,8 @@ export const ManageTeamRequestCard = () => {
 						description:
 							'Ensure your email is verified. Please try again later.',
 					})
-				}),
+				})
+		},
 		[]
 	)
 

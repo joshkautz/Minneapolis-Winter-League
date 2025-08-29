@@ -1,9 +1,8 @@
 import {
-	invitePlayer,
 	getPlayersQuery,
 	QueryDocumentSnapshot,
-	DocumentSnapshot,
 } from '@/firebase/firestore'
+import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { useCallback, useMemo, useState } from 'react'
 import { NotificationCard } from '@/shared/components'
 import { toast } from 'sonner'
@@ -57,17 +56,19 @@ export const ManageInvitePlayerList = () => {
 			playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
 			teamQueryDocumentSnapshot:
 				| QueryDocumentSnapshot<TeamDocument>
-				| undefined,
-			authenticatedUserDocumentSnapshot:
-				| DocumentSnapshot<PlayerDocument>
 				| undefined
 		) => {
-			invitePlayer(
-				playerQueryDocumentSnapshot,
-				teamQueryDocumentSnapshot,
-				authenticatedUserDocumentSnapshot
-			)
-				?.then(() => {
+			if (!playerQueryDocumentSnapshot?.id || !teamQueryDocumentSnapshot?.id) {
+				toast.error('Missing required data to send invite')
+				return
+			}
+
+			createOfferViaFunction({
+				playerId: playerQueryDocumentSnapshot.id,
+				teamId: teamQueryDocumentSnapshot.id,
+				type: 'invitation',
+			})
+				.then(() => {
 					toast.success('Invite sent', {
 						description: `${playerQueryDocumentSnapshot.data().firstname} ${playerQueryDocumentSnapshot.data().lastname} has been invited to join ${teamQueryDocumentSnapshot?.data().name}.`,
 					})
