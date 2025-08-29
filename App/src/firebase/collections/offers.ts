@@ -22,6 +22,7 @@ import type {
 	CollectionReference,
 	DocumentData,
 } from '../types'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 
 /**
  * Accepts an offer (invitation or request)
@@ -140,7 +141,7 @@ export const outgoingOffersQuery = (
 	const isCaptain = playerDocumentSnapshot
 		?.data()
 		?.seasons.some(
-			(item) =>
+			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 				item.captain
 		)
@@ -148,7 +149,7 @@ export const outgoingOffersQuery = (
 	const team = playerDocumentSnapshot
 		?.data()
 		?.seasons.find(
-			(item) =>
+			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 				item.captain
 		)?.team
@@ -188,7 +189,7 @@ export const incomingOffersQuery = (
 	const isCaptain = playerDocumentSnapshot
 		?.data()
 		?.seasons.some(
-			(item) =>
+			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 				item.captain
 		)
@@ -196,7 +197,7 @@ export const incomingOffersQuery = (
 	const team = playerDocumentSnapshot
 		?.data()
 		?.seasons.find(
-			(item) =>
+			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 				item.captain
 		)?.team

@@ -34,6 +34,11 @@ import type {
 	CollectionReference,
 	DocumentData,
 } from '../types'
+import type {
+	PlayerSeason,
+	TeamRosterPlayer,
+	TeamDocument,
+} from '@minneapolis-winter-league/shared'
 
 /**
  * Creates a new team and assigns a captain
@@ -90,16 +95,19 @@ export const createTeam = async (
 					Promise.all([
 						// Update the player document
 						updateDoc(playerRef, {
-							seasons: playerDocumentSnapshot.data()?.seasons.map((item) => ({
-								captain: item.season.id === seasonRef.id ? true : item.captain,
-								paid: item.paid,
-								season: item.season,
-								signed: item.signed,
-								team:
-									item.season.id === seasonRef.id
-										? teamDocumentReference
-										: item.team,
-							})),
+							seasons: playerDocumentSnapshot
+								.data()
+								?.seasons.map((item: PlayerSeason) => ({
+									captain:
+										item.season.id === seasonRef.id ? true : item.captain,
+									paid: item.paid,
+									season: item.season,
+									signed: item.signed,
+									team:
+										item.season.id === seasonRef.id
+											? teamDocumentReference
+											: item.team,
+								})),
 						}),
 						// Update the season document
 						updateDoc(seasonRef, {
@@ -152,14 +160,16 @@ export const rolloverTeam = async (
 	return Promise.all([
 		// Update the player document
 		updateDoc(playerRef, {
-			seasons: playerDocumentSnapshot.data()?.seasons.map((item) => ({
-				captain: item.season.id === seasonRef.id ? true : item.captain,
-				paid: item.paid,
-				season: item.season,
-				signed: item.signed,
-				team:
-					item.season.id === seasonRef.id ? teamDocumentReference : item.team,
-			})),
+			seasons: playerDocumentSnapshot
+				.data()
+				?.seasons.map((item: PlayerSeason) => ({
+					captain: item.season.id === seasonRef.id ? true : item.captain,
+					paid: item.paid,
+					season: item.season,
+					signed: item.signed,
+					team:
+						item.season.id === seasonRef.id ? teamDocumentReference : item.team,
+				})),
 		}),
 		// Update the season document
 		updateDoc(seasonRef, {
@@ -220,21 +230,23 @@ export const deleteTeam = async (
 			// Update all players on this team to remove them from the team
 			.then(() => getDoc(teamRef))
 			.then((teamDocumentSnapshot) =>
-				teamDocumentSnapshot.data()?.roster.map(async (item) =>
-					getDoc(item.player).then((playerDocumentSnapshot) =>
-						updateDoc(playerDocumentSnapshot.ref, {
-							seasons: (
-								playerDocumentSnapshot.data() as PlayerData
-							)?.seasons.map((item) => ({
-								captain: item.season.id === seasonRef.id ? false : item.team,
-								paid: item.paid,
-								season: item.season,
-								signed: item.signed,
-								team: item.season.id === seasonRef.id ? null : item.team,
-							})),
-						})
+				teamDocumentSnapshot
+					.data()
+					?.roster.map(async (item: TeamRosterPlayer) =>
+						getDoc(item.player).then((playerDocumentSnapshot) =>
+							updateDoc(playerDocumentSnapshot.ref, {
+								seasons: (
+									playerDocumentSnapshot.data() as PlayerData
+								)?.seasons.map((item: PlayerSeason) => ({
+									captain: item.season.id === seasonRef.id ? false : item.team,
+									paid: item.paid,
+									season: item.season,
+									signed: item.signed,
+									team: item.season.id === seasonRef.id ? null : item.team,
+								})),
+							})
+						)
 					)
-				)
 			)
 			// Update season document to remove the team
 			.then(() => getDoc(seasonRef))

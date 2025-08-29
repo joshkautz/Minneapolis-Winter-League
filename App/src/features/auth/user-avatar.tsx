@@ -16,12 +16,15 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { errorHandler, logger } from '@/shared/utils'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 
 const getInitials = (
 	firstName: string | undefined,
 	lastName: string | undefined
 ) => {
-	if (!firstName || !lastName) {return 'NA'}
+	if (!firstName || !lastName) {
+		return 'NA'
+	}
 	return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
 
@@ -42,7 +45,9 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const userInitials = useMemo(() => {
-		if (!authenticatedUserSnapshot) {return 'NA'}
+		if (!authenticatedUserSnapshot) {
+			return 'NA'
+		}
 		const data = authenticatedUserSnapshot.data()
 		return getInitials(data?.firstname, data?.lastname)
 	}, [authenticatedUserSnapshot])
@@ -57,7 +62,8 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.paid,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -67,7 +73,8 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.signed,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)

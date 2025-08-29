@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Timestamp } from '@firebase/firestore'
 import { useAuthContext, useSeasonsContext } from '@/providers'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 
 interface TeamCreationData {
 	name: string | undefined
@@ -63,7 +64,7 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.some(
-					(item) =>
+					(item: PlayerSeason) =>
 						item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 						item.team
 				) || false,

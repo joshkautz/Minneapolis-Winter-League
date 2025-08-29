@@ -6,6 +6,7 @@ import {
 	useSeasonsContext,
 } from '@/providers'
 import { logger } from '@/shared/utils'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 
 /**
  * Custom hook for top navigation logic
@@ -29,7 +30,8 @@ export const useTopNavigation = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.captain ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -39,7 +41,7 @@ export const useTopNavigation = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.some(
-					(item) =>
+					(item: PlayerSeason) =>
 						item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 						item.team
 				) || false,
@@ -56,7 +58,8 @@ export const useTopNavigation = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.paid ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -66,7 +69,8 @@ export const useTopNavigation = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.signed ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)

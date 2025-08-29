@@ -16,6 +16,7 @@ import { useDebounce } from '@/shared/hooks'
 import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
 import { useAuthContext } from '@/providers'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 
 export const ManageInvitePlayerList = () => {
 	const [search, setSearch] = useState('')
@@ -41,7 +42,7 @@ export const ManageInvitePlayerList = () => {
 					authenticatedUserSnapshot
 						?.data()
 						?.seasons.find(
-							(item) =>
+							(item: PlayerSeason) =>
 								item.season.id === currentSeasonQueryDocumentSnapshot?.id
 						)?.team?.id
 			),

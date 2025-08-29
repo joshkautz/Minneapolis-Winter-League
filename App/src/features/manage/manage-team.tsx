@@ -8,6 +8,7 @@ import { ManageTeamRosterCard } from './manage-team-roster-card'
 import { ManageCaptainActions } from './manage-captain-actions'
 import { ManageNonCaptainActions } from './manage-non-captain-actions'
 import { ManageCaptainsOffersPanel } from './manage-captains-offers-panel'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 import { ManageNonCaptainsOffersPanel } from './manage-non-captains-offers-panel'
 
 export const ManageTeam = () => {
@@ -51,7 +52,8 @@ export const ManageTeam = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.captain,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -61,7 +63,7 @@ export const ManageTeam = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.some(
-					(item) =>
+					(item: PlayerSeason) =>
 						item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 						item.team
 				),

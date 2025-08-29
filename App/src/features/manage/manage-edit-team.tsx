@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { FocusScope } from '@radix-ui/react-focus-scope'
 import { logger, errorHandler, ErrorType } from '@/shared/utils'
 import { teamFormSchema, type TeamFormData } from '@/shared/utils/validation'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 
 type ManageEditTeamSchema = TeamFormData
 
@@ -54,7 +55,7 @@ export const ManageEditTeam = ({
 					authenticatedUserSnapshot
 						?.data()
 						?.seasons.find(
-							(item) =>
+							(item: PlayerSeason) =>
 								item.season.id === currentSeasonQueryDocumentSnapshot?.id
 						)?.team?.id
 			),
@@ -98,8 +99,12 @@ export const ManageEditTeam = ({
 	}, [team, storage, setStorageRef, ref])
 
 	useEffect(() => {
-		if (!downloadUrl) {return}
-		if (!editedTeamData) {return}
+		if (!downloadUrl) {
+			return
+		}
+		if (!editedTeamData) {
+			return
+		}
 		editTeam(
 			team?.ref,
 			editedTeamData.name,

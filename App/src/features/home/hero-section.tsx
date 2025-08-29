@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CitySvg } from './city-svg'
 import { SparklesCore } from './particles'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 import { RegistrationCountdown } from './registration-countdown'
 
 export const HeroSection = () => {
@@ -58,7 +59,7 @@ export const HeroSection = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.some(
-					(item) =>
+					(item: PlayerSeason) =>
 						item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 						item.team
 				),

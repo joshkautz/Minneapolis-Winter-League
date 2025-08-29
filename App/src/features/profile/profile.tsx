@@ -6,6 +6,7 @@ import { Timestamp } from '@firebase/firestore'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { ProfileForm } from './profile-form'
 import { ProfileActions } from './profile-actions'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 
 export const Profile = () => {
 	const {
@@ -26,7 +27,8 @@ export const Profile = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.paid ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -36,7 +38,8 @@ export const Profile = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.signed ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -66,7 +69,8 @@ export const Profile = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.banned ?? false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)

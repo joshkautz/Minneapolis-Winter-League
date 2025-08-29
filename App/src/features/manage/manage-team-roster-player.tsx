@@ -25,6 +25,10 @@ import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
 import { logger, errorHandler } from '@/shared/utils'
+import type {
+	PlayerSeason,
+	TeamRosterPlayer,
+} from '@minneapolis-winter-league/shared'
 
 export const ManageTeamRosterPlayer = ({
 	playerRef,
@@ -44,7 +48,7 @@ export const ManageTeamRosterPlayer = ({
 					authenticatedUserSnapshot
 						?.data()
 						?.seasons.find(
-							(item) =>
+							(item: PlayerSeason) =>
 								item.season.id === currentSeasonQueryDocumentSnapshot?.id
 						)?.team?.id
 			),
@@ -59,8 +63,10 @@ export const ManageTeamRosterPlayer = ({
 		() =>
 			team
 				?.data()
-				.roster.find((item) => item.player.id === authenticatedUserSnapshot?.id)
-				?.captain,
+				.roster.find(
+					(item: TeamRosterPlayer) =>
+						item.player.id === authenticatedUserSnapshot?.id
+				)?.captain,
 		[team, authenticatedUserSnapshot]
 	)
 
@@ -69,7 +75,8 @@ export const ManageTeamRosterPlayer = ({
 			playerSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.captain,
 		[playerSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -79,7 +86,8 @@ export const ManageTeamRosterPlayer = ({
 			playerSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.paid,
 		[playerSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -89,7 +97,8 @@ export const ManageTeamRosterPlayer = ({
 			playerSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.signed,
 		[playerSnapshot, currentSeasonQueryDocumentSnapshot]
 	)

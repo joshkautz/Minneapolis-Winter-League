@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useAuthContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 
 /**
  * Custom hook for checking user authentication permissions
@@ -20,7 +21,8 @@ export const useAuthPermissions = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.team !== null,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -30,7 +32,8 @@ export const useAuthPermissions = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.captain,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -40,7 +43,8 @@ export const useAuthPermissions = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.paid,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
@@ -50,7 +54,8 @@ export const useAuthPermissions = () => {
 			authenticatedUserSnapshot
 				?.data()
 				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
+					(item: PlayerSeason) =>
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
 				)?.signed,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)

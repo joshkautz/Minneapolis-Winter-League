@@ -13,6 +13,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ManageEditTeamDialog } from './manage-edit-team-dialog'
+import type { PlayerSeason } from '@minneapolis-winter-league/shared'
 import { errorHandler, logger } from '@/shared/utils'
 import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
@@ -30,7 +31,7 @@ export const ManageCaptainActions = () => {
 					authenticatedUserSnapshot
 						?.data()
 						?.seasons.find(
-							(item) =>
+							(item: PlayerSeason) =>
 								item.season.id === currentSeasonQueryDocumentSnapshot?.id
 						)?.team?.id
 			),
