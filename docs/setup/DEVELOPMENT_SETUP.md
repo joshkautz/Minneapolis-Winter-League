@@ -44,6 +44,22 @@ cd Functions && npm install && cd ..
 
 ### 3. Start Development Environment
 
+#### Option A: Hot Reloading for Functions (Recommended)
+
+```bash
+# From project root - start Firebase emulators with Functions hot reload
+npm run dev:watch
+```
+
+In a new terminal:
+
+```bash
+# Start React development server
+cd App && npm run dev:emulators
+```
+
+#### Option B: Standard Development
+
 ```bash
 # From project root - start Firebase emulators with test data
 npm run dev
@@ -76,7 +92,32 @@ Minneapolis-Winter-League/
 
 ## Development Workflow
 
-### Daily Development
+### Daily Development (Hot Reloading - Recommended)
+
+1. **Start emulators with Functions hot reload**:
+
+   ```bash
+   npm run dev:watch
+   ```
+
+2. **Start React app** (in new terminal):
+
+   ```bash
+   cd App && npm run dev:emulators
+   ```
+
+3. **Make changes** to code:
+   - **React changes**: Automatically hot reload in browser
+   - **Functions changes**: TypeScript recompiles → Functions reload automatically
+   - **Firestore rules/indexes**: Manual emulator restart required
+
+4. **Development URLs**:
+   - React App: <http://localhost:5173>
+   - Firebase Emulator UI: <http://localhost:4000>
+   - Firestore: <http://localhost:8080>
+   - Functions: <http://localhost:5001>
+
+### Standard Development (Manual Rebuild)
 
 1. **Start emulators** (preserves data between restarts):
 
@@ -90,8 +131,11 @@ Minneapolis-Winter-League/
    cd App && npm run dev:emulators
    ```
 
-3. **Make changes** to code
-4. **Hot reload** automatically updates browser
+3. **Rebuild Functions after changes**:
+
+   ```bash
+   cd Functions && npm run build
+   ```
 
 ### Clean Start
 
@@ -103,15 +147,23 @@ npm run dev:clean
 
 ### Functions Development
 
+#### Hot Reloading (Recommended)
+
 ```bash
-# Build Functions
+# Start Functions in watch mode with emulators
+npm run dev:watch
+
+# Functions will automatically recompile and reload when you edit TypeScript files
+```
+
+#### Manual Development
+
+```bash
+# Build Functions manually after changes
 cd Functions && npm run build
 
-# Deploy Functions to emulator
-firebase emulators:start --only functions
-
-# Test Functions
-cd App && npm run dev:emulators
+# Start emulators separately
+npm run emulators:start
 ```
 
 ### TypeScript Compilation
@@ -167,9 +219,10 @@ firebase use demo-project
 
 ```bash
 npm run dev                 # Start emulators with test data
-npm run dev:clean          # Start clean emulators
-npm run emulators:export   # Export current emulator data
-npm run emulators:clear    # Clear all emulator data
+npm run dev:watch          # Start emulators with Functions hot reload (recommended)
+npm run functions:watch     # Start Functions TypeScript watch mode only
+npm run emulators:export    # Export current emulator data
+npm run emulators:clear     # Clear all emulator data
 ```
 
 ### App Directory Commands
@@ -192,7 +245,8 @@ npm run lint              # ESLint checking
 cd Functions/
 
 npm run build             # Build TypeScript Functions
-npm run serve             # Serve Functions in emulator
+npm run build:watch       # Build Functions in watch mode (hot reload)
+npm run dev               # Alias for build:watch
 npm run deploy            # Deploy to Firebase (requires auth)
 npm run logs              # View Function logs
 ```

@@ -49,6 +49,21 @@ This data is automatically imported when starting the Firebase emulators and exp
 
 ### Start Development with Test Data (Recommended)
 
+#### Hot Reloading (Best for Active Development)
+
+```bash
+npm run dev:watch
+```
+
+This will:
+
+- Start Firebase emulators with test data imported
+- Enable Functions hot reloading (automatic TypeScript compilation)
+- Automatically export any changes when you stop the emulators
+- Preserve your data modifications between sessions
+
+#### Standard Development
+
 ```bash
 npm run dev
 ```
@@ -58,6 +73,7 @@ This will:
 - Start Firebase emulators with test data imported
 - Automatically export any changes when you stop the emulators
 - Preserve your data modifications between sessions
+- Requires manual Functions rebuild after changes
 
 ### Start Clean (No Test Data)
 

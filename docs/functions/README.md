@@ -134,12 +134,35 @@ Key configuration constants are defined in `config/constants.ts`:
 6. **Add proper error handling**: Use `handleFunctionError` utility
 7. **Export from index.ts**: Make function available to clients
 
-### Testing
+### Testing & Development
+
+#### Hot Reloading Development (Recommended)
+
+```bash
+# From project root - start with Functions hot reload
+npm run dev:watch
+
+# Functions will automatically recompile and reload when TypeScript files change
+# No need to manually rebuild or restart emulators
+```
+
+#### Manual Development
+
+```bash
+# Build Functions manually after changes
+cd Functions && npm run build
+
+# Start emulators separately
+npm run emulators:start
+```
+
+#### Testing Guidelines
 
 - Test functions locally using Firebase emulator
 - Use test data from `.emulator/` directory
 - Validate authentication flows
 - Test error scenarios and edge cases
+- Functions hot reload automatically during development
 
 ### Deployment
 

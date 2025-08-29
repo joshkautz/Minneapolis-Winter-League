@@ -9,6 +9,8 @@
 	],
 	"scripts": {
 		"dev": "npm run build && npm run emulators:start",
+		"dev:watch": "concurrently \"npm run functions:watch\" \"npm run emulators:start\"",
+		"functions:watch": "npm run build:watch --workspace=Functions",
 		"build": "npm run build --workspace=App && npm run build --workspace=Functions",
 		"format:check": "npm run format:check --workspace=App && npm run format:check --workspace=Functions",
 		"format:fix": "npm run format:fix --workspace=App && npm run format:fix --workspace=Functions",
@@ -24,6 +26,7 @@
 		"deploy:firestore": "firebase deploy --only firestore"
 	},
 	"devDependencies": {
+		"concurrently": "^9.2.1",
 		"firebase-tools": "^14.14.0",
 		"typescript": "^5.9.2"
 	}
