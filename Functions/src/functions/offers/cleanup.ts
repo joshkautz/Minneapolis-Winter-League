@@ -5,7 +5,7 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '../../types.js'
+import { Collections, OfferDocument, PlayerDocument } from '../../types.js'
 import { validateAuthentication, validateAdminUser } from '../../shared/auth.js'
 
 /**
@@ -49,12 +49,14 @@ export const cleanupOffers = onCall(
 			const conflictingOffers = []
 
 			for (const offerDoc of pendingOffersQuery.docs) {
-				const offerData = offerDoc.data()
+				const offerData = offerDoc.data() as OfferDocument | undefined
+
+				if (!offerData) continue
 
 				// Get player data to check if they're already on a team
 				const playerDoc = await offerData.player.get()
 				if (playerDoc.exists) {
-					const playerDocument = playerDoc.data()
+					const playerDocument = playerDoc.data() as PlayerDocument | undefined
 					const hasTeamForSeason = playerDocument?.seasons?.some(
 						(season: any) =>
 							season.season.id === offerData.season && season.team
@@ -81,7 +83,12 @@ export const cleanupOffers = onCall(
 			const orphanedOffers = []
 
 			for (const offerDoc of allOffersQuery.docs) {
-				const offerData = offerDoc.data()
+				const offerData = offerDoc.data() as OfferDocument | undefined
+
+				if (!offerData) {
+					orphanedOffers.push(offerDoc.ref)
+					continue
+				}
 
 				try {
 					const [playerDoc, teamDoc] = await Promise.all([

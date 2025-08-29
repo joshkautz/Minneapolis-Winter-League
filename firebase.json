@@ -62,10 +62,7 @@
 				"source": "**/*.@(js|css)"
 			}
 		],
-		"predeploy": [
-			"npm install --prefix App",
-			"npm run build --prefix App"
-		],
+		"predeploy": ["npm install --prefix App", "npm run build --prefix App"],
 		"postdeploy": []
 	},
 	"storage": {

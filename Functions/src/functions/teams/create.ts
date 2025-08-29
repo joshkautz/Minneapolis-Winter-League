@@ -5,11 +5,7 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import {
-	Collections,
-	TeamDocument,
-	PlayerSeason,
-} from '../../types.js'
+import { Collections, TeamDocument, PlayerDocument, PlayerSeason, SeasonDocument } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 
 interface CreateTeamRequest {
@@ -36,7 +32,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 			const firestore = getFirestore()
 
 			// Validate season exists
-			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)
+			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId) as FirebaseFirestore.DocumentReference<SeasonDocument>
 			const seasonDoc = await seasonRef.get()
 
 			if (!seasonDoc.exists) {
@@ -51,10 +47,14 @@ export const createTeam = onCall<CreateTeamRequest>(
 				throw new Error('Player profile not found')
 			}
 
-			const playerDocument = playerDoc.data()
+			const playerDocument = playerDoc.data() as PlayerDocument | undefined
+
+			if (!playerDocument) {
+				throw new Error('Unable to retrieve player data')
+			}
 
 			// Check if player is already on a team for this season
-			const existingSeasonData = playerDocument?.seasons?.find(
+			const existingSeasonData = playerDocument.seasons?.find(
 				(season: PlayerSeason) => season.season.id === seasonId
 			)
 
@@ -77,9 +77,9 @@ export const createTeam = onCall<CreateTeamRequest>(
 				// registeredDate will be set when team becomes registered
 			}
 
-			const teamRef = await firestore
+			const teamRef = (await firestore
 				.collection(Collections.TEAMS)
-				.add(teamDocument)
+				.add(teamDocument)) as FirebaseFirestore.DocumentReference<TeamDocument>
 
 			// Update player's season data to include team
 			const updatedSeasons =

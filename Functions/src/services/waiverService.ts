@@ -5,7 +5,7 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerSeason } from '../types.js'
+import { Collections, PlayerSeason, PlayerDocument } from '../types.js'
 import {
 	FIREBASE_CONFIG,
 	DROPBOX_SIGN_CONFIG,
@@ -41,7 +41,7 @@ export const resendWaiverEmail = onCall(
 				throw new Error('Player not found')
 			}
 
-			const playerDocument = playerDoc.data()
+			const playerDocument = playerDoc.data() as PlayerDocument | undefined
 			if (!playerDocument) {
 				throw new Error('Invalid player data')
 			}

@@ -93,7 +93,7 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 			}
 
 			// Create player document
-			const playerData: PlayerDocument = {
+			const player: PlayerDocument = {
 				firstname: trimmedFirstname,
 				lastname: trimmedLastname,
 				email: email,
@@ -110,10 +110,7 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 				],
 			}
 
-			await firestore
-				.collection(Collections.PLAYERS)
-				.doc(playerId)
-				.set(playerData)
+			await firestore.collection(Collections.PLAYERS).doc(playerId).set(player)
 
 			logger.info(`Successfully created player: ${playerId}`, {
 				email,

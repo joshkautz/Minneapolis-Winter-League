@@ -215,8 +215,7 @@ export const promoteToCaptain = async (
 	return Promise.all([
 		// Update the team doc to add captain status for the player
 		updateDoc(teamRef, {
-			roster: teamDocumentSnapshot
-				.data()
+			roster: (teamDocumentSnapshot.data() as TeamDocument | undefined)
 				?.roster.map((item: TeamRosterPlayer) => ({
 					captain: item.player.id === playerRef.id ? true : item.captain,
 					player: item.player,
@@ -224,8 +223,7 @@ export const promoteToCaptain = async (
 		}),
 		// Update the player doc to add captain status for the season
 		updateDoc(playerRef, {
-			seasons: playerDocumentSnapshot
-				.data()
+			seasons: (playerDocumentSnapshot.data() as PlayerDocument | undefined)
 				?.seasons.map((item: PlayerSeason) => ({
 					captain: item.season.id === seasonRef.id ? true : item.captain,
 					paid: item.paid,
@@ -257,8 +255,7 @@ export const demoteFromCaptain = async (
 
 	// Check if the player is the last captain on the team. Cannot demote last captain.
 	if (
-		teamDocumentSnapshot
-			.data()
+		(teamDocumentSnapshot.data() as TeamDocument | undefined)
 			?.roster.filter((item: TeamRosterPlayer) => item.captain).length === 1
 	) {
 		throw new Error('Cannot demote last captain.')
@@ -267,8 +264,7 @@ export const demoteFromCaptain = async (
 	return Promise.all([
 		// Update the team doc to remove captain status for the player
 		updateDoc(teamRef, {
-			roster: teamDocumentSnapshot
-				.data()
+			roster: (teamDocumentSnapshot.data() as TeamDocument | undefined)
 				?.roster.map((item: TeamRosterPlayer) => ({
 					captain: item.player.id === playerRef.id ? false : item.captain,
 					player: item.player,
@@ -276,8 +272,7 @@ export const demoteFromCaptain = async (
 		}),
 		// Update the player doc to remove captain status for the season
 		updateDoc(playerRef, {
-			seasons: playerDocumentSnapshot
-				.data()
+			seasons: (playerDocumentSnapshot.data() as PlayerDocument | undefined)
 				?.seasons.map((item: PlayerSeason) => ({
 					captain: item.season.id === seasonRef.id ? false : item.captain,
 					paid: item.paid,
@@ -305,8 +300,7 @@ export const removeFromTeam = async (
 		// Ensure this player isn't the last captain on the team
 		.then((teamDocumentSnapshot) => {
 			if (
-				!teamDocumentSnapshot
-					.data()
+				!(teamDocumentSnapshot.data() as TeamDocument | undefined)
 					?.roster.some(
 						(item: TeamRosterPlayer) =>
 							item.captain && item.player.id !== playerRef.id
@@ -319,8 +313,7 @@ export const removeFromTeam = async (
 	// Update the team document to remove the player from the team
 	const teamPromise = getDoc(teamRef).then((teamDocumentSnapshot) =>
 		updateDoc(teamRef, {
-			roster: teamDocumentSnapshot
-				.data()
+			roster: (teamDocumentSnapshot.data() as TeamDocument | undefined)
 				?.roster.filter(
 					(item: TeamRosterPlayer) => item.player.id !== playerRef.id
 				),
@@ -330,8 +323,7 @@ export const removeFromTeam = async (
 	// Update the player document to remove the team from their season
 	const playerPromise = getDoc(playerRef).then((playerDocumentSnapshot) =>
 		updateDoc(playerRef, {
-			seasons: playerDocumentSnapshot
-				.data()
+			seasons: (playerDocumentSnapshot.data() as PlayerDocument | undefined)
 				?.seasons.map((item: PlayerSeason) => ({
 					banned: item.banned,
 					captain: item.season.id === seasonRef.id ? false : item.captain,

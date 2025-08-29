@@ -72,10 +72,10 @@ export const ResultsTable = ({
 						const team = teamsQuerySnapshot?.docs.find(
 							(team) => team.id === key
 						)
-						const teamData = teamsQuerySnapshot?.docs
+						const teamDocument = teamsQuerySnapshot?.docs
 							.find((team) => team.id === key)
 							?.data()
-						const url = teamData?.logo
+						const url = teamDocument?.logo
 						return (
 							<TableRow key={index}>
 								<TableCell className='font-medium '>{index + 1}</TableCell>
@@ -99,7 +99,7 @@ export const ResultsTable = ({
 													/>
 												)}
 											</div>
-											<span>{teamData?.name}</span>
+											<span>{teamDocument?.name}</span>
 										</div>
 									</Link>
 								</TableCell>

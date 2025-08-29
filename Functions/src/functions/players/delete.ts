@@ -5,7 +5,7 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerSeason } from '../../types.js'
+import { Collections, PlayerSeason, PlayerDocument } from '../../types.js'
 import { validateAuthentication, validateAdminUser } from '../../shared/auth.js'
 
 /**
@@ -62,10 +62,14 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 				throw new Error('Player not found')
 			}
 
-			const playerDocument = playerDoc.data()
+			const playerDocument = playerDoc.data() as PlayerDocument | undefined
+
+			if (!playerDocument) {
+				throw new Error('Unable to retrieve player data')
+			}
 
 			// Check for team associations
-			const hasTeamAssociations = playerDocument?.seasons?.some(
+			const hasTeamAssociations = playerDocument.seasons?.some(
 				(season: PlayerSeason) => season.team
 			)
 
@@ -82,7 +86,7 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 
 			logger.info(`Successfully deleted player: ${targetPlayerId}`, {
 				deletedBy: auth!.uid,
-				playerData: {
+				playerDocument: {
 					email: playerDocument?.email,
 					name: `${playerDocument?.firstname} ${playerDocument?.lastname}`,
 				},

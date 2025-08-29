@@ -72,15 +72,15 @@ export const invitePlayer = (
 		>,
 		{
 			type: OfferType.INVITATION,
-			creator: `${authenticatedUserDocumentSnapshot.data()?.firstname} ${authenticatedUserDocumentSnapshot.data()?.lastname}`,
+			creator: `${(authenticatedUserDocumentSnapshot.data() as PlayerDocument | undefined)?.firstname || ''} ${(authenticatedUserDocumentSnapshot.data() as PlayerDocument | undefined)?.lastname || ''}`,
 			player: playerQueryDocumentSnapshot.ref,
 			playerName:
-				playerQueryDocumentSnapshot.data()?.firstname +
+				((playerQueryDocumentSnapshot.data() as PlayerDocument | undefined)?.firstname || '') +
 				' ' +
-				playerQueryDocumentSnapshot.data()?.lastname,
+				((playerQueryDocumentSnapshot.data() as PlayerDocument | undefined)?.lastname || ''),
 			status: OfferStatus.PENDING,
 			team: teamQueryDocumentSnapshot.ref,
-			teamName: teamQueryDocumentSnapshot.data()?.name,
+			teamName: (teamQueryDocumentSnapshot.data() as TeamDocument | undefined)?.name || '',
 		}
 	)
 }
@@ -109,12 +109,12 @@ export const requestToJoinTeam = (
 		>,
 		{
 			type: OfferType.REQUEST,
-			creator: `${authenticatedUserDocumentSnapshot.data()?.firstname} ${authenticatedUserDocumentSnapshot.data()?.lastname}`,
+			creator: `${(authenticatedUserDocumentSnapshot.data() as PlayerDocument | undefined)?.firstname || ''} ${(authenticatedUserDocumentSnapshot.data() as PlayerDocument | undefined)?.lastname || ''}`,
 			player: playerDocumentSnapshot.ref,
-			playerName: `${playerDocumentSnapshot.data()?.firstname} ${playerDocumentSnapshot.data()?.lastname}`,
+			playerName: `${(playerDocumentSnapshot.data() as PlayerDocument | undefined)?.firstname || ''} ${(playerDocumentSnapshot.data() as PlayerDocument | undefined)?.lastname || ''}`,
 			status: OfferStatus.PENDING,
 			team: teamQueryDocumentSnapshot.ref,
-			teamName: teamQueryDocumentSnapshot.data()?.name,
+			teamName: (teamQueryDocumentSnapshot.data() as TeamDocument | undefined)?.name || '',
 		}
 	)
 }
@@ -132,16 +132,14 @@ export const outgoingOffersQuery = (
 		return undefined
 	}
 
-	const isCaptain = playerDocumentSnapshot
-		?.data()
+	const isCaptain = (playerDocumentSnapshot.data() as PlayerDocument | undefined)
 		?.seasons.some(
 			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 				item.captain
 		)
 
-	const team = playerDocumentSnapshot
-		?.data()
+	const team = (playerDocumentSnapshot.data() as PlayerDocument | undefined)
 		?.seasons.find(
 			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
@@ -178,16 +176,14 @@ export const incomingOffersQuery = (
 		return undefined
 	}
 
-	const isCaptain = playerDocumentSnapshot
-		?.data()
+	const isCaptain = (playerDocumentSnapshot.data() as PlayerDocument | undefined)
 		?.seasons.some(
 			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
 				item.captain
 		)
 
-	const team = playerDocumentSnapshot
-		?.data()
+	const team = (playerDocumentSnapshot.data() as PlayerDocument | undefined)
 		?.seasons.find(
 			(item: PlayerSeason) =>
 				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&

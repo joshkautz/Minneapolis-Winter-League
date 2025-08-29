@@ -72,7 +72,9 @@ export const updatePlayer = onCall<UpdatePlayerRequest>(
 
 		try {
 			const firestore = getFirestore()
-			const playerRef = firestore.collection(Collections.PLAYERS).doc(targetPlayerId)
+			const playerRef = firestore
+				.collection(Collections.PLAYERS)
+				.doc(targetPlayerId)
 
 			// Check if player exists
 			const playerDoc = await playerRef.get()

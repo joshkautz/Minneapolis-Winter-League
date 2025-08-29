@@ -54,8 +54,13 @@ export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
 			const waiverChanged = beforeSeasonData.signed !== afterSeasonData.signed
 
 			if (paymentChanged || waiverChanged) {
-				await updateTeamRegistrationStatus(afterSeasonData.team, currentSeason.id)
-				logger.info(`Updated team registration status for player change: ${playerId}`)
+				await updateTeamRegistrationStatus(
+					afterSeasonData.team,
+					currentSeason.id
+				)
+				logger.info(
+					`Updated team registration status for player change: ${playerId}`
+				)
 			}
 		} catch (error) {
 			logger.error('Error updating team registration on player change:', {

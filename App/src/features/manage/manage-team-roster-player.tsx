@@ -25,10 +25,7 @@ import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
 import { logger, errorHandler } from '@/shared/utils'
-import type {
-	PlayerSeason,
-	TeamRosterPlayer,
-} from '@/types'
+import type { PlayerSeason, TeamRosterPlayer } from '@/types'
 
 export const ManageTeamRosterPlayer = ({
 	playerRef,

@@ -41,7 +41,7 @@ The `createPlayer` Firebase Function implements all the security checks that wer
 
 - **All required fields validated**: firstname, lastname, email, seasonId
 - **Season exists verification**: Checks season document exists before creating player
-- **Proper PlayerData structure**: Ensures all required PlayerData fields are present
+- **Proper PlayerDocument structure**: Ensures all required PlayerDocument fields are present
 - **Input sanitization**: Trims whitespace from names
 
 ### ✅ Duplicate Prevention

@@ -15,5 +15,5 @@ export { logger } from './logger'
 export { errorHandler, ErrorType, withErrorHandling } from './error-handler'
 export type { AppError, ErrorHandlerOptions } from './error-handler'
 
-// Re-export validation utilities from the local validation file  
+// Re-export validation utilities from the local validation file
 export * from '../../validation'

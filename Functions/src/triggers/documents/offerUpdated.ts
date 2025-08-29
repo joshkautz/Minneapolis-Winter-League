@@ -5,7 +5,11 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '../../types.js'
+import {
+	Collections,
+	DocumentReference,
+	OfferDocument,
+} from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { getCurrentSeason } from '../../shared/database.js'
 
@@ -19,8 +23,8 @@ export const onOfferUpdated = onDocumentUpdated(
 		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {
-		const beforeData = event.data?.before.data()
-		const afterData = event.data?.after.data()
+		const beforeData = event.data?.before.data() as any
+		const afterData = event.data?.after.data() as any
 
 		// Only process when status changes to 'accepted'
 		if (beforeData?.status !== 'pending' || afterData?.status !== 'accepted') {
@@ -39,7 +43,9 @@ export const onOfferUpdated = onDocumentUpdated(
 				}
 
 				// Get offer data
-				const offerRef = firestore.collection(Collections.OFFERS).doc(offerId)
+				const offerRef = firestore
+					.collection(Collections.OFFERS)
+					.doc(offerId) as DocumentReference<OfferDocument>
 				const offerDoc = await transaction.get(offerRef)
 
 				if (!offerDoc.exists) {
@@ -63,10 +69,12 @@ export const onOfferUpdated = onDocumentUpdated(
 					throw new Error('Player or team not found')
 				}
 
-				const playerDocument = playerDoc.data()
-				const teamDocument = teamDoc.data()
+				const playerDocument = playerDoc.data() as any
+				const teamDocument = teamDoc.data() as any
 
-				// Check if player is already on a team for current season
+				if (!playerDocument || !teamDocument) {
+					throw new Error('Unable to retrieve player or team data')
+				}				// Check if player is already on a team for current season
 				const currentSeasonData = playerDocument.seasons?.find(
 					(season: any) => season.season.id === currentSeason.id
 				)

@@ -92,8 +92,7 @@ export const createTeam = async (
 					Promise.all([
 						// Update the player document
 						updateDoc(playerRef, {
-							seasons: playerDocumentSnapshot
-								.data()
+							seasons: (playerDocumentSnapshot.data() as PlayerDocument | undefined)
 								?.seasons.map((item: PlayerSeason) => ({
 									captain:
 										item.season.id === seasonRef.id ? true : item.captain,
@@ -108,8 +107,7 @@ export const createTeam = async (
 						}),
 						// Update the season document
 						updateDoc(seasonRef, {
-							teams: seasonDocumentSnapshot
-								.data()
+							teams: (seasonDocumentSnapshot.data() as SeasonDocument | undefined)
 								?.teams.concat(teamDocumentReference),
 						}),
 					])
@@ -157,8 +155,7 @@ export const rolloverTeam = async (
 	return Promise.all([
 		// Update the player document
 		updateDoc(playerRef, {
-			seasons: playerDocumentSnapshot
-				.data()
+			seasons: (playerDocumentSnapshot.data() as PlayerDocument | undefined)
 				?.seasons.map((item: PlayerSeason) => ({
 					captain: item.season.id === seasonRef.id ? true : item.captain,
 					paid: item.paid,
@@ -170,7 +167,7 @@ export const rolloverTeam = async (
 		}),
 		// Update the season document
 		updateDoc(seasonRef, {
-			teams: seasonDocumentSnapshot.data()?.teams.concat(teamDocumentReference),
+			teams: (seasonDocumentSnapshot.data() as SeasonDocument | undefined)?.teams.concat(teamDocumentReference),
 		}),
 	])
 }
@@ -191,11 +188,11 @@ export const editTeam = async (
 	const teamDocumentSnapshot = await getDoc(teamRef)
 
 	return updateDoc(teamRef, {
-		name: name ? name : teamDocumentSnapshot.data()?.name,
-		logo: logo ? logo : teamDocumentSnapshot.data()?.logo,
+		name: name ? name : (teamDocumentSnapshot.data() as TeamDocument | undefined)?.name,
+		logo: logo ? logo : (teamDocumentSnapshot.data() as TeamDocument | undefined)?.logo,
 		storagePath: storagePath
 			? storagePath
-			: teamDocumentSnapshot.data()?.storagePath,
+			: (teamDocumentSnapshot.data() as TeamDocument | undefined)?.storagePath,
 	})
 }
 
@@ -227,8 +224,7 @@ export const deleteTeam = async (
 			// Update all players on this team to remove them from the team
 			.then(() => getDoc(teamRef))
 			.then((teamDocumentSnapshot) =>
-				teamDocumentSnapshot
-					.data()
+				(teamDocumentSnapshot.data() as TeamDocument | undefined)
 					?.roster.map(async (item: TeamRosterPlayer) =>
 						getDoc(item.player).then((playerDocumentSnapshot) =>
 							updateDoc(playerDocumentSnapshot.ref, {
@@ -236,7 +232,8 @@ export const deleteTeam = async (
 									playerDocumentSnapshot.data() as PlayerDocument
 								)?.seasons.map((item: PlayerSeason) => ({
 									banned: item.banned,
-									captain: item.season.id === seasonRef.id ? false : item.captain,
+									captain:
+										item.season.id === seasonRef.id ? false : item.captain,
 									paid: item.paid,
 									season: item.season,
 									signed: item.signed,
@@ -250,15 +247,14 @@ export const deleteTeam = async (
 			.then(() => getDoc(seasonRef))
 			.then((seasonDocumentSnapshot) =>
 				updateDoc(seasonRef, {
-					teams: seasonDocumentSnapshot
-						.data()
+					teams: (seasonDocumentSnapshot.data() as SeasonDocument | undefined)
 						?.teams.filter((team) => team.id !== teamRef.id),
 				})
 			)
 			// Delete team's image from storage
 			.then(() => getDoc(teamRef))
 			.then((teamDocumentSnapshot) => {
-				const url = teamDocumentSnapshot.data()!.storagePath
+				const url = (teamDocumentSnapshot.data() as TeamDocument | undefined)?.storagePath
 				return url ? deleteImage(ref(storage, url)) : Promise.resolve()
 			})
 			// Delete the team document

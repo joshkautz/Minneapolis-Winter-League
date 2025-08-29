@@ -5,7 +5,7 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '../../types.js'
+import { Collections, TeamDocument } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 
 interface EditTeamRequest {
@@ -50,11 +50,15 @@ export const updateTeam = onCall<EditTeamRequest>(
 				throw new Error('Team not found')
 			}
 
-			const teamDocument = teamDoc.data()
+			const teamDocument = teamDoc.data() as TeamDocument | undefined
+
+			if (!teamDocument) {
+				throw new Error('Unable to retrieve team data')
+			}
 
 			// Check if user is a captain of this team
-			const userIsCaptain = teamDocument?.roster?.some(
-				(member: any) => member.player.id === userId && member.captain
+			const userIsCaptain = teamDocument.roster?.some(
+				(member) => member.player.id === userId && member.captain
 			)
 
 			if (!userIsCaptain) {

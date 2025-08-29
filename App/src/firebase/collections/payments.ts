@@ -36,7 +36,7 @@ export const stripeRegistration = async (
 		onSnapshot(
 			checkoutSessionDocumentReference,
 			(checkoutSessionDocumentSnapshot) => {
-				const data = checkoutSessionDocumentSnapshot.data()
+				const data = checkoutSessionDocumentSnapshot.data() as CheckoutSessionDocument | undefined
 				if (data) {
 					if (data.url) {
 						// We have a Stripe Checkout URL, let's redirect.

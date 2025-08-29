@@ -5,7 +5,7 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '../../types.js'
+import { Collections, OfferDocument, TeamDocument } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 
 interface UpdateOfferStatusRequest {
@@ -54,7 +54,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 					throw new Error('Offer not found')
 				}
 
-				const offerData = offerDoc.data()
+				const offerData = offerDoc.data() as OfferDocument | undefined
 				if (!offerData) {
 					throw new Error('Invalid offer data')
 				}
@@ -85,9 +85,9 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 						throw new Error('Team not found')
 					}
 
-					const teamDocument = teamDoc.data()
+					const teamDocument = teamDoc.data() as TeamDocument | undefined
 					const userIsCaptain = teamDocument?.roster?.some(
-						(member: any) => member.player.id === auth!.uid && member.captain
+						(member) => member.player.id === auth!.uid && member.captain
 					)
 
 					if (!userIsCaptain) {

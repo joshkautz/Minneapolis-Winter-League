@@ -40,7 +40,9 @@ export const updateTeamRegistrationOnRosterChange = onDocumentUpdated(
 				const currentSeason = await getCurrentSeason()
 				if (currentSeason) {
 					await updateTeamRegistrationStatus(teamRef, currentSeason.id)
-					logger.info(`Updated team registration status for roster change: ${teamId}`)
+					logger.info(
+						`Updated team registration status for roster change: ${teamId}`
+					)
 				}
 			}
 		} catch (error) {
@@ -78,7 +80,7 @@ export const updateTeamRegistrationDate = onDocumentUpdated(
 			// Check if registration status changed
 			if (beforeData.registered !== afterData.registered) {
 				const updateData: any = {}
-				
+
 				if (afterData.registered) {
 					updateData.registeredDate = new Date()
 				} else {
@@ -86,7 +88,7 @@ export const updateTeamRegistrationDate = onDocumentUpdated(
 				}
 
 				await teamRef.update(updateData)
-				
+
 				logger.info(`Updated team registration date`, {
 					teamId,
 					registered: afterData.registered,

@@ -379,7 +379,9 @@ export const offerDataSchema = z.object({
 })
 
 // Runtime validation helpers for API responses - with proper typing
-export const validatePlayerDocument = (data: unknown): PlayerDocumentSchemaType => {
+export const validatePlayerDocument = (
+	data: unknown
+): PlayerDocumentSchemaType => {
 	return playerDataSchema.parse(data)
 }
 
@@ -387,11 +389,15 @@ export const validateTeamDocument = (data: unknown): TeamDocumentSchemaType => {
 	return teamDataSchema.parse(data)
 }
 
-export const validateSeasonDocument = (data: unknown): SeasonDocumentSchemaType => {
+export const validateSeasonDocument = (
+	data: unknown
+): SeasonDocumentSchemaType => {
 	return seasonDataSchema.parse(data)
 }
 
-export const validateOfferDocument = (data: unknown): OfferDocumentSchemaType => {
+export const validateOfferDocument = (
+	data: unknown
+): OfferDocumentSchemaType => {
 	return offerDataSchema.parse(data)
 }
 

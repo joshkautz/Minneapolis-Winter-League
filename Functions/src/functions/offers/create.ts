@@ -5,7 +5,7 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '../../types.js'
+import { Collections, PlayerDocument, TeamDocument } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 import { getCurrentSeason } from '../../shared/database.js'
 
@@ -40,10 +40,8 @@ export const createOffer = onCall<CreateOfferRequest>(
 					throw new Error('No current season found')
 				}
 
-				// Get player and team documents
-				const playerRef = firestore
-					.collection(Collections.PLAYERS)
-					.doc(playerId)
+				// Get player and team documents  
+				const playerRef = firestore.collection(Collections.PLAYERS).doc(playerId)
 				const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
 
 				const [playerDoc, teamDoc] = await Promise.all([
@@ -55,14 +53,18 @@ export const createOffer = onCall<CreateOfferRequest>(
 					throw new Error('Player or team not found')
 				}
 
-				const playerDocument = playerDoc.data()
-				const teamDocument = teamDoc.data()
+				const playerDocument = playerDoc.data() as PlayerDocument | undefined
+				const teamDocument = teamDoc.data() as TeamDocument | undefined
+
+				if (!playerDocument || !teamDocument) {
+					throw new Error('Unable to retrieve player or team data')
+				}
 
 				// Validate authorization based on offer type
 				if (type === 'invitation') {
 					// User must be a captain of the team
-					const userIsCaptain = teamDocument?.roster?.some(
-						(member: any) => member.player.id === userId && member.captain
+					const userIsCaptain = teamDocument.roster.some(
+						(member) => member.player.id === userId && member.captain
 					)
 					if (!userIsCaptain) {
 						throw new Error('Only team captains can send invitations')
@@ -75,8 +77,8 @@ export const createOffer = onCall<CreateOfferRequest>(
 				}
 
 				// Check if player is already on a team for current season
-				const currentSeasonData = playerDocument?.seasons?.find(
-					(season: any) => season.season.id === currentSeason.id
+				const currentSeasonData = playerDocument.seasons.find(
+					(season) => season.season.id === currentSeason.id
 				)
 
 				if (currentSeasonData?.team) {

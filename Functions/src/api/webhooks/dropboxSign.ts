@@ -5,7 +5,7 @@
 import { onRequest } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '../../types.js'
+import { Collections, WaiverDocument, PlayerDocument } from '../../types.js'
 import { FIREBASE_CONFIG, DROPBOX_SIGN_CONFIG } from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
 import {
@@ -88,7 +88,12 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 		}
 
 		const waiverDoc = waiverQuery.docs[0]
-		const waiverData = waiverDoc.data()
+		const waiverData = waiverDoc.data() as WaiverDocument | undefined
+
+		if (!waiverData) {
+			logger.error('Invalid waiver data')
+			return
+		}
 
 		// Update waiver status
 		await waiverDoc.ref.update({
@@ -99,15 +104,17 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 		// Update player's signed status
 		const playerDoc = await waiverData.player.get()
 		if (playerDoc.exists) {
-			const playerDocument = playerDoc.data()
-			const updatedSeasons =
-				playerDocument.seasons?.map((season: any) =>
-					season.season.id === waiverData.season
-						? { ...season, signed: true }
-						: season
-				) || []
+			const playerDocument = playerDoc.data() as PlayerDocument | undefined
+			if (playerDocument) {
+				const updatedSeasons =
+					playerDocument.seasons?.map((season: any) =>
+						season.season.id === waiverData.season
+							? { ...season, signed: true }
+							: season
+					) || []
 
-			await playerDoc.ref.update({ seasons: updatedSeasons })
+				await playerDoc.ref.update({ seasons: updatedSeasons })
+			}
 		}
 
 		logger.info(

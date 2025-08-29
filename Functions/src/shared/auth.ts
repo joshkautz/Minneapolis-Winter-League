@@ -4,6 +4,7 @@
 
 import { CallableRequest } from 'firebase-functions/v2/https'
 import { Firestore } from 'firebase-admin/firestore'
+import { PlayerDocument } from '../types.js'
 
 /**
  * Validates that a user is authenticated and has a verified email
@@ -33,7 +34,7 @@ export async function validateAdminUser(
 
 	const userDoc = await firestore.collection('players').doc(auth.uid).get()
 
-	if (!userDoc.exists || !userDoc.data()?.admin) {
+	if (!userDoc.exists || !(userDoc.data() as PlayerDocument | undefined)?.admin) {
 		throw new Error('Admin privileges required')
 	}
 }

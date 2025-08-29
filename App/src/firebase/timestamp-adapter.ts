@@ -31,9 +31,7 @@ export const convertToClientTimestamp = (
 /**
  * Helper to check if a value is a timestamp
  */
-export const isTimestamp = (
-	value: any
-): value is ClientTimestamp => {
+export const isTimestamp = (value: any): value is ClientTimestamp => {
 	return (
 		value &&
 		typeof value === 'object' &&

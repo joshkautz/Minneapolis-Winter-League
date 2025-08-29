@@ -12,8 +12,6 @@ Frontend React application documentation, including components, features, and us
 
 Firebase Cloud Functions documentation, including API references, triggers, and backend logic.
 
-
-
 ### 🔥 [Firebase Infrastructure](./firebase/)
 
 Firebase services configuration, security rules, and database documentation.
@@ -103,7 +101,7 @@ cd Functions && npm run deploy # Deploy Functions
 | **Security**     | Security practices | Security Guidelines, Functions Migration Status           |
 | **Firebase**     | Database & queries | Collections Guide, Firestore Indexes, Functions API       |
 | **Development**  | Daily development  | TypeScript Improvements, Validation Patterns              |
-| **Reference**    | API & tools        | Player Functions, Emulator Data           |
+| **Reference**    | API & tools        | Player Functions, Emulator Data                           |
 
 - **Development**: Firebase Emulators + Hot Reload
 
