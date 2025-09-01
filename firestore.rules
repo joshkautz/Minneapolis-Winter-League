@@ -16,44 +16,32 @@ service cloud.firestore {
     // PUBLIC READ ACCESS - Prioritizing open access to league information
     //////////////////////////////////////////////////////////////////////////////
     
-    // SEASONS [Read]: Always - public league information
     match /seasons/{seasonId} {
       allow read: if true;
+      allow create: if false; // Force use of Functions
+      allow update: if false; // Force use of Functions
+      allow delete: if false; // Force use of Functions
     }
     
-    // GAMES [Read]: Always - public schedule and results
     match /games/{gameId} {
       allow read: if true;
+      allow create: if false; // Force use of Functions
+      allow update: if false; // Force use of Functions
+      allow delete: if false; // Force use of Functions
     }
     
-    // TEAMS [Read]: Always - public team information
     match /teams/{teamId} {
       allow read: if true;
-    }
-    
-    // PLAYERS [Read]: Always - public player profiles
-    match /players/{playerId} {
-      allow read: if true;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // HIGHLY RESTRICTED WRITE ACCESS - Firebase Functions handle business logic //
-    ///////////////////////////////////////////////////////////////////////////////
-    
-    // PLAYERS [Write]: All operations through Firebase Functions ONLY
-    // Security: Prevents client-side tampering with player data
-    match /players/{playerId} {
-      allow create: if false; // Use createPlayerViaFunction
-      allow update: if false; // Use updatePlayerViaFunction  
-      allow delete: if false; // Use deletePlayerViaFunction
-    }
-    
-    // TEAMS [Write]: All operations through Firebase Functions ONLY
-    // Security: Prevents unauthorized team modifications and roster tampering
-    match /teams/{teamId} {
       allow create: if false; // Use createTeamViaFunction
       allow update: if false; // Use editTeamViaFunction, manageTeamPlayerViaFunction
       allow delete: if false; // Use deleteTeamViaFunction
+    }
+    
+    match /players/{playerId} {
+      allow read: if true;
+      allow create: if false; // Use createPlayerViaFunction
+      allow update: if false; // Use updatePlayerViaFunction  
+      allow delete: if false; // Use deletePlayerViaFunction
     }
     
     // OFFERS [Read]: Limited to involved parties only
@@ -66,26 +54,9 @@ service cloud.firestore {
                        exists(/databases/$(database)/documents/players/$(request.auth.uid)) &&
                        get(/databases/$(database)/documents/players/$(request.auth.uid)).data.get('admin', false) == true
                      );
-      
-      // OFFERS [Write]: All operations through Firebase Functions for proper validation
-      // Security: Prevents unauthorized offer manipulation and ensures proper business logic
-      allow create: if false; // Use createOfferViaFunction
+            allow create: if false; // Use createOfferViaFunction
       allow update: if false; // Use updateOfferStatusViaFunction 
       allow delete: if false; // Handled automatically by Functions
-    }
-    
-    // GAMES [Write]: Admin-only through Functions
-    match /games/{gameId} {
-      allow create: if false; // Force use of Functions
-      allow update: if false; // Force use of Functions
-      allow delete: if false; // Force use of Functions
-    }
-    
-    // SEASONS [Write]: Admin-only through Functions
-    match /seasons/{seasonId} {
-      allow create: if false; // Force use of Functions
-      allow update: if false; // Force use of Functions
-      allow delete: if false; // Force use of Functions
     }
 
     //////////////////////////////////////////////////////////////////////////////
