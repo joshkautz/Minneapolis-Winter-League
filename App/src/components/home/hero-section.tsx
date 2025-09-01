@@ -1,77 +1,11 @@
-import { useAuthContext } from '@/contexts/auth-context'
-import { useSeasonsContext } from '@/contexts/seasons-context'
 import { useAnchorScroll } from '@/lib/use-anchor-scroll'
 import { useMemo } from 'react'
-import { useOutletContext, useNavigate } from 'react-router-dom'
-import { OutletContext } from '../layout'
-import { Button } from '../ui/button'
-import { Skeleton } from '../ui/skeleton'
 import { CitySvg } from './city-svg'
 import { SparklesCore } from './particles'
 import { RegistrationCountdown } from './registration-countdown'
 
 export const HeroSection = () => {
 	useAnchorScroll()
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
-	const { setIsMobileLoginOpen } = useOutletContext<OutletContext>()
-	const navigate = useNavigate()
-	const {
-		authStateUser,
-		authStateLoading,
-		authenticatedUserSnapshot,
-		authenticatedUserSnapshotLoading,
-	} = useAuthContext()
-
-	const isLoading = useMemo(
-		() =>
-			(!authStateUser &&
-				authStateLoading &&
-				!authenticatedUserSnapshot &&
-				authenticatedUserSnapshotLoading) ||
-			(!authStateUser &&
-				authStateLoading &&
-				!authenticatedUserSnapshot &&
-				!authenticatedUserSnapshotLoading) ||
-			(authStateUser &&
-				!authStateLoading &&
-				!authenticatedUserSnapshot &&
-				!authenticatedUserSnapshotLoading) ||
-			(authStateUser &&
-				!authStateLoading &&
-				!authenticatedUserSnapshot &&
-				authenticatedUserSnapshotLoading),
-		[
-			authStateUser,
-			authStateLoading,
-			authenticatedUserSnapshot,
-			authenticatedUserSnapshotLoading,
-		]
-	)
-
-	const isAuthenticated = useMemo(
-		() => authenticatedUserSnapshot,
-		[authenticatedUserSnapshot]
-	)
-
-	const isAuthenticatedUserRostered = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.some(
-					(item) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
-						item.team
-				),
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
-	)
-
-	const handleCallToAction = () => {
-		if (!authenticatedUserSnapshot) {
-			setIsMobileLoginOpen(true)
-			return
-		}
-		navigate('/manage')
-	}
 
 	const sparklesCore = useMemo(() => {
 		return (
