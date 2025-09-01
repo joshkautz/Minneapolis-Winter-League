@@ -10,6 +10,7 @@ import {
 	teamsBySeasonQuery,
 } from '@/firebase/firestore'
 import { GameDocument, PlayerDocument, TeamDocument } from '@/shared/utils'
+import { hasAssignedTeams, getTeamRole } from '@/shared/utils'
 import { TeamRosterPlayer } from './team-roster-player'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from '@firebase/firestore'
@@ -26,11 +27,6 @@ import {
 import { useSeasonsContext } from '@/providers'
 import { formatTimestamp } from '@/shared/utils'
 
-const OPPONENT = {
-	HOME: 'HOME',
-	AWAY: 'AWAY',
-} as const
-
 const RESULT = {
 	VS: 'vs',
 	UNREPORTED: 'Unreported',
@@ -40,18 +36,29 @@ const formatGameResult = (
 	team: DocumentSnapshot<TeamDocument> | undefined,
 	gameData: GameDocument
 ) => {
+	// Skip games with null team references (placeholder games)
+	if (!hasAssignedTeams(gameData)) {
+		return 'TBD'
+	}
+
 	const { homeScore, awayScore } = gameData
-	const opponent = team?.id == gameData.home.id ? OPPONENT.AWAY : OPPONENT.HOME
+	const teamRole = team?.id ? getTeamRole(gameData, team.id) : null
 	const isInFuture = gameData.date > Timestamp.now()
 	const isScoreReported =
 		Number.isInteger(homeScore) && Number.isInteger(awayScore)
-	return isInFuture
-		? RESULT.VS
-		: isScoreReported
-			? opponent == OPPONENT.AWAY
-				? `${homeScore} - ${awayScore}`
-				: `${awayScore} - ${homeScore}`
-			: RESULT.UNREPORTED
+
+	if (isInFuture) {
+		return RESULT.VS
+	}
+
+	if (!isScoreReported) {
+		return RESULT.UNREPORTED
+	}
+
+	// Return score from team's perspective
+	return teamRole === 'home'
+		? `${homeScore} - ${awayScore}`
+		: `${awayScore} - ${homeScore}`
 }
 
 export const TeamProfile = () => {
@@ -171,11 +178,25 @@ export const TeamProfile = () => {
 				<TeamRecordRoot>
 					{gamesQuerySnapshot?.docs.map((game, index) => {
 						const gameData = game.data()
-						const opponent =
-							teamDocumentSnapshot?.id == gameData.home.id
-								? OPPONENT.AWAY
-								: OPPONENT.HOME
+
+						// Skip games with null team references (placeholder games)
+						if (!hasAssignedTeams(gameData)) {
+							return null
+						}
+
+						const teamRole = teamDocumentSnapshot?.id
+							? getTeamRole(gameData, teamDocumentSnapshot.id)
+							: null
+						const opponentTeamRef = teamDocumentSnapshot?.id
+							? teamRole === 'home'
+								? gameData.away
+								: gameData.home
+							: null
 						const result = formatGameResult(teamDocumentSnapshot, gameData)
+
+						if (!opponentTeamRef) {
+							return null
+						}
 
 						return (
 							<TeamRecordRow key={index}>
@@ -186,19 +207,13 @@ export const TeamProfile = () => {
 								<div className='flex grow-3 shrink-0 basis-[100px] overflow-hidden text-clip'>
 									<Link
 										className='flex flex-col transition duration-300 group w-max'
-										to={
-											opponent == OPPONENT.AWAY
-												? `/teams/${gameData.away.id}`
-												: `/teams/${gameData.home.id}`
-										}
+										to={`/teams/${opponentTeamRef.id}`}
 									>
-										{opponent == OPPONENT.AWAY
-											? teamsQuerySnapshot?.docs
-													.find((team) => team.id === gameData.away.id)
-													?.data().name
-											: teamsQuerySnapshot?.docs
-													.find((team) => team.id === gameData.home.id)
-													?.data().name}
+										{
+											teamsQuerySnapshot?.docs
+												.find((team) => team.id === opponentTeamRef.id)
+												?.data().name
+										}
 										<span className='max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-primary' />
 									</Link>
 								</div>

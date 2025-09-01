@@ -1,4 +1,5 @@
 import { GameDocument } from '@/shared/utils'
+import { hasAssignedTeams } from '@/shared/utils'
 import {
 	Card,
 	CardContent,
@@ -46,13 +47,16 @@ export const ScheduleCard = ({
 				{games
 					.sort((a, b) => a.field - b.field)
 					.map((game, index) => {
-						const homeTeam = selectedSeasonTeamsQuerySnapshot?.docs.find(
-							(team) => team.id === game.home.id
-						)
+						let homeTeam, awayTeam
 
-						const awayTeam = selectedSeasonTeamsQuerySnapshot?.docs.find(
-							(team) => team.id === game.away.id
-						)
+						if (hasAssignedTeams(game)) {
+							homeTeam = selectedSeasonTeamsQuerySnapshot?.docs.find(
+								(team) => team.id === game.home.id
+							)
+							awayTeam = selectedSeasonTeamsQuerySnapshot?.docs.find(
+								(team) => team.id === game.away.id
+							)
+						}
 
 						return (
 							<div
@@ -71,7 +75,7 @@ export const ScheduleCard = ({
 												</div>
 											</TooltipTrigger>
 											<TooltipContent>
-												<p>{homeTeam?.data().name}</p>
+												<p>{homeTeam?.data().name || 'To Be Determined'}</p>
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>
@@ -90,7 +94,7 @@ export const ScheduleCard = ({
 												</div>
 											</TooltipTrigger>
 											<TooltipContent>
-												<p>{awayTeam?.data().name}</p>
+												<p>{awayTeam?.data().name || 'To Be Determined'}</p>
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>

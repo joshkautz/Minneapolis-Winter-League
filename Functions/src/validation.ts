@@ -122,11 +122,11 @@ export function isTeamRosterPlayer(obj: any): obj is TeamRosterPlayer {
 export function isGameDocument(obj: any): obj is GameDocument {
 	return (
 		obj &&
-		obj.away &&
+		(obj.away === null || obj.away) &&
 		typeof obj.awayScore === 'number' &&
 		obj.date &&
 		typeof obj.field === 'number' &&
-		obj.home &&
+		(obj.home === null || obj.home) &&
 		typeof obj.homeScore === 'number' &&
 		obj.season &&
 		Object.values(GameType).includes(obj.type)

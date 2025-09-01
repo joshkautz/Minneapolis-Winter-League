@@ -10,9 +10,15 @@ export const TeamIcon = ({
 }) => {
 	if (!team) {
 		return (
-			<div
-				className={'w-10 h-10 bg-secondary animate-pulse mx-auto rounded-full'}
-			/>
+			<div className={'flex flex-col items-center gap-1'}>
+				<div
+					className={
+						'w-8 h-8 bg-muted border-2 border-dashed border-muted-foreground mx-auto rounded-full flex items-center justify-center'
+					}
+				>
+					<span className={'text-xs text-muted-foreground font-bold'}>TBD</span>
+				</div>
+			</div>
 		)
 	}
 

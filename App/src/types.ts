@@ -171,16 +171,16 @@ export interface OfferDocument extends DocumentData {
  * Game document structure
  */
 export interface GameDocument extends DocumentData {
-	/** Reference to the away team */
-	away: DocumentReference<TeamDocument>
+	/** Reference to the away team (null for placeholder games) */
+	away: DocumentReference<TeamDocument> | null
 	/** Away team's score */
 	awayScore: number
 	/** Game date and time */
 	date: Timestamp
 	/** Field number where game is played */
 	field: number
-	/** Reference to the home team */
-	home: DocumentReference<TeamDocument>
+	/** Reference to the home team (null for placeholder games) */
+	home: DocumentReference<TeamDocument> | null
 	/** Home team's score */
 	homeScore: number
 	/** Reference to the season this game belongs to */

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { QuerySnapshot } from '@/firebase/firestore'
-import { GameDocument } from '@/shared/utils'
+import { GameDocument, hasAssignedTeams } from '@/shared/utils'
 
 export type TeamStanding = {
 	pointsFor: number
@@ -19,8 +19,14 @@ export const useStandings = (
 		} = {}
 
 		gamesQuerySnapshot?.docs.forEach((gameQueryDocumentSnapshot) => {
-			const { home, away, homeScore, awayScore } =
-				gameQueryDocumentSnapshot.data()
+			const gameData = gameQueryDocumentSnapshot.data()
+
+			// Skip games with null team references (placeholder games)
+			if (!hasAssignedTeams(gameData)) {
+				return
+			}
+
+			const { home, away, homeScore, awayScore } = gameData
 
 			const updateTeamStanding = (
 				teamId: string,
