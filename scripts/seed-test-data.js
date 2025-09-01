@@ -15,17 +15,21 @@
 import { initializeApp } from 'firebase-admin/app'
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
+import { getStorage } from 'firebase-admin/storage'
 
 // Initialize Firebase Admin SDK for local emulator
 process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'
 process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099'
+process.env.FIREBASE_STORAGE_EMULATOR_HOST = 'localhost:9199'
 
 const app = initializeApp({
 	projectId: 'minnesota-winter-league', // Match the emulator project ID
+	storageBucket: 'minnesota-winter-league.appspot.com', // Storage bucket for emulator
 })
 
 const db = getFirestore(app)
 const auth = getAuth(app)
+const storage = getStorage(app)
 
 // Collections enum - matching the app structure
 const Collections = {
@@ -72,6 +76,92 @@ const generateDocId = () => {
 		result += chars.charAt(Math.floor(Math.random() * chars.length))
 	}
 	return result
+}
+
+// Function to generate a team logo SVG and upload to Firebase Storage
+async function generateAndUploadTeamLogo(teamName, teamId) {
+	try {
+		// Generate a color based on team name for consistency
+		const colors = [
+			'#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+			'#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+			'#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2'
+		]
+		
+		const colorIndex = teamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length
+		const primaryColor = colors[colorIndex]
+		
+		// Split team name into words for better layout
+		const words = teamName.split(' ')
+		const city = words[0] || ''
+		const mascot = words.slice(1).join(' ') || ''
+		
+		// Create SVG content
+		const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:${primaryColor};stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="300" height="300" fill="url(#bg)" />
+  
+  <!-- Border -->
+  <rect x="8" y="8" width="284" height="284" fill="none" stroke="#2C3E50" stroke-width="8" />
+  
+  <!-- Team Name -->
+  <text x="150" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#2C3E50">
+    ${city}
+  </text>
+  <text x="150" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#2C3E50">
+    ${mascot}
+  </text>
+  
+  <!-- Simple hockey puck decoration -->
+  <circle cx="150" cy="220" r="15" fill="#2C3E50" />
+  <circle cx="150" cy="220" r="10" fill="none" stroke="#FFFFFF" stroke-width="2" />
+</svg>`
+
+		// Convert SVG to buffer
+		const buffer = Buffer.from(svgContent, 'utf8')
+
+		// Upload to Firebase Storage
+		const bucket = storage.bucket('minnesota-winter-league.appspot.com')
+		const fileName = `team-logos/${teamId}.svg`
+		const file = bucket.file(fileName)
+
+		await file.save(buffer, {
+			metadata: {
+				contentType: 'image/svg+xml',
+				metadata: {
+					teamName: teamName,
+					generatedAt: new Date().toISOString()
+				}
+			}
+		})
+
+		// Make the file publicly readable
+		await file.makePublic()
+
+		// Get the public URL (for emulator, this will be the emulator URL)
+		const publicUrl = `http://127.0.0.1:9199/v0/b/minnesota-winter-league.appspot.com/o/${encodeURIComponent(fileName)}?alt=media`
+
+		console.log(`     Generated and uploaded logo for ${teamName}`)
+
+		return {
+			logoUrl: publicUrl,
+			storagePath: fileName
+		}
+	} catch (error) {
+		console.error(`     Error generating logo for ${teamName}:`, error)
+		return {
+			logoUrl: null,
+			storagePath: null
+		}
+	}
 }
 
 async function seedTestData() {
@@ -321,15 +411,18 @@ async function createTeams(seasons, players) {
 				player: createRef(Collections.PLAYERS, player.id),
 			}))
 
+			// Generate and upload team logo
+			const logoData = await generateAndUploadTeamLogo(teamName, consistentTeamId)
+
 			const teamData = {
-				logo: null,
+				logo: logoData.logoUrl,
 				name: teamName,
 				placement: placements[i],
 				registered: true,
 				registeredDate: registrationDate,
 				roster: roster,
 				season: createRef(Collections.SEASONS, season.id),
-				storagePath: null,
+				storagePath: logoData.storagePath,
 				teamId: consistentTeamId,
 			}
 
