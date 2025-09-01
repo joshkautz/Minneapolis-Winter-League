@@ -1,82 +1,191 @@
-// import { useSeasonsContext } from '@/contexts/seasons-context'
-// import { useEffect, useState } from 'react'
+import { useSeasonsContext } from '@/contexts/seasons-context'
+import { useEffect, useState, useMemo } from 'react'
+import { Timestamp } from '@firebase/firestore'
+import { Skeleton } from '../ui/skeleton'
 
-// const HOURS = 1000 * 60 * 60
-// const MINUTES = 1000 * 60
+const HOURS = 1000 * 60 * 60
+const MINUTES = 1000 * 60
+
+enum RegistrationState {
+	BEFORE_START = 'BEFORE_START',
+	OPEN = 'OPEN',
+	CLOSED = 'CLOSED',
+}
 
 export const RegistrationCountdown = () => {
-	// const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
-	// const [remaining, setRemaining] = useState<number>()
+	const {
+		currentSeasonQueryDocumentSnapshot,
+		currentSeasonQueryDocumentSnapshotLoading,
+	} = useSeasonsContext()
+	const [remaining, setRemaining] = useState<number>()
 
-	// useEffect(() => {
-	// 	if (currentSeasonQueryDocumentSnapshot === undefined) return
+	const registrationState = useMemo(() => {
+		if (!currentSeasonQueryDocumentSnapshot) return null
 
-	// 	const currentDate = new Date()
-	// 	const startDate = currentSeasonQueryDocumentSnapshot
-	// 		?.data()
-	// 		.registrationStart.toDate()
+		const now = Timestamp.now()
+		const registrationStart =
+			currentSeasonQueryDocumentSnapshot.data().registrationStart
+		const registrationEnd =
+			currentSeasonQueryDocumentSnapshot.data().registrationEnd
 
-	// 	setRemaining(startDate.getTime() - currentDate.getTime())
+		if (now.seconds < registrationStart.seconds) {
+			return RegistrationState.BEFORE_START
+		} else if (
+			now.seconds >= registrationStart.seconds &&
+			now.seconds < registrationEnd.seconds
+		) {
+			return RegistrationState.OPEN
+		} else {
+			return RegistrationState.CLOSED
+		}
+	}, [currentSeasonQueryDocumentSnapshot])
 
-	// 	const interval = setInterval(
-	// 		() =>
-	// 			setRemaining((prevTime) => {
-	// 				if (prevTime === 0) {
-	// 					clearInterval(interval)
-	// 					return 0
-	// 				} else if (prevTime === undefined) {
-	// 					return startDate.getTime() - currentDate.getTime()
-	// 				} else {
-	// 					return prevTime - 1000
-	// 				}
-	// 			}),
-	// 		1000
-	// 	)
+	const targetDate = useMemo(() => {
+		if (!currentSeasonQueryDocumentSnapshot || registrationState === null)
+			return null
 
-	// 	return () => clearInterval(interval)
-	// }, [currentSeasonQueryDocumentSnapshot])
+		if (registrationState === RegistrationState.BEFORE_START) {
+			return currentSeasonQueryDocumentSnapshot
+				.data()
+				.registrationStart.toDate()
+		} else if (registrationState === RegistrationState.OPEN) {
+			return currentSeasonQueryDocumentSnapshot.data().registrationEnd.toDate()
+		}
+		return null
+	}, [currentSeasonQueryDocumentSnapshot, registrationState])
 
-	// const days = remaining ? Math.floor(remaining / (HOURS * 24)) : '?'
-	// const hours = remaining ? Math.floor((remaining % (HOURS * 24)) / HOURS) : '?'
-	// const minutes = remaining ? Math.floor((remaining % HOURS) / MINUTES) : '?'
-	// const seconds = remaining ? Math.floor((remaining % MINUTES) / 1000) : '?'
+	useEffect(() => {
+		if (!targetDate) {
+			setRemaining(undefined)
+			return
+		}
+
+		const updateRemaining = () => {
+			const currentTime = new Date().getTime()
+			const targetTime = targetDate.getTime()
+			const timeDiff = targetTime - currentTime
+
+			if (timeDiff <= 0) {
+				setRemaining(0)
+				return true // Signal that countdown is done
+			} else {
+				setRemaining(timeDiff)
+				return false
+			}
+		}
+
+		// Initial calculation
+		const isDone = updateRemaining()
+		if (isDone) return
+
+		const interval = setInterval(() => {
+			const isDone = updateRemaining()
+			if (isDone) {
+				clearInterval(interval)
+			}
+		}, 1000)
+
+		return () => clearInterval(interval)
+	}, [targetDate])
+
+	const days =
+		remaining !== undefined && remaining > 0
+			? Math.floor(remaining / (HOURS * 24))
+			: 0
+	const hours =
+		remaining !== undefined && remaining > 0
+			? Math.floor((remaining % (HOURS * 24)) / HOURS)
+			: 0
+	const minutes =
+		remaining !== undefined && remaining > 0
+			? Math.floor((remaining % HOURS) / MINUTES)
+			: 0
+	const seconds =
+		remaining !== undefined && remaining > 0
+			? Math.floor((remaining % MINUTES) / 1000)
+			: 0
+
+	const getHeaderText = () => {
+		if (registrationState === RegistrationState.BEFORE_START) {
+			return 'Registration opens soon!'
+		} else if (registrationState === RegistrationState.OPEN) {
+			return 'Registration is open!'
+		} else {
+			return 'Registration is closed!'
+		}
+	}
+
+	const getSubHeaderText = () => {
+		if (registrationState === RegistrationState.BEFORE_START) {
+			return 'Time until registration opens:'
+		} else if (registrationState === RegistrationState.OPEN) {
+			return 'Time until registration closes:'
+		}
+		return null
+	}
+
+	// Loading state
+	if (
+		currentSeasonQueryDocumentSnapshotLoading ||
+		!currentSeasonQueryDocumentSnapshot
+	) {
+		return (
+			<div className="flex flex-col items-start">
+				<Skeleton className="h-9 w-64 mb-2" />
+				<Skeleton className="h-5 w-48 mb-4" />
+				<div className="flex mt-2 space-x-2">
+					{[...Array(4)].map((_, index) => (
+						<div key={index} className="flex flex-col items-center min-w-16">
+							<Skeleton className="w-full h-12 rounded-lg" />
+							<Skeleton className="h-4 w-12 mt-2" />
+						</div>
+					))}
+				</div>
+			</div>
+		)
+	}
+
+	const showCountdown =
+		registrationState !== RegistrationState.CLOSED &&
+		remaining !== undefined &&
+		remaining > 0
 
 	return (
 		<div className="flex flex-col items-start">
-			<div className="text-3xl font-bold">Registration is closed!</div>
-			{/* {remaining === undefined ? (
-				<div className="text-3xl font-bold">Registration...</div>
-			) : remaining <= 0 ? (
-				<div className="text-3xl font-bold">Registration is open!</div>
-			) : (
-				<div className="text-3xl font-bold">Registration opens soon!</div>
-			)} */}
-			{/* <div className="flex mt-2 space-x-2">
-				<div className="flex flex-col items-center min-w-16">
-					<p className="w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground">
-						{0}
-					</p>
-					<p className="text-sm font-bold">days</p>
+			<div className="text-3xl font-bold">{getHeaderText()}</div>
+			{getSubHeaderText() && (
+				<div className="text-lg text-muted-foreground mt-1 mb-2">
+					{getSubHeaderText()}
 				</div>
-				<div className="flex flex-col items-center min-w-16">
-					<p className="w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground">
-						{0}
-					</p>
-					<p className="text-sm font-bold">hours</p>
+			)}
+			{showCountdown && (
+				<div className="flex mt-2 space-x-2">
+					<div className="flex flex-col items-center min-w-16">
+						<p className="w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground">
+							{days}
+						</p>
+						<p className="text-sm font-bold">days</p>
+					</div>
+					<div className="flex flex-col items-center min-w-16">
+						<p className="w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground">
+							{hours}
+						</p>
+						<p className="text-sm font-bold">hours</p>
+					</div>
+					<div className="flex flex-col items-center min-w-16">
+						<p className="w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground">
+							{minutes}
+						</p>
+						<p className="text-sm font-bold">minutes</p>
+					</div>
+					<div className="flex flex-col items-center min-w-16">
+						<p className="w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground">
+							{seconds}
+						</p>
+						<p className="text-sm font-bold">seconds</p>
+					</div>
 				</div>
-				<div className="flex flex-col items-center min-w-16">
-					<p className="w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground">
-						{0}
-					</p>
-					<p className="text-sm font-bold">minutes</p>
-				</div>
-				<div className="flex flex-col items-center min-w-16">
-					<p className="w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground">
-						{0}
-					</p>
-					<p className="text-sm font-bold">seconds</p>
-				</div>
-			</div> */}
+			)}
 		</div>
 	)
 }

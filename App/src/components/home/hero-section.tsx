@@ -113,30 +113,6 @@ export const HeroSection = () => {
 						<div className="flex mt-4 sm:mt-12">
 							<RegistrationCountdown />
 						</div>
-						{/* TEMPORARILY REMOVING THIS PARAGRAPH */}
-						{/* <div className={'mt-4 sm:mt-12 max-w-[490px] flex-1'}>
-							{`Join us this season for unforgettable Saturday nights of
-								organized league play. Whether you're a seasoned club veteran,
-								or a rookie learning the sport, `}
-							<span className={'font-bold'}>
-								{`we can't wait to welcome you to the league.`}
-							</span>
-						</div> */}
-
-						{isLoading ? (
-							<Skeleton className="w-24 mt-8 rounded sm:mt-12 bg-accent h-9" />
-						) : (
-							<Button
-								className="z-50 mt-8 sm:mt-12 bg-accent text-foreground hover:bg-accent/90 dark:text-background"
-								onClick={handleCallToAction}
-							>
-								{!isAuthenticated
-									? 'Join our League'
-									: isAuthenticatedUserRostered
-										? 'Your Team'
-										: 'Join a Team'}
-							</Button>
-						)}
 					</div>
 				</div>
 			</div>
