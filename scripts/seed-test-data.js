@@ -83,19 +83,33 @@ async function generateAndUploadTeamLogo(teamName, teamId) {
 	try {
 		// Generate a color based on team name for consistency
 		const colors = [
-			'#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-			'#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
-			'#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2'
+			'#FF6B6B',
+			'#4ECDC4',
+			'#45B7D1',
+			'#96CEB4',
+			'#FFEAA7',
+			'#DDA0DD',
+			'#98D8C8',
+			'#F7DC6F',
+			'#BB8FCE',
+			'#85C1E9',
+			'#F8C471',
+			'#82E0AA',
+			'#F1948A',
+			'#85C1E9',
+			'#D7BDE2',
 		]
-		
-		const colorIndex = teamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length
+
+		const colorIndex =
+			teamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+			colors.length
 		const primaryColor = colors[colorIndex]
-		
+
 		// Split team name into words for better layout
 		const words = teamName.split(' ')
 		const city = words[0] || ''
 		const mascot = words.slice(1).join(' ') || ''
-		
+
 		// Create SVG content
 		const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
@@ -138,9 +152,9 @@ async function generateAndUploadTeamLogo(teamName, teamId) {
 				contentType: 'image/svg+xml',
 				metadata: {
 					teamName: teamName,
-					generatedAt: new Date().toISOString()
-				}
-			}
+					generatedAt: new Date().toISOString(),
+				},
+			},
 		})
 
 		// Make the file publicly readable
@@ -153,13 +167,13 @@ async function generateAndUploadTeamLogo(teamName, teamId) {
 
 		return {
 			logoUrl: publicUrl,
-			storagePath: fileName
+			storagePath: fileName,
 		}
 	} catch (error) {
 		console.error(`     Error generating logo for ${teamName}:`, error)
 		return {
 			logoUrl: null,
-			storagePath: null
+			storagePath: null,
 		}
 	}
 }
@@ -330,13 +344,13 @@ async function createTeams(seasons, players) {
 
 		// 2000 teams
 		'New Brighton Nighthawks',
-		'Oakdale Otters',
+		'Bloomington Bears', // Carries over from 1999
 		'Plymouth Panthers',
 		'Richfield Raccoons',
-		'Shakopee Sharks',
+		'Edina Eagles', // Carries over from 1999
 		'Stillwater Stallions',
 		'Woodbury Wolves',
-		'Apple Valley Ants',
+		'Hopkins Hawks', // Carries over from 1999
 		'Burnsville Badgers',
 		'Coon Rapids Cardinals',
 		'Eagan Elephants',
@@ -345,28 +359,25 @@ async function createTeams(seasons, players) {
 		// 2025 teams
 		'Maple Grove Mantises',
 		'Roseville Ravens',
-		'St. Paul Pumas',
+		'Plymouth Panthers', // Carries over from 2000
 		'White Bear Lake Whales',
 		'Blaine Bison',
 		'Brooklyn Park Bears',
-		'Crystal Cougars',
-		'Maplewood Marlins',
+		'Edina Eagles', // Carries over from previous seasons
+		'Hopkins Hawks', // Carries over from previous seasons
 		'Rosemount Rhinos',
 		'Savage Salamanders',
 		'Victoria Vipers',
 		'Wayzata Walruses',
 	]
 
-	// Some teams that carry over between seasons (for continuity)
+	// Teams that carry over between seasons (for continuity)
+	// These teams will have the same teamId across seasons
 	const continuityTeams = new Map([
-		['Bloomington Bears', generateDocId()],
-		['Chaska Cheetahs', generateDocId()],
-		['Edina Eagles', generateDocId()],
-		['Hopkins Hawks', generateDocId()],
-		['Plymouth Panthers', generateDocId()],
-		['Shakopee Sharks', generateDocId()],
-		['Maple Grove Mantises', generateDocId()],
-		['St. Paul Pumas', generateDocId()],
+		['Bloomington Bears', generateDocId()], // 1999 -> 2000
+		['Edina Eagles', generateDocId()], // 1999 -> 2000 -> 2025
+		['Hopkins Hawks', generateDocId()], // 1999 -> 2000 -> 2025
+		['Plymouth Panthers', generateDocId()], // 2000 -> 2025
 	])
 
 	const teams = []
@@ -386,6 +397,7 @@ async function createTeams(seasons, players) {
 
 			// Use consistent teamId for continuity teams, otherwise generate new one
 			let consistentTeamId = continuityTeams.get(teamName) || generateDocId()
+			const isCarryoverTeam = continuityTeams.has(teamName)
 
 			// Random registration date in October of the year before season start
 			const seasonYear = parseInt(season.name.split(' ')[0])
@@ -412,7 +424,10 @@ async function createTeams(seasons, players) {
 			}))
 
 			// Generate and upload team logo
-			const logoData = await generateAndUploadTeamLogo(teamName, consistentTeamId)
+			const logoData = await generateAndUploadTeamLogo(
+				teamName,
+				consistentTeamId
+			)
 
 			const teamData = {
 				logo: logoData.logoUrl,
@@ -449,7 +464,7 @@ async function createTeams(seasons, players) {
 			}
 
 			console.log(
-				`     Created team: ${teamName} (Placement: ${placements[i]}, ${teamSize} players)`
+				`     Created team: ${teamName} (Placement: ${placements[i]}, ${teamSize} players)${isCarryoverTeam ? ' [CARRYOVER]' : ''}`
 			)
 
 			teamIndex++
