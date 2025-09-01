@@ -1,78 +1,11 @@
-import { useAuthContext } from '@/providers'
-import { useSeasonsContext } from '@/providers'
 import { useAnchorScroll } from '@/shared/hooks'
 import { useMemo } from 'react'
-import { useOutletContext, useNavigate } from 'react-router-dom'
-import { OutletContext } from '@/shared/components'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { CitySvg } from './city-svg'
 import { SparklesCore } from './particles'
-import type { PlayerSeason } from '@/types'
 import { RegistrationCountdown } from './registration-countdown'
 
 export const HeroSection = () => {
 	useAnchorScroll()
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
-	const { openAuthModal } = useOutletContext<OutletContext>()
-	const navigate = useNavigate()
-	const {
-		authStateUser,
-		authStateLoading,
-		authenticatedUserSnapshot,
-		authenticatedUserSnapshotLoading,
-	} = useAuthContext()
-
-	const isLoading = useMemo(
-		() =>
-			(!authStateUser &&
-				authStateLoading &&
-				!authenticatedUserSnapshot &&
-				authenticatedUserSnapshotLoading) ||
-			(!authStateUser &&
-				authStateLoading &&
-				!authenticatedUserSnapshot &&
-				!authenticatedUserSnapshotLoading) ||
-			(authStateUser &&
-				!authStateLoading &&
-				!authenticatedUserSnapshot &&
-				!authenticatedUserSnapshotLoading) ||
-			(authStateUser &&
-				!authStateLoading &&
-				!authenticatedUserSnapshot &&
-				authenticatedUserSnapshotLoading),
-		[
-			authStateUser,
-			authStateLoading,
-			authenticatedUserSnapshot,
-			authenticatedUserSnapshotLoading,
-		]
-	)
-
-	const isAuthenticated = useMemo(
-		() => authenticatedUserSnapshot,
-		[authenticatedUserSnapshot]
-	)
-
-	const isAuthenticatedUserRostered = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.some(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
-						item.team
-				),
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
-	)
-
-	const handleCallToAction = () => {
-		if (!authenticatedUserSnapshot) {
-			openAuthModal()
-			return
-		}
-		navigate('/manage')
-	}
 
 	const sparklesCore = useMemo(() => {
 		return (
@@ -114,30 +47,6 @@ export const HeroSection = () => {
 						<div className='flex mt-4 sm:mt-12'>
 							<RegistrationCountdown />
 						</div>
-						{/* TEMPORARILY REMOVING THIS PARAGRAPH */}
-						{/* <div className={'mt-4 sm:mt-12 max-w-[490px] flex-1'}>
-							{`Join us this season for unforgettable Saturday nights of
-								organized league play. Whether you're a seasoned club veteran,
-								or a rookie learning the sport, `}
-							<span className={'font-bold'}>
-								{`we can't wait to welcome you to the league.`}
-							</span>
-						</div> */}
-
-						{isLoading ? (
-							<Skeleton className='w-24 mt-8 rounded sm:mt-12 bg-accent h-9' />
-						) : (
-							<Button
-								className='z-50 mt-8 sm:mt-12 bg-accent text-foreground hover:bg-accent/90 dark:text-background'
-								onClick={handleCallToAction}
-							>
-								{!isAuthenticated
-									? 'Join our League'
-									: isAuthenticatedUserRostered
-										? 'Your Team'
-										: 'Join a Team'}
-							</Button>
-						)}
 					</div>
 				</div>
 			</div>
