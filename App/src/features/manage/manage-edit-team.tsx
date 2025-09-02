@@ -24,6 +24,8 @@ import { FocusScope } from '@radix-ui/react-focus-scope'
 import { logger, errorHandler, ErrorType } from '@/shared/utils'
 import { TeamFormData } from '@/shared/utils/validation'
 import { PlayerSeason } from '@/types'
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
+import { teamFormSchema } from '@/shared/utils/validation'
 
 export const ManageEditTeam = ({
 	closeDialog,
@@ -66,6 +68,7 @@ export const ManageEditTeam = ({
 	const url = team?.data().logo
 
 	const form = useForm<TeamFormData>({
+		resolver: standardSchemaResolver(teamFormSchema),
 		defaultValues: { name: '', logo: '' },
 	})
 

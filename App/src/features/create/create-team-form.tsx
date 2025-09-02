@@ -6,12 +6,9 @@ import {
 	FormControl,
 	FormMessage,
 } from '@/components/ui/form'
-import { useCallback } from 'react'
-import { useForm } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { errorHandler, logger, ErrorType } from '@/shared/utils'
-import { TeamFormData } from '@/shared/utils/validation'
+import { useCreateTeamForm } from '@/features/create/hooks'
 
 interface CreateFormProps {
 	isSubmitting: boolean
@@ -20,6 +17,7 @@ interface CreateFormProps {
 		React.SetStateAction<
 			| {
 					name: string | undefined
+					storageRef: any | undefined // Using any for StorageReference to avoid import complexity
 					teamId: string | undefined
 			  }
 			| undefined
@@ -36,6 +34,11 @@ interface CreateFormProps {
 		description: string
 		navigation: boolean
 	}) => void
+	uploadFile?: (
+		ref: any,
+		blob: Blob,
+		metadata: { contentType: string }
+	) => Promise<{ ref: any } | undefined>
 }
 
 export const CreateTeamForm = ({
@@ -43,54 +46,24 @@ export const CreateTeamForm = ({
 	setIsSubmitting,
 	setNewTeamDocument,
 	handleResult,
+	uploadFile,
 }: CreateFormProps) => {
-	const form = useForm<TeamFormData>({
-		defaultValues: {
-			name: '',
-			logo: '',
-		},
-	})
+	// Provide a no-op uploadFile function if not provided since this form doesn't handle file uploads
+	const defaultUploadFile = async () => undefined
 
-	const onCreateSubmit = useCallback(
-		async (data: TeamFormData) => {
-			try {
-				setIsSubmitting(true)
-				setNewTeamDocument({
-					name: data.name,
-					teamId: undefined,
-				})
-			} catch (error) {
-				logger.error(
-					'Team creation failed',
-					error instanceof Error ? error : new Error(String(error)),
-					{
-						component: 'CreateTeamForm',
-						teamName: data.name,
-					}
-				)
-				errorHandler.handle(
-					error,
-					ErrorType.UNEXPECTED,
-					'CreateTeamForm.onCreateSubmit'
-				)
-				handleResult({
-					success: false,
-					title: 'Creation failed',
-					description: 'Something went wrong. Please try again.',
-					navigation: false,
-				})
-			} finally {
-				setIsSubmitting(false)
-			}
-		},
-		[setNewTeamDocument, handleResult, setIsSubmitting]
-	)
+	const { form, onSubmit } = useCreateTeamForm({
+		isSubmitting,
+		setIsSubmitting,
+		setNewTeamDocument,
+		handleResult,
+		uploadFile: uploadFile || defaultUploadFile,
+	})
 
 	return (
 		<div className='max-w-[400px]'>
 			<Form {...form}>
 				<form
-					onSubmit={form.handleSubmit(onCreateSubmit)}
+					onSubmit={form.handleSubmit(onSubmit)}
 					className={'w-full space-y-6'}
 				>
 					<FormField

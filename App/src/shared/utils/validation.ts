@@ -125,7 +125,7 @@ export const profileFormSchema = z.object({
 
 export const teamFormSchema = z.object({
 	name: teamNameSchema,
-	logo: z.string().default(''),
+	logo: z.string().optional(),
 })
 
 // Type exports for form data

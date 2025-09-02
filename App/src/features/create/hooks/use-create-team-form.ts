@@ -3,6 +3,9 @@ import { useForm } from 'react-hook-form'
 import { v4 as uuidv4 } from 'uuid'
 import { StorageReference, ref, storage } from '@/firebase/storage'
 import { TeamFormData } from '@/shared/utils/validation'
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
+import { teamFormSchema } from '@/shared/utils/validation'
+
 interface UseCreateTeamFormProps {
 	isSubmitting: boolean
 	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
@@ -49,9 +52,9 @@ export const useCreateTeamForm = ({
 	const [blob, setBlob] = useState<Blob>()
 
 	const form = useForm<TeamFormData>({
+		resolver: standardSchemaResolver(teamFormSchema),
 		defaultValues: {
 			name: '',
-			logo: '',
 		},
 	})
 
