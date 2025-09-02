@@ -4,9 +4,10 @@ import * as React from 'react'
 import useEmblaCarousel, {
 	type UseEmblaCarouselType,
 } from 'embla-carousel-react'
+import { ArrowLeft, ArrowRight } from 'lucide-react'
+
 import { cn } from '@/shared/utils'
 import { Button } from '@/components/ui/button'
-import { ArrowLeftIcon, ArrowRightIcon } from '@radix-ui/react-icons'
 
 type CarouselApi = UseEmblaCarouselType[1]
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>
@@ -61,7 +62,7 @@ function Carousel({
 	const [canScrollNext, setCanScrollNext] = React.useState(false)
 
 	const onSelect = React.useCallback((api: CarouselApi) => {
-		if (!api) {return}
+		if (!api) return
 		setCanScrollPrev(api.canScrollPrev())
 		setCanScrollNext(api.canScrollNext())
 	}, [])
@@ -88,12 +89,12 @@ function Carousel({
 	)
 
 	React.useEffect(() => {
-		if (!api || !setApi) {return}
+		if (!api || !setApi) return
 		setApi(api)
 	}, [api, setApi])
 
 	React.useEffect(() => {
-		if (!api) {return}
+		if (!api) return
 		onSelect(api)
 		api.on('reInit', onSelect)
 		api.on('select', onSelect)
@@ -194,7 +195,7 @@ function CarouselPrevious({
 			onClick={scrollPrev}
 			{...props}
 		>
-			<ArrowLeftIcon />
+			<ArrowLeft />
 			<span className='sr-only'>Previous slide</span>
 		</Button>
 	)
@@ -224,7 +225,7 @@ function CarouselNext({
 			onClick={scrollNext}
 			{...props}
 		>
-			<ArrowRightIcon />
+			<ArrowRight />
 			<span className='sr-only'>Next slide</span>
 		</Button>
 	)
