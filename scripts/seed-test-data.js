@@ -41,18 +41,6 @@ const Collections = {
 	WAIVERS: 'waivers',
 }
 
-// Enums matching the app structure
-const OfferStatus = {
-	ACCEPTED: 'accepted',
-	PENDING: 'pending',
-	REJECTED: 'rejected',
-}
-
-const OfferType = {
-	INVITATION: 'invitation',
-	REQUEST: 'request',
-}
-
 const GameType = {
 	REGULAR: 'regular',
 	PLAYOFF: 'playoff',
@@ -96,7 +84,6 @@ async function generateAndUploadTeamLogo(teamName, teamId) {
 			'#F8C471',
 			'#82E0AA',
 			'#F1948A',
-			'#85C1E9',
 			'#D7BDE2',
 		]
 
@@ -317,13 +304,14 @@ async function createPlayersFromAuth(authUsers) {
 async function createTeams(seasons, players) {
 	console.log('🏒 Creating teams with alliterative names...')
 
-	// Check if we have enough players (need 15 players per team * 12 teams = 180 players minimum per season)
+	// Check if we have enough players for unique assignment per season
+	// With 12 teams and 15 players per team, we need 180 players for completely unique teams
 	const playersNeeded = 12 * 15 // 180 players per season
 	if (players.length < playersNeeded) {
 		console.log(
-			`   Warning: Only ${players.length} players available, but need ${playersNeeded} for full teams`
+			`   Warning: Only ${players.length} players available, but ideally need ${playersNeeded} for completely unique teams`
 		)
-		console.log('   Teams will have repeated players to fill rosters')
+		console.log('   Some players will appear on multiple teams within a season')
 	}
 
 	// Alliterative city/animal combinations
@@ -392,6 +380,11 @@ async function createTeams(seasons, players) {
 		const seasonTeams = []
 		const placements = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
+		// Create a shuffled pool of players for this season
+		// Each player should only be on one team per season
+		const seasonPlayerPool = shuffleArray([...players])
+		let playerIndex = 0
+
 		for (let i = 0; i < 12; i++) {
 			const teamName = teamNames[teamIndex]
 
@@ -402,7 +395,7 @@ async function createTeams(seasons, players) {
 			// Random registration date in October of the year before season start
 			const seasonYear = parseInt(season.name.split(' ')[0])
 			const registrationYear = seasonYear
-			const randomDay = Math.floor(Math.random() * 31) + 1
+			const randomDay = Math.floor(Math.random() * 31) + 1 // October has 31 days
 			const registrationDate = createDate(
 				`${registrationYear}-10-${randomDay.toString().padStart(2, '0')}`
 			)
@@ -410,13 +403,15 @@ async function createTeams(seasons, players) {
 			// Assign 15 players to each team
 			const teamSize = 15
 
-			// Create a pool of players that includes repeats if necessary
-			const playerPool = []
-			while (playerPool.length < teamSize) {
-				playerPool.push(...players)
+			// Get the next 15 players from the season pool
+			// If we run out of unique players, cycle back to the beginning
+			const teamPlayers = []
+			for (let j = 0; j < teamSize; j++) {
+				teamPlayers.push(
+					seasonPlayerPool[playerIndex % seasonPlayerPool.length]
+				)
+				playerIndex++
 			}
-			shuffleArray(playerPool)
-			const teamPlayers = playerPool.slice(0, teamSize)
 
 			const roster = teamPlayers.map((player, index) => ({
 				captain: index === 0, // First player is captain
@@ -505,21 +500,6 @@ function shuffleArray(array) {
 	return shuffled
 }
 
-function getRandomWeekend(year, month) {
-	const daysInMonth = new Date(year, month, 0).getDate()
-	const saturdays = []
-
-	for (let day = 1; day <= daysInMonth; day++) {
-		const date = new Date(year, month - 1, day)
-		if (date.getDay() === 6) {
-			// Saturday
-			saturdays.push(day)
-		}
-	}
-
-	return saturdays[Math.floor(Math.random() * saturdays.length)]
-}
-
 async function createGames(seasons, teams) {
 	console.log('🏒 Creating games...')
 
@@ -561,24 +541,6 @@ async function createGames(seasons, teams) {
 
 	// Helper function to generate random score (0-25)
 	const generateScore = () => Math.floor(Math.random() * 26)
-
-	// Helper function to create balanced matchups for a night
-	const createNightMatchups = (seasonTeams) => {
-		const shuffledTeams = shuffleArray([...seasonTeams])
-		const matchups = []
-
-		// Create 6 games (12 teams / 2 teams per game = 6 games)
-		for (let i = 0; i < shuffledTeams.length; i += 2) {
-			if (i + 1 < shuffledTeams.length) {
-				matchups.push({
-					home: shuffledTeams[i],
-					away: shuffledTeams[i + 1],
-				})
-			}
-		}
-
-		return matchups
-	}
 
 	// Predefined schedule for first 5 weeks (regular season)
 	// Each sub-array represents a week, each inner array represents a round (time slot)
