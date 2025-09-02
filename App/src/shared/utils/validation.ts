@@ -16,14 +16,11 @@
  * validated at runtime, but the schemas maintain structural compatibility.
  */
 
-import { z } from 'zod'
+import * as z from 'zod'
 import { OfferType, OfferStatus } from '@/types'
 
 // Common validation schemas with advanced features
 export const emailSchema = z
-	.string()
-	.trim()
-	.min(1, 'Email is required')
 	.email('Please enter a valid email address')
 	.transform((email) => email.toLowerCase())
 
@@ -200,7 +197,8 @@ export const paginationSchema = z.object({
 			z
 				.string()
 				.transform((val) => parseInt(val, 10))
-				.pipe(z.number().int().positive().default(1))
+				.pipe(z.number().int().positive())
+				.default(1)
 		),
 	limit: z
 		.number()
@@ -212,12 +210,13 @@ export const paginationSchema = z.object({
 			z
 				.string()
 				.transform((val) => parseInt(val, 10))
-				.pipe(z.number().int().positive().max(100).default(10))
+				.pipe(z.number().int().positive().max(100))
+				.default(10)
 		),
 })
 
 // URL/ID validation schemas
-export const uuidSchema = z.string().uuid('Invalid ID format')
+export const uuidSchema = z.uuid()
 export const firestoreIdSchema = z
 	.string()
 	.min(1, 'ID is required')
@@ -352,7 +351,7 @@ export const teamDataSchema = z.object({
 	roster: z.array(teamRosterItemSchema),
 	season: documentRefSchema, // DocumentReference - required
 	storagePath: z.string().nullable(),
-	teamId: z.string().uuid(),
+	teamId: z.uuid(),
 })
 
 export const seasonDataSchema = z.object({
@@ -365,8 +364,8 @@ export const seasonDataSchema = z.object({
 })
 
 // Game/Offer related schemas - using shared enum types
-export const offerStatusSchema = z.nativeEnum(OfferStatus)
-export const offerTypeSchema = z.nativeEnum(OfferType)
+export const offerStatusSchema = z.enum(OfferStatus)
+export const offerTypeSchema = z.enum(OfferType)
 
 export const offerDataSchema = z.object({
 	type: offerTypeSchema,
@@ -402,78 +401,63 @@ export const validateOfferDocument = (
 }
 
 // Safe parsing helpers - with proper typing
-export const safeParsePlayerDocument = (
-	data: unknown
-): z.SafeParseReturnType<unknown, PlayerDocumentSchemaType> => {
+export const safeParsePlayerDocument = (data: unknown) => {
 	return playerDataSchema.safeParse(data)
 }
 
-export const safeParseTeamDocument = (
-	data: unknown
-): z.SafeParseReturnType<unknown, TeamDocumentSchemaType> => {
+export const safeParseTeamDocument = (data: unknown) => {
 	return teamDataSchema.safeParse(data)
 }
 
-export const safeParseSeasonDocument = (
-	data: unknown
-): z.SafeParseReturnType<unknown, SeasonDocumentSchemaType> => {
+export const safeParseSeasonDocument = (data: unknown) => {
 	return seasonDataSchema.safeParse(data)
 }
 
-export const safeParseOfferDocument = (
-	data: unknown
-): z.SafeParseReturnType<unknown, OfferDocumentSchemaType> => {
+export const safeParseOfferDocument = (data: unknown) => {
 	return offerDataSchema.safeParse(data)
 }
 
 // Custom error map for better user-facing error messages
-export const customErrorMap: z.ZodErrorMap = (issue, ctx) => {
+export const customErrorMap: z.core.$ZodErrorMap = (issue) => {
 	switch (issue.code) {
 		case z.ZodIssueCode.invalid_type:
 			if (issue.expected === 'string') {
-				return { message: 'This field is required' }
+				return 'This field is required'
 			}
 			if (issue.expected === 'number') {
-				return { message: 'Please enter a valid number' }
+				return 'Please enter a valid number'
 			}
 			break
 		case z.ZodIssueCode.too_small:
 			if (issue.type === 'string') {
 				if (issue.minimum === 1) {
-					return { message: 'This field is required' }
+					return 'This field is required'
 				}
-				return { message: `Must be at least ${issue.minimum} characters long` }
+				return `Must be at least ${issue.minimum} characters long`
 			}
 			if (issue.type === 'number') {
-				return { message: `Must be at least ${issue.minimum}` }
+				return `Must be at least ${issue.minimum}`
 			}
 			break
 		case z.ZodIssueCode.too_big:
 			if (issue.type === 'string') {
-				return {
-					message: `Must be no more than ${issue.maximum} characters long`,
-				}
+				return `Must be no more than ${issue.maximum} characters long`
 			}
 			if (issue.type === 'number') {
-				return { message: `Must be no more than ${issue.maximum}` }
+				return `Must be no more than ${issue.maximum}`
 			}
 			break
-		case z.ZodIssueCode.invalid_string:
-			if (issue.validation === 'email') {
-				return { message: 'Please enter a valid email address' }
-			}
-			if (issue.validation === 'uuid') {
-				return { message: 'Invalid ID format' }
-			}
-			break
+		case z.ZodIssueCode.invalid_format:
+			// In v4, email validation issues use invalid_format instead of invalid_string
+			return 'Please enter a valid email address'
 		case z.ZodIssueCode.custom:
 			// Custom validations should provide their own messages
-			return { message: issue.message || 'Invalid value' }
+			return issue.message || 'Invalid value'
 		default:
 			// Fall back to default message
-			return { message: ctx.defaultError }
+			return undefined // Let Zod handle default messages
 	}
-	return { message: ctx.defaultError }
+	return undefined
 }
 
 // Utility to set the custom error map globally
@@ -482,15 +466,15 @@ export const setCustomErrorMap = () => {
 }
 
 // Schema validation utilities with better error handling and type safety
-export const createFormValidator = <TInput, TOutput>(
-	schema: z.ZodSchema<TOutput, any, TInput>
+export const createFormValidator = <TOutput = unknown, TInput = unknown>(
+	schema: z.ZodType<TOutput, TInput>
 ) => {
 	return {
 		validate: (data: TInput): TOutput => {
 			const result = schema.safeParse(data)
 			if (!result.success) {
 				throw new Error(
-					result.error.errors.map((err) => err.message).join(', ')
+					result.error.issues.map((err) => err.message).join(', ')
 				)
 			}
 			return result.data
@@ -499,7 +483,7 @@ export const createFormValidator = <TInput, TOutput>(
 			const result = await schema.safeParseAsync(data)
 			if (!result.success) {
 				throw new Error(
-					result.error.errors.map((err) => err.message).join(', ')
+					result.error.issues.map((err) => err.message).join(', ')
 				)
 			}
 			return result.data
@@ -511,7 +495,7 @@ export const createFormValidator = <TInput, TOutput>(
 			}
 
 			const fieldErrors: Record<string, string> = {}
-			result.error.errors.forEach((error) => {
+			result.error.issues.forEach((error) => {
 				const path = error.path.join('.')
 				if (!fieldErrors[path]) {
 					fieldErrors[path] = error.message
@@ -519,7 +503,7 @@ export const createFormValidator = <TInput, TOutput>(
 			})
 			return fieldErrors
 		},
-		safeParse: (data: TInput): z.SafeParseReturnType<TInput, TOutput> => {
+		safeParse: (data: TInput) => {
 			return schema.safeParse(data)
 		},
 	}
