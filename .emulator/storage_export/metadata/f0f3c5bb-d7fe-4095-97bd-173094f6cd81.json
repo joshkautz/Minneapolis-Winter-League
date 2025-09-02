@@ -1,18 +1,20 @@
 {
   "name": "team-logos/ABZ4hwEi0q8RKL45WHpE.svg",
   "bucket": "minnesota-winter-league.appspot.com",
-  "metageneration": 2,
+  "metageneration": 3,
   "generation": 1756763879303,
   "contentType": "image/svg+xml",
   "storageClass": "STANDARD",
-  "downloadTokens": [],
+  "downloadTokens": [
+    "288f4349-b269-4975-a090-ad2bf0fba030"
+  ],
   "etag": "8onYXYfszYLDgiQk3OHyT9Gx3sU",
   "customMetadata": {
     "teamName": "Chaska Cheetahs",
     "generatedAt": "2025-09-01T21:57:59.301Z"
   },
   "timeCreated": "2025-09-01T21:57:59.303Z",
-  "updated": "2025-09-01T21:57:59.305Z",
+  "updated": "2025-09-01T22:03:48.312Z",
   "size": 1042,
   "md5Hash": "FR5JBaCkZl6ORPmA0mn9Fw==",
   "crc32c": "2453085925"

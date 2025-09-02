@@ -1,18 +1,20 @@
 {
   "name": "team-logos/sNyPXm3tIT9GBR1SHloh.svg",
   "bucket": "minnesota-winter-league.appspot.com",
-  "metageneration": 2,
+  "metageneration": 3,
   "generation": 1756763879367,
   "contentType": "image/svg+xml",
   "storageClass": "STANDARD",
-  "downloadTokens": [],
+  "downloadTokens": [
+    "c69f23b2-c04a-4d1b-a264-469f546914a2"
+  ],
   "etag": "Dki6ATzq00MblTxSPkVPunr/ur0",
   "customMetadata": {
     "teamName": "New Brighton Nighthawks",
     "generatedAt": "2025-09-01T21:57:59.365Z"
   },
   "timeCreated": "2025-09-01T21:57:59.367Z",
-  "updated": "2025-09-01T21:57:59.368Z",
+  "updated": "2025-09-02T13:36:36.102Z",
   "size": 1050,
   "md5Hash": "9f1IUXw3CqQZX6p6pBDotA==",
   "crc32c": "1825053652"

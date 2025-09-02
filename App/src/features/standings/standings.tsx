@@ -20,7 +20,7 @@ export const Standings = () => {
 
 	return (
 		<div className='container'>
-			<GradientHeader>Standings (Regular Season)</GradientHeader>
+			<GradientHeader>Weeks 1-5 (Regular)</GradientHeader>
 			{!regularSeasonGamesQuerySnapshot ? (
 				<div className='absolute inset-0 flex items-center justify-center'>
 					<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
@@ -37,7 +37,7 @@ export const Standings = () => {
 						standings={standings}
 						teamsQuerySnapshot={selectedSeasonTeamsQuerySnapshot}
 					/>
-					<GradientHeader>Results (Post Season)</GradientHeader>
+					<GradientHeader>Weeks 6-7 (Playoffs)</GradientHeader>
 					<ResultsTable
 						results={results}
 						teamsQuerySnapshot={selectedSeasonTeamsQuerySnapshot}

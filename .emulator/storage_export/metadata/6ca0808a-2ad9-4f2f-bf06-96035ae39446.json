@@ -1,18 +1,20 @@
 {
   "name": "team-logos/gUukAaSUpQTB3NIddVcp.svg",
   "bucket": "minnesota-winter-league.appspot.com",
-  "metageneration": 2,
+  "metageneration": 3,
   "generation": 1756763879382,
   "contentType": "image/svg+xml",
   "storageClass": "STANDARD",
-  "downloadTokens": [],
+  "downloadTokens": [
+    "64f9a40d-cef8-44ab-9936-fcf0d980f58a"
+  ],
   "etag": "NtUV24YO9gyEmyVGc8Fk+evUffE",
   "customMetadata": {
     "teamName": "Richfield Raccoons",
     "generatedAt": "2025-09-01T21:57:59.381Z"
   },
   "timeCreated": "2025-09-01T21:57:59.382Z",
-  "updated": "2025-09-01T21:57:59.383Z",
+  "updated": "2025-09-02T13:36:36.117Z",
   "size": 1045,
   "md5Hash": "wT8eAGTR/qYVSSukmY0upg==",
   "crc32c": "4065506118"
