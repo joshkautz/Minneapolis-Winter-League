@@ -2,11 +2,13 @@ import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Timestamp } from '@firebase/firestore'
+import { StorageReference } from '@/firebase/storage'
 import { useAuthContext, useSeasonsContext } from '@/providers'
 import type { PlayerSeason } from '@/types'
 
-interface TeamCreationData {
+export interface TeamCreationData {
 	name: string | undefined
+	storageRef: StorageReference | undefined
 	teamId: string | undefined
 }
 

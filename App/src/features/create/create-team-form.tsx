@@ -8,20 +8,15 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { StorageReference } from '@/firebase/storage'
 import { useCreateTeamForm } from '@/features/create/hooks'
+import type { TeamCreationData } from '@/features/create/hooks/use-team-creation'
 
 interface CreateFormProps {
 	isSubmitting: boolean
 	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 	setNewTeamDocument: React.Dispatch<
-		React.SetStateAction<
-			| {
-					name: string | undefined
-					storageRef: any | undefined // Using any for StorageReference to avoid import complexity
-					teamId: string | undefined
-			  }
-			| undefined
-		>
+		React.SetStateAction<TeamCreationData | undefined>
 	>
 	handleResult: ({
 		success,
@@ -35,10 +30,10 @@ interface CreateFormProps {
 		navigation: boolean
 	}) => void
 	uploadFile?: (
-		ref: any,
+		ref: StorageReference,
 		blob: Blob,
 		metadata: { contentType: string }
-	) => Promise<{ ref: any } | undefined>
+	) => Promise<{ ref: StorageReference } | undefined>
 }
 
 export const CreateTeamForm = ({
