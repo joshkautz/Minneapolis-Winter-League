@@ -1,5 +1,5 @@
 import { useAuthContext } from '@/providers'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -69,7 +69,7 @@ export const ManageEditTeam = ({
 	const url = team?.data().logo
 
 	const form = useForm<ManageEditTeamSchema>({
-		resolver: zodResolver(teamFormSchema),
+		resolver: standardSchemaResolver(teamFormSchema),
 		defaultValues: { name: '', logo: '' },
 	})
 

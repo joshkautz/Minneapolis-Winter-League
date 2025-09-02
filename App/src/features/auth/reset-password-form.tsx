@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
@@ -38,7 +38,7 @@ export const ResetPasswordForm = ({
 		useAuthContext()
 
 	const form = useForm<ResetPasswordFormData>({
-		resolver: zodResolver(resetPasswordFormSchema),
+		resolver: standardSchemaResolver(resetPasswordFormSchema),
 		defaultValues: {
 			email: '',
 		},

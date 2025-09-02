@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { v4 as uuidv4 } from 'uuid'
 import { StorageReference, ref, storage } from '@/firebase/storage'
 import { teamFormSchema, type TeamFormData } from '@/shared/utils/validation'
@@ -53,7 +53,7 @@ export const useCreateTeamForm = ({
 	const [blob, setBlob] = useState<Blob>()
 
 	const form = useForm<CreateTeamFormData>({
-		resolver: zodResolver(teamFormSchema),
+		resolver: standardSchemaResolver(teamFormSchema),
 	})
 
 	const handleFileChange = useCallback(
@@ -68,7 +68,9 @@ export const useCreateTeamForm = ({
 
 	const onSubmit = useCallback(
 		async (data: CreateTeamFormData) => {
-			if (isSubmitting) {return}
+			if (isSubmitting) {
+				return
+			}
 			setIsSubmitting(true)
 
 			try {

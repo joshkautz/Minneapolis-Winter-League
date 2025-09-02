@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
@@ -31,7 +31,7 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const form = useForm<SignupFormData>({
-		resolver: zodResolver(signupFormSchema),
+		resolver: standardSchemaResolver(signupFormSchema),
 		defaultValues: {
 			firstName: '',
 			lastName: '',

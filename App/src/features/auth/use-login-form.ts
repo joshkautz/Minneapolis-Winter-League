@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { logger } from '@/shared/utils'
 import { loginFormSchema, type LoginFormData } from '@/shared/utils/validation'
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 
 export type { LoginFormData } from '@/shared/utils/validation'
 
@@ -21,8 +21,8 @@ export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
 	const { signInWithEmailAndPassword, signInWithEmailAndPasswordError } =
 		useAuthContext()
 
-	const form = useForm<LoginFormData>({
-		resolver: zodResolver(loginFormSchema),
+	const form = useForm({
+		resolver: standardSchemaResolver(loginFormSchema),
 		defaultValues: {
 			email: '',
 			password: '',

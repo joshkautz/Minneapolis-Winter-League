@@ -6,7 +6,7 @@ import {
 	FormControl,
 	FormMessage,
 } from '@/components/ui/form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
@@ -48,7 +48,7 @@ export const CreateTeamForm = ({
 	handleResult,
 }: CreateFormProps) => {
 	const form = useForm<CreateTeamSchema>({
-		resolver: zodResolver(teamFormSchema),
+		resolver: standardSchemaResolver(teamFormSchema),
 	})
 
 	const onCreateSubmit = useCallback(

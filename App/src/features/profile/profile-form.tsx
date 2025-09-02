@@ -10,7 +10,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { updatePlayer } from '@/firebase/firestore'
@@ -24,9 +24,7 @@ import {
 
 interface ProfileFormProps {
 	authStateUser: User | null | undefined
-	authenticatedUserSnapshot:
-		| DocumentSnapshot<PlayerDocument>
-		| undefined
+	authenticatedUserSnapshot: DocumentSnapshot<PlayerDocument> | undefined
 }
 
 /**
@@ -40,7 +38,7 @@ export const ProfileForm = ({
 	authenticatedUserSnapshot,
 }: ProfileFormProps) => {
 	const form = useForm<ProfileFormData>({
-		resolver: zodResolver(profileFormSchema),
+		resolver: standardSchemaResolver(profileFormSchema),
 		defaultValues: { firstname: '', lastname: '', email: '' },
 	})
 
