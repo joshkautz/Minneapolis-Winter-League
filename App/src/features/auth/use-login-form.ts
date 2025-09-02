@@ -21,7 +21,7 @@ export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
 	const { signInWithEmailAndPassword, signInWithEmailAndPasswordError } =
 		useAuthContext()
 
-	const form = useForm({
+	const form = useForm<LoginFormData>({
 		resolver: standardSchemaResolver(loginFormSchema),
 		defaultValues: {
 			email: '',
