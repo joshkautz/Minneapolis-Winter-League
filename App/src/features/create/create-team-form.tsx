@@ -6,15 +6,12 @@ import {
 	FormControl,
 	FormMessage,
 } from '@/components/ui/form'
-import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { errorHandler, logger, ErrorType } from '@/shared/utils'
-import { teamFormSchema, type TeamFormData } from '@/shared/utils/validation'
-
-type CreateTeamSchema = TeamFormData
+import { TeamFormData } from '@/shared/utils/validation'
 
 interface CreateFormProps {
 	isSubmitting: boolean
@@ -47,12 +44,15 @@ export const CreateTeamForm = ({
 	setNewTeamDocument,
 	handleResult,
 }: CreateFormProps) => {
-	const form = useForm<CreateTeamSchema>({
-		resolver: standardSchemaResolver(teamFormSchema),
+	const form = useForm<TeamFormData>({
+		defaultValues: {
+			name: '',
+			logo: '',
+		},
 	})
 
 	const onCreateSubmit = useCallback(
-		async (data: CreateTeamSchema) => {
+		async (data: TeamFormData) => {
 			try {
 				setIsSubmitting(true)
 				setNewTeamDocument({

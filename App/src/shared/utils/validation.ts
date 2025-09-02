@@ -125,10 +125,7 @@ export const profileFormSchema = z.object({
 
 export const teamFormSchema = z.object({
 	name: teamNameSchema,
-	logo: z
-		.string()
-		.optional()
-		.transform((val) => val || undefined), // Convert empty strings to undefined
+	logo: z.string().default(''),
 })
 
 // Type exports for form data

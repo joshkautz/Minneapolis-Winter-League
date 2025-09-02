@@ -1,5 +1,4 @@
 import { useAuthContext } from '@/providers'
-import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -23,10 +22,8 @@ import { useSeasonsContext } from '@/providers'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FocusScope } from '@radix-ui/react-focus-scope'
 import { logger, errorHandler, ErrorType } from '@/shared/utils'
-import { teamFormSchema, type TeamFormData } from '@/shared/utils/validation'
-import type { PlayerSeason } from '@/types'
-
-type ManageEditTeamSchema = TeamFormData
+import { TeamFormData } from '@/shared/utils/validation'
+import { PlayerSeason } from '@/types'
 
 export const ManageEditTeam = ({
 	closeDialog,
@@ -68,8 +65,7 @@ export const ManageEditTeam = ({
 
 	const url = team?.data().logo
 
-	const form = useForm<ManageEditTeamSchema>({
-		resolver: standardSchemaResolver(teamFormSchema),
+	const form = useForm<TeamFormData>({
 		defaultValues: { name: '', logo: '' },
 	})
 
@@ -140,7 +136,7 @@ export const ManageEditTeam = ({
 	}, [downloadUrl, editedTeamDocument, team, setIsLoading])
 
 	const onSubmit = useCallback(
-		async (data: ManageEditTeamSchema) => {
+		async (data: TeamFormData) => {
 			try {
 				setIsLoading(true)
 				if (uploadedFile) {

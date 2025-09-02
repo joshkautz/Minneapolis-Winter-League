@@ -1,12 +1,8 @@
 import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { v4 as uuidv4 } from 'uuid'
 import { StorageReference, ref, storage } from '@/firebase/storage'
-import { teamFormSchema, type TeamFormData } from '@/shared/utils/validation'
-
-export type CreateTeamFormData = TeamFormData
-
+import { TeamFormData } from '@/shared/utils/validation'
 interface UseCreateTeamFormProps {
 	isSubmitting: boolean
 	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
@@ -52,8 +48,11 @@ export const useCreateTeamForm = ({
 }: UseCreateTeamFormProps) => {
 	const [blob, setBlob] = useState<Blob>()
 
-	const form = useForm<CreateTeamFormData>({
-		resolver: standardSchemaResolver(teamFormSchema),
+	const form = useForm<TeamFormData>({
+		defaultValues: {
+			name: '',
+			logo: '',
+		},
 	})
 
 	const handleFileChange = useCallback(
@@ -67,7 +66,7 @@ export const useCreateTeamForm = ({
 	)
 
 	const onSubmit = useCallback(
-		async (data: CreateTeamFormData) => {
+		async (data: TeamFormData) => {
 			if (isSubmitting) {
 				return
 			}
@@ -124,6 +123,5 @@ export const useCreateTeamForm = ({
 		onSubmit,
 		handleFileChange,
 		blob,
-		teamFormSchema,
 	}
 }
