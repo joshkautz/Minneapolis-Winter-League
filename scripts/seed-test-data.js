@@ -16,6 +16,9 @@ import { initializeApp } from 'firebase-admin/app'
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 import { getStorage } from 'firebase-admin/storage'
+import { readdir, readFile } from 'fs/promises'
+import { join, dirname, extname } from 'path'
+import { fileURLToPath } from 'url'
 
 // Initialize Firebase Admin SDK for local emulator
 process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'
@@ -30,6 +33,13 @@ const app = initializeApp({
 const db = getFirestore(app)
 const auth = getAuth(app)
 const storage = getStorage(app)
+
+// Get the directory path for this script
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+// Track used images to avoid duplicates
+const usedImages = new Set()
 
 // Collections enum - matching the app structure
 const Collections = {
@@ -66,80 +76,73 @@ const generateDocId = () => {
 	return result
 }
 
-// Function to generate a team logo SVG and upload to Firebase Storage
-async function generateAndUploadTeamLogo(teamName, teamId) {
+// Function to get available images from scripts/images directory
+async function getAvailableImages() {
 	try {
-		// Generate a color based on team name for consistency
-		const colors = [
-			'#FF6B6B',
-			'#4ECDC4',
-			'#45B7D1',
-			'#96CEB4',
-			'#FFEAA7',
-			'#DDA0DD',
-			'#98D8C8',
-			'#F7DC6F',
-			'#BB8FCE',
-			'#85C1E9',
-			'#F8C471',
-			'#82E0AA',
-			'#F1948A',
-			'#D7BDE2',
-		]
+		const imagesDir = join(__dirname, 'images')
+		const files = await readdir(imagesDir)
 
-		const colorIndex =
-			teamName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) %
-			colors.length
-		const primaryColor = colors[colorIndex]
+		// Filter for image files and exclude already used images
+		const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+		const availableImages = files.filter((file) => {
+			const ext = extname(file).toLowerCase()
+			return imageExtensions.includes(ext) && !usedImages.has(file)
+		})
 
-		// Split team name into words for better layout
-		const words = teamName.split(' ')
-		const city = words[0] || ''
-		const mascot = words.slice(1).join(' ') || ''
+		return availableImages
+	} catch (error) {
+		console.error('Error reading images directory:', error)
+		return []
+	}
+}
 
-		// Create SVG content
-		const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="300" height="300" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:${primaryColor};stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:1" />
-    </radialGradient>
-  </defs>
-  
-  <!-- Background -->
-  <rect width="300" height="300" fill="url(#bg)" />
-  
-  <!-- Border -->
-  <rect x="8" y="8" width="284" height="284" fill="none" stroke="#2C3E50" stroke-width="8" />
-  
-  <!-- Team Name -->
-  <text x="150" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#2C3E50">
-    ${city}
-  </text>
-  <text x="150" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#2C3E50">
-    ${mascot}
-  </text>
-  
-  <!-- Simple hockey puck decoration -->
-  <circle cx="150" cy="220" r="15" fill="#2C3E50" />
-  <circle cx="150" cy="220" r="10" fill="none" stroke="#FFFFFF" stroke-width="2" />
-</svg>`
+// Function to select and upload a random team logo from available images
+async function selectAndUploadTeamLogo(teamName, teamId) {
+	try {
+		const availableImages = await getAvailableImages()
 
-		// Convert SVG to buffer
-		const buffer = Buffer.from(svgContent, 'utf8')
+		if (availableImages.length === 0) {
+			console.error(`     No available images left for ${teamName}`)
+			return {
+				logoUrl: null,
+				storagePath: null,
+			}
+		}
+
+		// Select a random image from available ones
+		const randomIndex = Math.floor(Math.random() * availableImages.length)
+		const selectedImage = availableImages[randomIndex]
+
+		// Mark this image as used
+		usedImages.add(selectedImage)
+
+		// Read the image file
+		const imagePath = join(__dirname, 'images', selectedImage)
+		const imageBuffer = await readFile(imagePath)
+
+		// Determine content type based on file extension
+		const ext = extname(selectedImage).toLowerCase()
+		const contentTypeMap = {
+			'.jpg': 'image/jpeg',
+			'.jpeg': 'image/jpeg',
+			'.png': 'image/png',
+			'.gif': 'image/gif',
+			'.webp': 'image/webp',
+		}
+		const contentType = contentTypeMap[ext] || 'image/jpeg'
 
 		// Upload to Firebase Storage
 		const bucket = storage.bucket('minnesota-winter-league.appspot.com')
-		const fileName = `team-logos/${teamId}.svg`
+		const fileName = `team-logos/${teamId}${ext}`
 		const file = bucket.file(fileName)
 
-		await file.save(buffer, {
+		await file.save(imageBuffer, {
 			metadata: {
-				contentType: 'image/svg+xml',
+				contentType: contentType,
 				metadata: {
 					teamName: teamName,
-					generatedAt: new Date().toISOString(),
+					originalFileName: selectedImage,
+					uploadedAt: new Date().toISOString(),
 				},
 			},
 		})
@@ -150,14 +153,16 @@ async function generateAndUploadTeamLogo(teamName, teamId) {
 		// Get the public URL (for emulator, this will be the emulator URL)
 		const publicUrl = `http://127.0.0.1:9199/v0/b/minnesota-winter-league.appspot.com/o/${encodeURIComponent(fileName)}?alt=media`
 
-		console.log(`     Generated and uploaded logo for ${teamName}`)
+		console.log(
+			`     Selected and uploaded image ${selectedImage} for ${teamName}`
+		)
 
 		return {
 			logoUrl: publicUrl,
 			storagePath: fileName,
 		}
 	} catch (error) {
-		console.error(`     Error generating logo for ${teamName}:`, error)
+		console.error(`     Error selecting logo for ${teamName}:`, error)
 		return {
 			logoUrl: null,
 			storagePath: null,
@@ -171,6 +176,10 @@ async function seedTestData() {
 	try {
 		// Clear existing data first
 		await clearCollections()
+
+		// Reset used images tracking for fresh start
+		usedImages.clear()
+		console.log('🎨 Reset image tracking for team logos...')
 
 		// Get existing auth users (don't create new ones)
 		const authUsers = await getExistingAuthUsers()
@@ -192,6 +201,17 @@ async function seedTestData() {
 		console.log(`   • ${players.length} players from existing auth users`)
 		console.log(`   • ${teams.length} teams with alliterative names`)
 		console.log(`   • ${games.length} games scheduled`)
+		console.log(`   • ${usedImages.size} unique images used for team logos`)
+
+		if (usedImages.size > 0) {
+			console.log('\n🎨 Images used for team logos:')
+			Array.from(usedImages)
+				.sort()
+				.forEach((image) => {
+					console.log(`   • ${image}`)
+				})
+		}
+
 		console.log('\n🎯 You can now stop the emulators to export this data.')
 	} catch (error) {
 		console.error('❌ Error seeding test data:', error)
@@ -421,11 +441,8 @@ async function createTeams(seasons, players) {
 				player: createRef(Collections.PLAYERS, player.id),
 			}))
 
-			// Generate and upload team logo
-			const logoData = await generateAndUploadTeamLogo(
-				teamName,
-				consistentTeamId
-			)
+			// Generate and upload team logo from random image
+			const logoData = await selectAndUploadTeamLogo(teamName, consistentTeamId)
 
 			const teamData = {
 				logo: logoData.logoUrl,
