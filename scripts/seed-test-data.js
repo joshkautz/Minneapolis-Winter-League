@@ -180,6 +180,10 @@ async function seedTestData() {
 		const players = await createPlayersFromAuth(authUsers)
 		const teams = await createTeams(seasons, players)
 		const games = await createGames(seasons, teams)
+
+		// Calculate and update team placements based on playoff results
+		await updateTeamPlacements(teams, games)
+
 		// Skipping offers and waivers.
 
 		console.log('✅ Test data seeding completed successfully!')
@@ -378,7 +382,6 @@ async function createTeams(seasons, players) {
 		console.log(`   Creating teams for ${season.name}...`)
 
 		const seasonTeams = []
-		const placements = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
 		// Create a shuffled pool of players for this season
 		// Each player should only be on one team per season
@@ -427,7 +430,7 @@ async function createTeams(seasons, players) {
 			const teamData = {
 				logo: logoData.logoUrl,
 				name: teamName,
-				placement: placements[i],
+				placement: null, // Will be calculated after games are completed
 				registered: true,
 				registeredDate: registrationDate,
 				roster: roster,
@@ -459,7 +462,7 @@ async function createTeams(seasons, players) {
 			}
 
 			console.log(
-				`     Created team: ${teamName} (Placement: ${placements[i]}, ${teamSize} players)${isCarryoverTeam ? ' [CARRYOVER]' : ''}`
+				`     Created team: ${teamName} (Placement: TBD after playoff results, ${teamSize} players)${isCarryoverTeam ? ' [CARRYOVER]' : ''}`
 			)
 
 			teamIndex++
@@ -539,8 +542,16 @@ async function createGames(seasons, teams) {
 		return saturdays.slice(0, 7)
 	}
 
-	// Helper function to generate random score (0-25)
-	const generateScore = () => Math.floor(Math.random() * 26)
+	// Helper function to generate random scores (0-25) ensuring no ties
+	const generateGameScores = () => {
+		let homeScore, awayScore
+		do {
+			homeScore = Math.floor(Math.random() * 26)
+			awayScore = Math.floor(Math.random() * 26)
+		} while (homeScore === awayScore) // Ensure no ties
+
+		return { homeScore, awayScore }
+	}
 
 	// Predefined schedule for first 5 weeks (regular season)
 	// Each sub-array represents a week, each inner array represents a round (time slot)
@@ -710,7 +721,7 @@ async function createGames(seasons, teams) {
 				awayStats.pointsFor += game.awayScore
 				awayStats.pointsAgainst += game.homeScore
 
-				// Determine winner
+				// Determine winner (ties are not allowed)
 				if (game.homeScore > game.awayScore) {
 					homeStats.wins++
 					awayStats.losses++
@@ -719,7 +730,8 @@ async function createGames(seasons, teams) {
 						game.away.id,
 						(homeStats.headToHead.get(game.away.id) || 0) + 1
 					)
-				} else if (game.awayScore > game.homeScore) {
+				} else {
+					// awayScore > homeScore (since ties are not allowed)
 					awayStats.wins++
 					homeStats.losses++
 					// Head-to-head tracking
@@ -728,7 +740,6 @@ async function createGames(seasons, teams) {
 						(awayStats.headToHead.get(game.home.id) || 0) + 1
 					)
 				}
-				// Ties don't affect win/loss record but do affect point differential
 			}
 		})
 
@@ -798,7 +809,8 @@ async function createGames(seasons, teams) {
 						game.away.id,
 						(homeStats.headToHead.get(game.away.id) || 0) + 1
 					)
-				} else if (game.awayScore > game.homeScore) {
+				} else {
+					// awayScore > homeScore (since ties are not allowed)
 					awayStats.wins++
 					homeStats.losses++
 					awayStats.headToHead.set(
@@ -909,15 +921,30 @@ async function createGames(seasons, teams) {
 						// Create game date/time
 						const gameDateTime = createDate(`${dateStr}T${timeSlot}:00`)
 
-						const gameData = {
-							away: createRef(Collections.TEAMS, awayTeam.id),
-							awayScore: isHistorical ? generateScore() : null,
-							date: gameDateTime,
-							field: field,
-							home: createRef(Collections.TEAMS, homeTeam.id),
-							homeScore: isHistorical ? generateScore() : null,
-							season: createRef(Collections.SEASONS, season.id),
-							type: GameType.REGULAR,
+						let gameData
+						if (isHistorical) {
+							const scores = generateGameScores()
+							gameData = {
+								away: createRef(Collections.TEAMS, awayTeam.id),
+								awayScore: scores.awayScore,
+								date: gameDateTime,
+								field: field,
+								home: createRef(Collections.TEAMS, homeTeam.id),
+								homeScore: scores.homeScore,
+								season: createRef(Collections.SEASONS, season.id),
+								type: GameType.REGULAR,
+							}
+						} else {
+							gameData = {
+								away: createRef(Collections.TEAMS, awayTeam.id),
+								awayScore: null,
+								date: gameDateTime,
+								field: field,
+								home: createRef(Collections.TEAMS, homeTeam.id),
+								homeScore: null,
+								season: createRef(Collections.SEASONS, season.id),
+								type: GameType.REGULAR,
+							}
 						}
 
 						const docRef = await db.collection(Collections.GAMES).add(gameData)
@@ -977,13 +1004,14 @@ async function createGames(seasons, teams) {
 							// Create game date/time
 							const gameDateTime = createDate(`${dateStr}T${timeSlot}:00`)
 
+							const scores = generateGameScores()
 							const gameData = {
 								away: createRef(Collections.TEAMS, awayTeam.id),
-								awayScore: generateScore(),
+								awayScore: scores.awayScore,
 								date: gameDateTime,
 								field: field,
 								home: createRef(Collections.TEAMS, homeTeam.id),
-								homeScore: generateScore(),
+								homeScore: scores.homeScore,
 								season: createRef(Collections.SEASONS, season.id),
 								type: GameType.PLAYOFF,
 							}
@@ -1091,13 +1119,14 @@ async function createGames(seasons, teams) {
 						const awayTeam = poolStandings[3][i].team // Pool 4
 						const gameDateTime = createDate(`${dateStr}T${gameTimes[0]}:00`)
 
+						const scores = generateGameScores()
 						const gameData = {
 							away: createRef(Collections.TEAMS, awayTeam.id),
-							awayScore: generateScore(),
+							awayScore: scores.awayScore,
 							date: gameDateTime,
 							field: i + 1,
 							home: createRef(Collections.TEAMS, homeTeam.id),
-							homeScore: generateScore(),
+							homeScore: scores.homeScore,
 							season: createRef(Collections.SEASONS, season.id),
 							type: GameType.PLAYOFF,
 						}
@@ -1122,13 +1151,14 @@ async function createGames(seasons, teams) {
 						const awayTeam = poolStandings[2][i].team // Pool 3
 						const gameDateTime = createDate(`${dateStr}T${gameTimes[1]}:00`)
 
+						const scores = generateGameScores()
 						const gameData = {
 							away: createRef(Collections.TEAMS, awayTeam.id),
-							awayScore: generateScore(),
+							awayScore: scores.awayScore,
 							date: gameDateTime,
 							field: i + 1,
 							home: createRef(Collections.TEAMS, homeTeam.id),
-							homeScore: generateScore(),
+							homeScore: scores.homeScore,
 							season: createRef(Collections.SEASONS, season.id),
 							type: GameType.PLAYOFF,
 						}
@@ -1163,13 +1193,14 @@ async function createGames(seasons, teams) {
 
 						const gameDateTime = createDate(`${dateStr}T${gameTimes[2]}:00`)
 
+						const scores = generateGameScores()
 						const gameData = {
 							away: createRef(Collections.TEAMS, round2Loser.id),
-							awayScore: generateScore(),
+							awayScore: scores.awayScore,
 							date: gameDateTime,
 							field: i + 1,
 							home: createRef(Collections.TEAMS, round1Loser.id),
-							homeScore: generateScore(),
+							homeScore: scores.homeScore,
 							season: createRef(Collections.SEASONS, season.id),
 							type: GameType.PLAYOFF,
 						}
@@ -1209,13 +1240,14 @@ async function createGames(seasons, teams) {
 
 						const gameDateTime = createDate(`${dateStr}T${gameTimes[3]}:00`)
 
+						const scores = generateGameScores()
 						const gameData = {
 							away: createRef(Collections.TEAMS, round2Winner.id),
-							awayScore: generateScore(),
+							awayScore: scores.awayScore,
 							date: gameDateTime,
 							field: i + 1,
 							home: createRef(Collections.TEAMS, round1Winner.id),
-							homeScore: generateScore(),
+							homeScore: scores.homeScore,
 							season: createRef(Collections.SEASONS, season.id),
 							type: GameType.PLAYOFF,
 						}
@@ -1285,6 +1317,158 @@ async function createGames(seasons, teams) {
 		`   Successfully created ${games.length} games across all seasons`
 	)
 	return games
+}
+
+// Function to calculate and update team placements based on Week 7 playoff results
+async function updateTeamPlacements(teams, games) {
+	console.log(
+		'🏆 Calculating final team placements based on playoff results...'
+	)
+
+	// Group teams by season
+	const teamsBySeason = new Map()
+	teams.forEach((team) => {
+		const seasonId = team.season.id
+		if (!teamsBySeason.has(seasonId)) {
+			teamsBySeason.set(seasonId, [])
+		}
+		teamsBySeason.get(seasonId).push(team)
+	})
+
+	// Calculate placements for each season
+	for (const [seasonId, seasonTeams] of teamsBySeason) {
+		console.log(`   Calculating placements for season ${seasonId}...`)
+
+		// Get Week 7 games for this season (championship games)
+		const week7Games = games.filter((game) => {
+			if (game.season.id !== seasonId || game.type !== GameType.PLAYOFF) {
+				return false
+			}
+
+			// Week 7 games are the second week of playoffs
+			// Get all playoff games for this season and find the latest date
+			const allPlayoffGames = games.filter(
+				(g) => g.season.id === seasonId && g.type === GameType.PLAYOFF
+			)
+			const playoffDates = [
+				...new Set(allPlayoffGames.map((g) => g.date.toDate().toDateString())),
+			]
+			playoffDates.sort((a, b) => new Date(a) - new Date(b))
+
+			// Week 7 should be the second (last) playoff date
+			const gameDate = game.date.toDate()
+			return (
+				playoffDates.length >= 2 && gameDate.toDateString() === playoffDates[1]
+			)
+		})
+
+		if (week7Games.length === 0) {
+			console.log(
+				`     No Week 7 games found for season ${seasonId}, skipping placement calculation`
+			)
+			continue
+		}
+
+		// Initialize placement map
+		const teamPlacements = new Map()
+
+		// Process Week 7 games to determine placements
+		// Round 3 games (losers bracket) - fields determine 3rd/4th, 7th/8th, 11th/12th places
+		const round3Games = week7Games.filter((game) => {
+			const gameTime =
+				game.date.toDate().getHours() * 60 + game.date.toDate().getMinutes()
+			return gameTime === 19 * 60 + 30 // 19:30 (7:30 PM)
+		})
+
+		// Round 4 games (winners bracket) - fields determine 1st/2nd, 5th/6th, 9th/10th places
+		const round4Games = week7Games.filter((game) => {
+			const gameTime =
+				game.date.toDate().getHours() * 60 + game.date.toDate().getMinutes()
+			return gameTime === 20 * 60 + 15 // 20:15 (8:15 PM)
+		})
+
+		// Process Round 3 games (3rd/4th, 7th/8th, 11th/12th places)
+		round3Games.forEach((game) => {
+			if (game.homeScore !== null && game.awayScore !== null) {
+				const field = game.field
+				let winnerPlace, loserPlace
+
+				if (field === 1) {
+					winnerPlace = 3
+					loserPlace = 4
+				} else if (field === 2) {
+					winnerPlace = 7
+					loserPlace = 8
+				} else if (field === 3) {
+					winnerPlace = 11
+					loserPlace = 12
+				}
+
+				if (winnerPlace && loserPlace) {
+					const winner =
+						game.homeScore > game.awayScore ? game.home.id : game.away.id
+					const loser =
+						game.homeScore > game.awayScore ? game.away.id : game.home.id
+
+					teamPlacements.set(winner, winnerPlace)
+					teamPlacements.set(loser, loserPlace)
+				}
+			}
+		})
+
+		// Process Round 4 games (1st/2nd, 5th/6th, 9th/10th places)
+		round4Games.forEach((game) => {
+			if (game.homeScore !== null && game.awayScore !== null) {
+				const field = game.field
+				let winnerPlace, loserPlace
+
+				if (field === 1) {
+					winnerPlace = 1
+					loserPlace = 2
+				} else if (field === 2) {
+					winnerPlace = 5
+					loserPlace = 6
+				} else if (field === 3) {
+					winnerPlace = 9
+					loserPlace = 10
+				}
+
+				if (winnerPlace && loserPlace) {
+					const winner =
+						game.homeScore > game.awayScore ? game.home.id : game.away.id
+					const loser =
+						game.homeScore > game.awayScore ? game.away.id : game.home.id
+
+					teamPlacements.set(winner, winnerPlace)
+					teamPlacements.set(loser, loserPlace)
+				}
+			}
+		})
+
+		// Update team documents with calculated placements
+		let placementsUpdated = 0
+		for (const team of seasonTeams) {
+			const placement = teamPlacements.get(team.id)
+			if (placement) {
+				await db.collection(Collections.TEAMS).doc(team.id).update({
+					placement: placement,
+				})
+				console.log(
+					`     Updated ${team.name}: ${placement}${placement === 1 ? 'st' : placement === 2 ? 'nd' : placement === 3 ? 'rd' : 'th'} place`
+				)
+				placementsUpdated++
+			} else {
+				// For future seasons or teams that didn't make playoffs, keep placement as null
+				console.log(
+					`     ${team.name}: No playoff placement (future season or incomplete playoffs)`
+				)
+			}
+		}
+
+		console.log(
+			`     Updated ${placementsUpdated} of ${seasonTeams.length} teams with final placements`
+		)
+	}
 }
 
 // Run the seeding script
