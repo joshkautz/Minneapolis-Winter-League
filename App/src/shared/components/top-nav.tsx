@@ -53,7 +53,10 @@ export const TopNav = ({ onLoginClick }: { onLoginClick: () => void }) => {
 							<span className='sr-only'>Toggle Menu</span>
 						</Button>
 					</SheetTrigger>
-					<SheetContent side='left' className='pr-0 pb-0'>
+					<SheetContent
+						side='left'
+						className='pr-0 pb-0 !w-[340px] !max-w-[340px] sm:!w-[340px] sm:!max-w-[340px]'
+					>
 						<SheetHeader className='pr-8'>
 							<VisuallyHidden>
 								<SheetTitle>Mobile Navigation Menu</SheetTitle>

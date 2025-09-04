@@ -37,23 +37,24 @@ export const MobileNavigation = ({
 	return (
 		<ScrollArea className='h-[calc(100vh-6rem)] pb-6 px-6'>
 			<div className='flex flex-col space-y-3 pt-2'>
-				<SeasonSelect mobile={true} />
-				<MobileThemeToggle />
-				<Separator />
-				{navItems.map(({ path, label, alt }) => (
-					<Link
-						key={path}
-						to={path}
-						aria-label={alt}
-						onClick={onItemClick}
-						className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset cursor-pointer'
-					>
-						{label}
-					</Link>
-				))}
+				{/* Authentication Section - Top Priority */}
+				{!isAuthenticated && (
+					<>
+						<Button
+							onClick={onLogin}
+							disabled={authStateLoading}
+							className='w-full justify-center h-10 px-3 py-2 text-base font-normal bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 cursor-pointer'
+							variant='default'
+						>
+							Login
+						</Button>
+						<Separator />
+					</>
+				)}
+
+				{/* User Profile Section - For Authenticated Users */}
 				{isAuthenticated && (
 					<>
-						<Separator />
 						{userItems.map(({ path, label, alt }) => (
 							<Link
 								key={path}
@@ -84,27 +85,42 @@ export const MobileNavigation = ({
 						<Separator />
 					</>
 				)}
-				{isAuthenticated ? (
-					<Button
-						disabled={signOutLoading || authStateLoading}
-						onClick={onSignOut}
-						className='w-full justify-start hover:bg-destructive hover:text-destructive-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-0 focus-visible:ring-inset'
-						variant='ghost'
+
+				{/* Main Navigation */}
+				{navItems.map(({ path, label, alt }) => (
+					<Link
+						key={path}
+						to={path}
+						aria-label={alt}
+						onClick={onItemClick}
+						className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset cursor-pointer'
 					>
-						{(signOutLoading || authStateLoading) && (
-							<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
-						)}
-						Log Out
-					</Button>
-				) : (
-					<Button
-						onClick={onLogin}
-						disabled={authStateLoading}
-						className='w-full justify-start h-10 px-3 py-2 text-sm font-normal bg-accent text-accent-foreground hover:bg-accent/80 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset cursor-pointer'
-						variant='ghost'
-					>
-						Login
-					</Button>
+						{label}
+					</Link>
+				))}
+
+				<Separator />
+
+				{/* Settings/Preferences Section */}
+				<SeasonSelect mobile={true} />
+				<MobileThemeToggle />
+
+				{/* Logout Button - Bottom */}
+				{isAuthenticated && (
+					<>
+						<Separator />
+						<Button
+							disabled={signOutLoading || authStateLoading}
+							onClick={onSignOut}
+							className='w-full justify-start hover:bg-destructive hover:text-destructive-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-0 focus-visible:ring-inset'
+							variant='ghost'
+						>
+							{(signOutLoading || authStateLoading) && (
+								<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+							)}
+							Log Out
+						</Button>
+					</>
 				)}
 			</div>
 		</ScrollArea>
