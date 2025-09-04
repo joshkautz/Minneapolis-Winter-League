@@ -37,9 +37,19 @@ export const MobileThemeToggle = () => {
 		const storedTheme = getStoredTheme()
 		switch (storedTheme) {
 			case 'light':
-				return <SunIcon className='w-4 h-4' />
+				return (
+					<div className='relative w-4 h-4'>
+						<SunIcon className='absolute transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0 w-4 h-4' />
+						<MoonIcon className='absolute transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100 w-4 h-4' />
+					</div>
+				)
 			case 'dark':
-				return <MoonIcon className='w-4 h-4' />
+				return (
+					<div className='relative w-4 h-4'>
+						<SunIcon className='absolute transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0 w-4 h-4' />
+						<MoonIcon className='absolute transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100 w-4 h-4' />
+					</div>
+				)
 			case 'system':
 				return <LaptopIcon className='w-4 h-4' />
 			default:
