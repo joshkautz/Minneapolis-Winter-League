@@ -8,11 +8,14 @@ import {
 import { useSeasonsContext } from '@/providers'
 import { useEffect, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/shared/utils'
 
 export const SeasonSelect = ({
 	handleCloseMobileNav,
+	mobile = false,
 }: {
 	handleCloseMobileNav?: () => void
+	mobile?: boolean
 }) => {
 	const {
 		selectedSeasonQueryDocumentSnapshot,
@@ -47,13 +50,18 @@ export const SeasonSelect = ({
 	}, [selectedSeasonQueryDocumentSnapshot])
 
 	return (
-		<div className='inline-flex items-center justify-center space-x-2'>
+		<div className='w-full'>
 			{seasonsQuerySnapshotLoading ? (
-				<Skeleton className='w-24 h-8' />
+				<Skeleton className={`w-full ${mobile ? 'h-10' : 'h-9'} rounded-md`} />
 			) : (
 				<Select value={stringValue} onValueChange={handleSeasonChange}>
-					<SelectTrigger>
-						<SelectValue />
+					<SelectTrigger
+						className={cn(
+							'w-full px-3 hover:bg-accent dark:hover:bg-accent dark:hover:text-accent-foreground dark:hover:[&_svg]:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset rounded-md cursor-pointer',
+							mobile ? '!h-10' : '!h-9'
+						)}
+					>
+						<SelectValue placeholder='Select season' />
 					</SelectTrigger>
 					<SelectContent>
 						{seasonsQuerySnapshot?.docs
@@ -62,7 +70,11 @@ export const SeasonSelect = ({
 									b.data().dateStart.seconds - a.data().dateStart.seconds
 							)
 							.map((season) => (
-								<SelectItem key={season.id} value={season.data().name}>
+								<SelectItem
+									key={season.id}
+									value={season.data().name}
+									className='hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 focus:outline-none'
+								>
 									{season.data().name}
 								</SelectItem>
 							))}

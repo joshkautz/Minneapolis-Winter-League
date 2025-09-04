@@ -4,6 +4,7 @@ import { ReloadIcon } from '@radix-ui/react-icons'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { SeasonSelect } from '../season-select'
+import { MobileThemeToggle } from '../mobile-theme-toggle'
 
 interface MobileNavigationProps {
 	navItems: Array<{ label: string; path: string; alt: string }>
@@ -34,11 +35,19 @@ export const MobileNavigation = ({
 	authStateLoading,
 }: MobileNavigationProps) => {
 	return (
-		<ScrollArea className='my-4 h-[calc(100vh-8rem)] pb-10 px-6'>
-			<div className='flex flex-col space-y-3'>
-				<SeasonSelect handleCloseMobileNav={onItemClick} />
+		<ScrollArea className='h-[calc(100vh-6rem)] pb-6 px-6'>
+			<div className='flex flex-col space-y-3 pt-2'>
+				<SeasonSelect mobile={true} />
+				<MobileThemeToggle />
+				<Separator />
 				{navItems.map(({ path, label, alt }) => (
-					<Link key={path} to={path} aria-label={alt} onClick={onItemClick}>
+					<Link
+						key={path}
+						to={path}
+						aria-label={alt}
+						onClick={onItemClick}
+						className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset cursor-pointer'
+					>
 						{label}
 					</Link>
 				))}
@@ -51,7 +60,7 @@ export const MobileNavigation = ({
 								to={path}
 								aria-label={alt}
 								onClick={onItemClick}
-								className='inline-flex'
+								className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset inline-flex items-center cursor-pointer'
 							>
 								{path === '/manage' && !!hasPendingOffers ? (
 									<>
@@ -79,6 +88,8 @@ export const MobileNavigation = ({
 					<Button
 						disabled={signOutLoading || authStateLoading}
 						onClick={onSignOut}
+						className='w-full justify-start hover:bg-destructive hover:text-destructive-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-0 focus-visible:ring-inset'
+						variant='ghost'
 					>
 						{(signOutLoading || authStateLoading) && (
 							<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
@@ -86,7 +97,12 @@ export const MobileNavigation = ({
 						Log Out
 					</Button>
 				) : (
-					<Button onClick={onLogin} disabled={authStateLoading}>
+					<Button
+						onClick={onLogin}
+						disabled={authStateLoading}
+						className='w-full justify-start h-10 px-3 py-2 text-sm font-normal bg-accent text-accent-foreground hover:bg-accent/80 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset cursor-pointer'
+						variant='ghost'
+					>
 						Login
 					</Button>
 				)}

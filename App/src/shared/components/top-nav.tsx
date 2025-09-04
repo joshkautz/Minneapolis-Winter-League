@@ -4,6 +4,7 @@ import {
 	Sheet,
 	SheetContent,
 	SheetDescription,
+	SheetHeader,
 	SheetTitle,
 	SheetTrigger,
 } from '@/components/ui/sheet'
@@ -52,11 +53,15 @@ export const TopNav = ({ onLoginClick }: { onLoginClick: () => void }) => {
 							<span className='sr-only'>Toggle Menu</span>
 						</Button>
 					</SheetTrigger>
-					<VisuallyHidden>
-						<SheetTitle>Mobile nav menu</SheetTitle>
-						<SheetDescription>Mobile nav menu</SheetDescription>
-					</VisuallyHidden>
-					<SheetContent side='top' className='pr-0'>
+					<SheetContent side='left' className='pr-0 pb-0'>
+						<SheetHeader className='pr-8'>
+							<VisuallyHidden>
+								<SheetTitle>Mobile Navigation Menu</SheetTitle>
+								<SheetDescription>
+									Navigate through the application pages and features
+								</SheetDescription>
+							</VisuallyHidden>
+						</SheetHeader>
 						<MobileNavigation
 							navItems={navContent}
 							userItems={userContent}
