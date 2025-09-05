@@ -150,9 +150,23 @@ const MobileNavigationContent = ({
 					</>
 				)}
 
+				{/* Main Navigation */}
+				{navItems.map(({ path, label, alt }) => (
+					<Link
+						key={path}
+						to={path}
+						aria-label={alt}
+						onClick={onItemClick}
+						className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset cursor-pointer'
+					>
+						{label}
+					</Link>
+				))}
+
 				{/* User Profile Section - For Authenticated Users */}
 				{isAuthenticated && (
 					<>
+						<Separator />
 						{userItems.map(({ path, label, alt }) => (
 							<Link
 								key={path}
@@ -180,22 +194,8 @@ const MobileNavigationContent = ({
 								)}
 							</Link>
 						))}
-						<Separator />
 					</>
 				)}
-
-				{/* Main Navigation */}
-				{navItems.map(({ path, label, alt }) => (
-					<Link
-						key={path}
-						to={path}
-						aria-label={alt}
-						onClick={onItemClick}
-						className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset cursor-pointer'
-					>
-						{label}
-					</Link>
-				))}
 
 				<Separator />
 
