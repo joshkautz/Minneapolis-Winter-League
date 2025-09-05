@@ -1,11 +1,5 @@
 import { Button } from '@/components/ui/button'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
 	Form,
 	FormControl,
@@ -14,7 +8,7 @@ import {
 	FormLabel,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { useSignupForm } from './use-signup-form'
+import { useSignupForm } from '@/features/auth'
 
 interface SignupFormProps {
 	onSuccess: () => void

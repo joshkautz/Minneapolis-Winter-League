@@ -3,25 +3,25 @@
  *
  * This file serves as the main entry point for all Firebase Functions.
  * Functions are organized by type and domain:
- * 
+ *
  * TRIGGERS:
  * - Authentication triggers (user lifecycle events)
  * - Document triggers (Firestore document changes)
  * - Payment triggers (payment processing events)
- * 
+ *
  * API ENDPOINTS:
  * - Webhooks (external service callbacks)
- * 
+ *
  * CALLABLE FUNCTIONS:
  * - Player management (CRUD operations)
  * - Team management (CRUD operations)
  * - Offer management (invitation/request system)
  * - Storage management (file upload/download)
- * 
+ *
  * SERVICES:
  * - Waiver management (signature requests)
  * - Team registration (status management)
- * 
+ *
  * This organization provides:
  * - Clear separation of concerns
  * - Easy to find and maintain functions

@@ -7,7 +7,6 @@
 
 // Player operations
 export {
-	createPlayer,
 	getPlayerSnapshot,
 	getPlayerRef,
 	getPlayersQuery,

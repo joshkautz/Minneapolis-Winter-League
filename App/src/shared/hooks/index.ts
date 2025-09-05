@@ -6,6 +6,7 @@
 
 export { useEmailVerificationPolling } from './use-email-verification-polling'
 export { useIsMobile } from './use-mobile'
+export { useResponsiveDrawer } from './use-responsive-drawer'
 export { useAnchorScroll } from './use-anchor-scroll'
 export { useDebounce } from './use-debounce'
 export { useOffer } from './use-offer'

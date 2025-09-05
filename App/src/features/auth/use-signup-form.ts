@@ -30,6 +30,8 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 		createUserWithEmailAndPasswordLoading,
 		createUserWithEmailAndPasswordUser,
 		sendEmailVerification,
+		sendEmailVerificationSending,
+		sendEmailVerificationError,
 	} = useAuthContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
@@ -45,9 +47,15 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 
 	const onSubmit = async (data: SignupFormData) => {
 		// Prevent multiple submissions while already processing
-		if (createUserWithEmailAndPasswordLoading) {
+		if (createUserWithEmailAndPasswordLoading || sendEmailVerificationSending) {
 			return
 		}
+
+		logger.userAction('signup_initiated', 'SignupForm', {
+			firstName: data.firstName,
+			lastName: data.lastName,
+			email: data.email,
+		})
 
 		try {
 			const credential = await createUserWithEmailAndPassword(
@@ -64,18 +72,61 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 				})
 
 				// Send email verification
-				sendEmailVerification()
+				const emailVerificationSent = await sendEmailVerification()
+
+				if (emailVerificationSent) {
+					logger.userAction('email_verification_sent', 'SignupForm', {
+						userId: credential.user.uid,
+					})
+				} else {
+					logger.error(
+						'Email verification failed',
+						sendEmailVerificationError,
+						{
+							component: 'SignupForm',
+							action: 'email_verification',
+							userId: credential.user.uid,
+						}
+					)
+					toast.error(
+						'Account created but failed to send verification email. Please try again from your profile.'
+					)
+				}
 
 				// Create player document
-				await createPlayerViaFunction({
-					firstname: data.firstName,
-					lastname: data.lastName,
-					email: data.email,
-					seasonId: currentSeasonQueryDocumentSnapshot?.id || '',
-				})
+				try {
+					await createPlayerViaFunction({
+						firstname: data.firstName,
+						lastname: data.lastName,
+						email: data.email,
+						seasonId: currentSeasonQueryDocumentSnapshot?.id || '',
+					})
 
-				logger.firebase('create', 'players', undefined, {
+					logger.firebase('create', 'players', undefined, {
+						userId: credential.user.uid,
+						success: true,
+					})
+				} catch (playerCreationError) {
+					logger.firebase(
+						'create',
+						'players',
+						playerCreationError instanceof Error
+							? playerCreationError
+							: new Error(String(playerCreationError)),
+						{
+							userId: credential.user.uid,
+							success: false,
+						}
+					)
+					// Don't throw here - account was created successfully even if player doc failed
+					// The user can still use their account, and this can be retried later
+					console.error('Player document creation failed:', playerCreationError)
+				}
+
+				// Log successful completion of entire signup process
+				logger.userAction('signup_completed', 'SignupForm', {
 					userId: credential.user.uid,
+					email: data.email,
 				})
 			}
 		} catch (error) {
@@ -99,13 +150,15 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 
 	// Combine form submission state with Firebase authentication state for comprehensive loading
 	const isLoading =
-		form.formState.isSubmitting || createUserWithEmailAndPasswordLoading
+		form.formState.isSubmitting ||
+		createUserWithEmailAndPasswordLoading ||
+		sendEmailVerificationSending
 
 	return {
 		form,
 		onSubmit,
 		isLoading,
-		error: createUserWithEmailAndPasswordError,
+		error: createUserWithEmailAndPasswordError || sendEmailVerificationError,
 		signupFormSchema,
 	}
 }

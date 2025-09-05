@@ -8,19 +8,14 @@
 
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '../app'
-
-interface CreatePlayerRequest {
-	firstname: string
-	lastname: string
-	email: string
-	seasonId: string
-}
-
-interface CreatePlayerResponse {
-	success: boolean
-	playerId: string
-	message: string
-}
+import type {
+	CreatePlayerRequest,
+	CreatePlayerResponse,
+	UpdatePlayerRequest,
+	UpdatePlayerResponse,
+	DeletePlayerRequest,
+	DeletePlayerResponse,
+} from './player-types'
 
 /**
  * Creates a new player profile via Firebase Function
@@ -32,6 +27,8 @@ interface CreatePlayerResponse {
  * - Document ID matches user UID
  * - Admin field set to false
  * - All required fields validated
+ *
+ * @throws Error when validation fails or Firebase function execution fails
  */
 export const createPlayerViaFunction = async (
 	data: CreatePlayerRequest
@@ -40,20 +37,14 @@ export const createPlayerViaFunction = async (
 		functions,
 		'createPlayer'
 	)
-	const result = await createPlayer(data)
-	return result.data
-}
 
-interface UpdatePlayerRequest {
-	playerId?: string // Optional - defaults to authenticated user
-	firstname?: string
-	lastname?: string
-}
-
-interface UpdatePlayerResponse {
-	success: boolean
-	playerId: string
-	message: string
+	try {
+		const result = await createPlayer(data)
+		return result.data
+	} catch (error) {
+		// Re-throw with preserved error message from Firebase function
+		throw error
+	}
 }
 
 /**
@@ -74,18 +65,6 @@ export const updatePlayerViaFunction = async (
 	)
 	const result = await updatePlayer(data)
 	return result.data
-}
-
-interface DeletePlayerRequest {
-	playerId?: string // Optional - defaults to authenticated user
-	adminOverride?: boolean // Allow admin to force delete
-}
-
-interface DeletePlayerResponse {
-	success: boolean
-	playerId: string
-	message: string
-	warnings?: string[]
 }
 
 /**

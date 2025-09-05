@@ -3,10 +3,10 @@
  */
 
 import { onCall } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, DocumentReference } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument } from '../../types.js'
-import { validateAuthentication } from '../../shared/auth.js'
+import { Collections, PlayerDocument, SeasonDocument } from '../../types.js'
+import { validateBasicAuthentication } from '../../shared/auth.js'
 
 /**
  * Request interface for creating a player
@@ -19,23 +19,39 @@ interface CreatePlayerRequest {
 }
 
 /**
+ * Response interface for creating a player
+ */
+interface CreatePlayerResponse {
+	success: boolean
+	playerId: string
+	message: string
+}
+
+/**
  * Creates a new player document in Firestore
  *
- * Security validations:
- * - User must be authenticated
- * - Email must match authenticated user's email
- * - Document ID must match authenticated user's UID
- * - Admin field is automatically set to false
- * - All required PlayerDocument fields must be provided
- * - Season must exist and be valid
+ * Security validations performed:
+ * - User must be authenticated (but email verification is not required)
+ * - Email must match authenticated user's email (explicitly validated)
+ * - All required PlayerDocument fields must be provided (validated)
+ * - Season must exist and be valid (validated)
+ * - Player document must not already exist (validated)
+ *
+ * Security features provided:
+ * - Document ID is automatically set to authenticated user's UID (prevents impersonation)
+ * - Admin field is automatically set to false (prevents privilege escalation)
+ * - All input is sanitized and validated server-side (prevents malicious data)
+ *
+ * Note: This function uses basic authentication validation (without email verification requirement)
+ * to allow newly created users to create their player profiles immediately after registration.
  */
 export const createPlayer = onCall<CreatePlayerRequest>(
 	{ cors: true },
 	async (request) => {
 		const { data, auth } = request
 
-		// Validate authentication
-		validateAuthentication(auth)
+		// Validate authentication (without requiring email verification for new users)
+		validateBasicAuthentication(auth)
 
 		// Validate and extract request data
 		const { firstname, lastname, email, seasonId } = data
@@ -85,7 +101,9 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 			}
 
 			// Validate season exists
-			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)
+			const seasonRef = firestore
+				.collection(Collections.SEASONS)
+				.doc(seasonId) as DocumentReference<SeasonDocument>
 			const seasonDoc = await seasonRef.get()
 
 			if (!seasonDoc.exists) {
@@ -94,18 +112,18 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 
 			// Create player document
 			const player: PlayerDocument = {
+				admin: false,
+				email: email,
 				firstname: trimmedFirstname,
 				lastname: trimmedLastname,
-				email: email,
-				admin: false,
 				seasons: [
 					{
-						season: seasonRef as any,
-						team: null,
+						banned: false,
 						captain: false,
 						paid: false,
+						season: seasonRef,
 						signed: false,
-						banned: false,
+						team: null,
 					},
 				],
 			}
@@ -121,17 +139,20 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 				success: true,
 				playerId,
 				message: 'Player created successfully',
-			}
+			} as CreatePlayerResponse
 		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Failed to create player'
+
 			logger.error('Error creating player:', {
 				uid: auth!.uid,
 				email,
-				error: error instanceof Error ? error.message : 'Unknown error',
+				error: errorMessage,
+				stack: error instanceof Error ? error.stack : undefined,
 			})
 
-			throw new Error(
-				error instanceof Error ? error.message : 'Failed to create player'
-			)
+			// Throw a structured error with consistent messaging
+			throw new Error(errorMessage)
 		}
 	}
 )

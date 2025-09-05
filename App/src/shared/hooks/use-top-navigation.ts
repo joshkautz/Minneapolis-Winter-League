@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
 import {
 	useAuthContext,
@@ -6,7 +6,7 @@ import {
 	useSeasonsContext,
 } from '@/providers'
 import { logger } from '@/shared/utils'
-import { useIsMobile } from '@/shared/hooks'
+import { useResponsiveDrawer } from '@/shared/hooks'
 import type { PlayerSeason } from '@/types'
 
 /**
@@ -25,15 +25,13 @@ export const useTopNavigation = () => {
 	const { incomingOffersQuerySnapshot } = useOffersContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
-	const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
-	const isMobile = useIsMobile()
-
-	// Close mobile navigation when switching from mobile to desktop
-	useEffect(() => {
-		if (!isMobile && isMobileNavOpen) {
-			setIsMobileNavOpen(false)
-		}
-	}, [isMobile, isMobileNavOpen])
+	// Use the responsive drawer hook for mobile navigation
+	const {
+		isDrawerOpen: isMobileNavOpen,
+		setDrawerOpen: setIsMobileNavOpen,
+		closeDrawer: closeMobileNav,
+		closeDrawerWithAction: closeMobileNavWithAction,
+	} = useResponsiveDrawer(false)
 
 	const isAuthenticatedUserCaptain = useMemo(
 		() =>
@@ -123,12 +121,6 @@ export const useTopNavigation = () => {
 			: []),
 	]
 
-	const handleCloseMobileNav = useCallback(() => {
-		if (isMobileNavOpen) {
-			setIsMobileNavOpen(false)
-		}
-	}, [isMobileNavOpen])
-
 	const handleSignOut = useCallback(async () => {
 		// Prevent multiple sign-out attempts while already processing
 		if (signOutLoading) {
@@ -144,7 +136,6 @@ export const useTopNavigation = () => {
 				toast.success('Logged Out', {
 					description: 'You are no longer signed in to an account.',
 				})
-				handleCloseMobileNav()
 			} else {
 				// Handle case where signOut returns false but doesn't throw
 				const errorMessage = signOutError?.message || 'Please try again later.'
@@ -165,18 +156,14 @@ export const useTopNavigation = () => {
 				description: 'An unexpected error occurred.',
 			})
 		}
-	}, [
-		signOut,
-		signOutLoading,
-		signOutError,
-		authStateUser,
-		handleCloseMobileNav,
-	])
+	}, [signOut, signOutLoading, signOutError, authStateUser])
 
-	const handleMobileLogin = useCallback((onLoginClick: () => void) => {
-		onLoginClick()
-		setIsMobileNavOpen(false)
-	}, [])
+	const handleMobileLogin = useCallback(
+		(onLoginClick: () => void) => {
+			closeMobileNavWithAction(onLoginClick)
+		},
+		[closeMobileNavWithAction]
+	)
 
 	return {
 		// State
@@ -193,7 +180,7 @@ export const useTopNavigation = () => {
 
 		// Actions
 		setIsMobileNavOpen,
-		handleCloseMobileNav,
+		handleCloseMobileNav: closeMobileNav,
 		handleSignOut,
 		handleMobileLogin,
 	}

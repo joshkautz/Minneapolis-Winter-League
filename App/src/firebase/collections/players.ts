@@ -9,20 +9,18 @@ import {
 	query,
 	where,
 	collection,
-	setDoc,
 	or,
 	and,
 } from 'firebase/firestore'
 import type {
 	DocumentSnapshot,
-	QueryDocumentSnapshot,
 	DocumentReference,
 	Query,
 	UpdateData,
 } from 'firebase/firestore'
 
 import { firestore } from '../app'
-import { User, UserCredential } from '../auth'
+import { User } from '../auth'
 import {
 	PlayerDocument,
 	SeasonDocument,
@@ -31,57 +29,6 @@ import {
 	PlayerSeason,
 	TeamRosterPlayer,
 } from '@/shared/utils'
-
-/**
- * Creates a new player document for a registered user
- *
- * @deprecated This function performs client-side validation which can be bypassed.
- * Use `createPlayerViaFunction` from '@/firebase/collections/functions' instead,
- * which performs all validations server-side via Firebase Functions for better security.
- *
- * The Firebase Function ensures:
- * - Server-side authentication verification
- * - Email matches authenticated user
- * - Document ID matches user UID
- * - Admin field is always false
- * - All required fields are validated
- * - Cannot be manipulated client-side
- */
-export const createPlayer = (
-	res: UserCredential | undefined,
-	firstname: string,
-	lastname: string,
-	email: string,
-	season: QueryDocumentSnapshot<SeasonDocument> | undefined
-): Promise<void> => {
-	console.warn(
-		'⚠️  createPlayer is deprecated. Use createPlayerViaFunction for better security.'
-	)
-
-	if (!res) {
-		return Promise.resolve()
-	}
-	if (!season) {
-		return Promise.resolve()
-	}
-
-	return setDoc(doc(firestore, Collections.PLAYERS, res.user.uid), {
-		admin: false,
-		firstname: firstname,
-		lastname: lastname,
-		email: email,
-		seasons: [
-			{
-				banned: false, // Add missing field for consistency
-				captain: false,
-				paid: false,
-				season: season.ref,
-				signed: false,
-				team: null,
-			},
-		],
-	})
-}
 
 /**
  * Gets a player document snapshot by reference
