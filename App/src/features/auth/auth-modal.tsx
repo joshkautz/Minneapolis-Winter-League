@@ -29,19 +29,21 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 		</>
 	)
 
-	if (isMobile) {
-		return (
-			<Sheet open={isOpen} onOpenChange={onClose}>
-				<SheetContent className='w-full pt-10'>{content}</SheetContent>
-			</Sheet>
-		)
-	}
-
 	return (
-		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className='sm:max-w-[425px] pt-10'>
-				{content}
-			</DialogContent>
-		</Dialog>
+		<>
+			{/* Mobile Sheet - always rendered */}
+			<Sheet open={isOpen && isMobile} onOpenChange={onClose}>
+				<SheetContent className='w-full pt-10 !w-[340px] !max-w-[340px] sm:!w-[340px] sm:!max-w-[340px]'>
+					{content}
+				</SheetContent>
+			</Sheet>
+
+			{/* Desktop Dialog - always rendered */}
+			<Dialog open={isOpen && !isMobile} onOpenChange={onClose}>
+				<DialogContent className='sm:max-w-[425px] pt-10 data-[state=open]:duration-500 data-[state=closed]:duration-500'>
+					{content}
+				</DialogContent>
+			</Dialog>
+		</>
 	)
 }

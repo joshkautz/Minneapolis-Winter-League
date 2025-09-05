@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import {
 	useAuthContext,
@@ -6,6 +6,7 @@ import {
 	useSeasonsContext,
 } from '@/providers'
 import { logger } from '@/shared/utils'
+import { useIsMobile } from '@/shared/hooks'
 import type { PlayerSeason } from '@/types'
 
 /**
@@ -24,6 +25,14 @@ export const useTopNavigation = () => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+	const isMobile = useIsMobile()
+
+	// Close mobile navigation when switching from mobile to desktop
+	useEffect(() => {
+		if (!isMobile && isMobileNavOpen) {
+			setIsMobileNavOpen(false)
+		}
+	}, [isMobile, isMobileNavOpen])
 
 	const isAuthenticatedUserCaptain = useMemo(
 		() =>
