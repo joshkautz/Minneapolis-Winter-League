@@ -1,6 +1,5 @@
-import { SeasonSelect } from '../season-select'
-import { ThemeToggle } from '../theme-toggle'
-import { UserAvatar } from '@/features/auth'
+import { SettingsSection } from './settings-section'
+import { AccountSection } from './account-section'
 
 interface UserSectionProps {
 	userContent: Array<{ label: string; path: string; alt: string }>
@@ -8,7 +7,7 @@ interface UserSectionProps {
 }
 
 /**
- * Desktop user section with season select, theme toggle, and user avatar
+ * Desktop user section with settings and account components
  */
 export const UserSection = ({
 	userContent,
@@ -16,9 +15,8 @@ export const UserSection = ({
 }: UserSectionProps) => {
 	return (
 		<div className='flex items-center justify-end flex-1 gap-4'>
-			<SeasonSelect />
-			<ThemeToggle />
-			<UserAvatar userContent={userContent} onLoginClick={onLoginClick} />
+			<SettingsSection />
+			<AccountSection userContent={userContent} onLoginClick={onLoginClick} />
 		</div>
 	)
 }

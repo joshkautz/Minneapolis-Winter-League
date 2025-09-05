@@ -1,5 +1,6 @@
 import { NavigationMenu } from './navigation-menu'
-import { UserSection } from './user-section'
+import { SettingsSection } from './settings-section'
+import { AccountSection } from './account-section'
 
 interface DesktopNavigationProps {
 	navItems: Array<{ label: string; path: string; alt: string }>
@@ -8,7 +9,7 @@ interface DesktopNavigationProps {
 }
 
 /**
- * Desktop navigation component that combines main navigation and user section
+ * Desktop navigation component that combines main navigation, settings, and account sections
  * Includes responsive wrapper that hides on mobile screens
  */
 export const DesktopNavigation = ({
@@ -19,7 +20,10 @@ export const DesktopNavigation = ({
 	return (
 		<div className='hidden mr-4 md:flex md:flex-1 items-center justify-between w-full'>
 			<NavigationMenu items={navItems} />
-			<UserSection userContent={userItems} onLoginClick={onLoginClick} />
+			<div className='flex items-center justify-end flex-1 gap-4'>
+				<SettingsSection />
+				<AccountSection userContent={userItems} onLoginClick={onLoginClick} />
+			</div>
 		</div>
 	)
 }
