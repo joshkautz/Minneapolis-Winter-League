@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ReloadIcon, HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
+import { SeparatorWithText } from '@/components/ui/separator-with-text'
 import {
 	Sheet,
 	SheetContent,
@@ -129,7 +129,7 @@ const MobileNavigationContent = ({
 						>
 							Log In
 						</Button>
-						<Separator />
+						<SeparatorWithText>Navigation</SeparatorWithText>
 					</>
 				) : (
 					<>
@@ -146,7 +146,7 @@ const MobileNavigationContent = ({
 								? 'Logging Out...'
 								: 'Log Out'}
 						</Button>
-						<Separator />
+						<SeparatorWithText>Navigation</SeparatorWithText>
 					</>
 				)}
 
@@ -166,7 +166,7 @@ const MobileNavigationContent = ({
 				{/* User Profile Section - For Authenticated Users */}
 				{isAuthenticated && (
 					<>
-						<Separator />
+						<SeparatorWithText>Account</SeparatorWithText>
 						{userItems.map(({ path, label, alt }) => (
 							<Link
 								key={path}
@@ -197,7 +197,7 @@ const MobileNavigationContent = ({
 					</>
 				)}
 
-				<Separator />
+				<SeparatorWithText>Settings</SeparatorWithText>
 
 				{/* Settings/Preferences Section */}
 				<SeasonSelect mobile={true} />
