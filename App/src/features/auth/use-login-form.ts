@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
+import { useEffect } from 'react'
 import { useAuthContext } from '@/providers'
 import { logger } from '@/shared/utils'
 import { loginFormSchema, type LoginFormData } from '@/shared/utils/validation'
@@ -18,8 +19,12 @@ interface UseLoginFormProps {
  * for the user login process.
  */
 export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
-	const { signInWithEmailAndPassword, signInWithEmailAndPasswordError } =
-		useAuthContext()
+	const {
+		signInWithEmailAndPassword,
+		signInWithEmailAndPasswordError,
+		signInWithEmailAndPasswordLoading,
+		signInWithEmailAndPasswordUser,
+	} = useAuthContext()
 
 	const form = useForm<LoginFormData>({
 		resolver: standardSchemaResolver(loginFormSchema),
@@ -30,14 +35,17 @@ export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
 	})
 
 	const onSubmit = async (data: LoginFormData) => {
+		// Prevent multiple submissions while already processing
+		if (signInWithEmailAndPasswordLoading) {
+			return
+		}
+
 		try {
 			const result = await signInWithEmailAndPassword(data.email, data.password)
 
 			if (result?.user) {
 				logger.auth('sign_in', true, undefined, result.user.uid)
 				logger.userAction('login_success', 'LoginForm', { email: data.email })
-				toast.success('Successfully logged in!')
-				onSuccess()
 			}
 		} catch (error) {
 			logger.auth(
@@ -50,10 +58,22 @@ export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
 		}
 	}
 
+	// Handle successful authentication
+	useEffect(() => {
+		if (signInWithEmailAndPasswordUser?.user) {
+			toast.success('Successfully logged in!')
+			onSuccess()
+		}
+	}, [signInWithEmailAndPasswordUser, onSuccess])
+
+	// Combine form submission state with Firebase authentication state for comprehensive loading
+	const isLoading =
+		form.formState.isSubmitting || signInWithEmailAndPasswordLoading
+
 	return {
 		form,
 		onSubmit,
-		isLoading: form.formState.isSubmitting,
+		isLoading,
 		error: signInWithEmailAndPasswordError,
 		loginFormSchema,
 	}

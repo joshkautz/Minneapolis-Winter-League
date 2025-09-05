@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { toast } from 'sonner'
+import { useEffect } from 'react'
 import { useAuthContext } from '@/providers'
 import { useSeasonsContext } from '@/providers'
 import { createPlayerViaFunction } from '@/firebase/collections/functions'
@@ -26,6 +27,8 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 	const {
 		createUserWithEmailAndPassword,
 		createUserWithEmailAndPasswordError,
+		createUserWithEmailAndPasswordLoading,
+		createUserWithEmailAndPasswordUser,
 		sendEmailVerification,
 	} = useAuthContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
@@ -41,6 +44,11 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 	})
 
 	const onSubmit = async (data: SignupFormData) => {
+		// Prevent multiple submissions while already processing
+		if (createUserWithEmailAndPasswordLoading) {
+			return
+		}
+
 		try {
 			const credential = await createUserWithEmailAndPassword(
 				data.email,
@@ -69,8 +77,6 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 				logger.firebase('create', 'players', undefined, {
 					userId: credential.user.uid,
 				})
-				toast.success('Account created successfully! Please verify your email.')
-				onSuccess()
 			}
 		} catch (error) {
 			logger.auth(
@@ -83,10 +89,22 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 		}
 	}
 
+	// Handle successful account creation
+	useEffect(() => {
+		if (createUserWithEmailAndPasswordUser?.user) {
+			toast.success('Account created successfully! Please verify your email.')
+			onSuccess()
+		}
+	}, [createUserWithEmailAndPasswordUser, onSuccess])
+
+	// Combine form submission state with Firebase authentication state for comprehensive loading
+	const isLoading =
+		form.formState.isSubmitting || createUserWithEmailAndPasswordLoading
+
 	return {
 		form,
 		onSubmit,
-		isLoading: form.formState.isSubmitting,
+		isLoading,
 		error: createUserWithEmailAndPasswordError,
 		signupFormSchema,
 	}
