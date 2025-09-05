@@ -141,12 +141,24 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 	}
 
 	// Handle successful account creation
+	// The key insight: only handle success when the form was actually submitted successfully
 	useEffect(() => {
-		if (createUserWithEmailAndPasswordUser?.user) {
+		if (
+			createUserWithEmailAndPasswordUser?.user &&
+			form.formState.isSubmitSuccessful &&
+			!createUserWithEmailAndPasswordError &&
+			!createUserWithEmailAndPasswordLoading
+		) {
 			toast.success('Account created successfully! Please verify your email.')
 			onSuccess()
 		}
-	}, [createUserWithEmailAndPasswordUser, onSuccess])
+	}, [
+		createUserWithEmailAndPasswordUser,
+		form.formState.isSubmitSuccessful,
+		createUserWithEmailAndPasswordError,
+		createUserWithEmailAndPasswordLoading,
+		onSuccess,
+	])
 
 	// Combine form submission state with Firebase authentication state for comprehensive loading
 	const isLoading =

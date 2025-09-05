@@ -59,12 +59,24 @@ export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
 	}
 
 	// Handle successful authentication
+	// The key insight: only handle success when the form was actually submitted successfully
 	useEffect(() => {
-		if (signInWithEmailAndPasswordUser?.user) {
+		if (
+			signInWithEmailAndPasswordUser?.user &&
+			form.formState.isSubmitSuccessful &&
+			!signInWithEmailAndPasswordError &&
+			!signInWithEmailAndPasswordLoading
+		) {
 			toast.success('Successfully logged in!')
 			onSuccess()
 		}
-	}, [signInWithEmailAndPasswordUser, onSuccess])
+	}, [
+		signInWithEmailAndPasswordUser,
+		form.formState.isSubmitSuccessful,
+		signInWithEmailAndPasswordError,
+		signInWithEmailAndPasswordLoading,
+		onSuccess,
+	])
 
 	// Combine form submission state with Firebase authentication state for comprehensive loading
 	const isLoading =
