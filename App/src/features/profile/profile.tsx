@@ -13,7 +13,6 @@ export const Profile = () => {
 		authStateUser,
 		authenticatedUserSnapshot,
 		authenticatedUserSnapshotLoading,
-		sendEmailVerification,
 	} = useAuthContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
@@ -118,7 +117,6 @@ export const Profile = () => {
 					currentSeasonQueryDocumentSnapshot={
 						currentSeasonQueryDocumentSnapshot
 					}
-					sendEmailVerification={sendEmailVerification}
 				/>
 			</div>
 		</div>

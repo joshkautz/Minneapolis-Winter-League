@@ -17,7 +17,6 @@ interface ProfileActionsProps {
 	currentSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
-	sendEmailVerification: () => Promise<boolean>
 }
 
 /**
@@ -36,7 +35,6 @@ export const ProfileActions = ({
 	isAuthenticatedUserPaid,
 	isAuthenticatedUserSigned,
 	currentSeasonQueryDocumentSnapshot,
-	sendEmailVerification,
 }: ProfileActionsProps) => {
 	return (
 		<div className={'max-w-(--breakpoint-md) flex-1 basis-[300px] shrink-0'}>
@@ -46,7 +44,6 @@ export const ProfileActions = ({
 					isVerified={isVerified}
 					isLoading={isLoading}
 					isAuthenticatedUserBanned={isAuthenticatedUserBanned}
-					sendEmailVerification={sendEmailVerification}
 				/>
 
 				<PaymentSection

@@ -1,7 +1,3 @@
-import { useForm } from 'react-hook-form'
-import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
-import { toast } from 'sonner'
-import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
@@ -19,11 +15,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { errorHandler, logger } from '@/shared/utils'
-import {
-	resetPasswordFormSchema,
-	type ResetPasswordFormData,
-} from '@/shared/utils/validation'
+import { useResetPasswordForm } from './use-reset-password-form'
 
 interface ResetPasswordFormProps {
 	onSuccess: () => void
@@ -34,47 +26,9 @@ export const ResetPasswordForm = ({
 	onSuccess,
 	onBack,
 }: ResetPasswordFormProps) => {
-	const { sendPasswordResetEmail, sendPasswordResetEmailError } =
-		useAuthContext()
-
-	const form = useForm<ResetPasswordFormData>({
-		resolver: standardSchemaResolver(resetPasswordFormSchema),
-		defaultValues: {
-			email: '',
-		},
+	const { form, onSubmit, isLoading, error } = useResetPasswordForm({
+		onSuccess,
 	})
-
-	const onSubmit = async (data: ResetPasswordFormData) => {
-		try {
-			const result = await sendPasswordResetEmail(data.email)
-
-			if (result) {
-				toast.success('Password reset email sent!', {
-					description:
-						'Check your inbox for instructions to reset your password.',
-				})
-				onSuccess()
-			} else {
-				toast.error('Failed to send reset email', {
-					description:
-						sendPasswordResetEmailError?.message || 'Please try again',
-				})
-			}
-		} catch (error) {
-			logger.error(
-				'Password reset failed',
-				error instanceof Error ? error : new Error(String(error)),
-				{
-					component: 'ResetPasswordForm',
-					email: data.email,
-				}
-			)
-			errorHandler.handleAuth(error, 'password_reset', {
-				fallbackMessage:
-					'An unexpected error occurred while sending reset email',
-			})
-		}
-	}
 
 	return (
 		<Card>
@@ -107,15 +61,15 @@ export const ResetPasswordForm = ({
 							)}
 						/>
 						<div className='space-y-2'>
-							<Button
-								type='submit'
-								className='w-full'
-								disabled={form.formState.isSubmitting}
-							>
-								{form.formState.isSubmitting
-									? 'Sending...'
-									: 'Send reset email'}
+							<Button type='submit' className='w-full' disabled={isLoading}>
+								{isLoading ? 'Sending...' : 'Send reset email'}
 							</Button>
+							{error && (
+								<p className='text-sm text-red-500 text-center'>
+									{error.message ||
+										'An error occurred while sending reset email'}
+								</p>
+							)}
 							<Button
 								type='button'
 								variant='outline'

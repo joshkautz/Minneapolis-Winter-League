@@ -1,13 +1,12 @@
-import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { CheckCircledIcon, ReloadIcon } from '@radix-ui/react-icons'
+import { useEmailVerification } from './use-email-verification'
 
 interface EmailVerificationSectionProps {
 	isVerified: boolean | undefined
 	isLoading: boolean
 	isAuthenticatedUserBanned: boolean
-	sendEmailVerification: () => Promise<boolean>
 }
 
 /**
@@ -20,19 +19,12 @@ export const EmailVerificationSection = ({
 	isVerified,
 	isLoading,
 	isAuthenticatedUserBanned,
-	sendEmailVerification,
 }: EmailVerificationSectionProps) => {
-	const [verificationEmailSent, setVerificationEmailSent] = useState(false)
-	const [verificationEmailLoading, setVerificationEmailLoading] =
-		useState(false)
-
-	const sendVerificationEmailButtonOnClickHandler = useCallback(() => {
-		setVerificationEmailLoading(true)
-		sendEmailVerification().then(() => {
-			setVerificationEmailSent(true)
-			setVerificationEmailLoading(false)
-		})
-	}, [sendEmailVerification])
+	const {
+		handleSendVerification,
+		isLoading: verificationEmailLoading,
+		verificationEmailSent,
+	} = useEmailVerification({ isAuthenticatedUserBanned })
 
 	return (
 		<fieldset className={'space-y-2'}>
@@ -63,7 +55,7 @@ export const EmailVerificationSection = ({
 					<>
 						<Button
 							variant={'default'}
-							onClick={sendVerificationEmailButtonOnClickHandler}
+							onClick={handleSendVerification}
 							disabled={
 								verificationEmailSent ||
 								verificationEmailLoading ||

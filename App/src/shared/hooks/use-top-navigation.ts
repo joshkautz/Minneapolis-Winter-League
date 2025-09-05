@@ -20,6 +20,7 @@ export const useTopNavigation = () => {
 		authenticatedUserSnapshot,
 		signOut,
 		signOutLoading,
+		signOutError,
 	} = useAuthContext()
 	const { incomingOffersQuerySnapshot } = useOffersContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
@@ -129,6 +130,11 @@ export const useTopNavigation = () => {
 	}, [isMobileNavOpen])
 
 	const handleSignOut = useCallback(async () => {
+		// Prevent multiple sign-out attempts while already processing
+		if (signOutLoading) {
+			return
+		}
+
 		try {
 			const success = await signOut()
 			if (success) {
@@ -140,16 +146,32 @@ export const useTopNavigation = () => {
 				})
 				handleCloseMobileNav()
 			} else {
+				// Handle case where signOut returns false but doesn't throw
+				const errorMessage = signOutError?.message || 'Please try again later.'
 				toast.error('Unable to Log Out', {
-					description: 'Please try again later.',
+					description: errorMessage,
 				})
 			}
-		} catch {
+		} catch (error) {
+			logger.error(
+				'Sign out failed',
+				error instanceof Error ? error : new Error(String(error)),
+				{
+					component: 'TopNavigation',
+					userId: authStateUser?.uid,
+				}
+			)
 			toast.error('Unable to Log Out', {
 				description: 'An unexpected error occurred.',
 			})
 		}
-	}, [signOut, handleCloseMobileNav, authStateUser])
+	}, [
+		signOut,
+		signOutLoading,
+		signOutError,
+		authStateUser,
+		handleCloseMobileNav,
+	])
 
 	const handleMobileLogin = useCallback((onLoginClick: () => void) => {
 		onLoginClick()
