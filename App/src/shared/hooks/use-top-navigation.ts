@@ -145,7 +145,7 @@ export const useTopNavigation = () => {
 			}
 		} catch (error) {
 			logger.error(
-				'Sign out failed',
+				'Log out failed',
 				error instanceof Error ? error : new Error(String(error)),
 				{
 					component: 'Layout',

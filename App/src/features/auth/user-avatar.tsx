@@ -106,7 +106,7 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 			}
 		} catch (error) {
 			logger.error(
-				'Sign out failed',
+				'Log out failed',
 				error instanceof Error ? error : new Error(String(error)),
 				{
 					component: 'UserAvatar',

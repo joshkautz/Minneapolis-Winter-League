@@ -60,7 +60,7 @@ export const MobileNavigation = ({
 			</SheetTrigger>
 			<SheetContent
 				side='left'
-				className='pr-0 pb-0 !w-[340px] !max-w-[340px] sm:!w-[340px] sm:!max-w-[340px]'
+				className='pr-0 pb-0 w-full max-w-[340px] sm:!max-w-[340px]'
 			>
 				<SheetHeader className='pr-8'>
 					<VisuallyHidden>
@@ -136,13 +136,15 @@ const MobileNavigationContent = ({
 						<Button
 							disabled={signOutLoading || authStateLoading}
 							onClick={onSignOut}
-							className='w-full justify-center h-10 px-3 py-2 text-base font-normal hover:bg-destructive hover:text-destructive-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-0 cursor-pointer'
-							variant='ghost'
+							className='w-full justify-center h-10 px-3 py-2 text-base font-normal bg-destructive text-destructive-foreground hover:bg-destructive/90 dark:bg-destructive dark:text-destructive-foreground dark:hover:bg-destructive/80 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-0 cursor-pointer'
+							variant='destructive'
 						>
 							{(signOutLoading || authStateLoading) && (
 								<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
 							)}
-							Log Out
+							{signOutLoading || authStateLoading
+								? 'Logging Out...'
+								: 'Log Out'}
 						</Button>
 						<Separator />
 					</>
