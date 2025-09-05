@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
-import { TopNav } from './top-nav'
+import { NavigationBar } from './navigation-bar'
 import { AuthModal } from '@/features/auth'
 import { useAuthModal } from '@/features/auth'
 import { cn } from '@/shared/utils'
@@ -19,7 +19,7 @@ export const Layout = () => {
 				pathname !== '/' && 'pb-10'
 			)}
 		>
-			<TopNav onLoginClick={openAuthModal} />
+			<NavigationBar onLoginClick={openAuthModal} />
 			<Outlet context={{ openAuthModal } satisfies OutletContext} />
 			<AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
 		</div>

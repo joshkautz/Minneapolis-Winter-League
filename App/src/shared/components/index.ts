@@ -6,6 +6,7 @@
 
 export { Layout } from './layout'
 export type { OutletContext } from './layout'
+export { NavigationBar } from './navigation-bar'
 export { ProtectedRoute } from './protected-route'
 export { LazyWrapper } from './lazy-wrapper'
 export { GradientHeader } from './gradient-header'
@@ -15,7 +16,6 @@ export { NotificationCardItem } from './notification-card-item'
 export { ThemeToggle } from './theme-toggle'
 export { DestructiveConfirmationDialog } from './destructive-confirmation-dialog'
 export { SeasonSelect } from './season-select'
-export { TopNav } from './top-nav'
 
 // Form components
 export * from './forms'

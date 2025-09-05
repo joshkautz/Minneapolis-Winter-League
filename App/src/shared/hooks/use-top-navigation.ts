@@ -10,7 +10,7 @@ import { useResponsiveDrawer } from '@/shared/hooks'
 import type { PlayerSeason } from '@/types'
 
 /**
- * Custom hook for top navigation logic
+ * Custom hook for navigation logic
  * Centralizes navigation state and user permission logic
  */
 export const useTopNavigation = () => {
@@ -130,7 +130,7 @@ export const useTopNavigation = () => {
 		try {
 			const success = await signOut()
 			if (success) {
-				logger.userAction('sign_out_success', 'TopNavigation', {
+				logger.userAction('sign_out_success', 'Layout', {
 					userId: authStateUser?.uid,
 				})
 				toast.success('Logged Out', {
@@ -148,7 +148,7 @@ export const useTopNavigation = () => {
 				'Sign out failed',
 				error instanceof Error ? error : new Error(String(error)),
 				{
-					component: 'TopNavigation',
+					component: 'Layout',
 					userId: authStateUser?.uid,
 				}
 			)

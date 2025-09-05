@@ -63,7 +63,7 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
 							)}
 						/>
 						<Button type='submit' className='w-full' disabled={isLoading}>
-							{isLoading ? 'Logging in...' : 'Log in'}
+							{isLoading ? 'Logging In...' : 'Log In'}
 						</Button>
 						{error && (
 							<p className='text-sm text-red-500 text-center'>

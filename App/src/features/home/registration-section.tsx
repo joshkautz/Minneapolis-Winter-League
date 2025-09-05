@@ -33,7 +33,7 @@ export const RegistrationSection = () => {
 						>
 							1
 						</span>
-						<p>{`Click on the "Login" button to Log In or Sign Up.`}</p>
+						<p>{`Click on the "Log In" button to Log In or Sign Up.`}</p>
 					</div>
 					<div className={'w-full flex'}>
 						<span

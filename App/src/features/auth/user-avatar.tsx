@@ -128,7 +128,7 @@ export const UserAvatar = ({ userContent, onLoginClick }: UserAvatarProps) => {
 	if (!authStateUser) {
 		return (
 			<Button variant='default' onClick={onLoginClick}>
-				Login
+				Log In
 			</Button>
 		)
 	}
