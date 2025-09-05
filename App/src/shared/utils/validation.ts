@@ -5,6 +5,10 @@
  */
 
 import * as z from 'zod'
+import { Filter } from 'bad-words'
+
+// Initialize profanity filter
+const filter = new Filter()
 
 // Common validation schemas using Zod v4 best practices
 export const emailSchema = z
@@ -62,6 +66,16 @@ export const nameSchema = z
 		},
 		{
 			error: 'Name cannot contain consecutive spaces or special characters',
+		}
+	)
+	.refine(
+		(name) => {
+			// Check for inappropriate language using bad-words package
+			return !filter.isProfane(name)
+		},
+		{
+			error:
+				'Name contains inappropriate language. Please choose a different name.',
 		}
 	)
 	.transform((name) => {

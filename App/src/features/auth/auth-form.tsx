@@ -12,6 +12,16 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 	const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login')
 	const [showResetPassword, setShowResetPassword] = useState(false)
 
+	const handleNameAppeal = (data: {
+		firstName: string
+		lastName: string
+		email: string
+	}) => {
+		alert(
+			`Name appeal submitted for: ${data.firstName} ${data.lastName} (${data.email}). We will review your request and get back to you soon.`
+		)
+	}
+
 	if (showResetPassword) {
 		return (
 			<ResetPasswordForm
@@ -28,8 +38,8 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 			className='min-w-[340px]'
 		>
 			<TabsList className='grid w-full grid-cols-2'>
-				<TabsTrigger value='login'>Login</TabsTrigger>
-				<TabsTrigger value='signup'>Sign up</TabsTrigger>
+				<TabsTrigger value='login'>Log In</TabsTrigger>
+				<TabsTrigger value='signup'>Sign Up</TabsTrigger>
 			</TabsList>
 			<TabsContent value='login'>
 				<LoginForm
@@ -38,7 +48,7 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 				/>
 			</TabsContent>
 			<TabsContent value='signup'>
-				<SignupForm onSuccess={onSuccess} />
+				<SignupForm onSuccess={onSuccess} onNameAppeal={handleNameAppeal} />
 			</TabsContent>
 		</Tabs>
 	)

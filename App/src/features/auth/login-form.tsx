@@ -33,12 +33,6 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
 
 	return (
 		<Card>
-			<CardHeader>
-				<CardTitle>Log in</CardTitle>
-				<CardDescription>
-					Enter your email below to log in to your account
-				</CardDescription>
-			</CardHeader>
 			<CardContent className='space-y-4'>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
