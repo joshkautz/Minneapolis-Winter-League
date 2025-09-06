@@ -11,10 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/shared/utils'
 
 export const SeasonSelect = ({
-	handleCloseMobileNav,
 	mobile = false,
 }: {
-	handleCloseMobileNav?: () => void
 	mobile?: boolean
 }) => {
 	const {
@@ -40,9 +38,6 @@ export const SeasonSelect = ({
 	useEffect(() => {
 		if (selectedSeasonQueryDocumentSnapshot) {
 			setStringValue(selectedSeasonQueryDocumentSnapshot.data().name)
-		}
-		if (handleCloseMobileNav && initialSelection) {
-			handleCloseMobileNav()
 		}
 		if (!initialSelection) {
 			setInitialSelection(true)

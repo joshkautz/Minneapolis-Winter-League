@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sheet'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { SeasonSelect } from '../season-select'
-import { MobileThemeToggle } from '../mobile-theme-toggle'
+import { ThemeSelect } from '../theme-select'
 
 interface MobileNavigationProps {
 	navItems: Array<{ label: string; path: string; alt: string }>
@@ -201,7 +201,7 @@ const MobileNavigationContent = ({
 
 				{/* Settings/Preferences Section */}
 				<SeasonSelect mobile={true} />
-				<MobileThemeToggle />
+				<ThemeSelect mobile={true} />
 			</div>
 		</ScrollArea>
 	)
