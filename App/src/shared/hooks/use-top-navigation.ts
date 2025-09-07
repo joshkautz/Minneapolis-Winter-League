@@ -91,7 +91,7 @@ export const useTopNavigation = () => {
 
 	// Navigation content configuration
 	const navContent = [
-		{ label: 'Home', path: '/#welcome', alt: 'home page' },
+		{ label: 'Home', path: '/', alt: 'home page' },
 		{ label: 'Schedule', path: '/schedule', alt: 'league schedule' },
 		{ label: 'Standings', path: '/standings', alt: 'league standings' },
 		{ label: 'Teams', path: '/teams', alt: 'team list' },

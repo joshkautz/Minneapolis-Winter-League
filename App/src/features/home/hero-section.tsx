@@ -22,7 +22,6 @@ export const HeroSection = () => {
 
 	return (
 		<section
-			id='welcome'
 			className={
 				'h-[80vh] max-h-[620px] relative bg-foreground text-background dark:text-foreground dark:bg-background z-10'
 			}
