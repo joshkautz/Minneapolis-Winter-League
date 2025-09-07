@@ -10,11 +10,7 @@ import { useEffect, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/shared/utils'
 
-export const SeasonSelect = ({
-	mobile = false,
-}: {
-	mobile?: boolean
-}) => {
+export const SeasonSelect = ({ mobile = false }: { mobile?: boolean }) => {
 	const {
 		selectedSeasonQueryDocumentSnapshot,
 		setSelectedSeasonQueryDocumentSnapshot,

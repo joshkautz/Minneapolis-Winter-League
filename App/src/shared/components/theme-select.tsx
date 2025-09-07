@@ -18,11 +18,7 @@ const themeOptions = [
 	{ value: 'system', label: 'System', icon: LaptopIcon },
 ] as const
 
-export const ThemeSelect = ({
-	mobile = false,
-}: {
-	mobile?: boolean
-}) => {
+export const ThemeSelect = ({ mobile = false }: { mobile?: boolean }) => {
 	const themeContext = useContext(ThemeContext)
 	const [stringValue, setStringValue] = useState<string>('')
 	const [initialSelection, setInitialSelection] = useState<boolean>(false)
@@ -43,14 +39,15 @@ export const ThemeSelect = ({
 	}
 
 	// Use the animated select hook
-	const { handleAnimatedChange, getTransitionClasses, getIconClasses } = useAnimatedSelect({
-		onValueChange: (theme: string) => {
-			const newTheme = theme as 'light' | 'dark' | 'system'
-			setStringValue(theme)
-			logger.userAction('theme_changed', 'ThemeSelect', { theme: newTheme })
-			setTheme(newTheme)
-		}
-	})
+	const { handleAnimatedChange, getTransitionClasses, getIconClasses } =
+		useAnimatedSelect({
+			onValueChange: (theme: string) => {
+				const newTheme = theme as 'light' | 'dark' | 'system'
+				setStringValue(theme)
+				logger.userAction('theme_changed', 'ThemeSelect', { theme: newTheme })
+				setTheme(newTheme)
+			},
+		})
 
 	const handleThemeChange = (theme: string) => {
 		handleAnimatedChange(theme)
@@ -79,10 +76,19 @@ export const ThemeSelect = ({
 				>
 					<SelectValue placeholder='Select theme'>
 						{stringValue && getCurrentThemeOption() && (
-							<div className={cn('flex items-center gap-2', getTransitionClasses())}>
+							<div
+								className={cn(
+									'flex items-center gap-2',
+									getTransitionClasses()
+								)}
+							>
 								{(() => {
 									const IconComponent = getCurrentThemeOption()!.icon
-									return <IconComponent className={cn('w-4 h-4', getIconClasses())} />
+									return (
+										<IconComponent
+											className={cn('w-4 h-4', getIconClasses())}
+										/>
+									)
 								})()}
 								<span>{getCurrentThemeOption()!.label}</span>
 							</div>
