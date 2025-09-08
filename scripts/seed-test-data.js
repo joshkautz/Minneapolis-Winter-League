@@ -56,9 +56,17 @@ const GameType = {
 	PLAYOFF: 'playoff',
 }
 
-// Helper function to create timestamps
+// Helper function to create timestamps in Central timezone
 const createDate = (dateString) => {
-	return Timestamp.fromDate(new Date(dateString))
+	// Create date in Central timezone by specifying the timezone offset
+	// If the dateString includes time, use it directly with CST offset
+	// Otherwise, assume it's a date-only string and add midnight in CST
+	const dateWithTimezone = dateString.includes('T')
+		? dateString + '-06:00' // Add CST offset to existing time
+		: dateString + 'T00:00:00-06:00' // Add midnight CST to date-only strings
+
+	const date = new Date(dateWithTimezone)
+	return Timestamp.fromDate(date)
 }
 
 // Helper function to create document references
@@ -187,8 +195,21 @@ async function seedTestData() {
 		// Create test data in order (dependencies matter)
 		const seasons = await createSeasons()
 		const players = await createPlayersFromAuth(authUsers)
-		const teams = await createTeams(seasons, players)
-		const games = await createGames(seasons, teams)
+
+		// Separate seasons by type for different processing
+		const pastSeasons = seasons.filter(
+			(s) => parseInt(s.name.split(' ')[0]) <= 2025
+		)
+		const futureSeasons = seasons.filter(
+			(s) => parseInt(s.name.split(' ')[0]) >= 2026
+		)
+
+		// Create teams and games for historical and current seasons
+		const teams = await createTeamsForActiveSeasons(pastSeasons, players)
+		const games = await createGamesForActiveSeasons(pastSeasons, teams)
+
+		// Create empty placeholder data for future seasons
+		await createPlaceholderDataForFutureSeasons(futureSeasons)
 
 		// Calculate and update team placements based on playoff results
 		await updateTeamPlacements(teams, games)
@@ -197,7 +218,9 @@ async function seedTestData() {
 
 		console.log('✅ Test data seeding completed successfully!')
 		console.log('\n📊 Summary:')
-		console.log(`   • ${seasons.length} seasons`)
+		console.log(
+			`   • ${seasons.length} seasons (${pastSeasons.length} active, ${futureSeasons.length} future placeholders)`
+		)
 		console.log(`   • ${players.length} players from existing auth users`)
 		console.log(`   • ${teams.length} teams with alliterative names`)
 		console.log(`   • ${games.length} games scheduled`)
@@ -260,12 +283,28 @@ async function createSeasons() {
 
 	const seasonsData = [
 		{
+			name: '1999 Winter',
+			dateStart: createDate('1999-02-01'),
+			dateEnd: createDate('1999-03-31'),
+			registrationStart: createDate('1999-01-01'),
+			registrationEnd: createDate('1999-01-31'),
+			teams: [],
+		},
+		{
 			name: '1999 Fall',
 			dateStart: createDate('1999-11-01'),
 			dateEnd: createDate('1999-12-31'),
 			registrationStart: createDate('1999-10-01'),
 			registrationEnd: createDate('1999-10-31'),
-			teams: [], // Will be populated after teams are created
+			teams: [],
+		},
+		{
+			name: '2000 Winter',
+			dateStart: createDate('2000-02-01'),
+			dateEnd: createDate('2000-03-31'),
+			registrationStart: createDate('2000-01-01'),
+			registrationEnd: createDate('2000-01-31'),
+			teams: [],
 		},
 		{
 			name: '2000 Fall',
@@ -276,11 +315,27 @@ async function createSeasons() {
 			teams: [],
 		},
 		{
+			name: '2001 Winter',
+			dateStart: createDate('2001-02-01'),
+			dateEnd: createDate('2001-03-31'),
+			registrationStart: createDate('2001-01-01'),
+			registrationEnd: createDate('2001-01-31'),
+			teams: [],
+		},
+		{
 			name: '2025 Fall',
 			dateStart: createDate('2025-11-01'),
 			dateEnd: createDate('2025-12-31'),
 			registrationStart: createDate('2025-10-01'),
 			registrationEnd: createDate('2025-10-31'),
+			teams: [],
+		},
+		{
+			name: '2026 Winter',
+			dateStart: createDate('2026-02-01'),
+			dateEnd: createDate('2026-03-31'),
+			registrationStart: createDate('2026-01-01'),
+			registrationEnd: createDate('2026-01-31'),
 			teams: [],
 		},
 	]
@@ -325,11 +380,181 @@ async function createPlayersFromAuth(authUsers) {
 	return createdPlayers
 }
 
-async function createTeams(seasons, players) {
-	console.log('🏒 Creating teams with alliterative names...')
+// Helper function to generate team names with Minnesota cities and alliterative nouns
+function generateTeamNames(count) {
+	// Minnesota cities grouped by first letter
+	const minnesotatCities = {
+		A: [
+			'Anoka',
+			'Albert Lea',
+			'Alexandria',
+			'Austin',
+			'Apple Valley',
+			'Andover',
+		],
+		B: [
+			'Bloomington',
+			'Burnsville',
+			'Brooklyn Park',
+			'Brooklyn Center',
+			'Brainerd',
+			'Bemidji',
+			'Blaine',
+		],
+		C: [
+			'Chaska',
+			'Coon Rapids',
+			'Crystal',
+			'Columbia Heights',
+			'Chanhassen',
+			'Cottage Grove',
+			'Cloquet',
+		],
+		D: ['Duluth', 'Dakota', 'Dayton', 'Delano', 'Detroit Lakes'],
+		E: ['Edina', 'Eagan', 'Eden Prairie', 'Elk River', 'Excelsior'],
+		F: [
+			'Fridley',
+			'Faribault',
+			'Fergus Falls',
+			'Forest Lake',
+			'Falcon Heights',
+		],
+		G: ['Golden Valley', 'Grand Rapids', 'Goodhue', 'Glencoe'],
+		H: ['Hopkins', 'Hastings', 'Hibbing', 'Hugo', 'Ham Lake'],
+		I: ['Inver Grove Heights', 'International Falls', 'Isanti'],
+		J: ['Jordan', 'Janesville'],
+		K: ['Kenyon', 'Kasson'],
+		L: ['Lakeville', 'Little Canada', 'Lino Lakes', 'Lakewood', 'Lauderdale'],
+		M: [
+			'Minneapolis',
+			'Minnetonka',
+			'Maple Grove',
+			'Mankato',
+			'Moorhead',
+			'Marshall',
+			'Mounds View',
+		],
+		N: ['New Brighton', 'North St. Paul', 'Northfield', 'New Hope', 'Newport'],
+		O: ['Oakdale', 'Owatonna', 'Orono'],
+		P: ['Plymouth', 'Prior Lake', 'Park Rapids'],
+		R: [
+			'Roseville',
+			'Rochester',
+			'Richfield',
+			'Ramsey',
+			'Rosemount',
+			'Red Wing',
+		],
+		S: [
+			'St. Paul',
+			'Savage',
+			'Stillwater',
+			'St. Cloud',
+			'Shoreview',
+			'South St. Paul',
+		],
+		T: ['Thief River Falls', 'Two Harbors'],
+		V: ['Victoria', 'Virginia'],
+		W: [
+			'Woodbury',
+			'White Bear Lake',
+			'Wayzata',
+			'Winona',
+			'Willmar',
+			'West St. Paul',
+		],
+		Y: ['Young America'],
+		Z: ['Zimmerman'],
+	}
+
+	// Alliterative nouns grouped by first letter
+	const nouns = {
+		A: [
+			'Alligators',
+			'Antelopes',
+			'Armadillos',
+			'Ants',
+			'Apes',
+			'Archers',
+			'Aviators',
+		],
+		B: [
+			'Bears',
+			'Bobcats',
+			'Bison',
+			'Badgers',
+			'Bulls',
+			'Bees',
+			'Bulldogs',
+			'Broncos',
+		],
+		C: [
+			'Cheetahs',
+			'Cardinals',
+			'Cougars',
+			'Cobras',
+			'Cranes',
+			'Colts',
+			'Cyclones',
+		],
+		D: ['Dragons', 'Deer', 'Dolphins', 'Dogs', 'Ducks', 'Daredevils'],
+		E: ['Eagles', 'Elephants', 'Eels', 'Elks', 'Emperors'],
+		F: ['Foxes', 'Falcons', 'Flamingos', 'Frogs', 'Fighters'],
+		G: ['Grizzlies', 'Geese', 'Gophers', 'Gazelles', 'Guardians'],
+		H: ['Hawks', 'Horses', 'Huskies', 'Hornets', 'Hunters'],
+		I: ['Iguanas', 'Ibis', 'Impalas', 'Indians'],
+		J: ['Jaguars', 'Jackals', 'Jays', 'Jumpers'],
+		K: ['Kangaroos', 'Kings', 'Knights', 'Kestrels'],
+		L: ['Lions', 'Leopards', 'Llamas', 'Lynx', 'Lightning'],
+		M: ['Moose', 'Mantises', 'Mustangs', 'Marlins', 'Mavericks'],
+		N: ['Nighthawks', 'Narwhals', 'Newts', 'Ninjas'],
+		O: ['Owls', 'Otters', 'Orcas', 'Ocelots'],
+		P: ['Panthers', 'Penguins', 'Pumas', 'Pelicans', 'Pirates'],
+		R: ['Ravens', 'Raccoons', 'Rhinos', 'Rams', 'Rangers'],
+		S: ['Stallions', 'Salamanders', 'Sharks', 'Seals', 'Spartans'],
+		T: ['Tigers', 'Turtles', 'Titans', 'Thunderbirds'],
+		V: ['Vipers', 'Vultures', 'Vikings', 'Velociraptors'],
+		W: ['Wolves', 'Walruses', 'Whales', 'Wildcats', 'Warriors'],
+		Y: ['Yaks', 'Yellowhammers'],
+		Z: ['Zebras', 'Zephyrs'],
+	}
+
+	const teamNames = []
+	const usedCombinations = new Set()
+
+	// Create all possible combinations first
+	const allCombinations = []
+	for (const [letter, cities] of Object.entries(minnesotatCities)) {
+		const letterNouns = nouns[letter] || []
+		for (const city of cities) {
+			for (const noun of letterNouns) {
+				allCombinations.push(`${city} ${noun}`)
+			}
+		}
+	}
+
+	// Shuffle all combinations to ensure random selection
+	const shuffledCombinations = shuffleArray(allCombinations)
+
+	// Take the first 'count' combinations
+	for (let i = 0; i < Math.min(count, shuffledCombinations.length); i++) {
+		teamNames.push(shuffledCombinations[i])
+	}
+
+	if (teamNames.length < count) {
+		console.warn(
+			`Warning: Could only generate ${teamNames.length} unique team names out of ${count} requested`
+		)
+	}
+
+	return teamNames
+}
+
+async function createTeamsForActiveSeasons(seasons, players) {
+	console.log('🏒 Creating teams for active seasons (with full rosters)...')
 
 	// Check if we have enough players for unique assignment per season
-	// With 12 teams and 15 players per team, we need 180 players for completely unique teams
+	// With 12 teams and 15 players per team, we need 180 players per season
 	const playersNeeded = 12 * 15 // 180 players per season
 	if (players.length < playersNeeded) {
 		console.log(
@@ -338,62 +563,18 @@ async function createTeams(seasons, players) {
 		console.log('   Some players will appear on multiple teams within a season')
 	}
 
-	// Alliterative city/animal combinations
-	const teamNames = [
-		// 1999 teams
-		'Anoka Alligators',
-		'Bloomington Bears',
-		'Chaska Cheetahs',
-		'Duluth Dragons',
-		'Edina Eagles',
-		'Fridley Foxes',
-		'Golden Valley Grizzlies',
-		'Hopkins Hawks',
-		'Inver Grove Iguanas',
-		'Jordan Jaguars',
-		'Lakeville Lions',
-		'Minnetonka Moose',
-
-		// 2000 teams
-		'New Brighton Nighthawks',
-		'Bloomington Bears', // Carries over from 1999
-		'Plymouth Panthers',
-		'Richfield Raccoons',
-		'Edina Eagles', // Carries over from 1999
-		'Stillwater Stallions',
-		'Woodbury Wolves',
-		'Hopkins Hawks', // Carries over from 1999
-		'Burnsville Badgers',
-		'Coon Rapids Cardinals',
-		'Eagan Elephants',
-		'Falcon Heights Falcons',
-
-		// 2025 teams
-		'Maple Grove Mantises',
-		'Roseville Ravens',
-		'Plymouth Panthers', // Carries over from 2000
-		'White Bear Lake Whales',
-		'Blaine Bison',
-		'Brooklyn Park Bears',
-		'Edina Eagles', // Carries over from previous seasons
-		'Hopkins Hawks', // Carries over from previous seasons
-		'Rosemount Rhinos',
-		'Savage Salamanders',
-		'Victoria Vipers',
-		'Wayzata Walruses',
-	]
-
-	// Teams that carry over between seasons (for continuity)
-	// These teams will have the same teamId across seasons
-	const continuityTeams = new Map([
-		['Bloomington Bears', generateDocId()], // 1999 -> 2000
-		['Edina Eagles', generateDocId()], // 1999 -> 2000 -> 2025
-		['Hopkins Hawks', generateDocId()], // 1999 -> 2000 -> 2025
-		['Plymouth Panthers', generateDocId()], // 2000 -> 2025
-	])
+	// Generate team names for all active seasons (12 teams per season)
+	const totalTeamsNeeded = seasons.length * 12
+	const allTeamNames = generateTeamNames(totalTeamsNeeded)
+	console.log(
+		`   Generated ${allTeamNames.length} unique team names for ${seasons.length} seasons`
+	)
 
 	const teams = []
 	let teamIndex = 0
+
+	// Track existing teamIds from previous seasons for potential reuse
+	const existingTeamIds = []
 
 	// Track player assignments across all seasons to enable multi-season participation
 	const allPlayerAssignments = new Map()
@@ -403,20 +584,43 @@ async function createTeams(seasons, players) {
 
 		const seasonTeams = []
 
+		// Track teamIds used in this season to prevent duplicates
+		const usedTeamIdsThisSeason = new Set()
+
 		// Create a shuffled pool of players for this season
 		// Each player should only be on one team per season
 		const seasonPlayerPool = shuffleArray([...players])
 		let playerIndex = 0
 
 		for (let i = 0; i < 12; i++) {
-			const teamName = teamNames[teamIndex]
+			const teamName = allTeamNames[teamIndex]
 
-			// Use consistent teamId for continuity teams, otherwise generate new one
-			let consistentTeamId = continuityTeams.get(teamName) || generateDocId()
-			const isCarryoverTeam = continuityTeams.has(teamName)
+			// Randomly decide whether to reuse an existing teamId or create a new one
+			// 30% chance to reuse an existing teamId if available, 70% chance for new teamId
+			let consistentTeamId
+			let isCarryoverTeam = false
+
+			// Filter out teamIds already used in this season
+			const availableTeamIds = existingTeamIds.filter(
+				(id) => !usedTeamIdsThisSeason.has(id)
+			)
+
+			if (availableTeamIds.length > 0 && Math.random() < 0.3) {
+				// Reuse a random existing teamId that hasn't been used in this season
+				const randomIndex = Math.floor(Math.random() * availableTeamIds.length)
+				consistentTeamId = availableTeamIds[randomIndex]
+				isCarryoverTeam = true
+			} else {
+				// Create a new teamId
+				consistentTeamId = generateDocId()
+				existingTeamIds.push(consistentTeamId)
+			}
+
+			// Mark this teamId as used in this season
+			usedTeamIdsThisSeason.add(consistentTeamId)
 
 			// Random registration date in October of the year before season start
-			const seasonYear = parseInt(season.name.split(' ')[0])
+			const seasonYear = season.dateStart.toDate().getFullYear()
 			const registrationYear = seasonYear
 			const randomDay = Math.floor(Math.random() * 31) + 1 // October has 31 days
 			const registrationDate = createDate(
@@ -520,8 +724,8 @@ function shuffleArray(array) {
 	return shuffled
 }
 
-async function createGames(seasons, teams) {
-	console.log('🏒 Creating games...')
+async function createGamesForActiveSeasons(seasons, teams) {
+	console.log('🏒 Creating games for active seasons...')
 
 	const games = []
 
@@ -533,30 +737,30 @@ async function createGames(seasons, teams) {
 		'20:15', // 8:15 PM
 	]
 
-	// Helper function to get first 7 Saturdays in November and December for a given year
-	const getSaturdays = (year) => {
+	// Helper function to get first 7 Saturdays within the season date range
+	const getGameDates = (startDate, endDate) => {
 		const saturdays = []
+		// Convert Firebase Timestamps to JavaScript Date objects
+		const start = startDate.toDate()
+		const end = endDate.toDate()
 
-		// November
-		for (let day = 1; day <= 30; day++) {
-			const date = new Date(year, 10, day) // Month 10 = November
-			if (date.getDay() === 6) {
-				// Saturday = 6
-				saturdays.push(`${year}-11-${day.toString().padStart(2, '0')}`)
-			}
+		// Start from the first Saturday on or after the start date
+		const current = new Date(start)
+		const daysUntilSaturday = (6 - current.getDay()) % 7
+		current.setDate(current.getDate() + daysUntilSaturday)
+
+		// Collect Saturdays until we reach the end date or have 7 dates
+		while (current <= end && saturdays.length < 7) {
+			const year = current.getFullYear()
+			const month = (current.getMonth() + 1).toString().padStart(2, '0')
+			const day = current.getDate().toString().padStart(2, '0')
+			saturdays.push(`${year}-${month}-${day}`)
+
+			// Move to next Saturday
+			current.setDate(current.getDate() + 7)
 		}
 
-		// December
-		for (let day = 1; day <= 31; day++) {
-			const date = new Date(year, 11, day) // Month 11 = December
-			if (date.getDay() === 6) {
-				// Saturday = 6
-				saturdays.push(`${year}-12-${day.toString().padStart(2, '0')}`)
-			}
-		}
-
-		// Return only the first 7 Saturdays for the season
-		return saturdays.slice(0, 7)
+		return saturdays
 	}
 
 	// Helper function to generate random scores (0-25) ensuring no ties
@@ -884,7 +1088,7 @@ async function createGames(seasons, teams) {
 
 	// Create games for each season
 	for (const season of seasons) {
-		const seasonYear = parseInt(season.name.split(' ')[0])
+		const seasonYear = season.dateStart.toDate().getFullYear()
 		const seasonTeams = teams.filter((team) => team.season.id === season.id)
 
 		if (seasonTeams.length !== 12) {
@@ -894,13 +1098,13 @@ async function createGames(seasons, teams) {
 			continue
 		}
 
-		const gameDates = getSaturdays(seasonYear)
+		const gameDates = getGameDates(season.dateStart, season.dateEnd)
 		console.log(
 			`   Creating games for ${season.name} - ${gameDates.length} Saturday dates (7-week season)...`
 		)
 
-		// Determine if games are historical (completed) or future
-		const isHistorical = seasonYear < 2025
+		// Determine if games are historical (completed) or future based on season status
+		const isHistorical = season.status === 'historical'
 
 		// Track games per team to ensure equal distribution
 		const teamGameCount = new Map()
@@ -1486,6 +1690,29 @@ async function updateTeamPlacements(teams, games) {
 			`     Updated ${placementsUpdated} of ${seasonTeams.length} teams with final placements`
 		)
 	}
+}
+
+// Function to create placeholder data for future seasons (no teams or games)
+async function createPlaceholderDataForFutureSeasons(seasons) {
+	console.log('📅 Creating placeholder data for future seasons...')
+
+	if (seasons.length === 0) {
+		console.log('   No future seasons to create placeholders for')
+		return
+	}
+
+	for (const season of seasons) {
+		console.log(
+			`   Future season: ${season.name} - no teams or games (for testing empty state)`
+		)
+
+		// Update season with empty teams array (already initialized as empty)
+		await db.collection(Collections.SEASONS).doc(season.id).update({
+			teams: [], // Ensure it's explicitly empty
+		})
+	}
+
+	console.log(`   Created ${seasons.length} future season placeholders`)
 }
 
 // Run the seeding script
