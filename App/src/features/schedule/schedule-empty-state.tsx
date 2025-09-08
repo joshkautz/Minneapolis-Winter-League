@@ -12,10 +12,10 @@ export const ScheduleEmptyState = () => {
 	const { selectedSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	return (
-		<div className={'flex flex-wrap gap-8'}>
+		<div className={'flex flex-wrap gap-8 text-center'}>
 			<ComingSoon>
-				<p className={'pt-6'}>
-					{`There is no schedule to display. Please wait for registration to end on ${formatTimestamp(selectedSeasonQueryDocumentSnapshot?.data()?.registrationEnd)}.`}
+				<p>
+					{`No schedule yet exists for the season. Check back after registration ends on ${formatTimestamp(selectedSeasonQueryDocumentSnapshot?.data()?.registrationEnd)}.`}
 				</p>
 			</ComingSoon>
 		</div>

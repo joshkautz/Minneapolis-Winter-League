@@ -27,7 +27,7 @@ export const Standings = () => {
 				</div>
 			) : Object.keys(standings).length === 0 ? (
 				<ComingSoon>
-					<p className={' pt-6 '}>
+					<p>
 						{`There are no standings to display. Please wait for games to start on ${formatTimestamp(selectedSeasonQueryDocumentSnapshot?.data()?.dateStart)}.`}
 					</p>
 				</ComingSoon>
