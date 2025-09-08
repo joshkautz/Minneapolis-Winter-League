@@ -240,7 +240,7 @@
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 	}
-	
+
 	.gradient-animated {
 		background-size: 300% 300%;
 		animation: gradient-shift 8s ease-in-out infinite;
