@@ -6,5 +6,5 @@ import React from 'react'
 import { HallOfFame } from '@/features/hallOfFame/HallOfFame'
 
 export const HallOfFamePage: React.FC = () => {
-    return <HallOfFame />
+	return <HallOfFame />
 }
