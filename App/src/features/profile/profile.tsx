@@ -89,10 +89,7 @@ export const Profile = () => {
 			}
 		>
 			<GradientHeader>
-				<p>Profile Settings</p>
-				<p className={'text-sm font-normal text-foreground'}>
-					Configure your profile with the options below.
-				</p>
+				<p>Profile</p>
 			</GradientHeader>
 
 			<div

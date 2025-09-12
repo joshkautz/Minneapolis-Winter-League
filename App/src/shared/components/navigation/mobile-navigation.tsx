@@ -14,6 +14,7 @@ import {
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { SeasonSelect } from '../season-select'
 import { ThemeSelect } from '../theme-select'
+import { NotificationBadge } from './notification-badge'
 
 interface MobileNavigationProps {
 	navItems: Array<{ label: string; path: string; alt: string }>
@@ -47,15 +48,23 @@ export const MobileNavigation = ({
 	signOutLoading,
 	authStateLoading,
 }: MobileNavigationProps) => {
+	const totalNotifications = isAuthenticated
+		? (hasPendingOffers || 0) + (hasRequiredTasks ? 1 : 0)
+		: 0
+
 	return (
 		<Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
 			<SheetTrigger asChild>
 				<Button
 					variant='ghost'
-					className='px-0 mr-2 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden'
+					className='px-0 mr-2 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden relative'
 				>
 					<HamburgerMenuIcon className='w-5 h-5' />
 					<span className='sr-only'>Toggle Menu</span>
+					<NotificationBadge
+						count={totalNotifications}
+						position='button-overlay'
+					/>
 				</Button>
 			</SheetTrigger>
 			<SheetContent
@@ -175,22 +184,15 @@ const MobileNavigationContent = ({
 								onClick={onItemClick}
 								className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset inline-flex items-center cursor-pointer'
 							>
-								{path === '/manage' && !!hasPendingOffers ? (
-									<>
-										{label}
-										<span className='relative flex w-2 h-2 ml-1'>
-											<span className='relative inline-flex w-2 h-2 rounded-full bg-primary' />
-										</span>
-									</>
-								) : path === '/profile' && hasRequiredTasks ? (
-									<>
-										{label}
-										<span className='relative flex w-2 h-2 ml-1'>
-											<span className='relative inline-flex w-2 h-2 rounded-full bg-primary' />
-										</span>
-									</>
-								) : (
-									label
+								{label}
+								{path === '/manage' && !!hasPendingOffers && (
+									<NotificationBadge
+										count={hasPendingOffers}
+										position='inline'
+									/>
+								)}
+								{path === '/profile' && hasRequiredTasks && (
+									<NotificationBadge count={1} position='inline' />
 								)}
 							</Link>
 						))}

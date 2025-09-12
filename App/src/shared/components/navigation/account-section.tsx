@@ -5,6 +5,7 @@ import { User } from 'lucide-react'
 import { useAccountSection } from '@/shared/hooks'
 import { LoginButton } from './login-button'
 import { LoadingSpinner } from './loading-spinner'
+import { NotificationBadge } from './notification-badge'
 import { Button } from '@/components/ui/button'
 import {
 	Popover,
@@ -50,15 +51,19 @@ export const AccountSection = ({
 	}
 
 	// Authenticated - show user popover
+	const totalNotifications =
+		(hasPendingOffers || 0) + (hasRequiredTasks ? 1 : 0)
+
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
 				<Button variant='ghost' size='sm' className='px-0 w-9 relative'>
-					{(hasPendingOffers || hasRequiredTasks) && (
-						<span className='z-10 absolute bottom-0 right-0 w-2 h-2 rounded-full bg-primary' />
-					)}
 					<User className='h-4 w-4' />
 					<span className='sr-only'>User account</span>
+					<NotificationBadge
+						count={totalNotifications}
+						position='button-overlay'
+					/>
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent
@@ -77,23 +82,16 @@ export const AccountSection = ({
 							aria-label={alt}
 							className='flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors'
 						>
-							<span>
-								{path === '/manage' && !!hasPendingOffers ? (
-									<>
-										{label}
-										<span className='relative flex w-2 h-2 ml-2 inline-block'>
-											<span className='relative inline-flex w-2 h-2 rounded-full bg-primary' />
-										</span>
-									</>
-								) : path === '/profile' && hasRequiredTasks ? (
-									<>
-										{label}
-										<span className='relative flex w-2 h-2 ml-2 inline-block'>
-											<span className='relative inline-flex w-2 h-2 rounded-full bg-primary' />
-										</span>
-									</>
-								) : (
-									label
+							<span className='flex items-center'>
+								{label}
+								{path === '/manage' && !!hasPendingOffers && (
+									<NotificationBadge
+										count={hasPendingOffers}
+										position='inline'
+									/>
+								)}
+								{path === '/profile' && hasRequiredTasks && (
+									<NotificationBadge count={1} position='inline' />
 								)}
 							</span>
 						</Link>
