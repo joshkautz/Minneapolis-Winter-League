@@ -6,7 +6,11 @@
 
 import React, { useState } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
+import { useAuthState } from 'react-firebase-hooks/auth'
+import { useDocument } from 'react-firebase-hooks/firestore'
 
+import { auth } from '@/firebase/auth'
+import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	playerRankingCalculationsQuery,
 	triggerHallOfFameCalculation,
@@ -33,9 +37,15 @@ import {
 	XCircle,
 	AlertCircle,
 	Settings,
+	AlertTriangle,
 } from 'lucide-react'
 
 export const HallOfFameAdmin: React.FC = () => {
+	const [user] = useAuthState(auth)
+	const playerRef = getPlayerRef(user)
+	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+
+	const isAdmin = playerSnapshot?.data()?.admin || false
 	const [isCalculating, setIsCalculating] = useState(false)
 	const [calculationError, setCalculationError] = useState<string | null>(null)
 	const [calculationSuccess, setCalculationSuccess] = useState<string | null>(
@@ -50,6 +60,39 @@ export const HallOfFameAdmin: React.FC = () => {
 		id: doc.id,
 		...doc.data(),
 	})) as (RankingCalculationDocument & { id: string })[] | undefined
+
+	// Handle authentication loading
+	if (playerLoading) {
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<Card>
+					<CardContent className='p-6 text-center'>
+						<p>Loading...</p>
+					</CardContent>
+				</Card>
+			</div>
+		)
+	}
+
+	// Handle non-admin users
+	if (!isAdmin) {
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<Card>
+					<CardContent className='p-6 text-center'>
+						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
+							<AlertTriangle className='h-6 w-6' />
+							<h2 className='text-xl font-semibold'>Access Denied</h2>
+						</div>
+						<p className='text-muted-foreground'>
+							You don't have permission to access the Hall of Fame admin
+							interface.
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+		)
+	}
 
 	const handleTriggerCalculation = async (type: 'full' | 'incremental') => {
 		setIsCalculating(true)

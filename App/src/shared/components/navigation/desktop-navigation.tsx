@@ -35,7 +35,7 @@ export const DesktopNavigation = ({
 	return (
 		<div className='hidden mr-4 md:flex md:flex-1 items-center justify-between w-full'>
 			<NavigationMenu items={navItems} />
-			<div className='flex items-center justify-end flex-1 gap-4'>
+			<div className='flex items-center justify-end gap-4 flex-shrink-0'>
 				<SettingsSection
 					isOpen={settingsPopoverOpen}
 					setIsOpen={setSettingsPopoverOpen}
