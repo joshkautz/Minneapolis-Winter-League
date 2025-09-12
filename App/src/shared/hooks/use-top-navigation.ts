@@ -112,7 +112,7 @@ export const useTopNavigation = () => {
 	]
 
 	const userContent = [
-		{ label: 'Edit Profile', path: '/profile', alt: 'user profile' },
+		{ label: 'Profile', path: '/profile', alt: 'user profile' },
 		...(authStateUser
 			? isAuthenticatedUserCaptain
 				? captainContent

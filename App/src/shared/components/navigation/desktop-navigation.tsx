@@ -12,6 +12,8 @@ interface DesktopNavigationProps {
 	accountPopoverOpen: boolean
 	setAccountPopoverOpen: Dispatch<SetStateAction<boolean>>
 	forceClosePopover: boolean
+	hasPendingOffers: number | undefined
+	hasRequiredTasks: boolean
 }
 
 /**
@@ -27,6 +29,8 @@ export const DesktopNavigation = ({
 	accountPopoverOpen,
 	setAccountPopoverOpen,
 	forceClosePopover,
+	hasPendingOffers,
+	hasRequiredTasks,
 }: DesktopNavigationProps) => {
 	return (
 		<div className='hidden mr-4 md:flex md:flex-1 items-center justify-between w-full'>
@@ -40,9 +44,11 @@ export const DesktopNavigation = ({
 				<AccountSection
 					userContent={userItems}
 					onLoginClick={onLoginClick}
-					accountPopoverOpen={accountPopoverOpen}
-					setAccountPopoverOpen={setAccountPopoverOpen}
-					forceClosePopover={forceClosePopover}
+					isOpen={accountPopoverOpen}
+					setIsOpen={setAccountPopoverOpen}
+					forceClose={forceClosePopover}
+					hasPendingOffers={hasPendingOffers}
+					hasRequiredTasks={hasRequiredTasks}
 				/>
 			</div>
 		</div>

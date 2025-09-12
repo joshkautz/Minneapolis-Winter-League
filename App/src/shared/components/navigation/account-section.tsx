@@ -17,9 +17,11 @@ import { cn } from '@/shared/utils'
 interface AccountSectionProps {
 	userContent: Array<{ label: string; path: string; alt: string }>
 	onLoginClick: () => void
-	accountPopoverOpen: boolean
-	setAccountPopoverOpen: Dispatch<SetStateAction<boolean>>
-	forceClosePopover: boolean
+	isOpen: boolean
+	setIsOpen: Dispatch<SetStateAction<boolean>>
+	forceClose: boolean
+	hasPendingOffers: number | undefined
+	hasRequiredTasks: boolean
 }
 
 /**
@@ -28,18 +30,14 @@ interface AccountSectionProps {
 export const AccountSection = ({
 	userContent,
 	onLoginClick,
-	accountPopoverOpen,
-	setAccountPopoverOpen,
-	forceClosePopover,
+	isOpen,
+	setIsOpen,
+	forceClose,
+	hasPendingOffers,
+	hasRequiredTasks,
 }: AccountSectionProps) => {
-	const {
-		authStateUser,
-		hasPendingOffers,
-		hasRequiredTasks,
-		isLoading,
-		signOutLoading,
-		handleSignOut,
-	} = useAccountSection()
+	const { authStateUser, isLoading, signOutLoading, handleSignOut } =
+		useAccountSection()
 
 	// Loading state
 	if (isLoading) {
@@ -53,7 +51,7 @@ export const AccountSection = ({
 
 	// Authenticated - show user popover
 	return (
-		<Popover open={accountPopoverOpen} onOpenChange={setAccountPopoverOpen}>
+		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
 				<Button variant='ghost' size='sm' className='px-0 w-9 relative'>
 					{(hasPendingOffers || hasRequiredTasks) && (
@@ -66,7 +64,7 @@ export const AccountSection = ({
 			<PopoverContent
 				className={cn(
 					'w-80',
-					forceClosePopover && '!animate-none !duration-0 !transition-none'
+					forceClose && '!animate-none !duration-0 !transition-none'
 				)}
 				align='end'
 			>
@@ -80,7 +78,7 @@ export const AccountSection = ({
 							className='flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors'
 						>
 							<span>
-								{path === '/manage' && hasPendingOffers ? (
+								{path === '/manage' && !!hasPendingOffers ? (
 									<>
 										{label}
 										<span className='relative flex w-2 h-2 ml-2 inline-block'>

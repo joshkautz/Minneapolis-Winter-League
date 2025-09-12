@@ -1,10 +1,7 @@
 import { useMemo } from 'react'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
-import { useOffersContext } from '@/providers'
-import { useSeasonsContext } from '@/providers'
 import { errorHandler, logger } from '@/shared/utils'
-import type { PlayerSeason } from '@/types'
 
 const getInitials = (
 	firstName: string | undefined,
@@ -24,8 +21,6 @@ export const useAccountSection = () => {
 		signOut,
 		signOutLoading,
 	} = useAuthContext()
-	const { incomingOffersQuerySnapshot } = useOffersContext()
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const userInitials = useMemo(() => {
 		if (!authenticatedUserSnapshot) {
@@ -34,39 +29,6 @@ export const useAccountSection = () => {
 		const data = authenticatedUserSnapshot.data()
 		return getInitials(data?.firstname, data?.lastname)
 	}, [authenticatedUserSnapshot])
-
-	const hasPendingOffers = useMemo(
-		() => !!incomingOffersQuerySnapshot?.docs.length,
-		[incomingOffersQuerySnapshot]
-	)
-
-	const isAuthenticatedUserPaid = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.find(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.paid,
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
-	)
-
-	const isAuthenticatedUserSigned = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.find(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.signed,
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
-	)
-
-	const hasRequiredTasks = useMemo(
-		() =>
-			isAuthenticatedUserPaid === false || isAuthenticatedUserSigned === false,
-		[isAuthenticatedUserPaid, isAuthenticatedUserSigned]
-	)
 
 	const isLoading = useMemo(
 		() =>
@@ -105,8 +67,6 @@ export const useAccountSection = () => {
 	return {
 		authStateUser,
 		userInitials,
-		hasPendingOffers,
-		hasRequiredTasks,
 		isLoading,
 		signOutLoading,
 		handleSignOut,

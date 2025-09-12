@@ -59,6 +59,8 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 					accountPopoverOpen={isAccountPopoverOpen}
 					setAccountPopoverOpen={setIsAccountPopoverOpen}
 					forceClosePopover={forceClosePopover}
+					hasPendingOffers={hasPendingOffers}
+					hasRequiredTasks={hasRequiredTasks}
 				/>
 
 				{/* Mobile Navigation */}
