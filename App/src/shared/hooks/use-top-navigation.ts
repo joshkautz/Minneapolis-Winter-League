@@ -95,6 +95,7 @@ export const useTopNavigation = () => {
 		{ label: 'Schedule', path: '/schedule', alt: 'league schedule' },
 		{ label: 'Standings', path: '/standings', alt: 'league standings' },
 		{ label: 'Teams', path: '/teams', alt: 'team list' },
+		{ label: 'Hall of Fame', path: '/hall-of-fame', alt: 'player rankings' },
 	]
 
 	const captainContent = [

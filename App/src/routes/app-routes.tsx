@@ -8,6 +8,7 @@ import {
 	Standings,
 	Teams,
 	TeamProfile,
+	HallOfFame,
 	Profile,
 	CreateTeam,
 	ManageTeam,
@@ -65,6 +66,14 @@ export const AppRoutes: React.FC = () => {
 					element={
 						<PublicRoute>
 							<TeamProfile />
+						</PublicRoute>
+					}
+				/>
+				<Route
+					path='/hall-of-fame'
+					element={
+						<PublicRoute>
+							<HallOfFame />
 						</PublicRoute>
 					}
 				/>

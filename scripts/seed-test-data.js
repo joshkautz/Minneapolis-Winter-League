@@ -341,10 +341,20 @@ async function createSeasons() {
 	]
 
 	const seasons = []
+	const currentDate = new Date()
+	
 	for (const seasonData of seasonsData) {
+		// Determine status based on season end date (for internal logic only, not stored)
+		const seasonEndDate = seasonData.dateEnd.toDate()
+		const status = seasonEndDate < currentDate ? 'historical' : 'active'
+		
+		// Save season without status field
 		const docRef = await db.collection(Collections.SEASONS).add(seasonData)
-		seasons.push({ id: docRef.id, ...seasonData })
-		console.log(`   Created season: ${seasonData.name}`)
+		
+		// Keep status in memory for game generation logic
+		const seasonWithStatus = { id: docRef.id, ...seasonData, status }
+		seasons.push(seasonWithStatus)
+		console.log(`   Created season: ${seasonData.name} (${status})`)
 	}
 
 	return seasons

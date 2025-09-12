@@ -24,6 +24,10 @@ export const TeamProfile = lazyImport(
 	() => import('@/features/teams'),
 	'TeamProfile'
 )
+export const HallOfFame = lazyImport(
+	() => import('@/pages/HallOfFamePage'),
+	'HallOfFamePage'
+)
 
 // Protected routes - require authentication
 export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')

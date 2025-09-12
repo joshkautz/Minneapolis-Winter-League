@@ -32,6 +32,9 @@ export enum Collections {
 	GAMES = 'games',
 	OFFERS = 'offers',
 	PLAYERS = 'players',
+	RANKINGS = 'rankings',
+	RANKING_HISTORY = 'ranking-history',
+	RANKING_CALCULATIONS = 'ranking-calculations',
 	SEASONS = 'seasons',
 	TEAMS = 'teams',
 	WAIVERS = 'waivers',
@@ -224,4 +227,165 @@ export interface CheckoutSessionDocument extends DocumentData {
 	success_url: string
 	/** Checkout session URL */
 	url: string
+}
+
+/////////////////////////////////////////////////////////////////
+/////////////////// Hall of Fame Types ////////////////////////
+/////////////////////////////////////////////////////////////////
+
+/**
+ * Player ranking document structure for Hall of Fame
+ */
+export interface PlayerRankingDocument extends DocumentData {
+	/** Reference to the player */
+	player: DocumentReference<PlayerDocument>
+	/** Player ID for easier querying and document management */
+	playerId: string
+	/** Player's display name (cached for performance) */
+	playerName: string
+	/** Current Elo rating */
+	eloRating: number
+	/** Total games played across all seasons */
+	totalGames: number
+	/** Total seasons participated in */
+	totalSeasons: number
+	/** Current rank position */
+	rank: number
+	/** Timestamp of last rating update */
+	lastUpdated: Timestamp
+	/** Last season the player participated in */
+	lastSeasonId: string | null
+	/** Array of season-specific statistics */
+	seasonStats: PlayerSeasonStats[]
+	/** Rating change in the last calculation */
+	lastRatingChange: number
+	/** Whether the player is currently active */
+	isActive: boolean
+}
+
+/**
+ * Player statistics for a specific season
+ */
+export interface PlayerSeasonStats {
+	/** Season ID */
+	seasonId: string
+	/** Season name (cached for performance) */
+	seasonName: string
+	/** Games played in this season */
+	gamesPlayed: number
+	/** Average point differential per game */
+	avgPointDifferential: number
+	/** Rating at end of season */
+	endOfSeasonRating: number
+	/** Team(s) played for in this season */
+	teams: Array<{
+		teamId: string
+		teamName: string
+		gamesPlayed: number
+	}>
+}
+
+/**
+ * Ranking history snapshot document structure
+ */
+export interface RankingHistoryDocument extends DocumentData {
+	/** Reference to the season */
+	season: DocumentReference<SeasonDocument>
+	/** Week number within the season */
+	week: number
+	/** Date of the snapshot */
+	snapshotDate: Timestamp
+	/** Array of player rankings at this point in time */
+	rankings: WeeklyPlayerRanking[]
+	/** Calculation metadata */
+	calculationMeta: {
+		/** Total games processed up to this point */
+		totalGamesProcessed: number
+		/** Average rating of all active players */
+		avgRating: number
+		/** Number of active players */
+		activePlayerCount: number
+		/** Timestamp when this snapshot was calculated */
+		calculatedAt: Timestamp
+	}
+}
+
+/**
+ * Individual player ranking within a weekly snapshot
+ */
+export interface WeeklyPlayerRanking {
+	/** Player ID */
+	playerId: string
+	/** Player name (cached) */
+	playerName: string
+	/** Elo rating at this point */
+	eloRating: number
+	/** Rank position */
+	rank: number
+	/** Rating change since last week */
+	weeklyChange: number
+	/** Games played in this week */
+	gamesThisWeek: number
+	/** Point differential this week */
+	pointDifferentialThisWeek: number
+}
+
+/**
+ * Ranking calculation state document
+ */
+export interface RankingCalculationDocument extends DocumentData {
+	/** Type of calculation (full or incremental) */
+	calculationType: 'full' | 'incremental'
+	/** Current status of the calculation */
+	status: 'pending' | 'running' | 'completed' | 'failed'
+	/** Timestamp when calculation started */
+	startedAt: Timestamp
+	/** Timestamp when calculation completed */
+	completedAt: Timestamp | null
+	/** User who triggered the calculation */
+	triggeredBy: string
+	/** Current progress information */
+	progress: {
+		/** Current step being processed */
+		currentStep: string
+		/** Percentage complete (0-100) */
+		percentComplete: number
+		/** Current season being processed */
+		currentSeason?: string
+		/** Current week being processed */
+		currentWeek?: number
+		/** Total seasons to process */
+		totalSeasons: number
+		/** Seasons processed so far */
+		seasonsProcessed: number
+	}
+	/** Error information if calculation failed */
+	error?: {
+		/** Error message */
+		message: string
+		/** Stack trace */
+		stack?: string
+		/** Timestamp when error occurred */
+		timestamp: Timestamp
+	}
+	/** Last successfully processed snapshot */
+	lastProcessedSnapshot?: {
+		seasonId: string
+		week: number
+	}
+	/** Calculation parameters used */
+	parameters: {
+		/** Starting season for calculation */
+		startSeasonId?: string
+		/** Starting week for incremental calculations */
+		startWeek?: number
+		/** Whether to apply rating decay */
+		applyDecay: boolean
+		/** Season decay factor */
+		seasonDecayFactor: number
+		/** Playoff multiplier */
+		playoffMultiplier: number
+		/** K-factor for Elo calculation */
+		kFactor: number
+	}
 }

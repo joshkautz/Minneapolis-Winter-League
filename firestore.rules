@@ -115,6 +115,34 @@ service cloud.firestore {
     }
 
     //////////////////////////////////////////////////////////////////////////////
+    // HALL OF FAME - Player rankings and calculation history
+    //////////////////////////////////////////////////////////////////////////////
+    
+    // Player rankings: Public read access
+    match /rankings/{playerId} {
+      allow read: if true;
+      allow create: if false; // Functions only
+      allow update: if false; // Functions only
+      allow delete: if false; // Functions only
+    }
+    
+    // Ranking history: Public read access for historical data
+    match /ranking-history/{snapshotId} {
+      allow read: if true;
+      allow create: if false; // Functions only
+      allow update: if false; // Functions only
+      allow delete: if false; // Functions only
+    }
+    
+    // Ranking calculations: Public read access, write access via Functions only
+    match /ranking-calculations/{calculationId} {
+      allow read: if true;
+      allow create: if false; // Functions only
+      allow update: if false; // Functions only
+      allow delete: if false; // Functions only
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
     // FALLBACK - DENY ALL OTHER ACCESS
     //////////////////////////////////////////////////////////////////////////////
     
