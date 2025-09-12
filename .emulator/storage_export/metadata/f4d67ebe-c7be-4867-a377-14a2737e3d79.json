@@ -1,11 +1,13 @@
 {
   "name": "team-logos/hbqNvEXc3iXMoDWhkg7n.jpg",
   "bucket": "minnesota-winter-league.appspot.com",
-  "metageneration": 2,
+  "metageneration": 3,
   "generation": 1757354910163,
   "contentType": "image/jpeg",
   "storageClass": "STANDARD",
-  "downloadTokens": [],
+  "downloadTokens": [
+    "3d5772bf-da5b-4813-9304-85b15188f8d7"
+  ],
   "etag": "EuyrHYS0Pfn5/r+K+BMBb7B4gog",
   "customMetadata": {
     "teamName": "Rosemount Rangers",
@@ -13,7 +15,7 @@
     "uploadedAt": "2025-09-08T18:08:30.161Z"
   },
   "timeCreated": "2025-09-08T18:08:30.163Z",
-  "updated": "2025-09-08T18:08:30.165Z",
+  "updated": "2025-09-08T18:30:09.804Z",
   "size": 173415,
   "md5Hash": "LiuOTwxKsMXVaDlARqpsQQ==",
   "crc32c": "1312651137"

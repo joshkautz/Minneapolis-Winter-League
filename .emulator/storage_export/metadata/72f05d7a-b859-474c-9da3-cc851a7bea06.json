@@ -1,11 +1,13 @@
 {
   "name": "team-logos/zummisKUC2NqW2DqWmsC.jpg",
   "bucket": "minnesota-winter-league.appspot.com",
-  "metageneration": 2,
+  "metageneration": 3,
   "generation": 1757354910074,
   "contentType": "image/jpeg",
   "storageClass": "STANDARD",
-  "downloadTokens": [],
+  "downloadTokens": [
+    "ab06bd34-f6f1-4c41-a3d5-81393be46bbb"
+  ],
   "etag": "Z6Uyzm3kbe2HTDATJBAEXefpfJk",
   "customMetadata": {
     "teamName": "West St. Paul Walruses",
@@ -13,7 +15,7 @@
     "uploadedAt": "2025-09-08T18:08:30.072Z"
   },
   "timeCreated": "2025-09-08T18:08:30.074Z",
-  "updated": "2025-09-08T18:08:30.075Z",
+  "updated": "2025-09-08T18:30:09.739Z",
   "size": 77314,
   "md5Hash": "ZexyqyX939lUYXxNFz8hdg==",
   "crc32c": "2652173615"

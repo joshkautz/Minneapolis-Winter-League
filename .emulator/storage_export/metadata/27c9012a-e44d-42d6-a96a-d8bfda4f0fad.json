@@ -1,11 +1,13 @@
 {
   "name": "team-logos/xUYlyqH2W12k9GTD6pg4.jpg",
   "bucket": "minnesota-winter-league.appspot.com",
-  "metageneration": 2,
+  "metageneration": 3,
   "generation": 1757354910109,
   "contentType": "image/jpeg",
   "storageClass": "STANDARD",
-  "downloadTokens": [],
+  "downloadTokens": [
+    "ef335066-daa1-4c4d-ae3b-ec36d2ab78ba"
+  ],
   "etag": "QZMe1iIUrc5bl9y83uxnX20iWxc",
   "customMetadata": {
     "teamName": "Northfield Nighthawks",
@@ -13,7 +15,7 @@
     "uploadedAt": "2025-09-08T18:08:30.107Z"
   },
   "timeCreated": "2025-09-08T18:08:30.109Z",
-  "updated": "2025-09-08T18:08:30.110Z",
+  "updated": "2025-09-08T18:30:09.755Z",
   "size": 97299,
   "md5Hash": "DFlGHSMkpu6r9JUfg8of9w==",
   "crc32c": "574595433"

@@ -1,11 +1,13 @@
 {
   "name": "team-logos/i7Ih6zItDq7s6LC7bhnx.jpg",
   "bucket": "minnesota-winter-league.appspot.com",
-  "metageneration": 2,
+  "metageneration": 3,
   "generation": 1757354910098,
   "contentType": "image/jpeg",
   "storageClass": "STANDARD",
-  "downloadTokens": [],
+  "downloadTokens": [
+    "310385ee-1538-4932-89ef-b1ea005f09f1"
+  ],
   "etag": "UJxui6QctY3Qr2dTwTb2gpPmik8",
   "customMetadata": {
     "teamName": "Elk River Elephants",
@@ -13,7 +15,7 @@
     "uploadedAt": "2025-09-08T18:08:30.096Z"
   },
   "timeCreated": "2025-09-08T18:08:30.098Z",
-  "updated": "2025-09-08T18:08:30.098Z",
+  "updated": "2025-09-08T18:30:09.685Z",
   "size": 37396,
   "md5Hash": "/0Q+3WsiIb0Sq0eN27YL0g==",
   "crc32c": "2486208329"

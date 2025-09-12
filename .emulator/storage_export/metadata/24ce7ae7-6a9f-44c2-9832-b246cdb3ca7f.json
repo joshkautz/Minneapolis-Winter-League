@@ -1,11 +1,13 @@
 {
   "name": "team-logos/nMKG272F5ORLYhUxCF9w.jpg",
   "bucket": "minnesota-winter-league.appspot.com",
-  "metageneration": 2,
+  "metageneration": 3,
   "generation": 1757354910130,
   "contentType": "image/jpeg",
   "storageClass": "STANDARD",
-  "downloadTokens": [],
+  "downloadTokens": [
+    "8f840e90-909f-474c-b7f9-e2e23c1f0dbf"
+  ],
   "etag": "+pnLFH4iydZNUvhP5szwBnbAliI",
   "customMetadata": {
     "teamName": "Winona Walruses",
@@ -13,7 +15,7 @@
     "uploadedAt": "2025-09-08T18:08:30.129Z"
   },
   "timeCreated": "2025-09-08T18:08:30.130Z",
-  "updated": "2025-09-08T18:08:30.131Z",
+  "updated": "2025-09-08T18:30:09.684Z",
   "size": 46305,
   "md5Hash": "v9bgDsBRRQC19gS+HT+9ig==",
   "crc32c": "796369553"

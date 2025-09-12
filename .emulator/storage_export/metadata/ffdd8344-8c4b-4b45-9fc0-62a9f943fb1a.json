@@ -1,11 +1,13 @@
 {
   "name": "team-logos/Ub5kWZJcihHvUXOFWPVd.jpg",
   "bucket": "minnesota-winter-league.appspot.com",
-  "metageneration": 2,
+  "metageneration": 3,
   "generation": 1757354910086,
   "contentType": "image/jpeg",
   "storageClass": "STANDARD",
-  "downloadTokens": [],
+  "downloadTokens": [
+    "dc48dd81-e18c-46d9-be76-4223201487c9"
+  ],
   "etag": "3STQ9GpuqVbPZefIulnEDDmktWs",
   "customMetadata": {
     "teamName": "Roseville Rhinos",
@@ -13,7 +15,7 @@
     "uploadedAt": "2025-09-08T18:08:30.084Z"
   },
   "timeCreated": "2025-09-08T18:08:30.086Z",
-  "updated": "2025-09-08T18:08:30.087Z",
+  "updated": "2025-09-08T18:30:09.787Z",
   "size": 58791,
   "md5Hash": "2PYwmQvgb9Oj8znlo2mshA==",
   "crc32c": "3683599187"

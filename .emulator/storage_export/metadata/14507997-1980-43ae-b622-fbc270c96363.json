@@ -1,11 +1,13 @@
 {
   "name": "team-logos/ntQxqGzTQ6RUQDQW07sV.jpg",
   "bucket": "minnesota-winter-league.appspot.com",
-  "metageneration": 2,
+  "metageneration": 3,
   "generation": 1757354910121,
   "contentType": "image/jpeg",
   "storageClass": "STANDARD",
-  "downloadTokens": [],
+  "downloadTokens": [
+    "ca701df6-ccc3-408f-9d10-c5fba5ad4fb7"
+  ],
   "etag": "MMBRRe+u4ARd7ty7GdRs0Faqx+0",
   "customMetadata": {
     "teamName": "Park Rapids Penguins",
@@ -13,7 +15,7 @@
     "uploadedAt": "2025-09-08T18:08:30.119Z"
   },
   "timeCreated": "2025-09-08T18:08:30.121Z",
-  "updated": "2025-09-08T18:08:30.121Z",
+  "updated": "2025-09-08T18:30:09.723Z",
   "size": 65610,
   "md5Hash": "WRTaQsoFofMnxl+S5y6lFg==",
   "crc32c": "4227358349"
