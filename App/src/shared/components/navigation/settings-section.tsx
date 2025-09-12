@@ -5,6 +5,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '@/components/ui/popover'
+import { SeparatorWithText } from '@/components/ui/separator-with-text'
 import { Settings } from 'lucide-react'
 import { SeasonSelect } from '../season-select'
 import { ThemeSelect } from '../theme-select'
@@ -39,6 +40,7 @@ export const SettingsSection = ({
 				)}
 				align='end'
 			>
+				<SeparatorWithText>Settings</SeparatorWithText>
 				<div className='space-y-4'>
 					<div>
 						<label className='text-sm font-medium mb-2 block'>Season</label>

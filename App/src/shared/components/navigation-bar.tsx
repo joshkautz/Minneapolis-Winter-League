@@ -12,6 +12,7 @@ interface NavigationBarProps {
  */
 export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 	const [isSettingsPopoverOpen, setIsSettingsPopoverOpen] = useState(false)
+	const [isAccountPopoverOpen, setIsAccountPopoverOpen] = useState(false)
 	const [forceClosePopover, setForceClosePopover] = useState(false)
 	const isMobile = useIsMobile()
 
@@ -30,19 +31,20 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 		handleMobileLogin,
 	} = useTopNavigation()
 
-	// Close settings popover when switching to mobile view
+	// Close popovers when switching to mobile view
 	useEffect(() => {
-		if (isMobile && isSettingsPopoverOpen) {
+		if (isMobile && (isSettingsPopoverOpen || isAccountPopoverOpen)) {
 			// Force immediate close without animation to prevent jarring UX
 			setForceClosePopover(true)
 			setIsSettingsPopoverOpen(false)
+			setIsAccountPopoverOpen(false)
 			// Reset the force close flag after a brief moment
 			const timeout = setTimeout(() => setForceClosePopover(false), 100)
 			return () => clearTimeout(timeout)
 		}
 		// Return undefined for other code paths
 		return undefined
-	}, [isMobile, isSettingsPopoverOpen])
+	}, [isMobile, isSettingsPopoverOpen, isAccountPopoverOpen])
 
 	return (
 		<header className='sticky top-0 z-50 w-full border-b supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur-sm'>
@@ -54,6 +56,8 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 					onLoginClick={onLoginClick}
 					settingsPopoverOpen={isSettingsPopoverOpen}
 					setSettingsPopoverOpen={setIsSettingsPopoverOpen}
+					accountPopoverOpen={isAccountPopoverOpen}
+					setAccountPopoverOpen={setIsAccountPopoverOpen}
 					forceClosePopover={forceClosePopover}
 				/>
 

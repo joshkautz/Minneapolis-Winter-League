@@ -9,6 +9,8 @@ interface DesktopNavigationProps {
 	onLoginClick: () => void
 	settingsPopoverOpen: boolean
 	setSettingsPopoverOpen: Dispatch<SetStateAction<boolean>>
+	accountPopoverOpen: boolean
+	setAccountPopoverOpen: Dispatch<SetStateAction<boolean>>
 	forceClosePopover: boolean
 }
 
@@ -22,6 +24,8 @@ export const DesktopNavigation = ({
 	onLoginClick,
 	settingsPopoverOpen,
 	setSettingsPopoverOpen,
+	accountPopoverOpen,
+	setAccountPopoverOpen,
 	forceClosePopover,
 }: DesktopNavigationProps) => {
 	return (
@@ -33,7 +37,13 @@ export const DesktopNavigation = ({
 					setIsOpen={setSettingsPopoverOpen}
 					forceClose={forceClosePopover}
 				/>
-				<AccountSection userContent={userItems} onLoginClick={onLoginClick} />
+				<AccountSection
+					userContent={userItems}
+					onLoginClick={onLoginClick}
+					accountPopoverOpen={accountPopoverOpen}
+					setAccountPopoverOpen={setAccountPopoverOpen}
+					forceClosePopover={forceClosePopover}
+				/>
 			</div>
 		</div>
 	)
