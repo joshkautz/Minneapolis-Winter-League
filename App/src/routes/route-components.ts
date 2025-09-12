@@ -28,6 +28,10 @@ export const HallOfFame = lazyImport(
 	() => import('@/pages/HallOfFamePage'),
 	'HallOfFamePage'
 )
+export const HallOfFameAdmin = lazyImport(
+	() => import('@/pages/HallOfFameAdminPage'),
+	'HallOfFameAdminPage'
+)
 
 // Protected routes - require authentication
 export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')

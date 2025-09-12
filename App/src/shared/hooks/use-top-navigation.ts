@@ -83,6 +83,11 @@ export const useTopNavigation = () => {
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
+	const isAuthenticatedUserAdmin = useMemo(
+		() => authenticatedUserSnapshot?.data()?.admin ?? false,
+		[authenticatedUserSnapshot]
+	)
+
 	const hasRequiredTasks = useMemo(
 		() =>
 			isAuthenticatedUserPaid === false || isAuthenticatedUserSigned === false,
@@ -96,6 +101,9 @@ export const useTopNavigation = () => {
 		{ label: 'Standings', path: '/standings', alt: 'league standings' },
 		{ label: 'Teams', path: '/teams', alt: 'team list' },
 		{ label: 'Hall of Fame', path: '/hall-of-fame', alt: 'player rankings' },
+		...(isAuthenticatedUserAdmin
+			? [{ label: 'Hall of Fame Admin', path: '/hall-of-fame/admin', alt: 'hall of fame administration' }]
+			: []),
 	]
 
 	const captainContent = [
