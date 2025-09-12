@@ -577,6 +577,7 @@ Map<string, TeamStrength> // teamId -> calculated strength
 - **Consistency Checks**: Verify calculation results match expectations
 - **Audit Logging**: Comprehensive logging for debugging and verification
 - **Rollback Capability**: Ability to revert to previous calculation states
+- **Full Precision Storage**: ELO ratings stored as floating-point numbers to prevent cumulative rounding errors
 
 ---
 

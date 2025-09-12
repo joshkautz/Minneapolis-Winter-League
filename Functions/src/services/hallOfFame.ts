@@ -414,7 +414,7 @@ export function calculatePlayerRankings(
 					player: null as any, // Will be set when saving to Firestore
 					playerId: playerState.playerId,
 					playerName: playerState.playerName,
-					eloRating: Math.round(playerState.currentRating),
+					eloRating: playerState.currentRating,
 					totalGames: playerState.totalGames,
 					totalSeasons: playerState.seasonStats.size,
 					rank: index + 1,
@@ -446,9 +446,9 @@ export function createWeeklySnapshot(
 			return {
 				playerId: playerState.playerId,
 				playerName: playerState.playerName,
-				eloRating: Math.round(playerState.currentRating),
+				eloRating: playerState.currentRating,
 				rank: index + 1,
-				weeklyChange: Math.round(weeklyChange),
+				weeklyChange: weeklyChange,
 				gamesThisWeek: 0, // Will be calculated separately
 				pointDifferentialThisWeek: 0, // Will be calculated separately
 			}

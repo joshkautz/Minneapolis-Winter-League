@@ -412,9 +412,7 @@ export const HallOfFame: React.FC<HallOfFameProps> = ({
 												</div>
 											</TableCell>
 											<TableCell className='text-center'>
-												<div className='font-mono font-medium text-lg'>
-													{player.eloRating}
-												</div>
+												{player.eloRating.toFixed(6)}
 											</TableCell>
 											<TableCell className='text-center'>
 												{player.lastRatingChange !== 0 && (
