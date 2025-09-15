@@ -27,7 +27,6 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
 	ChartConfig,
@@ -348,22 +347,80 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 
 	if (loading) {
 		return (
-			<Card className={className}>
-				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<Trophy className='h-5 w-5' />
-						Ranking History
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className='space-y-4'>
-						<Skeleton className='h-8 w-full' />
-						<div className='h-[400px] w-full flex items-center justify-center'>
-							<Skeleton className='h-full w-full rounded-lg' />
-						</div>
+			<div className='container max-w-6xl mx-auto py-8 space-y-6'>
+				{/* Back button skeleton */}
+				<div className='flex items-center gap-4'>
+					<div className='h-8 w-32 rounded-md bg-gray-200 animate-pulse relative overflow-hidden'>
+						<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
 					</div>
-				</CardContent>
-			</Card>
+				</div>
+
+				<Card className={`${className} pt-0`}>
+					{/* Header skeleton that matches the real layout */}
+					<CardHeader className='flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row'>
+						<div className='grid flex-1 gap-1'>
+							<div className='flex items-center gap-2'>
+								<Trophy className='h-5 w-5 text-gray-300' />
+								<div className='h-6 w-32 rounded bg-gray-200 animate-pulse relative overflow-hidden'>
+									<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
+								</div>
+							</div>
+						</div>
+						{/* Player selector skeleton */}
+						<div className='hidden h-9 w-[200px] rounded-lg bg-gray-200 animate-pulse sm:ml-auto sm:flex relative overflow-hidden'>
+							<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
+						</div>
+					</CardHeader>
+
+					{/* Chart content skeleton */}
+					<CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
+						<div className='aspect-auto h-[250px] w-full'>
+							{/* Chart area with subtle grid pattern to simulate chart */}
+							<div className='h-full w-full rounded-lg border bg-gray-50 relative overflow-hidden'>
+								{/* Simulate chart grid lines */}
+								<div className='absolute inset-0 opacity-30'>
+									{/* Horizontal lines */}
+									{Array.from({ length: 5 }).map((_, i) => (
+										<div
+											key={`h-${i}`}
+											className='absolute w-full border-t border-gray-300'
+											style={{ top: `${(i + 1) * 20}%` }}
+										/>
+									))}
+									{/* Vertical lines */}
+									{Array.from({ length: 6 }).map((_, i) => (
+										<div
+											key={`v-${i}`}
+											className='absolute h-full border-l border-gray-300'
+											style={{ left: `${(i + 1) * 16.66}%` }}
+										/>
+									))}
+								</div>
+
+								{/* Simulate chart curves */}
+								<div className='absolute inset-4 flex items-end justify-between'>
+									{Array.from({ length: 8 }).map((_, i) => (
+										<div
+											key={i}
+											className='flex flex-col items-center space-y-1'
+										>
+											<div
+												className='w-2 bg-gray-300 animate-pulse relative overflow-hidden'
+												style={{ height: `${Math.random() * 60 + 20}%` }}
+											>
+												<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
+											</div>
+										</div>
+									))}
+								</div>
+
+								{/* Main shimmer overlay for the entire chart area */}
+								<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer' />
+							</div>
+						</div>
+					</CardContent>
+				</Card>
+			</div>
 		)
 	}
 
@@ -394,12 +451,6 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 					<CardTitle className='flex items-center gap-2'>
 						<Trophy className='h-5 w-5' />
 						Ranking History
-						{playerName && (
-							<Badge variant='outline' className='ml-2'>
-								<User className='h-3 w-3 mr-1' />
-								{playerName}
-							</Badge>
-						)}
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
@@ -434,12 +485,6 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 						<CardTitle className='flex items-center gap-2'>
 							<Trophy className='h-5 w-5' />
 							Ranking History
-							{playerName && (
-								<Badge variant='outline' className='ml-2'>
-									<User className='h-3 w-3 mr-1' />
-									{playerName}
-								</Badge>
-							)}
 						</CardTitle>
 					</div>
 					<Select value={playerId} onValueChange={handlePlayerChange}>
@@ -494,11 +539,11 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 									/>
 								</linearGradient>
 							</defs>
-							<CartesianGrid vertical={false} />
+							<CartesianGrid vertical={true} />
 							<XAxis
 								dataKey='date'
-								tickLine={false}
-								axisLine={false}
+								tickLine={true}
+								axisLine={true}
 								tickMargin={8}
 								minTickGap={32}
 								tickFormatter={(value) => {
@@ -513,16 +558,17 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 							<YAxis
 								yAxisId='ranking'
 								orientation='left'
-								tickLine={false}
-								axisLine={false}
+								tickLine={true}
+								axisLine={true}
 								domain={[0, 'dataMax + 5']}
 							/>
 							<YAxis
 								yAxisId='eloRating'
 								orientation='right'
-								tickLine={false}
-								axisLine={false}
+								tickLine={true}
+								axisLine={true}
 								domain={['dataMin - 5', 'dataMax + 5']}
+								tickFormatter={(value) => Math.round(value).toString()}
 							/>
 							<ChartTooltip
 								cursor={false}
