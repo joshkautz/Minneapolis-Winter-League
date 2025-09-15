@@ -3,3 +3,4 @@
  */
 
 export { HallOfFame } from './hall-of-fame'
+export { PlayerRankingHistory } from './player-ranking-history'

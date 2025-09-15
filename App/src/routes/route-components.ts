@@ -28,6 +28,10 @@ export const HallOfFame = lazyImport(
 	() => import('@/features/hall-of-fame'),
 	'HallOfFame'
 )
+export const PlayerRankingHistory = lazyImport(
+	() => import('@/features/hall-of-fame'),
+	'PlayerRankingHistory'
+)
 export const HallOfFameAdmin = lazyImport(
 	() => import('@/features/admin'),
 	'HallOfFameAdmin'

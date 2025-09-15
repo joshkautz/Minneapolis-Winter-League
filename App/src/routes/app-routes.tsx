@@ -9,6 +9,7 @@ import {
 	Teams,
 	TeamProfile,
 	HallOfFame,
+	PlayerRankingHistory,
 	HallOfFameAdmin,
 	AdminDashboard,
 	Profile,
@@ -76,6 +77,14 @@ export const AppRoutes: React.FC = () => {
 					element={
 						<PublicRoute>
 							<HallOfFame />
+						</PublicRoute>
+					}
+				/>
+				<Route
+					path='/hall-of-fame/player/:playerId'
+					element={
+						<PublicRoute>
+							<PlayerRankingHistory />
 						</PublicRoute>
 					}
 				/>

@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { InlineMath, BlockMath } from 'react-katex'
 import 'katex/dist/katex.min.css'
@@ -51,6 +52,7 @@ interface HallOfFameProps {
 export const HallOfFame: React.FC<HallOfFameProps> = ({
 	showAdminControls = false,
 }) => {
+	const navigate = useNavigate()
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [rankingsSnapshot, loading, error] = useCollection(
 		currentPlayerRankingsQuery()
@@ -60,6 +62,10 @@ export const HallOfFame: React.FC<HallOfFameProps> = ({
 		id: doc.id,
 		...doc.data(),
 	})) as (PlayerRankingDocument & { id: string })[] | undefined
+
+	const handlePlayerClick = (playerId: string) => {
+		navigate(`/hall-of-fame/player/${playerId}`)
+	}
 
 	if (error) {
 		return (
@@ -425,8 +431,9 @@ export const HallOfFame: React.FC<HallOfFameProps> = ({
 									{rankings.map((player) => (
 										<TableRow
 											key={player.id}
+											onClick={() => handlePlayerClick(player.id)}
 											className={cn(
-												'hover:bg-muted/50',
+												'hover:bg-muted/50 cursor-pointer transition-colors',
 												player.rank <= 3 &&
 													'bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-900/20'
 											)}
