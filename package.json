@@ -8,7 +8,7 @@
 		"Functions"
 	],
 	"scripts": {
-		"dev": "concurrently \"npm run functions:watch\" \"npm run emulators:start\"",
+		"dev": "concurrently \"npm run functions:watch\" \"npm run emulators:start\" \"npm run dev --workspace=App\"",
 		"functions:watch": "npm run build:watch --workspace=Functions",
 		"build": "npm run build --workspace=App && npm run build --workspace=Functions",
 		"format:check": "npm run format:check --workspace=App && npm run format:check --workspace=Functions",
