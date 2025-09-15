@@ -17,6 +17,8 @@ import { cn } from '@/shared/utils'
 
 interface AccountSectionProps {
 	userContent: Array<{ label: string; path: string; alt: string }>
+	adminContent: Array<{ label: string; path: string; alt: string }>
+	isAuthenticatedUserAdmin: boolean
 	onLoginClick: () => void
 	isOpen: boolean
 	setIsOpen: Dispatch<SetStateAction<boolean>>
@@ -30,6 +32,8 @@ interface AccountSectionProps {
  */
 export const AccountSection = ({
 	userContent,
+	adminContent,
+	isAuthenticatedUserAdmin,
 	onLoginClick,
 	isOpen,
 	setIsOpen,
@@ -96,23 +100,43 @@ export const AccountSection = ({
 							</span>
 						</Link>
 					))}
-					<div className='border-t my-1' />
-					<Button
-						onClick={handleSignOut}
-						disabled={signOutLoading}
-						variant='destructive'
-						className='w-full justify-center h-8 px-3 py-1.5 text-sm font-normal bg-destructive text-destructive-foreground hover:bg-destructive/90 dark:bg-destructive dark:text-destructive-foreground dark:hover:bg-destructive/80 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-0 cursor-pointer'
-					>
-						{signOutLoading ? (
-							<>
-								<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
-								Logging out...
-							</>
-						) : (
-							'Log Out'
-						)}
-					</Button>
 				</div>
+
+				{/* Admin Section */}
+				{isAuthenticatedUserAdmin && adminContent.length > 0 && (
+					<>
+						<SeparatorWithText>Admin</SeparatorWithText>
+						<div className='space-y-1'>
+							{adminContent.map(({ path, label, alt }) => (
+								<Link
+									key={path}
+									to={path}
+									aria-label={alt}
+									className='flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors'
+								>
+									<span>{label}</span>
+								</Link>
+							))}
+						</div>
+					</>
+				)}
+
+				<div className='border-t my-1' />
+				<Button
+					onClick={handleSignOut}
+					disabled={signOutLoading}
+					variant='destructive'
+					className='w-full justify-center h-8 px-3 py-1.5 text-sm font-normal bg-destructive text-destructive-foreground hover:bg-destructive/90 dark:bg-destructive dark:text-destructive-foreground dark:hover:bg-destructive/80 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-0 cursor-pointer'
+				>
+					{signOutLoading ? (
+						<>
+							<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+							Logging out...
+						</>
+					) : (
+						'Log Out'
+					)}
+				</Button>
 			</PopoverContent>
 		</Popover>
 	)

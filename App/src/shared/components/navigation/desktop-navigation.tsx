@@ -6,6 +6,8 @@ import { AccountSection } from './account-section'
 interface DesktopNavigationProps {
 	navItems: Array<{ label: string; path: string; alt: string }>
 	userItems: Array<{ label: string; path: string; alt: string }>
+	adminItems: Array<{ label: string; path: string; alt: string }>
+	isAuthenticatedUserAdmin: boolean
 	onLoginClick: () => void
 	settingsPopoverOpen: boolean
 	setSettingsPopoverOpen: Dispatch<SetStateAction<boolean>>
@@ -23,6 +25,8 @@ interface DesktopNavigationProps {
 export const DesktopNavigation = ({
 	navItems,
 	userItems,
+	adminItems,
+	isAuthenticatedUserAdmin,
 	onLoginClick,
 	settingsPopoverOpen,
 	setSettingsPopoverOpen,
@@ -43,6 +47,8 @@ export const DesktopNavigation = ({
 				/>
 				<AccountSection
 					userContent={userItems}
+					adminContent={adminItems}
+					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 					onLoginClick={onLoginClick}
 					isOpen={accountPopoverOpen}
 					setIsOpen={setAccountPopoverOpen}

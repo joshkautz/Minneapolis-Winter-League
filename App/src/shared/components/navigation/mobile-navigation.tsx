@@ -19,7 +19,9 @@ import { NotificationBadge } from './notification-badge'
 interface MobileNavigationProps {
 	navItems: Array<{ label: string; path: string; alt: string }>
 	userItems: Array<{ label: string; path: string; alt: string }>
+	adminItems: Array<{ label: string; path: string; alt: string }>
 	isAuthenticated: boolean
+	isAuthenticatedUserAdmin: boolean
 	hasPendingOffers: number | undefined
 	hasRequiredTasks: boolean
 	isMobileNavOpen: boolean
@@ -37,7 +39,9 @@ interface MobileNavigationProps {
 export const MobileNavigation = ({
 	navItems,
 	userItems,
+	adminItems,
 	isAuthenticated,
+	isAuthenticatedUserAdmin,
 	hasPendingOffers,
 	hasRequiredTasks,
 	isMobileNavOpen,
@@ -82,7 +86,9 @@ export const MobileNavigation = ({
 				<MobileNavigationContent
 					navItems={navItems}
 					userItems={userItems}
+					adminItems={adminItems}
 					isAuthenticated={isAuthenticated}
+					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 					hasPendingOffers={hasPendingOffers}
 					hasRequiredTasks={hasRequiredTasks}
 					onItemClick={onItemClick}
@@ -99,7 +105,9 @@ export const MobileNavigation = ({
 interface MobileNavigationContentProps {
 	navItems: Array<{ label: string; path: string; alt: string }>
 	userItems: Array<{ label: string; path: string; alt: string }>
+	adminItems: Array<{ label: string; path: string; alt: string }>
 	isAuthenticated: boolean
+	isAuthenticatedUserAdmin: boolean
 	hasPendingOffers: number | undefined
 	hasRequiredTasks: boolean
 	onItemClick: () => void
@@ -115,7 +123,9 @@ interface MobileNavigationContentProps {
 const MobileNavigationContent = ({
 	navItems,
 	userItems,
+	adminItems,
 	isAuthenticated,
+	isAuthenticatedUserAdmin,
 	hasPendingOffers,
 	hasRequiredTasks,
 	onItemClick,
@@ -198,6 +208,26 @@ const MobileNavigationContent = ({
 						))}
 					</>
 				)}
+
+				{/* Admin Section - For Admin Users */}
+				{isAuthenticated &&
+					isAuthenticatedUserAdmin &&
+					adminItems.length > 0 && (
+						<>
+							<SeparatorWithText>Admin</SeparatorWithText>
+							{adminItems.map(({ path, label, alt }) => (
+								<Link
+									key={path}
+									to={path}
+									aria-label={alt}
+									onClick={onItemClick}
+									className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset cursor-pointer'
+								>
+									{label}
+								</Link>
+							))}
+						</>
+					)}
 
 				<SeparatorWithText>Settings</SeparatorWithText>
 

@@ -23,8 +23,10 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 		isMobileNavOpen,
 		hasPendingOffers,
 		hasRequiredTasks,
+		isAuthenticatedUserAdmin,
 		navContent,
 		userContent,
+		adminContent,
 		setIsMobileNavOpen,
 		handleCloseMobileNav,
 		handleSignOut,
@@ -53,6 +55,8 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 				<DesktopNavigation
 					navItems={navContent}
 					userItems={userContent}
+					adminItems={adminContent}
+					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 					onLoginClick={onLoginClick}
 					settingsPopoverOpen={isSettingsPopoverOpen}
 					setSettingsPopoverOpen={setIsSettingsPopoverOpen}
@@ -67,7 +71,9 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 				<MobileNavigation
 					navItems={navContent}
 					userItems={userContent}
+					adminItems={adminContent}
 					isAuthenticated={!!authStateUser}
+					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 					hasPendingOffers={hasPendingOffers}
 					hasRequiredTasks={hasRequiredTasks}
 					isMobileNavOpen={isMobileNavOpen}

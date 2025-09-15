@@ -101,15 +101,15 @@ export const useTopNavigation = () => {
 		{ label: 'Standings', path: '/standings', alt: 'league standings' },
 		{ label: 'Teams', path: '/teams', alt: 'team list' },
 		{ label: 'Hall of Fame', path: '/hall-of-fame', alt: 'player rankings' },
-		...(isAuthenticatedUserAdmin
-			? [
-					{
-						label: 'Admin',
-						path: '/admin',
-						alt: 'admin dashboard',
-					},
-				]
-			: []),
+	]
+
+	const adminContent = [
+		{ label: 'Dashboard', path: '/admin', alt: 'admin dashboard' },
+		{
+			label: 'Hall of Fame',
+			path: '/admin/hall-of-fame',
+			alt: 'hall of fame',
+		},
 	]
 
 	const captainContent = [
@@ -188,10 +188,12 @@ export const useTopNavigation = () => {
 		isMobileNavOpen,
 		hasPendingOffers,
 		hasRequiredTasks,
+		isAuthenticatedUserAdmin,
 
 		// Content
 		navContent,
 		userContent,
+		adminContent,
 
 		// Actions
 		setIsMobileNavOpen,
