@@ -42,7 +42,6 @@ import {
 	Info,
 } from 'lucide-react'
 import { cn } from '@/shared/utils'
-import { GradientHeader } from '@/shared/components'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 interface HallOfFameProps {
@@ -64,8 +63,17 @@ export const HallOfFame: React.FC<HallOfFameProps> = ({
 
 	if (error) {
 		return (
-			<div className='container'>
-				<GradientHeader>Hall of Fame</GradientHeader>
+			<div className='container mx-auto px-4 py-8 space-y-6'>
+				{/* Header */}
+				<div className='text-center space-y-4'>
+					<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
+						<Medal className='h-8 w-8' />
+						Hall of Fame
+					</h1>
+					<p className='text-muted-foreground'>
+						Player rankings based on performance and ELO rating system
+					</p>
+				</div>
 				<Card>
 					<CardContent className='p-6'>
 						<p className='text-red-600'>
@@ -78,8 +86,17 @@ export const HallOfFame: React.FC<HallOfFameProps> = ({
 	}
 
 	return (
-		<div className='container'>
-			<GradientHeader>Hall of Fame</GradientHeader>
+		<div className='container mx-auto px-4 py-8 space-y-6'>
+			{/* Header */}
+			<div className='text-center space-y-4'>
+				<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
+					<Medal className='h-8 w-8' />
+					Hall of Fame
+				</h1>
+				<p className='text-muted-foreground'>
+					Player rankings based on performance and ELO rating system
+				</p>
+			</div>
 
 			{/* Informational Alert */}
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -379,7 +396,7 @@ export const HallOfFame: React.FC<HallOfFameProps> = ({
 											className={cn(
 												'hover:bg-muted/50',
 												player.rank <= 3 &&
-													'bg-gradient-to-r from-yellow-50 to-transparent'
+													'bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-900/20'
 											)}
 										>
 											<TableCell className='font-medium'>
@@ -398,16 +415,21 @@ export const HallOfFame: React.FC<HallOfFameProps> = ({
 											</TableCell>
 											<TableCell>
 												<div className='space-y-1'>
-													<div className='font-medium'>{player.playerName}</div>
+													<div
+														className={cn(
+															'font-medium',
+															player.rank <= 3 && 'dark:text-foreground'
+														)}
+													>
+														{player.playerName}
+													</div>
 													{player.seasonStats.length > 0 && (
-														<div className='text-xs text-muted-foreground'>
-															Last active:{' '}
-															{
-																player.seasonStats[
-																	player.seasonStats.length - 1
-																]?.seasonName
-															}
-														</div>
+														<div
+															className={cn(
+																'text-xs text-muted-foreground',
+																player.rank <= 3 && 'dark:text-muted-foreground'
+															)}
+														></div>
 													)}
 												</div>
 											</TableCell>

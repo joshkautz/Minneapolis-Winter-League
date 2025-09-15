@@ -1,12 +1,12 @@
 import { formatTimestamp } from '@/shared/utils'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { useTeamsContext } from '@/providers'
-import { GradientHeader } from '@/shared/components'
 import { ComingSoon } from '@/shared/components'
 import { useSeasonsContext } from '@/providers'
 import { Timestamp } from '@firebase/firestore'
 import { useMemo } from 'react'
 import { TeamCard } from './team-card'
+import { Users } from 'lucide-react'
 
 // Types for better TypeScript support
 enum SeasonStatus {
@@ -54,8 +54,17 @@ export const Teams = () => {
 	}
 
 	return (
-		<div className='container'>
-			<GradientHeader>Teams</GradientHeader>
+		<div className='container mx-auto px-4 py-8 space-y-6'>
+			{/* Header */}
+			<div className='text-center space-y-4'>
+				<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
+					<Users className='h-8 w-8' />
+					Teams
+				</h1>
+				<p className='text-muted-foreground'>
+					Explore all the teams competing in this season
+				</p>
+			</div>
 
 			{!selectedSeasonTeamsQuerySnapshot ? (
 				<div

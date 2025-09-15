@@ -130,22 +130,26 @@ export const TeamProfile = () => {
 
 	return (
 		<div className={'container'}>
-			<div className={'w-1/2 md:w-1/4 my-8 mx-auto'}>
+			<div className={'w-1/2 md:w-1/4 my-8 mx-auto group'}>
 				{teamProfileImageLoaded ? null : (
-					<Skeleton className='h-[100px] md:h-[250px] md:w-1/4' />
+					<Skeleton className='aspect-square w-full rounded-lg' />
 				)}
-				<img
-					onError={() => {
-						setTeamProfileImageLoaded(false)
-					}}
-					style={teamProfileImageLoaded ? {} : { display: 'none' }}
-					src={imgSrc}
-					onLoad={() => {
-						setTeamProfileImageLoaded(true)
-					}}
-					alt={'team logo'}
-					className={'rounded-md'}
-				/>
+				<div className='aspect-square w-full overflow-hidden rounded-lg bg-muted'>
+					<img
+						onError={() => {
+							setTeamProfileImageLoaded(false)
+						}}
+						style={teamProfileImageLoaded ? {} : { display: 'none' }}
+						src={imgSrc}
+						onLoad={() => {
+							setTeamProfileImageLoaded(true)
+						}}
+						alt={'team logo'}
+						className={
+							'h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg'
+						}
+					/>
+				</div>
 			</div>
 
 			<div className='flex justify-center items-start gap-8 flex-wrap max-w-[1040px] mx-auto'>
