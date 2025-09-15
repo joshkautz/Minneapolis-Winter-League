@@ -10,6 +10,7 @@ import {
 	TeamProfile,
 	HallOfFame,
 	HallOfFameAdmin,
+	AdminDashboard,
 	Profile,
 	CreateTeam,
 	ManageTeam,
@@ -105,7 +106,15 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path='/hall-of-fame/admin'
+					path='/admin'
+					element={
+						<AuthenticatedRoute>
+							<AdminDashboard />
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/hall-of-fame'
 					element={
 						<AuthenticatedRoute>
 							<HallOfFameAdmin />

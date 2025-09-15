@@ -104,9 +104,9 @@ export const useTopNavigation = () => {
 		...(isAuthenticatedUserAdmin
 			? [
 					{
-						label: 'Hall of Fame Admin',
-						path: '/hall-of-fame/admin',
-						alt: 'hall of fame administration',
+						label: 'Admin',
+						path: '/admin',
+						alt: 'admin dashboard',
 					},
 				]
 			: []),
