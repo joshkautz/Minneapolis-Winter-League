@@ -356,24 +356,56 @@ export const HallOfFame: React.FC<HallOfFameProps> = ({
 					<CardTitle className='flex items-center gap-2'>
 						<Medal className='h-5 w-5' />
 						Player Rankings
-						{rankings && (
-							<Badge variant='secondary'>{rankings.length} players</Badge>
-						)}
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{loading ? (
-						<div className='space-y-3'>
-							{[...Array(10)].map((_, i) => (
-								<div key={i} className='flex items-center space-x-4'>
-									<Skeleton className='h-12 w-12 rounded-full' />
-									<div className='space-y-2 flex-1'>
-										<Skeleton className='h-4 w-1/3' />
-										<Skeleton className='h-3 w-1/4' />
-									</div>
-									<Skeleton className='h-6 w-16' />
-								</div>
-							))}
+						<div className='overflow-x-auto'>
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead className='w-16'>Rank</TableHead>
+										<TableHead className='w-32'>Player</TableHead>
+										<TableHead className='w-32 text-center'>Rating</TableHead>
+										<TableHead className='w-32 text-center'>Change</TableHead>
+										<TableHead className='w-32 text-center'>Games</TableHead>
+										<TableHead className='w-32 text-center'>Seasons</TableHead>
+										<TableHead className='w-32 text-center'>Status</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{[...Array(8)].map((_, i) => (
+										<TableRow key={i}>
+											<TableCell>
+												<div className='flex items-center gap-2'>
+													<Skeleton className='h-4 w-4 opacity-20' />
+													<Skeleton className='h-4 w-6 opacity-20' />
+												</div>
+											</TableCell>
+											<TableCell>
+												<div className='space-y-1'>
+													<Skeleton className='h-4 w-32 opacity-20' />
+												</div>
+											</TableCell>
+											<TableCell className='text-center'>
+												<Skeleton className='h-4 w-20 mx-auto opacity-20' />
+											</TableCell>
+											<TableCell className='text-center'>
+												<Skeleton className='h-4 w-12 mx-auto opacity-20' />
+											</TableCell>
+											<TableCell className='text-center'>
+												<Skeleton className='h-4 w-8 mx-auto opacity-20' />
+											</TableCell>
+											<TableCell className='text-center'>
+												<Skeleton className='h-4 w-6 mx-auto opacity-20' />
+											</TableCell>
+											<TableCell className='text-center'>
+												<Skeleton className='h-6 w-16 mx-auto rounded-full opacity-20' />
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
 						</div>
 					) : rankings && rankings.length > 0 ? (
 						<div className='overflow-x-auto'>
@@ -381,12 +413,12 @@ export const HallOfFame: React.FC<HallOfFameProps> = ({
 								<TableHeader>
 									<TableRow>
 										<TableHead className='w-16'>Rank</TableHead>
-										<TableHead>Player</TableHead>
-										<TableHead className='text-center'>Rating</TableHead>
-										<TableHead className='text-center'>Change</TableHead>
-										<TableHead className='text-center'>Games</TableHead>
-										<TableHead className='text-center'>Seasons</TableHead>
-										<TableHead className='text-center'>Status</TableHead>
+										<TableHead className='w-32'>Player</TableHead>
+										<TableHead className='w-32 text-center'>Rating</TableHead>
+										<TableHead className='w-32 text-center'>Change</TableHead>
+										<TableHead className='w-32 text-center'>Games</TableHead>
+										<TableHead className='w-32 text-center'>Seasons</TableHead>
+										<TableHead className='w-32 text-center'>Status</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
