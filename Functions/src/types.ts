@@ -29,13 +29,13 @@ export type Timestamp = AdminTimestamp
 /////////////////////////////////////////////////////////////////
 
 export enum Collections {
-	CALCULATED_ROUNDS = 'calculated-rounds',
 	GAMES = 'games',
 	OFFERS = 'offers',
 	PLAYERS = 'players',
 	RANKINGS = 'rankings',
 	RANKINGS_HISTORY = 'rankings-history',
 	RANKINGS_CALCULATIONS = 'rankings-calculations',
+	RANKINGS_CALCULATED_ROUNDS = 'rankings-calculated-rounds',
 	SEASONS = 'seasons',
 	TEAMS = 'teams',
 	WAIVERS = 'waivers',

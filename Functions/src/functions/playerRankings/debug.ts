@@ -84,7 +84,7 @@ export const getRoundCalculationStatus = onCall(
 
 				// Get calculated rounds count
 				const calculatedRoundsSnapshot = await firestore
-					.collection(Collections.CALCULATED_ROUNDS)
+					.collection(Collections.RANKINGS_CALCULATED_ROUNDS)
 					.get()
 
 				return {

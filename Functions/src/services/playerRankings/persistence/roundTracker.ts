@@ -31,7 +31,7 @@ export async function isRoundCalculated(roundId: string): Promise<boolean> {
 	const firestore = getFirestore()
 
 	const roundDoc = await firestore
-		.collection(Collections.CALCULATED_ROUNDS)
+		.collection(Collections.RANKINGS_CALCULATED_ROUNDS)
 		.doc(roundId)
 		.get()
 
@@ -59,7 +59,7 @@ export async function markRoundCalculated(
 	}
 
 	await firestore
-		.collection(Collections.CALCULATED_ROUNDS)
+		.collection(Collections.RANKINGS_CALCULATED_ROUNDS)
 		.doc(round.roundId)
 		.set(roundDoc)
 }
@@ -71,7 +71,7 @@ export async function getLastCalculatedRoundTime(): Promise<Date | null> {
 	const firestore = getFirestore()
 
 	const lastRoundQuery = await firestore
-		.collection(Collections.CALCULATED_ROUNDS)
+		.collection(Collections.RANKINGS_CALCULATED_ROUNDS)
 		.orderBy('roundStartTime', 'desc')
 		.limit(1)
 		.get()
@@ -111,7 +111,7 @@ export async function getCalculatedRoundsForSeason(
 	const firestore = getFirestore()
 
 	const roundsSnapshot = await firestore
-		.collection(Collections.CALCULATED_ROUNDS)
+		.collection(Collections.RANKINGS_CALCULATED_ROUNDS)
 		.where('seasonId', '==', seasonId)
 		.orderBy('roundStartTime', 'asc')
 		.get()

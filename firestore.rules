@@ -142,6 +142,14 @@ service cloud.firestore {
       allow delete: if false; // Functions only
     }
 
+    // Rankings calculated rounds: Public read access, write access via Functions only
+    match /rankings-calculated-rounds/{roundId} {
+      allow read: if true;
+      allow create: if false; // Functions only
+      allow update: if false; // Functions only
+      allow delete: if false; // Functions only
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     // FALLBACK - DENY ALL OTHER ACCESS
     //////////////////////////////////////////////////////////////////////////////

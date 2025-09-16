@@ -14,7 +14,7 @@ The Minneapolis Winter League Player Rankings system now supports **round-based 
 
 ### 2. Duplicate Prevention
 
-- Each round is tracked in the `calculated-rounds` collection
+- Each round is tracked in the `rankings-calculated-rounds` collection
 - System can detect which rounds have already been processed
 - Prevents accidental recalculation of existing data
 
@@ -135,7 +135,7 @@ const seasonStatus = await getRoundCalculationStatus({ seasonId: '2023-fall' })
 
 ## Database Collections
 
-### `calculated-rounds`
+### `rankings-calculated-rounds`
 
 Tracks which rounds have been processed to prevent duplication.
 
@@ -230,7 +230,7 @@ const rounds = groupGamesByRounds(games)
 1. Group all games by exact start time
 2. Sort rounds chronologically
 3. Process each round completely before moving to next
-4. Track completion in `calculated-rounds` collection
+4. Track completion in `rankings-calculated-rounds` collection
 5. Update player ratings after each round
 
 ### Error Handling
