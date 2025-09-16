@@ -16,7 +16,7 @@ import { firestore, functions } from '../app'
 import {
 	PlayerRankingDocument,
 	RankingHistoryDocument,
-	RankingCalculationDocument,
+	RankingsCalculationDocument,
 	SeasonDocument,
 	Collections,
 } from '../../types'
@@ -91,15 +91,15 @@ export const recentRankingHistoryQuery = (
 }
 
 /**
- * Creates a query for ranking calculations (for monitoring progress)
+ * Creates a query for rankings calculations (for monitoring progress)
  */
-export const playerRankingCalculationsQuery =
-	(): Query<RankingCalculationDocument> => {
+export const playerRankingsCalculationsQuery =
+	(): Query<RankingsCalculationDocument> => {
 		return query(
-			collection(firestore, Collections.RANKING_CALCULATIONS),
+			collection(firestore, Collections.RANKINGS_CALCULATIONS),
 			orderBy('startedAt', 'desc'),
 			limit(20)
-		) as Query<RankingCalculationDocument>
+		) as Query<RankingsCalculationDocument>
 	}
 
 /**
@@ -186,7 +186,7 @@ export const triggerPlayerRankingsCalculation = async (params: {
  */
 export const getPlayerRankingsCalculationStatus = httpsCallable<
 	{ calculationId: string },
-	RankingCalculationDocument
+	RankingsCalculationDocument
 >(functions, 'getCalculationStatus')
 
 /**

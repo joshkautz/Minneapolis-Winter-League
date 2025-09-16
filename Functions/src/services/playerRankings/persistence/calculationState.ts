@@ -1,5 +1,5 @@
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
-import { Collections, RankingCalculationDocument } from '../../../types.js'
+import { Collections, RankingsCalculationDocument } from '../../../types.js'
 import { ALGORITHM_CONSTANTS } from '../constants.js'
 
 /**
@@ -12,7 +12,7 @@ export async function createCalculationState(
 ): Promise<string> {
 	const firestore = getFirestore()
 
-	const calculationDoc: Partial<RankingCalculationDocument> = {
+	const calculationDoc: Partial<RankingsCalculationDocument> = {
 		calculationType,
 		status: 'pending',
 		startedAt: Timestamp.now(),
@@ -40,7 +40,7 @@ export async function createCalculationState(
 	}
 
 	const docRef = await firestore
-		.collection(Collections.RANKING_CALCULATIONS)
+		.collection(Collections.RANKINGS_CALCULATIONS)
 		.add(calculationDoc)
 
 	return docRef.id
@@ -51,11 +51,11 @@ export async function createCalculationState(
  */
 export async function updateCalculationState(
 	calculationId: string,
-	updates: Partial<RankingCalculationDocument>
+	updates: Partial<RankingsCalculationDocument>
 ): Promise<void> {
 	const firestore = getFirestore()
 	await firestore
-		.collection(Collections.RANKING_CALCULATIONS)
+		.collection(Collections.RANKINGS_CALCULATIONS)
 		.doc(calculationId)
 		.update(updates)
 }

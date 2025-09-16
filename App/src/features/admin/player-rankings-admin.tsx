@@ -12,10 +12,10 @@ import { useDocument } from 'react-firebase-hooks/firestore'
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
 import {
-	playerRankingCalculationsQuery,
+	playerRankingsCalculationsQuery,
 	triggerPlayerRankingsCalculation,
 } from '@/firebase/collections/player-rankings'
-import { RankingCalculationDocument } from '@/types'
+import { RankingsCalculationDocument } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -53,13 +53,13 @@ export const PlayerRankingsAdmin: React.FC = () => {
 	)
 
 	const [calculationsSnapshot, loading, error] = useCollection(
-		playerRankingCalculationsQuery()
+		playerRankingsCalculationsQuery()
 	)
 
 	const calculations = calculationsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),
-	})) as (RankingCalculationDocument & { id: string })[] | undefined
+	})) as (RankingsCalculationDocument & { id: string })[] | undefined
 
 	// Handle authentication loading
 	if (playerLoading) {
@@ -194,7 +194,7 @@ export const PlayerRankingsAdmin: React.FC = () => {
 					Player Rankings Administration
 				</h1>
 				<p className='text-muted-foreground'>
-					Manage player ranking calculations and monitor system status
+					Manage player rankings calculations and monitor system status
 				</p>
 			</div>
 

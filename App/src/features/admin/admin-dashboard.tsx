@@ -87,7 +87,7 @@ export const AdminDashboard: React.FC = () => {
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<p className='text-sm text-muted-foreground'>
-							Manage player ranking calculations and monitor player rankings
+							Manage player rankings calculations and monitor player rankings
 							system status.
 						</p>
 						<Button asChild className='w-full'>

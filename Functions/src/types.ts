@@ -35,7 +35,7 @@ export enum Collections {
 	PLAYERS = 'players',
 	RANKINGS = 'rankings',
 	RANKINGS_HISTORY = 'rankings-history',
-	RANKING_CALCULATIONS = 'ranking-calculations',
+	RANKINGS_CALCULATIONS = 'rankings-calculations',
 	SEASONS = 'seasons',
 	TEAMS = 'teams',
 	WAIVERS = 'waivers',
@@ -338,9 +338,9 @@ export interface WeeklyPlayerRanking {
 }
 
 /**
- * Ranking calculation state document
+ * Rankings calculation state document
  */
-export interface RankingCalculationDocument extends DocumentData {
+export interface RankingsCalculationDocument extends DocumentData {
 	/** Type of calculation (full, incremental, or round-based) */
 	calculationType: 'full' | 'incremental' | 'round-based'
 	/** Current status of the calculation */

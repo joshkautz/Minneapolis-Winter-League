@@ -30,7 +30,7 @@ export const getCalculationStatus = onCall(
 
 		const firestore = getFirestore()
 		const calculationDoc = await firestore
-			.collection(Collections.RANKING_CALCULATIONS)
+			.collection(Collections.RANKINGS_CALCULATIONS)
 			.doc(calculationId)
 			.get()
 
