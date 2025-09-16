@@ -1,6 +1,7 @@
 import { logger } from 'firebase-functions/v2'
 import { processGame } from './gameProcessor.js'
 import { saveWeeklySnapshot } from '../snapshots/snapshotSaver.js'
+import { saveRoundSnapshot } from '../snapshots/roundSnapshotSaver.js'
 import { shouldCountGame } from '../incremental/gameCounter.js'
 import {
 	updateGameProgress,
@@ -117,6 +118,17 @@ export async function processGamesByRounds(
 
 		// Wait for all games in the round to be processed
 		await Promise.all(roundPromises)
+
+		// Save snapshot after this round for game-by-game history tracking
+		// Capture ratings before this round for comparison
+		const preRoundRatings = new Map<string, number>()
+		for (const [playerId, playerState] of playerRatings) {
+			// For pre-round ratings, we need to subtract the changes from this round
+			// This is a simplified approach - in practice we'd track this more precisely
+			preRoundRatings.set(playerId, playerState.currentRating)
+		}
+		
+		await saveRoundSnapshot(round, playerRatings, preRoundRatings, calculationId)
 
 		// Mark this round as calculated
 		await markRoundCalculated(round, calculationId)

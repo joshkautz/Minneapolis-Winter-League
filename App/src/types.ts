@@ -306,6 +306,19 @@ export interface RankingHistoryDocument extends DocumentData {
 		/** Timestamp when this snapshot was calculated */
 		calculatedAt: Timestamp
 	}
+	/** Optional round-specific metadata for game-by-game tracking */
+	roundMeta?: {
+		/** Unique round identifier */
+		roundId: string
+		/** Timestamp when this round started */
+		roundStartTime: Timestamp
+		/** Number of games in this round */
+		gameCount: number
+		/** IDs of games processed in this round */
+		gameIds: string[]
+		/** ID of the calculation that processed this round */
+		calculationId: string
+	}
 }
 
 /**
@@ -332,6 +345,14 @@ export interface WeeklyPlayerRanking {
 	totalSeasons: number
 	/** Season statistics up to this point */
 	seasonStats: PlayerSeasonStats[]
+	/** Rating change since previous rating (for round-based tracking) */
+	change?: number
+	/** Games played in this specific round (for round-based tracking) */
+	gamesPlayedInRound?: number
+	/** Previous rating before this snapshot (for round-based tracking) */
+	previousRating?: number
+	/** Whether player is currently active */
+	isActive?: boolean
 }
 
 /**
