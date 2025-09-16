@@ -328,6 +328,12 @@ export interface WeeklyPlayerRanking {
 	gamesThisWeek: number
 	/** Point differential this week */
 	pointDifferentialThisWeek: number
+	/** Total games played up to this point */
+	totalGames: number
+	/** Total seasons participated in up to this point */
+	totalSeasons: number
+	/** Season statistics up to this point */
+	seasonStats: PlayerSeasonStats[]
 }
 
 /**

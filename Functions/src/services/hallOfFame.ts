@@ -193,7 +193,8 @@ export async function calculateTeamStrength(
  */
 export async function processGame(
 	game: GameProcessingData,
-	playerRatings: Map<string, PlayerRatingState>
+	playerRatings: Map<string, PlayerRatingState>,
+	shouldCountGame: boolean = true // Whether to increment totalGames for this game
 ): Promise<void> {
 	if (
 		!game.home ||
@@ -244,7 +245,8 @@ export async function processGame(
 		homeTeamStrength.averageRating,
 		awayTeamStrength.averageRating,
 		true, // isHomeTeam
-		playerRatings
+		playerRatings,
+		shouldCountGame
 	)
 
 	// Process each player on the away team
@@ -255,7 +257,8 @@ export async function processGame(
 		awayTeamStrength.averageRating,
 		homeTeamStrength.averageRating,
 		false, // isHomeTeam
-		playerRatings
+		playerRatings,
+		shouldCountGame
 	)
 }
 
@@ -269,7 +272,8 @@ export async function processPlayersInGame(
 	teamStrength: number,
 	opponentStrength: number,
 	isHomeTeam: boolean,
-	playerRatings: Map<string, PlayerRatingState>
+	playerRatings: Map<string, PlayerRatingState>,
+	shouldCountGame: boolean = true // Whether to increment totalGames for this game
 ): Promise<void> {
 	const seasonDecayFactor = Math.pow(
 		ALGORITHM_CONSTANTS.SEASON_DECAY_FACTOR,
@@ -315,7 +319,9 @@ export async function processPlayersInGame(
 
 		// Update player rating
 		playerState.currentRating += ratingChange
-		playerState.totalGames++
+		if (shouldCountGame) {
+			playerState.totalGames++
+		}
 		playerState.lastSeasonId = game.season.id
 
 		// Update season stats
@@ -434,7 +440,8 @@ export function calculatePlayerRankings(
  */
 export function createWeeklySnapshot(
 	playerRatings: Map<string, PlayerRatingState>,
-	previousRatings?: Map<string, number>
+	previousRatings?: Map<string, number>,
+	weeklyStats?: Map<string, { gamesPlayed: number; pointDifferential: number }>
 ): WeeklyPlayerRanking[] {
 	const rankings = Array.from(playerRatings.values())
 		.sort((a, b) => b.currentRating - a.currentRating)
@@ -442,6 +449,10 @@ export function createWeeklySnapshot(
 			const previousRating =
 				previousRatings?.get(playerState.playerId) || playerState.currentRating
 			const weeklyChange = playerState.currentRating - previousRating
+			const playerWeeklyStats = weeklyStats?.get(playerState.playerId) || {
+				gamesPlayed: 0,
+				pointDifferential: 0,
+			}
 
 			return {
 				playerId: playerState.playerId,
@@ -449,8 +460,11 @@ export function createWeeklySnapshot(
 				eloRating: playerState.currentRating,
 				rank: index + 1,
 				weeklyChange: weeklyChange,
-				gamesThisWeek: 0, // Will be calculated separately
-				pointDifferentialThisWeek: 0, // Will be calculated separately
+				gamesThisWeek: playerWeeklyStats.gamesPlayed,
+				pointDifferentialThisWeek: playerWeeklyStats.pointDifferential,
+				totalGames: playerState.totalGames,
+				totalSeasons: playerState.seasonStats.size,
+				seasonStats: Array.from(playerState.seasonStats.values()),
 			}
 		})
 

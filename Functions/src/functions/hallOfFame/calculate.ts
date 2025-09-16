@@ -12,9 +12,11 @@ import {
 	Collections,
 	GameDocument,
 	SeasonDocument,
+	TeamDocument,
 	RankingHistoryDocument,
 	RankingCalculationDocument,
 	WeeklyPlayerRanking,
+	PlayerSeasonStats,
 } from '../../types.js'
 import {
 	ALGORITHM_CONSTANTS,
@@ -212,6 +214,8 @@ async function processRankingCalculation(
 		// Determine starting point for calculation
 		let startSeasonIndex = 0
 		let existingPlayerRatings = new Map<string, PlayerRatingState>()
+		let incrementalStartSeasonIndex: number | undefined
+		let incrementalStartWeek: number | undefined
 
 		if (config.calculationType === 'incremental') {
 			const result = await determineIncrementalStartPoint(
@@ -220,6 +224,10 @@ async function processRankingCalculation(
 			)
 			startSeasonIndex = result.seasonIndex
 			existingPlayerRatings = result.playerRatings
+
+			// Track the incremental start point for game counting
+			incrementalStartSeasonIndex = result.seasonIndex
+			incrementalStartWeek = result.week
 		}
 
 		// Load all games for processing
@@ -234,18 +242,7 @@ async function processRankingCalculation(
 		const playerRatings = new Map(existingPlayerRatings)
 		logger.info(`Starting with ${playerRatings.size} existing player ratings`)
 
-		await processGamesChronologically(
-			allGames,
-			playerRatings,
-			calculationId,
-			seasons.length
-		)
-
-		logger.info(
-			`After processing games: ${playerRatings.size} players with ratings`
-		)
-
-		// Apply inactivity decay if enabled
+		// Apply inactivity decay if enabled (BEFORE processing games)
 		if (config.applyDecay) {
 			await updateCalculationState(calculationId, {
 				'progress.currentStep': 'Applying inactivity decay...',
@@ -255,6 +252,19 @@ async function processRankingCalculation(
 			const allSeasonIds = seasons.map((s) => s.id)
 			applyInactivityDecay(playerRatings, currentSeasonId, allSeasonIds)
 		}
+
+		await processGamesChronologically(
+			allGames,
+			playerRatings,
+			calculationId,
+			seasons.length,
+			incrementalStartSeasonIndex,
+			incrementalStartWeek
+		)
+
+		logger.info(
+			`After processing games: ${playerRatings.size} players with ratings`
+		)
 
 		// Calculate final rankings and save
 		await updateCalculationState(calculationId, {
@@ -351,13 +361,21 @@ function convertSnapshotToRatings(
 	const playerRatings = new Map<string, PlayerRatingState>()
 
 	for (const ranking of rankings) {
+		// Reconstruct season stats map from the array
+		const seasonStatsMap = new Map<string, PlayerSeasonStats>()
+		if (ranking.seasonStats) {
+			for (const seasonStat of ranking.seasonStats) {
+				seasonStatsMap.set(seasonStat.seasonId, seasonStat)
+			}
+		}
+
 		playerRatings.set(ranking.playerId, {
 			playerId: ranking.playerId,
 			playerName: ranking.playerName,
 			currentRating: ranking.eloRating,
-			totalGames: 0, // Will be recalculated
-			seasonStats: new Map(),
-			lastSeasonId: null,
+			totalGames: ranking.totalGames || 0, // Preserve existing total
+			seasonStats: seasonStatsMap,
+			lastSeasonId: null, // Will be updated as games are processed
 			isActive: true,
 		})
 	}
@@ -391,17 +409,16 @@ async function loadGamesForCalculation(
 
 		logger.info(`Season ${season.id}: Found ${gamesSnapshot.docs.length} games`)
 
-		const seasonGames = gamesSnapshot.docs
-			.map((doc) => {
-				const gameData = doc.data() as GameDocument
-				return {
-					id: doc.id,
-					...gameData,
-					seasonOrder: seasons.length - 1 - i, // 0 = most recent
-					week: calculateWeekNumber(gameData.date, season.dateStart),
-					gameDate: gameData.date.toDate(),
-				} as GameProcessingData
-			})
+		const seasonGames = gamesSnapshot.docs.map((doc) => {
+			const gameData = doc.data() as GameDocument
+			return {
+				id: doc.id,
+				...gameData,
+				seasonOrder: seasons.length - 1 - i, // 0 = most recent
+				week: calculateWeekNumber(gameData.date, season.dateStart),
+				gameDate: gameData.date.toDate(),
+			} as GameProcessingData
+		})
 
 		// Debug: Log a sample game to see the structure
 		if (gamesSnapshot.docs.length > 0) {
@@ -412,11 +429,13 @@ async function loadGamesForCalculation(
 				awayScore: sampleGameData.awayScore,
 				home: sampleGameData.home ? 'has home team' : 'no home team',
 				away: sampleGameData.away ? 'has away team' : 'no away team',
-				allFields: Object.keys(sampleGameData)
+				allFields: Object.keys(sampleGameData),
 			})
 		}
 
-		const completedGames = seasonGames.filter((game) => game.homeScore !== null && game.awayScore !== null)
+		const completedGames = seasonGames.filter(
+			(game) => game.homeScore !== null && game.awayScore !== null
+		)
 
 		logger.info(
 			`Season ${season.id}: ${completedGames.length} completed games after filtering`
@@ -452,11 +471,14 @@ async function processGamesChronologically(
 	games: GameProcessingData[],
 	playerRatings: Map<string, PlayerRatingState>,
 	calculationId: string,
-	totalSeasons: number
+	totalSeasons: number,
+	incrementalStartSeasonIndex?: number,
+	incrementalStartWeek?: number
 ): Promise<void> {
 	let currentSeasonId = ''
 	let currentWeek = 0
 	let weeklyGames: GameProcessingData[] = []
+	let weekStartRatings = new Map<string, number>() // Track ratings at start of week
 	let processedSeasons = 0
 
 	for (let i = 0; i < games.length; i++) {
@@ -470,7 +492,8 @@ async function processGamesChronologically(
 					currentSeasonId,
 					currentWeek,
 					playerRatings,
-					weeklyGames
+					weeklyGames,
+					weekStartRatings
 				)
 			}
 
@@ -491,10 +514,25 @@ async function processGamesChronologically(
 			currentSeasonId = game.season.id
 			currentWeek = game.week
 			weeklyGames = []
+
+			// Capture ratings at the start of this new week
+			weekStartRatings = new Map()
+			for (const [playerId, playerState] of playerRatings) {
+				weekStartRatings.set(playerId, playerState.currentRating)
+			}
 		}
 
+		// Determine if this game should count toward totalGames
+		// For incremental calculations, only count games from the new period
+		// For full calculations, count all games
+		const shouldCountGame =
+			incrementalStartSeasonIndex === undefined ||
+			game.seasonOrder > incrementalStartSeasonIndex ||
+			(game.seasonOrder === incrementalStartSeasonIndex &&
+				game.week >= (incrementalStartWeek || 1))
+
 		// Process the game
-		await processGame(game, playerRatings)
+		await processGame(game, playerRatings, shouldCountGame)
 		weeklyGames.push(game)
 
 		// Update progress periodically
@@ -512,7 +550,8 @@ async function processGamesChronologically(
 			currentSeasonId,
 			currentWeek,
 			playerRatings,
-			weeklyGames
+			weeklyGames,
+			weekStartRatings
 		)
 	}
 }
@@ -524,14 +563,75 @@ async function saveWeeklySnapshot(
 	seasonId: string,
 	week: number,
 	playerRatings: Map<string, PlayerRatingState>,
-	weeklyGames: GameProcessingData[]
+	weeklyGames: GameProcessingData[],
+	previousRatings: Map<string, number>
 ): Promise<void> {
 	const firestore = getFirestore()
 	const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)
 
-	// Calculate weekly stats
-	const weeklyPlayerStats = calculateWeeklyStats(weeklyGames, playerRatings)
-	const weeklyRankings = createWeeklySnapshot(playerRatings, weeklyPlayerStats)
+	// Calculate weekly stats by processing the games
+	const weeklyStats = new Map<
+		string,
+		{ gamesPlayed: number; pointDifferential: number }
+	>()
+
+	// Process each game to calculate player weekly stats
+	for (const game of weeklyGames) {
+		if (
+			!game.home ||
+			!game.away ||
+			game.homeScore === null ||
+			game.awayScore === null
+		) {
+			continue
+		}
+
+		try {
+			// Get team rosters for this game
+			const [homeTeamDoc, awayTeamDoc] = await Promise.all([
+				game.home.get(),
+				game.away.get(),
+			])
+
+			if (homeTeamDoc.exists && awayTeamDoc.exists) {
+				const homeTeamData = homeTeamDoc.data() as TeamDocument
+				const awayTeamData = awayTeamDoc.data() as TeamDocument
+
+				// Process home team players
+				for (const rosterPlayer of homeTeamData.roster || []) {
+					const playerId = rosterPlayer.player.id
+					const stats = weeklyStats.get(playerId) || {
+						gamesPlayed: 0,
+						pointDifferential: 0,
+					}
+					stats.gamesPlayed++
+					stats.pointDifferential += game.homeScore - game.awayScore
+					weeklyStats.set(playerId, stats)
+				}
+
+				// Process away team players
+				for (const rosterPlayer of awayTeamData.roster || []) {
+					const playerId = rosterPlayer.player.id
+					const stats = weeklyStats.get(playerId) || {
+						gamesPlayed: 0,
+						pointDifferential: 0,
+					}
+					stats.gamesPlayed++
+					stats.pointDifferential += game.awayScore - game.homeScore
+					weeklyStats.set(playerId, stats)
+				}
+			}
+		} catch (error) {
+			logger.warn(`Failed to get team data for game ${game.id}:`, error)
+		}
+	}
+
+	// Calculate previous ratings (using the passed previousRatings from start of week)
+	const weeklyRankings = createWeeklySnapshot(
+		playerRatings,
+		previousRatings,
+		weeklyStats
+	)
 
 	const snapshotDoc: Partial<RankingHistoryDocument> = {
 		season: seasonRef as any,
@@ -554,24 +654,6 @@ async function saveWeeklySnapshot(
 		.collection(Collections.RANKING_HISTORY)
 		.doc(snapshotId)
 		.set(snapshotDoc)
-}
-
-/**
- * Calculates weekly statistics for players
- */
-function calculateWeeklyStats(
-	weeklyGames: GameProcessingData[],
-	playerRatings: Map<string, PlayerRatingState>
-): Map<string, number> {
-	const previousRatings = new Map<string, number>()
-
-	// This is a simplified version - in a real implementation,
-	// you'd want to track ratings before the week started
-	for (const [playerId, state] of playerRatings) {
-		previousRatings.set(playerId, state.currentRating)
-	}
-
-	return previousRatings
 }
 
 /**
