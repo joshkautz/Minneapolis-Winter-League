@@ -1,6 +1,4 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
 
 /**
  * 404 Not Found page component
@@ -9,7 +7,7 @@ import { Button } from '@/components/ui/button'
  */
 export const FourOhFour: React.FC = () => {
 	return (
-		<div className='flex flex-col items-center justify-center min-h-screen gap-12 p-4 sm:justify-start sm:p-16'>
+		<div className='flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] gap-12 p-4 sm:justify-start sm:p-16'>
 			<div
 				className={`w-full basis-[320px] rounded-lg justify-center items-center flex max-w-[640px] bg-[url('/hhholographic.webp')]`}
 			>
@@ -26,9 +24,6 @@ export const FourOhFour: React.FC = () => {
 						<u>leadership@mplsmallard.com</u>
 					</a>
 				</p>
-				<Link className='mt-4' to={'/'}>
-					<Button variant={'outline'}>Return to Home</Button>
-				</Link>
 			</div>
 		</div>
 	)

@@ -130,17 +130,17 @@ export const AppRoutes: React.FC = () => {
 						</AuthenticatedRoute>
 					}
 				/>
-			</Route>
 
-			{/* Error routes */}
-			<Route
-				path='*'
-				element={
-					<PublicRoute>
-						<FourOhFour />
-					</PublicRoute>
-				}
-			/>
+				{/* Error routes */}
+				<Route
+					path='*'
+					element={
+						<PublicRoute>
+							<FourOhFour />
+						</PublicRoute>
+					}
+				/>
+			</Route>
 		</Routes>
 	)
 }
