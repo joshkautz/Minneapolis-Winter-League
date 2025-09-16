@@ -15,10 +15,16 @@ export async function saveRoundSnapshot(
 	calculationId: string
 ): Promise<void> {
 	const firestore = getFirestore()
-	const seasonRef = firestore.collection(Collections.SEASONS).doc(round.seasonId)
+	const seasonRef = firestore
+		.collection(Collections.SEASONS)
+		.doc(round.seasonId)
 
 	// Create rankings snapshot for this round
-	const roundRankings = createRoundSnapshot(playerRatings, previousRatings, round.games)
+	const roundRankings = createRoundSnapshot(
+		playerRatings,
+		previousRatings,
+		round.games
+	)
 
 	const snapshotDoc: Partial<RankingHistoryDocument> = {
 		season: seasonRef as any,
@@ -38,9 +44,9 @@ export async function saveRoundSnapshot(
 			roundId: round.roundId,
 			roundStartTime: Timestamp.fromDate(round.startTime),
 			gameCount: round.games.length,
-			gameIds: round.games.map(game => game.id),
-			calculationId: calculationId
-		}
+			gameIds: round.games.map((game) => game.id),
+			calculationId: calculationId,
+		},
 	}
 
 	// Use round ID as the document ID for chronological ordering
@@ -66,7 +72,8 @@ function createRoundSnapshot(
 			playerId,
 			playerName: playerState.playerName,
 			currentRating: playerState.currentRating,
-			previousRating: previousRatings.get(playerId) || ALGORITHM_CONSTANTS.STARTING_RATING,
+			previousRating:
+				previousRatings.get(playerId) || ALGORITHM_CONSTANTS.STARTING_RATING,
 			totalGames: playerState.totalGames,
 			isActive: playerState.isActive,
 		}))
@@ -159,7 +166,7 @@ async function calculateWeeklyStatsLocal(
 	incrementalStartWeek?: number,
 	totalSeasons?: number
 ): Promise<Map<string, any>> {
-	// This is a simplified version - in the real implementation, 
+	// This is a simplified version - in the real implementation,
 	// this would import from the existing statsCalculator
 	return new Map()
 }

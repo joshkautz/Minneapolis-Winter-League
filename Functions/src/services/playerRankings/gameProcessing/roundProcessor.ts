@@ -127,8 +127,13 @@ export async function processGamesByRounds(
 			// This is a simplified approach - in practice we'd track this more precisely
 			preRoundRatings.set(playerId, playerState.currentRating)
 		}
-		
-		await saveRoundSnapshot(round, playerRatings, preRoundRatings, calculationId)
+
+		await saveRoundSnapshot(
+			round,
+			playerRatings,
+			preRoundRatings,
+			calculationId
+		)
 
 		// Mark this round as calculated
 		await markRoundCalculated(round, calculationId)

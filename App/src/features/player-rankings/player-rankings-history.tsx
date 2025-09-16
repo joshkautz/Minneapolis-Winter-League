@@ -208,16 +208,16 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 		const playerHistory: ChartDataPoint[] = []
 
 		rankingHistorySnapshot.docs.forEach((doc) => {
-			const docId = doc.id 
+			const docId = doc.id
 			const data = doc.data()
 
 			// Check if this is a round-based snapshot (has roundMeta) or weekly snapshot
 			const isRoundSnapshot = !!data.roundMeta
-			
+
 			// Filter based on view mode
 			if (viewMode === 'weekly' && isRoundSnapshot) return // Skip round snapshots in weekly view
 			if (viewMode === 'per-game' && !isRoundSnapshot) return // Skip weekly snapshots in per-game view
-			
+
 			let seasonId: string
 			let weekNumber: number
 			let roundInfo: any = null
@@ -327,21 +327,24 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 					} else if (roundInfo.roundStartTime.seconds) {
 						dataPointDate = new Date(
 							roundInfo.roundStartTime.seconds * 1000 +
-							roundInfo.roundStartTime.nanoseconds / 1000000
+								roundInfo.roundStartTime.nanoseconds / 1000000
 						)
 					} else {
 						// Fallback to week calculation
 						dataPointDate = new Date(
-							seasonStartDate.getTime() + (weekNumber - 1) * 7 * 24 * 60 * 60 * 1000
+							seasonStartDate.getTime() +
+								(weekNumber - 1) * 7 * 24 * 60 * 60 * 1000
 						)
 					}
 					displayLabel = `Round ${roundInfo.roundId.split('_')[0]} (${roundInfo.gameCount} games)`
-					gamesPlayed = playerData.gamesPlayedInRound || roundInfo.gameCount || 0
+					gamesPlayed =
+						playerData.gamesPlayedInRound || roundInfo.gameCount || 0
 					ratingChange = playerData.change || 0
 				} else {
 					// Calculate week date from season start
 					dataPointDate = new Date(
-						seasonStartDate.getTime() + (weekNumber - 1) * 7 * 24 * 60 * 60 * 1000
+						seasonStartDate.getTime() +
+							(weekNumber - 1) * 7 * 24 * 60 * 60 * 1000
 					)
 					displayLabel = `Week ${weekNumber}`
 					gamesPlayed = playerData.gamesThisWeek || 0
@@ -523,7 +526,12 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 						</CardTitle>
 					</div>
 					<div className='flex items-center gap-2'>
-						<Select value={viewMode} onValueChange={(value: string) => setViewMode(value as 'weekly' | 'per-game')}>
+						<Select
+							value={viewMode}
+							onValueChange={(value: string) =>
+								setViewMode(value as 'weekly' | 'per-game')
+							}
+						>
 							<SelectTrigger
 								className='w-[140px] rounded-lg'
 								aria-label='Select view mode'
@@ -662,16 +670,25 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 													<>
 														{data.change !== 0 && (
 															<div className='flex items-center gap-2'>
-																<span className='text-muted-foreground'>Change</span>
-																<span className={`font-medium ${data.change > 0 ? 'text-green-600' : data.change < 0 ? 'text-red-600' : ''}`}>
-																	{data.change > 0 ? '+' : ''}{data.change}
+																<span className='text-muted-foreground'>
+																	Change
+																</span>
+																<span
+																	className={`font-medium ${data.change > 0 ? 'text-green-600' : data.change < 0 ? 'text-red-600' : ''}`}
+																>
+																	{data.change > 0 ? '+' : ''}
+																	{data.change}
 																</span>
 															</div>
 														)}
 														{data.gamesPlayed > 0 && (
 															<div className='flex items-center gap-2'>
-																<span className='text-muted-foreground'>Games</span>
-																<span className='font-medium'>{data.gamesPlayed}</span>
+																<span className='text-muted-foreground'>
+																	Games
+																</span>
+																<span className='font-medium'>
+																	{data.gamesPlayed}
+																</span>
 															</div>
 														)}
 													</>
