@@ -1,19 +1,23 @@
 /**
- * Hall of Fame Elo Rating System for Minneapolis Winter League Ultimate Frisbee
+ * Player Rankings Elo Rating System for Minneapolis Winter League Ultimate Frisbee
  *
- * This service implements a sophisticated player ranking algorithm optimized for
- * 40-minute Ultimate Frisbee games with ~20 total points scored. Features:
- * - Uses point differentials instead of wins/losses (perfect for meaningful margins)
- * - Applies diminishing returns to large point differentials
- * - Weights recent seasons exponentially higher
- * - Increases playoff points by 1.8x (accounting for time-pressure variance)
- * - Calculates team strength from average player ratings
- * - Uses Elo-style system where beating stronger teams awards more points
- * - Applies rating decay for inactive players
- * - Optimized K-factor (36) balanced for 20-point game information content
+ * This system calculates Elo-style ratings for players based on their game performance,
+ * applying team strength calculations, point differentials, and inactivity decay.
  *
- * NOTE: This file has been refactored into smaller modules.
- * All functionality is now re-exported from ./hallOfFame/index.ts
+ * Key Features:
+ * - ELO rating system with team composition adjustments
+ * - Point differential weighting (games to 20 points)
+ * - Inactivity decay for seasonal fairness
+ * - Incremental calculation support
+ * - Weekly snapshot tracking
+ * - Round-based chronological processing
+ *
+ * Technical Architecture:
+ * - Uses Firebase Firestore for persistence
+ * - Modular calculation pipeline
+ * - All functionality is now re-exported from ./playerRankings/index.ts
  */
 
-export * from './hallOfFame/index.js'
+export * from './playerRankings/index.js'
+
+export * from './playerRankings/index.js'

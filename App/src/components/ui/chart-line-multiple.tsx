@@ -65,7 +65,10 @@ export function ChartLineMultiple() {
 							tickMargin={8}
 							tickFormatter={(value) => value.slice(0, 3)}
 						/>
-						<ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+						<ChartTooltip
+							cursor={false}
+							content={(props) => <ChartTooltipContent {...props} />}
+						/>
 						<Line
 							dataKey='desktop'
 							type='monotone'

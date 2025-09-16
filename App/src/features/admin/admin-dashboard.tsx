@@ -77,21 +77,21 @@ export const AdminDashboard: React.FC = () => {
 
 			{/* Admin Functions Grid */}
 			<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-				{/* Hall of Fame Administration */}
+				{/* Player Rankings Administration */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
 							<Trophy className='h-5 w-5 text-yellow-600' />
-							Hall of Fame
+							Player Rankings
 						</CardTitle>
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<p className='text-sm text-muted-foreground'>
-							Manage player ranking calculations and monitor hall of fame system
-							status.
+							Manage player ranking calculations and monitor player rankings
+							system status.
 						</p>
 						<Button asChild className='w-full'>
-							<Link to='/admin/hall-of-fame'>
+							<Link to='/admin/player-rankings'>
 								<Settings className='h-4 w-4 mr-2' />
 								Manage Rankings
 							</Link>

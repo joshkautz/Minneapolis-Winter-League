@@ -8,9 +8,9 @@ import {
 	Standings,
 	Teams,
 	TeamProfile,
-	HallOfFame,
+	PlayerRankings,
 	PlayerRankingHistory,
-	HallOfFameAdmin,
+	PlayerRankingsAdmin,
 	AdminDashboard,
 	Profile,
 	CreateTeam,
@@ -73,15 +73,15 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path='/hall-of-fame'
+					path='/player-rankings'
 					element={
 						<PublicRoute>
-							<HallOfFame />
+							<PlayerRankings />
 						</PublicRoute>
 					}
 				/>
 				<Route
-					path='/hall-of-fame/player/:playerId'
+					path='/player-rankings/player/:playerId'
 					element={
 						<PublicRoute>
 							<PlayerRankingHistory />
@@ -123,10 +123,10 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path='/admin/hall-of-fame'
+					path='/admin/player-rankings'
 					element={
 						<AuthenticatedRoute>
-							<HallOfFameAdmin />
+							<PlayerRankingsAdmin />
 						</AuthenticatedRoute>
 					}
 				/>

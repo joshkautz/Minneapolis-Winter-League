@@ -68,7 +68,9 @@ export function ChartLineLabel() {
 						/>
 						<ChartTooltip
 							cursor={false}
-							content={<ChartTooltipContent indicator='line' />}
+							content={(props) => (
+								<ChartTooltipContent {...props} indicator='line' />
+							)}
 						/>
 						<Line
 							dataKey='desktop'

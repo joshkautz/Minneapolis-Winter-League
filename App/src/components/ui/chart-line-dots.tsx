@@ -67,7 +67,7 @@ export function ChartLineDots() {
 						/>
 						<ChartTooltip
 							cursor={false}
-							content={<ChartTooltipContent hideLabel />}
+							content={(props) => <ChartTooltipContent {...props} hideLabel />}
 						/>
 						<Line
 							dataKey='desktop'

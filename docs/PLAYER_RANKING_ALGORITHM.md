@@ -1,6 +1,6 @@
 # Player Ranking Algorithm - Technical Specification
 
-> **Minneapolis Winter League Hall of Fame Rating System**
+> **Minneapolis Winter League Player Rankings Rating System**
 >
 > A comprehensive ELO-based player ranking algorithm that evaluates individual performance across seasons, considering point differentials, opponent strength, playoff performance, and activity status.
 

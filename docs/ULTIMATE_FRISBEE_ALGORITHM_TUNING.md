@@ -2,7 +2,7 @@
 
 ## Corrected Analysis for 20-Point Games
 
-The Hall of Fame ranking algorithm has been re-optimized for **40-minute Ultimate Frisbee games** with approximately **20 total points scored**. This is significantly different from traditional ultimate frisbee (first to 15) and requires more conservative parameter tuning.
+The Player Rankings algorithm has been re-optimized for **40-minute Ultimate Frisbee games** with approximately **20 total points scored**. This is significantly different from traditional ultimate frisbee (first to 15) and requires more conservative parameter tuning.
 
 ### Key Game Characteristics
 

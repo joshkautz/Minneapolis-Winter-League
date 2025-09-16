@@ -100,15 +100,19 @@ export const useTopNavigation = () => {
 		{ label: 'Schedule', path: '/schedule', alt: 'league schedule' },
 		{ label: 'Standings', path: '/standings', alt: 'league standings' },
 		{ label: 'Teams', path: '/teams', alt: 'team list' },
-		{ label: 'Hall of Fame', path: '/hall-of-fame', alt: 'player rankings' },
+		{
+			label: 'Player Rankings',
+			path: '/player-rankings',
+			alt: 'player rankings',
+		},
 	]
 
 	const adminContent = [
 		{ label: 'Dashboard', path: '/admin', alt: 'admin dashboard' },
 		{
-			label: 'Hall of Fame',
-			path: '/admin/hall-of-fame',
-			alt: 'hall of fame',
+			label: 'Player Rankings',
+			path: '/admin/player-rankings',
+			alt: 'player rankings',
 		},
 	]
 

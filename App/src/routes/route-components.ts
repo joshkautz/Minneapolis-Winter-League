@@ -24,17 +24,17 @@ export const TeamProfile = lazyImport(
 	() => import('@/features/teams'),
 	'TeamProfile'
 )
-export const HallOfFame = lazyImport(
-	() => import('@/features/hall-of-fame'),
-	'HallOfFame'
+export const PlayerRankings = lazyImport(
+	() => import('@/features/player-rankings'),
+	'PlayerRankings'
 )
 export const PlayerRankingHistory = lazyImport(
-	() => import('@/features/hall-of-fame'),
+	() => import('@/features/player-rankings'),
 	'PlayerRankingHistory'
 )
-export const HallOfFameAdmin = lazyImport(
+export const PlayerRankingsAdmin = lazyImport(
 	() => import('@/features/admin'),
-	'HallOfFameAdmin'
+	'PlayerRankingsAdmin'
 )
 export const AdminDashboard = lazyImport(
 	() => import('@/features/admin'),

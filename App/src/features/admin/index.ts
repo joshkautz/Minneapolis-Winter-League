@@ -5,4 +5,4 @@
  */
 
 export { AdminDashboard } from './admin-dashboard'
-export { HallOfFameAdmin } from './hall-of-fame-admin'
+export { PlayerRankingsAdmin } from './player-rankings-admin'

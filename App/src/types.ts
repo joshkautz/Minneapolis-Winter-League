@@ -228,11 +228,11 @@ export interface CheckoutSessionDocument extends DocumentData {
 }
 
 /////////////////////////////////////////////////////////////////
-/////////////////// Hall of Fame Types ////////////////////////
+/////////////////// Player Rankings Types ////////////////////////
 /////////////////////////////////////////////////////////////////
 
 /**
- * Player ranking document structure for Hall of Fame
+ * Player ranking document structure for Player Rankings
  */
 export interface PlayerRankingDocument extends DocumentData {
 	/** Reference to the player */

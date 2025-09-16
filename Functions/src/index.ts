@@ -84,13 +84,11 @@ export { getUploadUrl } from './functions/storage/getUploadUrl.js'
 export { getDownloadUrl } from './functions/storage/getDownloadUrl.js'
 export { getFileMetadata } from './functions/storage/getFileMetadata.js'
 
-// Hall of Fame functions
-export {
-	calculateHallOfFameRankings,
-	getCalculationStatus,
-} from './functions/hallOfFame/calculate.js'
-export { calculateHallOfFameIterative } from './functions/hallOfFame/iterative.js'
-export { getRoundCalculationStatus } from './functions/hallOfFame/debug.js'
+// Player Rankings functions
+export { calculatePlayerRankingsRounds } from './functions/playerRankings/calculatePlayerRankingsRounds.js'
+export { calculatePlayerRankingsNewRounds } from './functions/playerRankings/calculatePlayerRankingsNewRounds.js'
+export { getCalculationStatus } from './functions/playerRankings/getStatus.js'
+export { getRoundCalculationStatus } from './functions/playerRankings/debug.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // SERVICES

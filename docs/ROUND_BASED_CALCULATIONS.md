@@ -1,8 +1,8 @@
-# Round-Based Hall of Fame Calculation System
+# Round-Based Player Rankings Calculation System
 
 ## Overview
 
-The Minneapolis Winter League Hall of Fame system now supports **round-based calculations** that process games iteratively by chronological round (sets of games that start at the same time). This provides true chronological order, prevents duplicate calculations, and enables efficient incremental updates.
+The Minneapolis Winter League Player Rankings system now supports **round-based calculations** that process games iteratively by chronological round (sets of games that start at the same time). This provides true chronological order, prevents duplicate calculations, and enables efficient incremental updates.
 
 ## Key Features
 
