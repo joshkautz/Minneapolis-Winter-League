@@ -61,7 +61,7 @@ export const activePlayerRankingsQuery = (): Query<PlayerRankingDocument> => {
 }
 
 /**
- * Creates a query for ranking history for a specific season
+ * Creates a query for rankings history for a specific season
  */
 export const seasonRankingHistoryQuery = (
 	seasonSnapshot: QueryDocumentSnapshot<SeasonDocument> | undefined
@@ -71,20 +71,20 @@ export const seasonRankingHistoryQuery = (
 	}
 
 	return query(
-		collection(firestore, Collections.RANKING_HISTORY),
+		collection(firestore, Collections.RANKINGS_HISTORY),
 		where('season', '==', seasonSnapshot.ref),
 		orderBy('week', 'asc')
 	) as Query<RankingHistoryDocument>
 }
 
 /**
- * Creates a query for recent ranking history (last N weeks)
+ * Creates a query for recent rankings history (last N weeks)
  */
 export const recentRankingHistoryQuery = (
 	weeksBack: number = 10
 ): Query<RankingHistoryDocument> => {
 	return query(
-		collection(firestore, Collections.RANKING_HISTORY),
+		collection(firestore, Collections.RANKINGS_HISTORY),
 		orderBy('snapshotDate', 'desc'),
 		limit(weeksBack)
 	) as Query<RankingHistoryDocument>
@@ -103,6 +103,37 @@ export const playerRankingCalculationsQuery =
 	}
 
 /**
+ * Calls the Firebase Function to completely rebuild Player Rankings from scratch
+ * Processes all games grouped by rounds in chronological order
+ *
+ * Use this for initial setup or complete recalculation of all rankings
+ */
+export const rebuildPlayerRankings = httpsCallable<
+	{}, // No parameters needed - decay is always applied
+	{
+		calculationId: string
+		status: string
+		message: string
+	}
+>(functions, 'rebuildPlayerRankings')
+
+/**
+ * Calls the Firebase Function to incrementally update Player Rankings
+ * Processes only uncalculated rounds for efficient updates
+ *
+ * Use this for regular production updates when adding new games
+ */
+export const updatePlayerRankings = httpsCallable<
+	{}, // No parameters needed - decay is always applied
+	{
+		calculationId: string
+		status: string
+		message: string
+	}
+>(functions, 'updatePlayerRankings')
+
+/**
+ * @deprecated Use rebuildPlayerRankings instead
  * Calls the Firebase Function to trigger full Player Rankings calculation
  * Processes all games grouped by rounds in chronological order from scratch
  */
@@ -116,6 +147,7 @@ export const triggerPlayerRankingsFullCalculation = httpsCallable<
 >(functions, 'calculatePlayerRankingsRounds')
 
 /**
+ * @deprecated Use updatePlayerRankings instead
  * Calls the Firebase Function to trigger incremental Player Rankings calculation
  * Processes only uncalculated rounds for efficient updates
  */
@@ -130,6 +162,7 @@ export const triggerPlayerRankingsIncrementalCalculation = httpsCallable<
 
 /**
  * Legacy wrapper function for backward compatibility
+ * @deprecated Use rebuildPlayerRankings or updatePlayerRankings directly
  * Routes to appropriate specific function based on calculationType
  */
 export const triggerPlayerRankingsCalculation = async (params: {
@@ -142,9 +175,9 @@ export const triggerPlayerRankingsCalculation = async (params: {
 	// Decay is always applied, and the functions auto-detect start points
 
 	if (params.calculationType === 'full') {
-		return triggerPlayerRankingsFullCalculation({})
+		return rebuildPlayerRankings({})
 	} else {
-		return triggerPlayerRankingsIncrementalCalculation({})
+		return updatePlayerRankings({})
 	}
 }
 
@@ -170,11 +203,11 @@ export const getPlayerRankingById = (
 }
 
 /**
- * Creates a query for a player's ranking history across seasons
+ * Creates a query for a player's rankings history across seasons
  */
 export const playerRankingHistoryQuery = (): Query<RankingHistoryDocument> => {
 	return query(
-		collection(firestore, Collections.RANKING_HISTORY),
+		collection(firestore, Collections.RANKINGS_HISTORY),
 		orderBy('snapshotDate', 'asc')
 		// Note: We'll need to filter client-side for specific player
 		// since Firestore doesn't support array-contains with orderBy

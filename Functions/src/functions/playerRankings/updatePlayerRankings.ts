@@ -1,20 +1,20 @@
 /**
- * Round-based Player Rankings calculation Firebase Function
+ * Player Rankings Incremental Update Firebase Function
  *
- * @deprecated This function is deprecated. Use `rebuildPlayerRankings` instead.
+ * This function efficiently updates player rankings by processing only the rounds
+ * that haven't been calculated yet. It's designed for production use where you
+ * regularly add new games and want to update rankings without recalculating everything.
  *
- * This function processes all games grouped by rounds in chronological order.
- * It processes complete rounds rather than individual games, which provides
- * better chronological accuracy when multiple games occur simultaneously.
- * Inactivity decay is always applied as part of the algorithm.
+ * The function automatically identifies which rounds are new since the last calculation
+ * and processes only those rounds, making it much faster than a full rebuild.
  *
  * Use this function when:
- * - You want to process games by complete rounds for better accuracy
- * - You need to recalculate everything using round-based processing
- * - You want to compare round-based vs individual game processing results
+ * - Adding new games to an existing league with established rankings
+ * - Running regular ranking updates in production
+ * - You want the fastest calculation for incremental updates
+ * - You need to process only the latest data efficiently
  *
- * MIGRATION: Replace calls to this function with `rebuildPlayerRankings`
- * which provides the same functionality with clearer naming.
+ * For initial setup or complete recalculation, use rebuildPlayerRankings instead.
  */
 
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
@@ -26,70 +26,64 @@ import { validateAdminUser } from '../../shared/auth.js'
 import {
 	applyInactivityDecay,
 	loadGamesForCalculation,
-	processGamesByRounds,
+	processNewRoundsOnly,
 	saveFinalRankings,
 	createCalculationState,
 	updateCalculationState,
 } from '../../services/playerRankings/index.js'
 
-// Validation schema for round-based calculation
-const roundsCalculationSchema = z.object({
-	// No parameters needed - decay is always applied
+// Validation schema for incremental update calculation
+const updateRankingsSchema = z.object({
+	// No parameters needed - function auto-detects new rounds
 })
 
-type RoundsCalculationRequest = z.infer<typeof roundsCalculationSchema>
+type UpdateRankingsRequest = z.infer<typeof updateRankingsSchema>
 
 /**
- * Round-based Player Rankings calculation
- * Processes all games grouped by rounds in chronological order
+ * Player Rankings Incremental Update
+ * Efficiently updates rankings by processing only new uncalculated rounds
  */
-export const calculatePlayerRankingsRounds = onCall(
+export const updatePlayerRankings = onCall(
 	{
 		region: 'us-central1',
 		timeoutSeconds: 540, // 9 minutes
 		memory: '1GiB',
 	},
-	async (request: CallableRequest<RoundsCalculationRequest>) => {
+	async (request: CallableRequest<UpdateRankingsRequest>) => {
 		try {
 			// Validate authentication and admin privileges
 			const firestore = getFirestore()
 			await validateAdminUser(request.auth, firestore)
 
 			// Validate request data
-			roundsCalculationSchema.parse(request.data)
+			updateRankingsSchema.parse(request.data)
 
-			logger.info('Starting round-based Player Rankings calculation', {
+			logger.info('Starting incremental Player Rankings update', {
 				triggeredBy: request.auth!.uid,
 				applyDecay: true, // Always applied
 			})
-
-			// Add deprecation warning
-			logger.warn(
-				'DEPRECATION WARNING: calculatePlayerRankingsRounds is deprecated. Please use rebuildPlayerRankings instead for the same functionality with clearer naming.'
-			)
 
 			// Create calculation state document for tracking
 			const calculationId = await createCalculationState(
 				'round-based',
 				request.auth!.uid,
-				{ applyDecay: true }
+				{ applyDecay: true, onlyNewRounds: true, isIncremental: true }
 			)
 
 			try {
-				await processRoundsCalculation(calculationId)
+				await processIncrementalUpdate(calculationId)
 
 				return {
 					calculationId,
 					status: 'completed',
-					message:
-						'Round-based Player Rankings calculation completed successfully.',
+					message: 'Player Rankings incremental update completed successfully.',
 				}
 			} catch (error) {
 				const errorMessage =
 					error instanceof Error ? error.message : 'Unknown error'
 				const errorStack = error instanceof Error ? error.stack : undefined
 
-				logger.error('Round-based calculation failed:', error)
+				logger.error('Player Rankings incremental update failed:', error)
 				await updateCalculationState(calculationId, {
 					status: 'failed',
 					error: {
@@ -102,30 +96,28 @@ export const calculatePlayerRankingsRounds = onCall(
 				return {
 					calculationId,
 					status: 'failed',
-					message: `Round-based calculation failed: ${errorMessage}`,
+					message: `Player Rankings incremental update failed: ${errorMessage}`,
 				}
 			}
 		} catch (error) {
-			logger.error(
-				'Error starting round-based Player Rankings calculation:',
-				error
-			)
+			logger.error('Error starting Player Rankings incremental update:', error)
 			throw error
 		}
 	}
 )
 
 /**
- * Process the round-based calculation - all games grouped by rounds
- * Decay is always applied as part of the algorithm
+ * Process only the new uncalculated rounds for efficient incremental updates
+ * Loads existing rankings and processes only new data
  */
-async function processRoundsCalculation(calculationId: string): Promise<void> {
+async function processIncrementalUpdate(calculationId: string): Promise<void> {
 	const firestore = getFirestore()
 
 	try {
 		await updateCalculationState(calculationId, {
 			status: 'running',
-			'progress.currentStep': 'Loading all seasons and games...',
+			'progress.currentStep':
+				'Identifying new rounds for incremental update...',
 		})
 
 		// Get all seasons ordered by start date
@@ -139,27 +131,26 @@ async function processRoundsCalculation(calculationId: string): Promise<void> {
 			...doc.data(),
 		})) as (SeasonDocument & { id: string })[]
 
-		logger.info(`Found ${seasons.length} seasons for round-based processing`)
+		logger.info(`Found ${seasons.length} seasons for incremental update`)
 
 		await updateCalculationState(calculationId, {
 			'progress.totalSeasons': seasons.length,
 		})
 
-		// Load ALL games from ALL seasons (startSeasonIndex = 0)
+		// Load ALL games to identify which rounds are new
 		const allGames = await loadGamesForCalculation(seasons, 0)
-		logger.info(
-			`Loaded ${allGames.length} total games for round-based processing`
-		)
+		logger.info(`Loaded ${allGames.length} total games to identify new rounds`)
 
 		await updateCalculationState(calculationId, {
-			'progress.currentStep': 'Processing games by rounds...',
-			'progress.totalGames': allGames.length,
+			'progress.currentStep':
+				'Processing only new rounds for efficient update...',
 		})
 
-		// Start with empty player ratings (fresh calculation)
+		// Start with empty player ratings - processNewRoundsOnly will handle loading existing ratings
+		// when there are existing calculated rounds, or process all rounds if this is the first calculation
 		const playerRatings = new Map()
 		logger.info(
-			'Starting with empty player ratings (round-based recalculation)'
+			'Starting incremental update (will load existing ratings or start fresh if none exist)'
 		)
 
 		// Apply inactivity decay (always applied as part of algorithm)
@@ -171,28 +162,28 @@ async function processRoundsCalculation(calculationId: string): Promise<void> {
 		const allSeasonIds = seasons.map((s) => s.id)
 		applyInactivityDecay(playerRatings, currentSeasonId, allSeasonIds)
 
-		// Process ALL games by rounds in chronological order
-		await processGamesByRounds(
+		// Process ONLY new uncalculated rounds (most efficient for production)
+		await processNewRoundsOnly(
 			allGames,
 			playerRatings,
 			calculationId,
 			seasons.length,
-			undefined, // No incremental start season
-			undefined // No incremental start week
+			undefined, // Auto-detect incremental start season
+			undefined // Auto-detect incremental start week
 		)
 
 		logger.info(
-			`After processing all rounds: ${playerRatings.size} players with ratings`
+			`After incremental update: ${playerRatings.size} players with ratings`
 		)
 
 		// Save final rankings
 		await updateCalculationState(calculationId, {
-			'progress.currentStep': 'Saving final rankings...',
+			'progress.currentStep': 'Saving updated rankings...',
 			'progress.percentComplete': 95,
 		})
 
 		await saveFinalRankings(playerRatings)
-		logger.info('Round-based calculation: Final rankings saved successfully')
+		logger.info('Incremental update: Final rankings saved successfully')
 
 		// Mark calculation as complete
 		await updateCalculationState(calculationId, {
@@ -203,11 +194,11 @@ async function processRoundsCalculation(calculationId: string): Promise<void> {
 		})
 
 		logger.info(
-			`Round-based Player Rankings calculation completed: ${calculationId}`
+			`Player Rankings incremental update completed: ${calculationId}`
 		)
 	} catch (error) {
 		logger.error(
-			`Round-based Player Rankings calculation failed: ${calculationId}`,
+			`Player Rankings incremental update failed: ${calculationId}`,
 			error
 		)
 		throw error

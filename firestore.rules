@@ -126,8 +126,8 @@ service cloud.firestore {
       allow delete: if false; // Functions only
     }
     
-    // Ranking history: Public read access for historical data
-    match /ranking-history/{snapshotId} {
+    // Rankings history: Public read access for historical data
+    match /rankings-history/{snapshotId} {
       allow read: if true;
       allow create: if false; // Functions only
       allow update: if false; // Functions only

@@ -1,7 +1,7 @@
 /**
  * PlayerRankingHistory component
  *
- * Displays a player's ranking history throughout their career using interactive charts
+ * Displays a player's rankings history throughout their career using interactive charts
  * Accessible at /player-rankings/player/{playerId}
  */
 
@@ -84,7 +84,7 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 			<div className='container max-w-4xl mx-auto py-8'>
 				<Alert variant='destructive'>
 					<AlertDescription>
-						Player ID is required to view ranking history.
+						Player ID is required to view rankings history.
 					</AlertDescription>
 				</Alert>
 			</div>
@@ -96,9 +96,9 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 		collection(firestore, Collections.PLAYERS) as Query<PlayerDocument>
 	)
 
-	// Fetch all ranking history data from ranking-history collection
+	// Fetch all rankings history data from rankings-history collection
 	const [rankingHistorySnapshot, historyLoading, error] = useCollection(
-		collection(firestore, 'ranking-history') as Query<RankingHistoryDocument>
+		collection(firestore, 'rankings-history') as Query<RankingHistoryDocument>
 	)
 
 	// Fetch all seasons data to get season start dates
@@ -164,11 +164,11 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 		return map
 	}, [seasonsSnapshot])
 
-	// Get all players for dropdown - only include players with ranking history data
+	// Get all players for dropdown - only include players with rankings history data
 	const allPlayers = useMemo(() => {
 		if (!allPlayersSnapshot?.docs || !rankingHistorySnapshot?.docs) return []
 
-		// Get unique player IDs from ranking history data
+		// Get unique player IDs from rankings history data
 		const playersWithHistory = new Set<string>()
 
 		rankingHistorySnapshot.docs.forEach((doc) => {
@@ -183,7 +183,7 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 			}
 		})
 
-		// Filter players to only include those with ranking history
+		// Filter players to only include those with rankings history
 		return allPlayersSnapshot.docs
 			.filter((doc) => playersWithHistory.has(doc.id))
 			.map((doc) => ({
@@ -409,13 +409,13 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
 						<Trophy className='h-5 w-5' />
-						Ranking History
+						Rankings history
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<Alert variant='destructive'>
 						<AlertDescription>
-							Failed to load ranking history. Please try again later.
+							Failed to load rankings history. Please try again later.
 						</AlertDescription>
 					</Alert>
 				</CardContent>
@@ -429,13 +429,13 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
 						<Trophy className='h-5 w-5' />
-						Ranking History
+						Rankings history
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<Alert>
 						<AlertDescription>
-							No ranking history data available for this player.
+							No rankings history data available for this player.
 						</AlertDescription>
 					</Alert>
 				</CardContent>
@@ -463,7 +463,7 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 					<div className='grid flex-1 gap-1'>
 						<CardTitle className='flex items-center gap-2'>
 							<Trophy className='h-5 w-5' />
-							Ranking History
+							Rankings history
 						</CardTitle>
 					</div>
 					<Select value={playerId} onValueChange={handlePlayerChange}>

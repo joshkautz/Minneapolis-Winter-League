@@ -54,7 +54,7 @@ export async function saveWeeklySnapshot(
 	// Use composite ID for easy querying
 	const snapshotId = `${seasonId}_week_${week}`
 	await firestore
-		.collection(Collections.RANKING_HISTORY)
+		.collection(Collections.RANKINGS_HISTORY)
 		.doc(snapshotId)
 		.set(snapshotDoc)
 }

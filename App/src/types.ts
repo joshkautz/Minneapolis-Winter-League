@@ -31,7 +31,7 @@ export enum Collections {
 	OFFERS = 'offers',
 	PLAYERS = 'players',
 	RANKINGS = 'rankings',
-	RANKING_HISTORY = 'ranking-history',
+	RANKINGS_HISTORY = 'rankings-history',
 	RANKING_CALCULATIONS = 'ranking-calculations',
 	SEASONS = 'seasons',
 	TEAMS = 'teams',
@@ -284,7 +284,7 @@ export interface PlayerSeasonStats {
 }
 
 /**
- * Ranking history snapshot document structure
+ * Rankings history snapshot document structure
  */
 export interface RankingHistoryDocument extends DocumentData {
 	/** Reference to the season */

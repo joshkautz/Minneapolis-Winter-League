@@ -1,16 +1,19 @@
 /**
  * New Rounds Only Player Rankings calculation Firebase Function
- * 
+ *
+ * @deprecated This function is deprecated. Use `updatePlayerRankings` instead.
+ *
  * This function processes only uncalculated rounds that have been added since
  * the last calculation. It's the most efficient option for production use.
  * Inactivity decay is always applied as part of the algorithm.
- * 
+ *
  * Use this function when:
  * - You've added new game rounds and want to update rankings incrementally
  * - You want the fastest calculation for regular production updates
  * - You need to process only the latest data without recalculating everything
- * 
- * This is the RECOMMENDED function for production workflows.
+ *
+ * MIGRATION: Replace calls to this function with `updatePlayerRankings`
+ * which provides the same functionality with clearer naming.
  */
 
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
@@ -59,6 +62,11 @@ export const calculatePlayerRankingsNewRounds = onCall(
 				applyDecay: true, // Always applied
 			})
 
+			// Add deprecation warning
+			logger.warn(
+				'DEPRECATION WARNING: calculatePlayerRankingsNewRounds is deprecated. Please use updatePlayerRankings instead for the same functionality with clearer naming.'
+			)
+
 			// Create calculation state document for tracking
 			const calculationId = await createCalculationState(
 				'round-based',
@@ -72,10 +80,12 @@ export const calculatePlayerRankingsNewRounds = onCall(
 				return {
 					calculationId,
 					status: 'completed',
-					message: 'New rounds Player Rankings calculation completed successfully.',
+					message:
+						'New rounds Player Rankings calculation completed successfully.',
 				}
 			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+				const errorMessage =
+					error instanceof Error ? error.message : 'Unknown error'
 				const errorStack = error instanceof Error ? error.stack : undefined
 
 				logger.error('New rounds calculation failed:', error)
@@ -95,7 +105,10 @@ export const calculatePlayerRankingsNewRounds = onCall(
 				}
 			}
 		} catch (error) {
-			logger.error('Error starting new rounds Player Rankings calculation:', error)
+			logger.error(
+				'Error starting new rounds Player Rankings calculation:',
+				error
+			)
 			throw error
 		}
 	}
@@ -161,10 +174,12 @@ async function processNewRoundsCalculation(
 			calculationId,
 			seasons.length,
 			undefined, // No incremental start season (will auto-detect)
-			undefined  // No incremental start week (will auto-detect)
+			undefined // No incremental start week (will auto-detect)
 		)
 
-		logger.info(`After processing new rounds: ${playerRatings.size} players with ratings`)
+		logger.info(
+			`After processing new rounds: ${playerRatings.size} players with ratings`
+		)
 
 		// Save final rankings
 		await updateCalculationState(calculationId, {
@@ -183,9 +198,14 @@ async function processNewRoundsCalculation(
 			'progress.percentComplete': 100,
 		})
 
-		logger.info(`New rounds Player Rankings calculation completed: ${calculationId}`)
+		logger.info(
+			`New rounds Player Rankings calculation completed: ${calculationId}`
+		)
 	} catch (error) {
-		logger.error(`New rounds Player Rankings calculation failed: ${calculationId}`, error)
+		logger.error(
+			`New rounds Player Rankings calculation failed: ${calculationId}`,
+			error
+		)
 		throw error
 	}
 }
