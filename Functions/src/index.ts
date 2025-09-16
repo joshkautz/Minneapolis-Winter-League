@@ -85,7 +85,12 @@ export { getDownloadUrl } from './functions/storage/getDownloadUrl.js'
 export { getFileMetadata } from './functions/storage/getFileMetadata.js'
 
 // Hall of Fame functions
-export { calculateHallOfFameRankings, getCalculationStatus } from './functions/hallOfFame/calculate.js'
+export {
+	calculateHallOfFameRankings,
+	getCalculationStatus,
+} from './functions/hallOfFame/calculate.js'
+export { calculateHallOfFameIterative } from './functions/hallOfFame/iterative.js'
+export { getRoundCalculationStatus } from './functions/hallOfFame/debug.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // SERVICES

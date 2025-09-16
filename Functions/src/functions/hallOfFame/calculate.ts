@@ -8,32 +8,27 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { CallableRequest, onCall } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { z } from 'zod'
+import { Collections, SeasonDocument } from '../../types.js'
 import {
-	Collections,
-	GameDocument,
-	SeasonDocument,
-	TeamDocument,
-	RankingHistoryDocument,
-	RankingCalculationDocument,
-	WeeklyPlayerRanking,
-	PlayerSeasonStats,
-} from '../../types.js'
-import {
-	ALGORITHM_CONSTANTS,
-	GameProcessingData,
 	PlayerRatingState,
-	processGame,
 	applyInactivityDecay,
-	calculatePlayerRankings,
-	createWeeklySnapshot,
-} from '../../services/hallOfFame.js'
+	loadGamesForCalculation,
+	processGamesChronologically,
+	processGamesByRounds,
+	processNewRoundsOnly,
+	determineIncrementalStartPoint,
+	saveFinalRankings,
+	createCalculationState,
+	updateCalculationState,
+} from '../../services/hallOfFame/index.js'
 
 // Validation schemas
 const calculateRankingsSchema = z.object({
-	calculationType: z.enum(['full', 'incremental']),
+	calculationType: z.enum(['full', 'incremental', 'round-based']),
 	applyDecay: z.boolean().default(true),
 	startSeasonId: z.string().optional(),
 	startWeek: z.number().optional(),
+	onlyNewRounds: z.boolean().default(false), // For round-based calculations
 })
 
 type CalculateRankingsRequest = z.infer<typeof calculateRankingsSchema>
@@ -67,21 +62,27 @@ export const calculateHallOfFameRankings = onCall(
 
 			// Validate request data
 			const validatedData = calculateRankingsSchema.parse(request.data)
-			const { calculationType, applyDecay, startSeasonId, startWeek } =
-				validatedData
+			const {
+				calculationType,
+				applyDecay,
+				startSeasonId,
+				startWeek,
+				onlyNewRounds,
+			} = validatedData
 
 			logger.info(`Starting Hall of Fame calculation: ${calculationType}`, {
 				triggeredBy: request.auth.uid,
 				applyDecay,
 				startSeasonId,
 				startWeek,
+				onlyNewRounds,
 			})
 
 			// Create calculation state document
 			const calculationId = await createCalculationState(
 				calculationType,
 				request.auth.uid,
-				{ applyDecay, startSeasonId, startWeek }
+				{ applyDecay, startSeasonId, startWeek, onlyNewRounds }
 			)
 
 			// Process the calculation and wait for completion
@@ -120,64 +121,6 @@ export const calculateHallOfFameRankings = onCall(
 		}
 	}
 )
-
-/**
- * Creates a new calculation state document
- */
-async function createCalculationState(
-	calculationType: 'full' | 'incremental',
-	userId: string,
-	parameters: any
-): Promise<string> {
-	const firestore = getFirestore()
-
-	const calculationDoc: Partial<RankingCalculationDocument> = {
-		calculationType,
-		status: 'pending',
-		startedAt: Timestamp.now(),
-		completedAt: null,
-		triggeredBy: userId,
-		progress: {
-			currentStep: 'Initializing...',
-			percentComplete: 0,
-			totalSeasons: 0,
-			seasonsProcessed: 0,
-		},
-		parameters: {
-			applyDecay: parameters.applyDecay ?? true,
-			seasonDecayFactor: ALGORITHM_CONSTANTS.SEASON_DECAY_FACTOR,
-			playoffMultiplier: ALGORITHM_CONSTANTS.PLAYOFF_MULTIPLIER,
-			kFactor: ALGORITHM_CONSTANTS.K_FACTOR,
-			// Only include defined values to avoid Firestore undefined value errors
-			...(parameters.startSeasonId !== undefined && {
-				startSeasonId: parameters.startSeasonId,
-			}),
-			...(parameters.startWeek !== undefined && {
-				startWeek: parameters.startWeek,
-			}),
-		},
-	}
-
-	const docRef = await firestore
-		.collection(Collections.RANKING_CALCULATIONS)
-		.add(calculationDoc)
-
-	return docRef.id
-}
-
-/**
- * Updates calculation state
- */
-async function updateCalculationState(
-	calculationId: string,
-	updates: Partial<RankingCalculationDocument>
-): Promise<void> {
-	const firestore = getFirestore()
-	await firestore
-		.collection(Collections.RANKING_CALCULATIONS)
-		.doc(calculationId)
-		.update(updates)
-}
 
 /**
  * Main calculation processing logic
@@ -253,15 +196,39 @@ async function processRankingCalculation(
 			applyInactivityDecay(playerRatings, currentSeasonId, allSeasonIds)
 		}
 
-		await processGamesChronologically(
-			allGames,
-			playerRatings,
-			calculationId,
-			seasons.length,
-			incrementalStartSeasonIndex,
-			incrementalStartWeek
-		)
-
+		// Choose processing method based on calculation type
+		if (config.calculationType === 'round-based') {
+			// Round-based processing: process games by rounds in chronological order
+			if (config.onlyNewRounds) {
+				await processNewRoundsOnly(
+					allGames,
+					playerRatings,
+					calculationId,
+					seasons.length,
+					incrementalStartSeasonIndex,
+					incrementalStartWeek
+				)
+			} else {
+				await processGamesByRounds(
+					allGames,
+					playerRatings,
+					calculationId,
+					seasons.length,
+					incrementalStartSeasonIndex,
+					incrementalStartWeek
+				)
+			}
+		} else {
+			// Traditional chronological processing (by individual games)
+			await processGamesChronologically(
+				allGames,
+				playerRatings,
+				calculationId,
+				seasons.length,
+				incrementalStartSeasonIndex,
+				incrementalStartWeek
+			)
+		}
 		logger.info(
 			`After processing games: ${playerRatings.size} players with ratings`
 		)
@@ -291,418 +258,6 @@ async function processRankingCalculation(
 		logger.error(`Hall of Fame calculation failed: ${calculationId}`, error)
 		throw error
 	}
-}
-
-/**
- * Determines the starting point for incremental calculations
- */
-async function determineIncrementalStartPoint(
-	startSeasonId?: string,
-	startWeek?: number
-): Promise<{
-	seasonIndex: number
-	week: number
-	playerRatings: Map<string, PlayerRatingState>
-}> {
-	const firestore = getFirestore()
-
-	// If no specific starting point, find the last completed snapshot
-	if (!startSeasonId) {
-		const lastSnapshotQuery = await firestore
-			.collection(Collections.RANKING_HISTORY)
-			.orderBy('snapshotDate', 'desc')
-			.limit(1)
-			.get()
-
-		if (lastSnapshotQuery.empty) {
-			// No previous snapshots, start from beginning
-			return {
-				seasonIndex: 0,
-				week: 1,
-				playerRatings: new Map(),
-			}
-		}
-
-		const lastSnapshot =
-			lastSnapshotQuery.docs[0].data() as RankingHistoryDocument
-		// Get season index and convert snapshot to player ratings
-		const seasonDoc = await lastSnapshot.season.get()
-		const seasonsSnapshot = await firestore
-			.collection(Collections.SEASONS)
-			.orderBy('dateStart', 'asc')
-			.get()
-
-		const seasonIndex = seasonsSnapshot.docs.findIndex(
-			(doc) => doc.id === seasonDoc.id
-		)
-		const playerRatings = convertSnapshotToRatings(lastSnapshot.rankings)
-
-		return {
-			seasonIndex: seasonIndex >= 0 ? seasonIndex : 0,
-			week: lastSnapshot.week + 1,
-			playerRatings,
-		}
-	}
-
-	// TODO: Implement specific season/week starting point
-	return {
-		seasonIndex: 0,
-		week: startWeek || 1,
-		playerRatings: new Map(),
-	}
-}
-
-/**
- * Converts a ranking snapshot back to player rating states
- */
-function convertSnapshotToRatings(
-	rankings: WeeklyPlayerRanking[]
-): Map<string, PlayerRatingState> {
-	const playerRatings = new Map<string, PlayerRatingState>()
-
-	for (const ranking of rankings) {
-		// Reconstruct season stats map from the array
-		const seasonStatsMap = new Map<string, PlayerSeasonStats>()
-		if (ranking.seasonStats) {
-			for (const seasonStat of ranking.seasonStats) {
-				seasonStatsMap.set(seasonStat.seasonId, seasonStat)
-			}
-		}
-
-		playerRatings.set(ranking.playerId, {
-			playerId: ranking.playerId,
-			playerName: ranking.playerName,
-			currentRating: ranking.eloRating,
-			totalGames: ranking.totalGames || 0, // Preserve existing total
-			seasonStats: seasonStatsMap,
-			lastSeasonId: null, // Will be updated as games are processed
-			isActive: true,
-		})
-	}
-
-	return playerRatings
-}
-
-/**
- * Loads all games for calculation starting from specified season
- */
-async function loadGamesForCalculation(
-	seasons: (SeasonDocument & { id: string })[],
-	startSeasonIndex: number
-): Promise<GameProcessingData[]> {
-	const firestore = getFirestore()
-	const allGames: GameProcessingData[] = []
-
-	logger.info(
-		`Loading games from ${seasons.length - startSeasonIndex} seasons (starting from index ${startSeasonIndex})`
-	)
-
-	for (let i = startSeasonIndex; i < seasons.length; i++) {
-		const season = seasons[i]
-		const seasonRef = firestore.collection(Collections.SEASONS).doc(season.id)
-
-		const gamesSnapshot = await firestore
-			.collection(Collections.GAMES)
-			.where('season', '==', seasonRef)
-			.orderBy('date', 'asc')
-			.get()
-
-		logger.info(`Season ${season.id}: Found ${gamesSnapshot.docs.length} games`)
-
-		const seasonGames = gamesSnapshot.docs.map((doc) => {
-			const gameData = doc.data() as GameDocument
-			return {
-				id: doc.id,
-				...gameData,
-				seasonOrder: seasons.length - 1 - i, // 0 = most recent
-				week: calculateWeekNumber(gameData.date, season.dateStart),
-				gameDate: gameData.date.toDate(),
-			} as GameProcessingData
-		})
-
-		// Debug: Log a sample game to see the structure
-		if (gamesSnapshot.docs.length > 0) {
-			const sampleGameData = gamesSnapshot.docs[0].data()
-			logger.info(`Sample game data for season ${season.id}:`, {
-				gameId: gamesSnapshot.docs[0].id,
-				homeScore: sampleGameData.homeScore,
-				awayScore: sampleGameData.awayScore,
-				home: sampleGameData.home ? 'has home team' : 'no home team',
-				away: sampleGameData.away ? 'has away team' : 'no away team',
-				allFields: Object.keys(sampleGameData),
-			})
-		}
-
-		const completedGames = seasonGames.filter(
-			(game) => game.homeScore !== null && game.awayScore !== null
-		)
-
-		logger.info(
-			`Season ${season.id}: ${completedGames.length} completed games after filtering`
-		)
-		allGames.push(...completedGames)
-	}
-
-	// Sort all games by date to ensure chronological processing
-	allGames.sort((a, b) => a.gameDate.getTime() - b.gameDate.getTime())
-
-	return allGames
-}
-
-/**
- * Calculates week number within a season based on game date
- */
-function calculateWeekNumber(
-	gameDate: Timestamp,
-	seasonStart: Timestamp
-): number {
-	const gameTime = gameDate.toDate().getTime()
-	const seasonStartTime = seasonStart.toDate().getTime()
-	const weeksDiff = Math.floor(
-		(gameTime - seasonStartTime) / (7 * 24 * 60 * 60 * 1000)
-	)
-	return Math.max(1, weeksDiff + 1)
-}
-
-/**
- * Processes games chronologically and creates weekly snapshots
- */
-async function processGamesChronologically(
-	games: GameProcessingData[],
-	playerRatings: Map<string, PlayerRatingState>,
-	calculationId: string,
-	totalSeasons: number,
-	incrementalStartSeasonIndex?: number,
-	incrementalStartWeek?: number
-): Promise<void> {
-	let currentSeasonId = ''
-	let currentWeek = 0
-	let weeklyGames: GameProcessingData[] = []
-	let weekStartRatings = new Map<string, number>() // Track ratings at start of week
-	let processedSeasons = 0
-
-	for (let i = 0; i < games.length; i++) {
-		const game = games[i]
-
-		// Check if we've moved to a new week
-		if (game.season.id !== currentSeasonId || game.week !== currentWeek) {
-			// Save snapshot for the previous week if we have games
-			if (weeklyGames.length > 0) {
-				await saveWeeklySnapshot(
-					currentSeasonId,
-					currentWeek,
-					playerRatings,
-					weeklyGames,
-					weekStartRatings
-				)
-			}
-
-			// Update progress if we've moved to a new season
-			if (game.season.id !== currentSeasonId) {
-				if (currentSeasonId) processedSeasons++
-
-				await updateCalculationState(calculationId, {
-					'progress.currentStep': `Processing season ${processedSeasons + 1}/${totalSeasons}...`,
-					'progress.percentComplete': Math.round(
-						(processedSeasons / totalSeasons) * 90
-					), // Leave 10% for final steps
-					'progress.seasonsProcessed': processedSeasons,
-					'progress.currentSeason': game.season.id,
-				})
-			}
-
-			currentSeasonId = game.season.id
-			currentWeek = game.week
-			weeklyGames = []
-
-			// Capture ratings at the start of this new week
-			weekStartRatings = new Map()
-			for (const [playerId, playerState] of playerRatings) {
-				weekStartRatings.set(playerId, playerState.currentRating)
-			}
-		}
-
-		// Determine if this game should count toward totalGames
-		// For incremental calculations, only count games from the new period
-		// For full calculations, count all games
-		const shouldCountGame =
-			incrementalStartSeasonIndex === undefined ||
-			game.seasonOrder > incrementalStartSeasonIndex ||
-			(game.seasonOrder === incrementalStartSeasonIndex &&
-				game.week >= (incrementalStartWeek || 1))
-
-		// Process the game
-		await processGame(game, playerRatings, shouldCountGame)
-		weeklyGames.push(game)
-
-		// Update progress periodically
-		if (i % 100 === 0) {
-			const overallProgress = Math.round((i / games.length) * 90)
-			await updateCalculationState(calculationId, {
-				'progress.percentComplete': overallProgress,
-			})
-		}
-	}
-
-	// Save the final week's snapshot
-	if (weeklyGames.length > 0) {
-		await saveWeeklySnapshot(
-			currentSeasonId,
-			currentWeek,
-			playerRatings,
-			weeklyGames,
-			weekStartRatings
-		)
-	}
-}
-
-/**
- * Saves a weekly ranking snapshot
- */
-async function saveWeeklySnapshot(
-	seasonId: string,
-	week: number,
-	playerRatings: Map<string, PlayerRatingState>,
-	weeklyGames: GameProcessingData[],
-	previousRatings: Map<string, number>
-): Promise<void> {
-	const firestore = getFirestore()
-	const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)
-
-	// Calculate weekly stats by processing the games
-	const weeklyStats = new Map<
-		string,
-		{ gamesPlayed: number; pointDifferential: number }
-	>()
-
-	// Process each game to calculate player weekly stats
-	for (const game of weeklyGames) {
-		if (
-			!game.home ||
-			!game.away ||
-			game.homeScore === null ||
-			game.awayScore === null
-		) {
-			continue
-		}
-
-		try {
-			// Get team rosters for this game
-			const [homeTeamDoc, awayTeamDoc] = await Promise.all([
-				game.home.get(),
-				game.away.get(),
-			])
-
-			if (homeTeamDoc.exists && awayTeamDoc.exists) {
-				const homeTeamData = homeTeamDoc.data() as TeamDocument
-				const awayTeamData = awayTeamDoc.data() as TeamDocument
-
-				// Process home team players
-				for (const rosterPlayer of homeTeamData.roster || []) {
-					const playerId = rosterPlayer.player.id
-					const stats = weeklyStats.get(playerId) || {
-						gamesPlayed: 0,
-						pointDifferential: 0,
-					}
-					stats.gamesPlayed++
-					stats.pointDifferential += game.homeScore - game.awayScore
-					weeklyStats.set(playerId, stats)
-				}
-
-				// Process away team players
-				for (const rosterPlayer of awayTeamData.roster || []) {
-					const playerId = rosterPlayer.player.id
-					const stats = weeklyStats.get(playerId) || {
-						gamesPlayed: 0,
-						pointDifferential: 0,
-					}
-					stats.gamesPlayed++
-					stats.pointDifferential += game.awayScore - game.homeScore
-					weeklyStats.set(playerId, stats)
-				}
-			}
-		} catch (error) {
-			logger.warn(`Failed to get team data for game ${game.id}:`, error)
-		}
-	}
-
-	// Calculate previous ratings (using the passed previousRatings from start of week)
-	const weeklyRankings = createWeeklySnapshot(
-		playerRatings,
-		previousRatings,
-		weeklyStats
-	)
-
-	const snapshotDoc: Partial<RankingHistoryDocument> = {
-		season: seasonRef as any,
-		week,
-		snapshotDate: Timestamp.now(),
-		rankings: weeklyRankings,
-		calculationMeta: {
-			totalGamesProcessed: weeklyGames.length,
-			avgRating: calculateAverageRating(playerRatings),
-			activePlayerCount: Array.from(playerRatings.values()).filter(
-				(p) => p.isActive
-			).length,
-			calculatedAt: Timestamp.now(),
-		},
-	}
-
-	// Use composite ID for easy querying
-	const snapshotId = `${seasonId}_week_${week}`
-	await firestore
-		.collection(Collections.RANKING_HISTORY)
-		.doc(snapshotId)
-		.set(snapshotDoc)
-}
-
-/**
- * Calculates average rating of all active players
- */
-function calculateAverageRating(
-	playerRatings: Map<string, PlayerRatingState>
-): number {
-	const activeRatings = Array.from(playerRatings.values())
-		.filter((p) => p.isActive)
-		.map((p) => p.currentRating)
-
-	return activeRatings.length > 0
-		? activeRatings.reduce((sum, rating) => sum + rating, 0) /
-				activeRatings.length
-		: ALGORITHM_CONSTANTS.STARTING_RATING
-}
-
-/**
- * Saves final player rankings to Firestore
- */
-async function saveFinalRankings(
-	playerRatings: Map<string, PlayerRatingState>
-): Promise<void> {
-	const firestore = getFirestore()
-	const rankings = calculatePlayerRankings(playerRatings)
-
-	// Use batch writes to update all rankings efficiently
-	const batch = firestore.batch()
-
-	for (const ranking of rankings) {
-		// Create a clean ranking document without circular references
-		const rankingDoc = {
-			...ranking,
-			// Remove the player reference that was causing issues
-			player: firestore.collection(Collections.PLAYERS).doc(ranking.playerId),
-			lastCalculated: Timestamp.now(),
-		}
-
-		// Use the actual player ID for the document ID
-		const rankingRef = firestore
-			.collection(Collections.RANKINGS)
-			.doc(ranking.playerId)
-
-		batch.set(rankingRef, rankingDoc)
-	}
-
-	await batch.commit()
-	logger.info(`Saved ${rankings.length} player rankings to Firestore`)
 }
 
 /**

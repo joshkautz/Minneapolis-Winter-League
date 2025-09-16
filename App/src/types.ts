@@ -26,6 +26,7 @@ export type Timestamp = ClientTimestamp
 /////////////////////////////////////////////////////////////////
 
 export enum Collections {
+	CALCULATED_ROUNDS = 'calculated-rounds',
 	GAMES = 'games',
 	OFFERS = 'offers',
 	PLAYERS = 'players',
@@ -337,8 +338,8 @@ export interface WeeklyPlayerRanking {
  * Ranking calculation state document
  */
 export interface RankingCalculationDocument extends DocumentData {
-	/** Type of calculation (full or incremental) */
-	calculationType: 'full' | 'incremental'
+	/** Type of calculation (full, incremental, or round-based) */
+	calculationType: 'full' | 'incremental' | 'round-based'
 	/** Current status of the calculation */
 	status: 'pending' | 'running' | 'completed' | 'failed'
 	/** Timestamp when calculation started */
