@@ -24,7 +24,6 @@ export function calculatePlayerRankings(
 					lastUpdated: Timestamp.now(),
 					lastSeasonId: playerState.lastSeasonId,
 					lastRatingChange: 0, // Will be calculated during updates
-					isActive: playerState.isActive,
 				}) as PlayerRankingDocument
 		)
 

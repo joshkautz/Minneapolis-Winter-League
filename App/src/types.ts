@@ -255,8 +255,6 @@ export interface PlayerRankingDocument extends DocumentData {
 	lastSeasonId: string | null
 	/** Rating change in the last calculation */
 	lastRatingChange: number
-	/** Whether the player is currently active */
-	isActive: boolean
 }
 
 /**
@@ -317,16 +315,14 @@ export interface TimeBasedPlayerRanking {
 	gamesPlayedInRound?: number
 	/** Previous rating before this snapshot (for round-based tracking) */
 	previousRating?: number
-	/** Whether player is currently active */
-	isActive?: boolean
 }
 
 /**
  * Rankings calculation state document
  */
 export interface RankingsCalculationDocument extends DocumentData {
-	/** Type of calculation (full, incremental, or round-based) */
-	calculationType: 'full' | 'incremental' | 'round-based'
+	/** Type of calculation (fresh rebuild or incremental update) */
+	calculationType: 'fresh' | 'incremental'
 	/** Current status of the calculation */
 	status: 'pending' | 'running' | 'completed' | 'failed'
 	/** Timestamp when calculation started */

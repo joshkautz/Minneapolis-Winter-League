@@ -62,7 +62,7 @@ export const rebuildPlayerRankings = onCall(
 
 			// Create calculation state document for tracking
 			const calculationId = await createCalculationState(
-				'round-based',
+				'fresh',
 				request.auth!.uid,
 				{ applyDecay: true, isFullRebuild: true }
 			)

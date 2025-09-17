@@ -2,7 +2,7 @@
 
 > **Minneapolis Winter League Player Rankings Rating System**
 >
-> A comprehensive ELO-based player ranking algorithm that evaluates individual performance across seasons, considering point differentials, opponent strength, playoff performance, and activity status.
+> A comprehensive ELO-based player ranking algorithm that evaluates individual performance across seasons, considering point differentials, opponent strength, playoff performance, and round-based inactivity decay.
 
 ## Table of Contents
 
@@ -14,30 +14,30 @@
 - [Team Strength Analysis](#team-strength-analysis)
 - [Point Differential Weighting](#point-differential-weighting)
 - [Season and Time-Based Factors](#season-and-time-based-factors)
-- [Activity and Decay Mechanics](#activity-and-decay-mechanics)
-- [Weekly Snapshots and History](#weekly-snapshots-and-history)
+- [Round-Based Decay Mechanics](#round-based-decay-mechanics)
+- [Round Snapshots and History](#round-snapshots-and-history)
 - [Calculation Flow](#calculation-flow)
 - [Technical Implementation](#technical-implementation)
 
 ## Mathematical Notation
 
-| Symbol                                     | Description                    |
-| ------------------------------------------ | ------------------------------ |
-| $R$                                        | Player rating                  |
-| $R_0, R_{\text{start}}$                    | Starting rating (1200)         |
-| $R_{\text{old}}, R_{\text{new}}$           | Rating before/after update     |
-| $\Delta R$                                 | Rating change                  |
-| $E, E_A$                                   | Expected score                 |
-| $S_{\text{actual}}$                        | Actual score (0-1 scale)       |
-| $K, K_{\text{base}}, K_{\text{effective}}$ | K-factor values                |
-| $d, d_{\max}$                              | Point differential values      |
-| $\alpha$                                   | Season decay factor (0.8)      |
-| $\beta$                                    | Inactivity decay factor (0.95) |
-| $f_{\text{season}}, f_{\text{playoff}}$    | Temporal multipliers           |
-| $n$                                        | Season order or count          |
-| $s$                                        | Seasons inactive               |
-| $C, C_{\min}$                              | Confidence scores              |
-| $\bar{R}_{\text{team}}$                    | Team average rating            |
+| Symbol                                     | Description                           |
+| ------------------------------------------ | ------------------------------------- |
+| $R$                                        | Player rating                         |
+| $R_0, R_{\text{start}}$                    | Starting rating (1200)                |
+| $R_{\text{old}}, R_{\text{new}}$           | Rating before/after update            |
+| $\Delta R$                                 | Rating change                         |
+| $E, E_A$                                   | Expected score                        |
+| $S_{\text{actual}}$                        | Actual score (0-1 scale)              |
+| $K, K_{\text{base}}, K_{\text{effective}}$ | K-factor values                       |
+| $d, d_{\max}$                              | Point differential values             |
+| $\alpha$                                   | Season decay factor (0.82)            |
+| $\beta$                                    | Round inactivity decay factor (0.996) |
+| $f_{\text{season}}, f_{\text{playoff}}$    | Temporal multipliers                  |
+| $n$                                        | Season order or count                 |
+| $r$                                        | Rounds of inactivity                  |
+| $C, C_{\min}$                              | Confidence scores                     |
+| $\bar{R}_{\text{team}}$                    | Team average rating                   |
 
 ## Overview
 
@@ -48,7 +48,7 @@ The Minneapolis Winter League employs a sophisticated **ELO-based rating system*
 - **Team Context**: The strength of a player's own team
 - **Temporal Factors**: Recent performance weighted more heavily
 - **Game Importance**: Playoff games carry additional weight
-- **Activity Status**: Decay for inactive players
+- **Round-Based Decay**: Gradual rating decline during periods of inactivity
 
 ### Key Innovations
 
@@ -56,7 +56,8 @@ The Minneapolis Winter League employs a sophisticated **ELO-based rating system*
 2. **Diminishing Returns**: Large point differentials have reduced impact to prevent outlier games from dominating
 3. **Dynamic Team Strength**: Calculates team strength based on current player ratings
 4. **Temporal Weighting**: Recent seasons and games matter more than historical performance
-5. **Playoff Amplification**: Postseason performance has 2x impact
+5. **Playoff Amplification**: Postseason performance has 1.8x impact
+6. **Round-Based Decay**: Continuous gradual decay (0.996 per round) instead of arbitrary thresholds
 
 ## Algorithm Constants
 
@@ -65,37 +66,33 @@ The following constants define the behavior of the rating system:
 | Constant                       | Symbol               | Value | Description                              |
 | ------------------------------ | -------------------- | ----- | ---------------------------------------- |
 | `STARTING_RATING`              | $R_0$                | 1200  | Initial rating for new players           |
-| `K_FACTOR`                     | $K$                  | 32    | Maximum rating change per game           |
-| `PLAYOFF_MULTIPLIER`           | $f_p$                | 2.0   | Playoff games worth 2× points            |
-| `SEASON_DECAY_FACTOR`          | $\alpha$             | 0.8   | Each past season weighted at 80%         |
-| `INACTIVITY_DECAY_PER_SEASON`  | $\beta$              | 0.95  | 5% rating decay per inactive season      |
-| `MAX_FULL_WEIGHT_DIFFERENTIAL` | $d_{\max}$           | 10    | Diminishing returns beyond ±10 points    |
+| `K_FACTOR`                     | $K$                  | 36    | Maximum rating change per game           |
+| `PLAYOFF_MULTIPLIER`           | $f_p$                | 1.8   | Playoff games worth 1.8× points          |
+| `SEASON_DECAY_FACTOR`          | $\alpha$             | 0.82  | Each past season weighted at 82%         |
+| `INACTIVITY_DECAY_PER_ROUND`   | $\beta$              | 0.996 | 0.4% rating decay per inactive round     |
+| `MAX_FULL_WEIGHT_DIFFERENTIAL` | $d_{\max}$           | 5     | Diminishing returns beyond ±5 points     |
 | `MIN_TEAM_CONFIDENCE`          | $C_{\min}$           | 0.5   | Minimum rated player ratio for team calc |
 | `DEFAULT_TEAM_STRENGTH`        | $R_{\text{default}}$ | 1200  | Fallback team strength                   |
-| `RETIREMENT_THRESHOLD_SEASONS` | $s_{\max}$           | 3     | Seasons inactive before "retired" status |
 
 ```typescript
 ALGORITHM_CONSTANTS = {
 	// Core ELO Settings
 	STARTING_RATING: 1200, // R₀
-	K_FACTOR: 32, // K
+	K_FACTOR: 36, // K
 
 	// Game Type Multipliers
-	PLAYOFF_MULTIPLIER: 2.0, // fₚ
+	PLAYOFF_MULTIPLIER: 1.8, // fₚ
 
 	// Temporal Decay Factors
-	SEASON_DECAY_FACTOR: 0.8, // α
-	INACTIVITY_DECAY_PER_SEASON: 0.95, // β
+	SEASON_DECAY_FACTOR: 0.82, // α
+	INACTIVITY_DECAY_PER_ROUND: 0.996, // β
 
 	// Point Differential Processing
-	MAX_FULL_WEIGHT_DIFFERENTIAL: 10, // d_max
+	MAX_FULL_WEIGHT_DIFFERENTIAL: 5, // d_max
 
 	// Team Strength Calculation
 	MIN_TEAM_CONFIDENCE: 0.5, // C_min
 	DEFAULT_TEAM_STRENGTH: 1200, // R_default
-
-	// Activity Classification
-	RETIREMENT_THRESHOLD_SEASONS: 3, // s_max
 }
 ```
 
@@ -111,9 +108,11 @@ interface PlayerRatingState {
 	playerName: string // Display name (cached)
 	currentRating: number // Current ELO rating
 	totalGames: number // Lifetime games played
-	seasonStats: Map<string, PlayerSeasonStats> // Per-season performance data
+	totalSeasons: number // Total seasons participated in
+	seasonsPlayed: Set<string> // Track which seasons player has participated in
 	lastSeasonId: string | null // Most recent season participated
-	isActive: boolean // Current activity status
+	lastGameDate: Date | null // Track when player last played a game
+	roundsSinceLastGame: number // Track rounds of inactivity
 }
 ```
 
@@ -128,7 +127,6 @@ interface GameProcessingData {
 	awayScore: number // Away team final score
 	type: 'regular' | 'playoff' // Game type classification
 	seasonOrder: number // 0 = current, 1 = previous, etc.
-	week: number // Week within season
 	gameDate: Date // When the game occurred
 	season: DocumentReference // Season reference
 	home: DocumentReference // Home team reference
@@ -178,7 +176,7 @@ $$
 Where:
 
 - $d$ = raw point differential
-- $d_{\max}$ = `MAX_FULL_WEIGHT_DIFFERENTIAL` (10)
+- $d_{\max}$ = `MAX_FULL_WEIGHT_DIFFERENTIAL` (5)
 
 ```typescript
 function calculateWeightedPointDifferential(rawDifferential: number): number {
@@ -200,9 +198,9 @@ function calculateWeightedPointDifferential(rawDifferential: number): number {
 
 **Examples:**
 
-- 5-point differential: No scaling (5.0)
-- 15-point differential: Scaled to ~12.2
-- 30-point differential: Scaled to ~16.4
+- 3-point differential: No scaling (3.0)
+- 8-point differential: Scaled to ~7.2
+- 15-point differential: Scaled to ~9.5
 
 ### Step 2: Expected Score Calculation
 
@@ -377,19 +375,19 @@ The algorithm applies logarithmic scaling to prevent extreme scores from dominat
 
 | Raw Differential | Weighted Differential | Scaling Factor |
 | ---------------- | --------------------- | -------------- |
+| ±3               | ±3.0                  | 1.00x          |
 | ±5               | ±5.0                  | 1.00x          |
-| ±10              | ±10.0                 | 1.00x          |
-| ±15              | ±12.2                 | 0.81x          |
-| ±20              | ±13.9                 | 0.69x          |
-| ±30              | ±16.4                 | 0.55x          |
-| ±50              | ±20.9                 | 0.42x          |
+| ±8               | ±7.2                  | 0.90x          |
+| ±10              | ±8.4                  | 0.84x          |
+| ±15              | ±9.5                  | 0.63x          |
+| ±20              | ±11.0                 | 0.55x          |
 
 ### Rationale
 
 This approach ensures that:
 
 1. **Close games matter most**: 1-point and 2-point games have full impact
-2. **Blowouts are discounted**: 30-point wins don't dominate rankings
+2. **Blowouts are discounted**: 15+ point wins don't dominate rankings
 3. **Skill differences show**: Consistent moderate wins still accumulate
 4. **Outliers are minimized**: One extreme game can't drastically change ratings
 
@@ -403,7 +401,7 @@ $$f_{\text{season}} = \alpha^n$$
 
 Where:
 
-- $\alpha$ = `SEASON_DECAY_FACTOR` (0.8)
+- $\alpha$ = `SEASON_DECAY_FACTOR` (0.82)
 - $n$ = season order (0 = current, 1 = previous, etc.)
 
 The effective K-factor becomes:
@@ -412,20 +410,20 @@ $$K_{\text{effective}} = K_{\text{base}} \times \alpha^n$$
 
 | Season            | Decay Factor | Effective K-Factor |
 | ----------------- | ------------ | ------------------ |
-| Current (0)       | 1.00x        | 32.0               |
-| Previous (1)      | 0.80x        | 25.6               |
-| 2 Seasons Ago (2) | 0.64x        | 20.5               |
-| 3 Seasons Ago (3) | 0.51x        | 16.4               |
-| 4 Seasons Ago (4) | 0.41x        | 13.1               |
+| Current (0)       | 1.00x        | 36.0               |
+| Previous (1)      | 0.82x        | 29.5               |
+| 2 Seasons Ago (2) | 0.67x        | 24.2               |
+| 3 Seasons Ago (3) | 0.55x        | 19.8               |
+| 4 Seasons Ago (4) | 0.45x        | 16.2               |
 
 ### Playoff Multiplier
 
-Playoff games receive double weight to reflect their importance:
+Playoff games receive additional weight to reflect their importance:
 
 - **Regular Season Games**: 1.0x multiplier
-- **Playoff Games**: 2.0x multiplier
+- **Playoff Games**: 1.8x multiplier
 
-This means a playoff game rating change can be up to 64 points (K=32 \* 2.0) versus 32 points for regular season.
+This means a playoff game rating change can be up to 65 points (K=36 × 1.8) versus 36 points for regular season.
 
 ### Chronological Processing
 
@@ -436,92 +434,93 @@ Games are processed in strict chronological order to ensure:
 3. Weekly snapshots capture true progression
 4. No future information leaks into past calculations
 
-## Activity and Decay Mechanics
+## Round-Based Decay Mechanics
 
-### Inactivity Decay
+### Continuous Inactivity Decay
 
-Players who don't participate in recent seasons experience rating decay:
+Players who don't participate in recent rounds experience gradual rating decay:
 
-$$R_{\text{new}} = R_{\text{start}} + (R_{\text{old}} - R_{\text{start}}) \times \beta^s$$
+$$R_{\text{new}} = R_{\text{start}} + (R_{\text{old}} - R_{\text{start}}) \times \beta^r$$
 
 Where:
 
 - $R_{\text{new}}$ = rating after decay
 - $R_{\text{old}}$ = rating before decay
 - $R_{\text{start}}$ = starting rating (1200)
-- $\beta$ = `INACTIVITY_DECAY_PER_SEASON` (0.95)
-- $s$ = seasons inactive
+- $\beta$ = `INACTIVITY_DECAY_PER_ROUND` (0.996)
+- $r$ = rounds of inactivity
 
-Activity classification:
+### Decay Process
 
-- **Active**: $s = 0$ (played in current/recent season)
-- **Inactive**: $s \geq 3$ (but rating preserved)
-- **Retired**: System status for very inactive players
+- **Per Round**: Each round a player doesn't play, their rating decays by 0.4%
+- **Accumulative**: Decay compounds over multiple rounds of inactivity
+- **Gradual**: No arbitrary thresholds or sudden status changes
+- **Resumable**: When players return, decay stops and ratings can increase again
 
 ### Decay Examples
 
 For a player with 1400 rating who becomes inactive:
 
-| Seasons Inactive | Decay Factor | New Rating | Status   |
-| ---------------- | ------------ | ---------- | -------- |
-| 0                | 1.000        | 1400       | Active   |
-| 1                | 0.950        | 1390       | Active   |
-| 2                | 0.903        | 1381       | Active   |
-| 3                | 0.857        | 1371       | Inactive |
-| 4                | 0.815        | 1363       | Inactive |
+| Rounds Inactive | Decay Factor | New Rating | Rating Lost |
+| --------------- | ------------ | ---------- | ----------- |
+| 0               | 1.000        | 1400       | 0           |
+| 5               | 0.980        | 1396       | 4           |
+| 10              | 0.961        | 1392       | 8           |
+| 20              | 0.922        | 1384       | 16          |
+| 40              | 0.851        | 1370       | 30          |
 
-### Activity Classification
+### Mathematical Properties
 
-- **Active**: Played in current or most recent season
-- **Inactive**: No games for 3+ seasons but rating preserved
-- **Retired**: System status, not displayed in active rankings
+- **Base Rating Preserved**: Decay only affects rating above starting value (1200)
+- **Continuous Function**: No jumps or discontinuities in rating changes
+- **Predictable**: Players can calculate their expected rating after any period of inactivity
+- **Fair**: All players experience identical decay rates regardless of skill level
 
-## Weekly Snapshots and History
+## Round Snapshots and History
 
 ### Snapshot Creation
 
-The system creates weekly snapshots during calculation:
+The system creates round-based snapshots during calculation:
 
 ```typescript
-interface WeeklyPlayerRanking {
+interface TimeBasedPlayerRanking {
 	playerId: string // Player identifier
 	playerName: string // Display name
 	eloRating: number // Rating at this point
 	rank: number // Position in rankings
-	weeklyChange: number // Rating change this week
-	gamesThisWeek: number // Games played
-	pointDifferentialThisWeek: number // Cumulative point differential
+	totalGames: number // Total games played up to this point
+	totalSeasons: number // Total seasons participated in up to this point
 }
 ```
 
 ### Historical Tracking
 
-Weekly snapshots enable:
+Round snapshots enable:
 
 1. **Progress visualization**: See rating changes over time
 2. **Performance analysis**: Identify trends and patterns
 3. **Verification**: Audit trail for rating calculations
-4. **Statistics**: Weekly/monthly performance metrics
+4. **Statistics**: Round-by-round performance metrics
 
 ## Calculation Flow
 
-### Full Recalculation Process
+### Rebuild Process (Full)
 
 1. **Initialize**: Load all seasons in chronological order
 2. **Reset**: Clear all player ratings to starting values
 3. **Process**: Handle each game chronologically across all seasons
-4. **Decay**: Apply inactivity decay for inactive players
+4. **Decay**: Apply round-based decay for periods of inactivity
 5. **Rank**: Sort players by final rating
-6. **Snapshot**: Create weekly historical snapshots
+6. **Snapshot**: Create round-based historical snapshots
 7. **Save**: Store final rankings to database
 
-### Incremental Update Process
+### Update Process (Incremental)
 
 1. **Load**: Retrieve existing ratings and last calculation point
 2. **Identify**: Find new games since last calculation
 3. **Process**: Apply new games to existing ratings
 4. **Update**: Modify only affected player rankings
-5. **Snapshot**: Add new weekly snapshots as needed
+5. **Snapshot**: Add new round snapshots as needed
 
 ### Game Processing Order
 
@@ -529,7 +528,7 @@ Games must be processed in strict chronological order because:
 
 - **Team Strength**: Later team strength depends on earlier rating updates
 - **Historical Accuracy**: Player ratings evolve naturally over time
-- **Snapshot Integrity**: Weekly snapshots reflect accurate progression
+- **Snapshot Integrity**: Round snapshots reflect accurate progression
 - **Consistency**: Results are deterministic and reproducible
 
 ## Technical Implementation
@@ -583,8 +582,16 @@ Map<string, TeamStrength> // teamId -> calculated strength
 
 ## Summary
 
-The Minneapolis Winter League Player Ranking Algorithm represents a sophisticated approach to individual performance evaluation in team sports. By incorporating point differentials, opponent strength, temporal factors, and activity status, it provides a nuanced and fair assessment of player skill that evolves appropriately over time.
+The Minneapolis Winter League Player Ranking Algorithm represents a sophisticated approach to individual performance evaluation in team sports. By incorporating point differentials, opponent strength, temporal factors, and round-based decay, it provides a nuanced and fair assessment of player skill that evolves appropriately over time.
 
-The system's emphasis on recent performance, playoff importance, and mathematical rigor ensures that rankings accurately reflect current player capabilities while maintaining historical context. The comprehensive snapshot system provides transparency and auditability, while the technical implementation ensures scalability and reliability.
+The system's emphasis on recent performance, playoff importance, and mathematical rigor ensures that rankings accurately reflect current player capabilities while maintaining historical context. The round-based decay system provides continuous, predictable rating adjustments without arbitrary thresholds or status classifications.
 
-This algorithm serves as both a competitive ranking system and a historical record of player development within the Minneapolis Winter League community.
+Key features of the current algorithm:
+
+- **Round-Based Decay**: Continuous 0.4% decay per round of inactivity
+- **Optimized Constants**: K-factor of 36, season decay of 0.82, playoff multiplier of 1.8
+- **Point Differential Focus**: Maximum weight for differentials up to 5 points
+- **No Activity Status**: All players ranked by current rating without classification
+- **Comprehensive Snapshots**: Round-by-round historical tracking for transparency
+
+This algorithm serves as both a competitive ranking system and a historical record of player development within the Minneapolis Winter League community, providing fair and mathematically sound player evaluations.

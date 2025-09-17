@@ -14,7 +14,6 @@ import { currentPlayerRankingsQuery } from '@/firebase/collections/player-rankin
 import { PlayerRankingDocument } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
 	Table,
 	TableBody,
@@ -131,15 +130,16 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 						{/* Core Formula */}
 						<div>
 							<h4 className='font-semibold mb-3 text-base'>
-								Core Rating Formula
+								Core ELO Rating Formula
 							</h4>
 							<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
-								<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^n \times f_p \times (S_{\text{actual}} - E)' />
+								<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^s \times f_p \times (S_{\text{actual}} - E)' />
 							</div>
 							<p className='text-muted-foreground'>
 								Each player starts with 1200 ELO rating. The formula combines
 								traditional ELO mathematics with sophisticated point
-								differential analysis and temporal weighting.
+								differential analysis, temporal weighting, and round-based
+								decay.
 							</p>
 						</div>
 
@@ -150,18 +150,23 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 							</h4>
 							<p className='text-muted-foreground mb-2'>
 								Unlike traditional win/loss ELO, our algorithm considers{' '}
-								<em>how much</em> you won or lost by:
+								<em>how much</em> you won or lost by using weighted
+								differentials:
 							</p>
-							<div className='bg-muted/20 p-2 rounded text-center'>
-								<InlineMath math='S_{\text{actual}} = \text{clamp}(0.5 + \frac{d_{\text{weighted}}}{100}, 0, 1)' />
+							<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+								<InlineMath math='d_{\text{weighted}} = \begin{cases} d & \text{if } |d| \leq 5 \\ \text{sign}(d) \times [5 + 2.2 \times \ln(|d| - 4)] & \text{if } |d| > 5 \end{cases}' />
+							</div>
+							<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+								<InlineMath math='S_{\text{actual}} = \text{clamp}(0.5 + \frac{d_{\text{weighted}}}{80}, 0, 1)' />
 							</div>
 							<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
-								<li>• Win by 10 points = 0.6 actual score</li>
-								<li>• Loss by 15 points = 0.35 actual score</li>
+								<li>• Win by 4 points = 0.55 actual score</li>
+								<li>• Loss by 6 points = 0.41 actual score</li>
 								<li>
 									• Large differentials use logarithmic scaling to prevent
 									outliers
 								</li>
+								<li>• Optimized for ~20 point Ultimate Frisbee games</li>
 							</ul>
 						</div>
 
@@ -170,15 +175,44 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 							<h4 className='font-semibold mb-2'>Dynamic Team Strength</h4>
 							<p className='text-muted-foreground mb-2'>
 								Team strength is calculated as the average rating of all roster
-								players, historically adjusted:
+								players, adjusted for historical seasons:
+							</p>
+							<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+								<InlineMath math='\bar{R}_{\text{team}} = \frac{1}{n} \sum_{i=1}^{n} [1200 + (R_i - 1200) \times 0.82^s]' />
+							</div>
+							<p className='text-xs text-muted-foreground text-center mb-2'>
+								where <InlineMath math='s' /> = seasons back in time,{' '}
+								<InlineMath math='n' /> = roster size
 							</p>
 							<div className='bg-muted/20 p-2 rounded text-center'>
-								<InlineMath math='\bar{R}_{\text{team}} = \frac{1}{n} \times \sum[R_{\text{start}} + (R_i - R_{\text{start}}) \times \alpha^n]' />
+								<InlineMath math='E = \frac{1}{1 + 10^{(\bar{R}_{\text{opponent}} - \bar{R}_{\text{team}})/400}}' />
 							</div>
-							<p className='text-xs text-muted-foreground text-center mt-2'>
-								Expected score uses standard ELO:{' '}
-								<InlineMath math='E = \frac{1}{1 + 10^{(R_{\text{opponent}} - R_{\text{team}})/400}}' />
+							<p className='text-xs text-muted-foreground text-center mt-1'>
+								Expected score uses standard ELO formula
 							</p>
+						</div>
+
+						{/* Round-Based Inactivity Decay */}
+						<div>
+							<h4 className='font-semibold mb-2'>
+								Round-Based Inactivity Decay
+							</h4>
+							<p className='text-muted-foreground mb-2'>
+								Player ratings decay gradually each round they don't
+								participate:
+							</p>
+							<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+								<InlineMath math='R_{\text{new}} = 1200 + (R_{\text{old}} - 1200) \times 0.996^r' />
+							</div>
+							<p className='text-xs text-muted-foreground text-center mb-2'>
+								where <InlineMath math='r' /> = rounds of inactivity
+							</p>
+							<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+								<li>• Decay applies per round, not per season</li>
+								<li>• ~0.4% rating loss per round above base (1200)</li>
+								<li>• Over 20 rounds: equivalent to ~5% seasonal decay</li>
+								<li>• Gradual adjustment ensures realistic rating evolution</li>
+							</ul>
 						</div>
 
 						{/* Temporal Factors */}
@@ -187,12 +221,12 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 							<div className='grid grid-cols-2 gap-3 mb-2'>
 								<div>
 									<p className='text-xs font-medium mb-1'>
-										Season Decay (α = 0.8)
+										Season Decay (α = 0.82)
 									</p>
 									<ul className='text-xs text-muted-foreground space-y-0.5'>
 										<li>Current season: 100% weight</li>
-										<li>Previous season: 80% weight</li>
-										<li>2 seasons ago: 64% weight</li>
+										<li>Previous season: 82% weight</li>
+										<li>2 seasons ago: 67% weight</li>
 									</ul>
 								</div>
 								<div>
@@ -201,8 +235,8 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 									</p>
 									<ul className='text-xs text-muted-foreground space-y-0.5'>
 										<li>Regular season: 1.0×</li>
-										<li>Playoff games: 2.0×</li>
-										<li>K-factor = 32 × modifiers</li>
+										<li>Playoff games: 1.8×</li>
+										<li>K-factor = 36 × modifiers</li>
 									</ul>
 								</div>
 							</div>
@@ -214,25 +248,16 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 							<div className='space-y-2'>
 								<div>
 									<p className='text-xs font-medium'>
-										Diminishing Returns Model
+										Confidence-Based Team Calculation
 									</p>
 									<p className='text-xs text-muted-foreground mb-2'>
-										Large point differentials (&gt;10) use logarithmic scaling:
+										Team confidence based on known player ratings:
 									</p>
 									<div className='text-center text-xs'>
-										<InlineMath math='d_{\text{weighted}} = \text{sign}(d) \times [10 + 2 \times \ln(|d| - 9)] \text{ for } |d| > 10' />
-									</div>
-								</div>
-								<div>
-									<p className='text-xs font-medium'>Inactivity Decay</p>
-									<p className='text-xs text-muted-foreground mb-2'>
-										Rating decay:
-									</p>
-									<div className='text-center text-xs'>
-										<InlineMath math='R_{\text{new}} = 1200 + (R_{\text{old}} - 1200) \times 0.95^s' />
+										<InlineMath math='\text{confidence} = \frac{\text{rated players}}{\text{total roster}} \geq 0.5' />
 									</div>
 									<p className='text-xs text-muted-foreground text-center mt-1'>
-										where <InlineMath math='s' /> = seasons inactive
+										Low confidence teams use default strength (1200)
 									</p>
 								</div>
 								<div>
@@ -240,8 +265,19 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 										Chronological Processing
 									</p>
 									<p className='text-xs text-muted-foreground'>
-										All games processed in time order to ensure team strengths
-										reflect accurate historical ratings
+										All games processed by rounds in chronological order to
+										ensure team strengths reflect accurate historical ratings at
+										game time
+									</p>
+								</div>
+								<div>
+									<p className='text-xs font-medium'>
+										Round-Based Incremental Updates
+									</p>
+									<p className='text-xs text-muted-foreground'>
+										System identifies uncalculated rounds for efficient
+										incremental updates while preserving existing player
+										statistics
 									</p>
 								</div>
 							</div>
@@ -265,7 +301,7 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 									<span className='text-xs font-medium text-muted-foreground mb-1'>
 										K-FACTOR
 									</span>
-									<span className='text-lg font-mono font-bold mb-1'>32</span>
+									<span className='text-lg font-mono font-bold mb-1'>36</span>
 									<p className='text-xs text-muted-foreground'>
 										Maximum rating change per game
 									</p>
@@ -275,7 +311,7 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 									<span className='text-xs font-medium text-muted-foreground mb-1'>
 										SEASON DECAY
 									</span>
-									<span className='text-lg font-mono font-bold mb-1'>0.8</span>
+									<span className='text-lg font-mono font-bold mb-1'>0.82</span>
 									<p className='text-xs text-muted-foreground'>
 										Weight reduction per past season
 									</p>
@@ -285,7 +321,7 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 									<span className='text-xs font-medium text-muted-foreground mb-1'>
 										PLAYOFF MULTIPLIER
 									</span>
-									<span className='text-lg font-mono font-bold mb-1'>2.0</span>
+									<span className='text-lg font-mono font-bold mb-1'>1.8</span>
 									<p className='text-xs text-muted-foreground'>
 										Postseason game importance factor
 									</p>
@@ -293,11 +329,13 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 
 								<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
 									<span className='text-xs font-medium text-muted-foreground mb-1'>
-										INACTIVITY DECAY
+										ROUND DECAY
 									</span>
-									<span className='text-lg font-mono font-bold mb-1'>0.95</span>
+									<span className='text-lg font-mono font-bold mb-1'>
+										0.996
+									</span>
 									<p className='text-xs text-muted-foreground'>
-										Rating decay per inactive season
+										Rating decay per inactive round
 									</p>
 								</div>
 
@@ -305,7 +343,7 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 									<span className='text-xs font-medium text-muted-foreground mb-1'>
 										MAX DIFFERENTIAL
 									</span>
-									<span className='text-lg font-mono font-bold mb-1'>10</span>
+									<span className='text-lg font-mono font-bold mb-1'>5</span>
 									<p className='text-xs text-muted-foreground'>
 										Full weight point differential threshold
 									</p>
@@ -313,42 +351,38 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 							</div>
 						</div>
 
-						{/* Activity and Status */}
-						<div>
-							<h4 className='font-semibold mb-2'>Activity Classification</h4>
-							<div className='space-y-1 text-xs'>
-								<div className='flex items-center gap-2'>
-									<div className='w-2 h-2 bg-green-500 rounded-full'></div>
-									<span>
-										<strong>Active:</strong> Played in current/recent season
-									</span>
-								</div>
-								<div className='flex items-center gap-2'>
-									<div className='w-2 h-2 bg-gray-400 rounded-full'></div>
-									<span>
-										<strong>Inactive:</strong> 3+ seasons without games (rating
-										preserved)
-									</span>
-								</div>
-							</div>
-							<p className='text-xs text-muted-foreground mt-2'>
-								Players who return from retirement automatically reactivate when
-								they play again.
-							</p>
-						</div>
-
 						{/* Calculation Notes */}
 						<div className='border-t pt-4'>
 							<h4 className='font-semibold mb-2 text-xs'>Technical Notes</h4>
 							<ul className='text-xs text-muted-foreground space-y-1'>
-								<li>• Rankings recalculated after each game completion</li>
-								<li>• Weekly snapshots preserve rating progression history</li>
 								<li>
-									• Team confidence scoring handles mixed veteran/rookie rosters
+									• All calculations performed in chronological order by rounds
 								</li>
 								<li>
-									• Mathematical precision ensures deterministic, reproducible
-									results
+									• Team strengths calculated at game time using historical
+									ratings
+								</li>
+								<li>
+									• Point differentials normalized for ~20-point Ultimate
+									Frisbee games
+								</li>
+								<li>
+									• Incremental updates process only new uncalculated rounds
+								</li>
+								<li>
+									• Full rebuilds process all historical data from scratch
+								</li>
+								<li>
+									• Round-based decay applies continuously during periods
+									without play
+								</li>
+								<li>
+									• Logarithmic scaling prevents large point differential
+									outliers
+								</li>
+								<li>
+									• Confidence thresholds ensure reliable team strength
+									calculations
 								</li>
 							</ul>
 						</div>
@@ -376,7 +410,6 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 										<TableHead className='w-32 text-center'>Change</TableHead>
 										<TableHead className='w-32 text-center'>Games</TableHead>
 										<TableHead className='w-32 text-center'>Seasons</TableHead>
-										<TableHead className='w-32 text-center'>Status</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -405,9 +438,6 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 											<TableCell className='text-center'>
 												<Skeleton className='h-4 w-6 mx-auto opacity-20' />
 											</TableCell>
-											<TableCell className='text-center'>
-												<Skeleton className='h-6 w-16 mx-auto rounded-full opacity-20' />
-											</TableCell>
 										</TableRow>
 									))}
 								</TableBody>
@@ -424,7 +454,6 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 										<TableHead className='w-32 text-center'>Change</TableHead>
 										<TableHead className='w-32 text-center'>Games</TableHead>
 										<TableHead className='w-32 text-center'>Seasons</TableHead>
-										<TableHead className='w-32 text-center'>Status</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -491,18 +520,6 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 											</TableCell>
 											<TableCell className='text-center'>
 												{player.totalSeasons}
-											</TableCell>
-											<TableCell className='text-center'>
-												<Badge
-													variant={player.isActive ? 'default' : 'secondary'}
-													className={cn(
-														player.isActive
-															? 'bg-green-100 text-green-800 hover:bg-green-200'
-															: 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-													)}
-												>
-													{player.isActive ? 'Active' : 'Inactive'}
-												</Badge>
 											</TableCell>
 										</TableRow>
 									))}

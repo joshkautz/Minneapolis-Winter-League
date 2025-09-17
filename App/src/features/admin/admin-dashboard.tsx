@@ -93,7 +93,7 @@ export const AdminDashboard: React.FC = () => {
 						<Button asChild className='w-full'>
 							<Link to='/admin/player-rankings'>
 								<Settings className='h-4 w-4 mr-2' />
-								Manage Rankings
+								Manage Player Rankings
 							</Link>
 						</Button>
 					</CardContent>

@@ -32,7 +32,4 @@ export const ALGORITHM_CONSTANTS = {
 
 	// Default team strength when confidence is too low
 	DEFAULT_TEAM_STRENGTH: 1200,
-
-	// Number of rounds of inactivity before considering a player "retired" within current season
-	RETIREMENT_THRESHOLD_ROUNDS: 40, // About 2-3 seasons worth of rounds
 }

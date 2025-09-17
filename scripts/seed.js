@@ -121,6 +121,10 @@ const Collections = {
 	SEASONS: 'seasons',
 	TEAMS: 'teams',
 	WAIVERS: 'waivers',
+	RANKINGS: 'rankings',
+	RANKINGS_HISTORY: 'rankings-history',
+	RANKINGS_CALCULATIONS: 'rankings-calculations',
+	RANKINGS_CALCULATED_ROUNDS: 'rankings-calculated-rounds',
 }
 
 const GameType = {

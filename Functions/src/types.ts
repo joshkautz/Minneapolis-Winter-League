@@ -328,8 +328,8 @@ export interface TimeBasedPlayerRanking {
  * Rankings calculation state document
  */
 export interface RankingsCalculationDocument extends DocumentData {
-	/** Type of calculation (full, incremental, or round-based) */
-	calculationType: 'full' | 'incremental' | 'round-based'
+	/** Type of calculation (fresh rebuild or incremental update) */
+	calculationType: 'fresh' | 'incremental'
 	/** Current status of the calculation */
 	status: 'pending' | 'running' | 'completed' | 'failed'
 	/** Timestamp when calculation started */

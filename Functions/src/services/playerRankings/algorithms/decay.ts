@@ -15,7 +15,6 @@ export function applyRoundBasedDecay(
 		if (playersInCurrentRound.has(playerId)) {
 			playerState.lastGameDate = currentRoundDate
 			playerState.roundsSinceLastGame = 0
-			playerState.isActive = true
 		} else {
 			// Player is not playing in this round, increment inactivity and apply decay
 			playerState.roundsSinceLastGame++
@@ -27,14 +26,6 @@ export function applyRoundBasedDecay(
 					playerState.currentRating - ALGORITHM_CONSTANTS.STARTING_RATING
 				playerState.currentRating =
 					ALGORITHM_CONSTANTS.STARTING_RATING + ratingAboveBase * decayFactor
-			}
-
-			// Mark as inactive if they haven't played in many rounds
-			if (
-				playerState.roundsSinceLastGame >=
-				ALGORITHM_CONSTANTS.RETIREMENT_THRESHOLD_ROUNDS
-			) {
-				playerState.isActive = false
 			}
 		}
 	}

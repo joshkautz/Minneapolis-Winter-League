@@ -13,7 +13,8 @@ import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	playerRankingsCalculationsQuery,
-	triggerPlayerRankingsCalculation,
+	rebuildPlayerRankings,
+	updatePlayerRankings,
 } from '@/firebase/collections/player-rankings'
 import { RankingsCalculationDocument } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,6 +22,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
 	Table,
 	TableBody,
@@ -32,6 +38,8 @@ import {
 import {
 	Play,
 	RefreshCw,
+	RefreshCcw,
+	IterationCcw,
 	Clock,
 	CheckCircle,
 	XCircle,
@@ -100,9 +108,10 @@ export const PlayerRankingsAdmin: React.FC = () => {
 		setCalculationSuccess(null)
 
 		try {
-			const result = await triggerPlayerRankingsCalculation({
-				calculationType: type,
-			})
+			const result =
+				type === 'full'
+					? await rebuildPlayerRankings({})
+					: await updatePlayerRankings({})
 
 			const typeDescription =
 				type === 'full'
@@ -218,56 +227,61 @@ export const PlayerRankingsAdmin: React.FC = () => {
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
 						<Play className='h-5 w-5' />
-						Trigger New Calculation
+						Trigger Player Rankings Calculation
 					</CardTitle>
 				</CardHeader>
 				<CardContent className='space-y-4'>
-					<p className='text-sm text-muted-foreground'>
-						Choose the type of calculation to perform.{' '}
-						<strong>Full calculations</strong> rebuild all rankings from scratch
-						using round-based processing.{' '}
-						<strong>Incremental calculations</strong>
-						process only new rounds that haven't been calculated yet.
-					</p>
+					<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant={'outline'}
+									onClick={() => handleTriggerCalculation('full')}
+									disabled={isCalculating}
+									className='flex items-center justify-center gap-2 w-full'
+									size='lg'
+								>
+									{isCalculating ? (
+										<RefreshCw className='h-4 w-4 animate-spin' />
+									) : (
+										<RefreshCcw className='h-4 w-4' />
+									)}
+									Rebuild Player Rankings
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side='bottom' align='center'>
+								<p className='max-w-xs'>
+									Complete rebuild from scratch. Processes all games
+									chronologically. Use for first-time setup or when algorithm
+									changes.
+								</p>
+							</TooltipContent>
+						</Tooltip>
 
-					<div className='flex gap-4'>
-						<Button
-							onClick={() => handleTriggerCalculation('full')}
-							disabled={isCalculating}
-							className='flex items-center gap-2'
-						>
-							{isCalculating ? (
-								<RefreshCw className='h-4 w-4 animate-spin' />
-							) : (
-								<Play className='h-4 w-4' />
-							)}
-							Full Recalculation
-						</Button>
-
-						<Button
-							variant='outline'
-							onClick={() => handleTriggerCalculation('incremental')}
-							disabled={isCalculating}
-							className='flex items-center gap-2'
-						>
-							{isCalculating ? (
-								<RefreshCw className='h-4 w-4 animate-spin' />
-							) : (
-								<RefreshCw className='h-4 w-4' />
-							)}
-							New Rounds Only
-						</Button>
-					</div>
-
-					<div className='text-xs text-muted-foreground space-y-1'>
-						<p>
-							<strong>Full:</strong> Use for first-time setup or when algorithm
-							changes
-						</p>
-						<p>
-							<strong>Incremental:</strong> Use for weekly updates after adding
-							new games
-						</p>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant='outline'
+									onClick={() => handleTriggerCalculation('incremental')}
+									disabled={isCalculating}
+									className='flex items-center justify-center gap-2 w-full'
+									size='lg'
+								>
+									{isCalculating ? (
+										<RefreshCw className='h-4 w-4 animate-spin' />
+									) : (
+										<IterationCcw className='h-4 w-4' />
+									)}
+									Update Player Rankings
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side='bottom' align='center'>
+								<p className='max-w-xs'>
+									Incremental update processing only new rounds. Use for regular
+									updates after adding new games.
+								</p>
+							</TooltipContent>
+						</Tooltip>
 					</div>
 				</CardContent>
 			</Card>

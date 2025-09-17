@@ -125,7 +125,6 @@ export async function processPlayersInGame(
 				lastSeasonId: null,
 				lastGameDate: null,
 				roundsSinceLastGame: 0,
-				isActive: true,
 			}
 
 			// Initialize round tracking for new player

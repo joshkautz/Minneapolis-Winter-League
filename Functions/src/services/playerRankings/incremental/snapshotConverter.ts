@@ -20,7 +20,6 @@ export function convertSnapshotToRatings(
 			lastSeasonId: null, // Will be updated as games are processed
 			lastGameDate: null, // Initialize for round-based decay tracking
 			roundsSinceLastGame: 0, // Start fresh for round tracking
-			isActive: true,
 		})
 	}
 

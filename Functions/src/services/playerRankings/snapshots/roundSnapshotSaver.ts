@@ -29,9 +29,7 @@ export async function saveRoundSnapshot(
 		calculationMeta: {
 			totalGamesProcessed: round.games.length,
 			avgRating: calculateAverageRating(playerRatings),
-			activePlayerCount: Array.from(playerRatings.values()).filter(
-				(p) => p.isActive
-			).length,
+			activePlayerCount: playerRatings.size,
 			calculatedAt: Timestamp.now(),
 		},
 		// Add round-specific metadata
@@ -54,17 +52,16 @@ export async function saveRoundSnapshot(
 }
 
 /**
- * Calculates average rating of all active players
+ * Calculates average rating of all players
  */
 function calculateAverageRating(
 	playerRatings: Map<string, PlayerRatingState>
 ): number {
-	const activeRatings = Array.from(playerRatings.values())
-		.filter((p) => p.isActive)
-		.map((p) => p.currentRating)
+	const allRatings = Array.from(playerRatings.values()).map(
+		(p) => p.currentRating
+	)
 
-	return activeRatings.length > 0
-		? activeRatings.reduce((sum, rating) => sum + rating, 0) /
-				activeRatings.length
+	return allRatings.length > 0
+		? allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length
 		: ALGORITHM_CONSTANTS.STARTING_RATING
 }

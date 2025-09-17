@@ -6,7 +6,7 @@ import { ALGORITHM_CONSTANTS } from '../constants.js'
  * Creates a new calculation state document
  */
 export async function createCalculationState(
-	calculationType: 'full' | 'incremental' | 'round-based',
+	calculationType: 'fresh' | 'incremental',
 	userId: string,
 	parameters: any
 ): Promise<string> {

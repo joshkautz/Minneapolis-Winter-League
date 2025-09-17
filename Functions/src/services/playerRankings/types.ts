@@ -16,7 +16,6 @@ export interface PlayerRatingState {
 	lastSeasonId: string | null
 	lastGameDate: Date | null // Track when player last played a game
 	roundsSinceLastGame: number // Track rounds of inactivity
-	isActive: boolean
 }
 
 export interface TeamStrength {

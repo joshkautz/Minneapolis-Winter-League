@@ -64,24 +64,3 @@ export const updatePlayerRankings = httpsCallable<
 		message: string
 	}
 >(functions, 'updatePlayerRankings')
-
-/**
- * Legacy wrapper function for backward compatibility
- * @deprecated Use rebuildPlayerRankings or updatePlayerRankings directly
- * Routes to appropriate specific function based on calculationType
- */
-export const triggerPlayerRankingsCalculation = async (params: {
-	calculationType: 'full' | 'incremental'
-	applyDecay?: boolean
-	startSeasonId?: string
-	startWeek?: number
-}) => {
-	// Note: applyDecay, startSeasonId, and startWeek are no longer used
-	// Decay is always applied, and the functions auto-detect start points
-
-	if (params.calculationType === 'full') {
-		return rebuildPlayerRankings({})
-	} else {
-		return updatePlayerRankings({})
-	}
-}
