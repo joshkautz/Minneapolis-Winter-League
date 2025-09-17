@@ -1,0 +1,12 @@
+{
+  "SvkQUGPqCCtTnuEeJ2df": {
+    "mode": "payment",
+    "price": "price_1PjNZjHMbQIHBzSiEbtC32Rb",
+    "success_url": "https://mplswinterleague.com/profile",
+    "cancel_url": "https://mplswinterleague.com/profile",
+    "created": "2024-10-24T02:56:10.128Z",
+    "client": "web",
+    "sessionId": "cs_live_a17Dn4TX4pXfx4dQTjhJROMh50EVH0eSwSOmUIzZmYF5BjFGsCyuZ1RCOw",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a17Dn4TX4pXfx4dQTjhJROMh50EVH0eSwSOmUIzZmYF5BjFGsCyuZ1RCOw#fidpamZkaWAnPydkcHFqJyknZHVsTmB8Jz8ndW5aaWxzYFowNEtsbXwzTUhnVExNR39WbEA0UnJuVTxoQXVuYnJJPU8xY3JLcn1hPFZWT1xEZkxkXFxGYkdNdGhIVmBmbGdddlV1R0I9Z1ZEUlU8QmdwYnBMf2QwSXxcXDU1T1BvXWJLbGEnKSdjd2poVmB3c2B3Jz9xd3BgKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl"
+  }
+}

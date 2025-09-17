@@ -1,0 +1,134 @@
+{
+  "prod_OXZxQHiB5Z5AKu": {
+    "tax_code": "txcd_20030000",
+    "metadata": {
+      "firebaseRole": "registered"
+    },
+    "role": "registered",
+    "active": true,
+    "description": "Player registration for Minnesota Winter League. Weekly Saturday night games from 6pm-9pm at the University of Minnesota Dome, running from November 4th - December 16.",
+    "name": "Minneapolis Winter League 2023",
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfQWNvUU5jM0lvYjhyTkVPUGh2OXRNMldE00ttfqLQKl"
+    ]
+  },
+  "prod_P6TiIxISVvPC9S": {
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfOEN4QUZJN091MVVWMlBLTkdSUXRYS2hI00XDQNnRnT"
+    ],
+    "metadata": {},
+    "tax_code": "txcd_20030000",
+    "role": null,
+    "active": true,
+    "description": "Team registration for Minnesota Warm Up.",
+    "name": "Minnesota Warm Up 2024"
+  },
+  "prod_QFj3vwUWFEJTdV": {
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfdjREcnlTRnNLUmJvNlZmV21vRjlKN3pR00ewikiZ1E"
+    ],
+    "metadata": {},
+    "tax_code": "txcd_20030000",
+    "role": null,
+    "name": "2024 Mallard | Season Dues",
+    "active": true,
+    "description": "Roster Player Dues: $875 | Practice Player Dues: $225"
+  },
+  "prod_QaYh1HIPSAQ09z": {
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfeDlrVE5ZdzRmUDNyVW82bkVoZUpZb2JY0017hysYKK"
+    ],
+    "tax_code": "txcd_20030000",
+    "active": true,
+    "metadata": {},
+    "role": null,
+    "name": "Minneapolis Winter League | 2024 Fall",
+    "description": "Registration fees for the 2024 Minneapolis Winter League | 2024 Fall"
+  },
+  "prod_QmZ1cYl9L3qDvT": {
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfZkprMG41TmxaUENwVHM4aElsZWF4djA000vrlVsxDF"
+    ],
+    "metadata": {},
+    "tax_code": "txcd_20030000",
+    "role": null,
+    "name": "2024 Mallard | Zue Pants",
+    "active": true,
+    "description": null
+  },
+  "prod_QmZ9CKMKIk1Iof": {
+    "images": [],
+    "metadata": {},
+    "tax_code": "txcd_20030000",
+    "role": null,
+    "name": "[Test] Minneapolis Winter League [2024]",
+    "active": true,
+    "description": null
+  },
+  "prod_QvDEmlCGzHQfUU": {
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfUUZ6elhCb0F0MjE2REJ1aVg2R0RMV2lw00t3IwsOBP"
+    ],
+    "metadata": {},
+    "tax_code": "txcd_99999999",
+    "role": null,
+    "active": true,
+    "description": "Get ready for Club Nationals with our exclusive, limited edition crewneck sweatshirt! Inspired by warmer weather and vibrant vibes, this piece of Mallard merch is the perfect blend of nostalgia and style featuring an artistic abstraction of our logo.",
+    "name": "Minneapolis Mallard Limited Edition Vintage 80s Crewneck Sweatshirt"
+  },
+  "prod_R0qr79w9Nkufre": {
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfQnZHbjltdHJiclRPdWVxTmhxWHp3c0Uy00Vdl3LZtQ"
+    ],
+    "metadata": {},
+    "tax_code": null,
+    "role": null,
+    "name": "Minneapolis Mallard Donation",
+    "active": true,
+    "description": "Support Mallard with a donation! Your contribution helps us lower costs for our own club players, as well as further our outreach in the community through our existing endeavors! Your consideration and generosity is greatly appreciated! Thank you!"
+  },
+  "prod_RCOKQf4zvUcEju": {
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfdjREcnlTRnNLUmJvNlZmV21vRjlKN3pR00ewikiZ1E"
+    ],
+    "metadata": {},
+    "tax_code": "txcd_20030000",
+    "role": null,
+    "name": "2024 Mallard | Nationals Dues",
+    "active": true,
+    "description": null
+  },
+  "prod_ROoTepjzHbyByd": {
+    "metadata": {},
+    "role": null,
+    "name": "Minneapolis Mallard Disc",
+    "active": true,
+    "description": "Get your hands on a brand new Minneapolis Mallard disc. (200 in stock)",
+    "tax_code": "txcd_99999999",
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfVExyVW5ZeElFcDg2SXBPenZVNUlJdGxU00jEJklD2V"
+    ]
+  },
+  "prod_ROq1bOmmIZ4dpw": {
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfOEN4QUZJN091MVVWMlBLTkdSUXRYS2hI00XDQNnRnT"
+    ],
+    "metadata": {},
+    "tax_code": "txcd_20030000",
+    "role": null,
+    "active": true,
+    "name": "Minnesota Warm Up 2025",
+    "description": "Team registration for Minnesota Warm Up 2025"
+  },
+  "prod_STThqfVilOIKRd": {
+    "images": [
+      "https://files.stripe.com/links/MDB8YWNjdF8xTmloeTZITWJRSUhCelNpfGZsX2xpdmVfdjREcnlTRnNLUmJvNlZmV21vRjlKN3pR00ewikiZ1E"
+    ],
+    "metadata": {},
+    "tax_code": "txcd_20030000",
+    "role": null,
+    "name": "2025 Mallard Dues",
+    "active": true,
+    "description": "Roster Players: $850, Practice Players: $150"
+  }
+}

@@ -1,0 +1,1782 @@
+{
+  "2I7YXDF7RAXs3MCvLM0h": {
+    "registeredDate": "2023-10-26T20:48:33.844Z",
+    "teamId": "b4ec3bfc-6fff-4d76-b818-1934d8e86b8e",
+    "name": "Surly POG Juice",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2Fcd067f4c-e23e-433c-afb6-17219e909eeb?alt=media&token=c9282d4a-8c45-4fa1-b8c3-1d9eb87c1b7a",
+    "registered": true,
+    "storagePath": "teams/cd067f4c-e23e-433c-afb6-17219e909eeb",
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/Je7hFCz5dKgFkxhiBffDDpuD5uO2"
+      },
+      {
+        "captain": false,
+        "player": "players/u7LDZJaRbNQO78AhCaZdlg1X6qs2"
+      },
+      {
+        "captain": false,
+        "player": "players/Yl4Uy1Dw4gcqa0YrEGn3LUos4QO2"
+      },
+      {
+        "captain": false,
+        "player": "players/FrMPp57A2BNshJpM9t7cAOk1uB43"
+      },
+      {
+        "captain": true,
+        "player": "players/OjgQZSZ6QtbaqRN8RtiQeHIRqpj2"
+      },
+      {
+        "captain": false,
+        "player": "players/Nc8pseFYkKPmj0vSjSiqBamf15e2"
+      },
+      {
+        "captain": false,
+        "player": "players/mu51eUk6XNVE3JNtiMhK1xefO1i1"
+      },
+      {
+        "captain": false,
+        "player": "players/fSZklloluwgpb9TpDUtzCM9cH0b2"
+      },
+      {
+        "captain": false,
+        "player": "players/x7HQ5hqsGgPOrUitBtaNgUigimG3"
+      },
+      {
+        "captain": false,
+        "player": "players/3MiQ8sOEnCVjZwaE3Lw7m4Zza7J3"
+      },
+      {
+        "captain": false,
+        "player": "players/oMIzAKGhcLdQw7DNRoVyuxiUcY02"
+      },
+      {
+        "captain": false,
+        "player": "players/d2p7uNK1yPO2IozpSFjPXIJNtek1"
+      },
+      {
+        "captain": false,
+        "player": "players/zHtwvAhcnwSCcw5XBRPqs8DSN2o1"
+      },
+      {
+        "captain": false,
+        "player": "players/7xuJQPc2CnO5NkUJbeRQvLMJajn2"
+      },
+      {
+        "captain": false,
+        "player": "players/w49qB0aD5xZ8I9At4AMnVBcqA9D2"
+      },
+      {
+        "captain": false,
+        "player": "players/eJeQd7thy9geIYN5c0M5W7tGJru2"
+      }
+    ],
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "placement": 5
+  },
+  "3hp5J5ZJ5NilcAI07y57": {
+    "teamId": "40f0794e-0ef7-4adf-86c6-fb48e54fe2c5",
+    "name": "Toucan Tappers",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2Fb0e64dde-6aff-4b22-8478-9a39edda47f5?alt=media&token=34b3aa79-b22d-40e2-9575-3be6ea04a7c1",
+    "storagePath": "teams/b0e64dde-6aff-4b22-8478-9a39edda47f5",
+    "registered": true,
+    "registeredDate": "2024-10-01T22:49:00.283Z",
+    "placement": 11,
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/YiQjQUlabBXfaeAoXGmpq2lgwau2"
+      },
+      {
+        "captain": true,
+        "player": "players/hFdawbG98wWdZ7aQ3qFKs6smbhL2"
+      },
+      {
+        "captain": true,
+        "player": "players/gcOr30JXwfUf2bmB8o3oolSfm722"
+      },
+      {
+        "captain": true,
+        "player": "players/Cg8MIG4ejwP3Fk3BxAJzMiyN3ws2"
+      },
+      {
+        "captain": false,
+        "player": "players/hEZzndY8ugToXxJwK2FX6m0FfxC2"
+      },
+      {
+        "captain": false,
+        "player": "players/5OqRZs4d1OcbyLeHGB2ejmafqUk1"
+      },
+      {
+        "captain": false,
+        "player": "players/k6t7LXKiFMSk8FwNoqc2buYIlkc2"
+      },
+      {
+        "captain": false,
+        "player": "players/A5s1Z90wVEhcUNlpTDSSb1Gv1IG2"
+      },
+      {
+        "captain": false,
+        "player": "players/AykUQmjGbCOLlMkNUV4C9S6z6Xk1"
+      },
+      {
+        "captain": false,
+        "player": "players/0PPEqhNZIJgjpAMCcNMvkVFOoI92"
+      },
+      {
+        "captain": false,
+        "player": "players/a3fHb9L1thZr5XUP1b80h1UDmXi1"
+      },
+      {
+        "captain": true,
+        "player": "players/sh36UCMQHVWWI1N87dxiSua4FYv1"
+      },
+      {
+        "captain": false,
+        "player": "players/C5jyhRYck1ZMddwg5uYJbHWneF22"
+      },
+      {
+        "captain": false,
+        "player": "players/HkPjpNXWqggRFBPjvz22alJ0nnE2"
+      },
+      {
+        "captain": false,
+        "player": "players/SiL22dHjd1SpnSzBd3pcaVdZKcs2"
+      },
+      {
+        "captain": false,
+        "player": "players/bB3qWhedlRVdDG3DXx9yWARBagA2"
+      }
+    ]
+  },
+  "67XqRkRUwClXW8VMbuYQ": {
+    "registeredDate": "2023-10-14T22:40:56.895Z",
+    "teamId": "ebadb1a7-b1b1-4254-b5ca-b68889ec3c98",
+    "name": "Ni-pull",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F379992346_250722184168006_6307794410499380746_n.jpg?alt=media&token=393c2381-be0b-4e66-85ef-e62280cc9149",
+    "registered": true,
+    "storagePath": "teams/379992346_250722184168006_6307794410499380746_n.jpg",
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/A2iqzSBZIphBhecqymdvD90PCgj1"
+      },
+      {
+        "captain": false,
+        "player": "players/2O6ZgBwGegNnyI2hgEqTQiY37eG2"
+      },
+      {
+        "captain": false,
+        "player": "players/BRSYAmHgiZTNOo8HrUd4G1MTdVw2"
+      },
+      {
+        "captain": false,
+        "player": "players/wzApdFD5ltZ0YadWWFDcdF6U97J3"
+      },
+      {
+        "captain": false,
+        "player": "players/2enScNEL8IOaG8CkknJmC3MBF5G3"
+      },
+      {
+        "captain": false,
+        "player": "players/mpAGPIdumAR83u6fy6eCL7JWuXI3"
+      },
+      {
+        "captain": false,
+        "player": "players/qPLru0hfmufU6edHMJO1Ufqult42"
+      },
+      {
+        "captain": false,
+        "player": "players/GCvZU3ypbVRu4N3Nh7QfkJvzzej2"
+      },
+      {
+        "captain": false,
+        "player": "players/06FRk1G7Ylat1LFQvzToEk5fcJv1"
+      },
+      {
+        "captain": false,
+        "player": "players/eguFOiZTN6QWG46uE7SiIibLV8O2"
+      },
+      {
+        "captain": false,
+        "player": "players/I4oUOvOZ4LS1Ru0FlVV0XGVbEbP2"
+      },
+      {
+        "captain": false,
+        "player": "players/tY8DMrZ9CDb7Dsa4X6QfZ766jJO2"
+      },
+      {
+        "captain": false,
+        "player": "players/WCEauqXuWheYhi8NiLqvqbTOhmz1"
+      },
+      {
+        "captain": false,
+        "player": "players/tIyNmV3Gqwf22qDl6p7GyJIDI602"
+      },
+      {
+        "captain": false,
+        "player": "players/MY5ebu4571hDbmmiB7GXPOWYdMu1"
+      },
+      {
+        "captain": false,
+        "player": "players/SejKppQvwCXVwKAhi0htZCjVtZo1"
+      }
+    ],
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "placement": 4
+  },
+  "AE9qWaJmhxI300Gbbuye": {
+    "registeredDate": "2023-10-26T02:28:48.025Z",
+    "teamId": "5c3c3aac-1b39-4f19-bc2d-41776f9e463b",
+    "name": "J.O.T",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F5da2efb3-83e2-4909-baa4-afa1c7040f8c?alt=media&token=0bb33907-be3b-447c-8b90-1b5728b07582",
+    "registered": true,
+    "storagePath": "teams/5da2efb3-83e2-4909-baa4-afa1c7040f8c",
+    "placement": 11,
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/AGPeaV5icIMYUYBsF0sTwzjRAS72"
+      },
+      {
+        "captain": false,
+        "player": "players/BV77WfJdfvRzZMQnTTurIns7rab2"
+      },
+      {
+        "captain": false,
+        "player": "players/nudtcMfwGsYTgj3xfjDzgvYcrNB2"
+      },
+      {
+        "captain": false,
+        "player": "players/nGuJzLyNxadca7X29pJ5fxkYWzH2"
+      },
+      {
+        "captain": false,
+        "player": "players/dUW8aQVKA0ZaHPHUvyvRmSqvgnF3"
+      },
+      {
+        "captain": false,
+        "player": "players/hLykRBMei4gZJt34BNp8PolCztK2"
+      },
+      {
+        "captain": false,
+        "player": "players/upXQScufEBOsPPZqyD8avqYMSsi2"
+      },
+      {
+        "captain": false,
+        "player": "players/mQKmp23XxAX1fvzYQyQos5uVmjS2"
+      },
+      {
+        "captain": false,
+        "player": "players/CZ3XVGUC5NVoGOuUUxEp0yCRQC63"
+      },
+      {
+        "captain": false,
+        "player": "players/Nvlidn61jBgWOhmu58w9gCtN4JT2"
+      },
+      {
+        "captain": false,
+        "player": "players/Ebb9yY1YvIWEeYxWIoNNmyA8ZkV2"
+      },
+      {
+        "captain": false,
+        "player": "players/hQXztDvotVSvJV0bxbDemh1nWFr2"
+      },
+      {
+        "captain": false,
+        "player": "players/l7GtntjmpZWlC9469gwKpkQi2bn2"
+      },
+      {
+        "captain": false,
+        "player": "players/4neiRcCP34UfjF9qOeDYvjjsjJf2"
+      },
+      {
+        "captain": false,
+        "player": "players/h6bHl8Pn5lgWp7925TLyHZiZ42K2"
+      }
+    ],
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+  },
+  "CsfadYYv1J1KvSj4SYd0": {
+    "teamId": "a03b3706-1024-4ca3-bece-1f0c23e77a36",
+    "name": "Lemonade",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "registered": true,
+    "registeredDate": "2024-10-02T18:06:57.754Z",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F14259e77-f7dc-44be-9a58-b771ec951356?alt=media&token=727581b7-e441-4fd0-b6b7-00779e5649ee",
+    "storagePath": "teams/14259e77-f7dc-44be-9a58-b771ec951356",
+    "roster": [
+      {
+        "player": "players/wCULQNyc7IXy5oMpUsBHBfoUY7k2",
+        "captain": true
+      },
+      {
+        "player": "players/rlpMDP3vBHWNTDCTNBCZzI0iE9F2",
+        "captain": false
+      },
+      {
+        "player": "players/qFwTXL0saYbWF6kQnctJ9zWJXEg1",
+        "captain": false
+      },
+      {
+        "player": "players/3ZRBRJ1HflhNETnQRXn4UlDRFB62",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/s0m7MitE8wOQp6ankDx2icfvKDr2"
+      },
+      {
+        "player": "players/6rQxLws9dNdYk3mEgo1GyH0Hphx2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/CrdEWJYBxOP81JvuFYUC2GeN9RP2"
+      },
+      {
+        "captain": false,
+        "player": "players/553YEJkTz0Zrdde2hurqpj8bdeD2"
+      },
+      {
+        "player": "players/jhQe8RTRkVg5FZugQAyTVGFohv62",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/3g4DcjaPxPb7Pa7SwnuBc6pUDgb2"
+      },
+      {
+        "captain": false,
+        "player": "players/lGzW8AByRwOd3ongikibE5UkcgQ2"
+      }
+    ],
+    "placement": 10
+  },
+  "DTzWGB7fMbUVcL3iHT08": {
+    "registeredDate": "2023-10-23T17:29:36.527Z",
+    "teamId": "63aa66a9-c000-48c8-b84e-79578666e374",
+    "name": "Birdtown Ballers",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F9b2e0d02-6843-4a16-8e17-fb1b221d5d1c?alt=media&token=2c1f4ad0-d814-430c-897b-caa91514b814",
+    "registered": true,
+    "storagePath": "teams/9b2e0d02-6843-4a16-8e17-fb1b221d5d1c",
+    "placement": 3,
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/QiChaQJ9j4deQCTniUHegGul5WF2"
+      },
+      {
+        "captain": false,
+        "player": "players/mhbANQU3xSZwe7dMIPnM9HhoUuP2"
+      },
+      {
+        "captain": false,
+        "player": "players/HWsh2lEi2FeRPKLEhLRnvxVF12M2"
+      },
+      {
+        "captain": false,
+        "player": "players/UficTSH7qrf2vRcWWRri9FjFioK2"
+      },
+      {
+        "captain": false,
+        "player": "players/blIVXUyffrMNDkKEoHHRpvRDUkm2"
+      },
+      {
+        "captain": false,
+        "player": "players/CCjthU2GS0XX9dW5PmsP8XvUSRv2"
+      },
+      {
+        "captain": false,
+        "player": "players/HaimBJLyNRN8f82daESZiaUqu7Z2"
+      },
+      {
+        "captain": false,
+        "player": "players/avfJ8aEVaQgxOUBsgytpgZJHlNj1"
+      },
+      {
+        "captain": false,
+        "player": "players/webNnmYErlMHW7Ao71xzzk0wvx63"
+      },
+      {
+        "captain": false,
+        "player": "players/e5KX55kItLdvrmjJY94DVhMMETH2"
+      },
+      {
+        "captain": false,
+        "player": "players/SnVaUQYKyucvvAC8VsR2DvRbEqX2"
+      },
+      {
+        "captain": false,
+        "player": "players/ZBsCkcf9ERMgBdh6GzoThu2Ym202"
+      },
+      {
+        "captain": false,
+        "player": "players/Xc4Hkc0dLjfN4mjVedWaOeKrVAn1"
+      },
+      {
+        "captain": false,
+        "player": "players/gwIkiXNg1raFpdDTxfcvaLaM4C43"
+      },
+      {
+        "captain": false,
+        "player": "players/zG0DoAeSl4dqsxQLFrfAHsop3eV2"
+      },
+      {
+        "captain": false,
+        "player": "players/gqyhqKnaD7fttsO8F3Q7j7ZvoIR2"
+      }
+    ],
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+  },
+  "GrNZCbOFMZ8bxgc1iaIb": {
+    "teamId": "f09f203c-f96b-4697-b216-61cc89c77ad8",
+    "name": "Northeast Neutrons",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F318db2e2-5d01-4c17-a804-6e1f4598af49?alt=media&token=ba58a67c-54b1-465c-933c-4e2bb48279b5",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "storagePath": "teams/318db2e2-5d01-4c17-a804-6e1f4598af49",
+    "registered": true,
+    "registeredDate": "2024-10-19T14:48:20.542Z",
+    "roster": [
+      {
+        "player": "players/hc9vcSedhaeM1991m6vqECN1hy32",
+        "captain": true
+      },
+      {
+        "captain": false,
+        "player": "players/AVtrBxgWRyU08jHXn9ZGDjesWSM2"
+      },
+      {
+        "captain": false,
+        "player": "players/webNnmYErlMHW7Ao71xzzk0wvx63"
+      },
+      {
+        "captain": false,
+        "player": "players/PllnIwCeBfOPsg2Ww57mMXBNiHX2"
+      },
+      {
+        "player": "players/cpu9Enl3LWQQamYpoUsmtJHECfi2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/9e7jnE3UB8UseepKjf3ZBW7vdx32"
+      },
+      {
+        "player": "players/dKAbVdjVTQaJj7QB3hiGpxD6SWP2",
+        "captain": false
+      },
+      {
+        "player": "players/LnHSjvXft6bl7EhPoXd0H4L0MPv2",
+        "captain": false
+      },
+      {
+        "player": "players/blIVXUyffrMNDkKEoHHRpvRDUkm2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/BdjmGZmCmXfnTQHLzWA16yimGVm1"
+      },
+      {
+        "captain": false,
+        "player": "players/JVFwTpNQZ5ZDI6emqEsV1HuDFh83"
+      },
+      {
+        "player": "players/Ygn7APcZHleOmtvZ1ReOEJQq7iE3",
+        "captain": false
+      },
+      {
+        "player": "players/SnVaUQYKyucvvAC8VsR2DvRbEqX2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/JDi0TzigiZazrFgwgtyky0LOwgj2"
+      },
+      {
+        "captain": false,
+        "player": "players/SjbBqiDIrohdNtSxeddpjpThqYF2"
+      }
+    ],
+    "placement": 5
+  },
+  "Gv5elo2IVFTc3Ldv9AkO": {
+    "teamId": "94e1981e-27bc-41c4-a065-294746a9cebb",
+    "name": "THE BODY",
+    "logo": null,
+    "storagePath": null,
+    "placement": 10,
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/ND2Nc6Qzj7XGMDDLVHeYfwKKI4R2"
+      },
+      {
+        "captain": false,
+        "player": "players/fdnYrNMRIlOGniUnXt4MsgGHuqm1"
+      },
+      {
+        "captain": false,
+        "player": "players/553YEJkTz0Zrdde2hurqpj8bdeD2"
+      },
+      {
+        "captain": false,
+        "player": "players/7NRKs84Xwgckco1lP2gATIEvcd03"
+      },
+      {
+        "captain": false,
+        "player": "players/9GhdqoSOZFONKQJ2Rdw2ffKPMw82"
+      },
+      {
+        "captain": true,
+        "player": "players/wb2zUAaQU1a2Vfy1qdSFhe5YjG23"
+      },
+      {
+        "captain": false,
+        "player": "players/rlpMDP3vBHWNTDCTNBCZzI0iE9F2"
+      },
+      {
+        "captain": false,
+        "player": "players/qFwTXL0saYbWF6kQnctJ9zWJXEg1"
+      },
+      {
+        "captain": false,
+        "player": "players/rOa2KuMeLfYeoMa7qUiX0FAD7iY2"
+      },
+      {
+        "captain": false,
+        "player": "players/royzMZbC0VZIsaXeHV1a3OAvJMw1"
+      },
+      {
+        "captain": false,
+        "player": "players/jhQe8RTRkVg5FZugQAyTVGFohv62"
+      },
+      {
+        "captain": false,
+        "player": "players/nz6eARNqHUbmiOcdVFL9BCu5F872"
+      },
+      {
+        "captain": false,
+        "player": "players/wCULQNyc7IXy5oMpUsBHBfoUY7k2"
+      },
+      {
+        "captain": false,
+        "player": "players/uikKxgn6qVV9finLwcirvaeC1ra2"
+      },
+      {
+        "captain": false,
+        "player": "players/Zf5HLh1NzQe5HGGBBMsYHiTZJRy2"
+      },
+      {
+        "captain": false,
+        "player": "players/tGgE2u1ZJjMnX5hU9SUE8f2DSF73"
+      },
+      {
+        "captain": false,
+        "player": "players/NUkDDRYWhXTtIcc4dDGTrs6Z7A23"
+      }
+    ],
+    "registered": true,
+    "registeredDate": "2024-08-27T17:27:05.555Z"
+  },
+  "JFIJXG08u9bMEDnzsgFr": {
+    "registeredDate": "2023-10-04T02:34:22.705Z",
+    "teamId": "f3e92d01-8078-42cc-98b6-4fa939e7ba03",
+    "name": "St. Louis Park Sleepy Heads",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2Fcac01413-e08b-4414-a368-3308d1ca68d5?alt=media&token=2f1c1cd1-0064-4114-9671-a0f6c83ba607",
+    "registered": true,
+    "storagePath": "teams/cac01413-e08b-4414-a368-3308d1ca68d5",
+    "placement": 6,
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/bLNI9w9sH4SC4tK8HwFufMW3gd23"
+      },
+      {
+        "captain": false,
+        "player": "players/ACgDukFigsQBRuONysJmZgvUCGW2"
+      },
+      {
+        "captain": false,
+        "player": "players/UFG26hClvoSfgIpn1yHc2XrmI3b2"
+      },
+      {
+        "captain": false,
+        "player": "players/gDtREHeQSEfbNZsC79cikh4rfVw2"
+      },
+      {
+        "captain": false,
+        "player": "players/uHcu1auorWdoECubLmadL7QRHVt1"
+      },
+      {
+        "captain": false,
+        "player": "players/CMV0nD2ILicF8vyHXRfHjkAq5RI2"
+      },
+      {
+        "captain": false,
+        "player": "players/6lWdcn2qDgYdVrSYNx6vSFccvi52"
+      },
+      {
+        "captain": false,
+        "player": "players/LRrKa2dvMwQf9ygzR7vsDLI4XAD2"
+      },
+      {
+        "captain": false,
+        "player": "players/hCW3QPB5ugcXhxuCfdrIocltFDQ2"
+      },
+      {
+        "captain": false,
+        "player": "players/nPyLZsU770hdCzre3AGVBiMkG4x1"
+      },
+      {
+        "captain": false,
+        "player": "players/0WYLo403F6P55xLuC17rGiu3zZ72"
+      },
+      {
+        "captain": false,
+        "player": "players/KOfBR7WtUBcPXSDVGFUKoNbrgRa2"
+      },
+      {
+        "captain": false,
+        "player": "players/6UjyP1XNJTfRprvZgqffyvDsd1s1"
+      },
+      {
+        "captain": false,
+        "player": "players/xw6bcwKsE6USybHi2nDcybSXWKX2"
+      },
+      {
+        "captain": false,
+        "player": "players/Vr8vt0GZtVVme1FQtUidCiRsWUg2"
+      }
+    ],
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+  },
+  "KNdbONsXNayHPq6uHhWp": {
+    "teamId": "80b5cbf0-30ca-4227-b693-3e84a03e053b",
+    "name": "The Dark Knights",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F93164f79-4285-4072-b7a5-ca7544d04acf?alt=media&token=59de62e7-2b94-48e4-bb23-73b1d14d3c0a",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "storagePath": "teams/93164f79-4285-4072-b7a5-ca7544d04acf",
+    "registered": true,
+    "registeredDate": "2024-10-16T02:33:58.426Z",
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/QvTaKr3tS7OJIehsDMr6wrmiCLO2"
+      },
+      {
+        "captain": false,
+        "player": "players/S2kS0VVQk6cVUx40rLwVMROtE7j2"
+      },
+      {
+        "player": "players/gsX9tfnfBhWNY8vVTO11tduibOg2",
+        "captain": false
+      },
+      {
+        "player": "players/y2h29atlVraztlFrIC1rwZxyrZg2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/0xKbONxYfaNVZMWuWhDv6JSokTI2"
+      },
+      {
+        "player": "players/x1BkufgxRfS5mDL5kKxQDOixnnP2",
+        "captain": false
+      },
+      {
+        "player": "players/MQI9daPWXtOEosKzIIImR0XinJr2",
+        "captain": false
+      },
+      {
+        "player": "players/d7f1yjnQVlUnibdD2FMm83aNZrk2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/B8lCX8L295fCJ9U3MlBqCBMVJNO2"
+      },
+      {
+        "captain": false,
+        "player": "players/t9xB0a80UMMTNZkI2aVGC3qwB992"
+      },
+      {
+        "player": "players/rEP2fuQ4IaQQcvCPYVKRbqUupH43",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/rOa2KuMeLfYeoMa7qUiX0FAD7iY2"
+      },
+      {
+        "player": "players/yKvFMo3mUhOPKOn2aFy1mOMXHFp2",
+        "captain": false
+      },
+      {
+        "player": "players/MzPsOb8on1MnYcc9lafItPBD78h2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/MHiVAl08ogaxad31QdLceGCmSbk1"
+      }
+    ],
+    "placement": 12
+  },
+  "OS4oMGXE3yAHkbGTKK5W": {
+    "registeredDate": "2023-10-25T22:09:57.815Z",
+    "teamId": "938912e3-0123-4330-89a8-84fd20b338f2",
+    "name": "Chaska Critters",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F98f2f2a6-7b8a-4d0e-9e5a-cb7253656d02?alt=media&token=74807f50-74f3-4af3-8917-4519353ac698",
+    "registered": true,
+    "storagePath": "teams/98f2f2a6-7b8a-4d0e-9e5a-cb7253656d02",
+    "placement": 1,
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/yEDnOJREolY3OdQGZPxseMbvwqq1"
+      },
+      {
+        "captain": true,
+        "player": "players/ggIMhIazrqhZUOfqfVzg8L45ubw1"
+      },
+      {
+        "captain": false,
+        "player": "players/GBuge9bYqoTSYFWp83lWVFfQYVs1"
+      },
+      {
+        "captain": false,
+        "player": "players/femfGJXXQ7M6aNy1ZdtxbbIM6mx1"
+      },
+      {
+        "captain": true,
+        "player": "players/W1Hk7ntOW9Wu5lTh5TeclRJreI03"
+      },
+      {
+        "captain": false,
+        "player": "players/39qZd7MA5NcnBaXjMceySCJG1zF3"
+      },
+      {
+        "captain": false,
+        "player": "players/eblHsaoQGwgGXne4nefMktbvBd12"
+      },
+      {
+        "captain": false,
+        "player": "players/SEJjjWV0Z9faQjCN608saSMYqI52"
+      },
+      {
+        "captain": false,
+        "player": "players/Oz9PqMQ25sVGh6KABwgvnTP9iSo1"
+      },
+      {
+        "captain": false,
+        "player": "players/EUHgYauKGFPUtOHgioLMlNksHF03"
+      },
+      {
+        "captain": false,
+        "player": "players/kJE9LmZGxgXEwY87sXzh2OoFfCk1"
+      },
+      {
+        "captain": false,
+        "player": "players/s9SJaYOa2keqRtn44tzaYAl8H1S2"
+      },
+      {
+        "captain": false,
+        "player": "players/K5qfKXQYw3RMG00jzrDrXftozq33"
+      },
+      {
+        "captain": false,
+        "player": "players/2F6dvMnuoCapNJW34EK0gHDNb612"
+      },
+      {
+        "captain": false,
+        "player": "players/lGPOFyufzwfBdeEFVeMlTLi3ywI2"
+      },
+      {
+        "captain": false,
+        "player": "players/r0FBAbYlNfbyWZQgNkck9ahmePx2"
+      }
+    ]
+  },
+  "SlSQZZyeRXzYeScoBHM2": {
+    "name": "Nipull",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2Fc57a8eb5-7f34-4d49-aaed-41099043c412?alt=media&token=1175d125-881d-42a9-8b17-68c51b0e6b34",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "storagePath": "teams/c57a8eb5-7f34-4d49-aaed-41099043c412",
+    "teamId": "ebadb1a7-b1b1-4254-b5ca-b68889ec3c98",
+    "registered": true,
+    "registeredDate": "2024-10-17T01:20:52.460Z",
+    "roster": [
+      {
+        "player": "players/2enScNEL8IOaG8CkknJmC3MBF5G3",
+        "captain": true
+      },
+      {
+        "captain": false,
+        "player": "players/06FRk1G7Ylat1LFQvzToEk5fcJv1"
+      },
+      {
+        "captain": false,
+        "player": "players/BRSYAmHgiZTNOo8HrUd4G1MTdVw2"
+      },
+      {
+        "player": "players/WCEauqXuWheYhi8NiLqvqbTOhmz1",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/OfiEfDWF9pNIudrHkPbmczitdUh1"
+      },
+      {
+        "player": "players/vm5KWQcqDpPtbgCN1gtNEkNuSbW2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/J6ObzTT4i0OlmfXyEkKzTNR9fIE2"
+      },
+      {
+        "player": "players/eeFn7IQ1sZS0l8Mf5hNDXMJeqZr1",
+        "captain": true
+      },
+      {
+        "captain": false,
+        "player": "players/GCvZU3ypbVRu4N3Nh7QfkJvzzej2"
+      },
+      {
+        "player": "players/Ck7Wkf0HW8O9cme3vXxkMyPfPxt1",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/NoL58fh9Kufmz185W1U8MRLxWdq1"
+      },
+      {
+        "captain": false,
+        "player": "players/mpAGPIdumAR83u6fy6eCL7JWuXI3"
+      },
+      {
+        "captain": false,
+        "player": "players/zwvSwQeclIRHPYgZWlcm2PZiLcc2"
+      },
+      {
+        "captain": false,
+        "player": "players/I4oUOvOZ4LS1Ru0FlVV0XGVbEbP2"
+      }
+    ],
+    "placement": 2
+  },
+  "UYtKXok2YrFCnOVaPsMD": {
+    "name": "nOPE",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2Fcd04ac06-aa7c-4fdc-81e4-c8d08313f131?alt=media&token=7845e851-13f5-44df-8285-bab58c8e67fe",
+    "storagePath": "teams/cd04ac06-aa7c-4fdc-81e4-c8d08313f131",
+    "registered": true,
+    "registeredDate": "2024-10-02T02:12:45.858Z",
+    "teamId": "6497eebc-5d04-42bc-aea5-43d22177de32",
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/pxDvcJzZp8fYixrZEgqjUn8hI6H3"
+      },
+      {
+        "player": "players/AEJSHsc3kmXZgO6UXrZwiDWrKa32",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/IeM060N2bsctwdi5CMGGh7s18oA2"
+      },
+      {
+        "captain": false,
+        "player": "players/60iQZM1xnzec7r5zX3TlJP7lJFy1"
+      },
+      {
+        "captain": false,
+        "player": "players/D6NkVNdSXjgYd3xzuhps5haTOA33"
+      },
+      {
+        "player": "players/1XBKwyZlKzVtdrZJRzOb1LvlKZx2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/8Z56AxJ0SEdIy2jsDAc7Ph4QCJs2"
+      },
+      {
+        "captain": false,
+        "player": "players/Qoz4dAtkAfO5MSfsUkF1zeO3CqI3"
+      },
+      {
+        "player": "players/dGPi9YcfsUgr7yBqfgDmAMHygzk1",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/WSnxmRUWwOYsaWRJJt8gsB14rKh1"
+      },
+      {
+        "player": "players/ncIpCry7JbUa6WNCja40yKPN82L2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/5CGOCkTIE8cZCsZl2g3AF5uvRCN2"
+      },
+      {
+        "player": "players/fdnYrNMRIlOGniUnXt4MsgGHuqm1",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/mC4e5ocdj0bHd1ImCeAr1cJmZp52"
+      },
+      {
+        "captain": false,
+        "player": "players/DefmnT9XZEdr7CGeLvTGzkOJQLR2"
+      }
+    ],
+    "placement": 6
+  },
+  "UaOUQ6B2uBB4E6K5IcGE": {
+    "name": "Birdtown Ballers ",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F122fca5b-09ce-4071-8920-a965ce9dca08?alt=media&token=9c1f9d71-db45-4dd6-b1d2-bec7366e1e19",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "storagePath": "teams/122fca5b-09ce-4071-8920-a965ce9dca08",
+    "teamId": "63aa66a9-c000-48c8-b84e-79578666e374",
+    "registered": true,
+    "registeredDate": "2024-10-09T14:19:53.517Z",
+    "roster": [
+      {
+        "player": "players/CCjthU2GS0XX9dW5PmsP8XvUSRv2",
+        "captain": true
+      },
+      {
+        "captain": false,
+        "player": "players/UficTSH7qrf2vRcWWRri9FjFioK2"
+      },
+      {
+        "player": "players/HWsh2lEi2FeRPKLEhLRnvxVF12M2",
+        "captain": false
+      },
+      {
+        "captain": true,
+        "player": "players/Xc4Hkc0dLjfN4mjVedWaOeKrVAn1"
+      },
+      {
+        "player": "players/mhbANQU3xSZwe7dMIPnM9HhoUuP2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/NWudV89jnKSvLs4zMCPINtQyY4b2"
+      },
+      {
+        "captain": false,
+        "player": "players/ebTVDnoUm8OgMqTu4xe3t2JNq2b2"
+      },
+      {
+        "player": "players/zG0DoAeSl4dqsxQLFrfAHsop3eV2",
+        "captain": false
+      },
+      {
+        "player": "players/mpAwZFuEdghNpD9rhwhDClRjI7y2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/FaPtHzNch1S5K84i9a2B1ry4rJx2"
+      },
+      {
+        "captain": false,
+        "player": "players/Sn2qSdo5BTPC8kzVm7sX39A6say1"
+      },
+      {
+        "captain": false,
+        "player": "players/HX1NFGidZQaZjs8iUyDS64V2lLr1"
+      },
+      {
+        "player": "players/NtDOtDSvbWX3lvWl20LqzHMd1gk1",
+        "captain": false
+      },
+      {
+        "player": "players/xXnOPN6IhXX75WJX9oVN26UM9Mc2",
+        "captain": false
+      },
+      {
+        "player": "players/Erk2avRzV8VPhAoreo2mYtE98LT2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/zylw3zAOrqYZFTtyidsLiBZOE422"
+      },
+      {
+        "captain": false,
+        "player": "players/lac8h7bWZbgKpvOpmPpac9tWu553"
+      },
+      {
+        "player": "players/BRsjvYtZ6WYE1IsPxy4rmOosq4q1",
+        "captain": false
+      },
+      {
+        "player": "players/gwIkiXNg1raFpdDTxfcvaLaM4C43",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/2gSafO2BedYRaRGl57mKgpn4ctD3"
+      },
+      {
+        "player": "players/ckq3R8WXrybKdjWWdqwUKWYdRPX2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/eLcnrWbqLmZm3B1DuKtjwVRqaZe2"
+      }
+    ],
+    "placement": 7
+  },
+  "Zl4NPP4kQ0GaZyiqUjbj": {
+    "teamId": "d85a459c-70c9-40d7-90ba-2b02d6f78b30",
+    "name": "Saint Paul Seacows",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F71c71f28-074b-42a4-80f4-5dbcf5ee50b5?alt=media&token=516d4ac0-f4c0-4b21-a5a5-f3b4db93dddd",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "storagePath": "teams/71c71f28-074b-42a4-80f4-5dbcf5ee50b5",
+    "registered": true,
+    "registeredDate": "2024-10-03T01:31:57.802Z",
+    "roster": [
+      {
+        "player": "players/cdMlY0aVs7b8JqZMPD2JnpjPc1C3",
+        "captain": true
+      },
+      {
+        "player": "players/mSPKjSLFz6bbuEMyqGsxp1o9Ml82",
+        "captain": false
+      },
+      {
+        "player": "players/MFp4CgrvXfNz3Zj9y4bzdeewwAw1",
+        "captain": true
+      },
+      {
+        "player": "players/5OWB7PacpshaqDUZDDm7OF9P2w13",
+        "captain": true
+      },
+      {
+        "player": "players/FD1h3hEAhsXUOMXtRqYklB0ddq52",
+        "captain": false
+      },
+      {
+        "captain": true,
+        "player": "players/hzePFUkzmwR3piH92uyVfUpXC4J3"
+      },
+      {
+        "captain": false,
+        "player": "players/rOU5L8mk1CdHhxrNETVr7BVrfUK2"
+      },
+      {
+        "captain": false,
+        "player": "players/mxpS1DEUIoXSDiYvlaIE9R9gyRw1"
+      },
+      {
+        "player": "players/WIuqKC8fJiQ64yv1mqJHWk3r6Cj1",
+        "captain": false
+      },
+      {
+        "player": "players/qwRRyDG7rBM91hCkEn3zUa08RSp1",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/tzANLUddLGhgCYN8CCFSMoIv6AE3"
+      },
+      {
+        "captain": false,
+        "player": "players/FidpnTUbZJb2v7QKaCpFOgRF1k93"
+      },
+      {
+        "player": "players/mxNUk1lresfFumt234dVa8RfM3e2",
+        "captain": false
+      },
+      {
+        "player": "players/JwNlvftb9sN54IWMgKO2Jyndcob2",
+        "captain": false
+      },
+      {
+        "player": "players/TJSEnyFc9HU4Nr7erLe1fSEnjns2",
+        "captain": false
+      }
+    ],
+    "placement": 4
+  },
+  "b3BM1rI4q2JuzLyPHh2K": {
+    "registeredDate": "2023-10-26T18:57:18.623Z",
+    "teamId": "2c93ef06-37c0-41d9-a2e2-456405b98c19",
+    "name": "Seatbelt Inspection CO.",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F380362771_672265541516149_5345393767686302260_n.jpg?alt=media&token=7326be39-5f54-4725-bba8-a016fda304dc",
+    "registered": true,
+    "storagePath": "teams/380362771_672265541516149_5345393767686302260_n.jpg",
+    "placement": 2,
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/aPfUqyN7QIT5SnU3wmFRHtcf9w62"
+      },
+      {
+        "captain": false,
+        "player": "players/v3BHsCBFzXQejO0jcB934X3Nsf23"
+      },
+      {
+        "captain": false,
+        "player": "players/jPxZLNAFiKV6Q6wToxuz0EmUDs03"
+      },
+      {
+        "captain": false,
+        "player": "players/OhAF4m9uFWaknCIKZXvGwUVbSrT2"
+      },
+      {
+        "captain": false,
+        "player": "players/vJzYTMeThkRyKXZmDQM9EXtkjB22"
+      },
+      {
+        "captain": false,
+        "player": "players/8jZKnR13EhdkACI2CV7mDiwaN743"
+      },
+      {
+        "captain": false,
+        "player": "players/VOY6myPX9ERrqFeSRgzRWJ3Tl9E3"
+      },
+      {
+        "captain": true,
+        "player": "players/hc9vcSedhaeM1991m6vqECN1hy32"
+      },
+      {
+        "captain": false,
+        "player": "players/7PUjdfLzDwUNSl8t0z73gsG2pQn1"
+      },
+      {
+        "captain": false,
+        "player": "players/Z1FY1Na2tOflGfPsGLWz3HESGjo2"
+      },
+      {
+        "captain": false,
+        "player": "players/9BazAQoZ9ChvBOZxjqnKZ9SAgpn2"
+      },
+      {
+        "captain": false,
+        "player": "players/CLLM6mJXKJYd0V5lL9R9PCDEQMQ2"
+      },
+      {
+        "captain": false,
+        "player": "players/dKAbVdjVTQaJj7QB3hiGpxD6SWP2"
+      },
+      {
+        "captain": false,
+        "player": "players/kdVFJrXWWUXLvkBZjjLa5dh6zrf1"
+      },
+      {
+        "captain": false,
+        "player": "players/jEd0kCkaLcRDQZhq5EqwMkSDUGn1"
+      },
+      {
+        "captain": false,
+        "player": "players/hT2l1OssFrQNe65eFvFw6xyKn882"
+      },
+      {
+        "captain": false,
+        "player": "players/Sn2qSdo5BTPC8kzVm7sX39A6say1"
+      },
+      {
+        "captain": false,
+        "player": "players/QnhSEfd4EMb2lSkUq2bqTKgQGAn2"
+      }
+    ],
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+  },
+  "cK26PQEyfvmmWpegVQzq": {
+    "registeredDate": "2023-10-27T03:28:43.604Z",
+    "teamId": "80b5cbf0-30ca-4227-b693-3e84a03e053b",
+    "name": "The Dark Knights",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F2a2e2126-77db-4b5e-9d44-24998ae122e0?alt=media&token=cf24485b-4c1c-4460-8899-088a9755483b",
+    "registered": true,
+    "storagePath": "teams/2a2e2126-77db-4b5e-9d44-24998ae122e0",
+    "placement": 9,
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/QvTaKr3tS7OJIehsDMr6wrmiCLO2"
+      },
+      {
+        "captain": false,
+        "player": "players/x1BkufgxRfS5mDL5kKxQDOixnnP2"
+      },
+      {
+        "captain": false,
+        "player": "players/LDzS7SRx63RM1FtkVYVveMgnIqg2"
+      },
+      {
+        "captain": false,
+        "player": "players/0xKbONxYfaNVZMWuWhDv6JSokTI2"
+      },
+      {
+        "captain": false,
+        "player": "players/yKvFMo3mUhOPKOn2aFy1mOMXHFp2"
+      },
+      {
+        "captain": false,
+        "player": "players/g7GaKmX81CXBtjOotg81BTiXiWe2"
+      },
+      {
+        "captain": false,
+        "player": "players/y2h29atlVraztlFrIC1rwZxyrZg2"
+      },
+      {
+        "captain": false,
+        "player": "players/oEWotBmdpOh9qCQKHm9kBMWLMJ63"
+      },
+      {
+        "captain": false,
+        "player": "players/fTil5fNwKvbOA2Q7znNgXkDT1n93"
+      },
+      {
+        "captain": false,
+        "player": "players/VO2BqGQ9V3ZrvFEvwBTMthjR3SJ2"
+      },
+      {
+        "captain": false,
+        "player": "players/AhEr5ne8r8adcj7TrrYjAUonqoz2"
+      },
+      {
+        "captain": false,
+        "player": "players/c5sqyub4MqYjJAK38Fn35vdSm0H3"
+      },
+      {
+        "captain": false,
+        "player": "players/iidGniXmxbNwsNC22lz760zJZSr2"
+      },
+      {
+        "captain": false,
+        "player": "players/6x9jYr9Jfze5unjeGrOraBipdao1"
+      },
+      {
+        "captain": false,
+        "player": "players/XFgWB3toEHgwh2qWffPwiesKEkB3"
+      }
+    ],
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+  },
+  "hJnBb3ALKZILxo0RNfYY": {
+    "registeredDate": "2023-10-28T18:18:04.335Z",
+    "teamId": "13e65e27-9df6-4ab9-b706-c37488aeb33b",
+    "name": "FATU",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2Fc9af4d1f-2756-4a19-9e88-8e07c012cf33?alt=media&token=e7c55673-8e0c-4f58-9f95-016d7d569438",
+    "registered": true,
+    "storagePath": "teams/c9af4d1f-2756-4a19-9e88-8e07c012cf33",
+    "placement": 12,
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/UK01POWGoyeYuQqMMiZKyCfFgs93"
+      },
+      {
+        "captain": false,
+        "player": "players/ENqDAQBaBJavTmUmYur5hFpLTqt1"
+      },
+      {
+        "captain": false,
+        "player": "players/UrDsbGgmgSgtDjGlNDfEwhTWN942"
+      },
+      {
+        "captain": false,
+        "player": "players/VDQm9XfXIzRqFftet0mDy05Hyvy2"
+      },
+      {
+        "captain": false,
+        "player": "players/jr9K4HYFYbMXPEMBjSRPmKBtmao2"
+      },
+      {
+        "captain": false,
+        "player": "players/h4DZtlNMKINjSXG10R9RfsbDvX12"
+      },
+      {
+        "captain": false,
+        "player": "players/E379CVLALKhdWSfSye6NqWUGJGv2"
+      },
+      {
+        "captain": false,
+        "player": "players/dOauOYInMFMWtmXFvLudh5piNoN2"
+      },
+      {
+        "captain": false,
+        "player": "players/X4y7GchilfSdiXoBEbP4fVwdOft1"
+      },
+      {
+        "captain": false,
+        "player": "players/lFbVv4Rd1QfDuBfEZwiq0wBMZFi1"
+      },
+      {
+        "captain": false,
+        "player": "players/X1PWRYUuSdSGXvGQSmlb9Z5IK0H3"
+      },
+      {
+        "captain": false,
+        "player": "players/F0sp4YPwb4gUyWZpqMS8yiwmEzs1"
+      }
+    ],
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+  },
+  "ifnI8V4AXxq28B0nWjJc": {
+    "registeredDate": "2023-10-08T01:31:30.687Z",
+    "teamId": "6497eebc-5d04-42bc-aea5-43d22177de32",
+    "name": "Centrifugal Force ",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F5ab0eff4-b6cb-443a-84ba-a9bcbef36d94?alt=media&token=492fcb44-da01-4d1a-b81f-a80d5a275fe3",
+    "registered": true,
+    "storagePath": "teams/5ab0eff4-b6cb-443a-84ba-a9bcbef36d94",
+    "placement": 7,
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/pxDvcJzZp8fYixrZEgqjUn8hI6H3"
+      },
+      {
+        "captain": false,
+        "player": "players/IeM060N2bsctwdi5CMGGh7s18oA2"
+      },
+      {
+        "captain": false,
+        "player": "players/Qoz4dAtkAfO5MSfsUkF1zeO3CqI3"
+      },
+      {
+        "captain": false,
+        "player": "players/60iQZM1xnzec7r5zX3TlJP7lJFy1"
+      },
+      {
+        "captain": false,
+        "player": "players/5CGOCkTIE8cZCsZl2g3AF5uvRCN2"
+      },
+      {
+        "captain": false,
+        "player": "players/lnFknGMfElfs3AGni8kG8xEEGKQ2"
+      },
+      {
+        "captain": false,
+        "player": "players/WSnxmRUWwOYsaWRJJt8gsB14rKh1"
+      },
+      {
+        "captain": false,
+        "player": "players/mC4e5ocdj0bHd1ImCeAr1cJmZp52"
+      },
+      {
+        "captain": false,
+        "player": "players/1XBKwyZlKzVtdrZJRzOb1LvlKZx2"
+      },
+      {
+        "captain": false,
+        "player": "players/AEJSHsc3kmXZgO6UXrZwiDWrKa32"
+      },
+      {
+        "captain": false,
+        "player": "players/diD6w0sb4MfpMqc5XZobCgJJ5np2"
+      },
+      {
+        "captain": false,
+        "player": "players/XbisiSKaYdRWntD5gzZmskDLTVa2"
+      }
+    ],
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+  },
+  "kocAbvNvtF4J4z5GOl93": {
+    "teamId": "2c93ef06-37c0-41d9-a2e2-456405b98c19",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "storagePath": "teams/9490c73e-b46a-4f0b-ad4e-43b28edd056f",
+    "name": "Mauston Mousers ",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F9490c73e-b46a-4f0b-ad4e-43b28edd056f?alt=media&token=0b4c2728-12f0-4f47-8c8f-32ffc22f8384",
+    "registered": true,
+    "registeredDate": "2024-10-19T17:44:45.098Z",
+    "placement": 3,
+    "roster": [
+      {
+        "player": "players/aPfUqyN7QIT5SnU3wmFRHtcf9w62",
+        "captain": true
+      },
+      {
+        "player": "players/SB8y7TDBW3VPc08VZqnKwkjnnjH2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/kdVFJrXWWUXLvkBZjjLa5dh6zrf1"
+      },
+      {
+        "player": "players/1dq1llCEm0O6engXL7VROWITQHq2",
+        "captain": false
+      },
+      {
+        "player": "players/ZBsCkcf9ERMgBdh6GzoThu2Ym202",
+        "captain": false
+      },
+      {
+        "captain": true,
+        "player": "players/tUFUAbaNYZP1wOnLsvTmM6DuhZR2"
+      },
+      {
+        "captain": false,
+        "player": "players/TjuEDJIrcobQHEJwMWbVl0iUqSz1"
+      },
+      {
+        "player": "players/9SWW6Mnvc8TxAnJphe6fwkOVFvj1",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/e5KX55kItLdvrmjJY94DVhMMETH2"
+      },
+      {
+        "captain": false,
+        "player": "players/IO4dFXWDjKPFXcEFND5yYbPZa6J2"
+      },
+      {
+        "captain": false,
+        "player": "players/7R04gcQwBab5d89rEQdKTxELwQU2"
+      },
+      {
+        "player": "players/HdFbdJ0LrePokQSjTnpAeErq6AJ3",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/HaimBJLyNRN8f82daESZiaUqu7Z2"
+      },
+      {
+        "player": "players/G8D0FKE6XsUc9MLjigSev6LIa7I3",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/7PUjdfLzDwUNSl8t0z73gsG2pQn1"
+      }
+    ]
+  },
+  "nUZOOC7j8TJGCEV6aQIf": {
+    "teamId": "b4ec3bfc-6fff-4d76-b818-1934d8e86b8e",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2Fbdf3954a-2a08-46eb-8541-ef1f1c7b91f6?alt=media&token=de7d9043-f7a3-4a7c-b3ae-f1509a68ec22",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "storagePath": "teams/bdf3954a-2a08-46eb-8541-ef1f1c7b91f6",
+    "name": "Super Happy Extra Surly Fun-time Team",
+    "registered": true,
+    "registeredDate": "2024-10-02T00:32:32.241Z",
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/OjgQZSZ6QtbaqRN8RtiQeHIRqpj2"
+      },
+      {
+        "player": "players/Nc8pseFYkKPmj0vSjSiqBamf15e2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/mu51eUk6XNVE3JNtiMhK1xefO1i1"
+      },
+      {
+        "player": "players/3iyL8xhtG5bbkIb0qwig2qZTWiY2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/8wcfdauseRYU2nH7djcay65NIqg1"
+      },
+      {
+        "player": "players/3MiQ8sOEnCVjZwaE3Lw7m4Zza7J3",
+        "captain": false
+      },
+      {
+        "player": "players/u7LDZJaRbNQO78AhCaZdlg1X6qs2",
+        "captain": false
+      },
+      {
+        "player": "players/fbuyyGJuyucUbmhbmhoVUh0TkpJ2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/6XGOMof6NHYJXC9xY9Ox6CLTagt1"
+      },
+      {
+        "captain": false,
+        "player": "players/Yl4Uy1Dw4gcqa0YrEGn3LUos4QO2"
+      },
+      {
+        "player": "players/7xuJQPc2CnO5NkUJbeRQvLMJajn2",
+        "captain": false
+      },
+      {
+        "captain": true,
+        "player": "players/Je7hFCz5dKgFkxhiBffDDpuD5uO2"
+      },
+      {
+        "player": "players/u4qRHIiIUeXqz2VHrjk8LlMvuHi1",
+        "captain": false
+      },
+      {
+        "player": "players/x7HQ5hqsGgPOrUitBtaNgUigimG3",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/8DdWgudtRIhFvFR4ya3FFi55EHY2"
+      },
+      {
+        "captain": false,
+        "player": "players/TtnDLkrEQqgN2t8LTXGLSpAGoNA3"
+      },
+      {
+        "captain": false,
+        "player": "players/e6oBdTuRV1YQK1QjpGZ1aM43lS03"
+      }
+    ],
+    "placement": 8
+  },
+  "nw1HrX3dXZMecbbTSGsR": {
+    "registeredDate": "2023-10-28T17:13:56.235Z",
+    "teamId": "d85a459c-70c9-40d7-90ba-2b02d6f78b30",
+    "name": "Saint Paul Seacows",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F2076d5c9-c93a-4952-b171-ef81117e00f5?alt=media&token=3ca56eca-703a-4431-aaa1-dabd78bd7690",
+    "registered": true,
+    "storagePath": "teams/2076d5c9-c93a-4952-b171-ef81117e00f5",
+    "placement": 8,
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/FH8sVEfaeTUvNOdegS4mQ1FOprP2"
+      },
+      {
+        "captain": true,
+        "player": "players/mxpS1DEUIoXSDiYvlaIE9R9gyRw1"
+      },
+      {
+        "captain": true,
+        "player": "players/TGgMtcXSwMYuP4laaCGdwLnXdOG3"
+      },
+      {
+        "captain": false,
+        "player": "players/MFp4CgrvXfNz3Zj9y4bzdeewwAw1"
+      },
+      {
+        "captain": false,
+        "player": "players/5OWB7PacpshaqDUZDDm7OF9P2w13"
+      },
+      {
+        "captain": false,
+        "player": "players/DPIF4Q68LDd7BIToRzov2RxOYpy1"
+      },
+      {
+        "captain": false,
+        "player": "players/qwRRyDG7rBM91hCkEn3zUa08RSp1"
+      },
+      {
+        "captain": false,
+        "player": "players/Uz2PYmLqSqbm9Fhjm8wrTDvR6dE2"
+      },
+      {
+        "captain": true,
+        "player": "players/cdMlY0aVs7b8JqZMPD2JnpjPc1C3"
+      },
+      {
+        "captain": false,
+        "player": "players/ihZQ1IuwRORahVQRDoAosdyC8G93"
+      },
+      {
+        "captain": false,
+        "player": "players/rOU5L8mk1CdHhxrNETVr7BVrfUK2"
+      },
+      {
+        "captain": false,
+        "player": "players/FD1h3hEAhsXUOMXtRqYklB0ddq52"
+      },
+      {
+        "captain": false,
+        "player": "players/8cV3HJW5P2dM2UkZThiH6vb7V473"
+      },
+      {
+        "captain": false,
+        "player": "players/hzePFUkzmwR3piH92uyVfUpXC4J3"
+      },
+      {
+        "captain": false,
+        "player": "players/v6evFTtEDuaIyJTjkdnGDJ2oQAI2"
+      },
+      {
+        "captain": false,
+        "player": "players/MRqRTgBbnPbTdHy5qiTbth41UYk2"
+      },
+      {
+        "captain": false,
+        "player": "players/mk6CVbMlY4WWEumBg6FnptPcVIs2"
+      }
+    ],
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+  },
+  "ozExVClE1sf8BNwotdIZ": {
+    "teamId": "f3e92d01-8078-42cc-98b6-4fa939e7ba03",
+    "name": "St. Louis Park Sleepy Heads",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2Fdcb79573-230d-4d3f-b236-9985249f6921?alt=media&token=4d77c79d-5255-41b3-869d-0321947b5f43",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "storagePath": "teams/dcb79573-230d-4d3f-b236-9985249f6921",
+    "registered": true,
+    "registeredDate": "2024-10-08T02:32:59.113Z",
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/bRbnYi2UxSM4WmDUyXLFQWz9I4B3"
+      },
+      {
+        "captain": true,
+        "player": "players/Vr8vt0GZtVVme1FQtUidCiRsWUg2"
+      },
+      {
+        "captain": false,
+        "player": "players/CnloONSbizf6CUvVy0vTvxqhDrM2"
+      },
+      {
+        "player": "players/UMwhxouRVXdwwMvXfh5g0aGwqV62",
+        "captain": false
+      },
+      {
+        "player": "players/8mCBQrQboYgFBvkLCy2ILeOh36y1",
+        "captain": false
+      },
+      {
+        "player": "players/KOfBR7WtUBcPXSDVGFUKoNbrgRa2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/exfYThZZSbSifQqxmMfiGsgzWOF2"
+      },
+      {
+        "captain": false,
+        "player": "players/JmS6vl1S6iUbgjZlynJFKCG0stv2"
+      },
+      {
+        "captain": false,
+        "player": "players/acCHta78ibdMmDs56VwTOktgy342"
+      },
+      {
+        "player": "players/hCW3QPB5ugcXhxuCfdrIocltFDQ2",
+        "captain": false
+      },
+      {
+        "player": "players/SzxvT9AJsuhgkDORAhDD1hC4VQY2",
+        "captain": false
+      },
+      {
+        "player": "players/Ru4hCFZkEQXNS9MhUhBxiM8vlFH2",
+        "captain": false
+      },
+      {
+        "player": "players/tvBlWNJvtIdM8I6B3MERkMjMOEL2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/Ef9WMKCQPngJdaH0SKw6E2bPsGl1"
+      },
+      {
+        "captain": true,
+        "player": "players/bLNI9w9sH4SC4tK8HwFufMW3gd23"
+      },
+      {
+        "captain": false,
+        "player": "players/8uErLDWHbmQLKUkFNirRTnEiUnx2"
+      },
+      {
+        "captain": false,
+        "player": "players/5VVelluk4sXLUOAhIWSnwN15M4I3"
+      }
+    ],
+    "placement": 9
+  },
+  "rpmhoe8o4VDqA1xwqoqK": {
+    "teamId": "938912e3-0123-4330-89a8-84fd20b338f2",
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "storagePath": "teams/d011f987-9f64-41dd-8f8c-0f5ba7884d5c",
+    "name": "Klane Island",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2Fd011f987-9f64-41dd-8f8c-0f5ba7884d5c?alt=media&token=01db01d7-67ac-49f9-9aae-1fb3c6f72d1e",
+    "registered": true,
+    "registeredDate": "2024-10-05T17:46:49.415Z",
+    "roster": [
+      {
+        "captain": true,
+        "player": "players/yEDnOJREolY3OdQGZPxseMbvwqq1"
+      },
+      {
+        "captain": true,
+        "player": "players/W1Hk7ntOW9Wu5lTh5TeclRJreI03"
+      },
+      {
+        "player": "players/SEJjjWV0Z9faQjCN608saSMYqI52",
+        "captain": true
+      },
+      {
+        "captain": false,
+        "player": "players/39qZd7MA5NcnBaXjMceySCJG1zF3"
+      },
+      {
+        "player": "players/ggIMhIazrqhZUOfqfVzg8L45ubw1",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/CLLM6mJXKJYd0V5lL9R9PCDEQMQ2"
+      },
+      {
+        "captain": false,
+        "player": "players/EUHgYauKGFPUtOHgioLMlNksHF03"
+      },
+      {
+        "player": "players/femfGJXXQ7M6aNy1ZdtxbbIM6mx1",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/eblHsaoQGwgGXne4nefMktbvBd12"
+      },
+      {
+        "player": "players/BhULF33nsdU2REjs4fZEjpgky673",
+        "captain": false
+      },
+      {
+        "player": "players/Oz9PqMQ25sVGh6KABwgvnTP9iSo1",
+        "captain": false
+      },
+      {
+        "player": "players/MY5ebu4571hDbmmiB7GXPOWYdMu1",
+        "captain": false
+      },
+      {
+        "player": "players/P2qCqEQQGTYrt3JUlsqnWnAwahN2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/GBuge9bYqoTSYFWp83lWVFfQYVs1"
+      },
+      {
+        "player": "players/BmcEtHznZ3Q1q09UADCJ6BarmAZ2",
+        "captain": false
+      },
+      {
+        "captain": false,
+        "player": "players/gqyhqKnaD7fttsO8F3Q7j7ZvoIR2"
+      }
+    ],
+    "placement": 1
+  }
+}

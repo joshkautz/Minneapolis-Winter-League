@@ -1,0 +1,89 @@
+{
+  "pi_3O5slcHMbQIHBzSi1mPp1tFp": {
+    "metadata": {},
+    "amount_details": {
+      "tip": {}
+    },
+    "livemode": true,
+    "canceled_at": null,
+    "amount_capturable": 0,
+    "description": null,
+    "source": null,
+    "statement_descriptor": null,
+    "transfer_data": null,
+    "latest_charge": "py_3O5slcHMbQIHBzSi1FDAZQmj",
+    "shipping": null,
+    "automatic_payment_methods": null,
+    "review": null,
+    "currency": "usd",
+    "client_secret": "pi_3O5slcHMbQIHBzSi1mPp1tFp_secret_nVEHAx7BbJsGOtVURk9abiWA4",
+    "id": "pi_3O5slcHMbQIHBzSi1mPp1tFp",
+    "payment_method_options": {
+      "link": {
+        "persistent_token": null
+      }
+    },
+    "payment_method": "pm_1O5slbHMbQIHBzSiUjRIbIHw",
+    "capture_method": "automatic",
+    "amount": 6000,
+    "transfer_group": null,
+    "on_behalf_of": null,
+    "created": 1698423612,
+    "payment_method_types": [
+      "link"
+    ],
+    "amount_received": 6000,
+    "setup_future_usage": null,
+    "confirmation_method": "automatic",
+    "cancellation_reason": null,
+    "payment_method_configuration_details": null,
+    "application": null,
+    "receipt_email": null,
+    "last_payment_error": null,
+    "next_action": null,
+    "processing": null,
+    "invoice": null,
+    "statement_descriptor_suffix": null,
+    "application_fee_amount": null,
+    "customer": "cus_OtNMi6kuC8QOIo",
+    "object": "payment_intent",
+    "status": "succeeded",
+    "prices": [
+      "products/prod_OXZxQHiB5Z5AKu/prices/price_1NkUnZHMbQIHBzSiRjN2Ms70"
+    ],
+    "items": [
+      {
+        "amount_tax": 0,
+        "quantity": 1,
+        "amount_discount": 0,
+        "price": {
+          "tax_behavior": "exclusive",
+          "metadata": {},
+          "product": "prod_OXZxQHiB5Z5AKu",
+          "livemode": true,
+          "created": 1693326589,
+          "recurring": null,
+          "active": true,
+          "unit_amount_decimal": "6000",
+          "billing_scheme": "per_unit",
+          "unit_amount": 6000,
+          "type": "one_time",
+          "transform_quantity": null,
+          "tiers_mode": null,
+          "nickname": null,
+          "lookup_key": null,
+          "currency": "usd",
+          "id": "price_1NkUnZHMbQIHBzSiRjN2Ms70",
+          "custom_unit_amount": null,
+          "object": "price"
+        },
+        "amount_total": 6000,
+        "description": "Minnesota Winter League Registration [2023]",
+        "currency": "usd",
+        "id": "li_1O5skJHMbQIHBzSiocg6rZmv",
+        "amount_subtotal": 6000,
+        "object": "item"
+      }
+    ]
+  }
+}

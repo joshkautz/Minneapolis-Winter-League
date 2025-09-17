@@ -1,0 +1,32 @@
+{
+  "JeNWKprLmeGwVdq9UEVN": {
+    "mode": "payment",
+    "price": "price_1NkUnZHMbQIHBzSiRjN2Ms70",
+    "cancel_url": "https://www.mplswinterleague.com/profile",
+    "success_url": "https://www.mplswinterleague.com/profile",
+    "created": "2023-10-30T15:23:23.464Z",
+    "client": "web",
+    "sessionId": "cs_live_a1Dnsf3WkA4A3pn8brHNJ8XsqvTtm2sXY5txrf1zEbBOvF7dCqTY1LLwHS",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a1Dnsf3WkA4A3pn8brHNJ8XsqvTtm2sXY5txrf1zEbBOvF7dCqTY1LLwHS#fidkdWxOYHwnPyd1blppbHNgWjA0S2xtfDNNSGdUTE1Hf1ZsQDRScm5VPGhBdW5ickk9TzFjcktyfWE8VlZPXERmTGRcXEZiR010aEhWYGZsZ112VXVHQj1nVkRSVTxCZ3BicEx%2FZDBJfFxcNTVPUG9dYktsYScpJ2N3amhWYHdzYHcnP3F3cGApJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+  },
+  "PNtkRLWp9s9quQ7AyOik": {
+    "mode": "payment",
+    "price": "price_1NkUnZHMbQIHBzSiRjN2Ms70",
+    "cancel_url": "https://mplswinterleague.com/profile",
+    "success_url": "https://mplswinterleague.com/profile",
+    "created": "2023-10-25T17:32:32.458Z",
+    "client": "web",
+    "sessionId": "cs_live_a1EATZaGs2UKAHvXN847gEsB0HKGPvpAzZTLepG2Tc5lpE0ReXLxogZlgp",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a1EATZaGs2UKAHvXN847gEsB0HKGPvpAzZTLepG2Tc5lpE0ReXLxogZlgp#fidkdWxOYHwnPyd1blppbHNgWjA0S2xtfDNNSGdUTE1Hf1ZsQDRScm5VPGhBdW5ickk9TzFjcktyfWE8VlZPXERmTGRcXEZiR010aEhWYGZsZ112VXVHQj1nVkRSVTxCZ3BicEx%2FZDBJfFxcNTVPUG9dYktsYScpJ2N3amhWYHdzYHcnP3F3cGApJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+  },
+  "emRh8Bed3Ojf26DaKTWN": {
+    "mode": "payment",
+    "price": "price_1NkUnZHMbQIHBzSiRjN2Ms70",
+    "cancel_url": "https://www.mplswinterleague.com/profile",
+    "success_url": "https://www.mplswinterleague.com/profile",
+    "created": "2023-10-30T15:22:16.813Z",
+    "client": "web",
+    "sessionId": "cs_live_a1qbKK2Z8yBgcS6CU9d8nHKk3E9vD9lgxZhwlKfG2SETleHjsdUGXPl9ub",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a1qbKK2Z8yBgcS6CU9d8nHKk3E9vD9lgxZhwlKfG2SETleHjsdUGXPl9ub#fidkdWxOYHwnPyd1blppbHNgWjA0S2xtfDNNSGdUTE1Hf1ZsQDRScm5VPGhBdW5ickk9TzFjcktyfWE8VlZPXERmTGRcXEZiR010aEhWYGZsZ112VXVHQj1nVkRSVTxCZ3BicEx%2FZDBJfFxcNTVPUG9dYktsYScpJ2N3amhWYHdzYHcnP3F3cGApJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+  }
+}

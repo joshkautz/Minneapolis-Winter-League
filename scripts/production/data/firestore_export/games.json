@@ -1,0 +1,1562 @@
+{
+  "0LOfJUYPpPHGDi4NYJoZ": {
+    "date": "2023-11-12T00:05:00.000Z",
+    "homeScore": 7,
+    "field": "2",
+    "awayScore": 13,
+    "away": "teams/DTzWGB7fMbUVcL3iHT08",
+    "home": "teams/nw1HrX3dXZMecbbTSGsR",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "0Y2SLXt4RQv2XEErZJ31": {
+    "date": "2023-12-10T00:05:00.000Z",
+    "homeScore": 12,
+    "field": "3",
+    "awayScore": 8,
+    "away": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "home": "teams/ifnI8V4AXxq28B0nWjJc",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "0bkzr27p2I3wgsZmwEf8": {
+    "date": "2023-12-10T00:50:00.000Z",
+    "homeScore": 14,
+    "field": "1",
+    "awayScore": 2,
+    "away": "teams/cK26PQEyfvmmWpegVQzq",
+    "home": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "0qRak5TjsGuBYxtBaoNg": {
+    "home": "teams/UYtKXok2YrFCnOVaPsMD",
+    "away": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "date": "2024-11-17T01:30:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 14,
+    "awayScore": 10,
+    "type": "regular"
+  },
+  "0wx29J48tjWTp6Mhkufa": {
+    "home": "teams/UYtKXok2YrFCnOVaPsMD",
+    "away": "teams/CsfadYYv1J1KvSj4SYd0",
+    "date": "2024-11-24T00:45:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 6,
+    "type": "regular"
+  },
+  "26MFtI9s9Rdnpy40yjlN": {
+    "home": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "away": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "date": "2024-12-08T01:30:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 17,
+    "awayScore": 9,
+    "type": "playoff"
+  },
+  "2t7YJHGTLAqHOmTavSBc": {
+    "home": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "away": "teams/KNdbONsXNayHPq6uHhWp",
+    "date": "2024-12-08T02:15:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 15,
+    "awayScore": 5,
+    "type": "playoff"
+  },
+  "4c3ppbKimpu0FWE9X6BT": {
+    "home": "teams/UYtKXok2YrFCnOVaPsMD",
+    "away": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "date": "2024-11-24T00:00:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 8,
+    "awayScore": 16,
+    "type": "regular"
+  },
+  "5A3lBxTZ8yhuwBcCEcD0": {
+    "home": "teams/SlSQZZyeRXzYeScoBHM2",
+    "away": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "date": "2024-11-17T00:00:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 13,
+    "awayScore": 7,
+    "type": "regular"
+  },
+  "5S3oXGC6TNezJfUQPlPe": {
+    "home": "teams/kocAbvNvtF4J4z5GOl93",
+    "away": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "homeScore": 13,
+    "awayScore": 10,
+    "date": "2024-12-15T01:30:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff"
+  },
+  "6V1xRLZSjfpdPznCPRfS": {
+    "home": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "away": "teams/SlSQZZyeRXzYeScoBHM2",
+    "date": "2024-11-03T01:15:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 13,
+    "awayScore": 8,
+    "type": "regular"
+  },
+  "6sn2NSrRDLTXUICcRHwq": {
+    "date": "2023-11-12T00:05:00.000Z",
+    "homeScore": 15,
+    "field": "1",
+    "awayScore": 3,
+    "away": "teams/AE9qWaJmhxI300Gbbuye",
+    "home": "teams/ifnI8V4AXxq28B0nWjJc",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "74TCqfdsqzVrXqyMNQXM": {
+    "date": "2023-12-10T00:50:00.000Z",
+    "homeScore": 10,
+    "field": "2",
+    "awayScore": 11,
+    "away": "teams/67XqRkRUwClXW8VMbuYQ",
+    "home": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "7LIuRCEMU9Hf01ES58DF": {
+    "home": "teams/3hp5J5ZJ5NilcAI07y57",
+    "away": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "date": "2024-12-01T00:45:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 8,
+    "awayScore": 14,
+    "type": "regular"
+  },
+  "7P5pFqOxPu6j6gG30rfT": {
+    "home": "teams/kocAbvNvtF4J4z5GOl93",
+    "away": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "date": "2024-11-24T00:45:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 11,
+    "awayScore": 12,
+    "type": "regular"
+  },
+  "7ZTyX7d6bALfhY5lZgmh": {
+    "date": "2023-11-19T02:20:00.000Z",
+    "homeScore": 2,
+    "field": "1",
+    "awayScore": 18,
+    "away": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "home": "teams/AE9qWaJmhxI300Gbbuye",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "7dCRPMgsEcVhTpgCZ4fL": {
+    "date": "2023-11-12T01:35:00.000Z",
+    "homeScore": 21,
+    "field": "2",
+    "awayScore": 0,
+    "away": "teams/hJnBb3ALKZILxo0RNfYY",
+    "home": "teams/JFIJXG08u9bMEDnzsgFr",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "7xnrrIGzRO7lvpAha4jj": {
+    "home": "teams/KNdbONsXNayHPq6uHhWp",
+    "away": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "date": "2024-12-01T01:30:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 8,
+    "awayScore": 12,
+    "type": "regular"
+  },
+  "89o4v5t72vcHmsyxL3sw": {
+    "home": "teams/KNdbONsXNayHPq6uHhWp",
+    "away": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "date": "2024-11-10T00:45:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 5,
+    "awayScore": 15,
+    "type": "regular"
+  },
+  "8VOp2BYZ8Gc9iPdPd3yB": {
+    "home": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "away": "teams/SlSQZZyeRXzYeScoBHM2",
+    "date": "2024-12-01T02:15:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 14,
+    "awayScore": 11,
+    "type": "regular"
+  },
+  "986qHVw98YEWUl2JLigd": {
+    "home": "teams/KNdbONsXNayHPq6uHhWp",
+    "away": "teams/CsfadYYv1J1KvSj4SYd0",
+    "date": "2024-11-24T00:00:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 4,
+    "awayScore": 8,
+    "type": "regular"
+  },
+  "ADs21m57ra4goK83H2QM": {
+    "date": "2023-11-12T02:20:00.000Z",
+    "homeScore": 15,
+    "field": "1",
+    "awayScore": 1,
+    "away": "teams/hJnBb3ALKZILxo0RNfYY",
+    "home": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "AQrCfqU5S2wimwSKNO63": {
+    "home": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "away": "teams/ozExVClE1sf8BNwotdIZ",
+    "date": "2024-12-01T01:30:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 0,
+    "awayScore": 5,
+    "type": "regular"
+  },
+  "AqoPqbjxHP63AS1vUSwM": {
+    "date": "2023-12-10T02:20:00.000Z",
+    "field": "2",
+    "away": "teams/hJnBb3ALKZILxo0RNfYY",
+    "home": "teams/67XqRkRUwClXW8VMbuYQ",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "awayScore": 10,
+    "homeScore": 15,
+    "type": "playoff"
+  },
+  "AqywzQTUyQysJO3ff9HA": {
+    "date": "2023-12-03T00:50:00.000Z",
+    "homeScore": 11,
+    "field": "1",
+    "awayScore": 17,
+    "away": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "home": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "B6fPJ7qAOPoTDSLTiX4S": {
+    "date": "2023-11-19T00:05:00.000Z",
+    "homeScore": 10,
+    "field": "1",
+    "awayScore": 13,
+    "away": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "home": "teams/cK26PQEyfvmmWpegVQzq",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "Be5JPKyyMEXIPFw5oVo6": {
+    "home": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "away": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "date": "2024-12-08T00:45:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 11,
+    "awayScore": 12,
+    "type": "playoff"
+  },
+  "CmJHszzzLpQvHyQEzk8V": {
+    "date": "2023-12-17T00:50:00.000Z",
+    "homeScore": 11,
+    "field": "3",
+    "awayScore": 7,
+    "away": "teams/AE9qWaJmhxI300Gbbuye",
+    "home": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "CshlNAAL42gcyhzLaO7G": {
+    "date": "2023-11-19T02:20:00.000Z",
+    "homeScore": 16,
+    "field": "2",
+    "awayScore": 8,
+    "away": "teams/JFIJXG08u9bMEDnzsgFr",
+    "home": "teams/DTzWGB7fMbUVcL3iHT08",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "DiUZ2u0Ph2wSKi3wFzgP": {
+    "home": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "away": "teams/CsfadYYv1J1KvSj4SYd0",
+    "date": "2024-11-03T01:15:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 19,
+    "awayScore": 4,
+    "type": "regular"
+  },
+  "DjsOo3jj3SwQnjiqyS4k": {
+    "home": "teams/KNdbONsXNayHPq6uHhWp",
+    "away": "teams/ozExVClE1sf8BNwotdIZ",
+    "date": "2024-11-02T23:45:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 4,
+    "awayScore": 19,
+    "type": "regular"
+  },
+  "EAeW8v0aibU1JuRVqAOx": {
+    "home": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "away": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "date": "2024-11-03T00:30:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 18,
+    "awayScore": 10,
+    "type": "regular"
+  },
+  "EBOaFeUNiXMYUspolsWr": {
+    "home": "teams/ozExVClE1sf8BNwotdIZ",
+    "away": "teams/CsfadYYv1J1KvSj4SYd0",
+    "homeScore": 16,
+    "awayScore": 7,
+    "date": "2024-12-15T02:15:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff"
+  },
+  "EDSJ85wN7TOeAAdCqJUP": {
+    "date": "2023-12-03T01:35:00.000Z",
+    "homeScore": 9,
+    "field": "3",
+    "awayScore": 12,
+    "away": "teams/ifnI8V4AXxq28B0nWjJc",
+    "home": "teams/JFIJXG08u9bMEDnzsgFr",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "EGERxhE3ry7Fd2BPu7Ss": {
+    "home": "teams/3hp5J5ZJ5NilcAI07y57",
+    "away": "teams/CsfadYYv1J1KvSj4SYd0",
+    "date": "2024-11-10T01:30:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 9,
+    "awayScore": 11,
+    "type": "regular"
+  },
+  "Ek3ltF8GGd49bEfm7Kz2": {
+    "home": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "away": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "date": "2024-11-17T01:30:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 9,
+    "type": "regular"
+  },
+  "Evv4zqMv16GPA3mEM8DF": {
+    "date": "2023-12-03T00:50:00.000Z",
+    "homeScore": 20,
+    "field": "3",
+    "awayScore": 1,
+    "away": "teams/hJnBb3ALKZILxo0RNfYY",
+    "home": "teams/DTzWGB7fMbUVcL3iHT08",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "F3NM7sMwkmEcyjolUtQD": {
+    "date": "2023-11-19T00:50:00.000Z",
+    "homeScore": 7,
+    "field": "1",
+    "awayScore": 13,
+    "away": "teams/67XqRkRUwClXW8VMbuYQ",
+    "home": "teams/cK26PQEyfvmmWpegVQzq",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "FIMedeMyjQFZYOklvn2z": {
+    "home": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "away": "teams/KNdbONsXNayHPq6uHhWp",
+    "date": "2024-11-17T00:00:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "awayScore": 7,
+    "homeScore": 12,
+    "type": "regular"
+  },
+  "FK8zXhAfpGywCmLe2YVF": {
+    "home": "teams/UYtKXok2YrFCnOVaPsMD",
+    "away": "teams/ozExVClE1sf8BNwotdIZ",
+    "date": "2024-12-01T00:00:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 16,
+    "awayScore": 7,
+    "type": "regular"
+  },
+  "GqtVJfTdPbX9ssjUAYDw": {
+    "date": "2023-11-05T00:35:00.000Z",
+    "homeScore": 22,
+    "field": "1",
+    "awayScore": 0,
+    "away": "teams/hJnBb3ALKZILxo0RNfYY",
+    "home": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "H4DnwUZUYgaRU0oiKdeX": {
+    "home": "teams/ozExVClE1sf8BNwotdIZ",
+    "away": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "date": "2024-11-17T02:15:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 10,
+    "awayScore": 11,
+    "type": "regular"
+  },
+  "HFQD0js1xdsJubc5F5ou": {
+    "home": "teams/SlSQZZyeRXzYeScoBHM2",
+    "away": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "date": "2024-11-10T00:00:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 9,
+    "awayScore": 12,
+    "type": "regular"
+  },
+  "HV6SUCEpcYJSDcF5ZpFf": {
+    "home": "teams/KNdbONsXNayHPq6uHhWp",
+    "away": "teams/3hp5J5ZJ5NilcAI07y57",
+    "date": "2024-12-01T00:00:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 8,
+    "awayScore": 9,
+    "type": "regular"
+  },
+  "HXgfZXlS6fs5JcNIskPg": {
+    "home": "teams/SlSQZZyeRXzYeScoBHM2",
+    "away": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "date": "2024-12-08T00:45:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 13,
+    "awayScore": 10,
+    "type": "playoff"
+  },
+  "HyLi5wVIzEWQusWrDQ0E": {
+    "date": "2023-11-12T00:05:00.000Z",
+    "homeScore": 12,
+    "field": "3",
+    "awayScore": 9,
+    "away": "teams/67XqRkRUwClXW8VMbuYQ",
+    "home": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "IhYrNuTSnh0rmeIYXQ4O": {
+    "home": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "away": "teams/ozExVClE1sf8BNwotdIZ",
+    "date": "2024-12-08T00:00:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 13,
+    "awayScore": 6,
+    "type": "playoff"
+  },
+  "ImqXg8w7Dwx3kIUwpdv1": {
+    "home": "teams/3hp5J5ZJ5NilcAI07y57",
+    "away": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "date": "2024-11-24T02:15:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 4,
+    "awayScore": 18,
+    "type": "regular"
+  },
+  "J6h088NM3PWMApFT1GZN": {
+    "date": "2023-12-03T02:20:00.000Z",
+    "homeScore": 3,
+    "field": "1",
+    "awayScore": 12,
+    "away": "teams/nw1HrX3dXZMecbbTSGsR",
+    "home": "teams/AE9qWaJmhxI300Gbbuye",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "JObupoktNzMJ4vlZFSms": {
+    "date": "2023-12-10T01:35:00.000Z",
+    "homeScore": 12,
+    "field": "3",
+    "awayScore": 9,
+    "away": "teams/ifnI8V4AXxq28B0nWjJc",
+    "home": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "JcP3ATsOKt9HH6rl7mTX": {
+    "home": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "away": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "date": "2024-11-24T02:15:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 14,
+    "awayScore": 11,
+    "type": "regular"
+  },
+  "JhFTGg6AfcBmawt1Sdm7": {
+    "date": "2023-12-17T00:50:00.000Z",
+    "homeScore": 11,
+    "field": "2",
+    "awayScore": 12,
+    "away": "teams/JFIJXG08u9bMEDnzsgFr",
+    "home": "teams/ifnI8V4AXxq28B0nWjJc",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "L0lCrGpemoNaLOxGD5Ll": {
+    "home": "teams/kocAbvNvtF4J4z5GOl93",
+    "away": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "date": "2024-12-01T00:00:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "awayScore": 0,
+    "homeScore": 8,
+    "type": "regular"
+  },
+  "LUJqC8N6fAllTaOvCfjH": {
+    "date": "2023-12-10T00:05:00.000Z",
+    "field": "2",
+    "away": "teams/AE9qWaJmhxI300Gbbuye",
+    "home": "teams/DTzWGB7fMbUVcL3iHT08",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "awayScore": 10,
+    "homeScore": 15,
+    "type": "playoff"
+  },
+  "MaOlqcrc11PnVc3ts48I": {
+    "date": "2023-12-03T00:05:00.000Z",
+    "homeScore": 9,
+    "field": "3",
+    "awayScore": 10,
+    "away": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "home": "teams/DTzWGB7fMbUVcL3iHT08",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "NCDV49VK65bu5AFHkgvs": {
+    "date": "2023-11-19T00:05:00.000Z",
+    "homeScore": 2,
+    "field": "2",
+    "awayScore": 22,
+    "away": "teams/67XqRkRUwClXW8VMbuYQ",
+    "home": "teams/hJnBb3ALKZILxo0RNfYY",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "ORDtj1ODkU1KshJXm9wL": {
+    "home": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "away": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "date": "2024-12-15T00:00:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff",
+    "homeScore": 12,
+    "awayScore": 8
+  },
+  "OWQ6FKY2mriFRUMybabZ": {
+    "home": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "away": "teams/kocAbvNvtF4J4z5GOl93",
+    "date": "2024-11-17T00:45:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 14,
+    "type": "regular"
+  },
+  "OYRofT6H7H4r37kN0JJx": {
+    "home": "teams/SlSQZZyeRXzYeScoBHM2",
+    "away": "teams/UYtKXok2YrFCnOVaPsMD",
+    "date": "2024-11-10T00:45:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 11,
+    "type": "regular"
+  },
+  "P3mmr2CXM084adzr0sCU": {
+    "date": "2023-11-19T01:35:00.000Z",
+    "homeScore": 12,
+    "field": "2",
+    "awayScore": 13,
+    "away": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "home": "teams/DTzWGB7fMbUVcL3iHT08",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "PO5rvCaI4IclCrbxm7SN": {
+    "date": "2023-12-17T00:05:00.000Z",
+    "homeScore": 8,
+    "field": "2",
+    "awayScore": 10,
+    "away": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "home": "teams/nw1HrX3dXZMecbbTSGsR",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "PYXGtZDmp8DWQmRdOi8Z": {
+    "home": "teams/kocAbvNvtF4J4z5GOl93",
+    "away": "teams/ozExVClE1sf8BNwotdIZ",
+    "date": "2024-11-02T23:00:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 5,
+    "type": "regular"
+  },
+  "Pzv7vqAEW4NWZVvKOp49": {
+    "date": "2023-12-10T00:50:00.000Z",
+    "homeScore": 11,
+    "field": "3",
+    "awayScore": 1,
+    "away": "teams/AE9qWaJmhxI300Gbbuye",
+    "home": "teams/JFIJXG08u9bMEDnzsgFr",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "Q0UJIhJYGYJzwkwdYIln": {
+    "home": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "away": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "date": "2024-11-10T02:15:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 13,
+    "awayScore": 10,
+    "type": "regular"
+  },
+  "Q6Igre9aFsAzFyYf13Q5": {
+    "date": "2023-12-03T00:05:00.000Z",
+    "homeScore": 3,
+    "field": "2",
+    "awayScore": 14,
+    "away": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "home": "teams/67XqRkRUwClXW8VMbuYQ",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "R1HhHBreLoTHsjR72ykp": {
+    "home": "teams/CsfadYYv1J1KvSj4SYd0",
+    "away": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "date": "2024-11-17T00:45:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 7,
+    "awayScore": 13,
+    "type": "regular"
+  },
+  "S6ULFN8KezeSELHjK6V9": {
+    "home": "teams/SlSQZZyeRXzYeScoBHM2",
+    "away": "teams/KNdbONsXNayHPq6uHhWp",
+    "date": "2024-12-08T01:30:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 14,
+    "awayScore": 6,
+    "type": "playoff"
+  },
+  "SB3LCSk7RfZkhPdmZoSF": {
+    "date": "2023-11-19T00:50:00.000Z",
+    "homeScore": 0,
+    "field": "2",
+    "awayScore": 16,
+    "away": "teams/nw1HrX3dXZMecbbTSGsR",
+    "home": "teams/hJnBb3ALKZILxo0RNfYY",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "SGZm9Wt5B71r9ASvlnfY": {
+    "home": "teams/kocAbvNvtF4J4z5GOl93",
+    "away": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "date": "2024-11-24T00:00:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 18,
+    "awayScore": 4,
+    "type": "regular"
+  },
+  "SHFr463OdMSJgBmLFywn": {
+    "date": "2023-12-03T01:35:00.000Z",
+    "homeScore": 7,
+    "field": "2",
+    "awayScore": 9,
+    "away": "teams/nw1HrX3dXZMecbbTSGsR",
+    "home": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "SKALP4qD1SbqFKjY26WT": {
+    "date": "2023-11-05T00:35:00.000Z",
+    "homeScore": 11,
+    "field": "2",
+    "awayScore": 9,
+    "away": "teams/ifnI8V4AXxq28B0nWjJc",
+    "home": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "SWI524iY5Yl8zv2uJD7c": {
+    "home": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "away": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "date": "2024-12-01T02:15:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 14,
+    "awayScore": 10,
+    "type": "regular"
+  },
+  "Sl9Uhyl1jViEYrc65Nw2": {
+    "home": "teams/ozExVClE1sf8BNwotdIZ",
+    "away": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "date": "2024-12-08T01:30:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 8,
+    "awayScore": 12,
+    "type": "playoff"
+  },
+  "SpcBuuM3C64VIrnp9IAQ": {
+    "date": "2023-11-19T00:05:00.000Z",
+    "homeScore": 12,
+    "field": "3",
+    "awayScore": 10,
+    "away": "teams/nw1HrX3dXZMecbbTSGsR",
+    "home": "teams/ifnI8V4AXxq28B0nWjJc",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "SsPYutKFFZheZIAopG5y": {
+    "home": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "away": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "date": "2024-11-03T01:15:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 7,
+    "awayScore": 13,
+    "type": "regular"
+  },
+  "TABfU4UKl4mIfgXtmbQA": {
+    "date": "2023-11-12T01:35:00.000Z",
+    "homeScore": 6,
+    "field": "1",
+    "awayScore": 11,
+    "away": "teams/cK26PQEyfvmmWpegVQzq",
+    "home": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "TNuzYqCBl6ed6JqWvFZI": {
+    "date": "2023-11-05T01:20:00.000Z",
+    "homeScore": 13,
+    "field": "2",
+    "awayScore": 8,
+    "away": "teams/nw1HrX3dXZMecbbTSGsR",
+    "home": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "TgM6GQhLvkIwuzpZDOCw": {
+    "home": "teams/KNdbONsXNayHPq6uHhWp",
+    "away": "teams/kocAbvNvtF4J4z5GOl93",
+    "date": "2024-11-10T00:00:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 7,
+    "awayScore": 15,
+    "type": "regular"
+  },
+  "Tl538Iorau3qYzbBhLTS": {
+    "home": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "away": "teams/CsfadYYv1J1KvSj4SYd0",
+    "date": "2024-12-01T02:15:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 13,
+    "awayScore": 8,
+    "type": "regular"
+  },
+  "Tz5aCjagrjBUKjzdh6DP": {
+    "date": "2023-12-17T00:50:00.000Z",
+    "homeScore": 12,
+    "field": "1",
+    "awayScore": 10,
+    "away": "teams/DTzWGB7fMbUVcL3iHT08",
+    "home": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "U4ww7c5snPiEllMsJP0W": {
+    "home": "teams/ozExVClE1sf8BNwotdIZ",
+    "away": "teams/3hp5J5ZJ5NilcAI07y57",
+    "date": "2024-11-17T01:30:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 9,
+    "awayScore": 8,
+    "type": "regular"
+  },
+  "U7NfhsqLy0Hklyl6dWKg": {
+    "date": "2023-12-10T02:20:00.000Z",
+    "homeScore": 16,
+    "field": "3",
+    "awayScore": 4,
+    "away": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "home": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "UMCiY0ifwOoNptVAHI7e": {
+    "home": "teams/ozExVClE1sf8BNwotdIZ",
+    "away": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "date": "2024-11-24T01:30:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 11,
+    "awayScore": 10,
+    "type": "regular"
+  },
+  "URe5lVEGerZaFUYix5u9": {
+    "home": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "away": "teams/UYtKXok2YrFCnOVaPsMD",
+    "date": "2024-12-15T00:45:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff",
+    "homeScore": 7,
+    "awayScore": 12
+  },
+  "UdwlmZ7HXOHpnkBpAXgW": {
+    "date": "2023-12-17T02:20:00.000Z",
+    "homeScore": 12,
+    "field": "3",
+    "awayScore": 14,
+    "away": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "home": "teams/cK26PQEyfvmmWpegVQzq",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "VAZTV5JoagkcOriSDTmR": {
+    "home": "teams/kocAbvNvtF4J4z5GOl93",
+    "away": "teams/3hp5J5ZJ5NilcAI07y57",
+    "date": "2024-11-02T23:45:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 6,
+    "type": "regular"
+  },
+  "VEfuPyzySCQa7zQGsKZG": {
+    "date": "2023-12-10T00:05:00.000Z",
+    "homeScore": 11,
+    "field": "1",
+    "awayScore": 8,
+    "away": "teams/nw1HrX3dXZMecbbTSGsR",
+    "home": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "W11d04HzpVDp6SkKkdu7": {
+    "home": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "away": "teams/UYtKXok2YrFCnOVaPsMD",
+    "homeScore": 10,
+    "awayScore": 7,
+    "date": "2024-12-15T02:15:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff"
+  },
+  "WFStc9EAt6jPdMBGkWE2": {
+    "home": "teams/UYtKXok2YrFCnOVaPsMD",
+    "away": "teams/3hp5J5ZJ5NilcAI07y57",
+    "date": "2024-11-17T02:15:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 6,
+    "type": "regular"
+  },
+  "Wu1220jU2SMQeyORSKUG": {
+    "date": "2023-12-03T02:20:00.000Z",
+    "homeScore": 11,
+    "field": "3",
+    "awayScore": 10,
+    "away": "teams/cK26PQEyfvmmWpegVQzq",
+    "home": "teams/JFIJXG08u9bMEDnzsgFr",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "X6JNRrf1R8qoChcy2a4s": {
+    "home": "teams/ozExVClE1sf8BNwotdIZ",
+    "away": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "date": "2024-11-10T01:30:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 9,
+    "awayScore": 15,
+    "type": "regular"
+  },
+  "XDUMvlPSrgXGxp9inDnF": {
+    "home": "teams/CsfadYYv1J1KvSj4SYd0",
+    "away": "teams/kocAbvNvtF4J4z5GOl93",
+    "date": "2024-11-17T00:00:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 7,
+    "awayScore": 16,
+    "type": "regular"
+  },
+  "XJBpjIM4nOsHBYoFfFNv": {
+    "home": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "away": "teams/UYtKXok2YrFCnOVaPsMD",
+    "date": "2024-11-10T00:00:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 11,
+    "type": "regular"
+  },
+  "Z6fVHa4Ya8JMXJEZybav": {
+    "date": "2023-11-05T01:20:00.000Z",
+    "homeScore": 20,
+    "field": "3",
+    "awayScore": 0,
+    "away": "teams/hJnBb3ALKZILxo0RNfYY",
+    "home": "teams/cK26PQEyfvmmWpegVQzq",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "Zkwr73uBv4kcMy6XrWDy": {
+    "date": "2023-11-12T01:35:00.000Z",
+    "homeScore": 12,
+    "field": "3",
+    "awayScore": 10,
+    "away": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "home": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "aGwUMTjXvGQKQ30HoQPK": {
+    "date": "2023-11-19T02:20:00.000Z",
+    "homeScore": 8,
+    "field": "3",
+    "awayScore": 11,
+    "away": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "home": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "aLL3VAuwnG1CcHsIOt9h": {
+    "home": "teams/KNdbONsXNayHPq6uHhWp",
+    "away": "teams/UYtKXok2YrFCnOVaPsMD",
+    "date": "2024-11-02T23:00:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 3,
+    "awayScore": 16,
+    "type": "regular"
+  },
+  "atBB2DFWDNQgouEOW7fY": {
+    "date": "2023-11-19T00:50:00.000Z",
+    "homeScore": 9,
+    "field": "3",
+    "awayScore": 10,
+    "away": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "home": "teams/ifnI8V4AXxq28B0nWjJc",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "axEqNr4mMZ84GETWzQFy": {
+    "date": "2023-12-10T01:35:00.000Z",
+    "homeScore": 9,
+    "field": "1",
+    "awayScore": 5,
+    "away": "teams/cK26PQEyfvmmWpegVQzq",
+    "home": "teams/nw1HrX3dXZMecbbTSGsR",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "b0w2FpggporBV56ryJoL": {
+    "home": "teams/ozExVClE1sf8BNwotdIZ",
+    "away": "teams/CsfadYYv1J1KvSj4SYd0",
+    "date": "2024-11-10T02:15:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 9,
+    "awayScore": 5,
+    "type": "regular"
+  },
+  "bCcYFncKwxnlV57LcOZX": {
+    "date": "2023-12-10T02:20:00.000Z",
+    "homeScore": 13,
+    "field": "1",
+    "awayScore": 6,
+    "away": "teams/JFIJXG08u9bMEDnzsgFr",
+    "home": "teams/DTzWGB7fMbUVcL3iHT08",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "bcGOGDp5EDyamxD7Imbv": {
+    "date": "2023-12-17T00:05:00.000Z",
+    "homeScore": 25,
+    "field": "3",
+    "awayScore": 2,
+    "away": "teams/hJnBb3ALKZILxo0RNfYY",
+    "home": "teams/cK26PQEyfvmmWpegVQzq",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "cQtiWzYXmcYd7r1CyIL1": {
+    "date": "2023-12-03T00:05:00.000Z",
+    "homeScore": 21,
+    "field": "1",
+    "awayScore": 0,
+    "away": "teams/hJnBb3ALKZILxo0RNfYY",
+    "home": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "cbqeSbsVA8lUKLx5RWze": {
+    "home": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "away": "teams/UYtKXok2YrFCnOVaPsMD",
+    "date": "2024-11-02T23:45:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 10,
+    "type": "regular"
+  },
+  "d4iWBvnWO2rWLRdDxlHs": {
+    "date": "2023-12-03T00:50:00.000Z",
+    "homeScore": 7,
+    "field": "2",
+    "awayScore": 10,
+    "away": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "home": "teams/67XqRkRUwClXW8VMbuYQ",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "djhowyNJdfv7hZ9Ma7DO": {
+    "date": "2023-12-17T02:20:00.000Z",
+    "homeScore": 7,
+    "field": "1",
+    "awayScore": 13,
+    "away": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "home": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "eJFUAhD1VscqpiDbsLWA": {
+    "date": "2023-11-05T01:20:00.000Z",
+    "homeScore": 16,
+    "field": "1",
+    "awayScore": 6,
+    "away": "teams/ifnI8V4AXxq28B0nWjJc",
+    "home": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "eTXLUIhtxmU6JIkRjDla": {
+    "date": "2023-11-12T00:50:00.000Z",
+    "homeScore": 15,
+    "field": "3",
+    "awayScore": 5,
+    "away": "teams/AE9qWaJmhxI300Gbbuye",
+    "home": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "equoJ0bMN4VDoBeesSij": {
+    "date": "2023-11-04T23:05:00.000Z",
+    "homeScore": 8,
+    "field": "1",
+    "awayScore": 11,
+    "away": "teams/DTzWGB7fMbUVcL3iHT08",
+    "home": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "fd26tLrwE5GTXCGpXSo0": {
+    "home": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "away": "teams/SlSQZZyeRXzYeScoBHM2",
+    "homeScore": 15,
+    "awayScore": 8,
+    "date": "2024-12-15T02:15:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff"
+  },
+  "fkmRlX8cjIfn9Ki3l6d9": {
+    "home": "teams/ozExVClE1sf8BNwotdIZ",
+    "away": "teams/KNdbONsXNayHPq6uHhWp",
+    "date": "2024-12-15T00:00:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff",
+    "homeScore": 13,
+    "awayScore": 5
+  },
+  "g5gKyEhPLw5CFn9TrKOl": {
+    "home": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "away": "teams/3hp5J5ZJ5NilcAI07y57",
+    "date": "2024-11-02T23:00:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 15,
+    "awayScore": 7,
+    "type": "regular"
+  },
+  "gzoAkqSZAEWhN1i1rXZZ": {
+    "date": "2023-11-12T02:20:00.000Z",
+    "homeScore": 4,
+    "field": "2",
+    "awayScore": 15,
+    "away": "teams/b3BM1rI4q2JuzLyPHh2K",
+    "home": "teams/JFIJXG08u9bMEDnzsgFr",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "h2CG3cTNvLcTIdTvQodC": {
+    "home": "teams/kocAbvNvtF4J4z5GOl93",
+    "away": "teams/UYtKXok2YrFCnOVaPsMD",
+    "date": "2024-12-01T01:30:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "awayScore": 9,
+    "homeScore": 13,
+    "type": "regular"
+  },
+  "hIzBfKECxWi1Zy15Cren": {
+    "home": "teams/kocAbvNvtF4J4z5GOl93",
+    "away": "teams/UYtKXok2YrFCnOVaPsMD",
+    "date": "2024-12-08T02:15:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 14,
+    "awayScore": 9,
+    "type": "playoff"
+  },
+  "i7b1htEY3UmULcMm8Kij": {
+    "home": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "away": "teams/CsfadYYv1J1KvSj4SYd0",
+    "date": "2024-12-08T02:15:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 15,
+    "awayScore": 10,
+    "type": "playoff"
+  },
+  "iArZTsVxR9NGK5B2nTNf": {
+    "home": "teams/UYtKXok2YrFCnOVaPsMD",
+    "away": "teams/3hp5J5ZJ5NilcAI07y57",
+    "date": "2024-12-08T00:45:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 4,
+    "type": "playoff"
+  },
+  "iXULhOQcw90UNDZ7vf8g": {
+    "date": "2023-12-03T01:35:00.000Z",
+    "homeScore": 5,
+    "field": "1",
+    "awayScore": 13,
+    "away": "teams/cK26PQEyfvmmWpegVQzq",
+    "home": "teams/AE9qWaJmhxI300Gbbuye",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "icfMlUzawf0502N5Kilz": {
+    "date": "2023-12-17T00:05:00.000Z",
+    "homeScore": 11,
+    "field": "1",
+    "awayScore": 6,
+    "away": "teams/67XqRkRUwClXW8VMbuYQ",
+    "home": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "iqh4M5CyS61OPc0ZQZIo": {
+    "home": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "away": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "date": "2024-11-24T01:30:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 11,
+    "awayScore": 16,
+    "type": "regular"
+  },
+  "isXGM4HLW5P9JAYSoLbq": {
+    "date": "2023-11-04T23:05:00.000Z",
+    "homeScore": 4,
+    "field": "3",
+    "awayScore": 13,
+    "away": "teams/JFIJXG08u9bMEDnzsgFr",
+    "home": "teams/AE9qWaJmhxI300Gbbuye",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "j835jMm7ZxkaF13ZQ6DO": {
+    "home": "teams/kocAbvNvtF4J4z5GOl93",
+    "away": "teams/3hp5J5ZJ5NilcAI07y57",
+    "date": "2024-12-08T00:00:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 14,
+    "awayScore": 5,
+    "type": "playoff"
+  },
+  "kdRsTOGc6mMNrQtwpgtJ": {
+    "date": "2023-11-12T00:50:00.000Z",
+    "homeScore": 5,
+    "field": "2",
+    "awayScore": 16,
+    "away": "teams/67XqRkRUwClXW8VMbuYQ",
+    "home": "teams/nw1HrX3dXZMecbbTSGsR",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "kf0SqWQwSEY4fuh0FcDS": {
+    "date": "2023-11-12T02:20:00.000Z",
+    "homeScore": 15,
+    "field": "3",
+    "awayScore": 5,
+    "away": "teams/cK26PQEyfvmmWpegVQzq",
+    "home": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "la764v9KKrZUgKr272vx": {
+    "home": "teams/KNdbONsXNayHPq6uHhWp",
+    "away": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "date": "2024-11-24T00:45:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 10,
+    "awayScore": 12,
+    "type": "regular"
+  },
+  "lnUV6CyHqpvFqG8zlwd7": {
+    "date": "2023-11-05T00:35:00.000Z",
+    "homeScore": 6,
+    "field": "3",
+    "awayScore": 8,
+    "away": "teams/nw1HrX3dXZMecbbTSGsR",
+    "home": "teams/cK26PQEyfvmmWpegVQzq",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "m2mc56OJRM6BQLfoUW6L": {
+    "home": "teams/SlSQZZyeRXzYeScoBHM2",
+    "away": "teams/KNdbONsXNayHPq6uHhWp",
+    "date": "2024-11-17T00:45:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 12,
+    "awayScore": 9,
+    "type": "regular"
+  },
+  "mQ7rosgZP7IT2AaRmzx1": {
+    "date": "2023-11-12T00:50:00.000Z",
+    "homeScore": 10,
+    "field": "1",
+    "awayScore": 13,
+    "away": "teams/DTzWGB7fMbUVcL3iHT08",
+    "home": "teams/ifnI8V4AXxq28B0nWjJc",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "mt4BLqyxCLezChVTnetJ": {
+    "home": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "away": "teams/SlSQZZyeRXzYeScoBHM2",
+    "date": "2024-11-03T00:30:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 9,
+    "awayScore": 12,
+    "type": "regular"
+  },
+  "mw4sQelA7lM9VeyDLgtw": {
+    "home": "teams/CsfadYYv1J1KvSj4SYd0",
+    "away": "teams/3hp5J5ZJ5NilcAI07y57",
+    "date": "2024-12-15T00:45:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff",
+    "homeScore": 10,
+    "awayScore": 7
+  },
+  "oaMxgxBAQIim117yF1Bq": {
+    "date": "2023-12-17T01:35:00.000Z",
+    "field": "1",
+    "away": "teams/DTzWGB7fMbUVcL3iHT08",
+    "home": "teams/67XqRkRUwClXW8VMbuYQ",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "awayScore": 15,
+    "homeScore": 10,
+    "type": "playoff"
+  },
+  "orW17LPOFNnWFyFHwLUV": {
+    "home": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "away": "teams/kocAbvNvtF4J4z5GOl93",
+    "date": "2024-12-15T00:45:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff",
+    "homeScore": 14,
+    "awayScore": 10
+  },
+  "ouvCfnHSgpKeOtRnFNUs": {
+    "date": "2023-11-04T23:50:00.000Z",
+    "homeScore": 4,
+    "field": "3",
+    "awayScore": 15,
+    "away": "teams/DTzWGB7fMbUVcL3iHT08",
+    "home": "teams/AE9qWaJmhxI300Gbbuye",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "p0tHkc89agsIkesfX8Ua": {
+    "home": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "away": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "date": "2024-11-10T01:30:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 11,
+    "awayScore": 5,
+    "type": "regular"
+  },
+  "p4wLc2CzW7uaq4vFSe6G": {
+    "date": "2023-11-19T01:35:00.000Z",
+    "homeScore": 7,
+    "field": "3",
+    "awayScore": 12,
+    "away": "teams/JFIJXG08u9bMEDnzsgFr",
+    "home": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "phoed3YZO5MI2ZShB7gp": {
+    "home": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "away": "teams/CsfadYYv1J1KvSj4SYd0",
+    "date": "2024-12-08T00:00:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 13,
+    "awayScore": 7,
+    "type": "playoff"
+  },
+  "qRoCVIB1qDWiHvyFeYeB": {
+    "date": "2023-12-17T01:35:00.000Z",
+    "homeScore": 10,
+    "field": "2",
+    "awayScore": 12,
+    "away": "teams/ifnI8V4AXxq28B0nWjJc",
+    "home": "teams/nw1HrX3dXZMecbbTSGsR",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "qY2XBgWMK8FCE0liCa3Q": {
+    "home": "teams/CsfadYYv1J1KvSj4SYd0",
+    "away": "teams/SlSQZZyeRXzYeScoBHM2",
+    "date": "2024-12-01T00:45:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 8,
+    "awayScore": 14,
+    "type": "regular"
+  },
+  "qnpIzyANBDeieWVeDTY9": {
+    "date": "2023-12-03T02:20:00.000Z",
+    "homeScore": 10,
+    "field": "2",
+    "awayScore": 15,
+    "away": "teams/ifnI8V4AXxq28B0nWjJc",
+    "home": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "rJ3V9hBmtpZMbf85GvTS": {
+    "home": "teams/GrNZCbOFMZ8bxgc1iaIb",
+    "away": "teams/CsfadYYv1J1KvSj4SYd0",
+    "date": "2024-11-03T00:30:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 15,
+    "awayScore": 5,
+    "type": "regular"
+  },
+  "rLN8u0TH8FhtZPjqZUFU": {
+    "home": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "away": "teams/SlSQZZyeRXzYeScoBHM2",
+    "date": "2024-12-15T00:00:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff",
+    "homeScore": 11,
+    "awayScore": 13
+  },
+  "rsQHuvqxqVzknj5FoucU": {
+    "home": "teams/3hp5J5ZJ5NilcAI07y57",
+    "away": "teams/SlSQZZyeRXzYeScoBHM2",
+    "date": "2024-11-24T01:30:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 7,
+    "awayScore": 17,
+    "type": "regular"
+  },
+  "rtx4RDSqW8IQWrx1l86P": {
+    "date": "2023-11-04T23:50:00.000Z",
+    "homeScore": 15,
+    "field": "2",
+    "awayScore": 11,
+    "away": "teams/JFIJXG08u9bMEDnzsgFr",
+    "home": "teams/67XqRkRUwClXW8VMbuYQ",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "s4Xc2khN3ihOBkiw6HCt": {
+    "date": "2023-11-04T23:50:00.000Z",
+    "homeScore": 12,
+    "field": "1",
+    "awayScore": 8,
+    "away": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "home": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "sNYxVdj7YEKzdMkVHhwg": {
+    "date": "2023-11-04T23:05:00.000Z",
+    "homeScore": 13,
+    "field": "2",
+    "awayScore": 4,
+    "away": "teams/Gv5elo2IVFTc3Ldv9AkO",
+    "home": "teams/67XqRkRUwClXW8VMbuYQ",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  },
+  "tKZtHkOkrm9jgZi5jW3V": {
+    "home": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "away": "teams/rpmhoe8o4VDqA1xwqoqK",
+    "date": "2024-12-01T00:45:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 9,
+    "awayScore": 14,
+    "type": "regular"
+  },
+  "uIMCkRhXDW9nu9Suw4qi": {
+    "home": "teams/3hp5J5ZJ5NilcAI07y57",
+    "away": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "date": "2024-11-10T02:15:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 3,
+    "awayScore": 11,
+    "type": "regular"
+  },
+  "uVUdW4OtcuOQK7i5K7i7": {
+    "home": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "away": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "homeScore": 10,
+    "awayScore": 8,
+    "date": "2024-12-15T01:30:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff"
+  },
+  "udsrkesaxNBNFZLjyZUj": {
+    "home": "teams/nUZOOC7j8TJGCEV6aQIf",
+    "away": "teams/kocAbvNvtF4J4z5GOl93",
+    "date": "2024-11-10T00:45:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 10,
+    "awayScore": 8,
+    "type": "regular"
+  },
+  "vZh4q79xQpscjgTlTS3L": {
+    "home": "teams/ozExVClE1sf8BNwotdIZ",
+    "away": "teams/SlSQZZyeRXzYeScoBHM2",
+    "date": "2024-11-24T02:15:00.000Z",
+    "field": 2,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 6,
+    "awayScore": 14,
+    "type": "regular"
+  },
+  "wR3NM0FbwFOW6f5qVJlk": {
+    "date": "2023-12-17T02:20:00.000Z",
+    "homeScore": 11,
+    "field": "2",
+    "awayScore": 10,
+    "away": "teams/JFIJXG08u9bMEDnzsgFr",
+    "home": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "wT4ldLVTqzbpwwmuAuyd": {
+    "date": "2023-12-17T01:35:00.000Z",
+    "field": "3",
+    "away": "teams/hJnBb3ALKZILxo0RNfYY",
+    "home": "teams/AE9qWaJmhxI300Gbbuye",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "awayScore": 10,
+    "homeScore": 15,
+    "type": "playoff"
+  },
+  "xFyJ53vy6EDMDA6V9jEW": {
+    "date": "2023-12-10T01:35:00.000Z",
+    "homeScore": 25,
+    "field": "2",
+    "awayScore": 2,
+    "away": "teams/hJnBb3ALKZILxo0RNfYY",
+    "home": "teams/2I7YXDF7RAXs3MCvLM0h",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "playoff"
+  },
+  "xGt5iPqnGWe25r4SbsfC": {
+    "home": "teams/3hp5J5ZJ5NilcAI07y57",
+    "away": "teams/KNdbONsXNayHPq6uHhWp",
+    "homeScore": 7,
+    "awayScore": 5,
+    "date": "2024-12-15T01:30:00.000Z",
+    "field": 3,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "type": "playoff"
+  },
+  "yL8UkycIlIIw7VD2QtSa": {
+    "home": "teams/UaOUQ6B2uBB4E6K5IcGE",
+    "away": "teams/Zl4NPP4kQ0GaZyiqUjbj",
+    "date": "2024-11-17T02:15:00.000Z",
+    "field": 1,
+    "season": "seasons/PBE6nY7rpCxufItsC7l0",
+    "homeScore": 14,
+    "awayScore": 6,
+    "type": "regular"
+  },
+  "z6N2Fjf8vF6HMMZh1jpF": {
+    "date": "2023-11-19T01:35:00.000Z",
+    "homeScore": 2,
+    "field": "1",
+    "awayScore": 13,
+    "away": "teams/OS4oMGXE3yAHkbGTKK5W",
+    "home": "teams/AE9qWaJmhxI300Gbbuye",
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "type": "regular"
+  }
+}
