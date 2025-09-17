@@ -1,6 +1,5 @@
 import { logger } from 'firebase-functions/v2'
 import { processGame } from './gameProcessor.js'
-import { saveWeeklySnapshot } from '../snapshots/snapshotSaver.js'
 import { saveRoundSnapshot } from '../snapshots/roundSnapshotSaver.js'
 import { shouldCountGame } from '../incremental/gameCounter.js'
 import {
@@ -25,8 +24,8 @@ export async function processGamesByRounds(
 	calculationId: string,
 	totalSeasons: number,
 	incrementalStartSeasonIndex?: number,
-	incrementalStartWeek?: number,
-	onlyNewRounds: boolean = false
+	onlyNewRounds: boolean = false,
+	isFullRebuild: boolean = false
 ): Promise<void> {
 	// Group games into rounds by start time
 	const allRounds = groupGamesByRounds(games)
@@ -42,9 +41,6 @@ export async function processGamesByRounds(
 	)
 
 	let currentSeasonId = ''
-	let currentWeek = 0
-	let weeklyGames: GameProcessingData[] = []
-	let weekStartRatings = new Map<string, number>()
 	let processedSeasons = 0
 	let processedGames = 0
 
@@ -61,58 +57,46 @@ export async function processGamesByRounds(
 			continue
 		}
 
-		// Check if we've moved to a new week
-		if (round.seasonId !== currentSeasonId || round.week !== currentWeek) {
-			// Save snapshot for the previous week if we have games
-			if (weeklyGames.length > 0) {
-				await saveWeeklySnapshot(
-					currentSeasonId,
-					currentWeek,
-					playerRatings,
-					weeklyGames,
-					weekStartRatings,
-					incrementalStartSeasonIndex,
-					incrementalStartWeek,
-					totalSeasons
-				)
-			}
+		// Update progress if we've moved to a new season
+		if (round.seasonId !== currentSeasonId) {
+			if (currentSeasonId) processedSeasons++
 
-			// Update progress if we've moved to a new season
-			if (round.seasonId !== currentSeasonId) {
-				if (currentSeasonId) processedSeasons++
-
-				await updateSeasonalProgress(
-					calculationId,
-					processedSeasons,
-					totalSeasons,
-					round.seasonId
-				)
-			}
-
+			await updateSeasonalProgress(
+				calculationId,
+				processedSeasons,
+				totalSeasons,
+				round.seasonId
+			)
 			currentSeasonId = round.seasonId
-			currentWeek = round.week
-			weeklyGames = []
+		}
 
-			// Capture ratings at the start of this new week
-			weekStartRatings = new Map()
-			for (const [playerId, playerState] of playerRatings) {
-				weekStartRatings.set(playerId, playerState.currentRating)
-			}
+		// Capture ratings before this round for comparison
+		const preRoundRatings = new Map<string, number>()
+		for (const [playerId, playerState] of playerRatings) {
+			preRoundRatings.set(playerId, playerState.currentRating)
 		}
 
 		// Process all games in this round simultaneously
 		// This ensures true chronological order since all games in a round start at the same time
 		const roundPromises = round.games.map(async (game) => {
-			// Determine if this game should count toward totalGames
-			const shouldCount = shouldCountGame(
+			// Determine if this game should count toward ELO calculations
+			const shouldCountForRating = shouldCountGame(
 				game,
 				incrementalStartSeasonIndex,
-				incrementalStartWeek,
 				totalSeasons
 			)
 
-			await processGame(game, playerRatings, shouldCount)
-			weeklyGames.push(game)
+			// For totalGames counting: Always count games being processed
+			// - Full rebuild: count ALL games (since we're rebuilding from scratch)
+			// - Incremental: count ALL games being processed (they're all new by definition)
+			const shouldCountForTotalGames = true
+
+			await processGame(
+				game,
+				playerRatings,
+				shouldCountForRating,
+				shouldCountForTotalGames
+			)
 			processedGames++
 		})
 
@@ -120,14 +104,6 @@ export async function processGamesByRounds(
 		await Promise.all(roundPromises)
 
 		// Save snapshot after this round for game-by-game history tracking
-		// Capture ratings before this round for comparison
-		const preRoundRatings = new Map<string, number>()
-		for (const [playerId, playerState] of playerRatings) {
-			// For pre-round ratings, we need to subtract the changes from this round
-			// This is a simplified approach - in practice we'd track this more precisely
-			preRoundRatings.set(playerId, playerState.currentRating)
-		}
-
 		await saveRoundSnapshot(
 			round,
 			playerRatings,
@@ -146,20 +122,6 @@ export async function processGamesByRounds(
 		await updateGameProgress(calculationId, processedGames, games.length)
 	}
 
-	// Save the final week's snapshot
-	if (weeklyGames.length > 0) {
-		await saveWeeklySnapshot(
-			currentSeasonId,
-			currentWeek,
-			playerRatings,
-			weeklyGames,
-			weekStartRatings,
-			incrementalStartSeasonIndex,
-			incrementalStartWeek,
-			totalSeasons
-		)
-	}
-
 	logger.info(
 		`Round-based processing complete: ${processedGames} games in ${roundsToProcess.length} rounds`
 	)
@@ -174,8 +136,7 @@ export async function processNewRoundsOnly(
 	playerRatings: Map<string, PlayerRatingState>,
 	calculationId: string,
 	totalSeasons: number,
-	incrementalStartSeasonIndex?: number,
-	incrementalStartWeek?: number
+	incrementalStartSeasonIndex?: number
 ): Promise<void> {
 	return processGamesByRounds(
 		games,
@@ -183,7 +144,7 @@ export async function processNewRoundsOnly(
 		calculationId,
 		totalSeasons,
 		incrementalStartSeasonIndex,
-		incrementalStartWeek,
-		true // Only process new rounds
+		true, // Only process new rounds
+		false // This is incremental, not a full rebuild
 	)
 }

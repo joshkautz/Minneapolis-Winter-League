@@ -2,7 +2,6 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, GameDocument, SeasonDocument } from '../../../types.js'
 import { GameProcessingData } from '../types.js'
-import { calculateWeekNumber } from './weekCalculator.js'
 
 /**
  * Loads all games for calculation starting from specified season
@@ -36,7 +35,6 @@ export async function loadGamesForCalculation(
 				id: doc.id,
 				...gameData,
 				seasonOrder: seasons.length - 1 - i, // 0 = most recent
-				week: calculateWeekNumber(gameData.date, season.dateStart),
 				gameDate: gameData.date.toDate(),
 			} as GameProcessingData
 		})

@@ -5,7 +5,7 @@
  * Accessible at /player-rankings/player/{playerId}
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
@@ -49,18 +49,12 @@ interface ChartDataPoint {
 	ranking: number
 	/** Player's Elo rating */
 	eloRating: number
-	/** Week identifier (e.g., "W3") for display */
-	week: string
 	/** Player's actual rank position */
 	rank: number
-	/** Weekly change in rating */
-	change: number
 	/** Season identifier */
 	season: string
 	/** Unix timestamp for sorting */
 	timestamp: number
-	/** Games played that week */
-	gamesPlayed: number
 }
 
 const chartConfig = {
@@ -77,7 +71,6 @@ const chartConfig = {
 export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 	const { playerId } = useParams<{ playerId: string }>()
 	const navigate = useNavigate()
-	const [viewMode, setViewMode] = useState<'weekly' | 'per-game'>('weekly')
 
 	// Handle missing playerId
 	if (!playerId) {
@@ -211,42 +204,25 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 			const docId = doc.id
 			const data = doc.data()
 
-			// Check if this is a round-based snapshot (has roundMeta) or weekly snapshot
-			const isRoundSnapshot = !!data.roundMeta
-
-			// Filter based on view mode
-			if (viewMode === 'weekly' && isRoundSnapshot) return // Skip round snapshots in weekly view
-			if (viewMode === 'per-game' && !isRoundSnapshot) return // Skip weekly snapshots in per-game view
+			// Only process round-based snapshots (with roundMeta)
+			// Skip any legacy weekly snapshots that might still exist
+			if (!data.roundMeta) return
 
 			let seasonId: string
-			let weekNumber: number
-			let roundInfo: any = null
+			let timestamp: number
 
-			if (isRoundSnapshot) {
-				// Format: {timestamp}_{seasonId}_week_{week} with roundMeta
-				const idParts = docId.split('_')
-				if (idParts.length >= 4 && idParts[2] === 'week') {
-					seasonId = idParts[1]
-					weekNumber = parseInt(idParts[3])
-					roundInfo = data.roundMeta
-				} else {
-					console.warn(`Skipping malformed round snapshot ID: ${docId}`)
-					return
-				}
+			// New format: {timestamp}_{seasonId}
+			const idParts = docId.split('_')
+			if (idParts.length >= 2) {
+				timestamp = parseInt(idParts[0])
+				seasonId = idParts[1]
 			} else {
-				// Legacy format: {SeasonID}_week_{weekNumber}
-				const idParts = docId.split('_week_')
-				if (idParts.length !== 2) {
-					console.warn(`Skipping malformed document ID: ${docId}`)
-					return
-				}
-				seasonId = idParts[0]
-				weekNumber = parseInt(idParts[1])
-				roundInfo = null // Explicitly set to null for weekly snapshots
+				console.warn(`Skipping malformed document ID: ${docId}`)
+				return
 			}
 
-			if (isNaN(weekNumber)) {
-				console.warn(`Invalid week number in document ID: ${docId}`)
+			if (isNaN(timestamp)) {
+				console.warn(`Invalid timestamp in document ID: ${docId}`)
 				return
 			}
 
@@ -282,82 +258,28 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 					return
 				}
 
-				// Get season information from seasons collection
-				const seasonInfo = seasonsMap.get(seasonId)
-				let seasonStartDate: Date
-
-				if (
-					seasonInfo &&
-					seasonInfo.dateStart &&
-					seasonInfo.dateStart instanceof Date
-				) {
-					seasonStartDate = seasonInfo.dateStart
-				} else {
-					// Fallback: assume season starts January 1st of current year
-					console.warn(
-						`No valid season start date found for ${seasonId}, using fallback. Season info:`,
-						seasonInfo
-					)
-					seasonStartDate = new Date(new Date().getFullYear(), 0, 1)
-				}
-
-				// Validate that we have a proper Date object
-				if (
-					!(seasonStartDate instanceof Date) ||
-					isNaN(seasonStartDate.getTime())
-				) {
-					console.warn(
-						`Invalid season start date for ${seasonId}, using fallback`
-					)
-					seasonStartDate = new Date(new Date().getFullYear(), 0, 1)
-				}
-
-				// Calculate the date - for round snapshots use the actual round time, otherwise calculate from week
+				// Get the date from the roundMeta timestamp
 				let dataPointDate: Date
-				let displayLabel: string
-				let gamesPlayed = 0
-				let ratingChange = 0
-
-				if (isRoundSnapshot && roundInfo && roundInfo.roundStartTime) {
-					// Use the actual round start time
-					if (typeof roundInfo.roundStartTime.toDate === 'function') {
-						dataPointDate = roundInfo.roundStartTime.toDate()
-					} else if (roundInfo.roundStartTime instanceof Date) {
-						dataPointDate = roundInfo.roundStartTime
-					} else if (roundInfo.roundStartTime.seconds) {
+				if (data.roundMeta && data.roundMeta.roundStartTime) {
+					if (typeof data.roundMeta.roundStartTime.toDate === 'function') {
+						dataPointDate = data.roundMeta.roundStartTime.toDate()
+					} else if (data.roundMeta.roundStartTime instanceof Date) {
+						dataPointDate = data.roundMeta.roundStartTime
+					} else if (data.roundMeta.roundStartTime.seconds) {
 						dataPointDate = new Date(
-							roundInfo.roundStartTime.seconds * 1000 +
-								roundInfo.roundStartTime.nanoseconds / 1000000
+							data.roundMeta.roundStartTime.seconds * 1000 +
+								data.roundMeta.roundStartTime.nanoseconds / 1000000
 						)
 					} else {
-						// Fallback to week calculation
-						dataPointDate = new Date(
-							seasonStartDate.getTime() +
-								(weekNumber - 1) * 7 * 24 * 60 * 60 * 1000
-						)
+						// Fallback to using the timestamp from document ID
+						dataPointDate = new Date(timestamp)
 					}
-					displayLabel = `Round ${roundInfo.roundId.split('_')[0]} (${roundInfo.gameCount} games)`
-					gamesPlayed =
-						playerData.gamesPlayedInRound || roundInfo.gameCount || 0
-					ratingChange = playerData.change || 0
 				} else {
-					// Calculate week date from season start
-					dataPointDate = new Date(
-						seasonStartDate.getTime() +
-							(weekNumber - 1) * 7 * 24 * 60 * 60 * 1000
-					)
-					displayLabel = `Week ${weekNumber}`
-					gamesPlayed = playerData.gamesThisWeek || 0
-					ratingChange = playerData.weeklyChange || 0
+					// Fallback to using the timestamp from document ID
+					dataPointDate = new Date(timestamp)
 				}
 
-				// Validate week number and calculated date
-				if (weekNumber < 1 || weekNumber > 52) {
-					console.warn(`Invalid week number ${weekNumber} in document ${docId}`)
-					return
-				}
-
-				// Validate the calculated date
+				// Validate the date
 				if (isNaN(dataPointDate.getTime())) {
 					console.warn(`Invalid date calculated for ${docId}`)
 					return
@@ -367,21 +289,18 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 
 				playerHistory.push({
 					date: dateString,
-					week: displayLabel,
 					rank: playerRank,
 					ranking: playerRank, // Use actual rank (lower is better)
 					eloRating: parseFloat((playerData.eloRating || 0).toFixed(5)),
-					change: ratingChange,
 					season: seasonId,
 					timestamp: dataPointDate.getTime(),
-					gamesPlayed: gamesPlayed,
 				})
 			}
 		})
 
 		// Sort by timestamp to ensure proper chronological order
 		return playerHistory.sort((a, b) => a.timestamp - b.timestamp)
-	}, [rankingHistorySnapshot, playerId, seasonsMap, viewMode])
+	}, [rankingHistorySnapshot, playerId, seasonsMap])
 
 	if (loading) {
 		return (
@@ -526,27 +445,6 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 						</CardTitle>
 					</div>
 					<div className='flex items-center gap-2'>
-						<Select
-							value={viewMode}
-							onValueChange={(value: string) =>
-								setViewMode(value as 'weekly' | 'per-game')
-							}
-						>
-							<SelectTrigger
-								className='w-[140px] rounded-lg'
-								aria-label='Select view mode'
-							>
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent className='rounded-xl'>
-								<SelectItem value='weekly' className='rounded-lg'>
-									Weekly View
-								</SelectItem>
-								<SelectItem value='per-game' className='rounded-lg'>
-									Per-Game View
-								</SelectItem>
-							</SelectContent>
-						</Select>
 						<Select value={playerId} onValueChange={handlePlayerChange}>
 							<SelectTrigger
 								className='hidden w-[200px] rounded-lg sm:ml-auto sm:flex'
@@ -665,34 +563,6 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 													<span className='text-muted-foreground'>Rating</span>
 													<span className='font-medium'>{data.eloRating}</span>
 												</div>
-												{/* Show additional info for per-game view */}
-												{viewMode === 'per-game' && (
-													<>
-														{data.change !== 0 && (
-															<div className='flex items-center gap-2'>
-																<span className='text-muted-foreground'>
-																	Change
-																</span>
-																<span
-																	className={`font-medium ${data.change > 0 ? 'text-green-600' : data.change < 0 ? 'text-red-600' : ''}`}
-																>
-																	{data.change > 0 ? '+' : ''}
-																	{data.change}
-																</span>
-															</div>
-														)}
-														{data.gamesPlayed > 0 && (
-															<div className='flex items-center gap-2'>
-																<span className='text-muted-foreground'>
-																	Games
-																</span>
-																<span className='font-medium'>
-																	{data.gamesPlayed}
-																</span>
-															</div>
-														)}
-													</>
-												)}
 											</div>
 										</div>
 									)

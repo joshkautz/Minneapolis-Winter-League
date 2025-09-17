@@ -19,11 +19,10 @@ export function calculatePlayerRankings(
 					playerName: playerState.playerName,
 					eloRating: playerState.currentRating,
 					totalGames: playerState.totalGames,
-					totalSeasons: playerState.seasonStats.size,
+					totalSeasons: playerState.totalSeasons,
 					rank: index + 1,
 					lastUpdated: Timestamp.now(),
 					lastSeasonId: playerState.lastSeasonId,
-					seasonStats: Array.from(playerState.seasonStats.values()),
 					lastRatingChange: 0, // Will be calculated during updates
 					isActive: playerState.isActive,
 				}) as PlayerRankingDocument
@@ -50,7 +49,6 @@ export async function saveFinalRankings(
 			...ranking,
 			// Remove the player reference that was causing issues
 			player: firestore.collection(Collections.PLAYERS).doc(ranking.playerId),
-			lastCalculated: Timestamp.now(),
 		}
 
 		// Use the actual player ID for the document ID

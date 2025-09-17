@@ -14,7 +14,6 @@ export {
 	processGame,
 	processPlayersInGame,
 } from './gameProcessing/gameProcessor.js'
-export { calculateWeekNumber } from './gameProcessing/weekCalculator.js'
 export {
 	groupGamesByRounds,
 	formatRoundInfo,
@@ -29,9 +28,8 @@ export { convertSnapshotToRatings } from './incremental/snapshotConverter.js'
 export { shouldCountGame } from './incremental/gameCounter.js'
 
 // Snapshots and progress tracking
-export { createWeeklySnapshot } from './snapshots/snapshotCreator.js'
-export { saveWeeklySnapshot } from './snapshots/snapshotSaver.js'
-export { calculateWeeklyStats } from './snapshots/statsCalculator.js'
+export { createTimeBasedSnapshot } from './snapshots/snapshotCreator.js'
+export { saveRoundSnapshot } from './snapshots/roundSnapshotSaver.js'
 
 // Persistence
 export {
@@ -44,6 +42,10 @@ export {
 	updateGameProgress,
 } from './persistence/progressTracker.js'
 export { saveFinalRankings } from './persistence/rankingsSaver.js'
+export {
+	loadExistingRankings,
+	hasExistingRankings,
+} from './persistence/existingRankingsLoader.js'
 
 // Round tracking (key for new rounds detection)
 export {

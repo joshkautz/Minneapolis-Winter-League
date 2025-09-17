@@ -253,34 +253,10 @@ export interface PlayerRankingDocument extends DocumentData {
 	lastUpdated: Timestamp
 	/** Last season the player participated in */
 	lastSeasonId: string | null
-	/** Array of season-specific statistics */
-	seasonStats: PlayerSeasonStats[]
 	/** Rating change in the last calculation */
 	lastRatingChange: number
 	/** Whether the player is currently active */
 	isActive: boolean
-}
-
-/**
- * Player statistics for a specific season
- */
-export interface PlayerSeasonStats {
-	/** Season ID */
-	seasonId: string
-	/** Season name (cached for performance) */
-	seasonName: string
-	/** Games played in this season */
-	gamesPlayed: number
-	/** Average point differential per game */
-	avgPointDifferential: number
-	/** Rating at end of season */
-	endOfSeasonRating: number
-	/** Team(s) played for in this season */
-	teams: Array<{
-		teamId: string
-		teamName: string
-		gamesPlayed: number
-	}>
 }
 
 /**
@@ -289,12 +265,10 @@ export interface PlayerSeasonStats {
 export interface RankingHistoryDocument extends DocumentData {
 	/** Reference to the season */
 	season: DocumentReference<SeasonDocument>
-	/** Week number within the season */
-	week: number
 	/** Date of the snapshot */
 	snapshotDate: Timestamp
 	/** Array of player rankings at this point in time */
-	rankings: WeeklyPlayerRanking[]
+	rankings: TimeBasedPlayerRanking[]
 	/** Calculation metadata */
 	calculationMeta: {
 		/** Total games processed up to this point */
@@ -322,9 +296,9 @@ export interface RankingHistoryDocument extends DocumentData {
 }
 
 /**
- * Individual player ranking within a weekly snapshot
+ * Individual player ranking within a time-based snapshot
  */
-export interface WeeklyPlayerRanking {
+export interface TimeBasedPlayerRanking {
 	/** Player ID */
 	playerId: string
 	/** Player name (cached) */
@@ -333,18 +307,10 @@ export interface WeeklyPlayerRanking {
 	eloRating: number
 	/** Rank position */
 	rank: number
-	/** Rating change since last week */
-	weeklyChange: number
-	/** Games played in this week */
-	gamesThisWeek: number
-	/** Point differential this week */
-	pointDifferentialThisWeek: number
 	/** Total games played up to this point */
 	totalGames: number
 	/** Total seasons participated in up to this point */
 	totalSeasons: number
-	/** Season statistics up to this point */
-	seasonStats: PlayerSeasonStats[]
 	/** Rating change since previous rating (for round-based tracking) */
 	change?: number
 	/** Games played in this specific round (for round-based tracking) */
@@ -377,8 +343,6 @@ export interface RankingsCalculationDocument extends DocumentData {
 		percentComplete: number
 		/** Current season being processed */
 		currentSeason?: string
-		/** Current week being processed */
-		currentWeek?: number
 		/** Total seasons to process */
 		totalSeasons: number
 		/** Seasons processed so far */
@@ -396,14 +360,12 @@ export interface RankingsCalculationDocument extends DocumentData {
 	/** Last successfully processed snapshot */
 	lastProcessedSnapshot?: {
 		seasonId: string
-		week: number
+		timestamp: Timestamp
 	}
 	/** Calculation parameters used */
 	parameters: {
 		/** Starting season for calculation */
 		startSeasonId?: string
-		/** Starting week for incremental calculations */
-		startWeek?: number
 		/** Whether to apply rating decay */
 		applyDecay: boolean
 		/** Season decay factor */

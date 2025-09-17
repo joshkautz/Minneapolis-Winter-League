@@ -12,8 +12,6 @@ export interface CalculatedRoundDocument {
 	roundStartTime: Timestamp
 	/** Season ID */
 	seasonId: string
-	/** Week number */
-	week: number
 	/** Number of games in this round */
 	gameCount: number
 	/** When this round was calculated */
@@ -51,7 +49,6 @@ export async function markRoundCalculated(
 		roundId: round.roundId,
 		roundStartTime: Timestamp.fromDate(round.startTime),
 		seasonId: round.seasonId,
-		week: round.week,
 		gameCount: round.games.length,
 		calculatedAt: Timestamp.now(),
 		calculationId,

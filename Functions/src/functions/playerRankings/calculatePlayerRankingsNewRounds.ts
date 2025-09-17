@@ -29,6 +29,8 @@ import {
 	saveFinalRankings,
 	createCalculationState,
 	updateCalculationState,
+	loadExistingRankings,
+	hasExistingRankings,
 } from '../../services/playerRankings/index.js'
 
 // Validation schema for new rounds calculation
@@ -158,6 +160,24 @@ async function processNewRoundsCalculation(
 		const playerRatings = new Map()
 		logger.info('Starting new rounds processing (will load existing ratings)')
 
+		// Load existing rankings for incremental update to preserve totalGames and other stats
+		const hasExisting = await hasExistingRankings()
+		if (hasExisting) {
+			logger.info('Loading existing player rankings for incremental update...')
+			const existingRankings = await loadExistingRankings()
+
+			// Copy existing rankings into our working map
+			for (const [playerId, playerState] of existingRankings) {
+				playerRatings.set(playerId, playerState)
+			}
+
+			logger.info(
+				`Loaded ${playerRatings.size} existing player rankings with preserved totalGames counts`
+			)
+		} else {
+			logger.info('No existing rankings found - starting fresh calculation')
+		}
+
 		// Apply inactivity decay (always applied as part of algorithm)
 		await updateCalculationState(calculationId, {
 			'progress.currentStep': 'Applying inactivity decay...',
@@ -173,8 +193,7 @@ async function processNewRoundsCalculation(
 			playerRatings,
 			calculationId,
 			seasons.length,
-			undefined, // No incremental start season (will auto-detect)
-			undefined // No incremental start week (will auto-detect)
+			undefined // No incremental start season (will auto-detect)
 		)
 
 		logger.info(

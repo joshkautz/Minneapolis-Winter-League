@@ -1,5 +1,5 @@
 import { logger } from 'firebase-functions/v2'
-import { PlayerDocument, SeasonDocument, TeamDocument } from '../../../types.js'
+import { PlayerDocument, TeamDocument } from '../../../types.js'
 import { ALGORITHM_CONSTANTS } from '../constants.js'
 import { calculateExpectedScore } from '../algorithms/elo.js'
 import { calculateWeightedPointDifferential } from '../algorithms/pointDifferential.js'
@@ -12,7 +12,8 @@ import { GameProcessingData, PlayerRatingState } from '../types.js'
 export async function processGame(
 	game: GameProcessingData,
 	playerRatings: Map<string, PlayerRatingState>,
-	shouldCountGame: boolean = true // Whether to increment totalGames for this game
+	shouldCountForRating: boolean = true, // Whether this game affects ELO calculations
+	shouldCountForTotalGames: boolean = true // Whether to increment totalGames for this game
 ): Promise<void> {
 	if (
 		!game.home ||
@@ -64,7 +65,8 @@ export async function processGame(
 		awayTeamStrength.averageRating,
 		true, // isHomeTeam
 		playerRatings,
-		shouldCountGame
+		shouldCountForRating,
+		shouldCountForTotalGames
 	)
 
 	// Process each player on the away team
@@ -76,7 +78,8 @@ export async function processGame(
 		homeTeamStrength.averageRating,
 		false, // isHomeTeam
 		playerRatings,
-		shouldCountGame
+		shouldCountForRating,
+		shouldCountForTotalGames
 	)
 }
 
@@ -91,7 +94,8 @@ export async function processPlayersInGame(
 	opponentStrength: number,
 	isHomeTeam: boolean,
 	playerRatings: Map<string, PlayerRatingState>,
-	shouldCountGame: boolean = true // Whether to increment totalGames for this game
+	shouldCountForRating: boolean = true, // Whether this game affects ELO calculations
+	shouldCountForTotalGames: boolean = true // Whether to increment totalGames for this game
 ): Promise<void> {
 	const seasonDecayFactor = Math.pow(
 		ALGORITHM_CONSTANTS.SEASON_DECAY_FACTOR,
@@ -115,7 +119,8 @@ export async function processPlayersInGame(
 				playerName: `${playerData.firstname} ${playerData.lastname}`,
 				currentRating: ALGORITHM_CONSTANTS.STARTING_RATING,
 				totalGames: 0,
-				seasonStats: new Map(),
+				totalSeasons: 0,
+				seasonsPlayed: new Set(),
 				lastSeasonId: null,
 				isActive: true,
 			}
@@ -136,67 +141,22 @@ export async function processPlayersInGame(
 			ALGORITHM_CONSTANTS.K_FACTOR * seasonDecayFactor * playoffMultiplier
 		const ratingChange = kFactor * (clampedActualScore - expectedScore)
 
-		// Update player rating
-		playerState.currentRating += ratingChange
-		if (shouldCountGame) {
+		// Update player rating only if this game should count for rating calculations
+		if (shouldCountForRating) {
+			playerState.currentRating += ratingChange
+		}
+
+		// Increment totalGames if this game should count for totalGames tracking
+		if (shouldCountForTotalGames) {
 			playerState.totalGames++
 		}
+
 		playerState.lastSeasonId = game.season.id
 
-		// Update season stats
-		let seasonStats = playerState.seasonStats.get(game.season.id)
-		if (!seasonStats) {
-			const seasonDoc = await game.season.get()
-			const seasonData = seasonDoc.data() as SeasonDocument
-
-			seasonStats = {
-				seasonId: game.season.id,
-				seasonName: seasonData.name,
-				gamesPlayed: 0,
-				avgPointDifferential: 0,
-				endOfSeasonRating: playerState.currentRating,
-				teams: [],
-			}
-			playerState.seasonStats.set(game.season.id, seasonStats)
-		}
-
-		// Update season stats
-		const previousTotal =
-			seasonStats.avgPointDifferential * seasonStats.gamesPlayed
-
-		if (shouldCountGame) {
-			seasonStats.gamesPlayed++
-		}
-
-		// Always update average point differential (even if not counting the game)
-		// but only change the count if shouldCountGame is true
-		if (seasonStats.gamesPlayed > 0) {
-			seasonStats.avgPointDifferential =
-				(previousTotal + pointDifferential) / seasonStats.gamesPlayed
-		}
-
-		seasonStats.endOfSeasonRating = playerState.currentRating
-
-		// Update team participation in season
-		if (!game.home || !game.away) return // Safety check
-
-		const teamId = isHomeTeam ? game.home.id : game.away.id
-		const teamData = isHomeTeam
-			? ((await game.home.get()).data() as TeamDocument)
-			: ((await game.away.get()).data() as TeamDocument)
-
-		let teamEntry = seasonStats.teams.find((t) => t.teamId === teamId)
-		if (!teamEntry) {
-			teamEntry = {
-				teamId,
-				teamName: teamData.name,
-				gamesPlayed: 0,
-			}
-			seasonStats.teams.push(teamEntry)
-		}
-
-		if (shouldCountGame) {
-			teamEntry.gamesPlayed++
+		// Track season participation for totalSeasons calculation
+		if (!playerState.seasonsPlayed.has(game.season.id)) {
+			playerState.seasonsPlayed.add(game.season.id)
+			playerState.totalSeasons = playerState.seasonsPlayed.size
 		}
 	}
 }

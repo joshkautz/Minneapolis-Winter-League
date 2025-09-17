@@ -462,14 +462,6 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 													>
 														{player.playerName}
 													</div>
-													{player.seasonStats.length > 0 && (
-														<div
-															className={cn(
-																'text-xs text-muted-foreground',
-																player.rank <= 3 && 'dark:text-muted-foreground'
-															)}
-														></div>
-													)}
 												</div>
 											</TableCell>
 											<TableCell className='text-center'>

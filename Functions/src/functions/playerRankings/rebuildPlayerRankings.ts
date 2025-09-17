@@ -164,8 +164,8 @@ async function processFullRebuild(calculationId: string): Promise<void> {
 			calculationId,
 			seasons.length,
 			undefined, // No incremental start season
-			undefined, // No incremental start week
-			false // Process all rounds, not just new ones
+			false, // Process all rounds, not just new ones
+			true // This is a full rebuild
 		)
 
 		logger.info(

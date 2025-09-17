@@ -4,9 +4,8 @@
  * For incremental calculations: only count games from the NEW period (at or after start point)
  */
 export function shouldCountGame(
-	game: { seasonOrder: number; week: number },
+	game: { seasonOrder: number },
 	incrementalStartSeasonIndex?: number,
-	incrementalStartWeek?: number,
 	totalSeasons?: number
 ): boolean {
 	// For full calculations, count all games (this rebuilds totals from scratch)
@@ -23,12 +22,6 @@ export function shouldCountGame(
 			? totalSeasons - 1 - incrementalStartSeasonIndex
 			: incrementalStartSeasonIndex // fallback to old logic if totalSeasons not provided
 
-	// For incremental calculations, count games that are:
-	// 1. From more recent seasons (lower seasonOrder), OR
-	// 2. From the same season but at or after the start week
-	return (
-		game.seasonOrder < startSeasonOrder ||
-		(game.seasonOrder === startSeasonOrder &&
-			game.week >= (incrementalStartWeek || 0))
-	)
+	// For incremental calculations, count games that are from more recent seasons (lower seasonOrder)
+	return game.seasonOrder <= startSeasonOrder
 }

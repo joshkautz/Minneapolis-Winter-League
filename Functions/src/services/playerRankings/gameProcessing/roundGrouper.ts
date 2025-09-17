@@ -12,8 +12,6 @@ export interface GameRound {
 	games: GameProcessingData[]
 	/** Season ID for this round */
 	seasonId: string
-	/** Week number within the season */
-	week: number
 }
 
 /**
@@ -33,7 +31,6 @@ export function groupGamesByRounds(games: GameProcessingData[]): GameRound[] {
 				startTime: game.gameDate,
 				games: [],
 				seasonId: game.season.id,
-				week: game.week,
 			})
 		}
 
@@ -53,7 +50,7 @@ export function groupGamesByRounds(games: GameProcessingData[]): GameRound[] {
 export function formatRoundInfo(round: GameRound): string {
 	const timeStr = round.startTime.toISOString()
 	const gameCount = round.games.length
-	const seasonWeek = `Season ${round.seasonId} Week ${round.week}`
+	const seasonInfo = `Season ${round.seasonId}`
 
-	return `${seasonWeek} - ${timeStr} (${gameCount} games)`
+	return `${seasonInfo} - ${timeStr} (${gameCount} games)`
 }

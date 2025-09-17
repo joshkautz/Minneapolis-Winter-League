@@ -1,9 +1,8 @@
-import { GameDocument, PlayerSeasonStats } from '../../types.js'
+import { GameDocument } from '../../types.js'
 
 export interface GameProcessingData extends GameDocument {
 	id: string
 	seasonOrder: number // 0 = most recent season, 1 = previous, etc.
-	week: number
 	gameDate: Date
 }
 
@@ -12,7 +11,8 @@ export interface PlayerRatingState {
 	playerName: string
 	currentRating: number
 	totalGames: number
-	seasonStats: Map<string, PlayerSeasonStats>
+	totalSeasons: number
+	seasonsPlayed: Set<string> // Track which seasons player has participated in
 	lastSeasonId: string | null
 	isActive: boolean
 }
@@ -24,13 +24,7 @@ export interface TeamStrength {
 	confidence: number // 0-1, based on how many rated players
 }
 
-export interface WeeklyStats {
-	gamesPlayed: number
-	pointDifferential: number
-}
-
 export interface IncrementalStartPoint {
 	seasonIndex: number
-	week: number
 	playerRatings: Map<string, PlayerRatingState>
 }
