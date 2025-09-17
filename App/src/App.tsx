@@ -1,5 +1,6 @@
 import React from 'react'
 import { AppRoutes } from '@/routes'
+import { GlobalErrorBoundary } from '@/components/ui/global-error-boundary'
 import { useEmailVerificationPolling } from '@/shared/hooks'
 
 /**
@@ -16,7 +17,11 @@ const App: React.FC = () => {
 	// Handle email verification polling
 	useEmailVerificationPolling()
 
-	return <AppRoutes />
+	return (
+		<GlobalErrorBoundary>
+			<AppRoutes />
+		</GlobalErrorBoundary>
+	)
 }
 
 export default App

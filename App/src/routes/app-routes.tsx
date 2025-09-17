@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from '@/shared/components'
+import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { PublicRoute, AuthenticatedRoute } from './route-wrappers'
 import {
 	Home,
@@ -25,6 +26,12 @@ import {
  * - Public routes (accessible to all users)
  * - Protected routes (require authentication)
  * - Error routes (404, etc.)
+ *
+ * Error Boundaries: Critical routes are wrapped with ErrorBoundary components
+ * to provide graceful error handling. The ErrorBoundary component automatically
+ * logs errors with route context, so no additional onError props are needed.
+ *
+ * For route-specific error handling, consider using RouteErrorBoundary instead.
  */
 export const AppRoutes: React.FC = () => {
 	return (
@@ -52,7 +59,9 @@ export const AppRoutes: React.FC = () => {
 					path='/standings'
 					element={
 						<PublicRoute>
-							<Standings />
+							<ErrorBoundary>
+								<Standings />
+							</ErrorBoundary>
 						</PublicRoute>
 					}
 				/>
@@ -60,7 +69,9 @@ export const AppRoutes: React.FC = () => {
 					path='/teams'
 					element={
 						<PublicRoute>
-							<Teams />
+							<ErrorBoundary>
+								<Teams />
+							</ErrorBoundary>
 						</PublicRoute>
 					}
 				/>
@@ -68,7 +79,9 @@ export const AppRoutes: React.FC = () => {
 					path='/teams/:id'
 					element={
 						<PublicRoute>
-							<TeamProfile />
+							<ErrorBoundary>
+								<TeamProfile />
+							</ErrorBoundary>
 						</PublicRoute>
 					}
 				/>
@@ -76,7 +89,9 @@ export const AppRoutes: React.FC = () => {
 					path='/player-rankings'
 					element={
 						<PublicRoute>
-							<PlayerRankings />
+							<ErrorBoundary>
+								<PlayerRankings />
+							</ErrorBoundary>
 						</PublicRoute>
 					}
 				/>
@@ -84,7 +99,9 @@ export const AppRoutes: React.FC = () => {
 					path='/player-rankings/player/:playerId'
 					element={
 						<PublicRoute>
-							<PlayerRankingHistory />
+							<ErrorBoundary>
+								<PlayerRankingHistory />
+							</ErrorBoundary>
 						</PublicRoute>
 					}
 				/>
@@ -94,7 +111,9 @@ export const AppRoutes: React.FC = () => {
 					path='/profile'
 					element={
 						<AuthenticatedRoute>
-							<Profile />
+							<ErrorBoundary>
+								<Profile />
+							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
 				/>
@@ -102,7 +121,9 @@ export const AppRoutes: React.FC = () => {
 					path='/create'
 					element={
 						<AuthenticatedRoute>
-							<CreateTeam />
+							<ErrorBoundary>
+								<CreateTeam />
+							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
 				/>
@@ -110,7 +131,9 @@ export const AppRoutes: React.FC = () => {
 					path='/manage'
 					element={
 						<AuthenticatedRoute>
-							<ManageTeam />
+							<ErrorBoundary>
+								<ManageTeam />
+							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
 				/>
@@ -118,7 +141,9 @@ export const AppRoutes: React.FC = () => {
 					path='/admin'
 					element={
 						<AuthenticatedRoute>
-							<AdminDashboard />
+							<ErrorBoundary>
+								<AdminDashboard />
+							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
 				/>
@@ -126,7 +151,9 @@ export const AppRoutes: React.FC = () => {
 					path='/admin/player-rankings'
 					element={
 						<AuthenticatedRoute>
-							<PlayerRankingsAdmin />
+							<ErrorBoundary>
+								<PlayerRankingsAdmin />
+							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
 				/>

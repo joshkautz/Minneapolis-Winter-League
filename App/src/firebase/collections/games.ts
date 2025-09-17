@@ -82,3 +82,15 @@ export const gamesByTeamQuery = (
 		orderBy('date', 'asc')
 	) as Query<GameDocument>
 }
+
+/**
+ * Creates a query for all games (includes both completed and incomplete games)
+ * Filter for completed games (non-null scores) should be done client-side
+ * due to Firestore's limitation of only one != filter per query
+ */
+export const allGamesQuery = (): Query<GameDocument> => {
+	return query(
+		collection(firestore, Collections.GAMES),
+		orderBy('date', 'desc')
+	) as Query<GameDocument>
+}

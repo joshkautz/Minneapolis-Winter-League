@@ -16,7 +16,14 @@ import {
 	rebuildPlayerRankings,
 	updatePlayerRankings,
 } from '@/firebase/collections/player-rankings'
-import { RankingsCalculationDocument } from '@/types'
+import { allGamesQuery } from '@/firebase/collections/games'
+import { calculatedRoundsQuery } from '@/firebase/collections/calculated-rounds'
+import { seasonsQuery } from '@/firebase/collections/seasons'
+import {
+	RankingsCalculationDocument,
+	GameDocument,
+	SeasonDocument,
+} from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,6 +53,8 @@ import {
 	AlertCircle,
 	Settings,
 	AlertTriangle,
+	ChevronLeft,
+	ChevronRight,
 } from 'lucide-react'
 
 export const PlayerRankingsAdmin: React.FC = () => {
@@ -60,14 +69,111 @@ export const PlayerRankingsAdmin: React.FC = () => {
 		null
 	)
 
+	// Pagination state for uncalculated games
+	const [currentPage, setCurrentPage] = useState(1)
+	const gamesPerPage = 20
+
 	const [calculationsSnapshot, loading, error] = useCollection(
 		playerRankingsCalculationsQuery()
 	)
+
+	// Fetch all games (will filter for completed games client-side)
+	const [allGamesSnapshot, allGamesLoading, allGamesError] =
+		useCollection(allGamesQuery())
+
+	// Fetch calculated rounds
+	const [calculatedRoundsSnapshot, calculatedRoundsLoading] = useCollection(
+		calculatedRoundsQuery()
+	)
+
+	// Fetch seasons for reference
+	const [seasonsSnapshot] = useCollection(seasonsQuery())
 
 	const calculations = calculationsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),
 	})) as (RankingsCalculationDocument & { id: string })[] | undefined
+
+	// Process uncalculated games
+	const uncalculatedGames = React.useMemo(() => {
+		try {
+			if (!allGamesSnapshot || !calculatedRoundsSnapshot || !seasonsSnapshot) {
+				return []
+			}
+
+			const allGamesUnfiltered = allGamesSnapshot.docs.map((doc) => ({
+				id: doc.id,
+				...doc.data(),
+			})) as (GameDocument & { id: string })[]
+
+			// Filter for completed games (both scores must be non-null) on client-side
+			// This avoids Firestore's limitation of only one != filter per query
+			const allGames = allGamesUnfiltered.filter(
+				(game) =>
+					game.homeScore !== null &&
+					game.homeScore !== undefined &&
+					game.awayScore !== null &&
+					game.awayScore !== undefined
+			)
+
+			const calculatedRounds = calculatedRoundsSnapshot.docs.map((doc) =>
+				doc.data()
+			)
+			const calculatedGameIds = new Set(
+				calculatedRounds.flatMap((round) => round.gameIds || [])
+			)
+
+			const seasons = seasonsSnapshot.docs.reduce(
+				(acc, doc) => {
+					acc[doc.id] = doc.data() as SeasonDocument
+					return acc
+				},
+				{} as Record<string, SeasonDocument>
+			)
+
+			return allGames
+				.filter((game) => !calculatedGameIds.has(game.id))
+				.map((game) => {
+					const seasonId = game.season?.id || 'unknown'
+					return {
+						...game,
+						seasonData: seasons[seasonId] || null,
+					}
+				})
+				.sort((a, b) => {
+					try {
+						const aTime = a.date?.toDate?.()?.getTime() || 0
+						const bTime = b.date?.toDate?.()?.getTime() || 0
+						return bTime - aTime
+					} catch (error) {
+						console.error('Error sorting games by date:', error)
+						return 0
+					}
+				})
+		} catch (error) {
+			console.error('Error processing uncalculated games:', error)
+			return []
+		}
+	}, [allGamesSnapshot, calculatedRoundsSnapshot, seasonsSnapshot])
+
+	// Pagination calculations for uncalculated games
+	const totalGames = uncalculatedGames.length
+	const totalPages = Math.ceil(totalGames / gamesPerPage)
+	const startIndex = (currentPage - 1) * gamesPerPage
+	const endIndex = startIndex + gamesPerPage
+	const paginatedGames = uncalculatedGames.slice(startIndex, endIndex)
+
+	const handlePreviousPage = () => {
+		setCurrentPage((prev) => Math.max(prev - 1, 1))
+	}
+
+	const handleNextPage = () => {
+		setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+	}
+
+	const handlePageClick = (page: number) => {
+		setCurrentPage(page)
+	}
 
 	// Handle authentication loading
 	if (playerLoading) {
@@ -179,19 +285,48 @@ export const PlayerRankingsAdmin: React.FC = () => {
 		}
 	}
 
+	const formatGameDate = (date: any) => {
+		try {
+			if (date && typeof date.toDate === 'function') {
+				return date.toDate().toLocaleDateString()
+			}
+			return 'Invalid Date'
+		} catch (error) {
+			console.error('Error formatting game date:', error)
+			return 'Invalid Date'
+		}
+	}
+
+	const formatGameTime = (date: any) => {
+		try {
+			if (date && typeof date.toDate === 'function') {
+				return date.toDate().toLocaleTimeString()
+			}
+			return 'Invalid Time'
+		} catch (error) {
+			console.error('Error formatting game time:', error)
+			return 'Invalid Time'
+		}
+	}
+
 	const formatDuration = (startTime: any, endTime: any) => {
 		if (!startTime) return 'N/A'
 
-		const start = startTime.toDate()
-		const end = endTime ? endTime.toDate() : new Date()
-		const diffMs = end.getTime() - start.getTime()
-		const diffMinutes = Math.floor(diffMs / 60000)
-		const diffSeconds = Math.floor((diffMs % 60000) / 1000)
+		try {
+			const start = startTime.toDate()
+			const end = endTime ? endTime.toDate() : new Date()
+			const diffMs = end.getTime() - start.getTime()
+			const diffMinutes = Math.floor(diffMs / 60000)
+			const diffSeconds = Math.floor((diffMs % 60000) / 1000)
 
-		if (diffMinutes > 0) {
-			return `${diffMinutes}m ${diffSeconds}s`
+			if (diffMinutes > 0) {
+				return `${diffMinutes}m ${diffSeconds}s`
+			}
+			return `${diffSeconds}s`
+		} catch (error) {
+			console.error('Error calculating duration:', error)
+			return 'N/A'
 		}
-		return `${diffSeconds}s`
 	}
 
 	return (
@@ -246,12 +381,12 @@ export const PlayerRankingsAdmin: React.FC = () => {
 									) : (
 										<RefreshCcw className='h-4 w-4' />
 									)}
-									Rebuild Player Rankings
+									Rebuild Player Rankings (Full)
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent side='bottom' align='center'>
 								<p className='max-w-xs'>
-									Complete rebuild from scratch. Processes all games
+									Full rebuild from scratch. Processes all games
 									chronologically. Use for first-time setup or when algorithm
 									changes.
 								</p>
@@ -272,7 +407,7 @@ export const PlayerRankingsAdmin: React.FC = () => {
 									) : (
 										<IterationCcw className='h-4 w-4' />
 									)}
-									Update Player Rankings
+									Update Player Rankings (Incremental)
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent side='bottom' align='center'>
@@ -372,6 +507,182 @@ export const PlayerRankingsAdmin: React.FC = () => {
 					)}
 				</CardContent>
 			</Card>
+
+			{/* Uncalculated Games */}
+			<Card>
+				<CardHeader>
+					<CardTitle className='flex items-center gap-2'>
+						<Clock className='h-5 w-5' />
+						Games Pending Calculation
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{allGamesLoading || calculatedRoundsLoading ? (
+						<div className='text-center py-8'>
+							<RefreshCw className='h-8 w-8 animate-spin mx-auto mb-4' />
+							<p>Loading uncalculated games...</p>
+						</div>
+					) : allGamesError ? (
+						<Alert variant='destructive'>
+							<XCircle className='h-4 w-4' />
+							<AlertDescription>
+								Error loading games: {allGamesError.message}
+							</AlertDescription>
+						</Alert>
+					) : uncalculatedGames && uncalculatedGames.length > 0 ? (
+						<div className='space-y-4'>
+							<div className='flex items-center justify-between'>
+								<div className='flex items-center gap-2 text-sm text-muted-foreground'>
+									<AlertCircle className='h-4 w-4' />
+									<span>
+										{totalGames} game{totalGames !== 1 ? 's' : ''} haven't been
+										processed yet
+									</span>
+								</div>
+								{totalPages > 1 && (
+									<div className='text-sm text-muted-foreground'>
+										Page {currentPage} of {totalPages}
+									</div>
+								)}
+							</div>
+							<div className='overflow-x-auto'>
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead>Timestamp</TableHead>
+											<TableHead>Season</TableHead>
+											<TableHead>Teams</TableHead>
+											<TableHead>Score</TableHead>
+											<TableHead>Field</TableHead>
+											<TableHead>Type</TableHead>
+										</TableRow>
+									</TableHeader>
+									<TableBody>
+										{paginatedGames.map((game) => (
+											<TableRow key={game.id}>
+												<TableCell className='text-sm'>
+													<div className='space-y-1'>
+														<div className='font-medium'>
+															{formatGameDate(game.date)}
+														</div>
+														<div className='text-xs text-muted-foreground'>
+															{formatGameTime(game.date)}
+														</div>
+													</div>
+												</TableCell>
+												<TableCell>
+													<Badge variant='outline' className='text-xs'>
+														{game.seasonData?.name || 'Unknown Season'}
+													</Badge>
+												</TableCell>
+												<TableCell className='text-sm'>
+													<div className='space-y-1'>
+														<div className='font-medium text-xs'>
+															Home: {game.home?.id || 'TBD'}
+														</div>
+														<div className='font-medium text-xs'>
+															Away: {game.away?.id || 'TBD'}
+														</div>
+													</div>
+												</TableCell>
+												<TableCell className='text-sm font-medium'>
+													{game.homeScore ?? 'N/A'} - {game.awayScore ?? 'N/A'}
+												</TableCell>
+												<TableCell className='text-sm'>
+													<Badge variant='outline' className='text-xs'>
+														Field {game.field || 'N/A'}
+													</Badge>
+												</TableCell>
+												<TableCell>
+													<Badge
+														variant={
+															game.type === 'playoff' ? 'default' : 'secondary'
+														}
+														className='text-xs'
+													>
+														{game.type === 'playoff' ? 'Playoff' : 'Regular'}
+													</Badge>
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</div>
+							{totalPages > 1 && (
+								<div className='flex items-center justify-between pt-4'>
+									<div className='text-sm text-muted-foreground'>
+										Showing {startIndex + 1}-{Math.min(endIndex, totalGames)} of{' '}
+										{totalGames} games
+									</div>
+									<div className='flex items-center gap-2'>
+										<Button
+											variant='outline'
+											size='sm'
+											onClick={handlePreviousPage}
+											disabled={currentPage === 1}
+											className='flex items-center gap-1'
+										>
+											<ChevronLeft className='h-4 w-4' />
+											Previous
+										</Button>
+
+										<div className='flex items-center gap-1'>
+											{Array.from(
+												{ length: Math.min(totalPages, 5) },
+												(_, i) => {
+													const pageNum =
+														Math.max(
+															1,
+															Math.min(totalPages - 4, currentPage - 2)
+														) + i
+													if (pageNum > totalPages) return null
+
+													return (
+														<Button
+															key={pageNum}
+															variant={
+																pageNum === currentPage ? 'default' : 'outline'
+															}
+															size='sm'
+															onClick={() => handlePageClick(pageNum)}
+															className='min-w-8'
+														>
+															{pageNum}
+														</Button>
+													)
+												}
+											)}
+										</div>
+
+										<Button
+											variant='outline'
+											size='sm'
+											onClick={handleNextPage}
+											disabled={currentPage === totalPages}
+											className='flex items-center gap-1'
+										>
+											Next
+											<ChevronRight className='h-4 w-4' />
+										</Button>
+									</div>
+								</div>
+							)}
+						</div>
+					) : (
+						<div className='text-center py-8'>
+							<CheckCircle className='h-12 w-12 text-green-500 mx-auto mb-4' />
+							<p className='text-muted-foreground'>
+								All games have been calculated!
+							</p>
+							<p className='text-sm text-muted-foreground mt-2'>
+								No games are pending calculation.
+							</p>
+						</div>
+					)}
+				</CardContent>
+			</Card>
 		</div>
 	)
 }
+
+export default PlayerRankingsAdmin
