@@ -16,7 +16,7 @@ import {
 	Profile,
 	CreateTeam,
 	ManageTeam,
-	FourOhFour,
+	NotFound,
 } from './route-components'
 
 /**
@@ -43,7 +43,9 @@ export const AppRoutes: React.FC = () => {
 					index
 					element={
 						<PublicRoute>
-							<Home />
+							<ErrorBoundary>
+								<Home />
+							</ErrorBoundary>
 						</PublicRoute>
 					}
 				/>
@@ -51,7 +53,9 @@ export const AppRoutes: React.FC = () => {
 					path='/schedule'
 					element={
 						<PublicRoute>
-							<Schedule />
+							<ErrorBoundary>
+								<Schedule />
+							</ErrorBoundary>
 						</PublicRoute>
 					}
 				/>
@@ -163,7 +167,9 @@ export const AppRoutes: React.FC = () => {
 					path='*'
 					element={
 						<PublicRoute>
-							<FourOhFour />
+							<ErrorBoundary>
+								<NotFound />
+							</ErrorBoundary>
 						</PublicRoute>
 					}
 				/>

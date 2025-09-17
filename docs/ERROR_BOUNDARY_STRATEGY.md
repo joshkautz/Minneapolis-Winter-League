@@ -22,27 +22,31 @@ This application implements a comprehensive multi-layered error boundary strateg
 
 ## Protected Routes
 
-### High Priority (Data-Heavy/Critical)
+### Public Routes (All Protected)
 
+- ✅ `/` (Home) - Application entry point
+- ✅ `/schedule` - Schedule display with potential API calls
 - ✅ `/standings` - Complex standings calculations
 - ✅ `/teams` - Team listing with data aggregation
 - ✅ `/teams/:id` - Team profiles with player data
 - ✅ `/player-rankings` - Player ranking calculations
 - ✅ `/player-rankings/player/:playerId` - Individual player history
-- ✅ `/admin/player-rankings` - Admin ranking calculations
 
-### User Management Routes
+### Authenticated Routes (All Protected)
 
 - ✅ `/profile` - User profile management
 - ✅ `/create` - Team creation workflow
 - ✅ `/manage` - Team management interface
 - ✅ `/admin` - Admin dashboard
+- ✅ `/admin/player-rankings` - Admin ranking calculations
 
-### Lower Priority (Simple/Static)
+### Error Routes (Protected)
 
-- ❌ `/` (Home) - Mostly static content
-- ❌ `/schedule` - Simple schedule display
-- ❌ `/404` - Error page (shouldn't need error boundary)
+- ✅ `/404` (404 page) - Even error pages can have rendering errors
+
+## Implementation Status
+
+**✅ Complete Coverage**: All routes in the application are now wrapped with ErrorBoundary components for consistent error handling and user experience.
 
 ## Error Boundary Features
 
@@ -99,10 +103,12 @@ onError: (error, errorInfo) => {
 
 ### When NOT to Add Error Boundaries
 
-- ❌ Simple static components
-- ❌ Basic layout components
-- ❌ Components that are already wrapped by parent boundaries
-- ❌ Error pages themselves
+- ❌ Components that are already wrapped by parent boundaries (avoid double-wrapping)
+- ❌ Event handlers (use try-catch instead)
+- ❌ Asynchronous code (use try-catch in async functions)
+- ❌ Simple functional components with no state or side effects (though route-level boundaries still provide coverage)
+
+**Note**: In this application, we use a comprehensive approach with error boundaries at the route level for all routes, ensuring consistent error handling across the entire application.
 
 ### Error Boundary Hierarchy
 

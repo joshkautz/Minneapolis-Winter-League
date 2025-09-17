@@ -5,7 +5,7 @@ import React from 'react'
  *
  * Displays a user-friendly error page when a route is not found.
  */
-export const FourOhFour: React.FC = () => {
+export const NotFound: React.FC = () => {
 	return (
 		<div className='flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] gap-12 p-4 sm:justify-start sm:p-16'>
 			<div

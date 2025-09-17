@@ -281,41 +281,117 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 
 	if (error) {
 		return (
-			<Card className={className}>
-				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<Trophy className='h-5 w-5' />
-						Rankings history
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<Alert variant='destructive'>
-						<AlertDescription>
-							Failed to load rankings history. Please try again later.
-						</AlertDescription>
-					</Alert>
-				</CardContent>
-			</Card>
+			<div className='container max-w-6xl mx-auto py-8 space-y-6'>
+				{/* Back button */}
+				<div className='flex items-center gap-4'>
+					<Button
+						variant='outline'
+						size='sm'
+						onClick={() => navigate('/player-rankings')}
+						className='flex items-center gap-2'
+					>
+						<ArrowLeft className='h-4 w-4' />
+						Back to Player Rankings
+					</Button>
+				</div>
+
+				<Card className={`${className} pt-0`}>
+					<CardHeader className='flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row'>
+						<div className='grid flex-1 gap-1'>
+							<CardTitle className='flex items-center gap-2'>
+								<Trophy className='h-5 w-5' />
+								Rankings history
+							</CardTitle>
+						</div>
+						<div className='flex items-center gap-2'>
+							<Select value={playerId} onValueChange={handlePlayerChange}>
+								<SelectTrigger
+									className='hidden w-[200px] rounded-lg sm:ml-auto sm:flex'
+									aria-label='Select a player'
+								>
+									<SelectValue placeholder='Select player' />
+								</SelectTrigger>
+								<SelectContent className='rounded-xl'>
+									{allPlayers.map((player) => (
+										<SelectItem
+											key={player.id}
+											value={player.id}
+											className='rounded-lg'
+										>
+											{player.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</CardHeader>
+					<CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
+						<Alert variant='destructive'>
+							<AlertDescription>
+								Failed to load rankings history. Please try again later.
+							</AlertDescription>
+						</Alert>
+					</CardContent>
+				</Card>
+			</div>
 		)
 	}
 
 	if (chartData.length === 0) {
 		return (
-			<Card className={className}>
-				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<Trophy className='h-5 w-5' />
-						Rankings history
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<Alert>
-						<AlertDescription>
-							No rankings history data available for this player.
-						</AlertDescription>
-					</Alert>
-				</CardContent>
-			</Card>
+			<div className='container max-w-6xl mx-auto py-8 space-y-6'>
+				{/* Back button */}
+				<div className='flex items-center gap-4'>
+					<Button
+						variant='outline'
+						size='sm'
+						onClick={() => navigate('/player-rankings')}
+						className='flex items-center gap-2'
+					>
+						<ArrowLeft className='h-4 w-4' />
+						Back to Player Rankings
+					</Button>
+				</div>
+
+				<Card className={`${className} pt-0`}>
+					<CardHeader className='flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row'>
+						<div className='grid flex-1 gap-1'>
+							<CardTitle className='flex items-center gap-2'>
+								<Trophy className='h-5 w-5' />
+								Rankings history
+							</CardTitle>
+						</div>
+						<div className='flex items-center gap-2'>
+							<Select value={playerId} onValueChange={handlePlayerChange}>
+								<SelectTrigger
+									className='hidden w-[200px] rounded-lg sm:ml-auto sm:flex'
+									aria-label='Select a player'
+								>
+									<SelectValue placeholder='Select player' />
+								</SelectTrigger>
+								<SelectContent className='rounded-xl'>
+									{allPlayers.map((player) => (
+										<SelectItem
+											key={player.id}
+											value={player.id}
+											className='rounded-lg'
+										>
+											{player.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+					</CardHeader>
+					<CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
+						<Alert>
+							<AlertDescription>
+								No rankings history data available for this player.
+							</AlertDescription>
+						</Alert>
+					</CardContent>
+				</Card>
+			</div>
 		)
 	}
 

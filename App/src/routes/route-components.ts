@@ -53,4 +53,4 @@ export const ManageTeam = lazyImport(
 )
 
 // Error pages
-export const FourOhFour = lazyImport(() => import('@/pages'), 'FourOhFour')
+export const NotFound = lazyImport(() => import('@/pages'), 'NotFound')
