@@ -14,6 +14,8 @@ export interface PlayerRatingState {
 	totalSeasons: number
 	seasonsPlayed: Set<string> // Track which seasons player has participated in
 	lastSeasonId: string | null
+	lastGameDate: Date | null // Track when player last played a game
+	roundsSinceLastGame: number // Track rounds of inactivity
 	isActive: boolean
 }
 

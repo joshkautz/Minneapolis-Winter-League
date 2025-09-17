@@ -2,37 +2,52 @@ import { ALGORITHM_CONSTANTS } from '../constants.js'
 import { PlayerRatingState } from '../types.js'
 
 /**
- * Applies rating decay for players who haven't played in recent seasons
+ * Applies gradual rating decay for players who haven't played in recent rounds
+ * This function should be called for each round to apply incremental decay
  */
-export function applyInactivityDecay(
+export function applyRoundBasedDecay(
 	playerRatings: Map<string, PlayerRatingState>,
-	currentSeasonId: string,
-	allSeasonIds: string[]
+	currentRoundDate: Date,
+	playersInCurrentRound: Set<string>
 ): void {
-	const currentSeasonIndex = allSeasonIds.indexOf(currentSeasonId)
+	for (const [playerId, playerState] of playerRatings) {
+		// If player is playing in this round, reset their inactivity counter
+		if (playersInCurrentRound.has(playerId)) {
+			playerState.lastGameDate = currentRoundDate
+			playerState.roundsSinceLastGame = 0
+			playerState.isActive = true
+		} else {
+			// Player is not playing in this round, increment inactivity and apply decay
+			playerState.roundsSinceLastGame++
 
-	for (const [, playerState] of playerRatings) {
-		if (!playerState.lastSeasonId) {
-			continue
-		}
+			// Apply gradual decay if player has been inactive
+			if (playerState.roundsSinceLastGame > 0) {
+				const decayFactor = ALGORITHM_CONSTANTS.INACTIVITY_DECAY_PER_ROUND
+				const ratingAboveBase =
+					playerState.currentRating - ALGORITHM_CONSTANTS.STARTING_RATING
+				playerState.currentRating =
+					ALGORITHM_CONSTANTS.STARTING_RATING + ratingAboveBase * decayFactor
+			}
 
-		const lastSeasonIndex = allSeasonIds.indexOf(playerState.lastSeasonId)
-		const seasonsInactive = currentSeasonIndex - lastSeasonIndex
-
-		if (seasonsInactive > 0) {
-			const decayFactor = Math.pow(
-				ALGORITHM_CONSTANTS.INACTIVITY_DECAY_PER_SEASON,
-				seasonsInactive
-			)
-			const ratingAboveBase =
-				playerState.currentRating - ALGORITHM_CONSTANTS.STARTING_RATING
-			playerState.currentRating =
-				ALGORITHM_CONSTANTS.STARTING_RATING + ratingAboveBase * decayFactor
-
-			// Mark as inactive if they haven't played in several seasons
-			if (seasonsInactive >= ALGORITHM_CONSTANTS.RETIREMENT_THRESHOLD_SEASONS) {
+			// Mark as inactive if they haven't played in many rounds
+			if (
+				playerState.roundsSinceLastGame >=
+				ALGORITHM_CONSTANTS.RETIREMENT_THRESHOLD_ROUNDS
+			) {
 				playerState.isActive = false
 			}
 		}
 	}
+}
+
+/**
+ * Initialize round tracking for players when they first play
+ * This should be called when a player is first added to the ratings system
+ */
+export function initializePlayerRoundTracking(
+	playerState: PlayerRatingState,
+	gameDate: Date
+): void {
+	playerState.lastGameDate = gameDate
+	playerState.roundsSinceLastGame = 0
 }

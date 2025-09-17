@@ -6,7 +6,10 @@ export * from './types.js'
 export { calculateExpectedScore } from './algorithms/elo.js'
 export { calculateWeightedPointDifferential } from './algorithms/pointDifferential.js'
 export { calculateTeamStrength } from './algorithms/teamStrength.js'
-export { applyInactivityDecay } from './algorithms/decay.js'
+export {
+	applyRoundBasedDecay,
+	initializePlayerRoundTracking,
+} from './algorithms/decay.js'
 
 // Game processing (round-based only)
 export { loadGamesForCalculation } from './gameProcessing/gameLoader.js'

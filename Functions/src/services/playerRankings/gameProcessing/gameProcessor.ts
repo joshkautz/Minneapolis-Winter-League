@@ -4,6 +4,7 @@ import { ALGORITHM_CONSTANTS } from '../constants.js'
 import { calculateExpectedScore } from '../algorithms/elo.js'
 import { calculateWeightedPointDifferential } from '../algorithms/pointDifferential.js'
 import { calculateTeamStrength } from '../algorithms/teamStrength.js'
+import { initializePlayerRoundTracking } from '../algorithms/decay.js'
 import { GameProcessingData, PlayerRatingState } from '../types.js'
 
 /**
@@ -122,8 +123,13 @@ export async function processPlayersInGame(
 				totalSeasons: 0,
 				seasonsPlayed: new Set(),
 				lastSeasonId: null,
+				lastGameDate: null,
+				roundsSinceLastGame: 0,
 				isActive: true,
 			}
+
+			// Initialize round tracking for new player
+			initializePlayerRoundTracking(playerState, game.gameDate)
 			playerRatings.set(playerId, playerState)
 		}
 

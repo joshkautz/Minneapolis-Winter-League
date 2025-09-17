@@ -35,6 +35,8 @@ export async function loadExistingRankings(): Promise<
 				totalSeasons: ranking.totalSeasons,
 				seasonsPlayed: new Set(), // Will be populated as we process games
 				lastSeasonId: ranking.lastSeasonId,
+				lastGameDate: null, // Initialize for round-based decay tracking
+				roundsSinceLastGame: 0, // Start fresh for round tracking
 				isActive: ranking.isActive,
 			}
 

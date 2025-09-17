@@ -18,6 +18,8 @@ export function convertSnapshotToRatings(
 			totalSeasons: ranking.totalSeasons || 0,
 			seasonsPlayed: new Set(), // Will be rebuilt as games are processed
 			lastSeasonId: null, // Will be updated as games are processed
+			lastGameDate: null, // Initialize for round-based decay tracking
+			roundsSinceLastGame: 0, // Start fresh for round tracking
 			isActive: true,
 		})
 	}

@@ -2,6 +2,7 @@ import { logger } from 'firebase-functions/v2'
 import { processGame } from './gameProcessor.js'
 import { saveRoundSnapshot } from '../snapshots/roundSnapshotSaver.js'
 import { shouldCountGame } from '../incremental/gameCounter.js'
+import { applyRoundBasedDecay } from '../algorithms/decay.js'
 import {
 	updateGameProgress,
 	updateSeasonalProgress,
@@ -13,6 +14,54 @@ import {
 	markRoundCalculated,
 	filterUncalculatedRounds,
 } from '../persistence/roundTracker.js'
+
+/**
+ * Extracts all player IDs participating in the games of a round
+ */
+async function getPlayersInRound(
+	games: GameProcessingData[]
+): Promise<Set<string>> {
+	const playerIds = new Set<string>()
+
+	for (const game of games) {
+		if (!game.home || !game.away) continue
+
+		try {
+			// Get team documents
+			const [homeTeamDoc, awayTeamDoc] = await Promise.all([
+				game.home.get(),
+				game.away.get(),
+			])
+
+			if (homeTeamDoc.exists && awayTeamDoc.exists) {
+				const homeTeamData = homeTeamDoc.data()
+				const awayTeamData = awayTeamDoc.data()
+
+				// Add home team players
+				if (homeTeamData?.roster) {
+					for (const rosterEntry of homeTeamData.roster) {
+						if (rosterEntry.player?.id) {
+							playerIds.add(rosterEntry.player.id)
+						}
+					}
+				}
+
+				// Add away team players
+				if (awayTeamData?.roster) {
+					for (const rosterEntry of awayTeamData.roster) {
+						if (rosterEntry.player?.id) {
+							playerIds.add(rosterEntry.player.id)
+						}
+					}
+				}
+			}
+		} catch (error) {
+			logger.warn(`Error getting players for game ${game.id}:`, error)
+		}
+	}
+
+	return playerIds
+}
 
 /**
  * Processes games by rounds in chronological order
@@ -75,6 +124,14 @@ export async function processGamesByRounds(
 		for (const [playerId, playerState] of playerRatings) {
 			preRoundRatings.set(playerId, playerState.currentRating)
 		}
+
+		// Collect all players participating in this round
+		const playersInRound = await getPlayersInRound(round.games)
+
+		// Apply round-based decay before processing games
+		// This will increment inactivity counters for players not in this round
+		// and reset counters for players who are playing
+		applyRoundBasedDecay(playerRatings, round.startTime, playersInRound)
 
 		// Process all games in this round simultaneously
 		// This ensures true chronological order since all games in a round start at the same time

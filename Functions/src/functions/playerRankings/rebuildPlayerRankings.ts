@@ -22,7 +22,6 @@ import { z } from 'zod'
 import { Collections, SeasonDocument } from '../../types.js'
 import { validateAdminUser } from '../../shared/auth.js'
 import {
-	applyInactivityDecay,
 	loadGamesForCalculation,
 	processGamesByRounds,
 	saveFinalRankings,
@@ -148,16 +147,8 @@ async function processFullRebuild(calculationId: string): Promise<void> {
 		const playerRatings = new Map()
 		logger.info('Starting complete rebuild with empty player ratings')
 
-		// Apply inactivity decay (always applied as part of algorithm)
-		await updateCalculationState(calculationId, {
-			'progress.currentStep': 'Applying inactivity decay...',
-		})
-
-		const currentSeasonId = seasons[seasons.length - 1]?.id
-		const allSeasonIds = seasons.map((s) => s.id)
-		applyInactivityDecay(playerRatings, currentSeasonId, allSeasonIds)
-
 		// Process ALL games by rounds in chronological order (no filtering)
+		// Round-based decay is now applied automatically during round processing
 		await processGamesByRounds(
 			allGames,
 			playerRatings,

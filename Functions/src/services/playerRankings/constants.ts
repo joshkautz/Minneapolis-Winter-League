@@ -15,8 +15,14 @@ export const ALGORITHM_CONSTANTS = {
 	// Exponential decay factor per season (each season back is multiplied by this)
 	SEASON_DECAY_FACTOR: 0.82, // Reduced from 0.85 - lower scoring means less clear skill signal
 
-	// Rating decay for inactive players (per season of inactivity)
-	INACTIVITY_DECAY_PER_SEASON: 0.95,
+	// Rating decay for inactive players (per round of inactivity within a season)
+	INACTIVITY_DECAY_PER_ROUND: 0.996, // Very small decay per round, accumulates over time
+
+	// Maximum rounds of inactivity before applying full seasonal decay
+	MAX_ROUNDS_FOR_SEASONAL_DECAY: 20, // Typical season has ~12-16 rounds
+
+	// Equivalent seasonal decay rate (what a full season of inactivity should achieve)
+	EQUIVALENT_SEASONAL_DECAY: 0.95, // Same as old INACTIVITY_DECAY_PER_SEASON
 
 	// Maximum point differential that gets full weight (adjusted for 20-point games)
 	MAX_FULL_WEIGHT_DIFFERENTIAL: 5, // Reduced from 8 - in 20-point games, 5+ margin is significant
@@ -27,6 +33,6 @@ export const ALGORITHM_CONSTANTS = {
 	// Default team strength when confidence is too low
 	DEFAULT_TEAM_STRENGTH: 1200,
 
-	// Number of seasons of inactivity before considering a player "retired"
-	RETIREMENT_THRESHOLD_SEASONS: 3,
+	// Number of rounds of inactivity before considering a player "retired" within current season
+	RETIREMENT_THRESHOLD_ROUNDS: 40, // About 2-3 seasons worth of rounds
 }

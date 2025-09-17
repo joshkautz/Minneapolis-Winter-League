@@ -24,7 +24,6 @@ import { z } from 'zod'
 import { Collections, SeasonDocument } from '../../types.js'
 import { validateAdminUser } from '../../shared/auth.js'
 import {
-	applyInactivityDecay,
 	loadGamesForCalculation,
 	processNewRoundsOnly,
 	saveFinalRankings,
@@ -173,16 +172,8 @@ async function processIncrementalUpdate(calculationId: string): Promise<void> {
 			logger.info('No existing rankings found - starting fresh calculation')
 		}
 
-		// Apply inactivity decay (always applied as part of algorithm)
-		await updateCalculationState(calculationId, {
-			'progress.currentStep': 'Applying inactivity decay...',
-		})
-
-		const currentSeasonId = seasons[seasons.length - 1]?.id
-		const allSeasonIds = seasons.map((s) => s.id)
-		applyInactivityDecay(playerRatings, currentSeasonId, allSeasonIds)
-
 		// Process ONLY new uncalculated rounds (most efficient for production)
+		// Round-based decay is now applied automatically during round processing
 		await processNewRoundsOnly(
 			allGames,
 			playerRatings,
