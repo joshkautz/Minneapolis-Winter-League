@@ -84,17 +84,9 @@ export { getUploadUrl } from './functions/storage/getUploadUrl.js'
 export { getDownloadUrl } from './functions/storage/getDownloadUrl.js'
 export { getFileMetadata } from './functions/storage/getFileMetadata.js'
 
-// Player Rankings functions - NEW NAMING (Recommended)
+// Player Rankings functions
 export { rebuildPlayerRankings } from './functions/playerRankings/rebuildPlayerRankings.js'
 export { updatePlayerRankings } from './functions/playerRankings/updatePlayerRankings.js'
-
-// Player Rankings functions - DEPRECATED (Use new names above)
-export { calculatePlayerRankingsRounds } from './functions/playerRankings/calculatePlayerRankingsRounds.js'
-export { calculatePlayerRankingsNewRounds } from './functions/playerRankings/calculatePlayerRankingsNewRounds.js'
-
-// Player Rankings utility functions
-export { getCalculationStatus } from './functions/playerRankings/getStatus.js'
-export { getRoundCalculationStatus } from './functions/playerRankings/debug.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // SERVICES
