@@ -70,3 +70,6 @@ node_modules/
 
 # Minneapolis Winter League: Build files
 dist
+
+# Production data
+scripts/production/data/**
