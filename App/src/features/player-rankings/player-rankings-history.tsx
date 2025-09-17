@@ -12,12 +12,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { collection, Query } from 'firebase/firestore'
 
 import { firestore } from '@/firebase/app'
-import {
-	PlayerDocument,
-	Collections,
-	SeasonDocument,
-	RankingHistoryDocument,
-} from '@/types'
+import { PlayerDocument, Collections, RankingHistoryDocument } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -43,7 +38,7 @@ interface PlayerRankingHistoryProps {
 }
 
 interface ChartDataPoint {
-	/** Date in YYYY-MM-DD format for display */
+	/** Date in ISO timestamp format for display */
 	date: string
 	/** Player's rank position (inverted for display) */
 	ranking: number
@@ -95,68 +90,7 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 		collection(firestore, 'rankings-history') as Query<RankingHistoryDocument>
 	)
 
-	// Fetch all seasons data to get season start dates
-	const [seasonsSnapshot, seasonsLoading] = useCollection(
-		collection(firestore, Collections.SEASONS) as Query<SeasonDocument>
-	)
-
-	const loading = historyLoading || allPlayersLoading || seasonsLoading
-
-	// Create seasons lookup map
-	const seasonsMap = useMemo(() => {
-		if (!seasonsSnapshot?.docs)
-			return new Map<
-				string,
-				SeasonDocument & { id: string; dateStart: Date | null }
-			>()
-
-		const map = new Map<
-			string,
-			SeasonDocument & { id: string; dateStart: Date | null }
-		>()
-		seasonsSnapshot.docs.forEach((doc) => {
-			const seasonData = doc.data() as SeasonDocument
-
-			// Try to convert Firestore Timestamp to JavaScript Date
-			let startDate = null
-			if (seasonData.dateStart) {
-				if (typeof seasonData.dateStart.toDate === 'function') {
-					// Firestore Timestamp object
-					startDate = seasonData.dateStart.toDate()
-				} else if (seasonData.dateStart instanceof Date) {
-					// Already a Date object
-					startDate = seasonData.dateStart
-				} else if (seasonData.dateStart.seconds) {
-					// Raw Firestore timestamp with seconds/nanoseconds
-					startDate = new Date(
-						seasonData.dateStart.seconds * 1000 +
-							seasonData.dateStart.nanoseconds / 1000000
-					)
-				}
-			}
-
-			// Fallback: try startDate field name
-			if (!startDate && seasonData.startDate) {
-				if (typeof seasonData.startDate.toDate === 'function') {
-					startDate = seasonData.startDate.toDate()
-				} else if (seasonData.startDate instanceof Date) {
-					startDate = seasonData.startDate
-				} else if (seasonData.startDate.seconds) {
-					startDate = new Date(
-						seasonData.startDate.seconds * 1000 +
-							seasonData.startDate.nanoseconds / 1000000
-					)
-				}
-			}
-
-			map.set(doc.id, {
-				...seasonData,
-				id: doc.id,
-				dateStart: startDate,
-			})
-		})
-		return map
-	}, [seasonsSnapshot])
+	const loading = historyLoading || allPlayersLoading
 
 	// Get all players for dropdown - only include players with rankings history data
 	const allPlayers = useMemo(() => {
@@ -208,99 +142,63 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 			// Skip any legacy weekly snapshots that might still exist
 			if (!data.roundMeta) return
 
-			let seasonId: string
-			let timestamp: number
-
-			// New format: {timestamp}_{seasonId}
+			// Parse document ID format: {timestamp}_{seasonId}
 			const idParts = docId.split('_')
-			if (idParts.length >= 2) {
-				timestamp = parseInt(idParts[0])
-				seasonId = idParts[1]
-			} else {
-				console.warn(`Skipping malformed document ID: ${docId}`)
-				return
-			}
+			if (idParts.length < 2) return
 
-			if (isNaN(timestamp)) {
-				console.warn(`Invalid timestamp in document ID: ${docId}`)
-				return
-			}
+			const timestamp = parseInt(idParts[0])
+			const seasonId = idParts[1]
+
+			if (isNaN(timestamp)) return
 
 			// Find player in the rankings array
 			const rankings = data.rankings || []
-			if (!Array.isArray(rankings)) {
-				console.warn(`Rankings is not an array in document: ${docId}`)
-				return
-			}
+			if (!Array.isArray(rankings)) return
 
-			const playerIndex = rankings.findIndex(
+			const playerData = rankings.find(
 				(player: any) => player.playerId === playerId
 			)
 
-			if (playerIndex !== -1) {
-				const playerData = rankings[playerIndex]
-				const playerRank = playerData.rank // Use the rank field from the ranking object
+			if (!playerData) return
 
-				// Validate that we have a valid rank
-				if (
-					typeof playerRank !== 'number' ||
-					isNaN(playerRank) ||
-					playerRank <= 0
-				) {
-					console.warn(
-						`Invalid or missing rank for player ${playerId} in ${docId}:`,
-						playerRank,
-						'typeof:',
-						typeof playerRank,
-						'playerData:',
-						playerData
+			const playerRank = playerData.rank
+			if (typeof playerRank !== 'number' || playerRank <= 0) return
+
+			// Get the round date
+			let roundDate: Date
+			if (data.roundMeta?.roundStartTime) {
+				if (typeof data.roundMeta.roundStartTime.toDate === 'function') {
+					roundDate = data.roundMeta.roundStartTime.toDate()
+				} else if (data.roundMeta.roundStartTime instanceof Date) {
+					roundDate = data.roundMeta.roundStartTime
+				} else if (data.roundMeta.roundStartTime.seconds) {
+					roundDate = new Date(
+						data.roundMeta.roundStartTime.seconds * 1000 +
+							(data.roundMeta.roundStartTime.nanoseconds || 0) / 1000000
 					)
-					return
-				}
-
-				// Get the date from the roundMeta timestamp
-				let dataPointDate: Date
-				if (data.roundMeta && data.roundMeta.roundStartTime) {
-					if (typeof data.roundMeta.roundStartTime.toDate === 'function') {
-						dataPointDate = data.roundMeta.roundStartTime.toDate()
-					} else if (data.roundMeta.roundStartTime instanceof Date) {
-						dataPointDate = data.roundMeta.roundStartTime
-					} else if (data.roundMeta.roundStartTime.seconds) {
-						dataPointDate = new Date(
-							data.roundMeta.roundStartTime.seconds * 1000 +
-								data.roundMeta.roundStartTime.nanoseconds / 1000000
-						)
-					} else {
-						// Fallback to using the timestamp from document ID
-						dataPointDate = new Date(timestamp)
-					}
 				} else {
-					// Fallback to using the timestamp from document ID
-					dataPointDate = new Date(timestamp)
+					roundDate = new Date(timestamp)
 				}
-
-				// Validate the date
-				if (isNaN(dataPointDate.getTime())) {
-					console.warn(`Invalid date calculated for ${docId}`)
-					return
-				}
-
-				const dateString = dataPointDate.toISOString().split('T')[0] // YYYY-MM-DD format
-
-				playerHistory.push({
-					date: dateString,
-					rank: playerRank,
-					ranking: playerRank, // Use actual rank (lower is better)
-					eloRating: parseFloat((playerData.eloRating || 0).toFixed(5)),
-					season: seasonId,
-					timestamp: dataPointDate.getTime(),
-				})
+			} else {
+				roundDate = new Date(timestamp)
 			}
+
+			if (isNaN(roundDate.getTime())) return
+
+			// Create one data point per round
+			playerHistory.push({
+				date: roundDate.toISOString(),
+				rank: playerRank,
+				ranking: playerRank,
+				eloRating: parseFloat((playerData.eloRating || 0).toFixed(5)),
+				season: seasonId,
+				timestamp: roundDate.getTime(),
+			})
 		})
 
 		// Sort by timestamp to ensure proper chronological order
 		return playerHistory.sort((a, b) => a.timestamp - b.timestamp)
-	}, [rankingHistorySnapshot, playerId, seasonsMap])
+	}, [rankingHistorySnapshot, playerId])
 
 	if (loading) {
 		return (
@@ -543,15 +441,25 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 
 									const data = props.payload[0].payload
 
-									// Get season name from seasonsMap
-									const seasonInfo = seasonsMap.get(data.season)
-									const seasonName = seasonInfo?.name || data.season
+									// Format the date and time from the data point
+									const dateTime = new Date(data.date)
+									const formattedDate = dateTime.toLocaleDateString('en-US', {
+										weekday: 'short',
+										month: 'short',
+										day: 'numeric',
+										year: 'numeric',
+									})
+									const formattedTime = dateTime.toLocaleTimeString('en-US', {
+										hour: 'numeric',
+										minute: '2-digit',
+										hour12: true,
+									})
 
 									return (
 										<div className='rounded-lg border bg-background p-3 shadow-md'>
 											<div className='mb-2'>
 												<p className='text-sm font-medium'>
-													{seasonName} • {data.week}
+													{formattedDate} • {formattedTime}
 												</p>
 											</div>
 											<div className='space-y-1 text-sm'>
