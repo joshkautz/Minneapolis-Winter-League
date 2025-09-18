@@ -155,7 +155,6 @@
     "registeredDate": "2023-10-14T22:40:56.895Z",
     "teamId": "ebadb1a7-b1b1-4254-b5ca-b68889ec3c98",
     "name": "Ni-pull",
-    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F379992346_250722184168006_6307794410499380746_n.jpg?alt=media&token=393c2381-be0b-4e66-85ef-e62280cc9149",
     "registered": true,
     "storagePath": "teams/379992346_250722184168006_6307794410499380746_n.jpg",
     "roster": [
@@ -225,7 +224,8 @@
       }
     ],
     "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
-    "placement": 4
+    "placement": 4,
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2Fc57a8eb5-7f34-4d49-aaed-41099043c412?alt=media&token=1175d125-881d-42a9-8b17-68c51b0e6b34"
   },
   "AE9qWaJmhxI300Gbbuye": {
     "registeredDate": "2023-10-26T02:28:48.025Z",
@@ -1119,7 +1119,6 @@
     "registeredDate": "2023-10-26T18:57:18.623Z",
     "teamId": "2c93ef06-37c0-41d9-a2e2-456405b98c19",
     "name": "Seatbelt Inspection CO.",
-    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F380362771_672265541516149_5345393767686302260_n.jpg?alt=media&token=7326be39-5f54-4725-bba8-a016fda304dc",
     "registered": true,
     "storagePath": "teams/380362771_672265541516149_5345393767686302260_n.jpg",
     "placement": 2,
@@ -1197,7 +1196,8 @@
         "player": "players/QnhSEfd4EMb2lSkUq2bqTKgQGAn2"
       }
     ],
-    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+    "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+    "logo": "https://firebasestorage.googleapis.com/v0/b/minnesota-winter-league.appspot.com/o/teams%2F4af6811f-e77f-4476-9f75-03c35226f886?alt=media&token=7326be39-5f54-4725-bba8-a016fda304dc"
   },
   "cK26PQEyfvmmWpegVQzq": {
     "registeredDate": "2023-10-27T03:28:43.604Z",

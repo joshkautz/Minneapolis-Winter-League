@@ -8,7 +8,8 @@
 		"Functions"
 	],
 	"scripts": {
-		"dev": "concurrently \"npm run functions:watch\" \"npm run emulators:start\" \"npm run dev --workspace=App\"",
+		"dev:test_data": "concurrently \"npm run functions:watch\" \"npm run emulators:test_data_start\" \"npm run dev --workspace=App\"",
+		"dev:prod_data": "concurrently \"npm run functions:watch\" \"npm run emulators:prod_data_start\" \"npm run dev --workspace=App\"",
 		"functions:watch": "npm run build:watch --workspace=Functions",
 		"build": "npm run build --workspace=App && npm run build --workspace=Functions",
 		"format:check": "npm run format:check --workspace=App && npm run format:check --workspace=Functions",
@@ -16,7 +17,8 @@
 		"lint:check": "npm run lint:check --workspace=App && npm run lint:check --workspace=Functions",
 		"lint:fix": "npm run lint:fix --workspace=App && npm run lint:fix --workspace=Functions",
 		"test": "npm run test --workspace=App && npm run test --workspace=Functions",
-		"emulators:start": "firebase emulators:start --import ./.emulator --only firestore,auth,storage",
+		"emulators:test_data_start": "firebase emulators:start --import ./.emulator/test",
+		"emulators:prod_data_start": "firebase emulators:start --import ./.emulator/prod",
 		"emulators:export": "firebase emulators:export ./.emulator",
 		"emulators:clear": "rm -rf ./.emulator && mkdir -p ./.emulator",
 		"deploy": "firebase deploy",

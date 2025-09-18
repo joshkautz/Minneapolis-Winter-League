@@ -49,6 +49,7 @@ process.env.FIREBASE_STORAGE_EMULATOR_HOST = 'localhost:9199'
 // Initialize Firebase Admin SDK for emulator
 const app = initializeApp({
 	projectId: 'minnesota-winter-league',
+	storageBucket: 'minnesota-winter-league.appspot.com',
 })
 
 // Initialize services (they will automatically connect to emulators via environment variables)
@@ -58,10 +59,30 @@ const storage = getStorage(app)
 
 const exportDir = path.join(__dirname, 'data')
 
-// Function to convert timestamp objects back to Firestore Timestamps
-function convertTimestamps(obj) {
+// Function to convert timestamp objects and document paths back to Firestore types
+function convertFirestoreTypes(obj) {
 	if (obj === null || obj === undefined) return obj
 
+	// Handle ISO timestamp strings (exported from Firestore Timestamps)
+	if (
+		typeof obj === 'string' &&
+		/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(obj)
+	) {
+		// This looks like an ISO timestamp string, convert to Date
+		return new Date(obj)
+	}
+
+	// Handle DocumentReference paths (strings like "teams/abc123" or "seasons/xyz789")
+	if (typeof obj === 'string' && obj.includes('/')) {
+		const pathParts = obj.split('/')
+		if (pathParts.length === 2) {
+			// This looks like a document path, convert to DocumentReference
+			const [collectionId, documentId] = pathParts
+			return db.collection(collectionId).doc(documentId)
+		}
+	}
+
+	// Handle legacy Firestore Timestamp objects (if any remain)
 	if (
 		typeof obj === 'object' &&
 		obj._seconds !== undefined &&
@@ -72,13 +93,13 @@ function convertTimestamps(obj) {
 	}
 
 	if (Array.isArray(obj)) {
-		return obj.map(convertTimestamps)
+		return obj.map(convertFirestoreTypes)
 	}
 
 	if (typeof obj === 'object') {
 		const converted = {}
 		for (const [key, value] of Object.entries(obj)) {
-			converted[key] = convertTimestamps(value)
+			converted[key] = convertFirestoreTypes(value)
 		}
 		return converted
 	}
@@ -98,7 +119,7 @@ async function importCollection(collectionName, filePath) {
 		let batch = db.batch()
 
 		for (const [docId, docData] of Object.entries(data)) {
-			const convertedData = convertTimestamps(docData)
+			const convertedData = convertFirestoreTypes(docData)
 			const docRef = collection.doc(docId)
 			batch.set(docRef, convertedData)
 			imported++
@@ -146,7 +167,7 @@ async function importSubcollection(
 		let batch = db.batch()
 
 		for (const [docId, docData] of Object.entries(data)) {
-			const convertedData = convertTimestamps(docData)
+			const convertedData = convertFirestoreTypes(docData)
 			const docRef = subcollection.doc(docId)
 			batch.set(docRef, convertedData)
 			imported++
@@ -224,6 +245,94 @@ async function clearAllCollections() {
 	}
 }
 
+/**
+ * Clear all authentication users
+ */
+async function clearAllUsers() {
+	console.log('🔐 Clearing existing authentication users...\n')
+
+	try {
+		let usersCleared = 0
+		let nextPageToken
+
+		do {
+			// List users in batches
+			const listUsersResult = await auth.listUsers(1000, nextPageToken)
+
+			if (listUsersResult.users.length > 0) {
+				// Delete users in batch
+				const uids = listUsersResult.users.map((user) => user.uid)
+				await auth.deleteUsers(uids)
+				usersCleared += uids.length
+
+				console.log(
+					`   🗑️  Deleted ${uids.length} users (total: ${usersCleared})`
+				)
+			}
+
+			nextPageToken = listUsersResult.pageToken
+		} while (nextPageToken)
+
+		console.log(`✅ Cleared ${usersCleared} authentication users\n`)
+		return usersCleared
+	} catch (error) {
+		console.error('❌ Error clearing authentication users:', error.message)
+		throw error
+	}
+}
+
+/**
+ * Clear all storage files
+ */
+async function clearAllStorage() {
+	console.log('📦 Clearing existing storage files...\n')
+
+	try {
+		const bucket = storage.bucket()
+		let filesCleared = 0
+
+		// Get all files in the bucket
+		const [files] = await bucket.getFiles()
+
+		if (files.length === 0) {
+			console.log('✅ No storage files to clear\n')
+			return 0
+		}
+
+		console.log(`   📁 Found ${files.length} files to delete`)
+
+		// Delete files in batches
+		const batchSize = 100
+		for (let i = 0; i < files.length; i += batchSize) {
+			const batch = files.slice(i, i + batchSize)
+
+			// Delete files in parallel within each batch
+			await Promise.all(
+				batch.map(async (file) => {
+					try {
+						await file.delete()
+						filesCleared++
+					} catch (error) {
+						console.log(
+							`   ⚠️  Failed to delete ${file.name}: ${error.message}`
+						)
+					}
+				})
+			)
+
+			console.log(
+				`   🗑️  Deleted ${Math.min(i + batchSize, files.length)}/${files.length} files`
+			)
+		}
+
+		console.log(`✅ Cleared ${filesCleared} storage files\n`)
+		return filesCleared
+	} catch (error) {
+		console.error('❌ Error clearing storage files:', error.message)
+		throw error
+	}
+}
+
 async function importAuthentication() {
 	if (skipAuth) {
 		console.log('🔐 Skipping authentication import (--skip-auth flag)')
@@ -241,6 +350,9 @@ async function importAuthentication() {
 	console.log('🔐 Importing authentication users...')
 
 	try {
+		// Clear existing users first
+		await clearAllUsers()
+
 		const authData = JSON.parse(fs.readFileSync(accountsFile, 'utf8'))
 		let importedUsers = 0
 
@@ -306,6 +418,9 @@ async function importStorage() {
 	const metadataFile = path.join(storageExportDir, 'metadata.json')
 
 	try {
+		// Clear existing storage files first
+		await clearAllStorage()
+
 		// Check if storage export exists
 		if (!fs.existsSync(storageExportDir)) {
 			console.log('   ⚠️  No storage export found, skipping...')
@@ -331,18 +446,18 @@ async function importStorage() {
 		// Upload each file
 		for (const fileInfo of metadata.files) {
 			try {
-				const localFilePath = path.join(
-					storageExportDir,
-					'files',
-					fileInfo.name
-				)
+				// Convert storage path to filesystem path (replace / with _)
+				const filesystemName = fileInfo.name.replace(/\//g, '_')
+				const localFilePath = path.join(storageExportDir, filesystemName)
 
 				if (!fs.existsSync(localFilePath)) {
-					console.log(`   ⚠️  File not found: ${fileInfo.name}`)
+					console.log(
+						`   ⚠️  File not found: ${fileInfo.name} (looking for: ${filesystemName})`
+					)
 					continue
 				}
 
-				// Upload file to emulator storage
+				// Upload file to emulator storage with original name
 				const file = bucket.file(fileInfo.name)
 				await file.save(fs.readFileSync(localFilePath), {
 					metadata: {
