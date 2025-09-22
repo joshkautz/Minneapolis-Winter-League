@@ -48,7 +48,7 @@ export const Schedule = () => {
 	}, [gamesQuerySnapshot])
 
 	return (
-		<div className={'sm:container'}>
+		<div className="container">
 			<GradientHeader>Schedule</GradientHeader>
 
 			{!gamesQuerySnapshot ? (
