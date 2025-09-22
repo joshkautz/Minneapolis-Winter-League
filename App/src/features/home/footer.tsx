@@ -1,58 +1,100 @@
 export const Footer = () => {
 	return (
-		<footer className='flex flex-col items-center justify-center h-full py-8 space-y-28 md:space-y-8 bg-background text-foreground'>
-			<div className='container flex flex-col items-center justify-between md:items-end md:flex-row'>
-				<div className='pb-8 md:pb-0'>
-					<img className='w-[324px]' src={'/footer-logo.png'} />
-				</div>
-				<div className='space-y-2 max-w-[300px] flex flex-col w-full items-start'>
-					<p className='text-2xl font-bold'>Contact Us</p>
-					<div className='flex flex-col text-lg md:flex-row md:space-x-1'>
-						<p className='font-bold'>Email:</p>
-						<a href='mailto:leadership@mplsmallard.com'>
-							<span>Leadership@mplsmallard.com</span>
+		<footer className='bg-muted/30 border-t border-border mt-20'>
+			<div className='container mx-auto px-6 py-16'>
+				{/* Main Footer Content */}
+				<div className='grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 mb-12'>
+					{/* Contact Info */}
+					<div className='space-y-6 text-center'>
+						<h3 className='text-lg font-semibold text-foreground'>Contact</h3>
+						<a
+							href='mailto:leadership@mplsmallard.com'
+							className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors duration-200'
+							aria-label='Send email to Minneapolis Winter League leadership'
+						>
+							<svg
+								className='w-4 h-4 mr-3'
+								fill='none'
+								stroke='currentColor'
+								viewBox='0 0 24 24'
+								aria-hidden='true'
+							>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									strokeWidth={2}
+									d='M3 8l7.89 7.89a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+								/>
+							</svg>
+							leadership@mplsmallard.com
 						</a>
 					</div>
-				</div>
-			</div>
 
-			<div className='container flex flex-col items-center justify-between md:items-end md:flex-row space-y-14 md:space-y-0'>
-				<div className='flex flex-col items-center space-y-4 max-w-[300px]'>
-					<p className='text-lg'>
-						Thank you for helping to make this league possible!
-					</p>
-
-					<div className='flex flex-row justify-center space-x-8'>
-						<div>
+					{/* Partners */}
+					<div className='space-y-6 text-center'>
+						<h3 className='text-lg font-semibold text-foreground'>
+							Our Partners
+						</h3>
+						<div className='flex items-center justify-center gap-6'>
 							<a
 								href='http://mplsmallard.com/'
 								target='_blank'
-								title='Minneapolis Mallard'
-								rel='noreferrer'
+								rel='noopener noreferrer'
+								className='inline-block transition-transform duration-200 hover:scale-105 focus:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded'
+								aria-label='Visit Minneapolis Mallard website'
 							>
 								<img
-									src={'/mallard.png'}
-									alt='Minneapolis Mallard'
+									src='/mallard.png'
+									alt='Minneapolis Mallard logo'
 									width={80}
+									height={80}
+									className='w-20 h-auto'
+								/>
+							</a>
+
+							<a
+								href='https://lostyetidesign.com/'
+								target='_blank'
+								rel='noopener noreferrer'
+								className='inline-block transition-transform duration-200 hover:scale-105 focus:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded'
+								aria-label='Visit Lost Yeti Design Company website'
+							>
+								<img
+									src='/lost-yeti.png'
+									alt='Lost Yeti Design Company logo'
+									width={120}
+									height={40}
+									className='w-30 h-auto max-w-[120px]'
 								/>
 							</a>
 						</div>
 					</div>
 				</div>
 
-				<div>
-					<a
-						href='https://lostyetidesign.com/'
-						target='_blank'
-						title='Lost Yeti Design Company'
-						rel='noreferrer'
-					>
-						<img
-							src='/lost-yeti.png'
-							alt='Lost Yeti Design Company'
-							width={296}
-						/>
-					</a>
+				{/* Footer Bottom */}
+				<div className='pt-8 border-t border-border'>
+					<div className='flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0'>
+						<p className='text-xs text-muted-foreground'>
+							© {new Date().getFullYear()} Minneapolis Winter League. All
+							rights reserved.
+						</p>
+						<div className='flex space-x-8'>
+							<a
+								href='/privacy'
+								className='text-xs text-muted-foreground hover:text-foreground transition-colors duration-200'
+								aria-label='Privacy Policy'
+							>
+								Privacy Policy
+							</a>
+							<a
+								href='/terms'
+								className='text-xs text-muted-foreground hover:text-foreground transition-colors duration-200'
+								aria-label='Terms of Service'
+							>
+								Terms of Service
+							</a>
+						</div>
+					</div>
 				</div>
 			</div>
 		</footer>

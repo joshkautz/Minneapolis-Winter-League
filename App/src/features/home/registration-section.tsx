@@ -95,20 +95,6 @@ export const RegistrationSection = () => {
 					</div>
 				</div>
 			</section>
-
-			<div
-				className={
-					'flex flex-col gap-2 pb-8 items-center max-w-[1040px] mx-auto'
-				}
-			>
-				<p className={'text-2xl max-w-[1040px] mx-auto'}>
-					{`Don't miss out on this opportunity to keep playing year-round. Secure your spot today, and let's make this season of Minneapolis Winter League one to remember!`}
-				</p>
-			</div>
-
-			<div className='max-w-[1040px] mx-auto flex items-center justify-start pb-24'>
-				<p className='text-2xl font-bold'>See you on the field!</p>
-			</div>
 		</div>
 	)
 }
