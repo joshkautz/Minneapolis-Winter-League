@@ -62,6 +62,65 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 		...doc.data(),
 	})) as (PlayerRankingDocument & { id: string })[] | undefined
 
+	// Helper function to process rankings with proper tie handling
+	const processRankingsWithTies = (
+		rankings: (PlayerRankingDocument & { id: string })[]
+	) => {
+		const tiedGroups = new Map<number, string[]>()
+		const tiedPlayerIds = new Set<string>()
+		const trueRankMap = new Map<string, number>()
+		const medalEligibilityMap = new Map<string, boolean>()
+
+		// Group players by their rounded ELO rating
+		rankings.forEach((player) => {
+			const roundedRating = Math.round(player.eloRating * 1000000) / 1000000
+
+			if (!tiedGroups.has(roundedRating)) {
+				tiedGroups.set(roundedRating, [])
+			}
+			tiedGroups.get(roundedRating)!.push(player.id)
+		})
+
+		// Identify tied players and calculate true ranks
+		let currentTrueRank = 1
+		const sortedRatings = Array.from(tiedGroups.keys()).sort((a, b) => b - a) // Highest first
+
+		sortedRatings.forEach((rating) => {
+			const playerIds = tiedGroups.get(rating)!
+
+			if (playerIds.length > 1) {
+				// These players are tied
+				playerIds.forEach((id) => {
+					tiedPlayerIds.add(id)
+					trueRankMap.set(id, currentTrueRank)
+					// Medal eligibility if any position in the tie group is <= 3
+					medalEligibilityMap.set(id, currentTrueRank <= 3)
+				})
+			} else {
+				// Single player at this rating
+				const playerId = playerIds[0]
+				trueRankMap.set(playerId, currentTrueRank)
+				medalEligibilityMap.set(playerId, currentTrueRank <= 3)
+			}
+
+			// Advance rank by the number of players at this rating level
+			currentTrueRank += playerIds.length
+		})
+
+		return {
+			tiedPlayerIds,
+			trueRankMap,
+			medalEligibilityMap,
+		}
+	}
+
+	const { trueRankMap, medalEligibilityMap } = rankings
+		? processRankingsWithTies(rankings)
+		: {
+				trueRankMap: new Map<string, number>(),
+				medalEligibilityMap: new Map<string, boolean>(),
+			}
+
 	const handlePlayerClick = (playerId: string) => {
 		navigate(`/player-rankings/player/${playerId}`)
 	}
@@ -457,72 +516,80 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{rankings.map((player) => (
-										<TableRow
-											key={player.id}
-											onClick={() => handlePlayerClick(player.id)}
-											className={cn(
-												'hover:bg-muted/50 cursor-pointer transition-colors',
-												player.rank <= 3 &&
-													'bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-900/20'
-											)}
-										>
-											<TableCell className='font-medium'>
-												<div className='flex items-center gap-2'>
-													{player.rank === 1 && (
-														<Crown className='h-4 w-4 text-yellow-500' />
-													)}
-													{player.rank === 2 && (
-														<Award className='h-4 w-4 text-gray-400' />
-													)}
-													{player.rank === 3 && (
-														<Medal className='h-4 w-4 text-amber-600' />
-													)}
-													#{player.rank}
-												</div>
-											</TableCell>
-											<TableCell>
-												<div className='space-y-1'>
-													<div
-														className={cn(
-															'font-medium',
-															player.rank <= 3 && 'dark:text-foreground'
-														)}
-													>
-														{player.playerName}
-													</div>
-												</div>
-											</TableCell>
-											<TableCell className='text-center'>
-												{player.eloRating.toFixed(6)}
-											</TableCell>
-											<TableCell className='text-center'>
-												{player.lastRatingChange !== 0 && (
-													<div
-														className={cn(
-															'flex items-center justify-center gap-1',
-															player.lastRatingChange > 0
-																? 'text-green-600'
-																: 'text-red-600'
-														)}
-													>
-														{player.lastRatingChange > 0 ? (
-															<TrendingUp className='h-3 w-3' />
-														) : (
-															<TrendingDown className='h-3 w-3' />
-														)}
-														{Math.abs(player.lastRatingChange)}
-													</div>
+									{rankings.map((player) => {
+										const trueRank = trueRankMap.get(player.id) || player.rank
+										const isMedalEligible =
+											medalEligibilityMap.get(player.id) || false
+
+										return (
+											<TableRow
+												key={player.id}
+												onClick={() => handlePlayerClick(player.id)}
+												className={cn(
+													'hover:bg-muted/50 cursor-pointer transition-colors',
+													isMedalEligible &&
+														'bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-900/20'
 												)}
-											</TableCell>
-											<TableCell className='text-center'>
-												{player.totalGames}
-											</TableCell>
-											<TableCell className='text-center'>
-												{player.totalSeasons}
-											</TableCell>
-										</TableRow>
-									))}
+											>
+												<TableCell className='font-medium'>
+													<div className='flex items-center gap-2'>
+														{trueRank === 1 && (
+															<Crown className='h-4 w-4 text-yellow-500' />
+														)}
+														{trueRank === 2 && (
+															<Award className='h-4 w-4 text-gray-400' />
+														)}
+														{trueRank === 3 && (
+															<Medal className='h-4 w-4 text-amber-600' />
+														)}
+														<div className='flex items-center gap-1'>
+															#{trueRank}
+														</div>
+													</div>
+												</TableCell>
+												<TableCell>
+													<div className='space-y-1'>
+														<div
+															className={cn(
+																'font-medium',
+																player.rank <= 3 && 'dark:text-foreground'
+															)}
+														>
+															{player.playerName}
+														</div>
+													</div>
+												</TableCell>
+												<TableCell className='text-center'>
+													{player.eloRating.toFixed(6)}
+												</TableCell>
+												<TableCell className='text-center'>
+													{player.lastRatingChange !== 0 && (
+														<div
+															className={cn(
+																'flex items-center justify-center gap-1',
+																player.lastRatingChange > 0
+																	? 'text-green-600'
+																	: 'text-red-600'
+															)}
+														>
+															{player.lastRatingChange > 0 ? (
+																<TrendingUp className='h-3 w-3' />
+															) : (
+																<TrendingDown className='h-3 w-3' />
+															)}
+															{Math.abs(player.lastRatingChange)}
+														</div>
+													)}
+												</TableCell>
+												<TableCell className='text-center'>
+													{player.totalGames}
+												</TableCell>
+												<TableCell className='text-center'>
+													{player.totalSeasons}
+												</TableCell>
+											</TableRow>
+										)
+									})}
 								</TableBody>
 							</Table>
 						</div>
