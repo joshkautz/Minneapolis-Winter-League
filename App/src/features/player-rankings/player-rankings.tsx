@@ -71,6 +71,15 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 		const trueRankMap = new Map<string, number>()
 		const medalEligibilityMap = new Map<string, boolean>()
 
+		// Create player lookup map for sorting by name
+		const playerLookup = new Map<
+			string,
+			PlayerRankingDocument & { id: string }
+		>()
+		rankings.forEach((player) => {
+			playerLookup.set(player.id, player)
+		})
+
 		// Group players by their rounded ELO rating
 		rankings.forEach((player) => {
 			const roundedRating = Math.round(player.eloRating * 1000000) / 1000000
@@ -79,6 +88,18 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 				tiedGroups.set(roundedRating, [])
 			}
 			tiedGroups.get(roundedRating)!.push(player.id)
+		})
+
+		// Sort players within each rating group alphabetically by name
+		tiedGroups.forEach((playerIds, rating) => {
+			if (playerIds.length > 1) {
+				playerIds.sort((a, b) => {
+					const playerA = playerLookup.get(a)!
+					const playerB = playerLookup.get(b)!
+					return playerA.playerName.localeCompare(playerB.playerName)
+				})
+				tiedGroups.set(rating, playerIds)
+			}
 		})
 
 		// Identify tied players and calculate true ranks
@@ -111,14 +132,19 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 			tiedPlayerIds,
 			trueRankMap,
 			medalEligibilityMap,
+			sortedRankings: sortedRatings.flatMap((rating) => {
+				const playerIds = tiedGroups.get(rating)!
+				return playerIds.map((id) => playerLookup.get(id)!)
+			}),
 		}
 	}
 
-	const { trueRankMap, medalEligibilityMap } = rankings
+	const { trueRankMap, medalEligibilityMap, sortedRankings } = rankings
 		? processRankingsWithTies(rankings)
 		: {
 				trueRankMap: new Map<string, number>(),
 				medalEligibilityMap: new Map<string, boolean>(),
+				sortedRankings: [],
 			}
 
 	const handlePlayerClick = (playerId: string) => {
@@ -502,7 +528,7 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 								</TableBody>
 							</Table>
 						</div>
-					) : rankings && rankings.length > 0 ? (
+					) : rankings && rankings.length > 0 && sortedRankings.length > 0 ? (
 						<div className='overflow-x-auto'>
 							<Table>
 								<TableHeader>
@@ -516,7 +542,7 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{rankings.map((player) => {
+									{sortedRankings.map((player) => {
 										const trueRank = trueRankMap.get(player.id) || player.rank
 										const isMedalEligible =
 											medalEligibilityMap.get(player.id) || false
