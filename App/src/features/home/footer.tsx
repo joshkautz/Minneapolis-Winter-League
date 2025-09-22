@@ -1,6 +1,6 @@
 export const Footer = () => {
 	return (
-		<footer className='flex flex-col items-center justify-center h-full py-8 space-y-28 md:space-y-8 dark:bg-foreground dark:text-background bg-background text-foreground'>
+		<footer className='flex flex-col items-center justify-center h-full py-8 space-y-28 md:space-y-8 bg-background text-foreground'>
 			<div className='container flex flex-col items-center justify-between md:items-end md:flex-row'>
 				<div className='pb-8 md:pb-0'>
 					<img className='w-[324px]' src={'/footer-logo.png'} />

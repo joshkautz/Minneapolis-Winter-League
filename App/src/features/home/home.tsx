@@ -12,7 +12,7 @@ import { RegistrationSection } from './registration-section'
  */
 export const Home = () => {
 	return (
-		<div className={'w-full'}>
+		<div className={'w-full bg-background text-foreground'}>
 			<HeroSection />
 			<LeagueDetailsSection />
 			<WhyJoinSection />

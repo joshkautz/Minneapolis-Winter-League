@@ -12,7 +12,7 @@ export const LeagueDetailsSection = () => {
 	return (
 		<div
 			className={
-				'w-full min-h-screen bg-background text-foreground dark:text-background dark:bg-foreground'
+				'w-full min-h-screen bg-background text-foreground'
 			}
 		>
 			<section id='league-details' className={'container pb-40'}>
@@ -36,7 +36,7 @@ export const LeagueDetailsSection = () => {
 				<div className={'flex flex-wrap items-center gap-20 mt-32 w-full'}>
 					<Card
 						className={
-							'flex flex-col flex-1 basis-[320px] shrink-0 rounded-2xl bg-foreground text-background dark:bg-background dark:text-foreground'
+							'flex flex-col flex-1 basis-[320px] shrink-0 rounded-2xl bg-card text-card-foreground'
 						}
 					>
 						<CardHeader>

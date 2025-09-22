@@ -161,25 +161,25 @@ export const RegistrationCountdown = () => {
 			{showCountdown && (
 				<div className='flex mt-2 space-x-2'>
 					<div className='flex flex-col items-center min-w-16'>
-						<p className='w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground'>
+						<p className='w-full p-2 text-3xl text-center rounded-lg bg-accent text-accent-foreground'>
 							{days}
 						</p>
 						<p className='text-sm font-bold'>days</p>
 					</div>
 					<div className='flex flex-col items-center min-w-16'>
-						<p className='w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground'>
+						<p className='w-full p-2 text-3xl text-center rounded-lg bg-accent text-accent-foreground'>
 							{hours}
 						</p>
 						<p className='text-sm font-bold'>hours</p>
 					</div>
 					<div className='flex flex-col items-center min-w-16'>
-						<p className='w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground'>
+						<p className='w-full p-2 text-3xl text-center rounded-lg bg-accent text-accent-foreground'>
 							{minutes}
 						</p>
 						<p className='text-sm font-bold'>minutes</p>
 					</div>
 					<div className='flex flex-col items-center min-w-16'>
-						<p className='w-full p-2 text-3xl text-center rounded-lg bg-accent dark:bg-primary text-accent-foreground dark:text-primary-foreground'>
+						<p className='w-full p-2 text-3xl text-center rounded-lg bg-accent text-accent-foreground'>
 							{seconds}
 						</p>
 						<p className='text-sm font-bold'>seconds</p>

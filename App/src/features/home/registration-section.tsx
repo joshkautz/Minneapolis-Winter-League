@@ -8,7 +8,7 @@ export const RegistrationSection = () => {
 	return (
 		<div
 			className={
-				'border border-transparent xl:max-w-none container dark:text-foreground dark:bg-background text-background bg-foreground'
+				'border border-transparent xl:max-w-none container text-foreground bg-background'
 			}
 		>
 			<section
@@ -17,7 +17,7 @@ export const RegistrationSection = () => {
 					'my-32 flex justify-center md:items-stretch gap-8 flex-col md:flex-row items-center'
 				}
 			>
-				<div className='flex items-center justify-center flex-1 rounded-lg overflow-clip bg-primary dark:bg-secondary max-w-[500px]'>
+				<div className='flex items-center justify-center flex-1 rounded-lg overflow-clip bg-primary max-w-[500px]'>
 					<img
 						src='/Map.png'
 						alt='University of Minnesota URW Sports Field Complex Map'
@@ -28,7 +28,7 @@ export const RegistrationSection = () => {
 					<div className={'w-full flex'}>
 						<span
 							className={
-								'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+								'bg-accent text-accent-foreground flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 							}
 						>
 							1
@@ -38,7 +38,7 @@ export const RegistrationSection = () => {
 					<div className={'w-full flex'}>
 						<span
 							className={
-								'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+								'bg-accent text-accent-foreground flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 							}
 						>
 							2
@@ -50,7 +50,7 @@ export const RegistrationSection = () => {
 					<div className={'w-full flex'}>
 						<span
 							className={
-								'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+								'bg-accent text-accent-foreground flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 							}
 						>
 							3
@@ -62,7 +62,7 @@ export const RegistrationSection = () => {
 					<div className={'w-full flex'}>
 						<span
 							className={
-								'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+								'bg-accent text-accent-foreground flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 							}
 						>
 							4
@@ -74,7 +74,7 @@ export const RegistrationSection = () => {
 					<div className={'w-full flex'}>
 						<span
 							className={
-								'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+								'bg-accent text-accent-foreground flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 							}
 						>
 							5
@@ -86,7 +86,7 @@ export const RegistrationSection = () => {
 					<div className={'w-full flex'}>
 						<span
 							className={
-								'bg-accent text-foreground dark:text-background flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
+								'bg-accent text-accent-foreground flex shrink-0 w-4 h-4 mt-2 mr-2 text-xs items-center justify-center font-bold rounded-full -translate-y-0.5'
 							}
 						>
 							6
