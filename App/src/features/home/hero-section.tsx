@@ -49,10 +49,10 @@ export const HeroSection = () => {
 					</div>
 				</div>
 			</div>
-			<div className='absolute inset-y-0 right-0 w-full h-screen pointer-events-none md:w-1/2'>
+			<div className='absolute inset-y-0 right-0 w-full h-screen pointer-events-none'>
 				{sparklesCore}
 			</div>
-			<CitySvg className='absolute right-0 bottom-0 w-auto h-full max-h-[400px] -z-10' />
+			<CitySvg className='absolute inset-x-0 bottom-0 w-full h-auto max-h-[400px] -z-10' />
 			<img
 				src={'/snowman.png'}
 				alt={'A snowman shaped like a duck.'}
