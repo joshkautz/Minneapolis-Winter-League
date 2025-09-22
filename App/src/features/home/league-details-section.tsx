@@ -47,7 +47,7 @@ export const LeagueDetailsSection = () => {
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>When:</p>
-								<span>{`Every Saturday, November 1st - December 20th.`}</span>
+								<span>{`November 1st, 8th, 15th, 22nd. December 6th, 13th, 20th.`}</span>
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>Where:</p>
@@ -75,9 +75,7 @@ export const LeagueDetailsSection = () => {
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>New!</p>
-								<span>
-									{`Certified athletic trainers present for all games! Waivers signed electronically! Additional dome time for warm-ups! League history! Ability to roll over teams from season to season!`}
-								</span>
+								<span>{`Player Rankings algorithm!`}</span>
 							</div>
 						</CardContent>
 					</Card>
