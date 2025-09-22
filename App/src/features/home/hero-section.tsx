@@ -55,7 +55,10 @@ export const HeroSection = () => {
 			>
 				{sparklesCore}
 			</div>
-			<div className='absolute inset-x-0 bottom-0 w-full -z-10' style={{ color: '#8893A6' }}>
+			<div
+				className='absolute inset-x-0 bottom-0 w-full -z-10'
+				style={{ color: '#8893A6' }}
+			>
 				<CitySvg className='w-full h-auto max-h-[400px]' />
 			</div>
 			<img
