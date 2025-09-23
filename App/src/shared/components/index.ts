@@ -16,6 +16,7 @@ export { NotificationCardItem } from './notification-card-item'
 export { ThemeToggle } from './theme-toggle'
 export { DestructiveConfirmationDialog } from './destructive-confirmation-dialog'
 export { SeasonSelect } from './season-select'
+export { NewBadge } from './new-badge'
 
 // Form components
 export * from './forms'
