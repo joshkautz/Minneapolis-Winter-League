@@ -17,10 +17,11 @@ export const RegistrationSection = () => {
 					'my-32 flex justify-center md:items-stretch gap-8 flex-col md:flex-row items-center'
 				}
 			>
-				<div className='flex items-center justify-center flex-1 rounded-lg overflow-clip bg-primary max-w-[500px]'>
+				<div className='group flex items-center justify-center flex-1 rounded-lg overflow-hidden bg-primary max-w-[500px] cursor-pointer'>
 					<img
 						src='/Map.png'
 						alt='University of Minnesota URW Sports Field Complex Map'
+						className='transition-transform duration-300 group-hover:scale-105'
 					/>
 				</div>
 				<div className='flex flex-col flex-1 gap-2 my-auto max-w-[500px]'>
