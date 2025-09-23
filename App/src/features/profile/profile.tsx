@@ -95,11 +95,7 @@ export const Profile = () => {
 				</p>
 			</div>
 
-			<div
-				className={
-					'flex md:flex-row flex-col flex-wrap items-stretch justify-center w-full md:space-x-16 md:space-y-0 space-y-16 space-x-0'
-				}
-			>
+			<div className='grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto'>
 				<ProfileForm
 					authStateUser={authStateUser}
 					authenticatedUserSnapshot={authenticatedUserSnapshot}

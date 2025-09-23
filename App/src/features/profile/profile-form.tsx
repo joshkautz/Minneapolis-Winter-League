@@ -1,6 +1,13 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
+import {
 	Form,
 	FormField,
 	FormItem,
@@ -21,6 +28,7 @@ import {
 	profileFormSchema,
 	type ProfileFormData,
 } from '@/shared/utils/validation'
+import { UserCog } from 'lucide-react'
 
 interface ProfileFormProps {
 	authStateUser: User | null | undefined
@@ -74,67 +82,76 @@ export const ProfileForm = ({
 	)
 
 	return (
-		<div className={'max-w-(--breakpoint-md) flex-1 basis-[300px] shrink-0'}>
-			<p className='mb-4 text-xl font-bold'>Details</p>
-
-			<Form {...form}>
-				<form
-					onSubmit={form.handleSubmit(onSubmit)}
-					className={'w-full space-y-6'}
-				>
-					<FormField
-						control={form.control}
-						name='firstname'
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>First Name</FormLabel>
-								<FormControl>
-									<Input {...field} />
-								</FormControl>
-								<FormDescription>
-									This is your publicly displayed first name.
-								</FormDescription>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name='lastname'
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Last Name</FormLabel>
-								<FormControl>
-									<Input {...field} />
-								</FormControl>
-								<FormDescription>
-									This is your publicly displayed last name.
-								</FormDescription>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<FormField
-						control={form.control}
-						name='email'
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Email</FormLabel>
-								<FormControl>
-									<Input disabled {...field} />
-								</FormControl>
-								<FormDescription>
-									You cannot change email addresses yet.
-								</FormDescription>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<Button disabled={!form.formState.isDirty} type='submit'>
-						Save Changes
-					</Button>
-				</form>
-			</Form>
-		</div>
+		<Card className='h-fit'>
+			<CardHeader>
+				<CardTitle className='flex items-center gap-2'>
+					<UserCog className='h-5 w-5' />
+					Profile Details
+				</CardTitle>
+				<CardDescription>
+					Manage your personal information and account details
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<Form {...form}>
+					<form
+						onSubmit={form.handleSubmit(onSubmit)}
+						className='w-full space-y-6'
+					>
+						<FormField
+							control={form.control}
+							name='firstname'
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>First Name</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormDescription>
+										This is your publicly displayed first name.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name='lastname'
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Last Name</FormLabel>
+									<FormControl>
+										<Input {...field} />
+									</FormControl>
+									<FormDescription>
+										This is your publicly displayed last name.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name='email'
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Email</FormLabel>
+									<FormControl>
+										<Input disabled {...field} />
+									</FormControl>
+									<FormDescription>
+										You cannot change email addresses yet.
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<Button disabled={!form.formState.isDirty} type='submit'>
+							Save Changes
+						</Button>
+					</form>
+				</Form>
+			</CardContent>
+		</Card>
 	)
 }

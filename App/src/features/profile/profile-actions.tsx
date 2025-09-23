@@ -1,9 +1,17 @@
 import { EmailVerificationSection } from './email-verification-section'
 import { PaymentSection } from './payment-section'
 import { WaiverSection } from './waiver-section'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
 import { User } from 'firebase/auth'
 import { QueryDocumentSnapshot } from '@/firebase/firestore'
 import { SeasonDocument } from '@/shared/utils'
+import { Settings } from 'lucide-react'
 
 interface ProfileActionsProps {
 	authStateUser: User | null | undefined
@@ -37,39 +45,49 @@ export const ProfileActions = ({
 	currentSeasonQueryDocumentSnapshot,
 }: ProfileActionsProps) => {
 	return (
-		<div className={'max-w-(--breakpoint-md) flex-1 basis-[300px] shrink-0'}>
-			<p className='mb-4 text-xl font-bold'>Actions</p>
-			<div className={'flex flex-col gap-6'}>
-				<EmailVerificationSection
-					isVerified={isVerified}
-					isLoading={isLoading}
-					isAuthenticatedUserBanned={isAuthenticatedUserBanned}
-				/>
+		<Card className='h-fit'>
+			<CardHeader>
+				<CardTitle className='flex items-center gap-2'>
+					<Settings className='h-5 w-5' />
+					Account Actions
+				</CardTitle>
+				<CardDescription>
+					Complete required tasks and manage your account status
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<div className='flex flex-col gap-6'>
+					<EmailVerificationSection
+						isVerified={isVerified}
+						isLoading={isLoading}
+						isAuthenticatedUserBanned={isAuthenticatedUserBanned}
+					/>
 
-				<PaymentSection
-					authStateUser={authStateUser}
-					isAuthenticatedUserPaid={isAuthenticatedUserPaid}
-					isLoading={isLoading}
-					isRegistrationOpen={isRegistrationOpen}
-					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
-					isAuthenticatedUserBanned={isAuthenticatedUserBanned}
-					currentSeasonQueryDocumentSnapshot={
-						currentSeasonQueryDocumentSnapshot
-					}
-				/>
+					<PaymentSection
+						authStateUser={authStateUser}
+						isAuthenticatedUserPaid={isAuthenticatedUserPaid}
+						isLoading={isLoading}
+						isRegistrationOpen={isRegistrationOpen}
+						isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
+						isAuthenticatedUserBanned={isAuthenticatedUserBanned}
+						currentSeasonQueryDocumentSnapshot={
+							currentSeasonQueryDocumentSnapshot
+						}
+					/>
 
-				<WaiverSection
-					isAuthenticatedUserSigned={isAuthenticatedUserSigned}
-					isLoading={isLoading}
-					isRegistrationOpen={isRegistrationOpen}
-					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
-					isAuthenticatedUserPaid={isAuthenticatedUserPaid}
-					isAuthenticatedUserBanned={isAuthenticatedUserBanned}
-					currentSeasonQueryDocumentSnapshot={
-						currentSeasonQueryDocumentSnapshot
-					}
-				/>
-			</div>
-		</div>
+					<WaiverSection
+						isAuthenticatedUserSigned={isAuthenticatedUserSigned}
+						isLoading={isLoading}
+						isRegistrationOpen={isRegistrationOpen}
+						isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
+						isAuthenticatedUserPaid={isAuthenticatedUserPaid}
+						isAuthenticatedUserBanned={isAuthenticatedUserBanned}
+						currentSeasonQueryDocumentSnapshot={
+							currentSeasonQueryDocumentSnapshot
+						}
+					/>
+				</div>
+			</CardContent>
+		</Card>
 	)
 }
