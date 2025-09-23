@@ -1,12 +1,12 @@
 import { useAuthContext } from '@/providers'
 import { useMemo } from 'react'
-import { GradientHeader } from '@/shared/components'
 import { useSeasonsContext } from '@/providers'
 import { Timestamp } from '@firebase/firestore'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { ProfileForm } from './profile-form'
 import { ProfileActions } from './profile-actions'
 import type { PlayerSeason } from '@/types'
+import { User } from 'lucide-react'
 
 export const Profile = () => {
 	const {
@@ -83,14 +83,17 @@ export const Profile = () => {
 	}
 
 	return (
-		<div
-			className={
-				'container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10'
-			}
-		>
-			<GradientHeader>
-				<p>Profile</p>
-			</GradientHeader>
+		<div className='container mx-auto px-4 py-8 space-y-6'>
+			{/* Header */}
+			<div className='text-center space-y-4'>
+				<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
+					<User className='h-8 w-8' />
+					Profile
+				</h1>
+				<p className='text-muted-foreground'>
+					Manage your player profile and account settings
+				</p>
+			</div>
 
 			<div
 				className={
