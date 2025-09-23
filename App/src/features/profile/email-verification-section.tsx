@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { CheckCircledIcon, ReloadIcon } from '@radix-ui/react-icons'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ReloadIcon } from '@radix-ui/react-icons'
+import { CheckCircle, Clock, Mail } from 'lucide-react'
 import { useEmailVerification } from './use-email-verification'
 
 interface EmailVerificationSectionProps {
@@ -12,7 +14,7 @@ interface EmailVerificationSectionProps {
 /**
  * EmailVerificationSection Component
  *
- * Handles email verification functionality
+ * Handles email verification functionality with improved status indicators
  * Extracted from main Profile component for better separation of concerns
  */
 export const EmailVerificationSection = ({
@@ -26,55 +28,87 @@ export const EmailVerificationSection = ({
 		verificationEmailSent,
 	} = useEmailVerification({ isAuthenticatedUserBanned })
 
-	return (
-		<fieldset className={'space-y-2'}>
-			<Label className={'inline-flex'}>
-				Email Verification
-				{isLoading ? (
-					// loading state, pulse animation
-					<></>
-				) : isVerified ? (
-					// action completed, checkIcon
-					<CheckCircledIcon className={'w-4 h-4 ml-1'} />
-				) : (
-					// action needed, solid dot
-					<span className={'relative flex w-2 h-2 ml-1'}>
-						<span
-							className={'relative inline-flex w-2 h-2 rounded-full bg-primary'}
-						/>
-					</span>
-				)}
-			</Label>
+	const getStatusBadge = () => {
+		if (isLoading || isVerified === undefined) {
+			return (
+				<Badge variant='outline' className='gap-1'>
+					<Clock className='h-3 w-3' />
+					Loading...
+				</Badge>
+			)
+		}
 
-			<div>
-				{isLoading || isVerified === undefined ? (
-					<div className={'inline-flex items-center gap-2'}>Loading...</div>
-				) : isVerified ? (
-					<></>
-				) : (
-					<>
-						<Button
-							variant={'default'}
-							onClick={handleSendVerification}
-							disabled={
-								verificationEmailSent ||
-								verificationEmailLoading ||
-								isAuthenticatedUserBanned
-							}
-						>
-							{verificationEmailLoading && (
-								<ReloadIcon className={'mr-2 h-4 w-4 animate-spin'} />
-							)}
-							{verificationEmailSent
-								? 'Email Sent!'
-								: 'Re-Send Verification Email'}
-						</Button>
-						<p className={'text-[0.8rem] text-muted-foreground mt-2'}>
-							Check your email for a verification link.
-						</p>
-					</>
-				)}
+		if (isVerified) {
+			return (
+				<Badge variant='successful' className='gap-1'>
+					<CheckCircle className='h-3 w-3' />
+					Verified
+				</Badge>
+			)
+		}
+
+		return (
+			<Badge variant='destructive' className='gap-1'>
+				<Mail className='h-3 w-3' />
+				Verification Required
+			</Badge>
+		)
+	}
+
+	return (
+		<div className='space-y-3'>
+			<div className='flex items-center justify-between'>
+				<h3 className='font-medium text-sm'>Email Verification</h3>
+				{getStatusBadge()}
 			</div>
-		</fieldset>
+
+			{isLoading || isVerified === undefined ? (
+				<div className='text-sm text-muted-foreground'>
+					Checking verification status...
+				</div>
+			) : isVerified ? (
+				<Alert className='border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'>
+					<CheckCircle className='h-4 w-4 !text-green-800 dark:!text-green-200' />
+					<AlertDescription className='!text-green-800 dark:!text-green-200'>
+						Your email address has been verified successfully.
+					</AlertDescription>
+				</Alert>
+			) : (
+				<div className='space-y-3'>
+					<Alert className='border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'>
+						<Mail className='h-4 w-4 !text-red-800 dark:!text-red-200' />
+						<AlertDescription className='!text-red-800 dark:!text-red-200'>
+							Please verify your email address to access all features.
+						</AlertDescription>
+					</Alert>
+
+					<Button
+						variant='outline'
+						size='sm'
+						onClick={handleSendVerification}
+						disabled={
+							verificationEmailSent ||
+							verificationEmailLoading ||
+							isAuthenticatedUserBanned
+						}
+						className='w-full'
+					>
+						{verificationEmailLoading && (
+							<ReloadIcon className='mr-2 h-3 w-3 animate-spin' />
+						)}
+						<Mail className='mr-2 h-3 w-3' />
+						{verificationEmailSent
+							? 'Verification Email Sent!'
+							: 'Send Verification Email'}
+					</Button>
+
+					{verificationEmailSent && (
+						<p className='text-xs text-muted-foreground text-center'>
+							Check your email inbox and click the verification link.
+						</p>
+					)}
+				</div>
+			)}
+		</div>
 	)
 }

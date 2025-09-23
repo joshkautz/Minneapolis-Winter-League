@@ -49,43 +49,47 @@ export const ProfileActions = ({
 			<CardHeader>
 				<CardTitle className='flex items-center gap-2'>
 					<Settings className='h-5 w-5' />
-					Account Actions
+					Profile Actions
 				</CardTitle>
 				<CardDescription>
 					Complete required tasks and manage your account status
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<div className='flex flex-col gap-6'>
+				<div className='space-y-6'>
 					<EmailVerificationSection
 						isVerified={isVerified}
 						isLoading={isLoading}
 						isAuthenticatedUserBanned={isAuthenticatedUserBanned}
 					/>
 
-					<PaymentSection
-						authStateUser={authStateUser}
-						isAuthenticatedUserPaid={isAuthenticatedUserPaid}
-						isLoading={isLoading}
-						isRegistrationOpen={isRegistrationOpen}
-						isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
-						isAuthenticatedUserBanned={isAuthenticatedUserBanned}
-						currentSeasonQueryDocumentSnapshot={
-							currentSeasonQueryDocumentSnapshot
-						}
-					/>
+					<div className='border-t pt-6'>
+						<PaymentSection
+							authStateUser={authStateUser}
+							isAuthenticatedUserPaid={isAuthenticatedUserPaid}
+							isLoading={isLoading}
+							isRegistrationOpen={isRegistrationOpen}
+							isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
+							isAuthenticatedUserBanned={isAuthenticatedUserBanned}
+							currentSeasonQueryDocumentSnapshot={
+								currentSeasonQueryDocumentSnapshot
+							}
+						/>
+					</div>
 
-					<WaiverSection
-						isAuthenticatedUserSigned={isAuthenticatedUserSigned}
-						isLoading={isLoading}
-						isRegistrationOpen={isRegistrationOpen}
-						isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
-						isAuthenticatedUserPaid={isAuthenticatedUserPaid}
-						isAuthenticatedUserBanned={isAuthenticatedUserBanned}
-						currentSeasonQueryDocumentSnapshot={
-							currentSeasonQueryDocumentSnapshot
-						}
-					/>
+					<div className='border-t pt-6'>
+						<WaiverSection
+							isAuthenticatedUserSigned={isAuthenticatedUserSigned}
+							isLoading={isLoading}
+							isRegistrationOpen={isRegistrationOpen}
+							isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
+							isAuthenticatedUserPaid={isAuthenticatedUserPaid}
+							isAuthenticatedUserBanned={isAuthenticatedUserBanned}
+							currentSeasonQueryDocumentSnapshot={
+								currentSeasonQueryDocumentSnapshot
+							}
+						/>
+					</div>
 				</div>
 			</CardContent>
 		</Card>

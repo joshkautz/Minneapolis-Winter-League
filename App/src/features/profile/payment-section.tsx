@@ -1,7 +1,15 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { CheckCircledIcon, ReloadIcon } from '@radix-ui/react-icons'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ReloadIcon } from '@radix-ui/react-icons'
+import {
+	CheckCircle,
+	Clock,
+	CreditCard,
+	AlertCircle,
+	Calendar,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { stripeRegistration } from '@/firebase/firestore'
 import { formatTimestamp } from '@/shared/utils'
@@ -52,70 +60,102 @@ export const PaymentSection = ({
 		stripeRegistration(authStateUser, setStripeLoading, setStripeError)
 	}, [authStateUser])
 
+	const getStatusBadge = () => {
+		if (isLoading || isAuthenticatedUserPaid === undefined) {
+			return (
+				<Badge variant='outline' className='gap-1'>
+					<Clock className='h-3 w-3' />
+					Loading...
+				</Badge>
+			)
+		}
+
+		if (isAuthenticatedUserPaid) {
+			return (
+				<Badge variant='successful' className='gap-1'>
+					<CheckCircle className='h-3 w-3' />
+					Paid
+				</Badge>
+			)
+		}
+
+		return (
+			<Badge variant='destructive' className='gap-1'>
+				<CreditCard className='h-3 w-3' />
+				Payment Required
+			</Badge>
+		)
+	}
+
+	const isRegistrationClosed = !isRegistrationOpen && !isAuthenticatedUserAdmin
+	const isUserBanned = isAuthenticatedUserBanned
+
 	return (
-		<fieldset className={'space-y-2'}>
-			<Label className={'inline-flex'}>
-				Payment
-				{isLoading || isAuthenticatedUserPaid === undefined ? (
-					<></>
-				) : isAuthenticatedUserPaid ? (
-					<CheckCircledIcon className={'w-4 h-4 ml-1'} />
-				) : (
-					<span className={'relative flex w-2 h-2 ml-1'}>
-						<span
-							className={'relative inline-flex w-2 h-2 rounded-full bg-primary'}
-						/>
-					</span>
-				)}
-			</Label>
+		<div className='space-y-3'>
+			<div className='flex items-center justify-between'>
+				<h3 className='font-medium text-sm'>Registration Payment</h3>
+				{getStatusBadge()}
+			</div>
 
-			<div>
-				{isLoading || isAuthenticatedUserPaid === undefined ? (
-					<div className={'inline-flex items-center gap-2'}>Loading...</div>
-				) : isAuthenticatedUserPaid ? (
-					<></>
-				) : (
-					<>
-						<Button
-							variant={'default'}
-							onClick={registrationButtonOnClickHandler}
-							disabled={
-								(!isRegistrationOpen && !isAuthenticatedUserAdmin) ||
-								stripeLoading ||
-								isAuthenticatedUserBanned
-							}
-						>
-							{stripeLoading && (
-								<ReloadIcon className={'mr-2 h-4 w-4 animate-spin'} />
-							)}
-							Pay via Stripe
-						</Button>
-
-						{!isRegistrationOpen && !isAuthenticatedUserAdmin ? (
-							<p className={'text-[0.8rem] text-muted-foreground mt-2'}>
+			{isLoading || isAuthenticatedUserPaid === undefined ? (
+				<div className='text-sm text-muted-foreground'>
+					Checking payment status...
+				</div>
+			) : isAuthenticatedUserPaid ? (
+				<Alert className='border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'>
+					<CheckCircle className='h-4 w-4 !text-green-800 dark:!text-green-200' />
+					<AlertDescription className='!text-green-800 dark:!text-green-200'>
+						Registration payment completed successfully.
+					</AlertDescription>
+				</Alert>
+			) : (
+				<div className='space-y-3'>
+					{isUserBanned ? (
+						<Alert className='border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'>
+							<AlertCircle className='h-4 w-4 !text-red-800 dark:!text-red-200' />
+							<AlertDescription className='!text-red-800 dark:!text-red-200'>
+								Account has been banned from Minneapolis Winter League.
+							</AlertDescription>
+						</Alert>
+					) : isRegistrationClosed ? (
+						<Alert className='border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'>
+							<Calendar className='h-4 w-4 !text-blue-800 dark:!text-blue-200' />
+							<AlertDescription className='!text-blue-800 dark:!text-blue-200'>
 								Registration opens on{' '}
 								{formatTimestamp(
 									currentSeasonQueryDocumentSnapshot?.data().registrationStart
 								)}
-							</p>
-						) : isAuthenticatedUserBanned ? (
-							<p
-								className={
-									'text-[0.8rem] text-muted-foreground mt-2 text-red-500'
-								}
-							>
-								Account has been regrettably suspended or banned from
-								Minneapolis Winter League.
-							</p>
+							</AlertDescription>
+						</Alert>
+					) : (
+						<Alert className='border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'>
+							<CreditCard className='h-4 w-4 !text-red-800 dark:!text-red-200' />
+							<AlertDescription className='!text-red-800 dark:!text-red-200'>
+								Complete registration by paying via Stripe.
+							</AlertDescription>
+						</Alert>
+					)}
+
+					<Button
+						onClick={registrationButtonOnClickHandler}
+						disabled={isRegistrationClosed || stripeLoading || isUserBanned}
+						className='w-full'
+					>
+						{stripeLoading ? (
+							<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
 						) : (
-							<p className={'text-[0.8rem] text-muted-foreground mt-2'}>
-								Complete registration by paying via Stripe. This may take a few
-								seconds to process.
-							</p>
+							<CreditCard className='mr-2 h-4 w-4' />
 						)}
-					</>
-				)}
-			</div>
-		</fieldset>
+						{stripeLoading ? 'Processing...' : 'Pay via Stripe'}
+					</Button>
+
+					{!isRegistrationClosed && !isUserBanned && (
+						<p className='text-xs text-muted-foreground text-center'>
+							Payment processing may take a few seconds to complete.
+						</p>
+					)}
+				</div>
+			)}
+		</div>
 	)
 }
