@@ -84,7 +84,7 @@ export const AccountSection = ({
 							key={path}
 							to={path}
 							aria-label={alt}
-							className='flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors'
+							className='flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-accent hover:text-accent-foreground transition-colors'
 						>
 							<span className='flex items-center'>
 								{label}
@@ -112,7 +112,7 @@ export const AccountSection = ({
 									key={path}
 									to={path}
 									aria-label={alt}
-									className='flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors'
+									className='flex items-center justify-between px-2 py-1.5 text-sm rounded hover:bg-accent hover:text-accent-foreground transition-colors'
 								>
 									<span>{label}</span>
 								</Link>
