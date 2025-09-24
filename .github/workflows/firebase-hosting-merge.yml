@@ -30,15 +30,15 @@ jobs:
 
       - name: Format App
         working-directory: ./App
-        run: npx prettier . --check
+        run: npm run format:check
 
       - name: Lint App
         working-directory: ./App
-        run: npx eslint .
+        run: npm run lint:check
 
       - name: Build App
         working-directory: ./App
-        run: npx tsc && npx vite build
+        run: npm run build
 
       - name: Deploy to Firebase Hosting Live Channel
         env:
@@ -91,7 +91,7 @@ jobs:
 
       - name: Lint Functions
         working-directory: ./Functions
-        run: npm run lint
+        run: npm run lint:check
 
       - name: Build Functions
         working-directory: ./Functions

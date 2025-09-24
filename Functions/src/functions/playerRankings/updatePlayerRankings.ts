@@ -67,8 +67,7 @@ export const updatePlayerRankings = onCall(
 			// Create calculation state document for tracking
 			const calculationId = await createCalculationState(
 				'incremental',
-				request.auth!.uid,
-				{ applyDecay: true, onlyNewRounds: true, isIncremental: true }
+				request.auth!.uid
 			)
 
 			try {

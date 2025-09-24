@@ -7,7 +7,7 @@ import { PlayerRatingState, TeamStrength } from '../types.js'
  * Calculates team strength based on average player ratings at the time of the game
  */
 export async function calculateTeamStrength(
-	teamRef: any,
+	teamRef: FirebaseFirestore.DocumentReference,
 	gameDate: Date,
 	playerRatings: Map<string, PlayerRatingState>,
 	seasonOrder: number

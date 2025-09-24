@@ -7,9 +7,9 @@ export async function updateProgress(
 	calculationId: string,
 	currentStep: string,
 	percentComplete?: number,
-	additionalUpdates?: Record<string, any>
+	additionalUpdates?: Record<string, unknown>
 ): Promise<void> {
-	const updates: Record<string, any> = {
+	const updates: Record<string, unknown> = {
 		'progress.currentStep': currentStep,
 		...additionalUpdates,
 	}

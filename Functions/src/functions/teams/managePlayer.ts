@@ -129,7 +129,7 @@ function handlePromoteToCaptain(
 	teamDocument: TeamDocument,
 	playerRef: FirebaseFirestore.DocumentReference,
 	playerDocument: PlayerDocument
-) {
+): { success: boolean; action: string; message: string } {
 	// Update team roster
 	const updatedRoster =
 		teamDocument.roster?.map((member: TeamRosterPlayer) =>
@@ -164,7 +164,7 @@ function handleDemoteFromCaptain(
 	teamDocument: TeamDocument,
 	playerRef: FirebaseFirestore.DocumentReference,
 	playerDocument: PlayerDocument
-) {
+): { success: boolean; action: string; message: string } {
 	// Check if this is the last captain
 	const captainCount =
 		teamDocument.roster?.filter((member: TeamRosterPlayer) => member.captain)
@@ -211,7 +211,7 @@ function handleRemoveFromTeam(
 	playerDocument: PlayerDocument,
 	playerId: string,
 	seasonId: string
-) {
+): { success: boolean; action: string; message: string } {
 	// Check if this is the last captain
 	const playerIsCaptain = teamDocument.roster?.find(
 		(member: TeamRosterPlayer) => member.player.id === playerId

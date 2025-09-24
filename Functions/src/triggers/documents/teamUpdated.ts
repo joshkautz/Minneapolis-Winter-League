@@ -79,7 +79,7 @@ export const updateTeamRegistrationDate = onDocumentUpdated(
 
 			// Check if registration status changed
 			if (beforeData.registered !== afterData.registered) {
-				const updateData: any = {}
+				const updateData: Record<string, unknown> = {}
 
 				if (afterData.registered) {
 					updateData.registeredDate = new Date()

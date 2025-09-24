@@ -7,8 +7,7 @@ import { ALGORITHM_CONSTANTS } from '../constants.js'
  */
 export async function createCalculationState(
 	calculationType: 'fresh' | 'incremental',
-	userId: string,
-	parameters: any
+	userId: string
 ): Promise<string> {
 	const firestore = getFirestore()
 
@@ -25,17 +24,10 @@ export async function createCalculationState(
 			seasonsProcessed: 0,
 		},
 		parameters: {
-			applyDecay: parameters.applyDecay ?? true,
+			applyDecay: true,
 			seasonDecayFactor: ALGORITHM_CONSTANTS.SEASON_DECAY_FACTOR,
 			playoffMultiplier: ALGORITHM_CONSTANTS.PLAYOFF_MULTIPLIER,
 			kFactor: ALGORITHM_CONSTANTS.K_FACTOR,
-			// Only include defined values to avoid Firestore undefined value errors
-			...(parameters.startSeasonId !== undefined && {
-				startSeasonId: parameters.startSeasonId,
-			}),
-			...(parameters.startWeek !== undefined && {
-				startWeek: parameters.startWeek,
-			}),
 		},
 	}
 

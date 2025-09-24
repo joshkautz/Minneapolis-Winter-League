@@ -61,7 +61,7 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 								| PlayerDocument
 								| undefined
 							const updatedSeasons =
-								playerDocument?.seasons?.map((season: any) =>
+								playerDocument?.seasons?.map((season) =>
 									season.team?.id === teamId
 										? { ...season, team: null, captain: false }
 										: season

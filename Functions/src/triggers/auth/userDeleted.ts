@@ -47,7 +47,8 @@ export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 							const teamDocument = teamDocSnapshot.data()
 							const updatedRoster =
 								teamDocument?.roster?.filter(
-									(member: any) => member.player.id !== uid
+									(member: { player: { id: string } }) =>
+										member.player.id !== uid
 								) || []
 
 							transaction.update(season.team, { roster: updatedRoster })

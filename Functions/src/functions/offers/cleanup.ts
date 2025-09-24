@@ -58,8 +58,7 @@ export const cleanupOffers = onCall(
 				if (playerDoc.exists) {
 					const playerDocument = playerDoc.data() as PlayerDocument | undefined
 					const hasTeamForSeason = playerDocument?.seasons?.some(
-						(season: any) =>
-							season.season.id === offerData.season && season.team
+						(season) => season.season.id === offerData.season && season.team
 					)
 
 					if (hasTeamForSeason) {
@@ -99,7 +98,7 @@ export const cleanupOffers = onCall(
 					if (!playerDoc.exists || !teamDoc.exists) {
 						orphanedOffers.push(offerDoc.ref)
 					}
-				} catch (error) {
+				} catch (_error) {
 					// If we can't fetch the documents, they're orphaned
 					orphanedOffers.push(offerDoc.ref)
 				}

@@ -66,7 +66,7 @@ export const updateTeam = onCall<EditTeamRequest>(
 			}
 
 			// Build update data
-			const updateData: any = {}
+			const updateData: Record<string, unknown> = {}
 			if (name !== undefined) {
 				if (typeof name !== 'string' || name.trim() === '') {
 					throw new Error('Team name must be a non-empty string')

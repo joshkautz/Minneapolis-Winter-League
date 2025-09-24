@@ -1,5 +1,9 @@
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
-import { Collections, RankingHistoryDocument } from '../../../types.js'
+import {
+	Collections,
+	RankingHistoryDocument,
+	SeasonDocument,
+} from '../../../types.js'
 import { ALGORITHM_CONSTANTS } from '../constants.js'
 import { PlayerRatingState } from '../types.js'
 import { createTimeBasedSnapshot } from './snapshotCreator.js'
@@ -23,7 +27,7 @@ export async function saveRoundSnapshot(
 	const roundRankings = createTimeBasedSnapshot(playerRatings)
 
 	const snapshotDoc: Partial<RankingHistoryDocument> = {
-		season: seasonRef as any,
+		season: seasonRef as FirebaseFirestore.DocumentReference<SeasonDocument>,
 		snapshotDate: Timestamp.fromDate(round.startTime),
 		rankings: roundRankings,
 		calculationMeta: {

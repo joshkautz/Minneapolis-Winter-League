@@ -110,7 +110,7 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 			const playerDocument = playerDoc.data() as PlayerDocument | undefined
 			if (playerDocument) {
 				const updatedSeasons =
-					playerDocument.seasons?.map((season: any) =>
+					playerDocument.seasons?.map((season) =>
 						season.season.id === waiverData.season
 							? { ...season, signed: true }
 							: season

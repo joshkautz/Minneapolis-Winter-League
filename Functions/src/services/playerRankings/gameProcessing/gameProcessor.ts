@@ -88,7 +88,7 @@ export async function processGame(
  * Processes all players on a team for a specific game
  */
 export async function processPlayersInGame(
-	roster: any[],
+	roster: Array<{ player: FirebaseFirestore.DocumentReference }>,
 	game: GameProcessingData,
 	pointDifferential: number,
 	teamStrength: number,

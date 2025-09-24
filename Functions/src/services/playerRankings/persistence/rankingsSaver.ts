@@ -45,7 +45,7 @@ export function calculatePlayerRankings(
 		}
 
 		rankings.push({
-			player: null as any, // Will be set when saving to Firestore
+			player: null as unknown as FirebaseFirestore.DocumentReference, // Will be set when saving to Firestore
 			playerId: player.playerId,
 			playerName: player.playerName,
 			eloRating: player.currentRating,

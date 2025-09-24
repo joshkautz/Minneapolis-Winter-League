@@ -10,7 +10,7 @@ import { logger } from 'firebase-functions/v2'
 export function handleFunctionError(
 	error: unknown,
 	context: string,
-	metadata?: Record<string, any>
+	metadata?: Record<string, unknown>
 ): Error {
 	const errorMessage = error instanceof Error ? error.message : 'Unknown error'
 

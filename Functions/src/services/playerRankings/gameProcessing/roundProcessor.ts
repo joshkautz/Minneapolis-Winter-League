@@ -74,7 +74,7 @@ export async function processGamesByRounds(
 	totalSeasons: number,
 	incrementalStartSeasonIndex?: number,
 	onlyNewRounds: boolean = false,
-	isFullRebuild: boolean = false
+	_isFullRebuild: boolean = false
 ): Promise<void> {
 	// Group games into rounds by start time
 	const allRounds = groupGamesByRounds(games)

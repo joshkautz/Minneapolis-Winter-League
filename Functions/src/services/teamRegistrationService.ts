@@ -11,7 +11,7 @@ import { countRegisteredPlayersOnTeam } from '../shared/database.js'
  * Helper function to update a team's registration status
  */
 export async function updateTeamRegistrationStatus(
-	teamRef: any,
+	teamRef: FirebaseFirestore.DocumentReference,
 	seasonId: string
 ): Promise<void> {
 	try {

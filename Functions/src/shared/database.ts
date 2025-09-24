@@ -39,7 +39,7 @@ export async function getCurrentSeason(): Promise<SeasonDocument | null> {
 /**
  * Gets the current season document reference
  */
-export async function getCurrentSeasonRef() {
+export async function getCurrentSeasonRef(): Promise<FirebaseFirestore.DocumentReference> {
 	const firestore = getFirestore()
 	const seasonsSnapshot = await firestore
 		.collection(Collections.SEASONS)

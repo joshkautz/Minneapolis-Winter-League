@@ -46,7 +46,7 @@ import {
  * const db = getFirestore()
  * ```
  */
-export const initializeApp = () => {
+export const initializeApp = (): void => {
 	if (getApps().length === 0) {
 		_initializeApp()
 	} else {

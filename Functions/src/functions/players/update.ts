@@ -83,7 +83,7 @@ export const updatePlayer = onCall<UpdatePlayerRequest>(
 			}
 
 			// Build update data
-			const updateData: any = {}
+			const updateData: Record<string, unknown> = {}
 			if (firstname !== undefined) {
 				updateData.firstname = firstname.trim()
 			}
