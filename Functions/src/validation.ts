@@ -81,7 +81,8 @@ export function isTeamDocument(obj: unknown): obj is TeamDocument {
 		'registered' in obj &&
 		typeof obj.registered === 'boolean' &&
 		'registeredDate' in obj &&
-		obj.registeredDate &&
+		obj.registeredDate !== null &&
+		obj.registeredDate !== undefined &&
 		'roster' in obj &&
 		Array.isArray(obj.roster) &&
 		'season' in obj &&
@@ -101,18 +102,22 @@ export function isSeasonDocument(obj: unknown): obj is SeasonDocument {
 	if (!isRecord(obj)) return false
 	return (
 		'dateEnd' in obj &&
-		obj.dateEnd &&
+		obj.dateEnd !== null &&
+		obj.dateEnd !== undefined &&
 		typeof obj.dateEnd === 'object' &&
 		'dateStart' in obj &&
-		obj.dateStart &&
+		obj.dateStart !== null &&
+		obj.dateStart !== undefined &&
 		typeof obj.dateStart === 'object' &&
 		'name' in obj &&
 		typeof obj.name === 'string' &&
 		'registrationEnd' in obj &&
-		obj.registrationEnd &&
+		obj.registrationEnd !== null &&
+		obj.registrationEnd !== undefined &&
 		typeof obj.registrationEnd === 'object' &&
 		'registrationStart' in obj &&
-		obj.registrationStart &&
+		obj.registrationStart !== null &&
+		obj.registrationStart !== undefined &&
 		typeof obj.registrationStart === 'object' &&
 		'teams' in obj &&
 		Array.isArray(obj.teams)
@@ -153,7 +158,8 @@ export function isTeamRosterPlayer(obj: unknown): obj is TeamRosterPlayer {
 		'captain' in obj &&
 		typeof obj.captain === 'boolean' &&
 		'player' in obj &&
-		obj.player
+		obj.player !== null &&
+		obj.player !== undefined
 	)
 }
 
@@ -164,19 +170,21 @@ export function isGameDocument(obj: unknown): obj is GameDocument {
 	if (!isRecord(obj)) return false
 	return (
 		'away' in obj &&
-		(obj.away === null || obj.away) &&
+		(obj.away === null || (obj.away !== null && obj.away !== undefined)) &&
 		'awayScore' in obj &&
 		typeof obj.awayScore === 'number' &&
 		'date' in obj &&
-		obj.date &&
+		obj.date !== null &&
+		obj.date !== undefined &&
 		'field' in obj &&
 		typeof obj.field === 'number' &&
 		'home' in obj &&
-		(obj.home === null || obj.home) &&
+		(obj.home === null || (obj.home !== null && obj.home !== undefined)) &&
 		'homeScore' in obj &&
 		typeof obj.homeScore === 'number' &&
 		'season' in obj &&
-		obj.season &&
+		obj.season !== null &&
+		obj.season !== undefined &&
 		'type' in obj &&
 		Object.values(GameType).includes(obj.type as GameType)
 	)
@@ -189,7 +197,8 @@ export function isWaiverDocument(obj: unknown): obj is WaiverDocument {
 	if (!isRecord(obj)) return false
 	return (
 		'player' in obj &&
-		obj.player &&
+		obj.player !== null &&
+		obj.player !== undefined &&
 		'signatureRequestId' in obj &&
 		typeof obj.signatureRequestId === 'string'
 	)
@@ -208,7 +217,8 @@ export function isCheckoutSessionDocument(
 		'client' in obj &&
 		typeof obj.client === 'string' &&
 		'created' in obj &&
-		obj.created &&
+		obj.created !== null &&
+		obj.created !== undefined &&
 		'mode' in obj &&
 		typeof obj.mode === 'string' &&
 		'price' in obj &&
