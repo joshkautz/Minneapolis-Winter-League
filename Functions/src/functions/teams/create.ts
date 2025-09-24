@@ -5,7 +5,13 @@
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, TeamDocument, PlayerDocument, PlayerSeason, SeasonDocument } from '../../types.js'
+import {
+	Collections,
+	TeamDocument,
+	PlayerDocument,
+	PlayerSeason,
+	SeasonDocument,
+} from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 
 interface CreateTeamRequest {
@@ -32,7 +38,9 @@ export const createTeam = onCall<CreateTeamRequest>(
 			const firestore = getFirestore()
 
 			// Validate season exists
-			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId) as FirebaseFirestore.DocumentReference<SeasonDocument>
+			const seasonRef = firestore
+				.collection(Collections.SEASONS)
+				.doc(seasonId) as FirebaseFirestore.DocumentReference<SeasonDocument>
 			const seasonDoc = await seasonRef.get()
 
 			if (!seasonDoc.exists) {

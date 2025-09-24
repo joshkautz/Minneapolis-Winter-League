@@ -5,11 +5,7 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import {
-	Collections,
-	DocumentReference,
-	OfferDocument,
-} from '../../types.js'
+import { Collections, DocumentReference, OfferDocument } from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { getCurrentSeason } from '../../shared/database.js'
 
@@ -74,7 +70,7 @@ export const onOfferUpdated = onDocumentUpdated(
 
 				if (!playerDocument || !teamDocument) {
 					throw new Error('Unable to retrieve player or team data')
-				}				// Check if player is already on a team for current season
+				} // Check if player is already on a team for current season
 				const currentSeasonData = playerDocument.seasons?.find(
 					(season: any) => season.season.id === currentSeason.id
 				)

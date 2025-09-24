@@ -40,8 +40,10 @@ export const createOffer = onCall<CreateOfferRequest>(
 					throw new Error('No current season found')
 				}
 
-				// Get player and team documents  
-				const playerRef = firestore.collection(Collections.PLAYERS).doc(playerId)
+				// Get player and team documents
+				const playerRef = firestore
+					.collection(Collections.PLAYERS)
+					.doc(playerId)
 				const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
 
 				const [playerDoc, teamDoc] = await Promise.all([

@@ -5,6 +5,7 @@ This document outlines the step-by-step migration from the current function orga
 ## Current vs New Organization
 
 ### Before (Current)
+
 ```
 src/
 ├── index.ts
@@ -21,6 +22,7 @@ src/
 ```
 
 ### After (New)
+
 ```
 src/
 ├── index.ts
@@ -34,12 +36,14 @@ src/
 ## Migration Steps
 
 ### Phase 1: Infrastructure ✅ COMPLETED
+
 - [x] Create new directory structure
 - [x] Create shared utilities (`shared/`)
 - [x] Migrate helper functions to appropriate shared modules
 - [x] Create organization documentation
 
 ### Phase 2: Trigger Functions ✅ COMPLETED
+
 - [x] Migrate `authTriggers.ts` → `triggers/auth/userDeleted.ts`
 - [x] Extract webhook from `paymentTriggers.ts` → `api/webhooks/dropboxSign.ts`
 - [x] Migrate payment trigger → `triggers/payments/paymentCreated.ts`
@@ -48,9 +52,10 @@ src/
 - [x] Create player trigger → `triggers/documents/playerUpdated.ts`
 
 ### Phase 3: Callable Functions 🔄 IN PROGRESS
+
 - [x] Migrate player functions → `functions/players/`
   - [x] `create.ts`
-  - [x] `update.ts` 
+  - [x] `update.ts`
   - [x] `delete.ts`
 - [x] Start team functions → `functions/teams/`
   - [x] `create.ts`
@@ -67,11 +72,13 @@ src/
   - [ ] `getFileMetadata.ts`
 
 ### Phase 4: Services 🔄 IN PROGRESS
+
 - [x] Create `services/waiverService.ts`
 - [x] Create `services/teamRegistrationService.ts`
 - [ ] Create `services/notificationService.ts`
 
 ### Phase 5: Testing & Deployment ⏳ PENDING
+
 - [ ] Update import paths in index.ts
 - [ ] Test all functions locally
 - [ ] Update client-side function calls
@@ -130,17 +137,19 @@ src/
 ## Breaking Changes
 
 ### Import Path Changes
+
 All function imports will need to be updated in the client application:
 
 ```typescript
 // Before
 import { createPlayer } from 'firebase-functions/playerFunctions'
 
-// After  
+// After
 import { createPlayer } from 'firebase-functions/functions/players/create'
 ```
 
 ### Function Export Changes
+
 The main index.ts will export all functions with the same names, so cloud function names remain the same.
 
 ## Rollback Plan
@@ -155,18 +164,21 @@ If issues arise during migration:
 ## Validation Checklist
 
 ### Pre-Migration ✅
+
 - [x] Document current function organization
 - [x] Identify all function dependencies
 - [x] Create new directory structure
 - [x] Plan migration phases
 
 ### During Migration 🔄
+
 - [x] Test each migrated function
 - [x] Maintain backward compatibility
 - [x] Update documentation
 - [ ] Monitor for TypeScript errors
 
 ### Post-Migration ⏳
+
 - [ ] Verify all functions deploy successfully
 - [ ] Test end-to-end functionality
 - [ ] Update client-side imports

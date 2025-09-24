@@ -33,7 +33,10 @@ export const getUploadUrl = onCall(
 
 			// Validate required parameters
 			if (!fileName || !contentType || !filePath) {
-				throw new HttpsError('invalid-argument', 'fileName, contentType, and filePath are required')
+				throw new HttpsError(
+					'invalid-argument',
+					'fileName, contentType, and filePath are required'
+				)
 			}
 
 			// Validate content type - only images allowed
@@ -54,13 +57,19 @@ export const getUploadUrl = onCall(
 				.toLowerCase()
 				.substring(fileName.lastIndexOf('.'))
 			if (!allowedExtensions.includes(fileExtension)) {
-				throw new HttpsError('invalid-argument', `File extension ${fileExtension} not allowed`)
+				throw new HttpsError(
+					'invalid-argument',
+					`File extension ${fileExtension} not allowed`
+				)
 			}
 
 			// Sanitize file path - prevent directory traversal
 			const sanitizedPath = filePath.replace(/[^a-zA-Z0-9\-_/]/g, '')
 			if (sanitizedPath !== filePath) {
-				throw new HttpsError('invalid-argument', 'Invalid characters in file path')
+				throw new HttpsError(
+					'invalid-argument',
+					'Invalid characters in file path'
+				)
 			}
 
 			// Create unique file name to prevent conflicts

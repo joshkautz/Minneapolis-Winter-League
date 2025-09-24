@@ -114,26 +114,31 @@ src/
 ## Benefits of This Organization
 
 ### 1. **Maintainability**
+
 - Easy to find related functions
 - Clear dependencies between modules
 - Consistent error handling patterns
 
 ### 2. **Scalability**
+
 - New functions follow established patterns
 - Easy to add new domains or features
 - Clear separation allows team collaboration
 
 ### 3. **Type Safety**
+
 - Shared utilities ensure consistent typing
 - Validation functions prevent runtime errors
 - Clear interfaces for all function inputs
 
 ### 4. **Testing**
+
 - Each module can be tested independently
 - Shared utilities have comprehensive tests
 - Clear boundaries for mocking
 
 ### 5. **Performance**
+
 - Functions can be deployed independently
 - Shared code reduces bundle size
 - Clear imports prevent unnecessary dependencies
@@ -141,6 +146,7 @@ src/
 ## Migration Status
 
 ### ✅ Completed
+
 - Directory structure creation
 - Shared utilities migration
 - Authentication triggers
@@ -149,12 +155,14 @@ src/
 - Documentation
 
 ### 🔄 In Progress
+
 - Team management functions
 - Offer management functions
 - Storage functions
 - Service functions
 
 ### ⏳ Remaining
+
 - Complete function migration
 - Update deployment configuration
 - Update client-side function calls
@@ -188,29 +196,29 @@ import { onCall } from 'firebase-functions/v2/https'
 import { validateAuthentication } from '../../shared/auth.js'
 
 interface FunctionRequest {
-  // Define request interface
+	// Define request interface
 }
 
 export const functionName = onCall<FunctionRequest>(
-  { cors: true },
-  async (request) => {
-    // Validate authentication
-    validateAuthentication(request.auth)
-    
-    try {
-      // Function logic here
-      
-      return {
-        success: true,
-        message: 'Operation completed successfully',
-      }
-    } catch (error) {
-      // Use shared error handling
-      throw new Error(
-        error instanceof Error ? error.message : 'Operation failed'
-      )
-    }
-  }
+	{ cors: true },
+	async (request) => {
+		// Validate authentication
+		validateAuthentication(request.auth)
+
+		try {
+			// Function logic here
+
+			return {
+				success: true,
+				message: 'Operation completed successfully',
+			}
+		} catch (error) {
+			// Use shared error handling
+			throw new Error(
+				error instanceof Error ? error.message : 'Operation failed'
+			)
+		}
+	}
 )
 ```
 

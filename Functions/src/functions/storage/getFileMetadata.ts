@@ -50,7 +50,10 @@ export const getFileMetadata = onCall(
 			return {
 				name: metadata.name,
 				bucket: metadata.bucket,
-				size: typeof metadata.size === 'string' ? parseInt(metadata.size) : metadata.size || 0,
+				size:
+					typeof metadata.size === 'string'
+						? parseInt(metadata.size)
+						: metadata.size || 0,
 				contentType: metadata.contentType,
 				timeCreated: metadata.timeCreated,
 				updated: metadata.updated,

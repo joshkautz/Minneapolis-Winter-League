@@ -57,7 +57,9 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 					for (const member of teamDocument.roster) {
 						const playerDoc = await member.player.get()
 						if (playerDoc.exists) {
-							const playerDocument = playerDoc.data() as PlayerDocument | undefined
+							const playerDocument = playerDoc.data() as
+								| PlayerDocument
+								| undefined
 							const updatedSeasons =
 								playerDocument?.seasons?.map((season: any) =>
 									season.team?.id === teamId
