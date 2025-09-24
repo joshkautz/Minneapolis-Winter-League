@@ -22,7 +22,7 @@ import { SignatureRequestApi, SubSigningOptions } from '@dropbox/sign'
 export const resendWaiverEmail = onCall(
 	{
 		region: FIREBASE_CONFIG.REGION,
-		cors: ['https://mplswinterleague.com'],
+		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
 		secrets: ['DROPBOX_SIGN_API_KEY'],
 	},
 	async (request) => {

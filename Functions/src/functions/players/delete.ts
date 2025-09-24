@@ -7,6 +7,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerSeason, PlayerDocument } from '../../types.js'
 import { validateAuthentication, validateAdminUser } from '../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 /**
  * Request interface for deleting a player
@@ -27,7 +28,7 @@ interface DeletePlayerRequest {
  * - Provides audit logging for deletions
  */
 export const deletePlayer = onCall<DeletePlayerRequest>(
-	{ cors: true },
+	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 

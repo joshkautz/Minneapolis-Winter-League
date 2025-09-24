@@ -6,6 +6,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
 import { validateAuthentication } from '../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 /**
  * Get a signed download URL for Firebase Storage
@@ -14,7 +15,7 @@ import { validateAuthentication } from '../../shared/auth.js'
 export const getDownloadUrl = onCall(
 	{
 		enforceAppCheck: true,
-		region: 'us-central1',
+		region: FIREBASE_CONFIG.REGION,
 	},
 	async (request) => {
 		try {

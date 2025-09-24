@@ -7,6 +7,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections } from '../../types.js'
 import { validateAuthentication, validateAdminUser } from '../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 /**
  * Request interface for updating a player
@@ -31,7 +32,7 @@ interface UpdatePlayerRequest {
  * - Seasons array requires dedicated functions
  */
 export const updatePlayer = onCall<UpdatePlayerRequest>(
-	{ cors: true },
+	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 

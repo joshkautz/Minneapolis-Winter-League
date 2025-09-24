@@ -8,6 +8,7 @@ import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerDocument, TeamDocument } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 import { getCurrentSeason } from '../../shared/database.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 interface CreateOfferRequest {
 	playerId: string
@@ -16,7 +17,7 @@ interface CreateOfferRequest {
 }
 
 export const createOffer = onCall<CreateOfferRequest>(
-	{ region: 'us-central1' },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		validateAuthentication(request.auth)
 

@@ -24,9 +24,9 @@
 		"ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
 		"rewrites": [
 			{
-				"source": "/dropboxSignHandleWebhookEvents",
+				"source": "/dropboxSignWebhook",
 				"function": {
-					"functionId": "dropboxSignHandleWebhookEvents",
+					"functionId": "dropboxSignWebhook",
 					"region": "us-central1"
 				}
 			},

@@ -7,6 +7,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, OfferDocument, TeamDocument } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 interface UpdateOfferStatusRequest {
 	offerId: string
@@ -24,7 +25,7 @@ interface UpdateOfferStatusRequest {
  * - Atomic transaction with proper cleanup
  */
 export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
-	{ cors: true },
+	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 

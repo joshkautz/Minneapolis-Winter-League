@@ -6,6 +6,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getStorage } from 'firebase-admin/storage'
 import { getAuth } from 'firebase-admin/auth'
 import { logger } from 'firebase-functions/v2'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 /**
  * Get a signed upload URL for Firebase Storage
@@ -14,7 +15,7 @@ import { logger } from 'firebase-functions/v2'
 export const getUploadUrl = onCall(
 	{
 		enforceAppCheck: true,
-		region: 'us-central1',
+		region: FIREBASE_CONFIG.REGION,
 	},
 	async (request) => {
 		try {
