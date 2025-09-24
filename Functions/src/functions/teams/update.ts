@@ -7,6 +7,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, TeamDocument } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 interface EditTeamRequest {
 	teamId: string
@@ -24,7 +25,7 @@ interface EditTeamRequest {
  * - At least one field must be provided to update
  */
 export const updateTeam = onCall<EditTeamRequest>(
-	{ region: 'us-central1' },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		validateAuthentication(request.auth)
 

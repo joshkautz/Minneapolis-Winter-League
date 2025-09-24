@@ -7,13 +7,14 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, OfferDocument, PlayerDocument } from '../../types.js'
 import { validateAuthentication, validateAdminUser } from '../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 /**
  * Function to clean up expired or conflicting offers
  * Only admin users can run this cleanup
  */
 export const cleanupOffers = onCall(
-	{ region: 'us-central1' },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		// Validate authentication and admin privileges
 		validateAuthentication(request.auth)

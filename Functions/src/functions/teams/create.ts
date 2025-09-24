@@ -13,6 +13,7 @@ import {
 	SeasonDocument,
 } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 interface CreateTeamRequest {
 	name: string
@@ -22,7 +23,7 @@ interface CreateTeamRequest {
 }
 
 export const createTeam = onCall<CreateTeamRequest>(
-	{ region: 'us-central1' },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		// Validate authentication
 		validateAuthentication(request.auth)

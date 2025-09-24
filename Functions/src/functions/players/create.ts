@@ -7,6 +7,7 @@ import { getFirestore, DocumentReference } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerDocument, SeasonDocument } from '../../types.js'
 import { validateBasicAuthentication } from '../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 /**
  * Request interface for creating a player
@@ -46,7 +47,7 @@ interface CreatePlayerResponse {
  * to allow newly created users to create their player profiles immediately after registration.
  */
 export const createPlayer = onCall<CreatePlayerRequest>(
-	{ cors: true },
+	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 

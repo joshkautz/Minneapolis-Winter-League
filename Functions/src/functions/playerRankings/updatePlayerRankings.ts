@@ -23,6 +23,7 @@ import { logger } from 'firebase-functions/v2'
 import { z } from 'zod'
 import { Collections, SeasonDocument } from '../../types.js'
 import { validateAdminUser } from '../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 import {
 	loadGamesForCalculation,
 	processNewRoundsOnly,
@@ -46,9 +47,10 @@ type UpdateRankingsRequest = z.infer<typeof updateRankingsSchema>
  */
 export const updatePlayerRankings = onCall(
 	{
-		region: 'us-central1',
+		region: FIREBASE_CONFIG.REGION,
 		timeoutSeconds: 540, // 9 minutes
 		memory: '1GiB',
+		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
 	},
 	async (request: CallableRequest<UpdateRankingsRequest>) => {
 		try {
