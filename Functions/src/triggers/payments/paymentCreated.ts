@@ -25,6 +25,7 @@ export const onPaymentCreated = onDocumentCreated(
 	{
 		document: 'customers/{uid}/payments/{sid}',
 		region: FIREBASE_CONFIG.REGION,
+		secrets: ['DROPBOX_SIGN_API_KEY'],
 	},
 	async (event) => {
 		const { uid, sid } = event.params

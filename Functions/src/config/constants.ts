@@ -22,6 +22,12 @@ export const TEAM_CONFIG = {
 	MIN_PLAYERS_FOR_REGISTRATION: 10,
 } as const
 
+// Stripe Configuration
+export const STRIPE_CONFIG = {
+	SECRET_KEY: ENV.stripeSecretKey,
+	API_VERSION: '2025-08-27.basil' as const,
+} as const
+
 // Email Configuration
 export const EMAIL_CONFIG = {
 	WAIVER_SUBJECT: 'Minneapolis Winter League - Release of Liability',

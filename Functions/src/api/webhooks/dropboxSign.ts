@@ -21,7 +21,10 @@ import {
  * @see https://firebase.google.com/docs/functions/http-events#trigger_a_function_with_an_http_request
  */
 export const dropboxSignWebhook = onRequest(
-	{ region: FIREBASE_CONFIG.REGION },
+	{
+		region: FIREBASE_CONFIG.REGION,
+		secrets: ['DROPBOX_SIGN_API_KEY'],
+	},
 	async (req, resp) => {
 		try {
 			logger.info('Received Dropbox Sign webhook')

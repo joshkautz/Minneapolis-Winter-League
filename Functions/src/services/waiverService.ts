@@ -23,6 +23,7 @@ export const resendWaiverEmail = onCall(
 	{
 		region: FIREBASE_CONFIG.REGION,
 		cors: ['https://mplswinterleague.com'],
+		secrets: ['DROPBOX_SIGN_API_KEY'],
 	},
 	async (request) => {
 		try {
