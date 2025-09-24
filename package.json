@@ -31,8 +31,5 @@
 		"firebase-tools": "^14.17.0",
 		"jsdom": "^27.0.0",
 		"typescript": "^5.9.2"
-	},
-	"dependencies": {
-		"bad-words": "^4.0.0"
 	}
 }

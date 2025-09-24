@@ -55,6 +55,7 @@
 		"@tsparticles/engine": "^3.5.0",
 		"@tsparticles/react": "^3.0.0",
 		"@tsparticles/slim": "^3.8.1",
+		"bad-words": "^4.0.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"cmdk": "^1.1.1",
@@ -98,6 +99,7 @@
 	},
 	"devDependencies": {
 		"@tailwindcss/postcss": "^4.1.13",
+		"@types/bad-words": "^3.0.3",
 		"@types/node": "^24.5.2",
 		"@types/react": "^19.1.12",
 		"@types/react-dom": "^19.1.9",
