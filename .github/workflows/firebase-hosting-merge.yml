@@ -22,7 +22,7 @@ jobs:
       - name: Set Node version
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install App dependencies
         working-directory: ./App
@@ -63,23 +63,7 @@ jobs:
       - name: Set Node version
         uses: actions/setup-node@v5
         with:
-          node-version: 20
-
-      - name: Inject Dropbox Sign API Key
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: "const DROPBOX_SIGN_API_KEY = 'DROPBOX_SIGN_API_KEY'"
-          replace: "const DROPBOX_SIGN_API_KEY =\n\t'${{ secrets.DROPBOX_SIGN_API_KEY }}'"
-          include: 'Functions/src/index.ts'
-          regex: true
-
-      # - name: Disable Dropbox Sign Test Mode
-      #   uses: jacobtomlinson/gha-find-replace@v3
-      #   with:
-      #     find: 'testMode: true,'
-      #     replace: "testMode: false,"
-      #     include: 'Functions/src/index.ts'
-      #     regex: true
+          node-version: 22
 
       - name: Install Functions dependencies
         working-directory: ./Functions

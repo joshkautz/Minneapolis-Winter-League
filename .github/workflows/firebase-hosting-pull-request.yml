@@ -133,7 +133,7 @@ jobs:
       - name: Set Node version
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Functions dependencies
         working-directory: ./Functions
