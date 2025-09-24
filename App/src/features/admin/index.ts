@@ -1,0 +1,8 @@
+/**
+ * Admin features module barrel export
+ *
+ * Provides a clean interface for importing admin-related components
+ */
+
+export { AdminDashboard } from './admin-dashboard'
+export { PlayerRankingsAdmin } from './player-rankings-admin'

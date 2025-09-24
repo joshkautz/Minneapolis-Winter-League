@@ -1,0 +1,103 @@
+{
+	"indexes": [
+		{
+			"collectionGroup": "games",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "season",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "type",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "games",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "home",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "date",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "games",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "away",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "date",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "offers",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "team",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "type",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "offers",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "player",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "type",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "offers",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "player",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "team",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "players",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "firstname",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "lastname",
+					"order": "ASCENDING"
+				}
+			]
+		}
+	],
+	"fieldOverrides": []
+}

@@ -1,0 +1,32 @@
+{
+  "Tz5vpB7lD8agP10XrXem": {
+    "mode": "payment",
+    "price": "price_1PjNZjHMbQIHBzSiEbtC32Rb",
+    "success_url": "https://www.mplswinterleague.com/profile",
+    "cancel_url": "https://www.mplswinterleague.com/profile",
+    "created": "2024-10-18T18:15:33.535Z",
+    "client": "web",
+    "sessionId": "cs_live_a1e7MH5fMUENWFvlObxnWukcMtLPb9jyq3aAdX2DCHzwfdDKtQtHlfDKGO",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a1e7MH5fMUENWFvlObxnWukcMtLPb9jyq3aAdX2DCHzwfdDKtQtHlfDKGO#fidpamZkaWAnPydkcHFqJyknZHVsTmB8Jz8ndW5aaWxzYFowNEtsbXwzTUhnVExNR39WbEA0UnJuVTxoQXVuYnJJPU8xY3JLcn1hPFZWT1xEZkxkXFxGYkdNdGhIVmBmbGdddlV1R0I9Z1ZEUlU8QmdwYnBMf2QwSXxcXDU1T1BvXWJLbGEnKSdjd2poVmB3c2B3Jz9xd3BgKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl"
+  },
+  "rQasiUdfIHYvxsuH4x9G": {
+    "mode": "payment",
+    "price": "price_1PjNZjHMbQIHBzSiEbtC32Rb",
+    "cancel_url": "https://www.mplswinterleague.com/profile",
+    "success_url": "https://www.mplswinterleague.com/profile",
+    "created": "2024-10-14T16:55:25.765Z",
+    "client": "web",
+    "sessionId": "cs_live_a1x5wKHjkpSsPMrFF8dydzERXZKMoCawuEFlwLNE0Be8junqVA3wIY2sYe",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a1x5wKHjkpSsPMrFF8dydzERXZKMoCawuEFlwLNE0Be8junqVA3wIY2sYe#fidpamZkaWAnPydkcHFqJyknZHVsTmB8Jz8ndW5aaWxzYFowNEtsbXwzTUhnVExNR39WbEA0UnJuVTxoQXVuYnJJPU8xY3JLcn1hPFZWT1xEZkxkXFxGYkdNdGhIVmBmbGdddlV1R0I9Z1ZEUlU8QmdwYnBMf2QwSXxcXDU1T1BvXWJLbGEnKSdjd2poVmB3c2B3Jz9xd3BgKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl"
+  },
+  "x5ULqRCrKg9bhV9nd2pU": {
+    "mode": "payment",
+    "price": "price_1PjNZjHMbQIHBzSiEbtC32Rb",
+    "success_url": "https://www.mplswinterleague.com/profile",
+    "cancel_url": "https://www.mplswinterleague.com/profile",
+    "created": "2024-10-19T14:56:27.349Z",
+    "client": "web",
+    "sessionId": "cs_live_a1PUZlOtiOBzGtkjP0Z2iONGDEK0BqHMlYHyF0SEddX847u43B13wXYDIf",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a1PUZlOtiOBzGtkjP0Z2iONGDEK0BqHMlYHyF0SEddX847u43B13wXYDIf#fidpamZkaWAnPydkcHFqJyknZHVsTmB8Jz8ndW5aaWxzYFowNEtsbXwzTUhnVExNR39WbEA0UnJuVTxoQXVuYnJJPU8xY3JLcn1hPFZWT1xEZkxkXFxGYkdNdGhIVmBmbGdddlV1R0I9Z1ZEUlU8QmdwYnBMf2QwSXxcXDU1T1BvXWJLbGEnKSdjd2poVmB3c2B3Jz9xd3BgKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "XxDMPVSeU3TPrxhny5K6": {
+    "mode": "payment",
+    "price": "price_1PjNZjHMbQIHBzSiEbtC32Rb",
+    "cancel_url": "https://mplswinterleague.com/profile",
+    "success_url": "https://mplswinterleague.com/profile",
+    "created": "2024-10-02T03:27:24.907Z",
+    "client": "web",
+    "sessionId": "cs_live_a16rSCldeZ6PcjGJW4qT5PwJVpdojof2Xb6pGkXDgKcdiD2siL8yEZ5WMu",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a16rSCldeZ6PcjGJW4qT5PwJVpdojof2Xb6pGkXDgKcdiD2siL8yEZ5WMu#fidpamZkaWAnPydkcHFqJyknZHVsTmB8Jz8ndW5aaWxzYFowNEtsbXwzTUhnVExNR39WbEA0UnJuVTxoQXVuYnJJPU8xY3JLcn1hPFZWT1xEZkxkXFxGYkdNdGhIVmBmbGdddlV1R0I9Z1ZEUlU8QmdwYnBMf2QwSXxcXDU1T1BvXWJLbGEnKSdjd2poVmB3c2B3Jz9xd3BgKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl"
+  },
+  "i9JkUMfqaDuP6cQNtUGn": {
+    "mode": "payment",
+    "price": "price_1PjNZjHMbQIHBzSiEbtC32Rb",
+    "cancel_url": "https://www.mplswinterleague.com/profile",
+    "success_url": "https://www.mplswinterleague.com/profile",
+    "created": "2024-10-01T16:30:42.685Z",
+    "client": "web",
+    "sessionId": "cs_live_a12mapZXAbcLDjT4ImvOHPhhs7dXg7muHaw3fA5hCaGRuc2XKYT0FXPMe8",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a12mapZXAbcLDjT4ImvOHPhhs7dXg7muHaw3fA5hCaGRuc2XKYT0FXPMe8#fidpamZkaWAnPydkcHFqJyknZHVsTmB8Jz8ndW5aaWxzYFowNEtsbXwzTUhnVExNR39WbEA0UnJuVTxoQXVuYnJJPU8xY3JLcn1hPFZWT1xEZkxkXFxGYkdNdGhIVmBmbGdddlV1R0I9Z1ZEUlU8QmdwYnBMf2QwSXxcXDU1T1BvXWJLbGEnKSdjd2poVmB3c2B3Jz9xd3BgKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl"
+  }
+}

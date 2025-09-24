@@ -1,0 +1,90 @@
+import { useState, useEffect } from 'react'
+import { DesktopNavigation, MobileNavigation } from './navigation'
+import { useTopNavigation, useIsMobile } from '@/shared/hooks'
+
+interface NavigationBarProps {
+	onLoginClick: () => void
+}
+
+/**
+ * Top navigation bar component that handles responsive navigation
+ * Shows DesktopNavigation on larger screens and MobileNavigation with sheet on mobile
+ */
+export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
+	const [isSettingsPopoverOpen, setIsSettingsPopoverOpen] = useState(false)
+	const [isAccountPopoverOpen, setIsAccountPopoverOpen] = useState(false)
+	const [forceClosePopover, setForceClosePopover] = useState(false)
+	const isMobile = useIsMobile()
+
+	const {
+		authStateUser,
+		authStateLoading,
+		signOutLoading,
+		isMobileNavOpen,
+		hasPendingOffers,
+		hasRequiredTasks,
+		isAuthenticatedUserAdmin,
+		navContent,
+		userContent,
+		adminContent,
+		setIsMobileNavOpen,
+		handleCloseMobileNav,
+		handleSignOut,
+		handleMobileLogin,
+	} = useTopNavigation()
+
+	// Close popovers when switching to mobile view
+	useEffect(() => {
+		if (isMobile && (isSettingsPopoverOpen || isAccountPopoverOpen)) {
+			// Force immediate close without animation to prevent jarring UX
+			setForceClosePopover(true)
+			setIsSettingsPopoverOpen(false)
+			setIsAccountPopoverOpen(false)
+			// Reset the force close flag after a brief moment
+			const timeout = setTimeout(() => setForceClosePopover(false), 100)
+			return () => clearTimeout(timeout)
+		}
+		// Return undefined for other code paths
+		return undefined
+	}, [isMobile, isSettingsPopoverOpen, isAccountPopoverOpen])
+
+	return (
+		<header className='sticky top-0 z-50 w-full border-b supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur-sm'>
+			<div className='container flex items-center h-14'>
+				{/* Desktop Navigation */}
+				<DesktopNavigation
+					navItems={navContent}
+					userItems={userContent}
+					adminItems={adminContent}
+					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
+					onLoginClick={onLoginClick}
+					settingsPopoverOpen={isSettingsPopoverOpen}
+					setSettingsPopoverOpen={setIsSettingsPopoverOpen}
+					accountPopoverOpen={isAccountPopoverOpen}
+					setAccountPopoverOpen={setIsAccountPopoverOpen}
+					forceClosePopover={forceClosePopover}
+					hasPendingOffers={hasPendingOffers}
+					hasRequiredTasks={hasRequiredTasks}
+				/>
+
+				{/* Mobile Navigation */}
+				<MobileNavigation
+					navItems={navContent}
+					userItems={userContent}
+					adminItems={adminContent}
+					isAuthenticated={!!authStateUser}
+					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
+					hasPendingOffers={hasPendingOffers}
+					hasRequiredTasks={hasRequiredTasks}
+					isMobileNavOpen={isMobileNavOpen}
+					setIsMobileNavOpen={setIsMobileNavOpen}
+					onItemClick={handleCloseMobileNav}
+					onSignOut={handleSignOut}
+					onLogin={() => handleMobileLogin(onLoginClick)}
+					signOutLoading={signOutLoading}
+					authStateLoading={authStateLoading}
+				/>
+			</div>
+		</header>
+	)
+}

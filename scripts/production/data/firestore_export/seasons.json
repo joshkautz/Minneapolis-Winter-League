@@ -1,0 +1,54 @@
+{
+  "PBE6nY7rpCxufItsC7l0": {
+    "dateStart": "2024-11-02T05:00:00.293Z",
+    "name": "2024 Fall",
+    "dateEnd": "2024-12-15T06:00:00.068Z",
+    "registrationStart": "2024-10-01T05:00:00.731Z",
+    "teams": [
+      "teams/rpmhoe8o4VDqA1xwqoqK",
+      "teams/CsfadYYv1J1KvSj4SYd0",
+      "teams/nUZOOC7j8TJGCEV6aQIf",
+      "teams/KNdbONsXNayHPq6uHhWp",
+      "teams/UaOUQ6B2uBB4E6K5IcGE",
+      "teams/UYtKXok2YrFCnOVaPsMD",
+      "teams/SlSQZZyeRXzYeScoBHM2",
+      "teams/ozExVClE1sf8BNwotdIZ",
+      "teams/Zl4NPP4kQ0GaZyiqUjbj",
+      "teams/3hp5J5ZJ5NilcAI07y57",
+      "teams/7safbOlBjCRqWhe1rEN1",
+      "teams/GrNZCbOFMZ8bxgc1iaIb",
+      "teams/kocAbvNvtF4J4z5GOl93",
+      "teams/JtDLdTIEFA0yoN4k6EQ5"
+    ],
+    "registrationEnd": "2024-10-27T05:00:00.465Z"
+  },
+  "Q2RQ8310uNUGfHSDpMB3": {
+    "dateEnd": "2025-12-21T06:00:00.456Z",
+    "dateStart": "2025-11-01T05:00:00.181Z",
+    "name": "2025 Fall",
+    "registrationStart": "2025-10-01T05:00:00.261Z",
+    "teams": [],
+    "registrationEnd": "2025-10-29T05:00:00.341Z"
+  },
+  "Vr0ZvjAeahGoVh5p6OTp": {
+    "dateStart": "2023-11-04T05:00:00.770Z",
+    "name": "2023 Fall",
+    "registrationEnd": "2023-11-01T05:00:00.048Z",
+    "dateEnd": "2023-12-17T06:00:00.334Z",
+    "registrationStart": "2023-10-01T05:00:00.058Z",
+    "teams": [
+      "teams/2I7YXDF7RAXs3MCvLM0h",
+      "teams/67XqRkRUwClXW8VMbuYQ",
+      "teams/AE9qWaJmhxI300Gbbuye",
+      "teams/DTzWGB7fMbUVcL3iHT08",
+      "teams/Gv5elo2IVFTc3Ldv9AkO",
+      "teams/JFIJXG08u9bMEDnzsgFr",
+      "teams/OS4oMGXE3yAHkbGTKK5W",
+      "teams/b3BM1rI4q2JuzLyPHh2K",
+      "teams/cK26PQEyfvmmWpegVQzq",
+      "teams/hJnBb3ALKZILxo0RNfYY",
+      "teams/ifnI8V4AXxq28B0nWjJc",
+      "teams/nw1HrX3dXZMecbbTSGsR"
+    ]
+  }
+}

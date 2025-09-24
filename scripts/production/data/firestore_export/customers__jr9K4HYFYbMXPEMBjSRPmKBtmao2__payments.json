@@ -1,0 +1,55 @@
+{
+  "pi_3O5zBVHMbQIHBzSi1GMVbUPo": {
+    "metadata": {},
+    "amount_details": {
+      "tip": {}
+    },
+    "livemode": true,
+    "amount_capturable": 0,
+    "description": null,
+    "source": null,
+    "statement_descriptor": null,
+    "transfer_data": null,
+    "shipping": null,
+    "automatic_payment_methods": null,
+    "review": null,
+    "currency": "usd",
+    "client_secret": "pi_3O5zBVHMbQIHBzSi1GMVbUPo_secret_JBgtfhpdQE0MLl7eWXb7Pu01G",
+    "id": "pi_3O5zBVHMbQIHBzSi1GMVbUPo",
+    "payment_method_options": {
+      "card": {
+        "installments": null,
+        "request_three_d_secure": "automatic",
+        "mandate_options": null,
+        "network": null
+      }
+    },
+    "payment_method": null,
+    "capture_method": "automatic",
+    "amount": 6000,
+    "transfer_group": null,
+    "on_behalf_of": null,
+    "created": 1698448281,
+    "payment_method_types": [
+      "card"
+    ],
+    "amount_received": 0,
+    "setup_future_usage": null,
+    "confirmation_method": "automatic",
+    "payment_method_configuration_details": null,
+    "application": null,
+    "receipt_email": null,
+    "next_action": null,
+    "processing": null,
+    "invoice": null,
+    "statement_descriptor_suffix": null,
+    "application_fee_amount": null,
+    "customer": "cus_Otl8qj7p2rMlwH",
+    "object": "payment_intent",
+    "latest_charge": "ch_3O5zBVHMbQIHBzSi19T7Fttx",
+    "canceled_at": 1698534580,
+    "last_payment_error": null,
+    "cancellation_reason": "automatic",
+    "status": "canceled"
+  }
+}

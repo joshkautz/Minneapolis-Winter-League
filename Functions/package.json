@@ -1,34 +1,33 @@
 {
-	"name": "functions",
-	"version": "2.0.0",
+	"name": "@minneapolis-winter-league/functions",
+	"version": "3.0.0",
 	"private": true,
 	"type": "module",
 	"main": "dist/index.js",
 	"engines": {
-		"node": "20"
+		"node": "22"
 	},
 	"scripts": {
-		"format": "prettier --check .",
-		"lint": "eslint .",
-		"build": "tsc"
+		"format:check": "prettier --check .",
+		"format:fix": "prettier --write .",
+		"lint:check": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"build": "tsc",
+		"build:watch": "tsc --watch",
+		"dev": "tsc --watch"
 	},
 	"dependencies": {
 		"@dropbox/sign": "^1.10.0",
 		"firebase-admin": "^13.5.0",
-		"firebase-functions": "^6.4.0"
+		"firebase-functions": "^6.4.0",
+		"stripe": "^18.5.0",
+		"zod": "^4.1.11"
 	},
 	"devDependencies": {
-		"@eslint/js": "^9.25.0",
-		"@types/eslint__js": "^8.42.3",
-		"eslint": "^9.34.0",
+		"@eslint/js": "^9.36.0",
+		"eslint": "^9.36.0",
 		"prettier": "^3.6.2",
 		"typescript": "^5.9.2",
-		"typescript-eslint": "^8.41.0"
-	},
-	"prettier": {
-		"trailingComma": "es5",
-		"semi": false,
-		"singleQuote": true,
-		"useTabs": true
+		"typescript-eslint": "^8.44.1"
 	}
 }

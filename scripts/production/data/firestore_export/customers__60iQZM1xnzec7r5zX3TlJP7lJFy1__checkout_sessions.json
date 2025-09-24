@@ -1,0 +1,32 @@
+{
+  "emh2aiq7NmmP04KJcnRi": {
+    "mode": "payment",
+    "price": "price_1NkUnZHMbQIHBzSiRjN2Ms70",
+    "cancel_url": "https://www.mplswinterleague.com/profile",
+    "success_url": "https://www.mplswinterleague.com/profile",
+    "created": "2023-10-04T18:57:19.154Z",
+    "client": "web",
+    "sessionId": "cs_live_a1KJ0Ol1Eu6461uApUwlCu0Nk5X75qTkl4GzkZMDtHODbcGemwR5eKVF2i",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a1KJ0Ol1Eu6461uApUwlCu0Nk5X75qTkl4GzkZMDtHODbcGemwR5eKVF2i#fidkdWxOYHwnPyd1blppbHNgWjA0S2xtfDNNSGdUTE1Hf1ZsQDRScm5VPGhBdW5ickk9TzFjcktyfWE8VlZPXERmTGRcXEZiR010aEhWYGZsZ112VXVHQj1nVkRSVTxCZ3BicEx%2FZDBJfFxcNTVPUG9dYktsYScpJ2N3amhWYHdzYHcnP3F3cGApJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+  },
+  "xgalhSqumoYU48udj2Yk": {
+    "mode": "payment",
+    "price": "price_1PjNZjHMbQIHBzSiEbtC32Rb",
+    "cancel_url": "https://www.mplswinterleague.com/profile",
+    "success_url": "https://www.mplswinterleague.com/profile",
+    "created": "2024-10-03T18:42:32.598Z",
+    "client": "web",
+    "sessionId": "cs_live_a1Ud5jEcswt5ULKYazvyqvh0n24qv9rfgy5KEGl8n1UCvA5H9c2MjDIEXg",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a1Ud5jEcswt5ULKYazvyqvh0n24qv9rfgy5KEGl8n1UCvA5H9c2MjDIEXg#fidpamZkaWAnPydkcHFqJyknZHVsTmB8Jz8ndW5aaWxzYFowNEtsbXwzTUhnVExNR39WbEA0UnJuVTxoQXVuYnJJPU8xY3JLcn1hPFZWT1xEZkxkXFxGYkdNdGhIVmBmbGdddlV1R0I9Z1ZEUlU8QmdwYnBMf2QwSXxcXDU1T1BvXWJLbGEnKSdjd2poVmB3c2B3Jz9xd3BgKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl"
+  },
+  "xufZiMPdEDd2Zofyxfo3": {
+    "mode": "payment",
+    "price": "price_1PjNZjHMbQIHBzSiEbtC32Rb",
+    "cancel_url": "https://mplswinterleague.com/profile",
+    "success_url": "https://mplswinterleague.com/profile",
+    "created": "2024-10-01T14:14:39.323Z",
+    "client": "web",
+    "sessionId": "cs_live_a1q4pP4nUNfD9U44NYHSadx7lwsy7ctomKJai9PZw963zIYsWar9RdBYxv",
+    "url": "https://checkout.stripe.com/c/pay/cs_live_a1q4pP4nUNfD9U44NYHSadx7lwsy7ctomKJai9PZw963zIYsWar9RdBYxv#fidpamZkaWAnPydkcHFqJyknZHVsTmB8Jz8ndW5aaWxzYFowNEtsbXwzTUhnVExNR39WbEA0UnJuVTxoQXVuYnJJPU8xY3JLcn1hPFZWT1xEZkxkXFxGYkdNdGhIVmBmbGdddlV1R0I9Z1ZEUlU8QmdwYnBMf2QwSXxcXDU1T1BvXWJLbGEnKSdjd2poVmB3c2B3Jz9xd3BgKSdpZHxqcHFRfHVgJz8ndmxrYmlgWmxxYGgnKSdga2RnaWBVaWRmYG1qaWFgd3YnP3F3cGB4JSUl"
+  }
+}

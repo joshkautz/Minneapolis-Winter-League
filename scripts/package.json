@@ -1,0 +1,9 @@
+{
+	"name": "mwl-scripts",
+	"version": "1.0.0",
+	"type": "module",
+	"description": "Utility scripts for Minneapolis Winter League",
+	"dependencies": {
+		"firebase-admin": "^13.5.0"
+	}
+}

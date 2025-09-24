@@ -1,0 +1,35 @@
+{
+	"name": "minneapolis-winter-league",
+	"version": "3.0.0",
+	"private": true,
+	"type": "module",
+	"workspaces": [
+		"App",
+		"Functions"
+	],
+	"scripts": {
+		"dev:test_data": "concurrently \"npm run functions:watch\" \"npm run emulators:test_data_start\" \"npm run dev --workspace=App\"",
+		"dev:prod_data": "concurrently \"npm run functions:watch\" \"npm run emulators:prod_data_start\" \"npm run dev --workspace=App\"",
+		"functions:watch": "npm run build:watch --workspace=Functions",
+		"build": "npm run build --workspace=App && npm run build --workspace=Functions",
+		"format:check": "npm run format:check --workspace=App && npm run format:check --workspace=Functions",
+		"format:fix": "npm run format:fix --workspace=App && npm run format:fix --workspace=Functions",
+		"lint:check": "npm run lint:check --workspace=App && npm run lint:check --workspace=Functions",
+		"lint:fix": "npm run lint:fix --workspace=App && npm run lint:fix --workspace=Functions",
+		"test": "npm run test --workspace=App && npm run test --workspace=Functions",
+		"emulators:test_data_start": "firebase emulators:start --import ./.emulator/test",
+		"emulators:prod_data_start": "firebase emulators:start --import ./.emulator/prod",
+		"emulators:export": "firebase emulators:export ./.emulator",
+		"emulators:clear": "rm -rf ./.emulator && mkdir -p ./.emulator",
+		"deploy": "firebase deploy",
+		"deploy:hosting": "firebase deploy --only hosting",
+		"deploy:functions": "firebase deploy --only functions",
+		"deploy:firestore": "firebase deploy --only firestore"
+	},
+	"devDependencies": {
+		"concurrently": "^9.2.1",
+		"firebase-tools": "^14.17.0",
+		"jsdom": "^27.0.0",
+		"typescript": "^5.9.2"
+	}
+}

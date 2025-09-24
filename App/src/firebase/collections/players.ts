@@ -1,0 +1,297 @@
+/**
+ * Player-related Firestore operations
+ */
+
+import {
+	doc,
+	getDoc,
+	updateDoc,
+	query,
+	where,
+	collection,
+	or,
+	and,
+} from 'firebase/firestore'
+import type {
+	DocumentSnapshot,
+	DocumentReference,
+	Query,
+	UpdateData,
+} from 'firebase/firestore'
+
+import { firestore } from '../app'
+import { User } from '../auth'
+import {
+	PlayerDocument,
+	SeasonDocument,
+	TeamDocument,
+	Collections,
+	PlayerSeason,
+	TeamRosterPlayer,
+} from '@/shared/utils'
+
+/**
+ * Gets a player document snapshot by reference
+ */
+export const getPlayerSnapshot = (
+	playerRef: DocumentReference<PlayerDocument>
+): Promise<DocumentSnapshot<PlayerDocument>> => {
+	return getDoc(playerRef)
+}
+
+/**
+ * Gets a player document reference from authenticated user
+ */
+export const getPlayerRef = (
+	authValue: User | null | undefined
+): DocumentReference<PlayerDocument> | undefined => {
+	if (!authValue) {
+		return undefined
+	}
+	return doc(
+		firestore,
+		Collections.PLAYERS,
+		authValue.uid
+	) as DocumentReference<PlayerDocument>
+}
+
+/**
+ * Creates a query to search for players by name
+ */
+export const getPlayersQuery = (
+	search: string
+): Query<PlayerDocument> | undefined => {
+	if (search === '') {
+		return undefined
+	}
+	if (search.includes(' ')) {
+		const [firstname, lastname] = search.split(' ', 2)
+		return query(
+			collection(firestore, Collections.PLAYERS),
+			where(
+				'firstname',
+				'>=',
+				firstname.charAt(0).toUpperCase() + firstname.slice(1)
+			),
+			where(
+				'firstname',
+				'<=',
+				firstname.charAt(0).toUpperCase() + firstname.slice(1) + '\uf8ff'
+			),
+			where(
+				'lastname',
+				'>=',
+				lastname.charAt(0).toUpperCase() + lastname.slice(1)
+			),
+			where(
+				'lastname',
+				'<=',
+				lastname.charAt(0).toUpperCase() + lastname.slice(1) + '\uf8ff'
+			)
+		) as Query<PlayerDocument>
+	} else {
+		return query(
+			collection(firestore, Collections.PLAYERS),
+			or(
+				and(
+					where(
+						'firstname',
+						'>=',
+						search.charAt(0).toUpperCase() + search.slice(1)
+					),
+					where(
+						'firstname',
+						'<=',
+						search.charAt(0).toUpperCase() + search.slice(1) + '\uf8ff'
+					)
+				),
+				and(
+					where(
+						'lastname',
+						'>=',
+						search.charAt(0).toUpperCase() + search.slice(1)
+					),
+					where(
+						'lastname',
+						'<=',
+						search.charAt(0).toUpperCase() + search.slice(1) + '\uf8ff'
+					)
+				)
+			)
+		) as Query<PlayerDocument>
+	}
+}
+
+/**
+ * Updates a player document with new data
+ *
+ * @deprecated This function performs client-side updates which can be bypassed.
+ * Use `updatePlayerViaFunction` from '@/firebase/collections/functions' instead,
+ * which performs all validations server-side via Firebase Functions for better security.
+ *
+ * The Firebase Function ensures:
+ * - Server-side authentication verification
+ * - Permission checks (users can only update their own profile unless admin)
+ * - Field validation and sanitization
+ * - Audit logging of all changes
+ * - Cannot be manipulated client-side
+ */
+export const updatePlayer = (
+	authValue: User | null | undefined,
+	data: UpdateData<PlayerDocument>
+): Promise<void> => {
+	console.warn(
+		'⚠️  updatePlayer is deprecated. Use updatePlayerViaFunction for better security.'
+	)
+	return updateDoc(doc(firestore, Collections.PLAYERS, authValue!.uid), data)
+}
+
+/**
+ * Promotes a player to captain status for a specific season and team
+ */
+export const promoteToCaptain = async (
+	playerRef: DocumentReference<PlayerDocument> | undefined,
+	teamRef: DocumentReference<TeamDocument> | undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined
+) => {
+	if (!playerRef || !teamRef || !seasonRef) {
+		return
+	}
+
+	// Get the team doc so we can update the team document
+	const teamDocumentSnapshot = await getDoc(teamRef)
+
+	// Get the player doc so we can update the player document
+	const playerDocumentSnapshot = await getDoc(playerRef)
+
+	return Promise.all([
+		// Update the team doc to add captain status for the player
+		updateDoc(teamRef, {
+			roster: (
+				teamDocumentSnapshot.data() as TeamDocument | undefined
+			)?.roster.map((item: TeamRosterPlayer) => ({
+				captain: item.player.id === playerRef.id ? true : item.captain,
+				player: item.player,
+			})),
+		}),
+		// Update the player doc to add captain status for the season
+		updateDoc(playerRef, {
+			seasons: (
+				playerDocumentSnapshot.data() as PlayerDocument | undefined
+			)?.seasons.map((item: PlayerSeason) => ({
+				captain: item.season.id === seasonRef.id ? true : item.captain,
+				paid: item.paid,
+				season: item.season,
+				signed: item.signed,
+				team: item.team,
+			})),
+		}),
+	])
+}
+
+/**
+ * Demotes a player from captain status for a specific season and team
+ */
+export const demoteFromCaptain = async (
+	playerRef: DocumentReference<PlayerDocument> | undefined,
+	teamRef: DocumentReference<TeamDocument> | undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined
+) => {
+	if (!playerRef || !teamRef || !seasonRef) {
+		return
+	}
+
+	// Get the team doc so we can update the team document
+	const teamDocumentSnapshot = await getDoc(teamRef)
+
+	// Get the player doc so we can update the player document
+	const playerDocumentSnapshot = await getDoc(playerRef)
+
+	// Check if the player is the last captain on the team. Cannot demote last captain.
+	if (
+		(teamDocumentSnapshot.data() as TeamDocument | undefined)?.roster.filter(
+			(item: TeamRosterPlayer) => item.captain
+		).length === 1
+	) {
+		throw new Error('Cannot demote last captain.')
+	}
+
+	return Promise.all([
+		// Update the team doc to remove captain status for the player
+		updateDoc(teamRef, {
+			roster: (
+				teamDocumentSnapshot.data() as TeamDocument | undefined
+			)?.roster.map((item: TeamRosterPlayer) => ({
+				captain: item.player.id === playerRef.id ? false : item.captain,
+				player: item.player,
+			})),
+		}),
+		// Update the player doc to remove captain status for the season
+		updateDoc(playerRef, {
+			seasons: (
+				playerDocumentSnapshot.data() as PlayerDocument | undefined
+			)?.seasons.map((item: PlayerSeason) => ({
+				captain: item.season.id === seasonRef.id ? false : item.captain,
+				paid: item.paid,
+				season: item.season,
+				signed: item.signed,
+				team: item.team,
+			})),
+		}),
+	])
+}
+
+/**
+ * Removes a player from a team
+ */
+export const removeFromTeam = async (
+	playerRef: DocumentReference<PlayerDocument> | undefined,
+	teamRef: DocumentReference<TeamDocument> | undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined
+) => {
+	if (!playerRef || !teamRef || !seasonRef) {
+		return
+	}
+
+	await getDoc(teamRef)
+		// Ensure this player isn't the last captain on the team
+		.then((teamDocumentSnapshot) => {
+			if (
+				!(teamDocumentSnapshot.data() as TeamDocument | undefined)?.roster.some(
+					(item: TeamRosterPlayer) =>
+						item.captain && item.player.id !== playerRef.id
+				)
+			) {
+				throw new Error('Cannot remove last captain.')
+			}
+		})
+
+	// Update the team document to remove the player from the team
+	const teamPromise = getDoc(teamRef).then((teamDocumentSnapshot) =>
+		updateDoc(teamRef, {
+			roster: (
+				teamDocumentSnapshot.data() as TeamDocument | undefined
+			)?.roster.filter(
+				(item: TeamRosterPlayer) => item.player.id !== playerRef.id
+			),
+		})
+	)
+
+	// Update the player document to remove the team from their season
+	const playerPromise = getDoc(playerRef).then((playerDocumentSnapshot) =>
+		updateDoc(playerRef, {
+			seasons: (
+				playerDocumentSnapshot.data() as PlayerDocument | undefined
+			)?.seasons.map((item: PlayerSeason) => ({
+				banned: item.banned,
+				captain: item.season.id === seasonRef.id ? false : item.captain,
+				paid: item.paid,
+				season: item.season,
+				signed: item.signed,
+				team: item.season.id === seasonRef.id ? null : item.team,
+			})),
+		})
+	)
+
+	return Promise.all([teamPromise, playerPromise])
+}

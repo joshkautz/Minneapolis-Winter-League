@@ -1,0 +1,7925 @@
+{
+  "06FRk1G7Ylat1LFQvzToEk5fcJv1": {
+    "admin": false,
+    "email": "et.ode44@gmail.com",
+    "lastname": "Ode",
+    "firstname": "Ethan ode",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "0PPEqhNZIJgjpAMCcNMvkVFOoI92": {
+    "firstname": "Nicholas",
+    "admin": false,
+    "email": "nicholasgazelka@gmail.com",
+    "lastname": "Gazelka",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "0SCQkz3RHuPPhUGgVqtQoY6jDdv1": {
+    "firstname": "Patrick",
+    "admin": false,
+    "email": "patwozniak02@gmail.com",
+    "lastname": "Wozniak",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "0WYLo403F6P55xLuC17rGiu3zZ72": {
+    "firstname": "Nicholas",
+    "admin": false,
+    "email": "njq01@yahoo.com",
+    "lastname": "Quast",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "0iSnbStuCoUVvly4k5ZUVD2R6cy1": {
+    "admin": false,
+    "firstname": "Joe",
+    "lastname": "Bosshardt",
+    "email": "jwbosshardt@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "0xKbONxYfaNVZMWuWhDv6JSokTI2": {
+    "firstname": "Kiernan",
+    "admin": false,
+    "email": "krbenson1313@gmail.com",
+    "lastname": "Benson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "1OlHOSaIZFS4U56GIhfr0Ac1vkg2": {
+    "firstname": "Chaz",
+    "admin": false,
+    "email": "Chazschul@gmail.com",
+    "lastname": "Schulz",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "1X4o4ptGDhVXSGcLP72mRjzCHTJ2": {
+    "firstname": "Maya",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "mayajseverson@gmail.com",
+    "lastname": "Severson "
+  },
+  "1XBKwyZlKzVtdrZJRzOb1LvlKZx2": {
+    "firstname": "Carl",
+    "admin": false,
+    "email": "slide.jingle.0k@icloud.com",
+    "lastname": "Rosamilia",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "1dq1llCEm0O6engXL7VROWITQHq2": {
+    "firstname": "Sophia ",
+    "admin": false,
+    "email": "sophiagracepung@gmail.com",
+    "lastname": "Pung ",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93"
+      }
+    ]
+  },
+  "1sWb4A5a2tRiYL47PCHKv4lwpoo2": {
+    "firstname": "Peter",
+    "admin": false,
+    "email": "pjkasner@gmail.com",
+    "lastname": "Kasner",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "1wNuB4fdGPcYazDmF6vFxKuE7aL2": {
+    "admin": false,
+    "firstname": "Dylan",
+    "lastname": "Moe",
+    "email": "dylanrichmoe@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "2F6dvMnuoCapNJW34EK0gHDNb612": {
+    "firstname": "Bret",
+    "admin": false,
+    "email": "bbergmeier@gmail.com",
+    "lastname": "Bergmeier",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "2O6ZgBwGegNnyI2hgEqTQiY37eG2": {
+    "firstname": "Cody",
+    "admin": false,
+    "email": "crondeau08@gmail.com",
+    "lastname": "RondeU",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "2enScNEL8IOaG8CkknJmC3MBF5G3": {
+    "firstname": "Max",
+    "admin": false,
+    "email": "maxwolpert1@gmail.com",
+    "lastname": "Wolpert",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "2gSafO2BedYRaRGl57mKgpn4ctD3": {
+    "firstname": "Finn",
+    "admin": false,
+    "email": "finnjdougherty@gmail.com",
+    "lastname": "Dougherty",
+    "seasons": [
+      {
+        "captain": false,
+        "signed": false,
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "team": null
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "39qZd7MA5NcnBaXjMceySCJG1zF3": {
+    "firstname": "Sam",
+    "admin": false,
+    "email": "Sam.bumsted@gmail.com",
+    "lastname": "Bumsted",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "3LdnJdwsFuXe4MfKBICM6huFvcL2": {
+    "firstname": "Derek",
+    "admin": false,
+    "email": "derekanderson4@comcast.net",
+    "lastname": "Anderson",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "3MHOodzt7mWHqnWJ4zUyvuaRIuM2": {
+    "firstname": "Joe",
+    "admin": false,
+    "email": "Josephnelsonmnsu@gmail.com",
+    "lastname": "Nelson",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "3MiQ8sOEnCVjZwaE3Lw7m4Zza7J3": {
+    "firstname": "Trevor",
+    "admin": false,
+    "email": "tjruwitch@gmail.com",
+    "lastname": "Ruwitch",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "3ZRBRJ1HflhNETnQRXn4UlDRFB62": {
+    "firstname": "Donald",
+    "admin": false,
+    "email": "pdonaldjr747@gmail.com",
+    "lastname": "Post",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "3g4DcjaPxPb7Pa7SwnuBc6pUDgb2": {
+    "firstname": "Max",
+    "admin": false,
+    "email": "maxicraft8910@gmail.com",
+    "lastname": "Baker",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "3iyL8xhtG5bbkIb0qwig2qZTWiY2": {
+    "firstname": "Casey",
+    "admin": false,
+    "email": "ctrundquist@gmail.com",
+    "lastname": "Rundquist",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "3oiVURfT1IZVxeYwo2vBdmG9PAl2": {
+    "firstname": "Matthew",
+    "admin": false,
+    "email": "matt.bloom101@gmail.com",
+    "lastname": "Bloom",
+    "seasons": [
+      {
+        "paid": false,
+        "signed": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "team": null,
+        "captain": false
+      }
+    ]
+  },
+  "4HqT9TT8onS8CajCIl8ExGfzMF33": {
+    "firstname": "chad",
+    "admin": false,
+    "email": "simonelli.coffee@gmail.com",
+    "lastname": "chadson",
+    "seasons": [
+      {
+        "paid": false,
+        "signed": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "team": null,
+        "captain": false
+      }
+    ]
+  },
+  "4neiRcCP34UfjF9qOeDYvjjsjJf2": {
+    "firstname": "Luke",
+    "admin": false,
+    "email": "luken1097@gmail.com",
+    "lastname": "Norris",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "4s1BneuyMkUOviYY5nSJtf84V963": {
+    "admin": false,
+    "email": "mobadillom@gmail.com",
+    "firstname": "Mauricio",
+    "lastname": "Badillo Moorman",
+    "seasons": [
+      {
+        "team": null,
+        "captain": false,
+        "signed": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0"
+      }
+    ]
+  },
+  "4sz3CEljVUUeOIy1meiNwckut0E3": {
+    "firstname": "Liam",
+    "admin": false,
+    "email": "lclark@greatriverschool.org",
+    "lastname": "Clark",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "553YEJkTz0Zrdde2hurqpj8bdeD2": {
+    "firstname": "Willis",
+    "admin": false,
+    "email": "willisehrler@gmail.com",
+    "lastname": "Ehrler",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": "teams/Gv5elo2IVFTc3Ldv9AkO",
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "5CGOCkTIE8cZCsZl2g3AF5uvRCN2": {
+    "firstname": "Korbin",
+    "admin": false,
+    "email": "allstar.lacy@gmail.com",
+    "lastname": "Lacy",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "5OWB7PacpshaqDUZDDm7OF9P2w13": {
+    "admin": false,
+    "email": "joelodahl7@gmail.com",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ],
+    "firstname": "•Ben",
+    "lastname": "Lodahl                                                         •Joe Lodahl"
+  },
+  "5OqRZs4d1OcbyLeHGB2ejmafqUk1": {
+    "firstname": "Linus",
+    "admin": false,
+    "email": "ttzehin@gmail.com",
+    "lastname": "Tong",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "5UV5lri3EHdxbNJeeCFBnm89Qon2": {
+    "admin": false,
+    "firstname": "Colin",
+    "lastname": "Fry",
+    "email": "Cjfry93@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "5VVelluk4sXLUOAhIWSnwN15M4I3": {
+    "firstname": "Brandon",
+    "admin": false,
+    "email": "brandon.krekelberg@gmail.com",
+    "lastname": "Krekelberg",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "60iQZM1xnzec7r5zX3TlJP7lJFy1": {
+    "firstname": "Jonathan",
+    "admin": false,
+    "email": "jonathanedwardsmusic7@gmail.com",
+    "lastname": "Edwards",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "6Ix7x0GY5VVgZ0PdWVihT8EzIL83": {
+    "firstname": "Chase",
+    "admin": false,
+    "email": "chase13olson@gmail.com",
+    "lastname": "Olson",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "6KRYEdxzzHYqugVjUTQjAp5wsvo1": {
+    "firstname": "Ella",
+    "admin": false,
+    "email": "ellaapmullin@gmail.com",
+    "lastname": "Mullin",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "6UjyP1XNJTfRprvZgqffyvDsd1s1": {
+    "firstname": "Isaiah ",
+    "admin": false,
+    "email": "isaiah.klepfer@gmail.com",
+    "lastname": "Klepfer",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "6XGOMof6NHYJXC9xY9Ox6CLTagt1": {
+    "firstname": "Evan",
+    "admin": false,
+    "email": "evan.nothmann@gmail.com",
+    "lastname": "Nothmann",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "6lWdcn2qDgYdVrSYNx6vSFccvi52": {
+    "firstname": "Benjamin",
+    "admin": false,
+    "email": "ben@klepfer.net",
+    "lastname": "Klepfer",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "6rQxLws9dNdYk3mEgo1GyH0Hphx2": {
+    "firstname": "Ryan",
+    "admin": false,
+    "email": "rccole@mtu.edu",
+    "lastname": "Cole",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "6x9jYr9Jfze5unjeGrOraBipdao1": {
+    "firstname": "Johnny",
+    "admin": false,
+    "email": "spamjohnny21@gmail.com",
+    "lastname": "Haas",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "7NRKs84Xwgckco1lP2gATIEvcd03": {
+    "firstname": "Joe",
+    "admin": false,
+    "email": "jp.sheehan789@gmail.com",
+    "lastname": "Sheehan",
+    "seasons": [
+      {
+        "paid": true,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "captain": false,
+        "signed": true
+      },
+      {
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "paid": false,
+        "team": null,
+        "captain": false,
+        "signed": false
+      }
+    ]
+  },
+  "7PUjdfLzDwUNSl8t0z73gsG2pQn1": {
+    "firstname": "Drew",
+    "admin": false,
+    "email": "drewo@mac.com",
+    "lastname": "Otterlei",
+    "seasons": [
+      {
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K",
+        "signed": true,
+        "paid": true,
+        "captain": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+      },
+      {
+        "team": "teams/kocAbvNvtF4J4z5GOl93",
+        "signed": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false
+      }
+    ]
+  },
+  "7R04gcQwBab5d89rEQdKTxELwQU2": {
+    "admin": false,
+    "firstname": "Jack",
+    "lastname": "Meehan",
+    "email": "meehanjack13@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93"
+      }
+    ]
+  },
+  "7xuJQPc2CnO5NkUJbeRQvLMJajn2": {
+    "firstname": "John",
+    "admin": false,
+    "email": "ANDERSJD89@GMAIL.COM",
+    "lastname": "Anderson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h",
+        "captain": false
+      },
+      {
+        "paid": true,
+        "signed": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "8ALrFkmzFjcx40sZppzsUQyFXoV2": {
+    "firstname": "Kyle",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "kb.privy@gmail.com",
+    "lastname": "Banks"
+  },
+  "8DdWgudtRIhFvFR4ya3FFi55EHY2": {
+    "firstname": "Eric",
+    "admin": false,
+    "email": "vandermolen.eric@gmail.com",
+    "lastname": "VanderMolen",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "8Z56AxJ0SEdIy2jsDAc7Ph4QCJs2": {
+    "firstname": "Raheem",
+    "admin": false,
+    "email": "raheem.ishaque@gmail.com",
+    "lastname": "Ishaque",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "8cV3HJW5P2dM2UkZThiH6vb7V473": {
+    "firstname": "Abbott",
+    "admin": false,
+    "email": "abbott@spillerfamily.net",
+    "lastname": "Spiller",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "8jZKnR13EhdkACI2CV7mDiwaN743": {
+    "firstname": "Saurav",
+    "admin": false,
+    "email": "dubey019@umn.edu",
+    "lastname": "Dubey",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "8mCBQrQboYgFBvkLCy2ILeOh36y1": {
+    "firstname": "Malik",
+    "admin": false,
+    "email": "malik.j.williams7567@gmail.com",
+    "lastname": "Williams ",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "8uErLDWHbmQLKUkFNirRTnEiUnx2": {
+    "firstname": "Nolan",
+    "admin": false,
+    "email": "nknuts026@icloud.com",
+    "lastname": "Knutson",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "8wcfdauseRYU2nH7djcay65NIqg1": {
+    "firstname": "Ming Cheng",
+    "admin": false,
+    "email": "friskyminsk@gmail.com",
+    "lastname": "Chew",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "9BazAQoZ9ChvBOZxjqnKZ9SAgpn2": {
+    "firstname": "Tristan",
+    "admin": false,
+    "email": "tristan.a.vdm@gmail.com",
+    "lastname": "Van De Moortele",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "9GhdqoSOZFONKQJ2Rdw2ffKPMw82": {
+    "firstname": "Kabor",
+    "admin": false,
+    "email": "kabordn@gmail.com",
+    "lastname": "Namarra",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "9SWW6Mnvc8TxAnJphe6fwkOVFvj1": {
+    "firstname": "Evan",
+    "admin": false,
+    "email": "natureboyee@gmail.com",
+    "lastname": "Ellis",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/kocAbvNvtF4J4z5GOl93"
+      }
+    ]
+  },
+  "9WqFsz3bKQhb2HJw1m0Ztjy49Fu1": {
+    "firstname": "Henry",
+    "admin": false,
+    "email": "henrylyne059@gmail.com",
+    "lastname": "Lyne",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "9bzKPNdHxndsIFoNBV3JLmWTYhV2": {
+    "firstname": "Everett",
+    "admin": false,
+    "email": "Evrries80@gmail.com",
+    "lastname": "Ries",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "9e7jnE3UB8UseepKjf3ZBW7vdx32": {
+    "firstname": "Matt",
+    "admin": false,
+    "email": "mattkompelien@gmail.com",
+    "lastname": "Kompelien",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "9gG1BTRr5ofAZyE5WFxreydEksu1": {
+    "firstname": "Aidan",
+    "admin": false,
+    "email": "aidan.clem11@gmail.com",
+    "lastname": "Clements",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "9ldt1bRx0xPZ0bojl4wkxLHZZit1": {
+    "firstname": "Hailey",
+    "admin": false,
+    "email": "hshoe04@gmail.com",
+    "lastname": "Shoemaker",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "A2iqzSBZIphBhecqymdvD90PCgj1": {
+    "admin": false,
+    "email": "cepur002@umn.edu",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "firstname": "Greg",
+    "lastname": "Cepuran"
+  },
+  "A5s1Z90wVEhcUNlpTDSSb1Gv1IG2": {
+    "firstname": "Josiah",
+    "admin": false,
+    "email": "josiahloosbrock@gmail.com",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ],
+    "lastname": "Loosbrock"
+  },
+  "ACgDukFigsQBRuONysJmZgvUCGW2": {
+    "firstname": "Mikey",
+    "admin": false,
+    "email": "Mikeywagner1525@gmail.com",
+    "lastname": "Wagner",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "AEJSHsc3kmXZgO6UXrZwiDWrKa32": {
+    "firstname": "Brian",
+    "admin": false,
+    "email": "chri1735@gmail.com",
+    "lastname": "Christiansen",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "AFodXuKdsaQA4akMfXzHlRbFQUb2": {
+    "firstname": "Michael",
+    "admin": false,
+    "email": "bubbakelm23@gmail.com",
+    "lastname": "Kelm",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "AGPeaV5icIMYUYBsF0sTwzjRAS72": {
+    "firstname": "Robert",
+    "admin": false,
+    "email": "Crosscountrytim@gmail.com",
+    "lastname": "Sterns",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "AOzPwN9lrLX9Xgoehs3cr20hwCH2": {
+    "firstname": "Caleb",
+    "admin": false,
+    "email": "reed0890@umn.edu",
+    "lastname": "Reed",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "AVtrBxgWRyU08jHXn9ZGDjesWSM2": {
+    "firstname": "Will",
+    "admin": false,
+    "email": "willbrandt22@gmail.com",
+    "lastname": "Brandt",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "AhEr5ne8r8adcj7TrrYjAUonqoz2": {
+    "firstname": "Willie",
+    "admin": false,
+    "email": "winstonivwillie@gmail.com",
+    "lastname": "Winston IV",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "Aqf6PEd8SWO7dOhxh67ox0x5juJ3": {
+    "firstname": "kenji",
+    "admin": false,
+    "email": "kenjisspam@gmail.com",
+    "lastname": "her",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "AykUQmjGbCOLlMkNUV4C9S6z6Xk1": {
+    "firstname": "Eric",
+    "admin": false,
+    "email": "eric.scott.ethen@gmail.com",
+    "lastname": "Ethen",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "B8lCX8L295fCJ9U3MlBqCBMVJNO2": {
+    "firstname": "Isaac",
+    "admin": false,
+    "email": "ilschmitz9@gmail.com",
+    "lastname": "Schmitz",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "BHXNn0oQ8TMmWWRm9gElfVDqfw33": {
+    "admin": false,
+    "firstname": "Tyler",
+    "lastname": "Wolf Williams",
+    "email": "Tylersporty@gmail.com",
+    "seasons": [
+      {
+        "team": null,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false
+      }
+    ]
+  },
+  "BLpHhay7ARevo43DnJUumaJxbBJ2": {
+    "firstname": "Max",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "max.baker.4599@gmail.com",
+    "lastname": "Baker"
+  },
+  "BRSYAmHgiZTNOo8HrUd4G1MTdVw2": {
+    "admin": false,
+    "email": "mitchell13allen@gmail.com",
+    "lastname": "Allen",
+    "firstname": "Mitch",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "BRsjvYtZ6WYE1IsPxy4rmOosq4q1": {
+    "admin": false,
+    "firstname": "Marco",
+    "lastname": "Dregni",
+    "email": "dregni.marco@gmail.com",
+    "seasons": [
+      {
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE",
+        "paid": true,
+        "captain": false,
+        "signed": true
+      }
+    ]
+  },
+  "BV77WfJdfvRzZMQnTTurIns7rab2": {
+    "firstname": "Alexander ",
+    "admin": false,
+    "email": "Darussian28@gmail.com",
+    "lastname": "Relling",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "BdjmGZmCmXfnTQHLzWA16yimGVm1": {
+    "firstname": "Luke",
+    "admin": false,
+    "email": "lukebleers@gmail.com",
+    "lastname": "Bleers",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "BhULF33nsdU2REjs4fZEjpgky673": {
+    "firstname": "Tommy",
+    "admin": false,
+    "email": "tommyharris96@gmail.com",
+    "lastname": "Harris",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "BmcEtHznZ3Q1q09UADCJ6BarmAZ2": {
+    "admin": false,
+    "firstname": "Benjamin",
+    "lastname": "Jagt",
+    "email": "benifiber@gmail.com",
+    "seasons": [
+      {
+        "signed": true,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "C5jyhRYck1ZMddwg5uYJbHWneF22": {
+    "firstname": "Wyatt",
+    "admin": false,
+    "email": "wyattmackenthun@gmail.com",
+    "lastname": "Mackenthun ",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "CCjthU2GS0XX9dW5PmsP8XvUSRv2": {
+    "firstname": "Mark",
+    "admin": false,
+    "email": "mroos98@gmail.com",
+    "lastname": "Roos",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "CLLM6mJXKJYd0V5lL9R9PCDEQMQ2": {
+    "firstname": "Mike",
+    "admin": false,
+    "email": "pete2204@umn.edu",
+    "lastname": "Petersen",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "CMV0nD2ILicF8vyHXRfHjkAq5RI2": {
+    "firstname": "Eli",
+    "admin": false,
+    "email": "Schmelzer.Eli2004@gmail.com",
+    "lastname": "Schmelzer",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "CZ3XVGUC5NVoGOuUUxEp0yCRQC63": {
+    "firstname": "Ryan",
+    "admin": false,
+    "email": "Ryans075@gmail.com",
+    "lastname": "Schultz",
+    "seasons": [
+      {
+        "captain": false,
+        "signed": true,
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "captain": false,
+        "signed": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "paid": false,
+        "team": null
+      }
+    ]
+  },
+  "Cg8MIG4ejwP3Fk3BxAJzMiyN3ws2": {
+    "firstname": "Vincent ",
+    "admin": false,
+    "email": "meyervincent841@gmail.com",
+    "lastname": "Meyer",
+    "seasons": [
+      {
+        "captain": true,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "Ck7Wkf0HW8O9cme3vXxkMyPfPxt1": {
+    "firstname": "Samuel",
+    "admin": false,
+    "email": "Samuelfronek@gmail.com",
+    "lastname": "Fronek",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "CnloONSbizf6CUvVy0vTvxqhDrM2": {
+    "firstname": "Ladd",
+    "admin": false,
+    "email": "wladdtimothy@gmail.com",
+    "lastname": "Timothy",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "CrdEWJYBxOP81JvuFYUC2GeN9RP2": {
+    "firstname": "Timothy",
+    "admin": false,
+    "email": "timefordrums@gmail.com",
+    "lastname": "Ford",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "D6NkVNdSXjgYd3xzuhps5haTOA33": {
+    "firstname": "Karter",
+    "admin": false,
+    "email": "karterkeller@gmail.com",
+    "lastname": "Keller",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "team": null,
+        "captain": false
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "DPIF4Q68LDd7BIToRzov2RxOYpy1": {
+    "firstname": "Marshall",
+    "admin": false,
+    "email": "marshall.wasmund@gmail.com",
+    "lastname": "Wasmund",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "Dc6qvIwryxSXHeOhHuBzd5QEeds2": {
+    "firstname": "Benjamin",
+    "admin": false,
+    "email": "tiril85@yatdew.com",
+    "lastname": "Torgersen",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "DefmnT9XZEdr7CGeLvTGzkOJQLR2": {
+    "firstname": "Luke",
+    "admin": false,
+    "email": "lfindell96@gmail.com",
+    "lastname": "Findell",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "DwiGekbzuFXbUDc8MrjYUCAJEbg1": {
+    "firstname": "Nick",
+    "admin": false,
+    "email": "njgoetz5@gmail.com",
+    "lastname": "Goetz",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "E379CVLALKhdWSfSye6NqWUGJGv2": {
+    "firstname": "Wenda",
+    "admin": false,
+    "email": "wenda.sto@gmail.com",
+    "lastname": "Liu",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "ENqDAQBaBJavTmUmYur5hFpLTqt1": {
+    "firstname": "Hetong",
+    "admin": false,
+    "email": "Wan00237@umn.edu",
+    "lastname": "Wang",
+    "seasons": [
+      {
+        "signed": true,
+        "captain": false,
+        "paid": true,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+      },
+      {
+        "captain": false,
+        "team": null,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "paid": false
+      }
+    ]
+  },
+  "EUHgYauKGFPUtOHgioLMlNksHF03": {
+    "firstname": "Josh",
+    "admin": false,
+    "email": "Jzklane@gmail.com",
+    "lastname": "Klane",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "Ebb9yY1YvIWEeYxWIoNNmyA8ZkV2": {
+    "firstname": "Zander",
+    "admin": false,
+    "email": "zandersachs1@gmail.com",
+    "lastname": "Sachs",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "Ef9WMKCQPngJdaH0SKw6E2bPsGl1": {
+    "firstname": "Erik",
+    "admin": false,
+    "email": "eriklindell417@gmail.com",
+    "lastname": "Lindell",
+    "seasons": [
+      {
+        "paid": true,
+        "signed": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "Ei3Y72m0JpOCLp7mfXUBQX18tSr2": {
+    "firstname": "Harris",
+    "admin": false,
+    "email": "harrisd2752@gmail.com",
+    "lastname": "deNeui",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "Erk2avRzV8VPhAoreo2mYtE98LT2": {
+    "admin": false,
+    "firstname": "Anthony",
+    "lastname": "Jirele",
+    "email": "apjirele@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "F0sp4YPwb4gUyWZpqMS8yiwmEzs1": {
+    "firstname": "Jun Hao",
+    "admin": false,
+    "email": "chehjh03@gmail.com",
+    "lastname": "Cheh",
+    "seasons": [
+      {
+        "signed": true,
+        "paid": true,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "captain": false
+      },
+      {
+        "paid": false,
+        "signed": true,
+        "captain": false,
+        "team": null,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0"
+      }
+    ]
+  },
+  "FD1h3hEAhsXUOMXtRqYklB0ddq52": {
+    "admin": false,
+    "email": "wyattkessler535@gmail.com",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": "teams/nw1HrX3dXZMecbbTSGsR",
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ],
+    "lastname": "Shakir",
+    "firstname": "I Love Khalil"
+  },
+  "FGORCvEszDWU7hsC75QgjV3hvVE2": {
+    "admin": false,
+    "firstname": "Dylan",
+    "lastname": "Marsh",
+    "email": "dylanmarsh96@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "FH8sVEfaeTUvNOdegS4mQ1FOprP2": {
+    "firstname": "Leland",
+    "admin": false,
+    "email": "Leland.engelking@gmail.com",
+    "lastname": "Engelking",
+    "seasons": [
+      {
+        "paid": true,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true
+      },
+      {
+        "captain": false,
+        "signed": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "team": null
+      }
+    ]
+  },
+  "FaPtHzNch1S5K84i9a2B1ry4rJx2": {
+    "firstname": "Jonathan",
+    "admin": false,
+    "email": "jonathanluigilovagnini@gmail.com",
+    "lastname": "Lovagnini",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "FidpnTUbZJb2v7QKaCpFOgRF1k93": {
+    "firstname": "Elzo",
+    "admin": false,
+    "email": "elzovg@icloud.com",
+    "lastname": "Van Genderen",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ]
+  },
+  "FrMPp57A2BNshJpM9t7cAOk1uB43": {
+    "firstname": "Dustin",
+    "admin": false,
+    "email": "dustone22@gmail.com",
+    "lastname": "Berglin",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "G5Rq83aSflTnjSrs4rKF0LAJA112": {
+    "firstname": "Charlie",
+    "admin": false,
+    "email": "charlieerny11@gmail.com",
+    "lastname": "Erny",
+    "seasons": [
+      {
+        "signed": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false,
+        "paid": false,
+        "team": null
+      }
+    ]
+  },
+  "G8D0FKE6XsUc9MLjigSev6LIa7I3": {
+    "admin": false,
+    "firstname": "Peter",
+    "lastname": "Mans",
+    "email": "peterkmans@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93"
+      }
+    ]
+  },
+  "GBuge9bYqoTSYFWp83lWVFfQYVs1": {
+    "firstname": "Ryan",
+    "admin": false,
+    "email": "Ryanosgar1@gmail.com",
+    "lastname": "Osgar",
+    "seasons": [
+      {
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "paid": true,
+        "captain": false,
+        "signed": true
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "GCvZU3ypbVRu4N3Nh7QfkJvzzej2": {
+    "firstname": "Jack",
+    "admin": false,
+    "email": "jackdupee20@gmail.com",
+    "lastname": "Dupee",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "GPb4eq5kEKMldHgqBYFhSYqrnmf1": {
+    "firstname": "Josh",
+    "admin": false,
+    "email": "vickie.hendrickson@yahoo.com",
+    "lastname": "Hendrickson",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "GlwKKMSPObdVHfio9L1agnSUpKu2": {
+    "admin": false,
+    "firstname": "Frank",
+    "lastname": "Samuels",
+    "email": "josh@mplsmallard.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "GyoVqKwdhqV3ngVD219e6xbZ10m2": {
+    "firstname": "Joe",
+    "admin": false,
+    "email": "jrileycregan@gmail.com",
+    "lastname": "Cregan",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "HGvNhKt0HLSsFV81OnMU1SUR8K12": {
+    "firstname": "Henry",
+    "admin": false,
+    "email": "Holson815@gmail.com",
+    "lastname": "Olson",
+    "seasons": [
+      {
+        "paid": false,
+        "signed": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "HWsh2lEi2FeRPKLEhLRnvxVF12M2": {
+    "firstname": "Becker",
+    "admin": false,
+    "email": "beckerjmathie@gmail.com",
+    "lastname": "Mathie",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "HX1NFGidZQaZjs8iUyDS64V2lLr1": {
+    "firstname": "Lucas",
+    "admin": false,
+    "email": "lucasbulger.m@gmail.com",
+    "lastname": "Bulger",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "HaimBJLyNRN8f82daESZiaUqu7Z2": {
+    "firstname": "Kristian",
+    "admin": false,
+    "email": "kristian.7.johnson@gmail.com",
+    "lastname": "Johnson",
+    "seasons": [
+      {
+        "paid": true,
+        "signed": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "paid": true,
+        "signed": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93",
+        "captain": false
+      }
+    ]
+  },
+  "HdFbdJ0LrePokQSjTnpAeErq6AJ3": {
+    "admin": false,
+    "email": "caspy28@gmail.com",
+    "lastname": "Casperson",
+    "firstname": "Will",
+    "seasons": [
+      {
+        "paid": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93",
+        "signed": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false
+      }
+    ]
+  },
+  "HkPjpNXWqggRFBPjvz22alJ0nnE2": {
+    "firstname": "Kaden",
+    "admin": false,
+    "email": "dahkaden@gmail.com",
+    "lastname": "Dahal",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "I1XUUa0T8uVjsunyovLYdJLcCHE3": {
+    "firstname": "Frank",
+    "admin": false,
+    "email": "josh@hikers.social",
+    "lastname": "Samuels",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "I4oUOvOZ4LS1Ru0FlVV0XGVbEbP2": {
+    "firstname": "Ashton ",
+    "admin": false,
+    "email": "ashtonrobinson84@gmail.com",
+    "lastname": "Robinson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "IO4dFXWDjKPFXcEFND5yYbPZa6J2": {
+    "firstname": "Austin",
+    "admin": false,
+    "email": "austinking00@gmail.com",
+    "lastname": "King",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93"
+      }
+    ]
+  },
+  "IRfBHlGRppbIuF9QJuulAEjMBPX2": {
+    "firstname": "Greta",
+    "admin": false,
+    "email": "gretafriedrichs@gmail.com",
+    "lastname": "Friedrichs",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "IcJshtfotMhWhf52dD8hntYCxrm2": {
+    "firstname": "Test",
+    "admin": false,
+    "email": "kautz035@umn.edu",
+    "lastname": "User",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "IeM060N2bsctwdi5CMGGh7s18oA2": {
+    "firstname": "Jacob",
+    "admin": false,
+    "email": "jacob@lofstad.net",
+    "lastname": "Lofstad",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "J6ObzTT4i0OlmfXyEkKzTNR9fIE2": {
+    "firstname": "Dan",
+    "admin": false,
+    "email": "Wylie.dan1@gmail.com",
+    "lastname": "Wylie",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "JDi0TzigiZazrFgwgtyky0LOwgj2": {
+    "admin": false,
+    "firstname": "Max",
+    "lastname": "Hanscom",
+    "email": "maxhanscom@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "JVFwTpNQZ5ZDI6emqEsV1HuDFh83": {
+    "firstname": "Noah",
+    "admin": false,
+    "email": "noahfjohnson@hotmail.com",
+    "lastname": "Johnson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "Je7hFCz5dKgFkxhiBffDDpuD5uO2": {
+    "firstname": "Ian",
+    "admin": false,
+    "email": "me@ianehlert.com",
+    "lastname": "Ehlert",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "JkTLA2Pkt7NnKkF8vgOO53LI90X2": {
+    "firstname": "Chaz",
+    "admin": false,
+    "email": "chazschulz@gmail.com",
+    "lastname": "Schulz",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "JmS6vl1S6iUbgjZlynJFKCG0stv2": {
+    "firstname": "Mckai",
+    "admin": false,
+    "email": "master.mouse132@gmail.com",
+    "lastname": "Howell",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "JwNlvftb9sN54IWMgKO2Jyndcob2": {
+    "firstname": "Luis",
+    "admin": false,
+    "email": "luisbhernandez2@icloud.com",
+    "lastname": "Hernandez",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ]
+  },
+  "K5qfKXQYw3RMG00jzrDrXftozq33": {
+    "firstname": "Ryan",
+    "admin": false,
+    "email": "Ryanwelch612@gmail.com",
+    "lastname": "Welch",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "KOfBR7WtUBcPXSDVGFUKoNbrgRa2": {
+    "firstname": "Ross",
+    "admin": false,
+    "email": "ross@mctoon.net",
+    "lastname": "Krueger ",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "KfK0CHQMTaVIaqITpHVdAuEgl7I2": {
+    "firstname": "Harper ",
+    "admin": false,
+    "email": "frontrangersco@gmail.com",
+    "lastname": "Garvey ",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "LDzS7SRx63RM1FtkVYVveMgnIqg2": {
+    "firstname": "Blake",
+    "admin": false,
+    "email": "parkinsonblake0@gmail.com",
+    "lastname": "Parkinson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "LRrKa2dvMwQf9ygzR7vsDLI4XAD2": {
+    "firstname": "Aaron",
+    "admin": false,
+    "email": "aaroncaseyfix@gmail.com",
+    "lastname": "Casey-Fix",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "LfMzmoRgyXgU6G8EOBcyqSrjmiA2": {
+    "firstname": "Andrew",
+    "admin": false,
+    "email": "luka010@icloud.com",
+    "lastname": "Lukasewycz",
+    "seasons": [
+      {
+        "paid": false,
+        "signed": false,
+        "captain": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "team": null
+      }
+    ]
+  },
+  "LnHSjvXft6bl7EhPoXd0H4L0MPv2": {
+    "firstname": "Grady",
+    "admin": false,
+    "email": "gconquergood123@gmail.com",
+    "lastname": "Conquergood",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "MFp4CgrvXfNz3Zj9y4bzdeewwAw1": {
+    "firstname": "Danny",
+    "admin": false,
+    "email": "dannyhobday23@gmail.com",
+    "lastname": "Hobday",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ]
+  },
+  "MHiVAl08ogaxad31QdLceGCmSbk1": {
+    "admin": false,
+    "firstname": "Alex",
+    "lastname": "Cracraft",
+    "email": "alexcracraft@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "MQI9daPWXtOEosKzIIImR0XinJr2": {
+    "firstname": "Riley",
+    "admin": false,
+    "email": "rvang7105@gmail.com",
+    "lastname": "Vang",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "MRqRTgBbnPbTdHy5qiTbth41UYk2": {
+    "firstname": "Jack",
+    "admin": false,
+    "email": "jackrlinstad@gmail.com",
+    "lastname": "Linstad",
+    "seasons": [
+      {
+        "team": "teams/nw1HrX3dXZMecbbTSGsR",
+        "signed": true,
+        "captain": false,
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+      },
+      {
+        "captain": false,
+        "paid": false,
+        "signed": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "team": null
+      }
+    ]
+  },
+  "MY5ebu4571hDbmmiB7GXPOWYdMu1": {
+    "firstname": "Alex ",
+    "admin": false,
+    "email": "alexkraft25@gmail.com",
+    "lastname": "Kraft",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "MzPsOb8on1MnYcc9lafItPBD78h2": {
+    "admin": false,
+    "firstname": "Tommy",
+    "lastname": "Selland",
+    "email": "tommyselland@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "team": "teams/KNdbONsXNayHPq6uHhWp",
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "paid": true,
+        "signed": true
+      }
+    ]
+  },
+  "ND2Nc6Qzj7XGMDDLVHeYfwKKI4R2": {
+    "firstname": "Josh",
+    "admin": false,
+    "email": "13thstormtrooper@gmail.com",
+    "lastname": "Kuhn",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "NSKD5ytSaacKau0oqE9ddpGLUvY2": {
+    "firstname": "ish",
+    "admin": false,
+    "email": "ishaan.lukhey@gmail.com",
+    "lastname": "lukhey",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "NUkDDRYWhXTtIcc4dDGTrs6Z7A23": {
+    "firstname": "Eddie",
+    "admin": false,
+    "email": "eddiej1203@gmail.com",
+    "lastname": "Johnson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "NWudV89jnKSvLs4zMCPINtQyY4b2": {
+    "firstname": "Alex",
+    "admin": false,
+    "email": "alexroth83@yahoo.com",
+    "lastname": "Roth",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "Nc8pseFYkKPmj0vSjSiqBamf15e2": {
+    "firstname": "Joe",
+    "admin": false,
+    "email": "Joeandrighetti1@gmail.com",
+    "lastname": "Andrighetti",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "NoL58fh9Kufmz185W1U8MRLxWdq1": {
+    "firstname": "Ishan",
+    "admin": false,
+    "email": "ishanssodhi@gmail.com",
+    "lastname": "Sodhi",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "Npb3gqcSNnN3khysiXvAwLUsBTE3": {
+    "firstname": "Jason",
+    "admin": false,
+    "email": "jporkcelain@gmail.com",
+    "lastname": "Tran",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "NtDOtDSvbWX3lvWl20LqzHMd1gk1": {
+    "firstname": "Nathan",
+    "admin": false,
+    "email": "Nathanphillips2396@gmail.com",
+    "lastname": "Phillips",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "Nvlidn61jBgWOhmu58w9gCtN4JT2": {
+    "firstname": "Declan",
+    "admin": false,
+    "email": "24declanfm@students.spa.edu",
+    "lastname": "Monahan",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "O4RLwk0cuTTsleoN9zLRJYMK9Of1": {
+    "firstname": "Noah",
+    "admin": false,
+    "email": "noahjs3@gmail.com",
+    "lastname": "Schultz",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "OE2QJQbtAyf7g5AnKo3L79Mj4Yu1": {
+    "firstname": "Jack",
+    "admin": false,
+    "email": "jackhodgson08@gmail.com",
+    "lastname": "hodgson",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "OIpiDcHYh6VhuwLAmmOW1knmIwV2": {
+    "firstname": "Henry ",
+    "admin": false,
+    "email": "hank@grasslake.net",
+    "lastname": "Barnhart ",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "OM1TrZ9JeKTsIcMeWpTKfqxZmcO2": {
+    "firstname": "Kathy",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "kfrantz21@gmail.com",
+    "lastname": "Frantz"
+  },
+  "ORfX3GDL6BTmXuD7LwRzN98m2p03": {
+    "firstname": "Peterson",
+    "admin": false,
+    "email": "Christina.c.peterson1@gmail.com",
+    "lastname": "Christina",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "OfiEfDWF9pNIudrHkPbmczitdUh1": {
+    "firstname": "Alex",
+    "admin": false,
+    "email": "alexzhengalt@gmail.com",
+    "lastname": "Zheng",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "OhAF4m9uFWaknCIKZXvGwUVbSrT2": {
+    "firstname": "Sebastian",
+    "admin": false,
+    "email": "sebastianbrauer650@gmail.com",
+    "lastname": "Brauer",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "OjgQZSZ6QtbaqRN8RtiQeHIRqpj2": {
+    "firstname": "Jeff",
+    "admin": false,
+    "email": "jmtuftin@gmail.com",
+    "lastname": "Tuftin",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "Oz9PqMQ25sVGh6KABwgvnTP9iSo1": {
+    "firstname": "Joe",
+    "admin": false,
+    "email": "jsimonelli097@gmail.com",
+    "lastname": "Simonelli",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "P2bieQh1vmei8oxEDimmqKxDXmT2": {
+    "admin": false,
+    "firstname": "Nora",
+    "lastname": "de Rege",
+    "email": "nderege@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "P2qCqEQQGTYrt3JUlsqnWnAwahN2": {
+    "admin": false,
+    "firstname": "Ryan",
+    "lastname": "Pesch",
+    "email": "repesch35@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "P5kdZjfpjGY8IzzUnMbPiSFPOJ52": {
+    "firstname": "Malachi",
+    "admin": false,
+    "email": "mraymond@middlebury.edu",
+    "lastname": "Raymond",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "P9EeNqNPH5VShuYkwqujKqRlNZy1": {
+    "firstname": "Austin",
+    "admin": false,
+    "email": "austinbhoops@gmail.com",
+    "lastname": "Hoops",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "PKlIFsqgRkNASDDSEfmYBte7IuT2": {
+    "firstname": "Tommy",
+    "admin": false,
+    "email": "Tommygale19@gmail.com",
+    "lastname": "Gale",
+    "seasons": [
+      {
+        "paid": false,
+        "signed": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "team": null,
+        "captain": false
+      }
+    ]
+  },
+  "PgOWi20BkrYiCRmFrtprkxoJc4B3": {
+    "firstname": "Chuck",
+    "admin": false,
+    "email": "cd4knights@gmail.com",
+    "lastname": "Dudek",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "PllnIwCeBfOPsg2Ww57mMXBNiHX2": {
+    "firstname": "Carter",
+    "admin": false,
+    "email": "carter.schafer8@outlook.com",
+    "lastname": "Schafer",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "QJKtrt5mA0RWqagYcnTllP4Y3uL2": {
+    "admin": false,
+    "firstname": "Caddy",
+    "lastname": "Swanson-Hysell",
+    "email": "sacadwallader@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "QiChaQJ9j4deQCTniUHegGul5WF2": {
+    "firstname": "Will",
+    "admin": false,
+    "email": "willjohnson556@gmail.com",
+    "lastname": "Johnson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "QnhSEfd4EMb2lSkUq2bqTKgQGAn2": {
+    "firstname": "Greg",
+    "admin": false,
+    "email": "gdcousins@gmail.com",
+    "lastname": "Cousins",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "Qoz4dAtkAfO5MSfsUkF1zeO3CqI3": {
+    "firstname": "Nikolas",
+    "admin": false,
+    "email": "poppmobil@gmail.com",
+    "lastname": "Popp",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "QvTaKr3tS7OJIehsDMr6wrmiCLO2": {
+    "firstname": "Connor",
+    "admin": false,
+    "email": "concor4@hotmail.com",
+    "lastname": "Corrigan",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "R2q6cRpLvhUs2auri7MVX8s46Bi2": {
+    "firstname": "Patrick",
+    "admin": false,
+    "email": "patrickand23@gmail.com",
+    "lastname": "Andresen",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "R9ISZ9u0wIVVY06WWznArow6QHS2": {
+    "admin": false,
+    "email": "Njohnson044@stpaul.k12.mn.us",
+    "firstname": "Will",
+    "lastname": "Branch",
+    "seasons": [
+      {
+        "team": null,
+        "signed": false,
+        "captain": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "paid": false
+      }
+    ]
+  },
+  "Ru4hCFZkEQXNS9MhUhBxiM8vlFH2": {
+    "firstname": "Isaac",
+    "admin": false,
+    "email": "isaacvansistine@outlook.com",
+    "lastname": "Van Sistine",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "S2kS0VVQk6cVUx40rLwVMROtE7j2": {
+    "firstname": "Jackson",
+    "admin": false,
+    "email": "jdevans7685@gmail.com",
+    "lastname": "Evans",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "SB8y7TDBW3VPc08VZqnKwkjnnjH2": {
+    "firstname": "Alex",
+    "admin": false,
+    "email": "alex.hitchler@gmail.com",
+    "lastname": "Hitchler",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93"
+      }
+    ]
+  },
+  "SEJjjWV0Z9faQjCN608saSMYqI52": {
+    "firstname": "Danielle",
+    "admin": false,
+    "email": "byersdanielle77@gmail.com",
+    "lastname": "Byers",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "SVG8ft91jjhYLrqKYeT8cHYsfnC3": {
+    "firstname": "WeiCheng",
+    "admin": false,
+    "email": "wan01133@umn.edu",
+    "lastname": "Wang",
+    "seasons": [
+      {
+        "paid": false,
+        "signed": true,
+        "team": null,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false
+      }
+    ]
+  },
+  "SejKppQvwCXVwKAhi0htZCjVtZo1": {
+    "firstname": "Brian",
+    "admin": false,
+    "email": "lafrance_b@yahoo.com",
+    "lastname": "LaFrance",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "SiL22dHjd1SpnSzBd3pcaVdZKcs2": {
+    "admin": false,
+    "firstname": "Tyler",
+    "lastname": "Smith",
+    "email": "tyler.alexander.smith.88@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "SjbBqiDIrohdNtSxeddpjpThqYF2": {
+    "admin": false,
+    "firstname": "Brandon",
+    "lastname": "Macho",
+    "email": "bmacho@comcast.net",
+    "seasons": [
+      {
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "paid": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb",
+        "signed": true,
+        "captain": false
+      }
+    ]
+  },
+  "Sn2qSdo5BTPC8kzVm7sX39A6say1": {
+    "firstname": "Jordan",
+    "admin": false,
+    "email": "jordanjmac@gmail.com",
+    "lastname": "Wright",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "SnVaUQYKyucvvAC8VsR2DvRbEqX2": {
+    "firstname": "Jasper",
+    "admin": false,
+    "email": "jskinnersloan@gmail.com",
+    "lastname": "Skinner-Sloan",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": "teams/DTzWGB7fMbUVcL3iHT08",
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "SzxvT9AJsuhgkDORAhDD1hC4VQY2": {
+    "admin": false,
+    "email": "Buckyb4dger@gmail.com",
+    "lastname": "Ohlemacher-Lonetti",
+    "firstname": "Hayden “Slotz”",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "T3s2yK8fhdgHj9ZghpNVRWIaTpn2": {
+    "firstname": "Adrien",
+    "admin": false,
+    "email": "kane65@wls1.com",
+    "lastname": "Prosacco",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "TGgMtcXSwMYuP4laaCGdwLnXdOG3": {
+    "firstname": "Cooper",
+    "admin": false,
+    "email": "Coopantin@gmail.com",
+    "lastname": "Antin",
+    "seasons": [
+      {
+        "captain": "teams/nw1HrX3dXZMecbbTSGsR",
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "TJSEnyFc9HU4Nr7erLe1fSEnjns2": {
+    "admin": false,
+    "firstname": "Charlie",
+    "lastname": "Acosta",
+    "email": "swacostasons@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ]
+  },
+  "TiGVPs8roIdsRTBr7zvOQW2KG0z1": {
+    "firstname": "Xander",
+    "admin": false,
+    "email": "xhall@macalester.edu",
+    "lastname": "Hall",
+    "seasons": [
+      {
+        "paid": false,
+        "captain": false,
+        "team": null,
+        "signed": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0"
+      }
+    ]
+  },
+  "TjuEDJIrcobQHEJwMWbVl0iUqSz1": {
+    "firstname": "Kellen",
+    "admin": false,
+    "email": "Kellen.oconnor1234@gmail.com",
+    "lastname": "OConnor",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93"
+      }
+    ]
+  },
+  "TtnDLkrEQqgN2t8LTXGLSpAGoNA3": {
+    "admin": false,
+    "firstname": "Louis",
+    "lastname": "LaCroix",
+    "email": "lacro038@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "UFG26hClvoSfgIpn1yHc2XrmI3b2": {
+    "firstname": "Calvin",
+    "admin": false,
+    "email": "jcalvinrs22@gmail.com",
+    "lastname": "Rice-Slothower",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "UK01POWGoyeYuQqMMiZKyCfFgs93": {
+    "firstname": "Hannah",
+    "admin": false,
+    "email": "huan2319@umn.edu",
+    "lastname": "Huang",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "UMwhxouRVXdwwMvXfh5g0aGwqV62": {
+    "firstname": "Andrew",
+    "admin": false,
+    "email": "andrewsteinberg401k@gmail.com",
+    "lastname": "Steinberg",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "URf3QizcsgYnf5cFA4nku0J9Z3j2": {
+    "firstname": "Aidan",
+    "admin": false,
+    "email": "aidanmhuber@aol.com",
+    "lastname": "Huber",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "UficTSH7qrf2vRcWWRri9FjFioK2": {
+    "firstname": "Michael",
+    "admin": false,
+    "email": "mikekovash@gmail.com",
+    "lastname": "Kovash",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "UrDsbGgmgSgtDjGlNDfEwhTWN942": {
+    "firstname": "Peiyuan ",
+    "admin": false,
+    "email": "lou00037@umn.edu",
+    "lastname": "Lou",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "Uz2PYmLqSqbm9Fhjm8wrTDvR6dE2": {
+    "firstname": "Murphy",
+    "admin": false,
+    "email": "murphygalvin1120@gmail.com",
+    "lastname": "Galvin",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "VDQm9XfXIzRqFftet0mDy05Hyvy2": {
+    "firstname": "Eric ",
+    "admin": false,
+    "email": "du000172@umn.edu",
+    "lastname": "Du",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "VO2BqGQ9V3ZrvFEvwBTMthjR3SJ2": {
+    "firstname": "Josh",
+    "admin": false,
+    "email": "joshuaekugel@gmail.com",
+    "lastname": "Kugel",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "VOY6myPX9ERrqFeSRgzRWJ3Tl9E3": {
+    "firstname": "Matej",
+    "admin": false,
+    "email": "mates.petruvka@gmail.com",
+    "lastname": "Petrovic",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "Vr8vt0GZtVVme1FQtUidCiRsWUg2": {
+    "firstname": "Cesario",
+    "admin": false,
+    "email": "cesario.velasco@gmail.com",
+    "lastname": "Velasco ",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "W1Hk7ntOW9Wu5lTh5TeclRJreI03": {
+    "firstname": "Nick",
+    "admin": true,
+    "email": "nrsimonelli@gmail.com",
+    "lastname": "Simonelli",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": "teams/OS4oMGXE3yAHkbGTKK5W",
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "W1JVna3vjrStVqWUnsYHZV2xgD92": {
+    "firstname": "Jessica",
+    "admin": false,
+    "email": "Jess.hendrickson14@gmail.com",
+    "lastname": "Hendrickson",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "WCEauqXuWheYhi8NiLqvqbTOhmz1": {
+    "firstname": "Brendan",
+    "admin": false,
+    "email": "brendangessner@yahoo.com",
+    "lastname": "Gessner",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "WIuqKC8fJiQ64yv1mqJHWk3r6Cj1": {
+    "firstname": "Theodore",
+    "admin": false,
+    "email": "theo.kimball@gmail.com",
+    "lastname": "Kimball",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ]
+  },
+  "WSnxmRUWwOYsaWRJJt8gsB14rKh1": {
+    "firstname": "Cameron",
+    "admin": false,
+    "email": "cameronlacy300@gmail.com",
+    "lastname": "Lacy",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "WmJsI2cHCKgmUh8qpxVZ1KENmui2": {
+    "firstname": "Jack",
+    "admin": false,
+    "email": "jack.sanda@gmail.com",
+    "lastname": "Sanda",
+    "seasons": [
+      {
+        "team": null,
+        "signed": true,
+        "captain": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "paid": false
+      }
+    ]
+  },
+  "X0fUKqzL22YoRD9JLJT0N64soGz1": {
+    "firstname": "Patrick",
+    "admin": false,
+    "email": "patrickwilliam88@icloud.com",
+    "lastname": "Vose",
+    "seasons": [
+      {
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false,
+        "team": null,
+        "paid": false,
+        "signed": false
+      }
+    ]
+  },
+  "X0wpDkSw0tbOZ2o5zpZmZZaU3Cj2": {
+    "firstname": "Eli",
+    "admin": false,
+    "email": "Negus.173@gmail.com",
+    "lastname": "Nehus",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "X1PWRYUuSdSGXvGQSmlb9Z5IK0H3": {
+    "firstname": "Shu",
+    "admin": false,
+    "email": "Ts15117901126@163.com",
+    "lastname": "Teng",
+    "seasons": [
+      {
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "paid": true,
+        "signed": true,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY",
+        "captain": false
+      },
+      {
+        "team": null,
+        "captain": false,
+        "signed": true,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0"
+      }
+    ]
+  },
+  "X4y7GchilfSdiXoBEbP4fVwdOft1": {
+    "firstname": "Yuming",
+    "admin": false,
+    "email": "1462561820@qq.com",
+    "lastname": "Ruan",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "XFgWB3toEHgwh2qWffPwiesKEkB3": {
+    "firstname": "Seth",
+    "admin": false,
+    "email": "jseth2475@gmail.com",
+    "lastname": "Johnson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "XbisiSKaYdRWntD5gzZmskDLTVa2": {
+    "firstname": "Tristan",
+    "admin": false,
+    "email": "grovender.tristan@gmail.com",
+    "lastname": "Grovender",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "Xc4Hkc0dLjfN4mjVedWaOeKrVAn1": {
+    "firstname": "Josh",
+    "admin": false,
+    "email": "yirajosh@gmail.com",
+    "lastname": "Yira",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "captain": true,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "Xua6BoxGNMXNFCyIczHomtpvjcF3": {
+    "firstname": "Timothy",
+    "admin": false,
+    "email": "timmorgensternmail@gmail.com",
+    "lastname": "Morgenstern",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "Ygn7APcZHleOmtvZ1ReOEJQq7iE3": {
+    "firstname": "Zane",
+    "admin": false,
+    "email": "ross.zane@gmail.com",
+    "lastname": "Ross",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "YiKfRQSz69NN8yIkRD1qDq7z9UV2": {
+    "admin": false,
+    "firstname": "Logan",
+    "lastname": "Pederson",
+    "email": "pedersonlogan8@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "YiQjQUlabBXfaeAoXGmpq2lgwau2": {
+    "firstname": "Kyle",
+    "admin": false,
+    "email": "kyledolbow@gmail.com",
+    "lastname": "Dolbow",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "Yl4Uy1Dw4gcqa0YrEGn3LUos4QO2": {
+    "firstname": "Andy",
+    "admin": false,
+    "email": "andrew.zumbusch@gmail.com",
+    "lastname": "Zumbusch",
+    "seasons": [
+      {
+        "paid": true,
+        "signed": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "Z1FY1Na2tOflGfPsGLWz3HESGjo2": {
+    "firstname": "Jordan",
+    "admin": false,
+    "email": "j0taylor317@gmail.com",
+    "lastname": "Taylor",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "Z6d0XEcZzVU2bsziZHzkJvbhSvt2": {
+    "firstname": "Bus",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "joshua.c.anosike@gmail.com",
+    "lastname": "Anosike"
+  },
+  "ZBsCkcf9ERMgBdh6GzoThu2Ym202": {
+    "firstname": "Blake",
+    "admin": false,
+    "email": "brkhawk@southslope.net",
+    "lastname": "Krapfl",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93"
+      }
+    ]
+  },
+  "Zf5HLh1NzQe5HGGBBMsYHiTZJRy2": {
+    "firstname": "Cash",
+    "admin": false,
+    "email": "cashbudlong@gmail.com",
+    "lastname": "Budlong",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "a3fHb9L1thZr5XUP1b80h1UDmXi1": {
+    "firstname": "Malakai",
+    "admin": false,
+    "email": "icpnguin071707@gmail.com",
+    "lastname": "Golben",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "aPfUqyN7QIT5SnU3wmFRHtcf9w62": {
+    "admin": false,
+    "email": "ajlomen@gmail.com",
+    "firstname": "Aiden",
+    "lastname": "Lomen",
+    "seasons": [
+      {
+        "signed": true,
+        "captain": "teams/b3BM1rI4q2JuzLyPHh2K",
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "team": "teams/kocAbvNvtF4J4z5GOl93",
+        "signed": true,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": true
+      }
+    ]
+  },
+  "acCHta78ibdMmDs56VwTOktgy342": {
+    "firstname": "Derek",
+    "admin": false,
+    "email": "derek@mctoon.net",
+    "lastname": "Krueger",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "atzoW0VbZDNXNqNAuxMyy6UjcqE2": {
+    "firstname": "Brady",
+    "admin": false,
+    "email": "Bradycampbell27@gmail.com",
+    "lastname": "Campbell",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "avfJ8aEVaQgxOUBsgytpgZJHlNj1": {
+    "firstname": "Reese",
+    "admin": false,
+    "email": "rgrailer@comcast.net",
+    "lastname": "Grailer",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "bB3qWhedlRVdDG3DXx9yWARBagA2": {
+    "admin": false,
+    "firstname": "John",
+    "lastname": "Helgeson",
+    "email": "helgeson.john4@gmail.com",
+    "seasons": [
+      {
+        "signed": true,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57",
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0"
+      }
+    ]
+  },
+  "bLNI9w9sH4SC4tK8HwFufMW3gd23": {
+    "admin": false,
+    "email": "boden.a.k.o@gmail.com",
+    "lastname": "Oelhafen",
+    "firstname": "Boden",
+    "seasons": [
+      {
+        "team": "teams/JFIJXG08u9bMEDnzsgFr",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "captain": true,
+        "paid": true,
+        "signed": true
+      },
+      {
+        "captain": true,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "bRbnYi2UxSM4WmDUyXLFQWz9I4B3": {
+    "firstname": "James",
+    "admin": false,
+    "email": "cullenj06@gmail.com",
+    "lastname": "Cullen",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "blIVXUyffrMNDkKEoHHRpvRDUkm2": {
+    "firstname": "Noah",
+    "admin": false,
+    "email": "njhmamba@gmail.com",
+    "lastname": "Hanson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "c5sqyub4MqYjJAK38Fn35vdSm0H3": {
+    "firstname": "Matthew",
+    "admin": false,
+    "email": "matthew.mckenna07@gmail.com",
+    "lastname": "McKenna",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "cJXzBDxpkTWYSjvttDo4Rb13zVk2": {
+    "firstname": "Henry ",
+    "admin": false,
+    "email": "1hankmak1@gmail.com",
+    "lastname": "Makarios ",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "cdMlY0aVs7b8JqZMPD2JnpjPc1C3": {
+    "firstname": "Noah",
+    "admin": false,
+    "email": "haonwj@gmail.com",
+    "lastname": "Johnson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ]
+  },
+  "ckq3R8WXrybKdjWWdqwUKWYdRPX2": {
+    "admin": false,
+    "firstname": "Matthew",
+    "lastname": "Gunter",
+    "email": "magunter06@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "cpu9Enl3LWQQamYpoUsmtJHECfi2": {
+    "firstname": "Paul",
+    "admin": false,
+    "email": "krenikpaul@gmail.com",
+    "lastname": "Krenik",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "d2p7uNK1yPO2IozpSFjPXIJNtek1": {
+    "firstname": "Matthew",
+    "admin": false,
+    "email": "mattracky@gmail.com",
+    "lastname": "Racky",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "d7f1yjnQVlUnibdD2FMm83aNZrk2": {
+    "firstname": "Olivia",
+    "admin": false,
+    "email": "oliviatainter@gmail.com",
+    "lastname": "Tainter",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "dGPi9YcfsUgr7yBqfgDmAMHygzk1": {
+    "firstname": "Gavriel",
+    "admin": false,
+    "email": "gavi.omen@gmail.com",
+    "lastname": "DePrenger-Gottfried",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "dKAbVdjVTQaJj7QB3hiGpxD6SWP2": {
+    "firstname": "Leo",
+    "admin": false,
+    "email": "leosfnandez@gmail.com",
+    "lastname": "Sovell-Fernandez",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "dMuSGQggJNTiFWiGtbzOjnXKFfk1": {
+    "firstname": "Sylas",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "sylasfkolb@gmail.com",
+    "lastname": "Kolb"
+  },
+  "dOauOYInMFMWtmXFvLudh5piNoN2": {
+    "firstname": "Shuaijia",
+    "admin": false,
+    "email": "shuaijiaduan@gmail.com",
+    "lastname": "Duan",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "dUW8aQVKA0ZaHPHUvyvRmSqvgnF3": {
+    "firstname": "ZACH",
+    "admin": false,
+    "email": "schmittzm12@gmail.com",
+    "lastname": "SCHMITT",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "db7JIvjYGhNXGIVVCF8BUjpuTKX2": {
+    "firstname": "Sam",
+    "admin": false,
+    "email": "Smunkeby@gmail.com",
+    "lastname": "Munkeby",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "diD6w0sb4MfpMqc5XZobCgJJ5np2": {
+    "firstname": "Tucker",
+    "admin": false,
+    "email": "tuckerhoffman96@gmail.com",
+    "lastname": "Hoffman",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "e5KX55kItLdvrmjJY94DVhMMETH2": {
+    "firstname": "Tanner",
+    "admin": false,
+    "email": "thelittleb2002@gmail.com",
+    "lastname": "Barcus",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93"
+      }
+    ]
+  },
+  "e6oBdTuRV1YQK1QjpGZ1aM43lS03": {
+    "admin": false,
+    "firstname": "Cloid",
+    "lastname": "Green",
+    "email": "cloid.green@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "eJeQd7thy9geIYN5c0M5W7tGJru2": {
+    "firstname": "Austin",
+    "admin": false,
+    "email": "chiveon.lee@gmail.com",
+    "lastname": "Lee",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "eLcnrWbqLmZm3B1DuKtjwVRqaZe2": {
+    "firstname": "Gabriel",
+    "admin": false,
+    "email": "jibs0509@gmail.com",
+    "lastname": "Jagt",
+    "seasons": [
+      {
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "paid": false,
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "eSAjJxcs7sYtiBvtTnCANv84NYn2": {
+    "firstname": "Eleanor",
+    "admin": false,
+    "email": "eleanor.heberlein@gmail.com",
+    "lastname": "Heberlein",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "ebTVDnoUm8OgMqTu4xe3t2JNq2b2": {
+    "firstname": "Nathan",
+    "admin": false,
+    "email": "Nate.salberg@gmail.com",
+    "lastname": "Salberg",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "eblHsaoQGwgGXne4nefMktbvBd12": {
+    "firstname": "Andrew",
+    "admin": false,
+    "email": "alawre28@gmail.com",
+    "lastname": "Lawrence",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "eeFn7IQ1sZS0l8Mf5hNDXMJeqZr1": {
+    "firstname": "Greg",
+    "admin": false,
+    "email": "Cepurang@gmail.com",
+    "lastname": "Cepuran",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "team": null
+      },
+      {
+        "captain": true,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "eguFOiZTN6QWG46uE7SiIibLV8O2": {
+    "firstname": "Brendon",
+    "admin": false,
+    "email": "brendonsackey@gmail.com",
+    "lastname": "Sackey",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "ervQ8W7csbV0JDLULj89H7HMKIE2": {
+    "firstname": "YIQI",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "chen9143@umn.edu",
+    "lastname": "CHEN"
+  },
+  "exfYThZZSbSifQqxmMfiGsgzWOF2": {
+    "firstname": "Ryan",
+    "admin": false,
+    "email": "ryansteinbergtdl@gmail.com",
+    "lastname": "Steinberg",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "f5QJCsV98JQJkpJzOXpI0Bmb1Sv1": {
+    "firstname": "Matsuno ",
+    "admin": false,
+    "email": "trailheadadmin@loppet.org",
+    "lastname": "Masahiro ",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": true,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "fSZklloluwgpb9TpDUtzCM9cH0b2": {
+    "firstname": "Matt",
+    "admin": false,
+    "email": "Matt.bailey12@gmail.com",
+    "lastname": "Bailey",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "fTil5fNwKvbOA2Q7znNgXkDT1n93": {
+    "firstname": "Davin",
+    "admin": false,
+    "email": "davinolafson@gmail.com",
+    "lastname": "Olafson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "fbuyyGJuyucUbmhbmhoVUh0TkpJ2": {
+    "firstname": "Jasper",
+    "admin": false,
+    "email": "jazzywine@gmail.com",
+    "lastname": "Weinburd",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "fdnYrNMRIlOGniUnXt4MsgGHuqm1": {
+    "firstname": "John",
+    "admin": false,
+    "email": "lei00007@umn.edu",
+    "lastname": "Lei",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "femfGJXXQ7M6aNy1ZdtxbbIM6mx1": {
+    "firstname": "Erik",
+    "admin": false,
+    "email": "eaadalen112@gmail.com",
+    "lastname": "Aadalen",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "g7GaKmX81CXBtjOotg81BTiXiWe2": {
+    "firstname": "Joe",
+    "admin": false,
+    "email": "joehendrick16@gmail.com",
+    "lastname": "Hendrickson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "gDtREHeQSEfbNZsC79cikh4rfVw2": {
+    "firstname": "Clayton",
+    "admin": false,
+    "email": "clayton@rabetribe.org",
+    "lastname": "Rabe",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "signed": true,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+      },
+      {
+        "signed": false,
+        "team": null,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false
+      }
+    ]
+  },
+  "gcOr30JXwfUf2bmB8o3oolSfm722": {
+    "firstname": "Aaron",
+    "admin": false,
+    "email": "aellis0333@gmail.com",
+    "lastname": "Ellis",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "ggIMhIazrqhZUOfqfVzg8L45ubw1": {
+    "firstname": "Blake",
+    "admin": false,
+    "email": "blake.trantina@gmail.com",
+    "lastname": "Trantina",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "gqyhqKnaD7fttsO8F3Q7j7ZvoIR2": {
+    "firstname": "Bryan",
+    "admin": false,
+    "email": "bvon333@gmail.com",
+    "lastname": "Vohnoutka",
+    "seasons": [
+      {
+        "signed": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "team": "teams/DTzWGB7fMbUVcL3iHT08",
+        "captain": false,
+        "paid": true
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ]
+  },
+  "gsX9tfnfBhWNY8vVTO11tduibOg2": {
+    "firstname": "Nate",
+    "admin": false,
+    "email": "nateriverhawk10@gmail.com",
+    "lastname": "Hegemann",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "gwIkiXNg1raFpdDTxfcvaLaM4C43": {
+    "firstname": "Tyler",
+    "admin": false,
+    "email": "tylerftg@gmail.com",
+    "lastname": "Thomegreene",
+    "seasons": [
+      {
+        "team": "teams/DTzWGB7fMbUVcL3iHT08",
+        "signed": true,
+        "captain": false,
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+      },
+      {
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE",
+        "signed": true,
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0"
+      }
+    ]
+  },
+  "h4DZtlNMKINjSXG10R9RfsbDvX12": {
+    "firstname": "Ryan",
+    "admin": false,
+    "email": "yin00308@umn.edu",
+    "lastname": "Yin",
+    "seasons": [
+      {
+        "captain": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY",
+        "paid": true
+      },
+      {
+        "captain": false,
+        "team": null,
+        "paid": false,
+        "signed": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0"
+      }
+    ]
+  },
+  "h6bHl8Pn5lgWp7925TLyHZiZ42K2": {
+    "firstname": "Theodore",
+    "admin": false,
+    "email": "theowzimmerman@gmail.com",
+    "lastname": "Zimmerman",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "hCW3QPB5ugcXhxuCfdrIocltFDQ2": {
+    "firstname": "Jim",
+    "admin": false,
+    "email": "Jimshope@jimshopeinc.com",
+    "lastname": "Shope",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "hEZzndY8ugToXxJwK2FX6m0FfxC2": {
+    "firstname": "Keegan",
+    "admin": false,
+    "email": "2026souhk06@moundsviewschools.org",
+    "lastname": "Souhrada",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "hFdawbG98wWdZ7aQ3qFKs6smbhL2": {
+    "firstname": "Isaac",
+    "admin": false,
+    "email": "isaactsai6@gmail.com",
+    "lastname": "Tsai",
+    "seasons": [
+      {
+        "captain": true,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "hLykRBMei4gZJt34BNp8PolCztK2": {
+    "firstname": "Michael",
+    "admin": false,
+    "email": "kale.culby@gmail.com",
+    "lastname": "Culbertson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "hQXztDvotVSvJV0bxbDemh1nWFr2": {
+    "firstname": "Jonathan",
+    "admin": false,
+    "email": "jon.rugg12@gmail.com",
+    "lastname": "Ruggiero",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "hT2l1OssFrQNe65eFvFw6xyKn882": {
+    "firstname": "Ian",
+    "admin": false,
+    "email": "ianmccosky@gmail.com",
+    "lastname": "McCosky",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "hc9vcSedhaeM1991m6vqECN1hy32": {
+    "firstname": "Gordon",
+    "admin": false,
+    "email": "gfl2000@gmail.com",
+    "lastname": "Larson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "captain": true,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "htw2XQ84qAOICvwQl0YAVxP3AOB2": {
+    "firstname": "Arthur",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "arthurpaulharris@gmail.com",
+    "lastname": "Harris"
+  },
+  "hzePFUkzmwR3piH92uyVfUpXC4J3": {
+    "admin": false,
+    "email": "arthur.madsen001@gmail.com",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": "teams/nw1HrX3dXZMecbbTSGsR",
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ],
+    "firstname": "Arthur",
+    "lastname": "Madsen"
+  },
+  "iGT6xoT6PVSqSJ7KFUNhr9PrQG12": {
+    "firstname": "Cody",
+    "admin": false,
+    "email": "codyjoec@gmail.com",
+    "lastname": "Castonguay",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "iSBUsPymzYZ0MVx4Mil5t13ZFtU2": {
+    "firstname": "Kalen",
+    "admin": false,
+    "email": "kbalas19@gmail.com",
+    "lastname": "Balas",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "iWSp5yYmdDQrX8ZtTO2P27cgHXo2": {
+    "firstname": "Lake",
+    "admin": false,
+    "email": "lakeaubmartin@gmail.com",
+    "lastname": "Martin",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "ihZQ1IuwRORahVQRDoAosdyC8G93": {
+    "firstname": "Harper",
+    "admin": false,
+    "email": "harperocean06@gmail.com",
+    "lastname": "O’Dowd",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "iidGniXmxbNwsNC22lz760zJZSr2": {
+    "firstname": "Josh",
+    "admin": false,
+    "email": "jhendy1414@gmail.com",
+    "lastname": "Hendrickson",
+    "seasons": [
+      {
+        "paid": true,
+        "signed": true,
+        "captain": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "team": null,
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false
+      }
+    ]
+  },
+  "ixhnczksj3cj4bA4FWdUnULuWkE2": {
+    "admin": false,
+    "firstname": "Gavriel",
+    "lastname": "Olson",
+    "email": "gavriel.olson@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "jEd0kCkaLcRDQZhq5EqwMkSDUGn1": {
+    "firstname": "Colin",
+    "admin": false,
+    "email": "colin.p.berry3@gmail.com",
+    "lastname": "Berry",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "jPxZLNAFiKV6Q6wToxuz0EmUDs03": {
+    "firstname": "Raj",
+    "admin": false,
+    "email": "raj.d.maitra@gmail.com",
+    "lastname": "Maitra",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "jhQe8RTRkVg5FZugQAyTVGFohv62": {
+    "firstname": "Jake",
+    "admin": false,
+    "email": "jwlamont1208@gmail.com",
+    "lastname": "Lamont",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "jkzXjlXwcyQfavKwljj30UzYVB73": {
+    "admin": false,
+    "firstname": "Owen",
+    "lastname": "Suelflow",
+    "email": "owensuelflow@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "jr9K4HYFYbMXPEMBjSRPmKBtmao2": {
+    "firstname": "Eric",
+    "admin": false,
+    "email": "ericzhu46@gmail.com",
+    "lastname": "Zhu",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "jxvSt94iWRWySUn6ZgX1c25jLEJ2": {
+    "admin": false,
+    "firstname": "Tim",
+    "lastname": "Yocum",
+    "email": "timothy.d.yocum@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "team": null,
+        "signed": true,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0"
+      }
+    ]
+  },
+  "k5H1OWSmfOToe1f1EcIvrwvdvCj1": {
+    "firstname": "Esther",
+    "admin": false,
+    "email": "esthergendler@gmail.com",
+    "lastname": "Gendler",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "k6t7LXKiFMSk8FwNoqc2buYIlkc2": {
+    "firstname": "Josh",
+    "admin": false,
+    "email": "joshuaabowler@icloud.com",
+    "lastname": "Bowler",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "kDlQLvcLdXeMmcZ93d6cPF8t9Cj1": {
+    "firstname": "Molly",
+    "admin": false,
+    "email": "molly.h.schwartz00@gmail.com",
+    "lastname": "Schwartz",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "kJE9LmZGxgXEwY87sXzh2OoFfCk1": {
+    "firstname": "Joe",
+    "admin": false,
+    "email": "joe-pfaff@comcast.net",
+    "lastname": "Pfaffinger",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "kVBr63W17FhhIdI3zytkEbtuH6C3": {
+    "firstname": "Eric",
+    "admin": false,
+    "email": "evolkmeier@gmail.com",
+    "lastname": "Volkmeier",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "kdVFJrXWWUXLvkBZjjLa5dh6zrf1": {
+    "firstname": "Matt",
+    "admin": false,
+    "email": "Soccerasaur@gmail.com",
+    "lastname": "Johnson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93"
+      }
+    ]
+  },
+  "khyo9ItVnbaF7HWlq8seniNYsb92": {
+    "firstname": "Jack",
+    "admin": false,
+    "email": "jmallmann1@gmail.com",
+    "lastname": "Mallmann",
+    "seasons": [
+      {
+        "signed": false,
+        "captain": false,
+        "team": null,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "paid": false
+      },
+      {
+        "team": null,
+        "captain": false,
+        "signed": true,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0"
+      }
+    ]
+  },
+  "l7GtntjmpZWlC9469gwKpkQi2bn2": {
+    "firstname": "Brennan",
+    "admin": false,
+    "email": "coll0751@d.umn.edu",
+    "lastname": "Collins",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "lFbVv4Rd1QfDuBfEZwiq0wBMZFi1": {
+    "firstname": "Victor",
+    "admin": false,
+    "email": "gws20020128@gmail.com",
+    "lastname": "Gao",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/hJnBb3ALKZILxo0RNfYY"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "lGPOFyufzwfBdeEFVeMlTLi3ywI2": {
+    "firstname": "Jane",
+    "admin": false,
+    "email": "janecarolynk@gmail.com",
+    "lastname": "Koch",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "lGzW8AByRwOd3ongikibE5UkcgQ2": {
+    "admin": false,
+    "firstname": "William",
+    "lastname": "Anderson",
+    "email": "wla.accts21@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "lac8h7bWZbgKpvOpmPpac9tWu553": {
+    "admin": false,
+    "firstname": "Abe",
+    "lastname": "Boardman",
+    "email": "abeboardman@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "lnFknGMfElfs3AGni8kG8xEEGKQ2": {
+    "firstname": "Bryan",
+    "admin": false,
+    "email": "bcook0129@gmail.com",
+    "lastname": "Cook",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "mC4e5ocdj0bHd1ImCeAr1cJmZp52": {
+    "firstname": "Matt",
+    "admin": false,
+    "email": "mattpasiuk395@gmail.com",
+    "lastname": "Pasiuk",
+    "seasons": [
+      {
+        "signed": true,
+        "captain": false,
+        "paid": true,
+        "team": "teams/ifnI8V4AXxq28B0nWjJc",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "mQKmp23XxAX1fvzYQyQos5uVmjS2": {
+    "firstname": "Theo",
+    "admin": false,
+    "email": "theobbonin@gmail.com",
+    "lastname": "Bonin",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "mRDfFed9vtSojL71i5KeSzhdKyj1": {
+    "firstname": "Clara",
+    "admin": false,
+    "email": "Leoandlucy14@gmail.com",
+    "lastname": "DeForge",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "mSPKjSLFz6bbuEMyqGsxp1o9Ml82": {
+    "admin": false,
+    "email": "Awesomecows5000@gmail.com",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ],
+    "firstname": "Ronald",
+    "lastname": "McDonald"
+  },
+  "maEp9Gbl8YUKg20kOAuoDrWRs973": {
+    "firstname": "Nolan",
+    "admin": false,
+    "email": "Nolanmanuel@icloud.com",
+    "lastname": "Manuel",
+    "seasons": [
+      {
+        "team": null,
+        "signed": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false,
+        "paid": false
+      }
+    ]
+  },
+  "mdY4TGmtmLgaQ8UcQrKO6SZrFPq1": {
+    "firstname": "Michael",
+    "admin": false,
+    "email": "mtruble20@gmail.com",
+    "lastname": "Ruble",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "mgbQsQWEo7hbpbXiwaLIDbTphhp2": {
+    "firstname": "Charlie",
+    "admin": false,
+    "email": "chopserny11@gmail.com",
+    "lastname": "Erny",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "mhbANQU3xSZwe7dMIPnM9HhoUuP2": {
+    "firstname": "Cash",
+    "admin": false,
+    "email": "barbercash@yahoo.com",
+    "lastname": "Barber",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "mk6CVbMlY4WWEumBg6FnptPcVIs2": {
+    "firstname": "Collin ",
+    "admin": false,
+    "email": "collin.jonesy41@gmail.com",
+    "lastname": "Jones",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "mpAGPIdumAR83u6fy6eCL7JWuXI3": {
+    "firstname": "Lucas",
+    "admin": false,
+    "email": "lucas.kempf1@gmail.com",
+    "lastname": "Kempf",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "mpAwZFuEdghNpD9rhwhDClRjI7y2": {
+    "firstname": "Simon",
+    "admin": false,
+    "email": "siko1445@gmail.com",
+    "lastname": "Koeper",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "mu0kE8A50iM2Xd2QmsXlGGqiBdr2": {
+    "admin": false,
+    "firstname": "Joel",
+    "lastname": "Pendergast",
+    "email": "126.126.126.go@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "mu51eUk6XNVE3JNtiMhK1xefO1i1": {
+    "firstname": "Tyghe",
+    "admin": false,
+    "email": "vallardt@gmail.com",
+    "lastname": "Vallard",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "mxNUk1lresfFumt234dVa8RfM3e2": {
+    "firstname": "Harper",
+    "admin": false,
+    "email": "htkopka@gmail.com",
+    "lastname": "Kopka",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ]
+  },
+  "mxpS1DEUIoXSDiYvlaIE9R9gyRw1": {
+    "firstname": "Sora",
+    "admin": false,
+    "email": "swalker029@stpaul.k12.mn.us",
+    "lastname": "Walker",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ]
+  },
+  "nEIKV27TNdeOBJYEyVtE5EiU7Gg2": {
+    "firstname": "Ryan",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "coleryan02@gmail.com",
+    "lastname": "Cole"
+  },
+  "nGuJzLyNxadca7X29pJ5fxkYWzH2": {
+    "firstname": "Erick",
+    "admin": false,
+    "email": "erickhuft@gmail.com",
+    "lastname": "Huft",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "nPyLZsU770hdCzre3AGVBiMkG4x1": {
+    "firstname": "Eli",
+    "admin": false,
+    "email": "eli.lessinburris11@gmail.com",
+    "lastname": "Lessin-Burris",
+    "seasons": [
+      {
+        "team": "teams/JFIJXG08u9bMEDnzsgFr",
+        "paid": true,
+        "captain": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true
+      },
+      {
+        "paid": false,
+        "captain": false,
+        "team": null,
+        "signed": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0"
+      }
+    ]
+  },
+  "nYcSlDumGyVwiBE3duF9J8Dbr4c2": {
+    "firstname": "Christopher",
+    "admin": false,
+    "email": "Christopherjohnson2998@gmail.com",
+    "lastname": "Johnson",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "ncIpCry7JbUa6WNCja40yKPN82L2": {
+    "firstname": "Josiah",
+    "admin": false,
+    "email": "josiahharris642@gmail.com",
+    "lastname": "Harris",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "nnEdJHtpHDSAaFwzEKy2zBipso33": {
+    "admin": false,
+    "firstname": "Max",
+    "lastname": "Siqveland",
+    "email": "max.siqveland@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "nudtcMfwGsYTgj3xfjDzgvYcrNB2": {
+    "firstname": "Jared",
+    "admin": false,
+    "email": "jaredjmonsen@gmail.com",
+    "lastname": "Monsen",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "nz6eARNqHUbmiOcdVFL9BCu5F872": {
+    "firstname": "Ross",
+    "admin": false,
+    "email": "rscreaton31@gmail.com",
+    "lastname": "Screaton",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "oEWotBmdpOh9qCQKHm9kBMWLMJ63": {
+    "firstname": "Albert",
+    "admin": false,
+    "email": "albert.wu0501@gmail.com",
+    "lastname": "Wu",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "oMIzAKGhcLdQw7DNRoVyuxiUcY02": {
+    "firstname": "Matt",
+    "admin": false,
+    "email": "taksoling13@gmail.com",
+    "lastname": "Lingam",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "oTnbaH1bAJOx4V0MVowJYCXNWcx2": {
+    "admin": false,
+    "firstname": "Lovie",
+    "lastname": "Garcia",
+    "email": "lovieg2092@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "p69TyDkVCVVe93v2xnK1kG8y78L2": {
+    "firstname": "Jakob",
+    "admin": false,
+    "email": "jakobyedo@gmail.com",
+    "lastname": "Yedo",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "pxDvcJzZp8fYixrZEgqjUn8hI6H3": {
+    "firstname": "Joshua",
+    "admin": false,
+    "email": "jnedwards246@gmail.com",
+    "lastname": "Edwards",
+    "seasons": [
+      {
+        "paid": true,
+        "signed": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "team": "teams/ifnI8V4AXxq28B0nWjJc",
+        "captain": true
+      },
+      {
+        "paid": true,
+        "signed": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": true,
+        "team": "teams/UYtKXok2YrFCnOVaPsMD"
+      }
+    ]
+  },
+  "q0L4pA4jtNUrvArjGKJZjaN8KWE3": {
+    "firstname": "Lance",
+    "admin": false,
+    "email": "lance.einhorn@gmail.com",
+    "lastname": "Einhorn",
+    "seasons": [
+      {
+        "team": null,
+        "signed": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false
+      }
+    ]
+  },
+  "q8J7ohNRFaRgHefeQr7yIFyPClp1": {
+    "admin": false,
+    "firstname": "Zeke",
+    "lastname": "Bronson",
+    "email": "zeke@bronson8.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/Q2RQ8310uNUGfHSDpMB3",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "q9yFs31FzRUB2WVIHdZd9A6hlYg1": {
+    "firstname": "Charlie",
+    "admin": false,
+    "email": "edwincdriver@gmail.com",
+    "lastname": "Eisenhood",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "qAPZ4RIzf4YIeQvNhmfQjAY7JSv1": {
+    "firstname": "John",
+    "admin": false,
+    "email": "Jc@destross.com",
+    "lastname": "Destross",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "qFPInubRGQhwxXFeEehLj7ZkYzn2": {
+    "firstname": "Oscar",
+    "admin": false,
+    "email": "oscardleinbach@gmail.com",
+    "lastname": "Leinbach",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "qFwTXL0saYbWF6kQnctJ9zWJXEg1": {
+    "firstname": "Neil",
+    "admin": false,
+    "email": "suduneil@gmail.com",
+    "lastname": "DeVries Smith",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO",
+        "captain": false
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "qGgATvOzZAhvanZadIVtPDE6ndC2": {
+    "firstname": "Matthew",
+    "admin": false,
+    "email": "muenchowmatthew@gmail.com",
+    "lastname": "Muenchow",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "qPLru0hfmufU6edHMJO1Ufqult42": {
+    "firstname": "Jake",
+    "admin": false,
+    "email": "underminer.krutch@gmail.com",
+    "lastname": "Kretschmer ",
+    "seasons": [
+      {
+        "paid": true,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false
+      },
+      {
+        "paid": false,
+        "team": null,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false,
+        "signed": false
+      }
+    ]
+  },
+  "qwRRyDG7rBM91hCkEn3zUa08RSp1": {
+    "admin": false,
+    "email": "Lukehobday34@gmail.com",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ],
+    "firstname": "Luke",
+    "lastname": "Hobday"
+  },
+  "r0FBAbYlNfbyWZQgNkck9ahmePx2": {
+    "firstname": "Tommy",
+    "admin": false,
+    "email": "tommyd250@gmail.com",
+    "lastname": "Donahue",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "rEP2fuQ4IaQQcvCPYVKRbqUupH43": {
+    "firstname": "Levi",
+    "admin": false,
+    "email": "levihasse@gmail.com",
+    "lastname": "Hasse",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "rMsJlrIxMGbFn1VpLAwkMiaHTUA3": {
+    "firstname": "Venice",
+    "admin": false,
+    "email": "venice.fan11@gmail.com",
+    "lastname": "Fan",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "rOU5L8mk1CdHhxrNETVr7BVrfUK2": {
+    "admin": false,
+    "email": "toniopantelis@gmail.com",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ],
+    "firstname": "Timothy ",
+    "lastname": "Poop"
+  },
+  "rOa2KuMeLfYeoMa7qUiX0FAD7iY2": {
+    "firstname": "Ian",
+    "admin": false,
+    "email": "iwangs1124@gmail.com",
+    "lastname": "Wang",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "rhBvjn8rZmNASWbxkw1qC8TCemg1": {
+    "firstname": "Dom",
+    "admin": false,
+    "email": "dtbturtlefrog@gmail.com",
+    "lastname": "Navarre",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "rlpMDP3vBHWNTDCTNBCZzI0iE9F2": {
+    "firstname": "Nathaniel",
+    "admin": false,
+    "email": "nathlrowe@pm.me",
+    "lastname": "Rowe",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "royzMZbC0VZIsaXeHV1a3OAvJMw1": {
+    "firstname": "Chris",
+    "admin": false,
+    "email": "chrisamundson96@gmail.com",
+    "lastname": "Amundson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "s0m7MitE8wOQp6ankDx2icfvKDr2": {
+    "firstname": "Kabor",
+    "admin": false,
+    "email": "namarradk@gmail.com",
+    "lastname": "Namarra",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "s9SJaYOa2keqRtn44tzaYAl8H1S2": {
+    "firstname": "Trevor",
+    "admin": false,
+    "email": "trevor.graham2121@gmail.com",
+    "lastname": "Graham",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "sJqopy42vqWZX55l60ot1QcUBJr1": {
+    "firstname": "Justin",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "justin.vorndran@gmail.com",
+    "lastname": "Vorndran"
+  },
+  "sh36UCMQHVWWI1N87dxiSua4FYv1": {
+    "firstname": "Miles",
+    "admin": false,
+    "email": "milesmartine99@gmail.com",
+    "lastname": "Martinez",
+    "seasons": [
+      {
+        "captain": true,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/3hp5J5ZJ5NilcAI07y57"
+      }
+    ]
+  },
+  "t9xB0a80UMMTNZkI2aVGC3qwB992": {
+    "firstname": "Johnny",
+    "admin": false,
+    "email": "johnnyquick6@gmail.com",
+    "lastname": "Quick",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": null,
+        "team": null
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "tGgE2u1ZJjMnX5hU9SUE8f2DSF73": {
+    "firstname": "Walter",
+    "admin": false,
+    "email": "walter.r.hipps@gmail.com",
+    "lastname": "Hipps",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "tIyNmV3Gqwf22qDl6p7GyJIDI602": {
+    "firstname": "Brian",
+    "admin": false,
+    "email": "bbies0324@gmail.com",
+    "lastname": "Bies",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "tUFUAbaNYZP1wOnLsvTmM6DuhZR2": {
+    "firstname": "Levi",
+    "admin": false,
+    "email": "levi@dohman.net",
+    "lastname": "Dohman",
+    "seasons": [
+      {
+        "team": null,
+        "captain": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "paid": false,
+        "signed": false
+      },
+      {
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/kocAbvNvtF4J4z5GOl93",
+        "paid": true
+      }
+    ]
+  },
+  "tY8DMrZ9CDb7Dsa4X6QfZ766jJO2": {
+    "firstname": "Donnie",
+    "admin": false,
+    "email": "Woodx36@gmail.com",
+    "lastname": "Wood",
+    "seasons": [
+      {
+        "team": "teams/67XqRkRUwClXW8VMbuYQ",
+        "signed": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "captain": false,
+        "paid": true
+      },
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "team": null,
+        "signed": false
+      }
+    ]
+  },
+  "tvBlWNJvtIdM8I6B3MERkMjMOEL2": {
+    "admin": false,
+    "firstname": "Sanjeev",
+    "lastname": "Sridhar",
+    "email": "sridhar.sanjeev55@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/ozExVClE1sf8BNwotdIZ"
+      }
+    ]
+  },
+  "tzANLUddLGhgCYN8CCFSMoIv6AE3": {
+    "admin": false,
+    "email": "arlonorthropkiel@gmail.com",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Zl4NPP4kQ0GaZyiqUjbj"
+      }
+    ],
+    "firstname": "Bingo",
+    "lastname": "Johnson"
+  },
+  "u4qRHIiIUeXqz2VHrjk8LlMvuHi1": {
+    "firstname": "Rick",
+    "admin": false,
+    "email": "rmgebhardt@gmail.com",
+    "lastname": "Gebhardt",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "u7LDZJaRbNQO78AhCaZdlg1X6qs2": {
+    "firstname": "Jesse",
+    "admin": false,
+    "email": "jesse.w.stratton@gmail.com",
+    "lastname": "Stratton ",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "uHcu1auorWdoECubLmadL7QRHVt1": {
+    "firstname": "Graham",
+    "admin": false,
+    "email": "gr4h4m.imh0lt3@gmail.com",
+    "lastname": "Imholte",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "uId0eF1mdgaydRKe0LyyL5pVcI23": {
+    "firstname": "Johnathan",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ],
+    "admin": false,
+    "email": "jap.pratt@gmail.com",
+    "lastname": "Pratt"
+  },
+  "uaUtSYX15ThHMnujG5guUu6rwWg1": {
+    "firstname": "Josh",
+    "admin": false,
+    "email": "jhendy4141@gmail.com",
+    "lastname": "Hendrickson",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "uikKxgn6qVV9finLwcirvaeC1ra2": {
+    "firstname": "Tyler",
+    "admin": false,
+    "email": "ChurchillTC2@gmail.com",
+    "lastname": "King",
+    "seasons": [
+      {
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "paid": true,
+        "signed": true,
+        "captain": false
+      },
+      {
+        "team": null,
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false
+      }
+    ]
+  },
+  "upXQScufEBOsPPZqyD8avqYMSsi2": {
+    "firstname": "Chris",
+    "admin": false,
+    "email": "Ricecg315@gmail.com",
+    "lastname": "Rice",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/AE9qWaJmhxI300Gbbuye"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "v3BHsCBFzXQejO0jcB934X3Nsf23": {
+    "firstname": "Ian",
+    "admin": false,
+    "email": "Ihahn1113@gmail.com",
+    "lastname": "Hahn",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "v6evFTtEDuaIyJTjkdnGDJ2oQAI2": {
+    "firstname": "Wally",
+    "admin": false,
+    "email": "wally.jirele@gmail.com",
+    "lastname": "Jirele",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nw1HrX3dXZMecbbTSGsR"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "vJzYTMeThkRyKXZmDQM9EXtkjB22": {
+    "firstname": "Eric",
+    "admin": false,
+    "email": "crosby6@stolaf.edu",
+    "lastname": "Crosby Lehmann",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/b3BM1rI4q2JuzLyPHh2K"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "vm5KWQcqDpPtbgCN1gtNEkNuSbW2": {
+    "firstname": "Alex",
+    "admin": false,
+    "email": "arkozitza01@gmail.com",
+    "lastname": "Kozitza",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "w49qB0aD5xZ8I9At4AMnVBcqA9D2": {
+    "firstname": "Alex",
+    "admin": false,
+    "email": "akaja90@gmail.com",
+    "lastname": "Kaja",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "w86mhhjwldNljWDcWUdeCV0vx5k1": {
+    "admin": false,
+    "firstname": "Will",
+    "lastname": "Hassell",
+    "email": "wrhassell15@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "wCULQNyc7IXy5oMpUsBHBfoUY7k2": {
+    "firstname": "Joe",
+    "admin": false,
+    "email": "crega008@umn.edu",
+    "lastname": "Cregan",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": true,
+        "team": "teams/CsfadYYv1J1KvSj4SYd0"
+      }
+    ]
+  },
+  "wb2zUAaQU1a2Vfy1qdSFhe5YjG23": {
+    "firstname": "Trevor",
+    "admin": false,
+    "email": "trevor.k.day@gmail.com",
+    "lastname": "Day",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": true,
+        "team": "teams/Gv5elo2IVFTc3Ldv9AkO"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "webNnmYErlMHW7Ao71xzzk0wvx63": {
+    "firstname": "Mickey",
+    "admin": false,
+    "email": "mickeywalsh222@gmail.com",
+    "lastname": "Walsh",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/GrNZCbOFMZ8bxgc1iaIb"
+      }
+    ]
+  },
+  "whOxFNDusfeZJdNCR5PugkD2FYm2": {
+    "firstname": "Frank",
+    "admin": false,
+    "email": "Ftoft008@gmail.com",
+    "lastname": "Toft",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "woAArvH2shPhICX2wGSgtEs2jUm2": {
+    "firstname": "Parker",
+    "admin": false,
+    "email": "pyellick@gmail.com",
+    "lastname": "Yellick",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "wzApdFD5ltZ0YadWWFDcdF6U97J3": {
+    "firstname": "Danny",
+    "admin": false,
+    "email": "danny.gollin93@gmail.com",
+    "lastname": "Gollin",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "team": "teams/67XqRkRUwClXW8VMbuYQ",
+        "captain": false
+      },
+      {
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "captain": false,
+        "paid": false,
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "x1BkufgxRfS5mDL5kKxQDOixnnP2": {
+    "firstname": "Tommy",
+    "admin": false,
+    "email": "tanderso1@yahoo.com",
+    "lastname": "Anderson",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "x4wpP287ywfcCBorYq4qFf9vbFC2": {
+    "firstname": "Nolan",
+    "admin": false,
+    "email": "nolanbessler@gmail.com",
+    "lastname": "Bessler",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "x7HQ5hqsGgPOrUitBtaNgUigimG3": {
+    "firstname": "Peter",
+    "admin": false,
+    "email": "peteralbertschmitt@gmail.com",
+    "lastname": "Schmitt",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/nUZOOC7j8TJGCEV6aQIf"
+      }
+    ]
+  },
+  "xClZRbGQjifn30JeYH17zfWhAW73": {
+    "admin": false,
+    "firstname": "Peter",
+    "lastname": "Helgeson",
+    "email": "peterhelgeson16@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "team": null
+      }
+    ]
+  },
+  "xXnOPN6IhXX75WJX9oVN26UM9Mc2": {
+    "admin": false,
+    "firstname": "Elliott",
+    "lastname": "Chartock",
+    "email": "echartock3@gmail.com",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "xw6bcwKsE6USybHi2nDcybSXWKX2": {
+    "firstname": "Kyle",
+    "admin": false,
+    "email": "dejes030@d.umn.edu",
+    "lastname": "De Jesus",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/JFIJXG08u9bMEDnzsgFr"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "y2h29atlVraztlFrIC1rwZxyrZg2": {
+    "firstname": "Tyler ",
+    "admin": false,
+    "email": "trczerni@gmail.com",
+    "lastname": "Czerniak",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq"
+      },
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "y5AsmWXA1aOVlyID5CHDo1X9fYM2": {
+    "firstname": "Will",
+    "admin": false,
+    "email": "Williambhager@gmail.com",
+    "lastname": "Hager",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "yE1Hz02llPVTRkE24a7Vsg4OjVJ2": {
+    "firstname": "bing",
+    "admin": false,
+    "email": "colin.keyforge@gmail.com",
+    "lastname": "bong",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "yEDnOJREolY3OdQGZPxseMbvwqq1": {
+    "email": "josh@joshkautz.com",
+    "lastname": "Kautz",
+    "firstname": "Josh",
+    "seasons": [
+      {
+        "team": "teams/OS4oMGXE3yAHkbGTKK5W",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "captain": "teams/OS4oMGXE3yAHkbGTKK5W",
+        "signed": true,
+        "paid": true
+      },
+      {
+        "signed": true,
+        "paid": true,
+        "captain": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "team": "teams/rpmhoe8o4VDqA1xwqoqK"
+      }
+    ],
+    "admin": true
+  },
+  "yGCUoh629UOnTKQ994G6MuZxqYd2": {
+    "firstname": "Andrew",
+    "admin": false,
+    "email": "andrew.mcotter@gmail.com",
+    "lastname": "Cotter",
+    "seasons": [
+      {
+        "paid": false,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": false,
+        "captain": false,
+        "team": null
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "yKvFMo3mUhOPKOn2aFy1mOMXHFp2": {
+    "firstname": "Evan",
+    "admin": false,
+    "email": "evansnyder1es@gmail.com",
+    "lastname": "Snyder",
+    "seasons": [
+      {
+        "paid": true,
+        "captain": false,
+        "team": "teams/cK26PQEyfvmmWpegVQzq",
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/KNdbONsXNayHPq6uHhWp"
+      }
+    ]
+  },
+  "zG0DoAeSl4dqsxQLFrfAHsop3eV2": {
+    "firstname": "Garrett",
+    "admin": false,
+    "email": "geib.garrett77@gmail.com",
+    "lastname": "Geib",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/DTzWGB7fMbUVcL3iHT08"
+      },
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  },
+  "zHtwvAhcnwSCcw5XBRPqs8DSN2o1": {
+    "firstname": "Matt",
+    "admin": false,
+    "email": "m@streamline.digital",
+    "lastname": "Fisher",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/Vr0ZvjAeahGoVh5p6OTp",
+        "signed": true,
+        "captain": false,
+        "team": "teams/2I7YXDF7RAXs3MCvLM0h"
+      },
+      {
+        "paid": false,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": false,
+        "captain": false,
+        "team": null
+      }
+    ]
+  },
+  "zwvSwQeclIRHPYgZWlcm2PZiLcc2": {
+    "firstname": "Simon",
+    "admin": false,
+    "email": "simon.mulrooney@gmail.com",
+    "lastname": "Mulrooney",
+    "seasons": [
+      {
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "captain": false,
+        "team": "teams/SlSQZZyeRXzYeScoBHM2"
+      }
+    ]
+  },
+  "zylw3zAOrqYZFTtyidsLiBZOE422": {
+    "admin": false,
+    "firstname": "Mike",
+    "lastname": "Merwin",
+    "email": "mtmerwin@mtu.edu",
+    "seasons": [
+      {
+        "captain": false,
+        "paid": true,
+        "season": "seasons/PBE6nY7rpCxufItsC7l0",
+        "signed": true,
+        "team": "teams/UaOUQ6B2uBB4E6K5IcGE"
+      }
+    ]
+  }
+}

@@ -1,39 +1,126 @@
 # Minneapolis Winter League
 
-| Environment | Status                                                                                                                                                                                                                                                                                         |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Production  | [![Production GitHub Workflow Status](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml/badge.svg "Production GitHub Workflow Status")](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml) |
-| Staging     | [![Staging GitHub Workflow Status](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml/badge.svg "Staging GitHub Workflow Status")](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml)       |
+A modern, secure web application for managing Minneapolis Winter League hockey seasons, teams, and games. Built with React, TypeScript, and Firebase with a focus on security and performance.
 
-## Requirements 📋
+| Environment | Status                                                                                                                                                                                                                                                     |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production  | [![Production GitHub Workflow Status](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml/badge.svg)](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml) |
+| Staging     | [![Staging GitHub Workflow Status](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml/badge.svg)](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml)    |
 
-- VS Code ([Windows](https://code.visualstudio.com/Download), [Mac](https://code.visualstudio.com/Download), [Linux](https://code.visualstudio.com/Download))
-- Docker ([Windows](https://docs.docker.com/desktop/install/windows-install/), [Mac](https://docs.docker.com/desktop/install/mac-install/), [Linux](https://docs.docker.com/desktop/install/linux-install/))
+## 🚀 Quick Start
 
-## Development 💻
+```bash
+# Clone and install
+git clone https://github.com/joshkautz/Minneapolis-Winter-League.git
+cd Minneapolis-Winter-League
+npm install
 
-We are using the Visual Studio Code Dev Containers extension to use a container as a full-featured development environment. Learn more about [developing inside a container](https://code.visualstudio.com/docs/devcontainers/containers).
+# Start development environment
+npm run dev                    # Start Firebase emulators
+cd App && npm run dev:emulators # Start React app (new terminal)
+```
 
-To begin development on the App, open `./App/` in your IDE and run `npm run start` to begin local development.
+**Access Points:**
 
-To begin development on the Functions, open `./Functions/index.js` in your IDE and begin development. You will want to use `firebase emulators:start` to leverage Firebase Local Emulator Suite for debugging. It is suggested that you are developing with the most recent LTS version of Node (v18.x.x as of writing).
+- App: <http://localhost:5173>
+- Firebase Emulator UI: <http://localhost:4000>
 
-## Deploy App 📦
+## 🛠️ Tech Stack
 
-### Deploy App to Preview Channel
+- **Frontend**: React 18 + TypeScript + Vite + shadcn/ui + Tailwind CSS
+- **Backend**: Firebase (Auth, Firestore, Functions Gen 2, Storage, Hosting)
+- **Security**: Firebase Functions-first architecture with strict Firestore rules
+- **Validation**: Local type definitions and validation
+- **Payments**: Stripe integration
+- **Development**: Firebase Emulators with hot reload
 
-1. Create a Pull Request to merge a new feature branch into the Main branch.
-2. Firebase Hosting GitHub Action will build and deploy the new changes to a Preview Channel on Firebase Hosting.
+## 📚 Documentation
 
-### Deploy App to Production
+| Category                       | Documents                                                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Setup & Development**        | [Development Setup](./docs/DEVELOPMENT_SETUP.md) • [Environment Variables](./docs/ENVIRONMENT_VARIABLES.md) • [Project Structure](./docs/PROJECT_STRUCTURE.md)                             |
+| **Security & Architecture**    | [Firebase Functions Migration](./docs/FIREBASE_FUNCTIONS_MIGRATION_STATUS.md) • [Security Guidelines](./docs/SECURITY.md) • [Authentication System](./docs/AUTHENTICATION_SYSTEM.md)       |
+| **Firebase Integration**       | [Firebase Migration Guide](./docs/FIREBASE_MIGRATION.md) • [Firebase Collections](./docs/FIREBASE_COLLECTIONS_README.md) • [Player Function Docs](./docs/PLAYER_FUNCTION_DOCUMENTATION.md) |
+| **Type Safety & Validation**   | [Zod Validation](./docs/ZOD_VALIDATION_ANALYSIS.md) • [TypeScript Improvements](./docs/TYPESCRIPT_IMPROVEMENTS.md)                                                                         |
+| **Performance & Optimization** | [Bundle Optimization](./docs/BUNDLE_OPTIMIZATION.md)                                                                                                                                       |
 
-1. After testing the features at the Preview Channel URL, merge the Pull Request into the Main branch.
-2. Firebase Hosting GitHub Action will build and deploy the new changes to the Live Channel on Firebase Hosting.
+## 🏗️ Architecture
 
-## Deploy Functions 📦
+```
+├── App/                     # React application (Vite + TypeScript)
+│   ├── src/features/        # Feature-based modules
+│   ├── src/firebase/        # Firebase SDK integration
+│   └── src/shared/          # Shared utilities & components
+├── Functions/               # Firebase Cloud Functions (Gen 2)
+│   ├── src/playerFunctions.ts    # Player CRUD operations
+│   ├── src/teamFunctions.ts      # Team management
+│   └── src/offerFunctions.ts     # Invitation/request workflow
+├── docs/                    # Complete documentation
+└── .emulator/           # Development test data
+```
 
-### Deploy Functions to Production
+## 🔐 Security Features
 
-1. Create a Pull Request to merge a new feature branch into the Main branch.
-2. Merge the Pull Request into the Main branch.
-3. Firebase Hosting GitHub Action will deploy the new changes to the production environment.
+- **Functions-First Architecture**: All write operations server-side only
+- **Zero Client-Side Writes**: Firestore rules deny all client writes to core collections
+- **Role-Based Authorization**: Captain/Player/Admin permissions enforced
+- **Email Verification Required**: All operations require verified accounts
+- **Atomic Transactions**: Multi-document consistency guaranteed
+- **Comprehensive Audit Logging**: All actions tracked with user context
+
+## 🎯 Key Features
+
+- **Season Management**: Complete season lifecycle with automated workflows
+- **Team Organization**: Secure team creation, editing, and roster management
+- **Player Profiles**: Individual statistics and team history
+- **Invitation System**: Secure team invitations and join requests
+- **Game Scheduling**: Automated scheduling and result tracking
+- **Payment Integration**: Stripe checkout for registration
+- **Mobile Responsive**: Full mobile experience with PWA support
+
+## 🚀 Deployment
+
+### Automatic Deployments
+
+- **Pull Requests**: Auto-deploy to Firebase Hosting preview channels
+- **Main Branch**: Auto-deploy to production on merge
+- **Functions**: Deploy via Firebase CLI or GitHub Actions
+
+### Scripts
+
+```bash
+# Development
+npm run dev                  # Start emulators with test data
+npm run dev:clean           # Start clean emulators
+
+# Production
+npm run build               # Build for production
+npm run deploy              # Deploy to Firebase
+```
+
+## 📈 Recent Major Updates
+
+- ✅ **Security Migration Complete**: All operations moved to secure Firebase Functions
+- ✅ **TypeScript Strict Mode**: Full type safety across codebase
+- ✅ **Project-Specific Types**: Each project has its own Firebase SDK-compatible types
+- ✅ **Firebase Functions Gen 2**: Modern serverless architecture
+- ✅ **Zero Client-Side Writes**: Complete security lockdown
+
+## 🔮 Upcoming Features
+
+- **Enhanced Team Karma System**: Priority seeding based on team inclusivity
+- **Player Request Messages**: Allow custom messages with team join requests
+- **Team Availability Flags**: Teams can indicate they're looking for players
+- **Advanced Analytics**: Detailed player and team statistics
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow the [Development Setup Guide](./docs/DEVELOPMENT_SETUP.md)
+4. Make changes with tests
+5. Submit a Pull Request
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.

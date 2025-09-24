@@ -1,71 +1,92 @@
 {
-  "$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firebase-config.json",
-  "functions": {
-    "source": "Functions",
-    "runtime": "nodejs20",
-    "ignore": [
-      "node_modules",
-      "src",
-      ".gitignore",
-      "eslint.config.js",
-      "tsconfig.json"
-    ]
-  },
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "hosting": {
-    "public": "App/dist",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "/dropboxSignHandleWebhookEvents",
-        "function": {
-          "functionId": "dropboxSignHandleWebhookEvents",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ],
-    "redirects": [
-      {
-        "source": "/preview",
-        "destination": "https://docs.google.com/document/d/e/2PACX-1vQVZuhWkACfZxA8QMF2rXokFff5_k6IWmo4FJ-O9ovHTwz1MQZMLlyf6sM9vQ-gzpKhpMEvtWLFcbNt/pub",
-        "type": 301
-      }
-    ],
-    "headers": [
-      {
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=604800"
-          }
-        ],
-        "source": "**/*.@(jpg|jpeg|gif|png)"
-      },
-      {
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=86400"
-          }
-        ],
-        "source": "**/*.@(js|css)"
-      }
-    ],
-    "predeploy": [],
-    "postdeploy": []
-  },
-  "storage": {
-    "rules": "storage.rules"
-  }
+	"$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firebase-config.json",
+	"functions": {
+		"source": "Functions",
+		"runtime": "nodejs22",
+		"ignore": [
+			"node_modules",
+			"src",
+			".gitignore",
+			"eslint.config.js",
+			"tsconfig.json"
+		],
+		"predeploy": [
+			"npm install --prefix Functions",
+			"npm run build --prefix Functions"
+		]
+	},
+	"firestore": {
+		"rules": "firestore.rules",
+		"indexes": "firestore.indexes.json"
+	},
+	"hosting": {
+		"public": "App/dist",
+		"ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+		"rewrites": [
+			{
+				"source": "/dropboxSignHandleWebhookEvents",
+				"function": {
+					"functionId": "dropboxSignHandleWebhookEvents",
+					"region": "us-central1"
+				}
+			},
+			{
+				"source": "**",
+				"destination": "/index.html"
+			}
+		],
+		"redirects": [
+			{
+				"source": "/preview",
+				"destination": "https://docs.google.com/document/d/e/2PACX-1vQVZuhWkACfZxA8QMF2rXokFff5_k6IWmo4FJ-O9ovHTwz1MQZMLlyf6sM9vQ-gzpKhpMEvtWLFcbNt/pub",
+				"type": 301
+			}
+		],
+		"headers": [
+			{
+				"headers": [
+					{
+						"key": "Cache-Control",
+						"value": "max-age=604800"
+					}
+				],
+				"source": "**/*.@(jpg|jpeg|gif|png)"
+			},
+			{
+				"headers": [
+					{
+						"key": "Cache-Control",
+						"value": "max-age=86400"
+					}
+				],
+				"source": "**/*.@(js|css)"
+			}
+		],
+		"predeploy": ["npm install --prefix App", "npm run build --prefix App"],
+		"postdeploy": []
+	},
+	"storage": {
+		"rules": "storage.rules"
+	},
+	"emulators": {
+		"auth": {
+			"port": 9099
+		},
+		"functions": {
+			"port": 5001
+		},
+		"firestore": {
+			"port": 8080
+		},
+		"hosting": {
+			"port": 5005
+		},
+		"storage": {
+			"port": 9199
+		},
+		"ui": {
+			"enabled": true
+		},
+		"singleProjectMode": true
+	}
 }

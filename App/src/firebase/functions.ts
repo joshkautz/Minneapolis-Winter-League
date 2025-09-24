@@ -3,18 +3,18 @@ import {
 	httpsCallable,
 	HttpsCallableResult,
 } from 'firebase/functions'
+import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
 
 import { app } from './app'
-import { DropboxError, DropboxResult } from '@/lib/interfaces'
 
 const functions = getFunctions(app)
 
 const sendDropboxEmail = async (): Promise<
-	HttpsCallableResult<DropboxResult | DropboxError>
+	HttpsCallableResult<returnTypeT<SignatureRequestGetResponse>>
 > => {
 	const dropboxSignSendReminderEmail = httpsCallable<
 		unknown,
-		DropboxResult | DropboxError
+		returnTypeT<SignatureRequestGetResponse>
 	>(functions, 'dropboxSignSendReminderEmail')
 	return dropboxSignSendReminderEmail()
 }
