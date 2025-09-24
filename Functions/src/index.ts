@@ -50,7 +50,7 @@ export {
 } from './triggers/documents/teamUpdated.js'
 
 // Payment triggers
-export { onCheckoutSessionCreated } from './triggers/payments/checkoutSessionCreated.js'
+// export { onCheckoutSessionCreated } from './triggers/payments/checkoutSessionCreated.js'
 export { onPaymentCreated } from './triggers/payments/paymentCreated.js'
 
 //////////////////////////////////////////////////////////////////////////////
