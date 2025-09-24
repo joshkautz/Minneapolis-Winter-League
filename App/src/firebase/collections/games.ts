@@ -2,11 +2,11 @@
  * Game-related Firestore operations
  */
 
-import { 
-	query, 
-	where, 
-	collection, 
-	orderBy, 
+import {
+	query,
+	where,
+	collection,
+	orderBy,
 	or,
 	DocumentReference,
 	QueryDocumentSnapshot,

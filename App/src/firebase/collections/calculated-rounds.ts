@@ -2,7 +2,13 @@
  * Rankings Calculated Rounds related Firestore operations
  */
 
-import { query, collection, orderBy, Query, DocumentData } from 'firebase/firestore'
+import {
+	query,
+	collection,
+	orderBy,
+	Query,
+	DocumentData,
+} from 'firebase/firestore'
 
 import { firestore } from '../app'
 import { Collections } from '@/types'
