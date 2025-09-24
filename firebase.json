@@ -11,8 +11,8 @@
 			"tsconfig.json"
 		],
 		"predeploy": [
-			"npm install --prefix Functions",
-			"npm run build --prefix Functions"
+			"npm install --workspace=Functions",
+			"npm run build --workspace=Functions"
 		]
 	},
 	"firestore": {
@@ -62,8 +62,10 @@
 				"source": "**/*.@(js|css)"
 			}
 		],
-		"predeploy": ["npm install --prefix App", "npm run build --prefix App"],
-		"postdeploy": []
+		"predeploy": [
+			"npm install --workspace=App",
+			"npm run build --workspace=App"
+		]
 	},
 	"storage": {
 		"rules": "storage.rules"
