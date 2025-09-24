@@ -2,7 +2,7 @@
 	"$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firebase-config.json",
 	"functions": {
 		"source": "Functions",
-		"runtime": "nodejs22",
+		"runtime": "nodejs20",
 		"ignore": [
 			"node_modules",
 			"src",
@@ -11,8 +11,8 @@
 			"tsconfig.json"
 		],
 		"predeploy": [
-			"npm install --workspace=Functions",
-			"npm run build --workspace=Functions"
+			"npm install --prefix Functions",
+			"npm run build --prefix Functions"
 		]
 	},
 	"firestore": {
@@ -62,10 +62,7 @@
 				"source": "**/*.@(js|css)"
 			}
 		],
-		"predeploy": [
-			"npm install --workspace=App",
-			"npm run build --workspace=App"
-		]
+		"predeploy": ["npm install --prefix App", "npm run build --prefix App"]
 	},
 	"storage": {
 		"rules": "storage.rules"

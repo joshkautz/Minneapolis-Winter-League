@@ -14,6 +14,7 @@ interface EnvironmentConfig {
 
 /**
  * Validates and loads environment variables/secrets
+ * This should be called only when needed, not at module load time
  */
 export function getEnvironmentConfig(): EnvironmentConfig {
 	const nodeEnv = process.env.NODE_ENV || 'development'
@@ -26,20 +27,16 @@ export function getEnvironmentConfig(): EnvironmentConfig {
 		const error =
 			'DROPBOX_SIGN_API_KEY is required (set via Firebase secret or .secret.local)'
 		logger.warn(error)
-		// Don't throw in development to allow functions to load
-		if (nodeEnv === 'production') {
-			throw new Error(error)
-		}
+		// Don't throw to allow functions to load even without secrets
+		// Functions that need the secret will fail at runtime instead
 	}
 
 	if (!stripeSecretKey) {
 		const error =
 			'STRIPE_SECRET_KEY is required (set via Firebase secret or .secret.local)'
 		logger.warn(error)
-		// Don't throw in development to allow functions to load
-		if (nodeEnv === 'production') {
-			throw new Error(error)
-		}
+		// Don't throw to allow functions to load even without secrets
+		// Functions that need the secret will fail at runtime instead
 	}
 
 	return {
@@ -51,7 +48,14 @@ export function getEnvironmentConfig(): EnvironmentConfig {
 	}
 }
 
+let _envConfig: EnvironmentConfig | null = null
+
 /**
- * Global environment configuration instance
+ * Global environment configuration instance (lazy-loaded)
  */
-export const ENV = getEnvironmentConfig()
+export function getENV(): EnvironmentConfig {
+	if (!_envConfig) {
+		_envConfig = getEnvironmentConfig()
+	}
+	return _envConfig
+}

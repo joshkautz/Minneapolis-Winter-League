@@ -5,7 +5,7 @@
 	"type": "module",
 	"main": "dist/index.js",
 	"engines": {
-		"node": "22"
+		"node": "20"
 	},
 	"scripts": {
 		"format:check": "prettier --check .",

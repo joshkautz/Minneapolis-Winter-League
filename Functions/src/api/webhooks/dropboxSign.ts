@@ -6,7 +6,10 @@ import { onRequest } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, WaiverDocument, PlayerDocument } from '../../types.js'
-import { FIREBASE_CONFIG, DROPBOX_SIGN_CONFIG } from '../../config/constants.js'
+import {
+	FIREBASE_CONFIG,
+	getDropboxSignConfig,
+} from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
 import {
 	EventCallbackRequest,
@@ -40,9 +43,8 @@ export const dropboxSignWebhook = onRequest(
 			const callbackEvent = EventCallbackRequest.init(callbackData)
 
 			// Verify that the callback came from Dropbox Sign
-			if (
-				!EventCallbackHelper.isValid(DROPBOX_SIGN_CONFIG.API_KEY, callbackEvent)
-			) {
+			const dropboxConfig = getDropboxSignConfig()
+			if (!EventCallbackHelper.isValid(dropboxConfig.API_KEY, callbackEvent)) {
 				logger.error('Invalid webhook signature')
 				resp.status(401).send('Unauthorized')
 				return
