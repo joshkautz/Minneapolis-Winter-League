@@ -18,8 +18,7 @@
  */
 
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
-import { CallableRequest, onCall } from 'firebase-functions/v2/https'
-import { logger } from 'firebase-functions/v2'
+import * as functions from 'firebase-functions/v1'
 import { z } from 'zod'
 import { Collections, SeasonDocument } from '../../types.js'
 import { validateAdminUser } from '../../shared/auth.js'
@@ -45,68 +44,78 @@ type UpdateRankingsRequest = z.infer<typeof updateRankingsSchema>
  * Player Rankings Incremental Update
  * Efficiently updates rankings by processing only new uncalculated rounds
  */
-export const updatePlayerRankings = onCall(
-	{
-		region: FIREBASE_CONFIG.REGION,
+export const updatePlayerRankings = functions
+	.region(FIREBASE_CONFIG.REGION)
+	.runWith({
 		timeoutSeconds: 540, // 9 minutes
-		memory: '1GiB',
-		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
-	},
-	async (request: CallableRequest<UpdateRankingsRequest>) => {
-		try {
-			// Validate authentication and admin privileges
-			const firestore = getFirestore()
-			await validateAdminUser(request.auth, firestore)
-
-			// Validate request data
-			updateRankingsSchema.parse(request.data)
-
-			logger.info('Starting incremental Player Rankings update', {
-				triggeredBy: request.auth!.uid,
-				applyDecay: true, // Always applied
-			})
-
-			// Create calculation state document for tracking
-			const calculationId = await createCalculationState(
-				'incremental',
-				request.auth!.uid
-			)
-
+		memory: '1GB',
+	})
+	.https.onCall(
+		async (
+			data: UpdateRankingsRequest,
+			context: functions.https.CallableContext
+		) => {
 			try {
-				await processIncrementalUpdate(calculationId)
+				// Validate authentication and admin privileges
+				const firestore = getFirestore()
+				await validateAdminUser(context.auth, firestore)
 
-				return {
-					calculationId,
-					status: 'completed',
-					message: 'Player Rankings incremental update completed successfully.',
-				}
-			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Unknown error'
-				const errorStack = error instanceof Error ? error.stack : undefined
+				// Validate request data
+				updateRankingsSchema.parse(data)
 
-				logger.error('Player Rankings incremental update failed:', error)
-				await updateCalculationState(calculationId, {
-					status: 'failed',
-					error: {
-						message: errorMessage,
-						stack: errorStack,
-						timestamp: Timestamp.now(),
-					},
+				functions.logger.info('Starting incremental Player Rankings update', {
+					triggeredBy: context.auth!.uid,
+					applyDecay: true, // Always applied
 				})
 
-				return {
-					calculationId,
-					status: 'failed',
-					message: `Player Rankings incremental update failed: ${errorMessage}`,
+				// Create calculation state document for tracking
+				const calculationId = await createCalculationState(
+					'incremental',
+					context.auth!.uid
+				)
+
+				try {
+					await processIncrementalUpdate(calculationId)
+
+					return {
+						calculationId,
+						status: 'completed',
+						message:
+							'Player Rankings incremental update completed successfully.',
+					}
+				} catch (error) {
+					const errorMessage =
+						error instanceof Error ? error.message : 'Unknown error'
+					const errorStack = error instanceof Error ? error.stack : undefined
+
+					functions.logger.error(
+						'Player Rankings incremental update failed:',
+						error
+					)
+					await updateCalculationState(calculationId, {
+						status: 'failed',
+						error: {
+							message: errorMessage,
+							stack: errorStack,
+							timestamp: Timestamp.now(),
+						},
+					})
+
+					return {
+						calculationId,
+						status: 'failed',
+						message: `Player Rankings incremental update failed: ${errorMessage}`,
+					}
 				}
+			} catch (error) {
+				functions.logger.error(
+					'Error starting Player Rankings incremental update:',
+					error
+				)
+				throw error
 			}
-		} catch (error) {
-			logger.error('Error starting Player Rankings incremental update:', error)
-			throw error
 		}
-	}
-)
+	)
 
 /**
  * Process only the new uncalculated rounds for efficient incremental updates
@@ -133,7 +142,9 @@ async function processIncrementalUpdate(calculationId: string): Promise<void> {
 			...doc.data(),
 		})) as (SeasonDocument & { id: string })[]
 
-		logger.info(`Found ${seasons.length} seasons for incremental update`)
+		functions.logger.info(
+			`Found ${seasons.length} seasons for incremental update`
+		)
 
 		await updateCalculationState(calculationId, {
 			'progress.totalSeasons': seasons.length,
@@ -141,7 +152,9 @@ async function processIncrementalUpdate(calculationId: string): Promise<void> {
 
 		// Load ALL games to identify which rounds are new
 		const allGames = await loadGamesForCalculation(seasons, 0)
-		logger.info(`Loaded ${allGames.length} total games to identify new rounds`)
+		functions.logger.info(
+			`Loaded ${allGames.length} total games to identify new rounds`
+		)
 
 		await updateCalculationState(calculationId, {
 			'progress.currentStep':
@@ -151,14 +164,16 @@ async function processIncrementalUpdate(calculationId: string): Promise<void> {
 		// Start with empty player ratings - processNewRoundsOnly will handle loading existing ratings
 		// when there are existing calculated rounds, or process all rounds if this is the first calculation
 		const playerRatings = new Map()
-		logger.info(
+		functions.logger.info(
 			'Starting incremental update (will load existing ratings or start fresh if none exist)'
 		)
 
 		// Load existing rankings for incremental update to preserve totalGames and other stats
 		const hasExisting = await hasExistingRankings()
 		if (hasExisting) {
-			logger.info('Loading existing player rankings for incremental update...')
+			functions.logger.info(
+				'Loading existing player rankings for incremental update...'
+			)
 			const existingRankings = await loadExistingRankings()
 
 			// Copy existing rankings into our working map
@@ -166,11 +181,13 @@ async function processIncrementalUpdate(calculationId: string): Promise<void> {
 				playerRatings.set(playerId, playerState)
 			}
 
-			logger.info(
+			functions.logger.info(
 				`Loaded ${playerRatings.size} existing player rankings with preserved totalGames counts`
 			)
 		} else {
-			logger.info('No existing rankings found - starting fresh calculation')
+			functions.logger.info(
+				'No existing rankings found - starting fresh calculation'
+			)
 		}
 
 		// Process ONLY new uncalculated rounds (most efficient for production)
@@ -183,7 +200,7 @@ async function processIncrementalUpdate(calculationId: string): Promise<void> {
 			undefined // Auto-detect incremental start season
 		)
 
-		logger.info(
+		functions.logger.info(
 			`After incremental update: ${playerRatings.size} players with ratings`
 		)
 
@@ -194,7 +211,9 @@ async function processIncrementalUpdate(calculationId: string): Promise<void> {
 		})
 
 		await saveFinalRankings(playerRatings)
-		logger.info('Incremental update: Final rankings saved successfully')
+		functions.logger.info(
+			'Incremental update: Final rankings saved successfully'
+		)
 
 		// Mark calculation as complete
 		await updateCalculationState(calculationId, {
@@ -204,11 +223,11 @@ async function processIncrementalUpdate(calculationId: string): Promise<void> {
 			'progress.percentComplete': 100,
 		})
 
-		logger.info(
+		functions.logger.info(
 			`Player Rankings incremental update completed: ${calculationId}`
 		)
 	} catch (error) {
-		logger.error(
+		functions.logger.error(
 			`Player Rankings incremental update failed: ${calculationId}`,
 			error
 		)
