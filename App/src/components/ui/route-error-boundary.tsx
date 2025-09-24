@@ -22,6 +22,7 @@ export const RouteErrorBoundary: React.FC<RouteErrorBoundaryProps> = ({
 	const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
 		// Add route context to the error if routeName is provided
 		if (routeName) {
+			// eslint-disable-next-line no-console
 			console.error(`Route Error [${routeName}]:`, error.message)
 		}
 

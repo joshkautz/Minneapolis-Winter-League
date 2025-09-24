@@ -67,19 +67,6 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 	const { playerId } = useParams<{ playerId: string }>()
 	const navigate = useNavigate()
 
-	// Handle missing playerId
-	if (!playerId) {
-		return (
-			<div className='container max-w-4xl mx-auto py-8'>
-				<Alert variant='destructive'>
-					<AlertDescription>
-						Player ID is required to view rankings history.
-					</AlertDescription>
-				</Alert>
-			</div>
-		)
-	}
-
 	// Fetch all players for the dropdown
 	const [allPlayersSnapshot, allPlayersLoading] = useCollection(
 		collection(firestore, Collections.PLAYERS) as Query<PlayerDocument>
@@ -122,11 +109,6 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 			}))
 			.sort((a, b) => a.name.localeCompare(b.name))
 	}, [allPlayersSnapshot, rankingHistorySnapshot])
-
-	// Handle player selection change
-	const handlePlayerChange = (newPlayerId: string) => {
-		navigate(`/player-rankings/player/${newPlayerId}`)
-	}
 
 	// Process data to extract player's history
 	const chartData = useMemo(() => {
@@ -199,6 +181,24 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 		// Sort by timestamp to ensure proper chronological order
 		return playerHistory.sort((a, b) => a.timestamp - b.timestamp)
 	}, [rankingHistorySnapshot, playerId])
+
+	// Handle player selection change
+	const handlePlayerChange = (newPlayerId: string) => {
+		navigate(`/player-rankings/player/${newPlayerId}`)
+	}
+
+	// Handle missing playerId
+	if (!playerId) {
+		return (
+			<div className='container max-w-4xl mx-auto py-8'>
+				<Alert variant='destructive'>
+					<AlertDescription>
+						Player ID is required to view rankings history.
+					</AlertDescription>
+				</Alert>
+			</div>
+		)
+	}
 
 	if (loading) {
 		return (

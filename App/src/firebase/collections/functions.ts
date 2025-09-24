@@ -38,13 +38,8 @@ export const createPlayerViaFunction = async (
 		'createPlayer'
 	)
 
-	try {
-		const result = await createPlayer(data)
-		return result.data
-	} catch (error) {
-		// Re-throw with preserved error message from Firebase function
-		throw error
-	}
+	const result = await createPlayer(data)
+	return result.data
 }
 
 /**

@@ -83,6 +83,7 @@ export const GlobalErrorBoundary: React.FC<GlobalErrorBoundaryProps> = ({
 		<ErrorBoundary
 			fallback={<GlobalErrorFallback />}
 			onError={(error, errorInfo) => {
+				// eslint-disable-next-line no-console
 				console.error('Global application error:', error, errorInfo)
 
 				// You could send this to an error reporting service here

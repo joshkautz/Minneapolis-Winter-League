@@ -2,7 +2,16 @@
  * Game-related Firestore operations
  */
 
-import { query, where, collection, orderBy, or } from 'firebase/firestore'
+import { 
+	query, 
+	where, 
+	collection, 
+	orderBy, 
+	or,
+	DocumentReference,
+	QueryDocumentSnapshot,
+	Query,
+} from 'firebase/firestore'
 
 import { firestore } from '../app'
 import {
@@ -11,11 +20,6 @@ import {
 	TeamDocument,
 	Collections,
 } from '@/shared/utils'
-import type {
-	DocumentReference,
-	QueryDocumentSnapshot,
-	Query,
-} from 'firebase/firestore'
 
 /**
  * Creates a query for regular season games in a specific season

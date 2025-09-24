@@ -23,12 +23,6 @@ export const ThemeSelect = ({ mobile = false }: { mobile?: boolean }) => {
 	const [stringValue, setStringValue] = useState<string>('')
 	const [initialSelection, setInitialSelection] = useState<boolean>(false)
 
-	if (!themeContext) {
-		return null
-	}
-
-	const { setTheme } = themeContext
-
 	// Get the stored theme preference (including 'system')
 	const getStoredTheme = (): 'light' | 'dark' | 'system' => {
 		const stored = localStorage.getItem('theme')
@@ -45,13 +39,11 @@ export const ThemeSelect = ({ mobile = false }: { mobile?: boolean }) => {
 				const newTheme = theme as 'light' | 'dark' | 'system'
 				setStringValue(theme)
 				logger.userAction('theme_changed', 'ThemeSelect', { theme: newTheme })
-				setTheme(newTheme)
+				if (themeContext) {
+					themeContext.setTheme(newTheme)
+				}
 			},
 		})
-
-	const handleThemeChange = (theme: string) => {
-		handleAnimatedChange(theme)
-	}
 
 	useEffect(() => {
 		if (!initialSelection) {
@@ -60,6 +52,14 @@ export const ThemeSelect = ({ mobile = false }: { mobile?: boolean }) => {
 			setInitialSelection(true)
 		}
 	}, [])
+
+	if (!themeContext) {
+		return null
+	}
+
+	const handleThemeChange = (theme: string) => {
+		handleAnimatedChange(theme)
+	}
 
 	const getCurrentThemeOption = () => {
 		return themeOptions.find((option) => option.value === stringValue)

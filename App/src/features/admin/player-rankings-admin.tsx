@@ -5,9 +5,8 @@
  */
 
 import React, { useState } from 'react'
-import { useCollection } from 'react-firebase-hooks/firestore'
+import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument } from 'react-firebase-hooks/firestore'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
@@ -24,6 +23,7 @@ import {
 	GameDocument,
 	SeasonDocument,
 } from '@/types'
+import { logger } from '@/shared/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -146,12 +146,12 @@ export const PlayerRankingsAdmin: React.FC = () => {
 						const bTime = b.date?.toDate?.()?.getTime() || 0
 						return bTime - aTime
 					} catch (error) {
-						console.error('Error sorting games by date:', error)
+						logger.error('Error sorting games by date', error as Error)
 						return 0
 					}
 				})
 		} catch (error) {
-			console.error('Error processing uncalculated games:', error)
+			logger.error('Error processing uncalculated games', error as Error)
 			return []
 		}
 	}, [allGamesSnapshot, calculatedRoundsSnapshot, seasonsSnapshot])
@@ -292,7 +292,7 @@ export const PlayerRankingsAdmin: React.FC = () => {
 			}
 			return 'Invalid Date'
 		} catch (error) {
-			console.error('Error formatting game date:', error)
+			logger.error('Error formatting game date', error as Error)
 			return 'Invalid Date'
 		}
 	}
@@ -304,7 +304,7 @@ export const PlayerRankingsAdmin: React.FC = () => {
 			}
 			return 'Invalid Time'
 		} catch (error) {
-			console.error('Error formatting game time:', error)
+			logger.error('Error formatting game time', error as Error)
 			return 'Invalid Time'
 		}
 	}
@@ -324,7 +324,7 @@ export const PlayerRankingsAdmin: React.FC = () => {
 			}
 			return `${diffSeconds}s`
 		} catch (error) {
-			console.error('Error calculating duration:', error)
+			logger.error('Error calculating duration', error as Error)
 			return 'N/A'
 		}
 	}

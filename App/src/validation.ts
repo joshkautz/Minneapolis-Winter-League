@@ -2,6 +2,8 @@
  * Validation utilities and type guards for App
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
 	PlayerDocument,
 	PlayerSeason,

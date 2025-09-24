@@ -47,10 +47,15 @@ export class ErrorBoundary extends Component<Props, State> {
 			userAgent: navigator.userAgent,
 		}
 
+		// eslint-disable-next-line no-console
 		console.group('🚨 ErrorBoundary: React Error Caught')
+		// eslint-disable-next-line no-console
 		console.error('Error:', error)
+		// eslint-disable-next-line no-console
 		console.error('Error Info:', errorInfo)
+		// eslint-disable-next-line no-console
 		console.error('Context:', errorContext)
+		// eslint-disable-next-line no-console
 		console.groupEnd()
 
 		this.setState({
