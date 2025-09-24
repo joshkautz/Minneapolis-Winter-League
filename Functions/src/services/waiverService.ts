@@ -8,7 +8,7 @@ import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerSeason, PlayerDocument } from '../types.js'
 import {
 	FIREBASE_CONFIG,
-	DROPBOX_SIGN_CONFIG,
+	getDropboxSignConfig,
 	EMAIL_CONFIG,
 } from '../config/constants.js'
 import { validateAuthentication } from '../shared/auth.js'
@@ -57,11 +57,12 @@ export const resendWaiverEmail = onCall(
 			}
 
 			// Send Dropbox signature request
+			const dropboxConfig = getDropboxSignConfig()
 			const dropbox = new SignatureRequestApi()
-			dropbox.username = DROPBOX_SIGN_CONFIG.API_KEY
+			dropbox.username = dropboxConfig.API_KEY
 
 			const signatureResponse = await dropbox.signatureRequestSendWithTemplate({
-				templateIds: [DROPBOX_SIGN_CONFIG.TEMPLATE_ID],
+				templateIds: [dropboxConfig.TEMPLATE_ID],
 				subject: EMAIL_CONFIG.WAIVER_SUBJECT,
 				message: EMAIL_CONFIG.WAIVER_MESSAGE,
 				signers: [
@@ -78,7 +79,7 @@ export const resendWaiverEmail = onCall(
 					phone: false,
 					defaultType: SubSigningOptions.DefaultTypeEnum.Type,
 				},
-				testMode: DROPBOX_SIGN_CONFIG.TEST_MODE,
+				testMode: dropboxConfig.TEST_MODE,
 			})
 
 			logger.info(`Resent waiver email to player: ${playerId}`)

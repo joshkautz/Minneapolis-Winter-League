@@ -8,7 +8,7 @@ import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerDocument } from '../../types.js'
 import {
 	FIREBASE_CONFIG,
-	DROPBOX_SIGN_CONFIG,
+	getDropboxSignConfig,
 	EMAIL_CONFIG,
 } from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
@@ -36,8 +36,9 @@ export const onPaymentCreated = onDocumentCreated(
 			)
 
 			const firestore = getFirestore()
+			const dropboxConfig = getDropboxSignConfig()
 			const dropbox = new SignatureRequestApi()
-			dropbox.username = DROPBOX_SIGN_CONFIG.API_KEY
+			dropbox.username = dropboxConfig.API_KEY
 
 			// Get payment document
 			const paymentDoc = await firestore
@@ -81,7 +82,7 @@ export const onPaymentCreated = onDocumentCreated(
 
 			// Send Dropbox signature request
 			const signatureResponse = await dropbox.signatureRequestSendWithTemplate({
-				templateIds: [DROPBOX_SIGN_CONFIG.TEMPLATE_ID],
+				templateIds: [dropboxConfig.TEMPLATE_ID],
 				subject: EMAIL_CONFIG.WAIVER_SUBJECT,
 				message: EMAIL_CONFIG.WAIVER_MESSAGE,
 				signers: [
@@ -98,7 +99,7 @@ export const onPaymentCreated = onDocumentCreated(
 					phone: false,
 					defaultType: SubSigningOptions.DefaultTypeEnum.Type,
 				},
-				testMode: DROPBOX_SIGN_CONFIG.TEST_MODE,
+				testMode: dropboxConfig.TEST_MODE,
 			})
 
 			// Create waiver document
