@@ -1,9 +1,5 @@
 import { NotificationCard } from '@/shared/components'
-import {
-	
-	DocumentSnapshot,
-	QuerySnapshot,
-} from '@/firebase/firestore'
+import { DocumentSnapshot, QuerySnapshot } from '@/firebase/firestore'
 import { useSeasonsContext } from '@/providers'
 import { TeamDocument } from '@/shared/utils'
 

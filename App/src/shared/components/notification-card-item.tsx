@@ -9,9 +9,7 @@ export interface NotificationCardItemProps {
 	message?: string
 	actionOptions: {
 		title: string
-		action: (
-			offerDocumentReference: DocumentReference<OfferDocument>
-		) => void
+		action: (offerDocumentReference: DocumentReference<OfferDocument>) => void
 	}[]
 }
 
