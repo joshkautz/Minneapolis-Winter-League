@@ -20,6 +20,8 @@ export const DestructiveConfirmationDialog = ({
 	cancelText,
 	continueText,
 	onConfirm,
+	open: externalOpen,
+	onOpenChange: externalOnOpenChange,
 }: {
 	children: ReactNode
 	title: ReactNode
@@ -27,20 +29,29 @@ export const DestructiveConfirmationDialog = ({
 	cancelText?: string
 	continueText?: string
 	onConfirm: () => void
+	open?: boolean
+	onOpenChange?: (open: boolean) => void
 }) => {
-	const [open, setOpen] = useState(false)
+	const [internalOpen, setInternalOpen] = useState(false)
+	const open = externalOpen ?? internalOpen
+	const setOpen = externalOnOpenChange ?? setInternalOpen
+	
 	return (
-		<AlertDialog open={open}>
-			<AlertDialogTrigger
-				onClick={() => {
-					if (!open) {
-						setOpen(true)
-					}
-				}}
-				asChild
-			>
-				{children}
-			</AlertDialogTrigger>
+		<AlertDialog open={open} onOpenChange={setOpen}>
+			{externalOpen !== undefined ? (
+				children
+			) : (
+				<AlertDialogTrigger
+					onClick={() => {
+						if (!open) {
+							setOpen(true)
+						}
+					}}
+					asChild
+				>
+					{children}
+				</AlertDialogTrigger>
+			)}
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>{title}</AlertDialogTitle>
@@ -49,9 +60,7 @@ export const DestructiveConfirmationDialog = ({
 				<AlertDialogFooter>
 					<AlertDialogCancel
 						onClick={() => {
-							if (open) {
-								setOpen(false)
-							}
+							setOpen(false)
 						}}
 					>
 						{cancelText ?? 'Cancel'}
@@ -60,9 +69,7 @@ export const DestructiveConfirmationDialog = ({
 						className={cn(buttonVariants({ variant: 'destructive' }))}
 						onClick={() => {
 							onConfirm()
-							if (open) {
-								setOpen(false)
-							}
+							setOpen(false)
 						}}
 					>
 						{continueText ?? 'Continue'}
