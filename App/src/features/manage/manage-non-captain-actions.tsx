@@ -79,7 +79,7 @@ export const ManageNonCaptainActions = () => {
 	}, [authenticatedUserSnapshot, teamQueryDocumentSnapshot])
 
 	return (
-		<div className='absolute right-6 top-6'>
+		<div className='absolute right-6'>
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
 					<Button size={'sm'} variant={'ghost'}>

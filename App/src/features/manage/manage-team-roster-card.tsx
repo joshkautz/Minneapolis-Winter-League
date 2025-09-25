@@ -83,10 +83,13 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 	}, [team])
 
 	const titleData = (
-		<div className={'inline-flex items-center gap-2 h-4'}>
-			<p>{team?.data().name}</p>
-			<div className={'h-8 w-8 rounded-full overflow-hidden'}>
-				{!imgLoaded && <Skeleton className='h-[100px] md:h-[250px] md:w-1/4' />}
+		<div className={'flex items-center gap-3'}>
+			<div
+				className={
+					'relative h-12 w-12 rounded-full overflow-hidden bg-muted flex-shrink-0'
+				}
+			>
+				{!imgLoaded && <Skeleton className='h-full w-full absolute inset-0' />}
 				<img
 					onError={() => {
 						setImgLoaded(false)
@@ -96,9 +99,15 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 					onLoad={() => {
 						setImgLoaded(true)
 					}}
-					alt={'team logo'}
-					className={'rounded-md object-cover'}
+					alt={`${team?.data().name} team logo`}
+					className={'h-full w-full object-cover rounded-full'}
 				/>
+			</div>
+			<div className='flex flex-col justify-center'>
+				<h3 className='font-semibold text-lg leading-tight'>
+					{team?.data().name}
+				</h3>
+				<p className='text-sm text-muted-foreground mt-1'>Team Roster</p>
 			</div>
 		</div>
 	)
@@ -110,26 +119,27 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 					? 'Loading...'
 					: titleData
 			}
-			description={'Your team roster'}
 			moreActions={actions}
 			footerContent={
 				isAuthenticatedUserCaptain ? registrationStatus : undefined
 			}
 		>
-			{team?.data().roster.map(
-				(
-					item: {
-						captain: boolean
-						player: DocumentReference<PlayerDocument>
-					},
-					index: number
-				) => (
-					<ManageTeamRosterPlayer
-						key={`team-${index}`}
-						playerRef={item.player}
-					/>
-				)
-			)}
+			<div className='space-y-0 -mx-1'>
+				{team?.data().roster.map(
+					(
+						item: {
+							captain: boolean
+							player: DocumentReference<PlayerDocument>
+						},
+						index: number
+					) => (
+						<ManageTeamRosterPlayer
+							key={`team-${index}`}
+							playerRef={item.player}
+						/>
+					)
+				)}
+			</div>
 		</NotificationCard>
 	)
 }
