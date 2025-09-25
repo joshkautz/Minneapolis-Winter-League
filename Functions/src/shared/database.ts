@@ -29,7 +29,9 @@ export async function getCurrentSeason(): Promise<SeasonDocument | null> {
 			return null
 		}
 
-		return seasonsSnapshot.docs[0].data() as SeasonDocument
+		const seasonDoc = seasonsSnapshot.docs[0]
+		const seasonData = seasonDoc.data() as SeasonDocument
+		return { ...seasonData, id: seasonDoc.id }
 	} catch (error) {
 		logger.error('Error getting current season:', error)
 		throw new Error('Failed to get current season')
