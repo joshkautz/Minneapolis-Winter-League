@@ -4,7 +4,7 @@
  * Script to generate 480 test users for Firebase Auth emulator
  */
 
-import { writeFileSync } from 'fs'
+import { writeFileSync, mkdirSync, existsSync } from 'fs'
 
 // Lists of masculine American first and last names
 const firstNames = [
@@ -258,8 +258,38 @@ const accountsData = {
 }
 
 // Write to file
-const outputPath =
-	'/Users/josh/Projects/Minneapolis-Winter-League/.emulator/auth_export/accounts.json'
+const basePath = '/Users/josh/Projects/Minneapolis-Winter-League/.emulator/test'
+const authExportDir = `${basePath}/auth_export`
+const outputPath = `${authExportDir}/accounts.json`
+
+// Create directory if it doesn't exist
+mkdirSync(authExportDir, { recursive: true })
+
+// Create Firebase export metadata file if it doesn't exist
+const metadataPath = `${basePath}/firebase-export-metadata.json`
+if (!existsSync(metadataPath)) {
+	const metadataContent = {
+		version: '14.16.0',
+		auth: {
+			version: '14.16.0',
+			path: 'auth_export',
+		},
+	}
+	writeFileSync(metadataPath, JSON.stringify(metadataContent, null, 2))
+	console.log('✅ Created firebase-export-metadata.json')
+}
+
+// Create auth config file if it doesn't exist
+const configPath = `${authExportDir}/config.json`
+if (!existsSync(configPath)) {
+	const configContent = {
+		signIn: { allowDuplicateEmails: false },
+		emailPrivacyConfig: { enableImprovedEmailPrivacy: false },
+	}
+	writeFileSync(configPath, JSON.stringify(configContent))
+	console.log('✅ Created auth config.json')
+}
+
 writeFileSync(outputPath, JSON.stringify(accountsData, null, 2))
 
 console.log(`✅ Generated ${users.length} users in accounts.json`)
