@@ -35,7 +35,7 @@ export const DestructiveConfirmationDialog = ({
 	const [internalOpen, setInternalOpen] = useState(false)
 	const open = externalOpen ?? internalOpen
 	const setOpen = externalOnOpenChange ?? setInternalOpen
-	
+
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			{externalOpen !== undefined ? (
