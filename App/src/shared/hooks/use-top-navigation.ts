@@ -96,7 +96,6 @@ export const useTopNavigation = () => {
 	const userContent = [
 		{ label: 'Profile', path: '/profile', alt: 'user profile' },
 		{ label: 'Team Management', path: '/manage', alt: 'team management' },
-		{ label: 'Create a Team', path: '/create', alt: 'team creation' },
 	]
 
 	const handleSignOut = useCallback(async () => {
