@@ -14,7 +14,6 @@ import {
 	PlayerRankingsAdmin,
 	AdminDashboard,
 	Profile,
-	CreateTeam,
 	ManageTeam,
 	NotFound,
 } from './route-components'
@@ -117,16 +116,6 @@ export const AppRoutes: React.FC = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<Profile />
-							</ErrorBoundary>
-						</AuthenticatedRoute>
-					}
-				/>
-				<Route
-					path='/create'
-					element={
-						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<CreateTeam />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

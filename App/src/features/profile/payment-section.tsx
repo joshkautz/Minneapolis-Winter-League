@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner } from '@/shared/components'
 import {
 	CheckCircle,
 	Clock,
@@ -142,7 +142,7 @@ export const PaymentSection = ({
 						className='w-full'
 					>
 						{stripeLoading ? (
-							<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+							<LoadingSpinner size='sm' className='mr-2' />
 						) : (
 							<CreditCard className='mr-2 h-4 w-4' />
 						)}

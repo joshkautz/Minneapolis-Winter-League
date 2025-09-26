@@ -22,6 +22,7 @@ import {
 	AlertTriangle,
 	Shield,
 } from 'lucide-react'
+import { PageContainer, PageHeader } from '@/shared/components'
 
 export const AdminDashboard: React.FC = () => {
 	const [user] = useAuthState(auth)
@@ -63,17 +64,12 @@ export const AdminDashboard: React.FC = () => {
 	}
 
 	return (
-		<div className='container mx-auto px-4 py-8 space-y-6'>
-			{/* Header */}
-			<div className='text-center space-y-4'>
-				<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
-					<Shield className='h-8 w-8' />
-					Admin Dashboard
-				</h1>
-				<p className='text-muted-foreground'>
-					Manage system settings and monitor application status
-				</p>
-			</div>
+		<PageContainer withSpacing withGap>
+			<PageHeader
+				title='Admin Dashboard'
+				description='Manage system settings and monitor application status'
+				icon={Shield}
+			/>
 
 			{/* Admin Functions Grid */}
 			<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
@@ -153,6 +149,6 @@ export const AdminDashboard: React.FC = () => {
 					</Alert>
 				</CardContent>
 			</Card>
-		</div>
+		</PageContainer>
 	)
 }

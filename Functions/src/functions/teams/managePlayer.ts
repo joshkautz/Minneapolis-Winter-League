@@ -71,8 +71,17 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 						member.player.id === userId && member.captain
 				)
 
-				if (!userIsCaptain) {
-					throw new Error('Only team captains can manage team players')
+				// Authorization check: captains can manage any player,
+				// any player can remove themselves
+				const canPerformAction =
+					userIsCaptain || (action === 'remove' && playerId === userId)
+
+				if (!canPerformAction) {
+					if (action === 'remove') {
+						throw new Error('You can only remove yourself from the team')
+					} else {
+						throw new Error('Only team captains can manage team players')
+					}
 				}
 
 				// Handle different actions

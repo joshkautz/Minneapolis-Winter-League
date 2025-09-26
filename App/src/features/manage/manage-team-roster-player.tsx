@@ -225,35 +225,43 @@ export const ManageTeamRosterPlayer = ({
 	}, [team, playerSnapshot])
 
 	return (
-		<div>
+		<div className='border-b border-border/50 last:border-b-0 relative'>
 			{playerSnapshot ? (
-				<div className='flex items-end gap-2 py-2'>
-					<div className='flex flex-row items-center'>
-						<p className='mr-2 select-none'>
-							{playerSnapshot.data()?.firstname}{' '}
-							{playerSnapshot.data()?.lastname}{' '}
-						</p>
-						{isPlayerCaptain && <StarFilledIcon className='text-primary' />}
-					</div>
-					<div className='flex justify-end flex-1 gap-2'>
-						<div className='flex items-center'>
-							<Badge
-								className={'select-none hover:bg-initial'}
-								variant={
-									isPlayerPaid && isPlayerSigned ? 'secondary' : 'outline'
-								}
-							>
-								{isPlayerPaid && isPlayerSigned ? 'registered' : 'unregistered'}
-							</Badge>
+				<div className='flex items-center justify-between py-3 pl-1 pr-3 gap-3'>
+					<div className='flex items-center gap-2 flex-1 min-w-0'>
+						<div className='flex items-center gap-2 min-w-0'>
+							<p className='select-none font-medium truncate'>
+								{playerSnapshot.data()?.firstname}{' '}
+								{playerSnapshot.data()?.lastname}
+							</p>
+							{isPlayerCaptain && (
+								<StarFilledIcon
+									className='text-primary flex-shrink-0'
+									aria-label='Team Captain'
+								/>
+							)}
 						</div>
+					</div>
+					<div className='flex items-center gap-3 flex-shrink-0'>
+						<Badge
+							className={'select-none hover:bg-initial text-xs'}
+							variant={isPlayerPaid && isPlayerSigned ? 'secondary' : 'outline'}
+						>
+							{isPlayerPaid && isPlayerSigned ? 'registered' : 'unregistered'}
+						</Badge>
 						{isAuthenticatedUserCaptain && (
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
-									<Button size={'sm'} variant={'ghost'}>
-										<DotsVerticalIcon />
+									<Button
+										size={'sm'}
+										variant={'ghost'}
+										className='h-8 w-8 p-0 absolute top-3 right-3'
+										aria-label={`Manage ${playerSnapshot.data()?.firstname} ${playerSnapshot.data()?.lastname}`}
+									>
+										<DotsVerticalIcon className='h-4 w-4' />
 									</Button>
 								</DropdownMenuTrigger>
-								<DropdownMenuContent className={'w-56'}>
+								<DropdownMenuContent className={'w-56'} align='end'>
 									<DropdownMenuGroup>
 										<DropdownMenuItem
 											disabled={!isPlayerCaptain}
@@ -298,10 +306,8 @@ export const ManageTeamRosterPlayer = ({
 					</div>
 				</div>
 			) : (
-				<div className='flex items-end gap-2 py-2'>
-					<div className='mr-2'>
-						<Skeleton className='h-4 w-[250px]' />
-					</div>
+				<div className='flex items-center py-3 px-1'>
+					<Skeleton className='h-5 w-48' />
 				</div>
 			)}
 		</div>

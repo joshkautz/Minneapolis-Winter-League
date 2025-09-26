@@ -6,7 +6,7 @@ import { useTeamsContext } from '@/providers'
 import { DocumentReference } from '@/firebase/firestore'
 import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner } from '@/shared/components'
 import { getInviteMessage, getRequestMessage } from '@/shared/utils'
 import { NotificationCardItem } from '@/shared/components'
 
@@ -85,14 +85,14 @@ export const ManageNonCaptainsOffersPanel = () => {
 	]
 
 	return (
-		<div className='max-w-[600px] flex-1 basis-80 space-y-4'>
+		<div className='w-full space-y-4'>
 			<NotificationCard
 				title={'Incoming invites'}
 				description={getInviteMessage(incomingInvites?.length)}
 			>
 				{incomingOffersQuerySnapshotLoading || incomingInvitesLoading ? (
 					<div className={'inset-0 flex items-center justify-center'}>
-						<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
+						<LoadingSpinner size='lg' />
 					</div>
 				) : (
 					incomingInvites?.map((incomingInvite: OfferDocument) => (
@@ -113,7 +113,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 			>
 				{outgoingOffersQuerySnapshotLoading || outgoingRequestsLoading ? (
 					<div className={'inset-0 flex items-center justify-center'}>
-						<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
+						<LoadingSpinner size='lg' />
 					</div>
 				) : (
 					outgoingRequests?.map((outgoingRequest: OfferDocument) => (

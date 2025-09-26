@@ -16,8 +16,7 @@
  */
 
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
-import { CallableRequest, onCall } from 'firebase-functions/v2/https'
-import { logger } from 'firebase-functions/v2'
+import * as functions from 'firebase-functions/v1'
 import { z } from 'zod'
 import { Collections, SeasonDocument } from '../../types.js'
 import { validateAdminUser } from '../../shared/auth.js'
@@ -41,68 +40,71 @@ type RebuildRankingsRequest = z.infer<typeof rebuildRankingsSchema>
  * Player Rankings Full Rebuild
  * Completely rebuilds all player rankings from scratch by processing all games chronologically
  */
-export const rebuildPlayerRankings = onCall(
-	{
-		region: FIREBASE_CONFIG.REGION,
+export const rebuildPlayerRankings = functions
+	.region(FIREBASE_CONFIG.REGION)
+	.runWith({
 		timeoutSeconds: 540, // 9 minutes
-		memory: '1GiB',
-		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
-	},
-	async (request: CallableRequest<RebuildRankingsRequest>) => {
-		try {
-			// Validate authentication and admin privileges
-			const firestore = getFirestore()
-			await validateAdminUser(request.auth, firestore)
-
-			// Validate request data
-			rebuildRankingsSchema.parse(request.data)
-
-			logger.info('Starting complete Player Rankings rebuild', {
-				triggeredBy: request.auth!.uid,
-				applyDecay: true, // Always applied
-			})
-
-			// Create calculation state document for tracking
-			const calculationId = await createCalculationState(
-				'fresh',
-				request.auth!.uid
-			)
-
+		memory: '1GB',
+	})
+	.https.onCall(
+		async (
+			data: RebuildRankingsRequest,
+			context: functions.https.CallableContext
+		) => {
 			try {
-				await processFullRebuild(calculationId)
+				// Validate authentication and admin privileges
+				const firestore = getFirestore()
+				await validateAdminUser(context.auth, firestore)
 
-				return {
-					calculationId,
-					status: 'completed',
-					message: 'Player Rankings full rebuild completed successfully.',
-				}
-			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Unknown error'
-				const errorStack = error instanceof Error ? error.stack : undefined
+				// Validate request data
+				rebuildRankingsSchema.parse(data)
 
-				logger.error('Player Rankings rebuild failed:', error)
-				await updateCalculationState(calculationId, {
-					status: 'failed',
-					error: {
-						message: errorMessage,
-						stack: errorStack,
-						timestamp: Timestamp.now(),
-					},
+				functions.logger.info('Starting complete Player Rankings rebuild', {
+					triggeredBy: context.auth!.uid,
+					applyDecay: true, // Always applied
 				})
 
-				return {
-					calculationId,
-					status: 'failed',
-					message: `Player Rankings rebuild failed: ${errorMessage}`,
+				// Create calculation state document for tracking
+				const calculationId = await createCalculationState(
+					'fresh',
+					context.auth!.uid
+				)
+
+				try {
+					await processFullRebuild(calculationId)
+
+					return {
+						calculationId,
+						status: 'completed',
+						message: 'Player Rankings full rebuild completed successfully.',
+					}
+				} catch (error) {
+					const errorMessage =
+						error instanceof Error ? error.message : 'Unknown error'
+					const errorStack = error instanceof Error ? error.stack : undefined
+
+					functions.logger.error('Player Rankings rebuild failed:', error)
+					await updateCalculationState(calculationId, {
+						status: 'failed',
+						error: {
+							message: errorMessage,
+							stack: errorStack,
+							timestamp: Timestamp.now(),
+						},
+					})
+
+					return {
+						calculationId,
+						status: 'failed',
+						message: `Player Rankings rebuild failed: ${errorMessage}`,
+					}
 				}
+			} catch (error) {
+				functions.logger.error('Error starting Player Rankings rebuild:', error)
+				throw error
 			}
-		} catch (error) {
-			logger.error('Error starting Player Rankings rebuild:', error)
-			throw error
 		}
-	}
-)
+	)
 
 /**
  * Process the complete rebuild - all games from scratch
@@ -129,7 +131,9 @@ async function processFullRebuild(calculationId: string): Promise<void> {
 			...doc.data(),
 		})) as (SeasonDocument & { id: string })[]
 
-		logger.info(`Found ${seasons.length} seasons for complete rebuild`)
+		functions.logger.info(
+			`Found ${seasons.length} seasons for complete rebuild`
+		)
 
 		await updateCalculationState(calculationId, {
 			'progress.totalSeasons': seasons.length,
@@ -137,7 +141,9 @@ async function processFullRebuild(calculationId: string): Promise<void> {
 
 		// Load ALL games from ALL seasons (startSeasonIndex = 0)
 		const allGames = await loadGamesForCalculation(seasons, 0)
-		logger.info(`Loaded ${allGames.length} total games for complete rebuild`)
+		functions.logger.info(
+			`Loaded ${allGames.length} total games for complete rebuild`
+		)
 
 		await updateCalculationState(calculationId, {
 			'progress.currentStep': 'Rebuilding rankings from scratch...',
@@ -146,7 +152,7 @@ async function processFullRebuild(calculationId: string): Promise<void> {
 
 		// Start with completely empty player ratings (complete rebuild)
 		const playerRatings = new Map()
-		logger.info('Starting complete rebuild with empty player ratings')
+		functions.logger.info('Starting complete rebuild with empty player ratings')
 
 		// Process ALL games by rounds in chronological order (no filtering)
 		// Round-based decay is now applied automatically during round processing
@@ -160,7 +166,7 @@ async function processFullRebuild(calculationId: string): Promise<void> {
 			true // This is a full rebuild
 		)
 
-		logger.info(
+		functions.logger.info(
 			`After complete rebuild: ${playerRatings.size} players with ratings`
 		)
 
@@ -171,7 +177,7 @@ async function processFullRebuild(calculationId: string): Promise<void> {
 		})
 
 		await saveFinalRankings(playerRatings)
-		logger.info('Complete rebuild: Final rankings saved successfully')
+		functions.logger.info('Complete rebuild: Final rankings saved successfully')
 
 		// Mark calculation as complete
 		await updateCalculationState(calculationId, {
@@ -181,9 +187,14 @@ async function processFullRebuild(calculationId: string): Promise<void> {
 			'progress.percentComplete': 100,
 		})
 
-		logger.info(`Player Rankings complete rebuild finished: ${calculationId}`)
+		functions.logger.info(
+			`Player Rankings complete rebuild finished: ${calculationId}`
+		)
 	} catch (error) {
-		logger.error(`Player Rankings rebuild failed: ${calculationId}`, error)
+		functions.logger.error(
+			`Player Rankings rebuild failed: ${calculationId}`,
+			error
+		)
 		throw error
 	}
 }

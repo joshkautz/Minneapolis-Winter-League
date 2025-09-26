@@ -33,29 +33,6 @@ export const useTopNavigation = () => {
 		closeDrawerWithAction: closeMobileNavWithAction,
 	} = useResponsiveDrawer(false)
 
-	const isAuthenticatedUserCaptain = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.find(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.captain ?? false,
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
-	)
-
-	const isAuthenticatedUserRostered = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.some(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
-						item.team
-				) || false,
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
-	)
-
 	const hasPendingOffers = useMemo(
 		() => incomingOffersQuerySnapshot?.docs.length,
 		[incomingOffersQuerySnapshot]
@@ -116,28 +93,9 @@ export const useTopNavigation = () => {
 		},
 	]
 
-	const captainContent = [
-		{ label: 'Manage Team', path: '/manage', alt: 'team management' },
-	]
-
-	const rosteredContent = [
-		{ label: 'Your Team', path: '/manage', alt: 'team profile' },
-	]
-
-	const unrosteredContent = [
-		{ label: 'Join a Team', path: '/manage', alt: 'team management' },
-		{ label: 'Create a Team', path: '/create', alt: 'team creation' },
-	]
-
 	const userContent = [
 		{ label: 'Profile', path: '/profile', alt: 'user profile' },
-		...(authStateUser
-			? isAuthenticatedUserCaptain
-				? captainContent
-				: isAuthenticatedUserRostered
-					? rosteredContent
-					: unrosteredContent
-			: []),
+		{ label: 'Team Management', path: '/manage', alt: 'team management' },
 	]
 
 	const handleSignOut = useCallback(async () => {

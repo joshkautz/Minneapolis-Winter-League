@@ -1,6 +1,5 @@
 import { Dispatch, SetStateAction } from 'react'
 import { Link } from 'react-router-dom'
-import { ReloadIcon } from '@radix-ui/react-icons'
 import { User } from 'lucide-react'
 import { useAccountSection } from '@/shared/hooks'
 import { LoginButton } from './login-button'
@@ -130,7 +129,7 @@ export const AccountSection = ({
 				>
 					{signOutLoading ? (
 						<>
-							<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+							<LoadingSpinner size='sm' className='mr-2' />
 							Logging out...
 						</>
 					) : (

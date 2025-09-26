@@ -7,7 +7,7 @@ import { useAuthContext } from '@/providers'
 import { toast } from 'sonner'
 import { PlayerDocument, TeamDocument } from '@/shared/utils'
 import { ManageTeamDetail } from './manage-team-detail'
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner } from '@/shared/components'
 
 export const ManageTeamRequestCard = () => {
 	const { authenticatedUserSnapshot } = useAuthContext()
@@ -59,7 +59,7 @@ export const ManageTeamRequestCard = () => {
 		>
 			{currentSeasonTeamsQuerySnapshotLoading ? (
 				<div className={'inset-0 flex items-center justify-center'}>
-					<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
+					<LoadingSpinner size='lg' />
 				</div>
 			) : (
 				currentSeasonTeamsQuerySnapshot?.docs.map(

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { manageTeamPlayerViaFunction } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
@@ -20,6 +20,8 @@ export const ManageNonCaptainActions = () => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 	const { authenticatedUserSnapshot } = useAuthContext()
+	const [dropdownOpen, setDropdownOpen] = useState(false)
+	const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
 
 	const teamQueryDocumentSnapshot = useMemo(
 		() =>
@@ -79,8 +81,8 @@ export const ManageNonCaptainActions = () => {
 	}, [authenticatedUserSnapshot, teamQueryDocumentSnapshot])
 
 	return (
-		<div className='absolute right-6 top-6'>
-			<DropdownMenu>
+		<div className='absolute right-6'>
+			<DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
 				<DropdownMenuTrigger asChild>
 					<Button size={'sm'} variant={'ghost'}>
 						<DotsVerticalIcon />
@@ -88,23 +90,31 @@ export const ManageNonCaptainActions = () => {
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className={'w-56'}>
 					<DropdownMenuGroup>
-						<DestructiveConfirmationDialog
-							title={'Are you sure you want to leave?'}
-							description={
-								'You will not be able to rejoin unless a captain accepts you back on to the roster.'
-							}
-							onConfirm={removeFromTeamOnClickHandler}
+						<DropdownMenuItem
+							className='focus:bg-destructive focus:text-destructive-foreground'
+							onSelect={() => {
+								setDropdownOpen(false)
+								setConfirmDialogOpen(true)
+							}}
 						>
-							<DropdownMenuItem
-								className='focus:bg-destructive focus:text-destructive-foreground'
-								onClick={(event) => event.preventDefault()}
-							>
-								Leave team
-							</DropdownMenuItem>
-						</DestructiveConfirmationDialog>
+							Leave team
+						</DropdownMenuItem>
 					</DropdownMenuGroup>
 				</DropdownMenuContent>
 			</DropdownMenu>
+
+			<DestructiveConfirmationDialog
+				title={'Are you sure you want to leave?'}
+				description={
+					'You will not be able to rejoin unless a captain accepts you back on to the roster.'
+				}
+				onConfirm={removeFromTeamOnClickHandler}
+				open={confirmDialogOpen}
+				onOpenChange={setConfirmDialogOpen}
+			>
+				{/* This won't be used as a trigger since we control it with open/onOpenChange */}
+				<div />
+			</DestructiveConfirmationDialog>
 		</div>
 	)
 }

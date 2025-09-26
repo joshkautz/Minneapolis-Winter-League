@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { ReloadIcon, HamburgerMenuIcon } from '@radix-ui/react-icons'
+import { HamburgerMenuIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner } from '@/shared/components'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { SeparatorWithText } from '@/components/ui/separator-with-text'
 import {
@@ -160,7 +161,7 @@ const MobileNavigationContent = ({
 							variant='destructive'
 						>
 							{(signOutLoading || authStateLoading) && (
-								<ReloadIcon className='mr-2 h-4 w-4 animate-spin' />
+								<LoadingSpinner size='sm' className='mr-2' />
 							)}
 							{signOutLoading || authStateLoading
 								? 'Logging Out...'

@@ -148,16 +148,28 @@ export const RolloverTeamForm = ({
 	)
 
 	return (
-		<div className='inline-flex items-start justify-start w-full space-x-2'>
+		<div className='w-full max-w-md mx-auto'>
 			{!teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot ? (
-				<p>No previous teams eligible for rollover</p>
+				<div className='text-center py-8'>
+					<p className='text-muted-foreground'>
+						No previous teams available for rollover
+					</p>
+					<p className='text-sm text-muted-foreground mt-2'>
+						You haven't captained any teams in previous seasons
+					</p>
+				</div>
 			) : (
-				<div className='flex flex-col space-y-6'>
-					<div className='space-y-2'>
-						<Label>{`Teams you've captained in the past`}</Label>
+				<div className='space-y-6'>
+					<div className='space-y-3'>
+						<Label className='text-sm font-medium'>
+							Teams You've Captained
+						</Label>
 						<Select value={stringValue} onValueChange={handleSeasonChange}>
-							<SelectTrigger>
-								<SelectValue placeholder={'Select a previous team'} />
+							<SelectTrigger
+								className='h-11'
+								aria-label='Select a team to rollover'
+							>
+								<SelectValue placeholder='Select a previous team to rollover' />
 							</SelectTrigger>
 							<SelectContent>
 								{teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot?.docs
@@ -172,8 +184,8 @@ export const RolloverTeamForm = ({
 											)
 											if (seasonA && seasonB) {
 												return (
-													seasonA.data()?.dateStart.seconds -
-													seasonB.data()?.dateStart.seconds
+													seasonB.data()?.dateStart.seconds -
+													seasonA.data()?.dateStart.seconds
 												)
 											}
 											return 0
@@ -198,30 +210,39 @@ export const RolloverTeamForm = ({
 												value={team.data().name}
 												disabled={teamHasBeenRolledOver}
 											>
-												{!teamHasBeenRolledOver
-													? `${team.data().name} - ${seasonQueryDocumentSnapshot?.data().name}`
-													: `${team.data().name} - ${seasonQueryDocumentSnapshot?.data().name} (Already Rolled Over)`}
+												<div className='flex flex-col'>
+													<span className='font-medium'>
+														{team.data().name}
+													</span>
+													<span className='text-xs text-muted-foreground'>
+														{seasonQueryDocumentSnapshot?.data().name}
+														{teamHasBeenRolledOver && ' (Already Rolled Over)'}
+													</span>
+												</div>
 											</SelectItem>
 										)
 									})}
 							</SelectContent>
 						</Select>
+						{selectedTeamQueryDocumentSnapshot && (
+							<p className='text-sm text-muted-foreground'>
+								Rolling over will create a new team with the same name and
+								captain
+							</p>
+						)}
 					</div>
-					<Button
-						type={'submit'}
-						onClick={onRolloverSubmit}
-						disabled={
-							isSubmitting || !selectedTeamQueryDocumentSnapshot || true
-						}
-					>
-						Rollover
-					</Button>
-					<p
-						className={'text-[0.8rem] text-muted-foreground mt-2 text-red-500'}
-					>
-						The maximum number of fully registered teams for the current season
-						has been reached.
-					</p>
+
+					<div className='pt-2'>
+						<Button
+							type='submit'
+							onClick={onRolloverSubmit}
+							disabled={isSubmitting || !selectedTeamQueryDocumentSnapshot}
+							className='w-full h-11'
+							size='lg'
+						>
+							{isSubmitting ? 'Rolling Over Team...' : 'Rollover Team'}
+						</Button>
+					</div>
 				</div>
 			)}
 		</div>

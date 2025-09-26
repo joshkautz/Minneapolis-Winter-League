@@ -1,4 +1,4 @@
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner } from '@/shared/components'
 
 /**
  * ScheduleLoadingState Component
@@ -9,7 +9,7 @@ import { ReloadIcon } from '@radix-ui/react-icons'
 export const ScheduleLoadingState = () => {
 	return (
 		<div className={'flex absolute inset-0 justify-center items-center'}>
-			<ReloadIcon className={'mr-2 w-10 h-10 animate-spin'} />
+			<LoadingSpinner size='lg' />
 		</div>
 	)
 }

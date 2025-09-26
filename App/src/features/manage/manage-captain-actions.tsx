@@ -122,7 +122,7 @@ export const ManageCaptainActions = () => {
 	}, [authenticatedUserSnapshot, teamQueryDocumentSnapshot])
 
 	return (
-		<div className='absolute right-6 top-6'>
+		<div className='absolute right-6'>
 			<DropdownMenu open={open} onOpenChange={setOpen}>
 				<DropdownMenuTrigger asChild>
 					<Button size={'sm'} variant={'ghost'}>

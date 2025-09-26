@@ -14,9 +14,19 @@ export const TeamCreationToggle = ({
 	onToggle,
 }: TeamCreationToggleProps) => {
 	return (
-		<div className='flex items-center space-x-2'>
-			<Switch id='rollover' checked={rolloverMode} onCheckedChange={onToggle} />
-			<Label htmlFor='rollover'>Rollover past team</Label>
+		<div className='flex items-center space-x-3 bg-muted/30 rounded-lg px-3 py-2'>
+			<Label
+				htmlFor='rollover-toggle'
+				className='text-sm font-medium cursor-pointer select-none'
+			>
+				{rolloverMode ? 'Rollover Mode' : 'Create New'}
+			</Label>
+			<Switch
+				id='rollover-toggle'
+				checked={rolloverMode}
+				onCheckedChange={onToggle}
+				aria-label={`Switch to ${rolloverMode ? 'create new team' : 'rollover existing team'} mode`}
+			/>
 		</div>
 	)
 }

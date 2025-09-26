@@ -6,7 +6,7 @@ import { useTeamsContext } from '@/providers'
 import { DocumentReference } from '@/firebase/firestore'
 import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner } from '@/shared/components'
 import { getInviteMessage, getRequestMessage } from '@/shared/utils'
 import { NotificationCardItem } from '@/shared/components'
 
@@ -92,7 +92,7 @@ export const ManageCaptainsOffersPanel = () => {
 			>
 				{incomingOffersQuerySnapshotLoading || incomingRequestsLoading ? (
 					<div className={'inset-0 flex items-center justify-center'}>
-						<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
+						<LoadingSpinner size='lg' />
 					</div>
 				) : (
 					incomingRequests?.map((incomingRequest: OfferDocument) => (
@@ -113,7 +113,7 @@ export const ManageCaptainsOffersPanel = () => {
 			>
 				{outgoingOffersQuerySnapshotLoading || outgoingInvitesLoading ? (
 					<div className={'inset-0 flex items-center justify-center'}>
-						<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
+						<LoadingSpinner size='lg' />
 					</div>
 				) : (
 					outgoingInvites?.map((outgoingInvite: OfferDocument) => (
