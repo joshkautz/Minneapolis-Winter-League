@@ -6,7 +6,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
 	PlayerDocument,
 	SeasonDocument,
-	PlayerSeason,
 	isPlayerCaptainForSeason,
 	isPlayerPaidForSeason,
 	isPlayerSignedForSeason,
