@@ -142,9 +142,14 @@ export const teamFormSchema = z.object({
 	logo: z.string().optional(),
 })
 
+export const rolloverTeamFormSchema = z.object({
+	selectedTeam: z.string().min(1, 'Please select a team to rollover'),
+})
+
 // Type exports for form data
 export type LoginFormData = z.infer<typeof loginFormSchema>
 export type SignupFormData = z.infer<typeof signupFormSchema>
 export type ResetPasswordFormData = z.infer<typeof resetPasswordFormSchema>
 export type ProfileFormData = z.infer<typeof profileFormSchema>
 export type TeamFormData = z.infer<typeof teamFormSchema>
+export type RolloverTeamFormData = z.infer<typeof rolloverTeamFormSchema>
