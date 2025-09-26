@@ -43,10 +43,10 @@ export const NotificationCard = ({
 			</CardHeader>
 			{scrollArea ? (
 				<ScrollArea className='h-[600px]'>
-					<CardContent>{children}</CardContent>
+					<CardContent className='min-w-0'>{children}</CardContent>
 				</ScrollArea>
 			) : (
-				<CardContent>{children}</CardContent>
+				<CardContent className='min-w-0'>{children}</CardContent>
 			)}
 			{footerContent && <CardFooter>{footerContent}</CardFooter>}
 		</Card>

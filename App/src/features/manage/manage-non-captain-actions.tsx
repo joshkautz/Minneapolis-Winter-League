@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { manageTeamPlayerViaFunction } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
-import { useAuthContext } from '@/providers'
 import { Button } from '@/components/ui/button'
 import { DotsVerticalIcon } from '@radix-ui/react-icons'
 import { DestructiveConfirmationDialog } from '@/shared/components'
@@ -12,34 +11,23 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
 import { logger, errorHandler } from '@/shared/utils'
+import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 export const ManageNonCaptainActions = () => {
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
-	const { authenticatedUserSnapshot } = useAuthContext()
+	const { userSnapshot: authenticatedUserSnapshot, currentSeasonData } =
+		useUserStatus()
 	const [dropdownOpen, setDropdownOpen] = useState(false)
 	const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
 
 	const teamQueryDocumentSnapshot = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) =>
-					team.id ===
-					authenticatedUserSnapshot
-						?.data()
-						?.seasons.find(
-							(item) =>
-								item.season.id === currentSeasonQueryDocumentSnapshot?.id
-						)?.team?.id
+				(team) => team.id === currentSeasonData?.team?.id
 			),
-		[
-			authenticatedUserSnapshot,
-			currentSeasonTeamsQuerySnapshot,
-			currentSeasonQueryDocumentSnapshot,
-		]
+		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)
 
 	const removeFromTeamOnClickHandler = useCallback(async () => {
