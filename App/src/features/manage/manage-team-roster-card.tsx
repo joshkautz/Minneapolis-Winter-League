@@ -3,12 +3,12 @@ import { useTeamsContext } from '@/providers'
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { NotificationCard } from '@/shared/components'
 import { ManageTeamRosterPlayer } from './manage-team-roster-player'
-import { useAuthContext } from '@/providers'
 import { PlayerDocument } from '@/shared/utils'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { useSeasonsContext } from '@/providers'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatTimestamp } from '@/shared/utils'
+import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
@@ -17,43 +17,21 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 		currentSeasonTeamsQuerySnapshotLoading,
 	} = useTeamsContext()
 	const {
-		authenticatedUserSnapshot,
-		authenticatedUserSnapshotLoading,
-		authStateLoading,
-	} = useAuthContext()
+		isLoading,
+		isCaptain: isAuthenticatedUserCaptain,
+		currentSeasonData,
+	} = useUserStatus()
 
 	const team = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) =>
-					team.id ===
-					authenticatedUserSnapshot
-						?.data()
-						?.seasons.find(
-							(item) =>
-								item.season.id === currentSeasonQueryDocumentSnapshot?.id
-						)?.team?.id
+				(team) => team.id === currentSeasonData?.team?.id
 			),
-		[
-			authenticatedUserSnapshot,
-			currentSeasonTeamsQuerySnapshot,
-			currentSeasonQueryDocumentSnapshot,
-		]
-	)
-
-	const isAuthenticatedUserCaptain = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.find(
-					(item) => item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.captain,
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
+		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)
 
 	const registrationStatus =
-		authenticatedUserSnapshotLoading ||
-		currentSeasonTeamsQuerySnapshotLoading ? (
+		isLoading || currentSeasonTeamsQuerySnapshotLoading ? (
 			<p className='text-sm text-muted-foreground'>Loading...</p>
 		) : !team?.data().registered ? (
 			<p className={'text-sm text-muted-foreground'}>
@@ -114,11 +92,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 
 	return (
 		<NotificationCard
-			title={
-				authenticatedUserSnapshotLoading || authStateLoading
-					? 'Loading...'
-					: titleData
-			}
+			title={isLoading ? 'Loading...' : titleData}
 			moreActions={actions}
 			footerContent={
 				isAuthenticatedUserCaptain ? registrationStatus : undefined

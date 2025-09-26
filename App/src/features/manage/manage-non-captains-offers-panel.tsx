@@ -106,7 +106,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 						/>
 					))
 				)}
-			</NotificationCard>{' '}
+			</NotificationCard>
 			<NotificationCard
 				title={'Outgoing requests'}
 				description={getRequestMessage(outgoingRequests?.length)}

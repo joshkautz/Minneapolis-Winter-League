@@ -11,7 +11,6 @@ import { DotsVerticalIcon, StarFilledIcon } from '@radix-ui/react-icons'
 import { useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useAuthContext } from '@/providers'
 import { PlayerDocument } from '@/shared/utils'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { DestructiveConfirmationDialog } from '@/shared/components'
@@ -20,46 +19,29 @@ import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
 import { logger, errorHandler } from '@/shared/utils'
-import type { PlayerSeason, TeamRosterPlayer } from '@/types'
+import type { PlayerSeason } from '@/types'
+import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 export const ManageTeamRosterPlayer = ({
 	playerRef,
 }: {
 	playerRef: DocumentReference<PlayerDocument>
 }) => {
-	const { authenticatedUserSnapshot } = useAuthContext()
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const {
+		userSnapshot: authenticatedUserSnapshot,
+		isCaptain: isAuthenticatedUserCaptain,
+		currentSeasonData,
+	} = useUserStatus()
 	const [playerSnapshot] = useDocument(playerRef as any)
 
 	const team = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) =>
-					team.id ===
-					authenticatedUserSnapshot
-						?.data()
-						?.seasons.find(
-							(item: PlayerSeason) =>
-								item.season.id === currentSeasonQueryDocumentSnapshot?.id
-						)?.team?.id
+				(team) => team.id === currentSeasonData?.team?.id
 			),
-		[
-			authenticatedUserSnapshot,
-			currentSeasonTeamsQuerySnapshot,
-			currentSeasonQueryDocumentSnapshot,
-		]
-	)
-
-	const isAuthenticatedUserCaptain = useMemo(
-		() =>
-			team
-				?.data()
-				.roster.find(
-					(item: TeamRosterPlayer) =>
-						item.player.id === authenticatedUserSnapshot?.id
-				)?.captain,
-		[team, authenticatedUserSnapshot]
+		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)
 
 	const isPlayerCaptain = useMemo(
@@ -255,7 +237,7 @@ export const ManageTeamRosterPlayer = ({
 									<Button
 										size={'sm'}
 										variant={'ghost'}
-										className='h-8 w-8 p-0 absolute top-3 right-3'
+										className='h-8 w-8'
 										aria-label={`Manage ${playerSnapshot.data()?.firstname} ${playerSnapshot.data()?.lastname}`}
 									>
 										<DotsVerticalIcon className='h-4 w-4' />

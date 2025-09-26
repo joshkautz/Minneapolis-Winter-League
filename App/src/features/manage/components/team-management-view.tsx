@@ -32,23 +32,25 @@ export const TeamManagementView = ({
 				icon={Users}
 			/>
 
-			<div className='flex flex-row justify-center gap-8 flex-wrap-reverse'>
-				{/* LEFT SIDE PANEL */}
-				<div className='max-w-[600px] flex-1 basis-80 space-y-4'>
+			<div className='flex flex-col lg:flex-row justify-center items-center lg:items-start gap-8 max-w-6xl mx-auto'>
+				{/* Main content - appears first on mobile, left side on desktop */}
+				<div className='w-full max-w-2xl lg:w-1/2 lg:max-w-none'>
 					<ManageTeamRosterCard
 						actions={
 							isCaptain ? <ManageCaptainActions /> : <ManageNonCaptainActions />
 						}
 					/>
-					{isCaptain && <ManageInvitePlayerList />}
 				</div>
 
-				{/* RIGHT SIDE PANEL */}
-				{isCaptain ? (
-					<ManageCaptainsOffersPanel />
-				) : (
-					<ManageNonCaptainsOffersPanel />
-				)}
+				{/* Offers panel - appears second on mobile, right side on desktop */}
+				<div className='w-full max-w-2xl lg:w-1/2 lg:max-w-none space-y-4 min-w-0 overflow-hidden'>
+					{isCaptain ? (
+						<ManageCaptainsOffersPanel />
+					) : (
+						<ManageNonCaptainsOffersPanel />
+					)}
+					{isCaptain && <ManageInvitePlayerList />}
+				</div>
 			</div>
 		</PageContainer>
 	)

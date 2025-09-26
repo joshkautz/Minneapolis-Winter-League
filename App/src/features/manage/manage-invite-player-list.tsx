@@ -8,10 +8,8 @@ import { ManageInvitePlayerDetail } from './manage-invite-player-detail'
 import { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
 import { usePlayersSearch } from '@/shared/hooks'
 import { useDebounce } from '@/shared/hooks'
-import { useSeasonsContext } from '@/providers'
 import { useTeamsContext } from '@/providers'
-import { useAuthContext } from '@/providers'
-import type { PlayerSeason } from '@/types'
+import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 export const ManageInvitePlayerList = () => {
 	const [search, setSearch] = useState('')
@@ -25,27 +23,15 @@ export const ManageInvitePlayerList = () => {
 	const { playersQuerySnapshot, playersQuerySnapshotLoading } =
 		usePlayersSearch(playersQuery)
 
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
-	const { authenticatedUserSnapshot } = useAuthContext()
+	const { currentSeasonData } = useUserStatus()
 
 	const teamQueryDocumentSnapshot = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) =>
-					team.id ===
-					authenticatedUserSnapshot
-						?.data()
-						?.seasons.find(
-							(item: PlayerSeason) =>
-								item.season.id === currentSeasonQueryDocumentSnapshot?.id
-						)?.team?.id
+				(team) => team.id === currentSeasonData?.team?.id
 			),
-		[
-			authenticatedUserSnapshot,
-			currentSeasonTeamsQuerySnapshot,
-			currentSeasonQueryDocumentSnapshot,
-		]
+		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)
 
 	const handleInvite = useCallback(
@@ -82,6 +68,7 @@ export const ManageInvitePlayerList = () => {
 			title={'Invite players'}
 			description={'players eligible for team roster invitations.'}
 			scrollArea
+			className='w-full max-w-full overflow-hidden'
 			searchBar={
 				<ManageInvitePlayerSearchBar
 					value={search}
@@ -90,18 +77,33 @@ export const ManageInvitePlayerList = () => {
 				/>
 			}
 		>
-			{playersQuerySnapshot?.empty || search.length === 0 ? (
-				<span>No players found</span>
-			) : (
-				playersQuerySnapshot?.docs.map((playerQueryDocumentSnapshot) => (
-					<ManageInvitePlayerDetail
-						key={playerQueryDocumentSnapshot.id}
-						handleInvite={handleInvite}
-						teamQueryDocumentSnapshot={teamQueryDocumentSnapshot}
-						playerQueryDocumentSnapshot={playerQueryDocumentSnapshot}
-					/>
-				))
-			)}
+			<div className='w-full min-w-0'>
+				{playersQuerySnapshot?.empty || search.length === 0 ? (
+					<div className='flex flex-col items-center justify-center py-12 px-6 text-center'>
+						<div className='space-y-3'>
+							<p className='text-muted-foreground font-medium text-lg'>
+								{search.length === 0
+									? 'Search for players to invite'
+									: 'No players found'}
+							</p>
+							<p className='text-muted-foreground/70 text-sm max-w-md'>
+								{search.length === 0
+									? "Start typing a player's name to find eligible players for your team roster."
+									: `No players match "${search}". Try adjusting your search terms or check the spelling.`}
+							</p>
+						</div>
+					</div>
+				) : (
+					playersQuerySnapshot?.docs.map((playerQueryDocumentSnapshot) => (
+						<ManageInvitePlayerDetail
+							key={playerQueryDocumentSnapshot.id}
+							handleInvite={handleInvite}
+							teamQueryDocumentSnapshot={teamQueryDocumentSnapshot}
+							playerQueryDocumentSnapshot={playerQueryDocumentSnapshot}
+						/>
+					))
+				)}
+			</div>
 		</NotificationCard>
 	)
 }
