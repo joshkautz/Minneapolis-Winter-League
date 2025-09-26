@@ -18,12 +18,6 @@ import { Timestamp } from '@firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TeamHistory } from './team-history'
-import {
-	TeamRecordRoot,
-	TeamRecordRow,
-	TeamRecordRowDate,
-	TeamRecordRowResult,
-} from './team-record'
 import { useSeasonsContext } from '@/providers'
 import { formatTimestamp } from '@/shared/utils'
 
@@ -131,10 +125,10 @@ export const TeamProfile = () => {
 	return (
 		<div className={'container'}>
 			<div className={'w-1/2 md:w-1/4 my-8 mx-auto group'}>
-				{teamProfileImageLoaded ? null : (
-					<Skeleton className='aspect-square w-full rounded-lg' />
-				)}
-				<div className='aspect-square w-full overflow-hidden rounded-lg bg-muted'>
+				<div className='aspect-square w-full overflow-hidden rounded-lg bg-muted relative'>
+					{!teamProfileImageLoaded && (
+						<Skeleton className='absolute inset-0 w-full h-full rounded-lg' />
+					)}
 					<img
 						onError={() => {
 							setTeamProfileImageLoaded(false)
@@ -152,79 +146,99 @@ export const TeamProfile = () => {
 				</div>
 			</div>
 
-			<div className='flex justify-center items-start gap-8 flex-wrap max-w-[1040px] mx-auto'>
-				<NotificationCard
-					title={'Roster'}
-					description={
-						teamDocumentSnapshot
-							? `${teamDocumentSnapshot?.data()?.name} team players and captains`
-							: ``
-					}
-					className={'flex-1 basis-[360px] shrink-0'}
-					footerContent={registrationStatus}
-				>
-					{teamDocumentSnapshot?.data()?.roster?.map(
-						(
-							item: {
-								captain: boolean
-								player: DocumentReference<PlayerDocument>
-							},
-							index: number
-						) => (
-							<TeamRosterPlayer
-								key={`team-${index}`}
-								playerRef={item.player}
-								seasonRef={teamDocumentSnapshot.data()?.season}
-							/>
-						)
-					)}
-				</NotificationCard>
-				<TeamRecordRoot>
-					{gamesQuerySnapshot?.docs.map((game, index) => {
-						const gameData = game.data()
-
-						// Skip games with null team references (placeholder games)
-						if (!hasAssignedTeams(gameData)) {
-							return null
+			<div className='max-w-[1040px] mx-auto'>
+				<div className='flex justify-center items-start gap-4 flex-wrap mb-4'>
+					<NotificationCard
+						title={'Roster'}
+						description={
+							teamDocumentSnapshot
+								? `${teamDocumentSnapshot?.data()?.name} team players and captains`
+								: ``
 						}
+						className={'flex-1 basis-[360px] shrink-0'}
+						footerContent={registrationStatus}
+					>
+						{teamDocumentSnapshot?.data()?.roster?.map(
+							(
+								item: {
+									captain: boolean
+									player: DocumentReference<PlayerDocument>
+								},
+								index: number
+							) => (
+								<TeamRosterPlayer
+									key={`team-${index}`}
+									playerRef={item.player}
+									seasonRef={teamDocumentSnapshot.data()?.season}
+								/>
+							)
+						)}
+					</NotificationCard>
+					<NotificationCard
+						title={'Record'}
+						className={'flex-1 basis-[360px] shrink-0'}
+					>
+						<div className='flex flex-col items-end gap-2 py-2'>
+							{gamesQuerySnapshot?.docs.map((game, index) => {
+								const gameData = game.data()
 
-						const teamRole = teamDocumentSnapshot?.id
-							? getTeamRole(gameData, teamDocumentSnapshot.id)
-							: null
-						const opponentTeamRef = teamDocumentSnapshot?.id
-							? teamRole === 'home'
-								? gameData.away
-								: gameData.home
-							: null
-						const result = formatGameResult(teamDocumentSnapshot, gameData)
+								// Skip games with null team references (placeholder games)
+								if (!hasAssignedTeams(gameData)) {
+									return null
+								}
 
-						if (!opponentTeamRef) {
-							return null
-						}
+								const teamRole = teamDocumentSnapshot?.id
+									? getTeamRole(gameData, teamDocumentSnapshot.id)
+									: null
+								const opponentTeamRef = teamDocumentSnapshot?.id
+									? teamRole === 'home'
+										? gameData.away
+										: gameData.home
+									: null
+								const result = formatGameResult(teamDocumentSnapshot, gameData)
 
-						return (
-							<TeamRecordRow key={index}>
-								<TeamRecordRowDate>
-									{gameData.date.toDate().toLocaleDateString()}
-								</TeamRecordRowDate>
-								<TeamRecordRowResult>{result}</TeamRecordRowResult>
-								<div className='flex grow-3 shrink-0 basis-[100px] overflow-hidden text-clip'>
-									<Link
-										className='flex flex-col transition duration-300 group w-max'
-										to={`/teams/${opponentTeamRef.id}`}
+								if (!opponentTeamRef) {
+									return null
+								}
+
+								return (
+									<div
+										key={index}
+										className={'flex items-center justify-between w-full h-8'}
 									>
-										{
-											teamsQuerySnapshot?.docs
-												.find((team) => team.id === opponentTeamRef.id)
-												?.data().name
-										}
-										<span className='max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-primary' />
-									</Link>
-								</div>
-							</TeamRecordRow>
-						)
-					})}
-				</TeamRecordRoot>
+										<p
+											className={
+												'flex grow-1 select-none basis-[92px] shrink-0'
+											}
+										>
+											{gameData.date.toDate().toLocaleDateString()}
+										</p>
+										<p
+											className={
+												'flex grow-1 text-center basis-[74px] shrink-0 select-none'
+											}
+										>
+											{result}
+										</p>
+										<div className='flex grow-3 shrink-0 basis-[100px] overflow-hidden text-clip'>
+											<Link
+												className='flex flex-col transition duration-300 group w-max'
+												to={`/teams/${opponentTeamRef.id}`}
+											>
+												{
+													teamsQuerySnapshot?.docs
+														.find((team) => team.id === opponentTeamRef.id)
+														?.data().name
+												}
+												<span className='max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-primary' />
+											</Link>
+										</div>
+									</div>
+								)
+							})}
+						</div>
+					</NotificationCard>
+				</div>
 				{historyQuerySnapshot && (
 					<TeamHistory
 						teamDocumentSnapshot={teamDocumentSnapshot}
