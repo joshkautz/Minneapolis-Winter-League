@@ -122,6 +122,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 
 			// Generate unique team ID
 			const teamId = crypto.randomUUID()
+			const fileId = crypto.randomUUID()
 			let logoUrl = ''
 			let storagePath = ''
 
@@ -130,7 +131,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 				try {
 					const storage = getStorage()
 					const bucket = storage.bucket()
-					const fileName = `logos/${teamId}.${logoContentType.split('/')[1]}`
+					const fileName = `teams/${fileId}`
 					const file = bucket.file(fileName)
 
 					// Convert base64 to buffer
@@ -146,8 +147,8 @@ export const createTeam = onCall<CreateTeamRequest>(
 					// Make file publicly readable
 					await file.makePublic()
 
-					// Get public URL
-					logoUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`
+					// Get proper public URL using the publicUrl() method
+					logoUrl = file.publicUrl()
 					storagePath = fileName
 
 					logger.info(`Successfully uploaded logo for team: ${teamId}`, {

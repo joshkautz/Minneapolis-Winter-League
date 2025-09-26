@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { NotificationCard } from '@/shared/components'
 import {
@@ -16,7 +16,7 @@ import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from '@firebase/firestore'
 
 import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { Skeleton } from '@/components/ui/skeleton'
+
 import { TeamHistory } from './team-history'
 import { useSeasonsContext } from '@/providers'
 import { formatTimestamp } from '@/shared/utils'
@@ -89,12 +89,7 @@ export const TeamProfile = () => {
 		]
 	)
 
-	const [teamProfileImageLoaded, setTeamProfileImageLoaded] = useState(false)
-	const [imgSrc, setImgSrc] = useState<string | undefined>()
-
-	useEffect(() => {
-		setImgSrc(teamDocumentSnapshot?.data()?.logo + `&date=${Date.now()}`)
-	}, [teamDocumentSnapshot])
+	const [imageError, setImageError] = useState(false)
 
 	const registrationStatus = useMemo(
 		() =>
@@ -125,27 +120,24 @@ export const TeamProfile = () => {
 	return (
 		<div className={'container'}>
 			<div className={'w-1/2 md:w-1/4 my-8 mx-auto group'}>
-				<div className='aspect-square w-full overflow-hidden rounded-lg bg-muted relative'>
-					{!teamProfileImageLoaded && (
-						<Skeleton className='absolute inset-0 w-full h-full rounded-lg' />
+				<div className='aspect-square w-full overflow-hidden rounded-lg bg-muted'>
+					{teamDocumentSnapshot?.data()?.logo && !imageError ? (
+						<img
+							src={teamDocumentSnapshot.data()?.logo || undefined}
+							alt={`${teamDocumentSnapshot.data()?.name || 'Team'} logo`}
+							className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg'
+							onError={() => setImageError(true)}
+						/>
+					) : (
+						<div className='flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-sky-300'>
+							<span className='text-4xl font-bold text-primary-foreground'>
+								{teamDocumentSnapshot?.data()?.name?.charAt(0)?.toUpperCase() ||
+									'T'}
+							</span>
+						</div>
 					)}
-					<img
-						onError={() => {
-							setTeamProfileImageLoaded(false)
-						}}
-						style={teamProfileImageLoaded ? {} : { display: 'none' }}
-						src={imgSrc}
-						onLoad={() => {
-							setTeamProfileImageLoaded(true)
-						}}
-						alt={'team logo'}
-						className={
-							'h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg'
-						}
-					/>
 				</div>
-			</div>
-
+			</div>{' '}
 			<div className='max-w-[1040px] mx-auto'>
 				<div className='flex justify-center items-start gap-4 flex-wrap mb-4'>
 					<NotificationCard

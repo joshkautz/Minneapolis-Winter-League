@@ -86,12 +86,6 @@ export const CreateTeamForm = ({
 							className='h-11'
 							disabled={isSubmitting}
 						/>
-						{blob && (
-							<p className='text-xs text-muted-foreground'>
-								Selected: {blob instanceof File ? blob.name : 'Image'} (
-								{(blob.size / 1024).toFixed(1)}KB)
-							</p>
-						)}
 					</div>
 
 					<div className='pt-2'>
