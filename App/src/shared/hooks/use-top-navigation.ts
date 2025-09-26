@@ -33,7 +33,7 @@ export const useTopNavigation = () => {
 		closeDrawerWithAction: closeMobileNavWithAction,
 	} = useResponsiveDrawer(false)
 
-	const hasPendingOffers = useMemo(
+	const pendingOffersCount = useMemo(
 		() => incomingOffersQuerySnapshot?.docs.length,
 		[incomingOffersQuerySnapshot]
 	)
@@ -65,11 +65,29 @@ export const useTopNavigation = () => {
 		[authenticatedUserSnapshot]
 	)
 
-	const hasRequiredTasks = useMemo(
-		() =>
-			isAuthenticatedUserPaid === false || isAuthenticatedUserSigned === false,
-		[isAuthenticatedUserPaid, isAuthenticatedUserSigned]
-	)
+	// Count of required tasks for profile completion
+	const requiredTasksCount = useMemo(() => {
+		if (!authStateUser) return 0
+
+		let count = 0
+
+		// Email verification required
+		if (!authStateUser.emailVerified) {
+			count++
+		}
+
+		// Payment required
+		if (isAuthenticatedUserPaid === false) {
+			count++
+		}
+
+		// Waiver signature required
+		if (isAuthenticatedUserSigned === false) {
+			count++
+		}
+
+		return count
+	}, [authStateUser, isAuthenticatedUserPaid, isAuthenticatedUserSigned])
 
 	// Navigation content configuration
 	const navContent = [
@@ -148,8 +166,8 @@ export const useTopNavigation = () => {
 		authStateLoading,
 		signOutLoading,
 		isMobileNavOpen,
-		hasPendingOffers,
-		hasRequiredTasks,
+		pendingOffersCount,
+		requiredTasksCount,
 		isAuthenticatedUserAdmin,
 
 		// Content

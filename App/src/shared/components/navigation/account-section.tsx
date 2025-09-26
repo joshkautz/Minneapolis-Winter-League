@@ -22,8 +22,8 @@ interface AccountSectionProps {
 	isOpen: boolean
 	setIsOpen: Dispatch<SetStateAction<boolean>>
 	forceClose: boolean
-	hasPendingOffers: number | undefined
-	hasRequiredTasks: boolean
+	pendingOffersCount: number | undefined
+	requiredTasksCount: number
 }
 
 /**
@@ -37,8 +37,8 @@ export const AccountSection = ({
 	isOpen,
 	setIsOpen,
 	forceClose,
-	hasPendingOffers,
-	hasRequiredTasks,
+	pendingOffersCount,
+	requiredTasksCount,
 }: AccountSectionProps) => {
 	const { authStateUser, isLoading, signOutLoading, handleSignOut } =
 		useAccountSection()
@@ -54,8 +54,7 @@ export const AccountSection = ({
 	}
 
 	// Authenticated - show user popover
-	const totalNotifications =
-		(hasPendingOffers || 0) + (hasRequiredTasks ? 1 : 0)
+	const totalNotifications = (pendingOffersCount || 0) + requiredTasksCount
 
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -87,14 +86,17 @@ export const AccountSection = ({
 						>
 							<span className='flex items-center'>
 								{label}
-								{path === '/manage' && !!hasPendingOffers && (
+								{path === '/manage' && !!pendingOffersCount && (
 									<NotificationBadge
-										count={hasPendingOffers}
+										count={pendingOffersCount}
 										position='inline'
 									/>
 								)}
-								{path === '/profile' && hasRequiredTasks && (
-									<NotificationBadge count={1} position='inline' />
+								{path === '/profile' && requiredTasksCount > 0 && (
+									<NotificationBadge
+										count={requiredTasksCount}
+										position='inline'
+									/>
 								)}
 							</span>
 						</Link>

@@ -24,8 +24,8 @@ interface MobileNavigationProps {
 	adminItems: Array<{ label: string; path: string; alt: string }>
 	isAuthenticated: boolean
 	isAuthenticatedUserAdmin: boolean
-	hasPendingOffers: number | undefined
-	hasRequiredTasks: boolean
+	pendingOffersCount: number | undefined
+	requiredTasksCount: number
 	isMobileNavOpen: boolean
 	setIsMobileNavOpen: (open: boolean) => void
 	onItemClick: () => void
@@ -44,8 +44,8 @@ export const MobileNavigation = ({
 	adminItems,
 	isAuthenticated,
 	isAuthenticatedUserAdmin,
-	hasPendingOffers,
-	hasRequiredTasks,
+	pendingOffersCount,
+	requiredTasksCount,
 	isMobileNavOpen,
 	setIsMobileNavOpen,
 	onItemClick,
@@ -55,7 +55,7 @@ export const MobileNavigation = ({
 	authStateLoading,
 }: MobileNavigationProps) => {
 	const totalNotifications = isAuthenticated
-		? (hasPendingOffers || 0) + (hasRequiredTasks ? 1 : 0)
+		? (pendingOffersCount || 0) + requiredTasksCount
 		: 0
 
 	return (
@@ -91,8 +91,8 @@ export const MobileNavigation = ({
 					adminItems={adminItems}
 					isAuthenticated={isAuthenticated}
 					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
-					hasPendingOffers={hasPendingOffers}
-					hasRequiredTasks={hasRequiredTasks}
+					pendingOffersCount={pendingOffersCount}
+					requiredTasksCount={requiredTasksCount}
 					onItemClick={onItemClick}
 					onSignOut={onSignOut}
 					onLogin={onLogin}
@@ -110,8 +110,8 @@ interface MobileNavigationContentProps {
 	adminItems: Array<{ label: string; path: string; alt: string }>
 	isAuthenticated: boolean
 	isAuthenticatedUserAdmin: boolean
-	hasPendingOffers: number | undefined
-	hasRequiredTasks: boolean
+	pendingOffersCount: number | undefined
+	requiredTasksCount: number
 	onItemClick: () => void
 	onSignOut: () => void
 	onLogin: () => void
@@ -128,8 +128,8 @@ const MobileNavigationContent = ({
 	adminItems,
 	isAuthenticated,
 	isAuthenticatedUserAdmin,
-	hasPendingOffers,
-	hasRequiredTasks,
+	pendingOffersCount,
+	requiredTasksCount,
 	onItemClick,
 	onSignOut,
 	onLogin,
@@ -198,14 +198,17 @@ const MobileNavigationContent = ({
 								className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset inline-flex items-center cursor-pointer'
 							>
 								{label}
-								{path === '/manage' && !!hasPendingOffers && (
+								{path === '/manage' && !!pendingOffersCount && (
 									<NotificationBadge
-										count={hasPendingOffers}
+										count={pendingOffersCount}
 										position='inline'
 									/>
 								)}
-								{path === '/profile' && hasRequiredTasks && (
-									<NotificationBadge count={1} position='inline' />
+								{path === '/profile' && requiredTasksCount > 0 && (
+									<NotificationBadge
+										count={requiredTasksCount}
+										position='inline'
+									/>
 								)}
 							</Link>
 						))}
