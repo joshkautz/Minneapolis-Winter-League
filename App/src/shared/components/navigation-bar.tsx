@@ -21,8 +21,8 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 		authStateLoading,
 		signOutLoading,
 		isMobileNavOpen,
-		hasPendingOffers,
-		hasRequiredTasks,
+		pendingOffersCount,
+		requiredTasksCount,
 		isAuthenticatedUserAdmin,
 		navContent,
 		userContent,
@@ -63,8 +63,8 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 					accountPopoverOpen={isAccountPopoverOpen}
 					setAccountPopoverOpen={setIsAccountPopoverOpen}
 					forceClosePopover={forceClosePopover}
-					hasPendingOffers={hasPendingOffers}
-					hasRequiredTasks={hasRequiredTasks}
+					pendingOffersCount={pendingOffersCount}
+					requiredTasksCount={requiredTasksCount}
 				/>
 
 				{/* Mobile Navigation */}
@@ -74,8 +74,8 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 					adminItems={adminContent}
 					isAuthenticated={!!authStateUser}
 					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
-					hasPendingOffers={hasPendingOffers}
-					hasRequiredTasks={hasRequiredTasks}
+					pendingOffersCount={pendingOffersCount}
+					requiredTasksCount={requiredTasksCount}
 					isMobileNavOpen={isMobileNavOpen}
 					setIsMobileNavOpen={setIsMobileNavOpen}
 					onItemClick={handleCloseMobileNav}

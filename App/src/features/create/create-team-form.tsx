@@ -93,7 +93,7 @@ export const CreateTeamForm = ({
 							className='w-full h-11'
 							size='lg'
 						>
-							{isSubmitting ? 'Creating Team...' : 'Create Team'}
+							{isSubmitting ? 'Creating Team...' : 'Create New Team'}
 						</Button>
 					</div>
 				</form>
