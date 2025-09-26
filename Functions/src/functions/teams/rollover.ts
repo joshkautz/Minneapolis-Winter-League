@@ -1,10 +1,12 @@
 /**
- * Create team callable function
+ * Rollover team callable function
+ *
+ * Rolls over an existing team from a previous season to the current season,
+ * preserving the teamId but creating a new team document.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
-import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
@@ -14,51 +16,35 @@ import {
 	SeasonDocument,
 } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
+import { Timestamp } from 'firebase-admin/firestore'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 
-interface CreateTeamRequest {
-	name: string
-	logoBlob?: string // Base64 encoded image
-	logoContentType?: string // MIME type of the image
+interface RolloverTeamRequest {
+	originalTeamId: string
 	seasonId: string
 	timezone?: string // User's browser timezone (e.g., 'America/New_York')
 }
 
-export const createTeam = onCall<CreateTeamRequest>(
+export const rolloverTeam = onCall<RolloverTeamRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		// Validate authentication
 		validateAuthentication(request.auth)
 
-		const { name, logoBlob, logoContentType, seasonId, timezone } = request.data
+		const { originalTeamId, seasonId, timezone } = request.data
 		const userId = request.auth!.uid
 
-		if (!name || !seasonId) {
+		if (!originalTeamId || !seasonId) {
 			throw new HttpsError(
 				'invalid-argument',
-				'Team name and season ID are required'
-			)
-		}
-
-		// Validate logo parameters if provided
-		if (logoBlob && !logoContentType) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Logo content type is required when uploading logo'
-			)
-		}
-
-		if (logoContentType && !logoContentType.startsWith('image/')) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Only image files are allowed for logos'
+				'Original team ID and season ID are required'
 			)
 		}
 
 		try {
 			const firestore = getFirestore()
 
-			// Validate season exists and registration is open
+			// Validate season exists and is current
 			const seasonRef = firestore
 				.collection(Collections.SEASONS)
 				.doc(seasonId) as FirebaseFirestore.DocumentReference<SeasonDocument>
@@ -69,13 +55,14 @@ export const createTeam = onCall<CreateTeamRequest>(
 			}
 
 			const seasonData = seasonDoc.data()!
-			const now = new Date()
+			const now = Timestamp.now()
 
 			// Validate registration is open
 			const registrationStart = seasonData.registrationStart.toDate()
 			const registrationEnd = seasonData.registrationEnd.toDate()
+			const currentTime = now.toDate()
 
-			if (now < registrationStart || now > registrationEnd) {
+			if (currentTime < registrationStart || currentTime > registrationEnd) {
 				const formatDate = (date: Date) => {
 					const options: Intl.DateTimeFormatOptions = {
 						year: 'numeric',
@@ -91,6 +78,45 @@ export const createTeam = onCall<CreateTeamRequest>(
 				throw new HttpsError(
 					'failed-precondition',
 					`Team registration is not currently open. Registration opens ${formatDate(registrationStart)} and closes ${formatDate(registrationEnd)}.`
+				)
+			}
+
+			// Get original team to validate ownership and get team data
+			const originalTeamsQuery = await firestore
+				.collection(Collections.TEAMS)
+				.where('teamId', '==', originalTeamId)
+				.get()
+
+			if (originalTeamsQuery.empty) {
+				throw new HttpsError('not-found', 'Original team not found')
+			}
+
+			// Find the most recent version of this team
+			const originalTeams = originalTeamsQuery.docs.map((doc) => ({
+				...doc.data(),
+				id: doc.id,
+			})) as (TeamDocument & { id: string })[]
+
+			// Get the most recent team document for this teamId
+			const originalTeam = originalTeams.sort((a, b) => {
+				// Sort by season dateStart descending to get most recent
+				return b.season.id.localeCompare(a.season.id)
+			})[0]
+
+			if (!originalTeam) {
+				throw new HttpsError('not-found', 'Original team not found')
+			}
+
+			// Validate user was a captain of the original team
+			const userWasCaptain = originalTeam.roster.some(
+				(rosterPlayer) =>
+					rosterPlayer.player.id === userId && rosterPlayer.captain
+			)
+
+			if (!userWasCaptain) {
+				throw new HttpsError(
+					'permission-denied',
+					'Only captains of the original team can rollover the team'
 				)
 			}
 
@@ -120,83 +146,56 @@ export const createTeam = onCall<CreateTeamRequest>(
 				)
 			}
 
-			// Generate unique team ID
-			const teamId = crypto.randomUUID()
-			let logoUrl = ''
-			let storagePath = ''
+			// Check if team has already been rolled over to this season
+			const existingRolloverQuery = await firestore
+				.collection(Collections.TEAMS)
+				.where('teamId', '==', originalTeamId)
+				.where('season', '==', seasonRef)
+				.get()
 
-			// Handle logo upload if provided
-			if (logoBlob && logoContentType) {
-				try {
-					const storage = getStorage()
-					const bucket = storage.bucket()
-					const fileName = `logos/${teamId}.${logoContentType.split('/')[1]}`
-					const file = bucket.file(fileName)
-
-					// Convert base64 to buffer
-					const buffer = Buffer.from(logoBlob, 'base64')
-
-					// Upload file
-					await file.save(buffer, {
-						metadata: {
-							contentType: logoContentType,
-						},
-					})
-
-					// Make file publicly readable
-					await file.makePublic()
-
-					// Get public URL
-					logoUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`
-					storagePath = fileName
-
-					logger.info(`Successfully uploaded logo for team: ${teamId}`, {
-						fileName,
-						contentType: logoContentType,
-					})
-				} catch (uploadError) {
-					logger.error('Logo upload failed:', uploadError)
-					// Don't fail team creation if logo upload fails
-					logoUrl = ''
-					storagePath = ''
-				}
+			if (!existingRolloverQuery.empty) {
+				throw new HttpsError(
+					'already-exists',
+					'Team has already been rolled over for this season'
+				)
 			}
 
-			// Create team document - Note: roster player refs are Firebase Admin SDK refs
-			const teamDocument: Partial<TeamDocument> = {
-				name: name.trim(),
-				teamId,
-				logo: logoUrl,
-				storagePath,
+			// Create new team document with rolled over data
+			const newTeamDocument: Partial<TeamDocument> = {
+				name: originalTeam.name,
+				logo: originalTeam.logo,
+				storagePath: originalTeam.storagePath,
+				teamId: originalTeamId, // Preserve original teamId
 				season: seasonRef,
 				roster: [
 					{
-						player: playerRef, // Type assertion needed for Firebase Admin SDK compatibility
+						player: playerRef,
 						captain: true,
 					},
 				] as TeamDocument['roster'],
-				registered: false,
+				registered: false, // Always false initially
 				placement: null,
-				// registeredDate will be set when team becomes registered
 			}
 
-			const teamRef = (await firestore
+			const newTeamRef = (await firestore
 				.collection(Collections.TEAMS)
-				.add(teamDocument)) as FirebaseFirestore.DocumentReference<TeamDocument>
+				.add(
+					newTeamDocument
+				)) as FirebaseFirestore.DocumentReference<TeamDocument>
 
-			// Update player's season data to include team
+			// Update player's season data to include the new team
 			const updatedSeasons =
 				playerDocument?.seasons?.map((season: PlayerSeason) =>
 					season.season.id === seasonId
-						? { ...season, team: teamRef, captain: true }
+						? { ...season, team: newTeamRef, captain: true }
 						: season
 				) || []
 
 			// If no season entry exists, create one
 			if (!existingSeasonData) {
 				updatedSeasons.push({
-					season: seasonRef, // Firebase admin SDK DocumentReference
-					team: teamRef, // Firebase admin SDK DocumentReference
+					season: seasonRef,
+					team: newTeamRef,
 					captain: true,
 					paid: false,
 					signed: false,
@@ -206,27 +205,30 @@ export const createTeam = onCall<CreateTeamRequest>(
 
 			await playerRef.update({ seasons: updatedSeasons })
 
-			logger.info(`Successfully created team: ${teamRef.id}`, {
-				teamName: name,
+			logger.info(`Successfully rolled over team: ${newTeamRef.id}`, {
+				originalTeamId,
+				newTeamId: newTeamRef.id,
+				teamName: originalTeam.name,
 				captainId: userId,
 				seasonId,
 			})
 
 			return {
 				success: true,
-				teamId: teamRef.id,
-				message: 'Team created successfully',
+				teamId: newTeamRef.id,
+				message: 'Team rolled over successfully',
 			}
 		} catch (error) {
-			logger.error('Error creating team:', {
+			logger.error('Error rolling over team:', {
 				userId,
-				teamName: name,
+				originalTeamId,
+				seasonId,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
 
 			throw new HttpsError(
 				'internal',
-				error instanceof Error ? error.message : 'Failed to create team'
+				error instanceof Error ? error.message : 'Failed to rollover team'
 			)
 		}
 	}

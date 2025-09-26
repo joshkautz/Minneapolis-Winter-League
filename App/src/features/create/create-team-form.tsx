@@ -8,13 +8,11 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { StorageReference } from '@/firebase/storage'
+
 import { useCreateTeamForm } from '@/features/create/hooks'
 import type { TeamCreationData } from '@/features/create/hooks/use-team-creation'
 
 interface CreateFormProps {
-	isSubmitting: boolean
-	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 	setNewTeamDocument: React.Dispatch<
 		React.SetStateAction<TeamCreationData | undefined>
 	>
@@ -29,30 +27,20 @@ interface CreateFormProps {
 		description: string
 		navigation: boolean
 	}) => void
-	uploadFile?: (
-		ref: StorageReference,
-		blob: Blob,
-		metadata: { contentType: string }
-	) => Promise<{ ref: StorageReference } | undefined>
+	seasonId: string
 }
 
 export const CreateTeamForm = ({
-	isSubmitting,
-	setIsSubmitting,
 	setNewTeamDocument,
 	handleResult,
-	uploadFile,
+	seasonId,
 }: CreateFormProps) => {
-	// Provide a no-op uploadFile function if not provided since this form doesn't handle file uploads
-	const defaultUploadFile = async () => undefined
-
-	const { form, onSubmit } = useCreateTeamForm({
-		isSubmitting,
-		setIsSubmitting,
-		setNewTeamDocument,
-		handleResult,
-		uploadFile: uploadFile || defaultUploadFile,
-	})
+	const { form, onSubmit, handleFileChange, blob, isSubmitting } =
+		useCreateTeamForm({
+			setNewTeamDocument,
+			handleResult,
+			seasonId,
+		})
 
 	return (
 		<div className='w-full'>
@@ -85,6 +73,26 @@ export const CreateTeamForm = ({
 							</FormItem>
 						)}
 					/>
+
+					<div className='space-y-2'>
+						<label htmlFor='team-logo-upload' className='text-sm font-medium'>
+							Team Logo (Optional)
+						</label>
+						<Input
+							id='team-logo-upload'
+							type='file'
+							accept='image/*'
+							onChange={handleFileChange}
+							className='h-11'
+							disabled={isSubmitting}
+						/>
+						{blob && (
+							<p className='text-xs text-muted-foreground'>
+								Selected: {blob instanceof File ? blob.name : 'Image'} (
+								{(blob.size / 1024).toFixed(1)}KB)
+							</p>
+						)}
+					</div>
 
 					<div className='pt-2'>
 						<Button

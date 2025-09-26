@@ -8,29 +8,23 @@ import { useTeamCreation } from './hooks'
 export const CreateTeam: React.FC = () => {
 	const {
 		rolloverMode,
-		isSubmitting,
 		isLoading,
 		isRostered,
+		currentSeasonQueryDocumentSnapshot,
 		setNewTeamDocument,
-		setIsSubmitting,
 		handleResult,
 		toggleRolloverMode,
 	} = useTeamCreation()
 
-	if (isLoading || isSubmitting) {
+	if (isLoading) {
 		return (
 			<div
 				className='flex items-center justify-center min-h-[400px]'
 				role='status'
 				aria-live='polite'
-				aria-label={
-					isLoading ? 'Loading team creation form...' : 'Creating team...'
-				}
+				aria-label='Loading team creation form...'
 			>
-				<LoadingSpinner
-					size='lg'
-					label={isLoading ? 'Loading...' : 'Creating team...'}
-				/>
+				<LoadingSpinner size='lg' label='Loading...' />
 			</div>
 		)
 	}
@@ -55,18 +49,16 @@ export const CreateTeam: React.FC = () => {
 						onToggleMode={toggleRolloverMode}
 						createNewForm={
 							<CreateTeamForm
-								isSubmitting={isSubmitting}
-								setIsSubmitting={setIsSubmitting}
 								setNewTeamDocument={setNewTeamDocument}
 								handleResult={handleResult}
+								seasonId={currentSeasonQueryDocumentSnapshot?.id || ''}
 							/>
 						}
 						rolloverForm={
 							<RolloverTeamForm
-								isSubmitting={isSubmitting}
-								setIsSubmitting={setIsSubmitting}
 								setNewTeamDocument={setNewTeamDocument}
 								handleResult={handleResult}
+								seasonId={currentSeasonQueryDocumentSnapshot?.id || ''}
 							/>
 						}
 					/>
