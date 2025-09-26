@@ -2,8 +2,9 @@
  * Create team callable function
  */
 
-import { onCall } from 'firebase-functions/v2/https'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
+import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
@@ -17,9 +18,10 @@ import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 interface CreateTeamRequest {
 	name: string
-	logo?: string
+	logoBlob?: string // Base64 encoded image
+	logoContentType?: string // MIME type of the image
 	seasonId: string
-	storagePath?: string
+	timezone?: string // User's browser timezone (e.g., 'America/New_York')
 }
 
 export const createTeam = onCall<CreateTeamRequest>(
@@ -28,24 +30,68 @@ export const createTeam = onCall<CreateTeamRequest>(
 		// Validate authentication
 		validateAuthentication(request.auth)
 
-		const { name, logo, seasonId, storagePath } = request.data
+		const { name, logoBlob, logoContentType, seasonId, timezone } = request.data
 		const userId = request.auth!.uid
 
 		if (!name || !seasonId) {
-			throw new Error('Team name and season ID are required')
+			throw new HttpsError(
+				'invalid-argument',
+				'Team name and season ID are required'
+			)
+		}
+
+		// Validate logo parameters if provided
+		if (logoBlob && !logoContentType) {
+			throw new HttpsError(
+				'invalid-argument',
+				'Logo content type is required when uploading logo'
+			)
+		}
+
+		if (logoContentType && !logoContentType.startsWith('image/')) {
+			throw new HttpsError(
+				'invalid-argument',
+				'Only image files are allowed for logos'
+			)
 		}
 
 		try {
 			const firestore = getFirestore()
 
-			// Validate season exists
+			// Validate season exists and registration is open
 			const seasonRef = firestore
 				.collection(Collections.SEASONS)
 				.doc(seasonId) as FirebaseFirestore.DocumentReference<SeasonDocument>
 			const seasonDoc = await seasonRef.get()
 
 			if (!seasonDoc.exists) {
-				throw new Error('Invalid season ID')
+				throw new HttpsError('not-found', 'Invalid season ID')
+			}
+
+			const seasonData = seasonDoc.data()!
+			const now = new Date()
+
+			// Validate registration is open
+			const registrationStart = seasonData.registrationStart.toDate()
+			const registrationEnd = seasonData.registrationEnd.toDate()
+
+			if (now < registrationStart || now > registrationEnd) {
+				const formatDate = (date: Date) => {
+					const options: Intl.DateTimeFormatOptions = {
+						year: 'numeric',
+						month: 'long',
+						day: 'numeric',
+						hour: 'numeric',
+						minute: '2-digit',
+						timeZoneName: 'short',
+						...(timezone && { timeZone: timezone }),
+					}
+					return date.toLocaleDateString('en-US', options)
+				}
+				throw new HttpsError(
+					'failed-precondition',
+					`Team registration is not currently open. Registration opens ${formatDate(registrationStart)} and closes ${formatDate(registrationEnd)}.`
+				)
 			}
 
 			// Get player document
@@ -53,13 +99,13 @@ export const createTeam = onCall<CreateTeamRequest>(
 			const playerDoc = await playerRef.get()
 
 			if (!playerDoc.exists) {
-				throw new Error('Player profile not found')
+				throw new HttpsError('not-found', 'Player profile not found')
 			}
 
 			const playerDocument = playerDoc.data() as PlayerDocument | undefined
 
 			if (!playerDocument) {
-				throw new Error('Unable to retrieve player data')
+				throw new HttpsError('internal', 'Unable to retrieve player data')
 			}
 
 			// Check if player is already on a team for this season
@@ -68,14 +114,62 @@ export const createTeam = onCall<CreateTeamRequest>(
 			)
 
 			if (existingSeasonData?.team) {
-				throw new Error('Player is already on a team for this season')
+				throw new HttpsError(
+					'already-exists',
+					'Player is already on a team for this season'
+				)
+			}
+
+			// Generate unique team ID
+			const teamId = crypto.randomUUID()
+			const fileId = crypto.randomUUID()
+			let logoUrl = ''
+			let storagePath = ''
+
+			// Handle logo upload if provided
+			if (logoBlob && logoContentType) {
+				try {
+					const storage = getStorage()
+					const bucket = storage.bucket()
+					const fileName = `teams/${fileId}`
+					const file = bucket.file(fileName)
+
+					// Convert base64 to buffer
+					const buffer = Buffer.from(logoBlob, 'base64')
+
+					// Upload file
+					await file.save(buffer, {
+						metadata: {
+							contentType: logoContentType,
+						},
+					})
+
+					// Make file publicly readable
+					await file.makePublic()
+
+					// Get proper public URL using the publicUrl() method
+					logoUrl = file.publicUrl()
+					storagePath = fileName
+
+					logger.info(`Successfully uploaded logo for team: ${teamId}`, {
+						fileName,
+						contentType: logoContentType,
+					})
+				} catch (uploadError) {
+					logger.error('Logo upload failed:', uploadError)
+					// Don't fail team creation if logo upload fails
+					logoUrl = ''
+					storagePath = ''
+				}
 			}
 
 			// Create team document - Note: roster player refs are Firebase Admin SDK refs
 			const teamDocument: Partial<TeamDocument> = {
 				name: name.trim(),
-				logo: logo || '',
-				storagePath: storagePath || '',
+				teamId,
+				logo: logoUrl,
+				storagePath,
+				season: seasonRef,
 				roster: [
 					{
 						player: playerRef, // Type assertion needed for Firebase Admin SDK compatibility
@@ -83,6 +177,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 					},
 				] as TeamDocument['roster'],
 				registered: false,
+				placement: null,
 				// registeredDate will be set when team becomes registered
 			}
 
@@ -130,7 +225,8 @@ export const createTeam = onCall<CreateTeamRequest>(
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
 
-			throw new Error(
+			throw new HttpsError(
+				'internal',
 				error instanceof Error ? error.message : 'Failed to create team'
 			)
 		}

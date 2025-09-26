@@ -21,7 +21,6 @@ interface TeamCreationResult {
 
 interface UseTeamCreationReturn {
 	rolloverMode: boolean
-	isSubmitting: boolean
 	isLoading: boolean
 	isAdmin: boolean
 	isRostered: boolean
@@ -32,7 +31,6 @@ interface UseTeamCreationReturn {
 	setNewTeamDocument: React.Dispatch<
 		React.SetStateAction<TeamCreationData | undefined>
 	>
-	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 	handleResult: (result: TeamCreationResult) => void
 	toggleRolloverMode: () => void
 }
@@ -52,8 +50,9 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		seasonsQuerySnapshotLoading,
 	} = useSeasonsContext()
 
-	const [newTeamDocument, setNewTeamDocument] = useState<TeamCreationData>()
-	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+	const [newTeamDocument, setNewTeamDocument] = useState<TeamCreationData>() // Keep for backward compatibility
+	// This is used by child components to store team creation data
+	void newTeamDocument // Suppress unused variable warning
 	const [rolloverMode, setRolloverMode] = useState(false)
 
 	const isAdmin = useMemo(
@@ -120,16 +119,12 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		setRolloverMode((prev) => !prev)
 	}, [])
 
-	// TODO: Implement team creation logic when firebase functions are available
-	// Effect for handling team creation
-	if (newTeamDocument) {
-		// Team creation logic will be implemented here
-	}
+	// Team creation is now handled directly in the forms via Firebase Functions
+	// No additional processing needed here since functions handle the complete workflow
 
 	return {
 		// State
 		rolloverMode,
-		isSubmitting,
 		isLoading,
 		isAdmin,
 		isRostered,
@@ -138,7 +133,6 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 
 		// Actions
 		setNewTeamDocument,
-		setIsSubmitting,
 		handleResult,
 		toggleRolloverMode,
 	}

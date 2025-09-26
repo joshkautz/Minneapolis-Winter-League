@@ -1,12 +1,12 @@
 import { DocumentReference } from '@/firebase/firestore'
 import { useTeamsContext } from '@/providers'
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { ReactNode, useMemo, useState } from 'react'
 import { NotificationCard } from '@/shared/components'
 import { ManageTeamRosterPlayer } from './manage-team-roster-player'
 import { PlayerDocument } from '@/shared/utils'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { useSeasonsContext } from '@/providers'
-import { Skeleton } from '@/components/ui/skeleton'
+
 import { formatTimestamp } from '@/shared/utils'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 
@@ -53,12 +53,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 			</p>
 		)
 
-	const [imgLoaded, setImgLoaded] = useState(false)
-	const [imgSrc, setImgSrc] = useState<string | undefined>()
-
-	useEffect(() => {
-		setImgSrc(team?.data()?.logo + `&date=${Date.now()}`)
-	}, [team])
+	const [imageError, setImageError] = useState(false)
 
 	const titleData = (
 		<div className={'flex items-center gap-3'}>
@@ -67,19 +62,20 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 					'relative h-12 w-12 rounded-full overflow-hidden bg-muted flex-shrink-0'
 				}
 			>
-				{!imgLoaded && <Skeleton className='h-full w-full absolute inset-0' />}
-				<img
-					onError={() => {
-						setImgLoaded(false)
-					}}
-					style={imgLoaded ? {} : { display: 'none' }}
-					src={imgSrc}
-					onLoad={() => {
-						setImgLoaded(true)
-					}}
-					alt={`${team?.data().name} team logo`}
-					className={'h-full w-full object-cover rounded-full'}
-				/>
+				{team?.data()?.logo && !imageError ? (
+					<img
+						src={team.data().logo || undefined}
+						alt={`${team.data().name} team logo`}
+						className={'h-full w-full object-cover rounded-full'}
+						onError={() => setImageError(true)}
+					/>
+				) : (
+					<div className='flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-sky-300'>
+						<span className='text-sm font-bold text-primary-foreground'>
+							{team?.data()?.name?.charAt(0)?.toUpperCase() || 'T'}
+						</span>
+					</div>
+				)}
 			</div>
 			<div className='flex flex-col justify-center'>
 				<h3 className='font-semibold text-lg leading-tight'>

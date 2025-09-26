@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { useTeamsContext, useSeasonsContext } from '@/providers'
 import {
 	Form,
 	FormField,
@@ -16,19 +14,10 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { QueryDocumentSnapshot } from '@/firebase/firestore'
-import { TeamDocument, errorHandler, logger } from '@/shared/utils'
 import type { TeamCreationData } from '@/features/create/hooks/use-team-creation'
-import { useForm } from 'react-hook-form'
-import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
-import {
-	RolloverTeamFormData,
-	rolloverTeamFormSchema,
-} from '@/shared/utils/validation'
+import { useRolloverTeamForm } from '@/features/create/hooks'
 
 interface RolloverTeamFormProps {
-	isSubmitting: boolean
-	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 	setNewTeamDocument: React.Dispatch<
 		React.SetStateAction<TeamCreationData | undefined>
 	>
@@ -43,133 +32,27 @@ interface RolloverTeamFormProps {
 		description: string
 		navigation: boolean
 	}) => void
+	seasonId: string
 }
 
 export const RolloverTeamForm = ({
-	isSubmitting,
-	setIsSubmitting,
 	setNewTeamDocument,
 	handleResult,
+	seasonId,
 }: RolloverTeamFormProps) => {
 	const {
-		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
-		currentSeasonTeamsQuerySnapshot,
-	} = useTeamsContext()
-	const { seasonsQuerySnapshot } = useSeasonsContext()
-
-	const [
-		selectedTeamQueryDocumentSnapshot,
-		setSelectedTeamQueryDocumentSnapshot,
-	] = useState<QueryDocumentSnapshot<TeamDocument> | undefined>(undefined)
-
-	const form = useForm<RolloverTeamFormData>({
-		resolver: standardSchemaResolver(rolloverTeamFormSchema),
-		defaultValues: {
-			selectedTeam: '',
-		},
-	})
-
-	useEffect(() => {
-		const defaultTeamQueryDocumentSnapshot =
-			teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot?.docs
-				.sort((a, b) => {
-					const seasonsQuerySnapshots = seasonsQuerySnapshot?.docs
-					if (seasonsQuerySnapshots) {
-						const seasonA = seasonsQuerySnapshots.find(
-							(seasonQueryDocumentSnapshot) =>
-								seasonQueryDocumentSnapshot.id === a.data().season.id
-						)
-						const seasonB = seasonsQuerySnapshots.find(
-							(seasonQueryDocumentSnapshot) =>
-								seasonQueryDocumentSnapshot.id === b.data().season.id
-						)
-						if (seasonA && seasonB) {
-							return (
-								seasonA.data()?.dateStart.seconds -
-								seasonB.data()?.dateStart.seconds
-							)
-						}
-						return 0
-					}
-					return 0
-				})
-				.find((team) => team)
-
-		const defaultTeamHasBeenRolledOver =
-			currentSeasonTeamsQuerySnapshot?.docs.some(
-				(teamQueryDocumentSnapshot) =>
-					teamQueryDocumentSnapshot.data().teamId ===
-					defaultTeamQueryDocumentSnapshot?.data().teamId
-			)
-
-		if (
-			!defaultTeamHasBeenRolledOver &&
-			defaultTeamQueryDocumentSnapshot?.data().name
-		) {
-			const teamName = defaultTeamQueryDocumentSnapshot.data().name
-			setSelectedTeamQueryDocumentSnapshot(defaultTeamQueryDocumentSnapshot)
-			form.setValue('selectedTeam', teamName)
-		}
-	}, [
-		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
-		seasonsQuerySnapshot,
-		currentSeasonTeamsQuerySnapshot,
-		setSelectedTeamQueryDocumentSnapshot,
 		form,
-	])
-
-	const onRolloverSubmit = useCallback(
-		async (data: RolloverTeamFormData) => {
-			try {
-				setIsSubmitting(true)
-				// Validate that a team is selected
-				if (!selectedTeamQueryDocumentSnapshot || !data.selectedTeam) {
-					throw new Error('No team selected')
-				}
-				setNewTeamDocument({
-					name: selectedTeamQueryDocumentSnapshot.data().name,
-					storageRef: undefined, // Not needed for rollover scenarios
-					teamId: selectedTeamQueryDocumentSnapshot.data().teamId,
-				})
-			} catch (error) {
-				logger.error(
-					'Team rollover failed',
-					error instanceof Error ? error : new Error(String(error)),
-					{
-						component: 'RolloverTeamForm',
-						teamId: selectedTeamQueryDocumentSnapshot?.data().teamId,
-					}
-				)
-
-				errorHandler.handleValidation(error, 'rollover-team-form', {
-					fallbackMessage: 'Failed to rollover team. Please try again.',
-				})
-			} finally {
-				setIsSubmitting(false)
-			}
-		},
-		[
-			selectedTeamQueryDocumentSnapshot,
-			setNewTeamDocument,
-			handleResult,
-			setIsSubmitting,
-		]
-	)
-
-	const handleSeasonChange = useCallback(
-		(team: string) => {
-			const teamQueryDocumentSnapshot =
-				teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot?.docs.find(
-					(teamQueryDocumentSnapshot) =>
-						teamQueryDocumentSnapshot.data().name === team
-				)
-			setSelectedTeamQueryDocumentSnapshot(teamQueryDocumentSnapshot)
-		},
-		[
-			setSelectedTeamQueryDocumentSnapshot,
-			teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
-		]
-	)
+		onSubmit,
+		handleTeamChange,
+		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
+		currentSeasonTeamsQuerySnapshot,
+		seasonsQuerySnapshot,
+		isSubmitting,
+	} = useRolloverTeamForm({
+		setNewTeamDocument,
+		handleResult,
+		seasonId,
+	})
 
 	return (
 		<div className='w-full'>
@@ -185,7 +68,7 @@ export const RolloverTeamForm = ({
 			) : (
 				<Form {...form}>
 					<form
-						onSubmit={form.handleSubmit(onRolloverSubmit)}
+						onSubmit={form.handleSubmit(onSubmit)}
 						className='space-y-6'
 						noValidate
 					>
@@ -202,7 +85,7 @@ export const RolloverTeamForm = ({
 											value={field.value}
 											onValueChange={(value) => {
 												field.onChange(value)
-												handleSeasonChange(value)
+												handleTeamChange(value)
 											}}
 										>
 											<SelectTrigger

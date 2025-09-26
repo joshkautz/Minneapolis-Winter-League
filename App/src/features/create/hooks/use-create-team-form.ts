@@ -1,13 +1,12 @@
 import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { v4 as uuidv4 } from 'uuid'
-import { StorageReference, ref, storage } from '@/firebase/storage'
+import { StorageReference } from '@/firebase/storage'
 import { TeamFormData, teamFormSchema } from '@/shared/utils/validation'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
+import { createTeamViaFunction } from '@/firebase/collections/functions'
+import { logger } from '@/shared/utils'
 
 interface UseCreateTeamFormProps {
-	isSubmitting: boolean
-	setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>
 	setNewTeamDocument: React.Dispatch<
 		React.SetStateAction<
 			| {
@@ -29,11 +28,7 @@ interface UseCreateTeamFormProps {
 		description: string
 		navigation: boolean
 	}) => void
-	uploadFile: (
-		ref: StorageReference,
-		blob: Blob,
-		metadata: { contentType: string }
-	) => Promise<{ ref: StorageReference } | undefined>
+	seasonId: string
 }
 
 /**
@@ -42,13 +37,12 @@ interface UseCreateTeamFormProps {
  * Encapsulates form validation, file handling, and team creation logic.
  */
 export const useCreateTeamForm = ({
-	isSubmitting,
-	setIsSubmitting,
 	setNewTeamDocument,
 	handleResult,
-	uploadFile,
+	seasonId,
 }: UseCreateTeamFormProps) => {
 	const [blob, setBlob] = useState<Blob>()
+	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
 	const form = useForm<TeamFormData>({
 		resolver: standardSchemaResolver(teamFormSchema),
@@ -75,35 +69,83 @@ export const useCreateTeamForm = ({
 			setIsSubmitting(true)
 
 			try {
-				const teamId = uuidv4()
-				let storageRef: StorageReference | undefined
+				// Convert blob to base64 if present
+				let logoBlob: string | undefined
+				let logoContentType: string | undefined
 
 				if (blob) {
-					const fileRef = ref(storage, `logos/${teamId}`)
-					const result = await uploadFile(fileRef, blob, {
-						contentType: blob.type,
+					logoContentType = blob.type
+					// Convert File/Blob to base64
+					const reader = new FileReader()
+					const base64Promise = new Promise<string>((resolve, reject) => {
+						reader.onload = () => {
+							const result = reader.result as string
+							// Remove the data:image/xxx;base64, prefix
+							const base64 = result.split(',')[1]
+							resolve(base64)
+						}
+						reader.onerror = reject
 					})
-					storageRef = result?.ref
+					reader.readAsDataURL(blob)
+					logoBlob = await base64Promise
 				}
 
+				// Call Firebase Function to create team
+				const result = await createTeamViaFunction({
+					name: data.name,
+					logoBlob,
+					logoContentType,
+					seasonId,
+					timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+				})
+
+				// Set the team document for any subsequent processing
 				setNewTeamDocument({
 					name: data.name,
-					storageRef,
-					teamId,
+					storageRef: undefined, // Not needed since server handles upload
+					teamId: result.teamId,
 				})
 
 				handleResult({
 					success: true,
-					title: 'Team creation initiated',
-					description: 'Please proceed to complete team registration',
+					title: 'Team created successfully',
+					description: result.message,
 					navigation: true,
 				})
 			} catch (error) {
-				console.error('Create team error:', error)
+				logger.error(
+					'Team creation failed',
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						component: 'useCreateTeamForm',
+						teamName: data.name,
+						seasonId,
+					}
+				)
+
+				// Handle Firebase Functions errors
+				let errorMessage = 'An error occurred while creating the team'
+				let errorTitle = 'Team creation failed'
+
+				if (error && typeof error === 'object' && 'message' in error) {
+					errorMessage = error.message as string
+				} else if (error instanceof Error) {
+					errorMessage = error.message
+				}
+
+				// Provide more user-friendly titles based on error message
+				if (errorMessage.includes('registration is not currently open')) {
+					errorTitle = 'Registration Closed'
+				} else if (errorMessage.includes('already on a team')) {
+					errorTitle = 'Already on Team'
+				} else if (errorMessage.includes('Player profile not found')) {
+					errorTitle = 'Profile Not Found'
+				}
+
 				handleResult({
 					success: false,
-					title: 'Team creation failed',
-					description: 'An error occurred while creating the team',
+					title: errorTitle,
+					description: errorMessage,
 					navigation: false,
 				})
 			} finally {
@@ -116,7 +158,7 @@ export const useCreateTeamForm = ({
 			blob,
 			setNewTeamDocument,
 			handleResult,
-			uploadFile,
+			seasonId,
 		]
 	)
 
@@ -125,5 +167,6 @@ export const useCreateTeamForm = ({
 		onSubmit,
 		handleFileChange,
 		blob,
+		isSubmitting,
 	}
 }

@@ -1,0 +1,235 @@
+/**
+ * Rollover team callable function
+ *
+ * Rolls over an existing team from a previous season to the current season,
+ * preserving the teamId but creating a new team document.
+ */
+
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
+import { getFirestore } from 'firebase-admin/firestore'
+import { logger } from 'firebase-functions/v2'
+import {
+	Collections,
+	TeamDocument,
+	PlayerDocument,
+	PlayerSeason,
+	SeasonDocument,
+} from '../../types.js'
+import { validateAuthentication } from '../../shared/auth.js'
+import { Timestamp } from 'firebase-admin/firestore'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
+
+interface RolloverTeamRequest {
+	originalTeamId: string
+	seasonId: string
+	timezone?: string // User's browser timezone (e.g., 'America/New_York')
+}
+
+export const rolloverTeam = onCall<RolloverTeamRequest>(
+	{ region: FIREBASE_CONFIG.REGION },
+	async (request) => {
+		// Validate authentication
+		validateAuthentication(request.auth)
+
+		const { originalTeamId, seasonId, timezone } = request.data
+		const userId = request.auth!.uid
+
+		if (!originalTeamId || !seasonId) {
+			throw new HttpsError(
+				'invalid-argument',
+				'Original team ID and season ID are required'
+			)
+		}
+
+		try {
+			const firestore = getFirestore()
+
+			// Validate season exists and is current
+			const seasonRef = firestore
+				.collection(Collections.SEASONS)
+				.doc(seasonId) as FirebaseFirestore.DocumentReference<SeasonDocument>
+			const seasonDoc = await seasonRef.get()
+
+			if (!seasonDoc.exists) {
+				throw new HttpsError('not-found', 'Invalid season ID')
+			}
+
+			const seasonData = seasonDoc.data()!
+			const now = Timestamp.now()
+
+			// Validate registration is open
+			const registrationStart = seasonData.registrationStart.toDate()
+			const registrationEnd = seasonData.registrationEnd.toDate()
+			const currentTime = now.toDate()
+
+			if (currentTime < registrationStart || currentTime > registrationEnd) {
+				const formatDate = (date: Date) => {
+					const options: Intl.DateTimeFormatOptions = {
+						year: 'numeric',
+						month: 'long',
+						day: 'numeric',
+						hour: 'numeric',
+						minute: '2-digit',
+						timeZoneName: 'short',
+						...(timezone && { timeZone: timezone }),
+					}
+					return date.toLocaleDateString('en-US', options)
+				}
+				throw new HttpsError(
+					'failed-precondition',
+					`Team registration is not currently open. Registration opens ${formatDate(registrationStart)} and closes ${formatDate(registrationEnd)}.`
+				)
+			}
+
+			// Get original team to validate ownership and get team data
+			const originalTeamsQuery = await firestore
+				.collection(Collections.TEAMS)
+				.where('teamId', '==', originalTeamId)
+				.get()
+
+			if (originalTeamsQuery.empty) {
+				throw new HttpsError('not-found', 'Original team not found')
+			}
+
+			// Find the most recent version of this team
+			const originalTeams = originalTeamsQuery.docs.map((doc) => ({
+				...doc.data(),
+				id: doc.id,
+			})) as (TeamDocument & { id: string })[]
+
+			// Get the most recent team document for this teamId
+			const originalTeam = originalTeams.sort((a, b) => {
+				// Sort by season dateStart descending to get most recent
+				return b.season.id.localeCompare(a.season.id)
+			})[0]
+
+			if (!originalTeam) {
+				throw new HttpsError('not-found', 'Original team not found')
+			}
+
+			// Validate user was a captain of the original team
+			const userWasCaptain = originalTeam.roster.some(
+				(rosterPlayer) =>
+					rosterPlayer.player.id === userId && rosterPlayer.captain
+			)
+
+			if (!userWasCaptain) {
+				throw new HttpsError(
+					'permission-denied',
+					'Only captains of the original team can rollover the team'
+				)
+			}
+
+			// Get player document
+			const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
+			const playerDoc = await playerRef.get()
+
+			if (!playerDoc.exists) {
+				throw new HttpsError('not-found', 'Player profile not found')
+			}
+
+			const playerDocument = playerDoc.data() as PlayerDocument | undefined
+
+			if (!playerDocument) {
+				throw new HttpsError('internal', 'Unable to retrieve player data')
+			}
+
+			// Check if player is already on a team for this season
+			const existingSeasonData = playerDocument.seasons?.find(
+				(season: PlayerSeason) => season.season.id === seasonId
+			)
+
+			if (existingSeasonData?.team) {
+				throw new HttpsError(
+					'already-exists',
+					'Player is already on a team for this season'
+				)
+			}
+
+			// Check if team has already been rolled over to this season
+			const existingRolloverQuery = await firestore
+				.collection(Collections.TEAMS)
+				.where('teamId', '==', originalTeamId)
+				.where('season', '==', seasonRef)
+				.get()
+
+			if (!existingRolloverQuery.empty) {
+				throw new HttpsError(
+					'already-exists',
+					'Team has already been rolled over for this season'
+				)
+			}
+
+			// Create new team document with rolled over data
+			const newTeamDocument: Partial<TeamDocument> = {
+				name: originalTeam.name,
+				logo: originalTeam.logo,
+				storagePath: originalTeam.storagePath,
+				teamId: originalTeamId, // Preserve original teamId
+				season: seasonRef,
+				roster: [
+					{
+						player: playerRef,
+						captain: true,
+					},
+				] as TeamDocument['roster'],
+				registered: false, // Always false initially
+				placement: null,
+			}
+
+			const newTeamRef = (await firestore
+				.collection(Collections.TEAMS)
+				.add(
+					newTeamDocument
+				)) as FirebaseFirestore.DocumentReference<TeamDocument>
+
+			// Update player's season data to include the new team
+			const updatedSeasons =
+				playerDocument?.seasons?.map((season: PlayerSeason) =>
+					season.season.id === seasonId
+						? { ...season, team: newTeamRef, captain: true }
+						: season
+				) || []
+
+			// If no season entry exists, create one
+			if (!existingSeasonData) {
+				updatedSeasons.push({
+					season: seasonRef,
+					team: newTeamRef,
+					captain: true,
+					paid: false,
+					signed: false,
+					banned: false,
+				})
+			}
+
+			await playerRef.update({ seasons: updatedSeasons })
+
+			logger.info(`Successfully rolled over team: ${newTeamRef.id}`, {
+				originalTeamId,
+				newTeamId: newTeamRef.id,
+				teamName: originalTeam.name,
+				captainId: userId,
+				seasonId,
+			})
+
+			return {
+				success: true,
+				teamId: newTeamRef.id,
+				message: 'Team rolled over successfully',
+			}
+		} catch (error) {
+			logger.error('Error rolling over team:', {
+				userId,
+				originalTeamId,
+				seasonId,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			})
+
+			throw new HttpsError(
+				'internal',
+				error instanceof Error ? error.message : 'Failed to rollover team'
+			)
+		}
+	}
+)

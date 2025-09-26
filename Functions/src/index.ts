@@ -71,6 +71,7 @@ export { deletePlayer } from './functions/players/delete.js'
 
 // Team management functions
 export { createTeam } from './functions/teams/create.js'
+export { rolloverTeam } from './functions/teams/rollover.js'
 export { updateTeam } from './functions/teams/update.js'
 export { deleteTeam } from './functions/teams/delete.js'
 export { manageTeamPlayer } from './functions/teams/managePlayer.js'

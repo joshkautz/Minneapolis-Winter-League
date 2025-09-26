@@ -86,19 +86,21 @@ export const deletePlayerViaFunction = async (
 
 interface CreateTeamRequest {
 	name: string
-	logo?: string
+	logoBlob?: string // Base64 encoded image
+	logoContentType?: string // MIME type of the image
 	seasonId: string
-	storagePath?: string
+	timezone?: string // User's browser timezone
 }
 
 interface CreateTeamResponse {
 	teamId: string
 	success: boolean
+	message: string
 }
 
 /**
- * Creates a new team via Firebase Function
- * Replaces the complex client-side createTeam function
+ * Creates a new team via Firebase Function with optional logo upload
+ * Handles server-side file upload and team creation
  */
 export const createTeamViaFunction = async (
 	data: CreateTeamRequest
@@ -108,6 +110,33 @@ export const createTeamViaFunction = async (
 		'createTeam'
 	)
 	const result = await createTeam(data)
+	return result.data
+}
+
+interface RolloverTeamRequest {
+	originalTeamId: string
+	seasonId: string
+	timezone?: string // User's browser timezone
+}
+
+interface RolloverTeamResponse {
+	success: boolean
+	teamId: string
+	message: string
+}
+
+/**
+ * Rolls over an existing team to the current season
+ * Creates new team document while preserving teamId
+ */
+export const rolloverTeamViaFunction = async (
+	data: RolloverTeamRequest
+): Promise<RolloverTeamResponse> => {
+	const rolloverTeam = httpsCallable<RolloverTeamRequest, RolloverTeamResponse>(
+		functions,
+		'rolloverTeam'
+	)
+	const result = await rolloverTeam(data)
 	return result.data
 }
 

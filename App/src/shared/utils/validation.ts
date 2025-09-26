@@ -94,25 +94,17 @@ export const teamNameSchema = z
 	})
 	.trim()
 	.min(2, 'Team name must be at least 2 characters')
-	.max(30, 'Team name must be less than 30 characters')
+	.max(50, 'Team name must be less than 50 characters')
 	.refine(
-		(name) => name.trim().length >= 2,
-		'Team name cannot be just whitespace'
+		(name) => {
+			// Check for inappropriate language using bad-words package
+			return !filter.isProfane(name)
+		},
+		{
+			error:
+				'Team name contains inappropriate language. Please choose a different name.',
+		}
 	)
-	.refine((name) => {
-		// Check for inappropriate words (basic example)
-		const inappropriateWords = ['test', 'admin', 'system', 'banned', 'deleted']
-		return !inappropriateWords.some((word) => name.toLowerCase().includes(word))
-	}, 'Team name contains inappropriate content')
-	.refine((name) => {
-		// Ensure team name doesn't look like a placeholder
-		const placeholderPatterns = [/^team\s*\d*$/i, /^untitled/i, /^new\s*team/i]
-		return !placeholderPatterns.some((pattern) => pattern.test(name))
-	}, 'Please choose a more specific team name')
-	.transform((name) => {
-		// Normalize and capitalize properly
-		return name.replace(/\s+/g, ' ').trim()
-	})
 
 // Compound schemas for common form patterns
 export const authFormBaseSchema = z.object({
