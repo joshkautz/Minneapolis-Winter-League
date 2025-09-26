@@ -3,6 +3,7 @@ import { ScheduleGrid } from './schedule-grid'
 import { ScheduleLoadingState } from './schedule-loading-state'
 import { ScheduleEmptyState } from './schedule-empty-state'
 import { Calendar } from 'lucide-react'
+import { PageContainer, PageHeader } from '@/shared/components'
 
 /**
  * Schedule Component
@@ -14,17 +15,12 @@ export const Schedule = () => {
 	const { isLoading, hasGames } = useScheduleData()
 
 	return (
-		<div className='container mx-auto px-4 py-8 space-y-6'>
-			{/* Header */}
-			<div className='text-center space-y-4'>
-				<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
-					<Calendar className='h-8 w-8' />
-					Schedule
-				</h1>
-				<p className='text-muted-foreground'>
-					View all games and match schedules organized by rounds
-				</p>
-			</div>
+		<PageContainer withSpacing withGap>
+			<PageHeader
+				title='Schedule'
+				description='View all games and match schedules organized by rounds'
+				icon={Calendar}
+			/>
 
 			{isLoading ? (
 				<ScheduleLoadingState />
@@ -33,6 +29,6 @@ export const Schedule = () => {
 			) : (
 				<ScheduleGrid />
 			)}
-		</div>
+		</PageContainer>
 	)
 }

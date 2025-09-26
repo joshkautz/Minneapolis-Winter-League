@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner } from '@/shared/components'
 
 interface FormSubmitButtonProps {
 	children: ReactNode
@@ -25,7 +25,7 @@ export const FormSubmitButton = ({
 }: FormSubmitButtonProps) => {
 	return (
 		<Button type={type} disabled={disabled || isLoading} className={className}>
-			{isLoading && <ReloadIcon className='mr-2 h-4 w-4 animate-spin' />}
+			{isLoading && <LoadingSpinner size='sm' className='mr-2' />}
 			{isLoading ? loadingText : children}
 		</Button>
 	)

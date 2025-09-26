@@ -1,6 +1,5 @@
 import React from 'react'
-import { ReloadIcon } from '@radix-ui/react-icons'
-import { GradientHeader } from '@/shared/components'
+import { LoadingSpinner, NotificationCard } from '@/shared/components'
 import { CreateTeamForm } from './create-team-form'
 import { RolloverTeamForm } from './rollover-team-form'
 import { TeamCreationStatusCard, TeamCreationFormWrapper } from './components'
@@ -11,10 +10,7 @@ export const CreateTeam: React.FC = () => {
 		rolloverMode,
 		isSubmitting,
 		isLoading,
-		isAdmin,
 		isRostered,
-		isRegistrationOpen,
-		currentSeasonQueryDocumentSnapshot,
 		setNewTeamDocument,
 		setIsSubmitting,
 		handleResult,
@@ -23,53 +19,59 @@ export const CreateTeam: React.FC = () => {
 
 	if (isLoading || isSubmitting) {
 		return (
-			<div className='container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10'>
-				<div className='absolute inset-0 flex items-center justify-center'>
-					<ReloadIcon className='mr-2 h-10 w-10 animate-spin' />
-				</div>
-			</div>
-		)
-	}
-
-	if (isRostered || (!isRegistrationOpen && !isAdmin)) {
-		const registrationStartDate =
-			currentSeasonQueryDocumentSnapshot?.data()?.registrationStart
-
-		return (
-			<div className='container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10'>
-				<TeamCreationStatusCard
-					isRostered={isRostered}
-					isRegistrationOpen={isRegistrationOpen}
-					registrationStartDate={registrationStartDate}
+			<div
+				className='flex items-center justify-center min-h-[400px]'
+				role='status'
+				aria-live='polite'
+				aria-label={
+					isLoading ? 'Loading team creation form...' : 'Creating team...'
+				}
+			>
+				<LoadingSpinner
+					size='lg'
+					label={isLoading ? 'Loading...' : 'Creating team...'}
 				/>
 			</div>
 		)
 	}
 
-	return (
-		<div className='container flex flex-col items-center md:min-h-[calc(100vh-60px)] gap-10'>
-			<GradientHeader>Create a Team</GradientHeader>
+	if (isRostered) {
+		return (
+			<div className='flex justify-center'>
+				<TeamCreationStatusCard isRostered={isRostered} />
+			</div>
+		)
+	}
 
-			<TeamCreationFormWrapper
-				rolloverMode={rolloverMode}
-				onToggleMode={toggleRolloverMode}
-			>
-				{rolloverMode ? (
-					<RolloverTeamForm
-						isSubmitting={isSubmitting}
-						setIsSubmitting={setIsSubmitting}
-						setNewTeamDocument={setNewTeamDocument}
-						handleResult={handleResult}
+	return (
+		<div className='flex justify-center'>
+			<div className='w-full max-w-2xl'>
+				<NotificationCard
+					title='Create Team'
+					description='Create a new team or rollover an existing team for the upcoming season'
+				>
+					<TeamCreationFormWrapper
+						rolloverMode={rolloverMode}
+						onToggleMode={toggleRolloverMode}
+						createNewForm={
+							<CreateTeamForm
+								isSubmitting={isSubmitting}
+								setIsSubmitting={setIsSubmitting}
+								setNewTeamDocument={setNewTeamDocument}
+								handleResult={handleResult}
+							/>
+						}
+						rolloverForm={
+							<RolloverTeamForm
+								isSubmitting={isSubmitting}
+								setIsSubmitting={setIsSubmitting}
+								setNewTeamDocument={setNewTeamDocument}
+								handleResult={handleResult}
+							/>
+						}
 					/>
-				) : (
-					<CreateTeamForm
-						isSubmitting={isSubmitting}
-						setIsSubmitting={setIsSubmitting}
-						setNewTeamDocument={setNewTeamDocument}
-						handleResult={handleResult}
-					/>
-				)}
-			</TeamCreationFormWrapper>
+				</NotificationCard>
+			</div>
 		</div>
 	)
 }

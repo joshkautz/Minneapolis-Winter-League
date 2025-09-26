@@ -1,4 +1,4 @@
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner } from '@/shared/components'
 import { Input } from '@/components/ui/input'
 
 export const ManageInvitePlayerSearchBar = ({
@@ -19,9 +19,7 @@ export const ManageInvitePlayerSearchBar = ({
 			/>
 			{searching && (
 				<div className={'absolute inset-y-0 right-3 h-full items-center flex'}>
-					<ReloadIcon
-						className={'w-4 h-4 text-muted-foreground animate-spin'}
-					/>
+					<LoadingSpinner size='sm' className='text-muted-foreground' />
 				</div>
 			)}
 		</div>

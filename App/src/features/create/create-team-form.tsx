@@ -55,38 +55,47 @@ export const CreateTeamForm = ({
 	})
 
 	return (
-		<div className='max-w-[400px]'>
+		<div className='w-full'>
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
-					className={'w-full space-y-6'}
+					className='space-y-6'
+					noValidate
 				>
 					<FormField
 						control={form.control}
-						name={'name'}
+						name='name'
 						render={({ field }) => (
 							<FormItem>
-								<FormLabel>Team name</FormLabel>
+								<FormLabel className='text-sm font-medium'>Team Name</FormLabel>
 								<FormControl>
 									<Input
-										placeholder={'Team name'}
+										placeholder='Enter your team name'
+										className='h-11'
+										autoComplete='off'
+										autoFocus
 										{...field}
 										value={field.value ?? ''}
+										aria-describedby={
+											form.formState.errors.name ? `name-error` : undefined
+										}
 									/>
 								</FormControl>
-								<FormMessage />
+								<FormMessage id='name-error' />
 							</FormItem>
 						)}
 					/>
-					<Button type={'submit'} disabled={isSubmitting || true}>
-						Create
-					</Button>
-					<p
-						className={'text-[0.8rem] text-muted-foreground mt-2 text-red-500'}
-					>
-						The maximum number of fully registered teams for the current season
-						has been reached.
-					</p>
+
+					<div className='pt-2'>
+						<Button
+							type='submit'
+							disabled={isSubmitting}
+							className='w-full h-11'
+							size='lg'
+						>
+							{isSubmitting ? 'Creating Team...' : 'Create Team'}
+						</Button>
+					</div>
 				</form>
 			</Form>
 		</div>

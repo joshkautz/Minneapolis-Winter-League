@@ -43,6 +43,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/shared/utils'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
+import { PageContainer, PageHeader } from '@/shared/components'
 
 interface PlayerRankingsProps {
 	showAdminControls?: boolean
@@ -176,17 +177,12 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 	}
 
 	return (
-		<div className='container mx-auto px-4 py-8 space-y-6'>
-			{/* Header */}
-			<div className='text-center space-y-4'>
-				<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
-					<Medal className='h-8 w-8' />
-					Player Rankings
-				</h1>
-				<p className='text-muted-foreground'>
-					Player rankings based on performance and ELO rating system
-				</p>
-			</div>
+		<PageContainer withSpacing withGap>
+			<PageHeader
+				title='Player Rankings'
+				description='Player rankings based on performance and ELO rating system'
+				icon={Medal}
+			/>
 
 			{/* Informational Alert */}
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -648,6 +644,6 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 					</CardContent>
 				</Card>
 			)}
-		</div>
+		</PageContainer>
 	)
 }

@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { v4 as uuidv4 } from 'uuid'
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner } from '@/shared/components'
 import { editTeamViaFunction } from '@/firebase/collections/functions'
 import { StorageReference, ref, storage } from '@/firebase/storage'
 import { useTeamsContext } from '@/providers'
@@ -309,11 +309,7 @@ export const ManageEditTeam = ({
 							<Skeleton className='h-[100px] md:h-[250px] md:w-1/4' />
 						)}
 						<Button type={'submit'} disabled={isLoading}>
-							{isLoading ? (
-								<ReloadIcon className={'animate-spin'} />
-							) : (
-								`Save changes`
-							)}
+							{isLoading ? <LoadingSpinner size='sm' /> : `Save changes`}
 						</Button>
 					</form>
 				</Form>

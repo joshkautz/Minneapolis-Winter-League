@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner } from '@/shared/components'
 import { CheckCircle, Clock, Mail } from 'lucide-react'
 import { useEmailVerification } from './use-email-verification'
 
@@ -94,7 +94,7 @@ export const EmailVerificationSection = ({
 						className='w-full'
 					>
 						{verificationEmailLoading && (
-							<ReloadIcon className='mr-2 h-3 w-3 animate-spin' />
+							<LoadingSpinner size='sm' className='mr-2' />
 						)}
 						<Mail className='mr-2 h-3 w-3' />
 						{verificationEmailSent

@@ -1,7 +1,7 @@
 import { ComingSoon } from '@/shared/components'
 import { useTeamsContext } from '@/providers'
 import { useGamesContext } from '@/providers'
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { LoadingSpinner, PageContainer, PageHeader } from '@/shared/components'
 import { useStandings } from '@/shared/hooks'
 import { StandingsTable } from './standings-table'
 import { ResultsTable } from './results-table'
@@ -19,21 +19,16 @@ export const Standings = () => {
 	const results = useStandings(playoffGamesQuerySnapshot)
 
 	return (
-		<div className='container mx-auto px-4 py-8 space-y-6'>
-			{/* Header */}
-			<div className='text-center space-y-4'>
-				<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
-					<Trophy className='h-8 w-8' />
-					Standings
-				</h1>
-				<p className='text-muted-foreground'>
-					Regular season and playoff results for all teams
-				</p>
-			</div>
+		<PageContainer withSpacing withGap>
+			<PageHeader
+				title='Standings'
+				description='Regular season and playoff results for all teams'
+				icon={Trophy}
+			/>
 
 			{!regularSeasonGamesQuerySnapshot ? (
 				<div className='absolute inset-0 flex items-center justify-center'>
-					<ReloadIcon className={'mr-2 h-10 w-10 animate-spin'} />
+					<LoadingSpinner size='lg' />
 				</div>
 			) : Object.keys(standings).length === 0 &&
 			  Object.keys(results).length === 0 ? (
@@ -69,6 +64,6 @@ export const Standings = () => {
 					)}
 				</>
 			)}
-		</div>
+		</PageContainer>
 	)
 }
