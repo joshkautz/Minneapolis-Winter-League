@@ -8,7 +8,7 @@ import { ManageNonCaptainsOffersPanel } from '@/features/manage/manage-non-capta
  */
 export const JoinTeam: React.FC = () => {
 	return (
-		<div className='flex flex-col lg:flex-row justify-center items-center lg:items-start gap-8 max-w-6xl mx-auto'>
+		<div className='flex flex-col lg:flex-row justify-center items-center lg:items-start gap-4 max-w-6xl mx-auto'>
 			{/* Main request card - appears first on mobile, left side on desktop */}
 			<div className='w-full max-w-2xl lg:flex-1 lg:max-w-none space-y-4'>
 				<ManageTeamRequestCard />

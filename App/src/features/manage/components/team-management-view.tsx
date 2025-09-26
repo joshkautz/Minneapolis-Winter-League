@@ -32,7 +32,7 @@ export const TeamManagementView = ({
 				icon={Users}
 			/>
 
-			<div className='flex flex-col lg:flex-row justify-center items-center lg:items-start gap-8 max-w-6xl mx-auto'>
+			<div className='flex flex-col lg:flex-row justify-center items-center lg:items-start gap-4 max-w-6xl mx-auto'>
 				{/* Main content - appears first on mobile, left side on desktop */}
 				<div className='w-full max-w-2xl lg:w-1/2 lg:max-w-none'>
 					<ManageTeamRosterCard

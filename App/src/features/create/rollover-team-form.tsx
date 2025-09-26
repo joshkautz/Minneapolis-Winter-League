@@ -148,7 +148,7 @@ export const RolloverTeamForm = ({
 	)
 
 	return (
-		<div className='w-full max-w-md mx-auto'>
+		<div className='w-full'>
 			{!teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot ? (
 				<div className='text-center py-8'>
 					<p className='text-muted-foreground'>
