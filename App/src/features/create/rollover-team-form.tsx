@@ -166,10 +166,12 @@ export const RolloverTeamForm = ({
 						</Label>
 						<Select value={stringValue} onValueChange={handleSeasonChange}>
 							<SelectTrigger
-								className='h-11'
+								className='w-full h-11 justify-between min-h-11'
 								aria-label='Select a team to rollover'
 							>
-								<SelectValue placeholder='Select a previous team to rollover' />
+								<div className='flex-1 text-center'>
+									<SelectValue placeholder='Select a previous team to rollover' />
+								</div>
 							</SelectTrigger>
 							<SelectContent>
 								{teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot?.docs
@@ -209,8 +211,9 @@ export const RolloverTeamForm = ({
 												key={team.id}
 												value={team.data().name}
 												disabled={teamHasBeenRolledOver}
+												className='justify-center'
 											>
-												<div className='flex flex-col'>
+												<div className='flex flex-col items-center text-center w-full'>
 													<span className='font-medium'>
 														{team.data().name}
 													</span>
@@ -224,12 +227,6 @@ export const RolloverTeamForm = ({
 									})}
 							</SelectContent>
 						</Select>
-						{selectedTeamQueryDocumentSnapshot && (
-							<p className='text-sm text-muted-foreground'>
-								Rolling over will create a new team with the same name and
-								captain
-							</p>
-						)}
 					</div>
 
 					<div className='pt-2'>
@@ -240,7 +237,7 @@ export const RolloverTeamForm = ({
 							className='w-full h-11'
 							size='lg'
 						>
-							{isSubmitting ? 'Rolling Over Team...' : 'Rollover Team'}
+							{isSubmitting ? 'Rolling Over Team...' : 'Rollover Existing Team'}
 						</Button>
 					</div>
 				</div>
