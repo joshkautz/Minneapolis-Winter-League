@@ -35,12 +35,11 @@ export const CreateTeamForm = ({
 	handleResult,
 	seasonId,
 }: CreateFormProps) => {
-	const { form, onSubmit, handleFileChange, blob, isSubmitting } =
-		useCreateTeamForm({
-			setNewTeamDocument,
-			handleResult,
-			seasonId,
-		})
+	const { form, onSubmit, handleFileChange, isSubmitting } = useCreateTeamForm({
+		setNewTeamDocument,
+		handleResult,
+		seasonId,
+	})
 
 	return (
 		<div className='w-full'>
