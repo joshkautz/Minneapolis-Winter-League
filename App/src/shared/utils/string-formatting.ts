@@ -9,12 +9,12 @@
  */
 export const getRequestMessage = (count: number | undefined): string => {
 	if (!count || count === 0) {
-		return 'no requests pending at this time.'
+		return 'No Requests at this time.'
 	}
 	if (count === 1) {
-		return 'you have one pending request.'
+		return 'You have one request.'
 	}
-	return `you have ${count} pending requests.`
+	return `You have ${count} requests.`
 }
 
 /**
@@ -22,12 +22,12 @@ export const getRequestMessage = (count: number | undefined): string => {
  */
 export const getInviteMessage = (count: number | undefined): string => {
 	if (!count || count === 0) {
-		return 'no invites pending at this time.'
+		return 'No Invitations at this time.'
 	}
 	if (count === 1) {
-		return 'you have one pending invite.'
+		return 'You have one invitation.'
 	}
-	return `you have ${count} pending invites.`
+	return `You have ${count} invitations.`
 }
 
 /**

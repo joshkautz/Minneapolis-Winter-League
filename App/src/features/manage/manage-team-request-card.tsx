@@ -61,6 +61,18 @@ export const ManageTeamRequestCard = () => {
 				<div className={'inset-0 flex items-center justify-center'}>
 					<LoadingSpinner size='lg' />
 				</div>
+			) : currentSeasonTeamsQuerySnapshot?.empty ? (
+				<div className='flex flex-col items-center justify-center py-12 px-6 text-center'>
+					<div className='space-y-3'>
+						<p className='text-muted-foreground font-medium text-lg'>
+							No teams available
+						</p>
+						<p className='text-muted-foreground/70 text-sm max-w-md'>
+							There are no teams created for this season yet. Check back later
+							or contact an administrator.
+						</p>
+					</div>
+				</div>
 			) : (
 				currentSeasonTeamsQuerySnapshot?.docs.map(
 					(currentSeasonTeamsQueryDocumentSnapshot) => (

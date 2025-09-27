@@ -93,12 +93,24 @@ export const ManageNonCaptainsOffersPanel = () => {
 	return (
 		<div className='w-full space-y-4'>
 			<NotificationCard
-				title={'Incoming invites'}
+				title={'Incoming Invitations'}
 				description={getInviteMessage(incomingInvites?.length)}
 			>
 				{incomingOffersQuerySnapshotLoading || incomingInvitesLoading ? (
 					<div className={'inset-0 flex items-center justify-center'}>
 						<LoadingSpinner size='lg' />
+					</div>
+				) : !incomingInvites || incomingInvites.length === 0 ? (
+					<div className='flex flex-col items-center justify-center py-12 px-6 text-center'>
+						<div className='space-y-3'>
+							<p className='text-muted-foreground font-medium text-lg'>
+								No incoming invitations
+							</p>
+							<p className='text-muted-foreground/70 text-sm max-w-md'>
+								No teams have invited you to join yet. When team captains send
+								invitations, they will appear here for you to review.
+							</p>
+						</div>
 					</div>
 				) : (
 					incomingInvites?.map((incomingInvite: OfferDocumentWithUI) => (
@@ -114,12 +126,24 @@ export const ManageNonCaptainsOffersPanel = () => {
 				)}
 			</NotificationCard>
 			<NotificationCard
-				title={'Outgoing requests'}
+				title={'Outgoing Requests'}
 				description={getRequestMessage(outgoingRequests?.length)}
 			>
 				{outgoingOffersQuerySnapshotLoading || outgoingRequestsLoading ? (
 					<div className={'inset-0 flex items-center justify-center'}>
 						<LoadingSpinner size='lg' />
+					</div>
+				) : !outgoingRequests || outgoingRequests.length === 0 ? (
+					<div className='flex flex-col items-center justify-center py-12 px-6 text-center'>
+						<div className='space-y-3'>
+							<p className='text-muted-foreground font-medium text-lg'>
+								No outgoing requests
+							</p>
+							<p className='text-muted-foreground/70 text-sm max-w-md'>
+								You haven't requested to join any teams yet. Browse available
+								teams above to send join requests.
+							</p>
+						</div>
 					</div>
 				) : (
 					outgoingRequests?.map((outgoingRequest: OfferDocumentWithUI) => (
