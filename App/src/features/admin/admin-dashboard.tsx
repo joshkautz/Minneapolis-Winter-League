@@ -46,9 +46,9 @@ export const AdminDashboard: React.FC = () => {
 	const [isAddingSeasonToPlayers, setIsAddingSeasonToPlayers] = useState(false)
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
-	const seasons = seasonsSnapshot?.docs.map(doc => ({
+	const seasons = seasonsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
-		...doc.data()
+		...doc.data(),
 	})) as (SeasonDocument & { id: string })[] | undefined
 
 	const handleAddSeasonToAllPlayers = async () => {
@@ -60,7 +60,7 @@ export const AdminDashboard: React.FC = () => {
 		setIsAddingSeasonToPlayers(true)
 		try {
 			const result = await addNewSeasonToAllPlayersViaFunction({
-				seasonId: selectedSeasonId
+				seasonId: selectedSeasonId,
 			})
 
 			if (result.success) {
@@ -170,7 +170,8 @@ export const AdminDashboard: React.FC = () => {
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<p className='text-sm text-muted-foreground'>
-							Add new seasons to all player profiles. This creates PlayerSeason entries for every player with default values.
+							Add new seasons to all player profiles. This creates PlayerSeason
+							entries for every player with default values.
 						</p>
 						<div className='space-y-3'>
 							<Select
@@ -178,8 +179,8 @@ export const AdminDashboard: React.FC = () => {
 								onValueChange={setSelectedSeasonId}
 								disabled={!seasons || seasons.length === 0}
 							>
-								<SelectTrigger className="w-full">
-									<SelectValue placeholder="Select a season to add" />
+								<SelectTrigger className='w-full'>
+									<SelectValue placeholder='Select a season to add' />
 								</SelectTrigger>
 								<SelectContent>
 									{seasons?.map((season) => (
@@ -189,13 +190,15 @@ export const AdminDashboard: React.FC = () => {
 									))}
 								</SelectContent>
 							</Select>
-							<Button 
+							<Button
 								onClick={handleAddSeasonToAllPlayers}
 								disabled={!selectedSeasonId || isAddingSeasonToPlayers}
 								className='w-full'
 							>
 								<UserPlus className='h-4 w-4 mr-2' />
-								{isAddingSeasonToPlayers ? 'Adding Season...' : 'Add Season to All Players'}
+								{isAddingSeasonToPlayers
+									? 'Adding Season...'
+									: 'Add Season to All Players'}
 							</Button>
 						</div>
 					</CardContent>

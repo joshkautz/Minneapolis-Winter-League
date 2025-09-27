@@ -6,9 +6,18 @@
  */
 
 import { onCall } from 'firebase-functions/v2/https'
-import { getFirestore, DocumentReference, WriteBatch } from 'firebase-admin/firestore'
+import {
+	getFirestore,
+	DocumentReference,
+	WriteBatch,
+} from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument, SeasonDocument, PlayerSeason } from '../../types.js'
+import {
+	Collections,
+	PlayerDocument,
+	SeasonDocument,
+	PlayerSeason,
+} from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 
@@ -56,7 +65,7 @@ export const addNewSeasonToAllPlayers = onCall<AddNewSeasonToPlayersRequest>(
 
 			// Validate authentication and admin privileges
 			validateAuthentication(authContext)
-			
+
 			if (!authContext?.uid) {
 				throw new Error('Authentication required')
 			}
@@ -97,9 +106,7 @@ export const addNewSeasonToAllPlayers = onCall<AddNewSeasonToPlayersRequest>(
 			})
 
 			// Get all players
-			const playersQuery = await firestore
-				.collection(Collections.PLAYERS)
-				.get()
+			const playersQuery = await firestore.collection(Collections.PLAYERS).get()
 
 			if (playersQuery.empty) {
 				return {
@@ -121,14 +128,17 @@ export const addNewSeasonToAllPlayers = onCall<AddNewSeasonToPlayersRequest>(
 				const playerId = playerDoc.id
 
 				// Check if player already has this season
-				const existingSeasonIndex = playerData.seasons?.findIndex(
-					(season: PlayerSeason) => season.season.id === seasonId
-				) ?? -1
+				const existingSeasonIndex =
+					playerData.seasons?.findIndex(
+						(season: PlayerSeason) => season.season.id === seasonId
+					) ?? -1
 
 				if (existingSeasonIndex >= 0) {
 					// Player already has this season, skip
 					playersSkipped++
-					logger.debug(`Skipping player ${playerId}, already has season ${seasonId}`)
+					logger.debug(
+						`Skipping player ${playerId}, already has season ${seasonId}`
+					)
 					continue
 				}
 
@@ -138,7 +148,8 @@ export const addNewSeasonToAllPlayers = onCall<AddNewSeasonToPlayersRequest>(
 					// Find the most recent season by getting the season with the latest dateStart
 					// Since we can't easily compare dates here, we'll use the last season in the array
 					// as seasons are typically added chronologically
-					const mostRecentSeason = playerData.seasons[playerData.seasons.length - 1]
+					const mostRecentSeason =
+						playerData.seasons[playerData.seasons.length - 1]
 					bannedStatus = mostRecentSeason.banned || false
 				}
 
@@ -172,7 +183,9 @@ export const addNewSeasonToAllPlayers = onCall<AddNewSeasonToPlayersRequest>(
 			// Commit any remaining operations
 			if (operationsInBatch > 0) {
 				await batch.commit()
-				logger.info(`Committed final batch with ${operationsInBatch} operations`)
+				logger.info(
+					`Committed final batch with ${operationsInBatch} operations`
+				)
 			}
 
 			const message = `Successfully added season ${seasonId} to ${playersUpdated} players. ${playersSkipped} players already had this season.`
