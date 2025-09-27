@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { Timestamp } from '@firebase/firestore'
 import { ProfileForm } from './profile-form'
 import { ProfileActions } from './profile-actions'
 import { User } from 'lucide-react'
@@ -20,16 +19,6 @@ export const Profile = () => {
 		isBanned: isAuthenticatedUserBanned,
 	} = useUserStatus()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
-
-	const isRegistrationOpen = useMemo(
-		() =>
-			currentSeasonQueryDocumentSnapshot &&
-			Timestamp.now() >
-				currentSeasonQueryDocumentSnapshot?.data().registrationStart &&
-			Timestamp.now() <
-				currentSeasonQueryDocumentSnapshot?.data().registrationEnd,
-		[currentSeasonQueryDocumentSnapshot]
-	)
 
 	const isLoading = useMemo(
 		() =>
@@ -65,7 +54,6 @@ export const Profile = () => {
 					authStateUser={authStateUser}
 					isVerified={isVerified}
 					isLoading={isLoading}
-					isRegistrationOpen={isRegistrationOpen}
 					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 					isAuthenticatedUserBanned={isAuthenticatedUserBanned}
 					isAuthenticatedUserPaid={isAuthenticatedUserPaid}

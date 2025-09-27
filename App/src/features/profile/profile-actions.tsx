@@ -17,7 +17,6 @@ interface ProfileActionsProps {
 	authStateUser: User | null | undefined
 	isVerified: boolean | undefined
 	isLoading: boolean
-	isRegistrationOpen: boolean | undefined
 	isAuthenticatedUserAdmin: boolean
 	isAuthenticatedUserBanned: boolean
 	isAuthenticatedUserPaid: boolean
@@ -37,7 +36,6 @@ export const ProfileActions = ({
 	authStateUser,
 	isVerified,
 	isLoading,
-	isRegistrationOpen,
 	isAuthenticatedUserAdmin,
 	isAuthenticatedUserBanned,
 	isAuthenticatedUserPaid,
@@ -68,7 +66,6 @@ export const ProfileActions = ({
 							authStateUser={authStateUser}
 							isAuthenticatedUserPaid={isAuthenticatedUserPaid}
 							isLoading={isLoading}
-							isRegistrationOpen={isRegistrationOpen}
 							isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 							isAuthenticatedUserBanned={isAuthenticatedUserBanned}
 							currentSeasonQueryDocumentSnapshot={
@@ -81,7 +78,6 @@ export const ProfileActions = ({
 						<WaiverSection
 							isAuthenticatedUserSigned={isAuthenticatedUserSigned}
 							isLoading={isLoading}
-							isRegistrationOpen={isRegistrationOpen}
 							isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 							isAuthenticatedUserPaid={isAuthenticatedUserPaid}
 							isAuthenticatedUserBanned={isAuthenticatedUserBanned}

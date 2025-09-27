@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -11,15 +11,15 @@ import {
 	Calendar,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { sendDropboxEmail } from '@/firebase/functions'
 import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
 import { formatTimestamp, SeasonDocument } from '@/shared/utils'
 import { QueryDocumentSnapshot } from '@/firebase/firestore'
+import { Timestamp } from '@firebase/firestore'
+import { sendDropboxEmail } from '@/firebase/functions'
 
 interface WaiverSectionProps {
 	isAuthenticatedUserSigned: boolean | undefined
 	isLoading: boolean
-	isRegistrationOpen: boolean | undefined
 	isAuthenticatedUserAdmin: boolean | undefined
 	isAuthenticatedUserPaid: boolean | undefined
 	isAuthenticatedUserBanned: boolean
@@ -37,7 +37,6 @@ interface WaiverSectionProps {
 export const WaiverSection = ({
 	isAuthenticatedUserSigned,
 	isLoading,
-	isRegistrationOpen,
 	isAuthenticatedUserAdmin,
 	isAuthenticatedUserPaid,
 	isAuthenticatedUserBanned,
@@ -108,7 +107,29 @@ export const WaiverSection = ({
 		)
 	}
 
-	const isRegistrationClosed = !isRegistrationOpen && !isAuthenticatedUserAdmin
+	// Check if registration hasn't started yet (different from registration ended)
+	const isRegistrationNotStarted = useMemo(() => {
+		if (!currentSeasonQueryDocumentSnapshot) return false
+		const now = Timestamp.now()
+		const registrationStart =
+			currentSeasonQueryDocumentSnapshot.data().registrationStart
+		return now < registrationStart
+	}, [currentSeasonQueryDocumentSnapshot])
+
+	// Check if registration has ended
+	const isRegistrationEnded = useMemo(() => {
+		if (!currentSeasonQueryDocumentSnapshot) return false
+		const now = Timestamp.now()
+		const registrationEnd =
+			currentSeasonQueryDocumentSnapshot.data().registrationEnd
+		return now > registrationEnd
+	}, [currentSeasonQueryDocumentSnapshot])
+
+	// For non-admin users, disable waiver actions if registration hasn't started yet or has ended
+	// For admin users, always allow waiver actions regardless of registration dates
+	const isWaiverDisabled =
+		!isAuthenticatedUserAdmin &&
+		(isRegistrationNotStarted || isRegistrationEnded)
 	const isUserBanned = isAuthenticatedUserBanned
 	const needsPayment = !isAuthenticatedUserPaid
 
@@ -139,13 +160,23 @@ export const WaiverSection = ({
 								Account has been banned from Minneapolis Winter League.
 							</AlertDescription>
 						</Alert>
-					) : isRegistrationClosed ? (
+					) : isRegistrationNotStarted && !isAuthenticatedUserAdmin ? (
 						<Alert className='border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'>
 							<Calendar className='h-4 w-4 !text-blue-800 dark:!text-blue-200' />
 							<AlertDescription className='!text-blue-800 dark:!text-blue-200'>
 								Registration opens on{' '}
 								{formatTimestamp(
 									currentSeasonQueryDocumentSnapshot?.data().registrationStart
+								)}
+							</AlertDescription>
+						</Alert>
+					) : isRegistrationEnded && !isAuthenticatedUserAdmin ? (
+						<Alert className='border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'>
+							<Calendar className='h-4 w-4 !text-blue-800 dark:!text-blue-200' />
+							<AlertDescription className='!text-blue-800 dark:!text-blue-200'>
+								Registration ended on{' '}
+								{formatTimestamp(
+									currentSeasonQueryDocumentSnapshot?.data().registrationEnd
 								)}
 							</AlertDescription>
 						</Alert>
@@ -168,7 +199,7 @@ export const WaiverSection = ({
 					<Button
 						onClick={sendDropboxEmailButtonOnClickHandler}
 						disabled={
-							isRegistrationClosed ||
+							isWaiverDisabled ||
 							dropboxEmailLoading ||
 							dropboxEmailSent ||
 							needsPayment ||
