@@ -11,17 +11,10 @@ export {
 	getPlayerRef,
 	getPlayersQuery,
 	updatePlayer,
-	promoteToCaptain,
-	demoteFromCaptain,
-	removeFromTeam,
 } from './collections/players'
 
 // Team operations
 export {
-	createTeam,
-	rolloverTeam,
-	editTeam,
-	deleteTeam,
 	getTeamById,
 	teamsQuery,
 	teamsHistoryQuery,
