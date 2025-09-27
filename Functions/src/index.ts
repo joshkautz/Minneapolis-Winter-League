@@ -68,6 +68,7 @@ export { dropboxSignWebhook } from './api/webhooks/dropboxSign.js'
 export { createPlayer } from './functions/players/create.js'
 export { updatePlayer } from './functions/players/update.js'
 export { deletePlayer } from './functions/players/delete.js'
+export { addNewSeasonToAllPlayers } from './functions/players/addNewSeason.js'
 
 // Team management functions
 export { createTeam } from './functions/teams/create.js'

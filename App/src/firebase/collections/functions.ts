@@ -80,6 +80,35 @@ export const deletePlayerViaFunction = async (
 	)
 	const result = await deletePlayer(data)
 	return result.data
+}
+
+interface AddNewSeasonToPlayersRequest {
+	/** Season ID to add to all players */
+	seasonId: string
+}
+
+interface AddNewSeasonToPlayersResponse {
+	success: boolean
+	message: string
+	/** Number of players updated */
+	playersUpdated: number
+	/** Number of players skipped (already had the season) */
+	playersSkipped: number
+}
+
+/**
+ * Adds a new PlayerSeason to all PlayerDocuments for a specified season
+ * Only callable by admin users via the Admin Dashboard
+ */
+export const addNewSeasonToAllPlayersViaFunction = async (
+	data: AddNewSeasonToPlayersRequest
+): Promise<AddNewSeasonToPlayersResponse> => {
+	const addNewSeasonToAllPlayers = httpsCallable<
+		AddNewSeasonToPlayersRequest,
+		AddNewSeasonToPlayersResponse
+	>(functions, 'addNewSeasonToAllPlayers')
+	const result = await addNewSeasonToAllPlayers(data)
+	return result.data
 } //////////////////////////////////////////////////////////////////////////////
 // TEAM FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////
