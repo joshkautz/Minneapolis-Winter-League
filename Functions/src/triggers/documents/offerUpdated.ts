@@ -60,7 +60,7 @@ export const onOfferUpdated = onDocumentUpdated(
 					throw new Error('Invalid offer data')
 				}
 
-				const { player: playerRef, team: teamRef, type } = offerData
+				const { player: playerRef, team: teamRef } = offerData
 
 				// Get player and team documents
 				const [playerDoc, teamDoc] = await Promise.all([
@@ -89,7 +89,7 @@ export const onOfferUpdated = onDocumentUpdated(
 				// Add player to team roster
 				const newRosterMember = {
 					player: playerRef,
-					captain: type === 'invitation', // Invitations make you captain
+					captain: false, // Players joining via offers are not captains
 					dateJoined: new Date(),
 				}
 
@@ -113,14 +113,14 @@ export const onOfferUpdated = onDocumentUpdated(
 					updatedSeasons[existingSeasonIndex] = {
 						...updatedSeasons[existingSeasonIndex],
 						team: teamRef,
-						captain: type === 'invitation',
+						captain: false, // Players joining via offers are not captains
 					}
 				} else {
 					// Create new season data if none exists
 					const newSeasonData = {
 						season: seasonRef,
 						team: teamRef,
-						captain: type === 'invitation',
+						captain: false, // Players joining via offers are not captains
 						paid: false,
 						signed: false,
 						banned: false,
