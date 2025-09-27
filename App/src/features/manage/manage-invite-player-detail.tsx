@@ -5,7 +5,12 @@ import {
 import { cn } from '@/shared/utils'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Button } from '@/components/ui/button'
-import { PlayerDocument, TeamDocument } from '@/shared/utils'
+import {
+	PlayerDocument,
+	TeamDocument,
+	OfferDocument,
+	OfferStatus,
+} from '@/shared/utils'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useTeamsContext } from '@/providers'
@@ -58,8 +63,31 @@ export const ManageInvitePlayerDetail = ({
 	const playerInitials =
 		`${playerData.firstname[0]}${playerData.lastname[0]}`.toUpperCase()
 
-	const isInviteDisabled = !offersForPlayerByTeamQuerySnapshot?.empty
-	const inviteStatus = isInviteDisabled ? 'Already invited' : 'Send invite'
+	// Check for offers that should block re-invitation
+	const blockingOffers = offersForPlayerByTeamQuerySnapshot?.docs.filter(
+		(doc) => {
+			const offer = doc.data() as OfferDocument
+			// Block if pending (prevents duplicates) or rejected (player said no)
+			// Allow if canceled (captain changed mind) or accepted (handled by team membership check)
+			return (
+				offer.status === OfferStatus.PENDING ||
+				offer.status === OfferStatus.REJECTED
+			)
+		}
+	)
+
+	const isInviteDisabled = (blockingOffers?.length ?? 0) > 0
+
+	// Determine the appropriate status message
+	let inviteStatus = 'Send invite'
+	if (blockingOffers && blockingOffers.length > 0) {
+		const latestOffer = blockingOffers[0].data() as OfferDocument
+		if (latestOffer.status === OfferStatus.PENDING) {
+			inviteStatus = 'Already invited'
+		} else if (latestOffer.status === OfferStatus.REJECTED) {
+			inviteStatus = 'Previously declined'
+		}
+	}
 
 	return (
 		<div className='border-b border-border/50 last:border-b-0'>

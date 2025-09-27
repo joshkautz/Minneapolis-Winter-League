@@ -48,6 +48,7 @@ export const rejectOffer = (
 
 /**
  * Creates an invitation for a player to join a team
+ * @deprecated Use createOfferViaFunction instead for proper server-side validation
  */
 export const invitePlayer = (
 	playerQueryDocumentSnapshot:
@@ -56,12 +57,14 @@ export const invitePlayer = (
 	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined,
 	authenticatedUserDocumentSnapshot:
 		| DocumentSnapshot<PlayerDocument>
-		| undefined
+		| undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined
 ) => {
 	if (
 		!playerQueryDocumentSnapshot ||
 		!teamQueryDocumentSnapshot ||
-		!authenticatedUserDocumentSnapshot
+		!authenticatedUserDocumentSnapshot ||
+		!seasonRef
 	) {
 		return
 	}
@@ -72,33 +75,34 @@ export const invitePlayer = (
 		>,
 		{
 			type: OfferType.INVITATION,
-			creator: `${(authenticatedUserDocumentSnapshot.data() as PlayerDocument | undefined)?.firstname || ''} ${(authenticatedUserDocumentSnapshot.data() as PlayerDocument | undefined)?.lastname || ''}`,
+			createdBy: authenticatedUserDocumentSnapshot.ref,
+			createdAt: new Date() as any,
+			expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) as any, // 7 days
 			player: playerQueryDocumentSnapshot.ref,
-			playerName:
-				(playerQueryDocumentSnapshot.data()?.firstname || '') +
-				' ' +
-				(playerQueryDocumentSnapshot.data()?.lastname || ''),
+			season: seasonRef,
 			status: OfferStatus.PENDING,
 			team: teamQueryDocumentSnapshot.ref,
-			teamName: teamQueryDocumentSnapshot.data()?.name || '',
 		}
 	)
 }
 
 /**
  * Creates a request for a player to join a team
+ * @deprecated Use createOfferViaFunction instead for proper server-side validation
  */
 export const requestToJoinTeam = (
 	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument> | undefined,
 	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument>,
 	authenticatedUserDocumentSnapshot:
 		| DocumentSnapshot<PlayerDocument>
-		| undefined
+		| undefined,
+	seasonRef: DocumentReference<SeasonDocument> | undefined
 ) => {
 	if (
 		!playerDocumentSnapshot ||
 		!teamQueryDocumentSnapshot ||
-		!authenticatedUserDocumentSnapshot
+		!authenticatedUserDocumentSnapshot ||
+		!seasonRef
 	) {
 		return
 	}
@@ -109,12 +113,13 @@ export const requestToJoinTeam = (
 		>,
 		{
 			type: OfferType.REQUEST,
-			creator: `${(authenticatedUserDocumentSnapshot.data() as PlayerDocument | undefined)?.firstname || ''} ${(authenticatedUserDocumentSnapshot.data() as PlayerDocument | undefined)?.lastname || ''}`,
+			createdBy: authenticatedUserDocumentSnapshot.ref,
+			createdAt: new Date() as any,
+			expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) as any, // 7 days
 			player: playerDocumentSnapshot.ref,
-			playerName: `${(playerDocumentSnapshot.data() as PlayerDocument | undefined)?.firstname || ''} ${(playerDocumentSnapshot.data() as PlayerDocument | undefined)?.lastname || ''}`,
+			season: seasonRef,
 			status: OfferStatus.PENDING,
 			team: teamQueryDocumentSnapshot.ref,
-			teamName: teamQueryDocumentSnapshot.data()?.name || '',
 		}
 	)
 }

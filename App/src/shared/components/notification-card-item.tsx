@@ -1,10 +1,11 @@
 import { cn, OfferDocument, OfferDirection } from '@/shared/utils'
 import { Button } from '@/components/ui/button'
 import { DocumentReference } from '@/firebase/firestore'
+import { OfferDocumentWithUI } from '@/shared/hooks'
 
 export interface NotificationCardItemProps {
 	type: OfferDirection
-	data: OfferDocument
+	data: OfferDocumentWithUI
 	statusColor?: string
 	message?: string
 	actionOptions: {
@@ -35,7 +36,7 @@ export const NotificationCardItem = ({
 					{type === OfferDirection.OUTGOING_INVITE ||
 					type === OfferDirection.INCOMING_REQUEST
 						? data.playerName
-						: data.creator}
+						: data.creatorName}
 				</p>
 				<p className='overflow-hidden text-sm max-h-5 text-muted-foreground'>
 					{`${message} ${data.teamName}`}

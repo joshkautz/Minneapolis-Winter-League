@@ -6,7 +6,12 @@ import {
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { PlayerDocument, TeamDocument } from '@/shared/utils'
+import {
+	PlayerDocument,
+	TeamDocument,
+	OfferDocument,
+	OfferStatus,
+} from '@/shared/utils'
 import { Link } from 'react-router-dom'
 
 export const ManageTeamDetail = ({
@@ -29,6 +34,21 @@ export const ManageTeamDetail = ({
 			currentSeasonTeamsQueryDocumentSnapshot
 		)
 	)
+
+	// Check for offers that should block new requests
+	const blockingOffers = offersForPlayerByTeamQuerySnapshot?.docs.filter(
+		(doc) => {
+			const offer = doc.data() as OfferDocument
+			// Block if pending (prevents duplicates) or rejected (captain said no)
+			// Allow if canceled (player changed mind)
+			return (
+				offer.status === OfferStatus.PENDING ||
+				offer.status === OfferStatus.REJECTED
+			)
+		}
+	)
+
+	const isRequestDisabled = (blockingOffers?.length ?? 0) > 0
 
 	return (
 		<div className='flex items-center gap-2 py-2'>
@@ -55,7 +75,7 @@ export const ManageTeamDetail = ({
 				<Button
 					size={'sm'}
 					variant={'default'}
-					disabled={!offersForPlayerByTeamQuerySnapshot?.empty}
+					disabled={isRequestDisabled}
 					onClick={() =>
 						handleRequest(
 							playerDocumentSnapshot,

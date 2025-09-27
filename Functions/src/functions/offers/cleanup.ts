@@ -59,7 +59,7 @@ export const cleanupOffers = onCall(
 				if (playerDoc.exists) {
 					const playerDocument = playerDoc.data() as PlayerDocument | undefined
 					const hasTeamForSeason = playerDocument?.seasons?.some(
-						(season) => season.season.id === offerData.season && season.team
+						(season) => season.season.id === offerData.season.id && season.team
 					)
 
 					if (hasTeamForSeason) {

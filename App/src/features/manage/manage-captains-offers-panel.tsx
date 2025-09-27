@@ -1,7 +1,7 @@
 import { OfferDocument, OfferDirection } from '@/shared/utils'
 import { NotificationCard } from '@/shared/components'
 import { useOffersContext } from '@/providers'
-import { useOffer } from '@/shared/hooks'
+import { useOffer, OfferDocumentWithUI } from '@/shared/hooks'
 import { useTeamsContext } from '@/providers'
 import { DocumentReference } from '@/firebase/firestore'
 import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
@@ -35,9 +35,11 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Request rejected',
 			})
-		} catch {
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Request not rejected'
 			toast.error('Failure', {
-				description: 'Request not rejected',
+				description: errorMessage,
 			})
 		}
 	}
@@ -53,9 +55,11 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Request accepted',
 			})
-		} catch {
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Request not accepted'
 			toast.error('Failure', {
-				description: 'Request not accepted',
+				description: errorMessage,
 			})
 		}
 	}
@@ -66,14 +70,16 @@ export const ManageCaptainsOffersPanel = () => {
 		try {
 			await updateOfferStatusViaFunction({
 				offerId: offerDocumentReference.id,
-				status: 'rejected',
+				status: 'canceled',
 			})
 			toast.success('Success', {
 				description: 'Invite canceled',
 			})
-		} catch {
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Invite not canceled'
 			toast.error('Failure', {
-				description: 'Invite not canceled',
+				description: errorMessage,
 			})
 		}
 	}
@@ -95,7 +101,7 @@ export const ManageCaptainsOffersPanel = () => {
 						<LoadingSpinner size='lg' />
 					</div>
 				) : (
-					incomingRequests?.map((incomingRequest: OfferDocument) => (
+					incomingRequests?.map((incomingRequest: OfferDocumentWithUI) => (
 						<NotificationCardItem
 							key={`incomingRequest-row-${incomingRequest.ref.id}`}
 							type={OfferDirection.INCOMING_REQUEST}
@@ -116,7 +122,7 @@ export const ManageCaptainsOffersPanel = () => {
 						<LoadingSpinner size='lg' />
 					</div>
 				) : (
-					outgoingInvites?.map((outgoingInvite: OfferDocument) => (
+					outgoingInvites?.map((outgoingInvite: OfferDocumentWithUI) => (
 						<NotificationCardItem
 							key={`outgoingInvite-row-${outgoingInvite.ref.id}`}
 							type={OfferDirection.OUTGOING_INVITE}

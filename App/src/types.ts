@@ -40,6 +40,7 @@ export enum Collections {
 
 export enum OfferStatus {
 	ACCEPTED = 'accepted',
+	CANCELED = 'canceled',
 	PENDING = 'pending',
 	REJECTED = 'rejected',
 }
@@ -155,18 +156,24 @@ export interface SeasonDocument extends DocumentData {
  * Offer/invitation document structure
  */
 export interface OfferDocument extends DocumentData {
-	/** Display name of the offer creator */
-	creator: string
+	/** Reference to the user who created the offer */
+	createdBy?: DocumentReference<PlayerDocument>
+	/** Timestamp when the offer was created */
+	createdAt: Timestamp
+	/** Timestamp when the offer expires */
+	expiresAt: Timestamp
 	/** Reference to the player being invited/requested */
 	player: DocumentReference<PlayerDocument>
-	/** Resolved player name for display (optional, populated by frontend) */
-	playerName: string
+	/** Timestamp when the offer was responded to (accepted/rejected) */
+	respondedAt?: Timestamp
+	/** Reference to the user who responded to the offer */
+	respondedBy?: DocumentReference<PlayerDocument>
+	/** Reference to the season this offer belongs to */
+	season: DocumentReference<SeasonDocument>
 	/** Current status of the offer */
 	status: OfferStatus
 	/** Reference to the team making/receiving the offer */
 	team: DocumentReference<TeamDocument>
-	/** Resolved team name for display (optional, populated by frontend) */
-	teamName: string
 	/** Type of offer: request or invitation */
 	type: OfferType
 }

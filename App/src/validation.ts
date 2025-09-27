@@ -98,16 +98,15 @@ export function isOfferDocument(obj: any): obj is OfferDocument {
 	return (
 		obj &&
 		Object.values(OfferType).includes(obj.type) &&
-		typeof obj.creator === 'string' &&
+		obj.createdAt &&
+		obj.expiresAt &&
 		obj.player &&
 		typeof obj.player === 'object' &&
 		'id' in obj.player &&
-		typeof obj.playerName === 'string' &&
 		Object.values(OfferStatus).includes(obj.status) &&
 		obj.team &&
 		typeof obj.team === 'object' &&
-		'id' in obj.team &&
-		typeof obj.teamName === 'string'
+		'id' in obj.team
 	)
 }
 

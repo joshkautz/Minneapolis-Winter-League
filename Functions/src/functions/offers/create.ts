@@ -7,7 +7,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerDocument, TeamDocument } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
-import { getCurrentSeason } from '../../shared/database.js'
+import { getCurrentSeason, getCurrentSeasonRef } from '../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 interface CreateOfferRequest {
@@ -40,6 +40,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 				if (!currentSeason) {
 					throw new Error('No current season found')
 				}
+				const seasonRef = await getCurrentSeasonRef()
 
 				// Get player and team documents
 				const playerRef = firestore
@@ -81,7 +82,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 
 				// Check if player is already on a team for current season
 				const currentSeasonData = playerDocument.seasons.find(
-					(season) => season.season.id === currentSeason.id
+					(season) => season.season.id === seasonRef.id
 				)
 
 				if (currentSeasonData?.team) {
@@ -102,11 +103,29 @@ export const createOffer = onCall<CreateOfferRequest>(
 					)
 				}
 
+				// For invitations, prevent re-invitation if player previously rejected
+				// (but allow re-invitation if captain previously canceled)
+				if (type === 'invitation') {
+					const rejectedOffersQuery = await firestore
+						.collection(Collections.OFFERS)
+						.where('player', '==', playerRef)
+						.where('team', '==', teamRef)
+						.where('type', '==', 'invitation')
+						.where('status', '==', 'rejected')
+						.get()
+
+					if (!rejectedOffersQuery.empty) {
+						throw new Error(
+							'Cannot re-invite this player - they previously rejected an invitation from this team'
+						)
+					}
+				}
+
 				// Create offer document
 				const offerData = {
 					player: playerRef,
 					team: teamRef,
-					season: currentSeason.id,
+					season: seasonRef,
 					type,
 					status: 'pending',
 					createdBy: firestore.collection(Collections.PLAYERS).doc(userId),

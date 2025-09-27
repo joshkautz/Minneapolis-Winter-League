@@ -253,7 +253,7 @@ export const createOfferViaFunction = async (
 
 interface UpdateOfferStatusRequest {
 	offerId: string
-	status: 'accepted' | 'rejected'
+	status: 'accepted' | 'rejected' | 'canceled'
 }
 
 interface UpdateOfferStatusResponse {

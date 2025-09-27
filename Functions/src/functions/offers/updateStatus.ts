@@ -11,7 +11,7 @@ import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 interface UpdateOfferStatusRequest {
 	offerId: string
-	status: 'accepted' | 'rejected'
+	status: 'accepted' | 'rejected' | 'canceled'
 }
 
 /**
@@ -39,8 +39,8 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 			throw new Error('Offer ID and status are required')
 		}
 
-		if (!['accepted', 'rejected'].includes(status)) {
-			throw new Error('Invalid status. Must be accepted or rejected')
+		if (!['accepted', 'rejected', 'canceled'].includes(status)) {
+			throw new Error('Invalid status. Must be accepted, rejected, or canceled')
 		}
 
 		try {
@@ -71,28 +71,64 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 					throw new Error('Offer has expired')
 				}
 
-				// Validate authorization based on offer type
+				// Check if user is the creator of the offer (for cancellation)
+				const isCreator =
+					offerData.createdBy && offerData.createdBy.id === auth!.uid
+
+				// Validate authorization based on offer type and action
 				if (offerData.type === 'invitation') {
 					// Player can accept/reject invitations sent to them
-					if (auth!.uid !== offerData.player.id) {
-						throw new Error(
-							'Only the invited player can respond to this invitation'
-						)
+					// Creator (captain) can cancel their own invitations
+					const canRespondAsRecipient =
+						auth!.uid === offerData.player.id &&
+						(status === 'accepted' || status === 'rejected')
+					const canCancelAsCreator = isCreator && status === 'canceled'
+
+					if (!canRespondAsRecipient && !canCancelAsCreator) {
+						if (status === 'canceled' && !isCreator) {
+							throw new Error(
+								'Only the invitation creator can cancel this invitation'
+							)
+						} else if (status === 'rejected' && isCreator) {
+							throw new Error(
+								'Creators should use canceled status instead of rejected to cancel their invitations'
+							)
+						} else {
+							throw new Error(
+								'Only the invited player can respond to this invitation, or creator can cancel'
+							)
+						}
 					}
 				} else if (offerData.type === 'request') {
 					// Team captains can accept/reject requests to their team
-					const teamDoc = await offerData.team.get()
-					if (!teamDoc.exists) {
-						throw new Error('Team not found')
-					}
+					// Creator (player) can cancel their own requests
+					const canCancelAsCreator = isCreator && status === 'canceled'
 
-					const teamDocument = teamDoc.data() as TeamDocument | undefined
-					const userIsCaptain = teamDocument?.roster?.some(
-						(member) => member.player.id === auth!.uid && member.captain
-					)
+					if (canCancelAsCreator) {
+						// Allow creator to cancel their own request
+					} else {
+						// Check if user is a team captain for accepting/rejecting
+						const teamDoc = await offerData.team.get()
+						if (!teamDoc.exists) {
+							throw new Error('Team not found')
+						}
 
-					if (!userIsCaptain) {
-						throw new Error('Only team captains can respond to join requests')
+						const teamDocument = teamDoc.data() as TeamDocument | undefined
+						const userIsCaptain = teamDocument?.roster?.some(
+							(member) => member.player.id === auth!.uid && member.captain
+						)
+
+						if (!userIsCaptain) {
+							if (status === 'rejected') {
+								throw new Error('Only team captains can reject join requests')
+							} else if (status === 'canceled') {
+								throw new Error(
+									'Only the request creator can cancel their own request'
+								)
+							} else {
+								throw new Error('Only team captains can accept join requests')
+							}
+						}
 					}
 				}
 
@@ -103,9 +139,9 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 					respondedBy: firestore.collection(Collections.PLAYERS).doc(auth!.uid),
 				})
 
-				// If rejected, we're done - the trigger will handle cleanup
-				if (status === 'rejected') {
-					logger.info(`Offer rejected: ${offerId}`, {
+				// If rejected or canceled, we're done - the trigger will handle cleanup
+				if (status === 'rejected' || status === 'canceled') {
+					logger.info(`Offer ${status}: ${offerId}`, {
 						type: offerData.type,
 						respondedBy: auth!.uid,
 					})
