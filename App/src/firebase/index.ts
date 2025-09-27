@@ -24,10 +24,6 @@ export {
 
 // Offer operations (invitations and requests)
 export {
-	acceptOffer,
-	rejectOffer,
-	invitePlayer,
-	requestToJoinTeam,
 	outgoingOffersQuery,
 	incomingOffersQuery,
 	offersForPlayerByTeamQuery,

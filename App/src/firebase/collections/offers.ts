@@ -2,7 +2,7 @@
  * Offer-related Firestore operations (invitations and requests)
  */
 
-import { addDoc, updateDoc, query, where, collection } from 'firebase/firestore'
+import { query, where, collection } from 'firebase/firestore'
 
 import { firestore } from '../app'
 import {
@@ -13,116 +13,13 @@ import {
 	TeamDocument,
 	SeasonDocument,
 	Collections,
-	DocumentData,
 	PlayerSeason,
 } from '@/shared/utils'
 import type {
-	DocumentReference,
 	DocumentSnapshot,
 	QueryDocumentSnapshot,
 	Query,
-	CollectionReference,
 } from 'firebase/firestore'
-
-/**
- * Accepts an offer (invitation or request)
- */
-export const acceptOffer = (
-	offerDocumentReference: DocumentReference<OfferDocument>
-): Promise<void> => {
-	return updateDoc(offerDocumentReference, {
-		status: OfferStatus.ACCEPTED,
-	})
-}
-
-/**
- * Rejects an offer (invitation or request)
- */
-export const rejectOffer = (
-	offerDocumentReference: DocumentReference<OfferDocument>
-): Promise<void> => {
-	return updateDoc(offerDocumentReference, {
-		status: OfferStatus.REJECTED,
-	})
-}
-
-/**
- * Creates an invitation for a player to join a team
- * @deprecated Use createOfferViaFunction instead for proper server-side validation
- */
-export const invitePlayer = (
-	playerQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<PlayerDocument>
-		| undefined,
-	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined,
-	authenticatedUserDocumentSnapshot:
-		| DocumentSnapshot<PlayerDocument>
-		| undefined,
-	seasonRef: DocumentReference<SeasonDocument> | undefined
-) => {
-	if (
-		!playerQueryDocumentSnapshot ||
-		!teamQueryDocumentSnapshot ||
-		!authenticatedUserDocumentSnapshot ||
-		!seasonRef
-	) {
-		return
-	}
-	return addDoc(
-		collection(firestore, Collections.OFFERS) as CollectionReference<
-			OfferDocument,
-			DocumentData
-		>,
-		{
-			type: OfferType.INVITATION,
-			createdBy: authenticatedUserDocumentSnapshot.ref,
-			createdAt: new Date() as any,
-			expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) as any, // 7 days
-			player: playerQueryDocumentSnapshot.ref,
-			season: seasonRef,
-			status: OfferStatus.PENDING,
-			team: teamQueryDocumentSnapshot.ref,
-		}
-	)
-}
-
-/**
- * Creates a request for a player to join a team
- * @deprecated Use createOfferViaFunction instead for proper server-side validation
- */
-export const requestToJoinTeam = (
-	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument> | undefined,
-	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument>,
-	authenticatedUserDocumentSnapshot:
-		| DocumentSnapshot<PlayerDocument>
-		| undefined,
-	seasonRef: DocumentReference<SeasonDocument> | undefined
-) => {
-	if (
-		!playerDocumentSnapshot ||
-		!teamQueryDocumentSnapshot ||
-		!authenticatedUserDocumentSnapshot ||
-		!seasonRef
-	) {
-		return
-	}
-	return addDoc(
-		collection(firestore, Collections.OFFERS) as CollectionReference<
-			OfferDocument,
-			DocumentData
-		>,
-		{
-			type: OfferType.REQUEST,
-			createdBy: authenticatedUserDocumentSnapshot.ref,
-			createdAt: new Date() as any,
-			expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) as any, // 7 days
-			player: playerDocumentSnapshot.ref,
-			season: seasonRef,
-			status: OfferStatus.PENDING,
-			team: teamQueryDocumentSnapshot.ref,
-		}
-	)
-}
 
 /**
  * Creates a query for outgoing offers (invitations sent by captains or requests sent by players)
