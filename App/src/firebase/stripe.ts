@@ -16,5 +16,5 @@ export const getCurrentSeasonPrice = (): string => {
 		return Products.WinterLeagueRegistration2025Dev
 	}
 
-	return Products.WinterLeagueRegistration2025Dev
+	return Products.WinterLeagueRegistration2025
 }
