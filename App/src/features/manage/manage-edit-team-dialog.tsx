@@ -1,46 +1,40 @@
-import { ReactNode, useState } from 'react'
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from '@/components/ui/dialog'
-import { ManageEditTeam } from './manage-edit-team'
+import { ManageEditTeamForm } from './manage-edit-team-form'
+import { toast } from 'sonner'
 
 export const ManageEditTeamDialog = ({
-	closeDialog,
-	children,
+	open = false,
+	onOpenChange,
 }: {
-	closeDialog?: () => void
-	children: ReactNode
+	open?: boolean
+	onOpenChange?: (open: boolean) => void
 }) => {
-	const [open, setOpen] = useState(false)
-
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogTrigger
-				onClick={() => {
-					if (!open) {
-						setOpen(true)
-					}
-				}}
-				asChild
-			>
-				{children}
-			</DialogTrigger>
-			<DialogContent>
-				<DialogHeader>
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent className='flex flex-col items-center'>
+				<DialogHeader className='text-center'>
 					<DialogTitle>Edit team</DialogTitle>
 					<DialogDescription>{`Update your team's name or logo`}</DialogDescription>
 				</DialogHeader>
-				<ManageEditTeam
-					closeDialog={() => {
-						setOpen(false)
-						if (closeDialog) {
-							closeDialog()
+				<ManageEditTeamForm
+					handleResult={({ success, title, description }) => {
+						if (success) {
+							toast.success(title, {
+								description,
+							})
+						} else {
+							toast.error(title, {
+								description,
+							})
 						}
+						// Always close dialog on completion (success or error)
+						onOpenChange?.(false)
 					}}
 				/>
 			</DialogContent>

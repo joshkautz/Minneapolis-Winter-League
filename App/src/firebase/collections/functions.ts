@@ -196,6 +196,8 @@ interface EditTeamRequest {
 	name?: string
 	logo?: string
 	storagePath?: string
+	logoBlob?: string // Base64 encoded image
+	logoContentType?: string // MIME type of the image
 }
 
 interface EditTeamResponse {
@@ -211,11 +213,11 @@ interface EditTeamResponse {
 export const editTeamViaFunction = async (
 	data: EditTeamRequest
 ): Promise<EditTeamResponse> => {
-	const editTeam = httpsCallable<EditTeamRequest, EditTeamResponse>(
+	const updateTeam = httpsCallable<EditTeamRequest, EditTeamResponse>(
 		functions,
-		'editTeam'
+		'updateTeam'
 	)
-	const result = await editTeam(data)
+	const result = await updateTeam(data)
 	return result.data
 }
 

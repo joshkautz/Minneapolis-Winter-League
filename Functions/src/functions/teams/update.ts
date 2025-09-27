@@ -4,6 +4,7 @@
 
 import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
+import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
 import { Collections, TeamDocument } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
@@ -14,6 +15,8 @@ interface EditTeamRequest {
 	name?: string
 	logo?: string
 	storagePath?: string
+	logoBlob?: string // Base64 encoded image
+	logoContentType?: string // MIME type of the image
 }
 
 /**
@@ -29,15 +32,30 @@ export const updateTeam = onCall<EditTeamRequest>(
 	async (request) => {
 		validateAuthentication(request.auth)
 
-		const { teamId, name, logo, storagePath } = request.data
+		const { teamId, name, logo, storagePath, logoBlob, logoContentType } =
+			request.data
 		const userId = request.auth!.uid
 
 		if (!teamId) {
 			throw new Error('Team ID is required')
 		}
 
-		if (!name && logo === undefined && storagePath === undefined) {
+		if (
+			!name &&
+			logo === undefined &&
+			storagePath === undefined &&
+			logoBlob === undefined
+		) {
 			throw new Error('At least one field must be provided to update')
+		}
+
+		// Validate logo parameters if provided
+		if (logoBlob && !logoContentType) {
+			throw new Error('Logo content type is required when uploading logo')
+		}
+
+		if (logoContentType && !logoContentType.startsWith('image/')) {
+			throw new Error('Only image files are allowed for logos')
 		}
 
 		try {
@@ -66,33 +84,102 @@ export const updateTeam = onCall<EditTeamRequest>(
 				throw new Error('Only team captains can edit team information')
 			}
 
-			// Build update data
+			// Handle logo upload if provided
+			let logoUrl = logo
+			let logoStoragePath = storagePath
+
+			if (logoBlob && logoContentType) {
+				try {
+					const storage = getStorage()
+					const bucket = storage.bucket()
+					const fileId = crypto.randomUUID()
+					const fileName = `teams/${fileId}`
+					const file = bucket.file(fileName)
+
+					// Convert base64 to buffer
+					const buffer = Buffer.from(logoBlob, 'base64')
+
+					// Upload file
+					await file.save(buffer, {
+						metadata: {
+							contentType: logoContentType,
+						},
+					})
+
+					// Make file publicly readable
+					await file.makePublic()
+
+					// Get proper public URL using the publicUrl() method
+					logoUrl = file.publicUrl()
+					logoStoragePath = fileName
+
+					logger.info(`Successfully uploaded logo for team: ${teamId}`, {
+						fileName,
+						contentType: logoContentType,
+					})
+				} catch (uploadError) {
+					logger.error('Logo upload failed:', uploadError)
+					throw new Error('Failed to upload team logo')
+				}
+			}
+
+			// Build update data - only include fields that actually changed
 			const updateData: Record<string, unknown> = {}
+			const changedFields: string[] = []
+
 			if (name !== undefined) {
 				if (typeof name !== 'string' || name.trim() === '') {
 					throw new Error('Team name must be a non-empty string')
 				}
-				updateData.name = name.trim()
+				const trimmedName = name.trim()
+				// Only update name if it's different from current
+				if (trimmedName !== teamDocument.name) {
+					updateData.name = trimmedName
+					changedFields.push('name')
+				}
 			}
-			if (logo !== undefined) {
-				updateData.logo = logo
+			if (logoUrl !== undefined) {
+				// Always update logo when provided (new upload)
+				updateData.logo = logoUrl
+				changedFields.push('logo')
 			}
-			if (storagePath !== undefined) {
-				updateData.storagePath = storagePath
+			if (logoStoragePath !== undefined) {
+				updateData.storagePath = logoStoragePath
 			}
 
-			// Update team document
-			await teamRef.update(updateData)
+			// Only perform update if there are actual changes
+			if (Object.keys(updateData).length > 0) {
+				await teamRef.update(updateData)
 
-			logger.info(`Successfully updated team: ${teamId}`, {
-				updatedFields: Object.keys(updateData),
-				updatedBy: userId,
-			})
+				logger.info(`Successfully updated team: ${teamId}`, {
+					updatedFields: Object.keys(updateData),
+					changedFields,
+					updatedBy: userId,
+				})
+			}
+
+			// Build descriptive message based on what actually changed
+			let message: string
+
+			if (changedFields.length === 0) {
+				message = 'No changes were made'
+			} else if (
+				changedFields.includes('name') &&
+				changedFields.includes('logo')
+			) {
+				message = 'Updated team name and logo'
+			} else if (changedFields.includes('name')) {
+				message = 'Updated team name'
+			} else if (changedFields.includes('logo')) {
+				message = 'Updated team logo'
+			} else {
+				message = 'Updated team information'
+			}
 
 			return {
 				success: true,
 				teamId,
-				message: 'Team updated successfully',
+				message,
 			}
 		} catch (error) {
 			logger.error('Error updating team:', {

@@ -33,6 +33,7 @@ export const ManageCaptainActions = () => {
 	)
 
 	const [open, setOpen] = useState(false)
+	const [editTeamDialogOpen, setEditTeamDialogOpen] = useState(false)
 
 	const removeFromTeamOnClickHandler = useCallback(async () => {
 		if (!authenticatedUserSnapshot?.id || !teamQueryDocumentSnapshot?.id) {
@@ -108,6 +109,13 @@ export const ManageCaptainActions = () => {
 		}
 	}, [authenticatedUserSnapshot, teamQueryDocumentSnapshot])
 
+	const handleEditTeamClick = useCallback(() => {
+		// Close dropdown first
+		setOpen(false)
+		// Open dialog immediately - let Radix handle focus management
+		setEditTeamDialogOpen(true)
+	}, [])
+
 	return (
 		<div className='absolute right-6'>
 			<DropdownMenu open={open} onOpenChange={setOpen}>
@@ -118,11 +126,9 @@ export const ManageCaptainActions = () => {
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className={'w-56'}>
 					<DropdownMenuGroup>
-						<ManageEditTeamDialog closeDialog={() => setOpen(false)}>
-							<DropdownMenuItem onClick={(event) => event.preventDefault()}>
-								Edit team
-							</DropdownMenuItem>
-						</ManageEditTeamDialog>
+						<DropdownMenuItem onClick={handleEditTeamClick}>
+							Edit team
+						</DropdownMenuItem>
 						<DestructiveConfirmationDialog
 							title={'Are you sure you want to leave?'}
 							description={
@@ -155,6 +161,10 @@ export const ManageCaptainActions = () => {
 					</DropdownMenuGroup>
 				</DropdownMenuContent>
 			</DropdownMenu>
+			<ManageEditTeamDialog
+				open={editTeamDialogOpen}
+				onOpenChange={setEditTeamDialogOpen}
+			/>
 		</div>
 	)
 }

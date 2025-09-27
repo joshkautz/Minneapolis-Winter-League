@@ -14,5 +14,5 @@ export { ManageNonCaptainsOffersPanel } from './manage-non-captains-offers-panel
 export { ManageInvitePlayerDetail } from './manage-invite-player-detail'
 export { ManageInvitePlayerList } from './manage-invite-player-list'
 export { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
-export { ManageEditTeam } from './manage-edit-team'
 export { ManageEditTeamDialog } from './manage-edit-team-dialog'
+export { ManageEditTeamForm } from './manage-edit-team-form'
