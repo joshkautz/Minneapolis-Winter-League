@@ -10,6 +10,7 @@ import {
 	DocumentReference,
 	OfferDocument,
 	PlayerDocument,
+	SeasonDocument,
 	TeamDocument,
 } from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
@@ -98,18 +99,34 @@ export const onOfferUpdated = onDocumentUpdated(
 				// Update player's season data
 				const seasonRef = firestore
 					.collection(Collections.SEASONS)
-					.doc(currentSeason.id)
-				const newSeasonData = {
-					season: seasonRef,
-					team: teamRef,
-					captain: type === 'invitation',
-					paid: false,
-					signed: false,
-				}
+					.doc(currentSeason.id) as DocumentReference<SeasonDocument>
 
-				const updatedSeasons = playerDocument.seasons
-					? [...playerDocument.seasons, newSeasonData]
-					: [newSeasonData]
+				const existingSeasonIndex =
+					playerDocument.seasons?.findIndex(
+						(season) => season.season.id === currentSeason.id
+					) ?? -1
+
+				let updatedSeasons = playerDocument.seasons || []
+
+				if (existingSeasonIndex >= 0) {
+					// Update existing season data
+					updatedSeasons[existingSeasonIndex] = {
+						...updatedSeasons[existingSeasonIndex],
+						team: teamRef,
+						captain: type === 'invitation',
+					}
+				} else {
+					// Create new season data if none exists
+					const newSeasonData = {
+						season: seasonRef,
+						team: teamRef,
+						captain: type === 'invitation',
+						paid: false,
+						signed: false,
+						banned: false,
+					}
+					updatedSeasons = [...updatedSeasons, newSeasonData]
+				}
 
 				transaction.update(playerRef, { seasons: updatedSeasons })
 

@@ -132,6 +132,8 @@ export interface TeamRosterPlayer {
 	captain: boolean
 	/** Reference to the player document */
 	player: DocumentReference<PlayerDocument>
+	/** Timestamp when player joined the team */
+	dateJoined: Timestamp
 }
 
 /**
