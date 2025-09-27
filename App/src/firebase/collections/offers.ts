@@ -148,20 +148,22 @@ export const outgoingOffersQuery = (
 				item.captain
 		)?.team
 
-	// If the user is a captain, show all the invitations to join their team
+	// If the user is a captain, show all the pending, unprocessed invitations to join their team
 	if (isCaptain) {
 		return query(
 			collection(firestore, Collections.OFFERS),
 			where('team', '==', team),
-			where('type', '==', OfferType.INVITATION)
+			where('type', '==', OfferType.INVITATION),
+			where('status', '==', OfferStatus.PENDING)
 		) as Query<OfferDocument>
 	}
 
-	// If the user is a player, show all their requests to join teams
+	// If the user is a player, show all their pending, unprocessed requests to join teams
 	return query(
 		collection(firestore, Collections.OFFERS),
 		where('player', '==', playerDocumentSnapshot.ref),
-		where('type', '==', OfferType.REQUEST)
+		where('type', '==', OfferType.REQUEST),
+		where('status', '==', OfferStatus.PENDING)
 	) as Query<OfferDocument>
 }
 
@@ -194,20 +196,22 @@ export const incomingOffersQuery = (
 				item.captain
 		)?.team
 
-	// If the user is a captain, show all the requests to join their team
+	// If the user is a captain, show all the pending, unprocessed requests to join their team
 	if (isCaptain) {
 		return query(
 			collection(firestore, Collections.OFFERS),
 			where('team', '==', team),
-			where('type', '==', OfferType.REQUEST)
+			where('type', '==', OfferType.REQUEST),
+			where('status', '==', OfferStatus.PENDING)
 		) as Query<OfferDocument>
 	}
 
-	// If the user is a player, show all their invitations to join teams
+	// If the user is a player, show all their pending, unprocessed invitations to join teams
 	return query(
 		collection(firestore, Collections.OFFERS),
 		where('player', '==', playerDocumentSnapshot.ref),
-		where('type', '==', OfferType.INVITATION)
+		where('type', '==', OfferType.INVITATION),
+		where('status', '==', OfferStatus.PENDING)
 	) as Query<OfferDocument>
 }
 
