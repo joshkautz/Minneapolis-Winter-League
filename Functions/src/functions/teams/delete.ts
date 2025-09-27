@@ -99,15 +99,17 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 				message: 'Team deleted successfully',
 			}
 		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Unknown error'
+
 			logger.error('Error deleting team:', {
 				teamId,
 				userId,
-				error: error instanceof Error ? error.message : 'Unknown error',
+				error: errorMessage,
 			})
 
-			throw new Error(
-				error instanceof Error ? error.message : 'Failed to delete team'
-			)
+			// Re-throw the original error message for better user experience
+			throw new Error(errorMessage)
 		}
 	}
 )

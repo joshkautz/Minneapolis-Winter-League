@@ -2,7 +2,7 @@
  * Manage team player callable function
  */
 
-import { onCall } from 'firebase-functions/v2/https'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
@@ -31,11 +31,17 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 		const userId = request.auth!.uid
 
 		if (!teamId || !playerId || !action) {
-			throw new Error('Team ID, player ID, and action are required')
+			throw new HttpsError(
+				'invalid-argument',
+				'Team ID, player ID, and action are required'
+			)
 		}
 
 		if (!['promote', 'demote', 'remove'].includes(action)) {
-			throw new Error('Invalid action. Must be promote, demote, or remove')
+			throw new HttpsError(
+				'invalid-argument',
+				'Invalid action. Must be promote, demote, or remove'
+			)
 		}
 
 		try {
@@ -44,7 +50,7 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 			return await firestore.runTransaction(async (transaction) => {
 				const currentSeason = await getCurrentSeason()
 				if (!currentSeason) {
-					throw new Error('No current season found')
+					throw new HttpsError('not-found', 'No current season found')
 				}
 
 				// Get team and player documents
@@ -59,7 +65,7 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 				])
 
 				if (!teamDoc.exists || !playerDoc.exists) {
-					throw new Error('Team or player not found')
+					throw new HttpsError('not-found', 'Team or player not found')
 				}
 
 				const teamDocument = teamDoc.data() as TeamDocument
@@ -78,9 +84,15 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 
 				if (!canPerformAction) {
 					if (action === 'remove') {
-						throw new Error('You can only remove yourself from the team')
+						throw new HttpsError(
+							'permission-denied',
+							'You can only remove yourself from the team'
+						)
 					} else {
-						throw new Error('Only team captains can manage team players')
+						throw new HttpsError(
+							'permission-denied',
+							'Only team captains can manage team players'
+						)
 					}
 				}
 
@@ -113,21 +125,23 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 							currentSeason.id
 						)
 					default:
-						throw new Error('Invalid action')
+						throw new HttpsError('invalid-argument', 'Invalid action')
 				}
 			})
 		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Unknown error'
+
 			logger.error('Error managing team player:', {
 				teamId,
 				playerId,
 				action,
 				userId,
-				error: error instanceof Error ? error.message : 'Unknown error',
+				error: errorMessage,
 			})
 
-			throw new Error(
-				error instanceof Error ? error.message : 'Failed to manage team player'
-			)
+			// Use HttpsError to properly return error messages to client
+			throw new HttpsError('failed-precondition', errorMessage)
 		}
 	}
 )
@@ -180,8 +194,9 @@ function handleDemoteFromCaptain(
 		teamDocument.roster?.filter((member: TeamRosterPlayer) => member.captain)
 			.length || 0
 	if (captainCount <= 1) {
-		throw new Error(
-			'Cannot demote the last captain. Promote another player first.'
+		throw new HttpsError(
+			'failed-precondition',
+			'Cannot demote the last captain. You must promote another player to captain first.'
 		)
 	}
 
@@ -232,8 +247,9 @@ function handleRemoveFromTeam(
 			.length || 0
 
 	if (playerIsCaptain && captainCount <= 1) {
-		throw new Error(
-			'Cannot remove the last captain. Promote another player first.'
+		throw new HttpsError(
+			'failed-precondition',
+			'Cannot remove the last captain. You must promote another player to captain before leaving the team.'
 		)
 	}
 

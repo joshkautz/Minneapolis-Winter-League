@@ -182,15 +182,17 @@ export const updateTeam = onCall<EditTeamRequest>(
 				message,
 			}
 		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Unknown error'
+
 			logger.error('Error updating team:', {
 				teamId,
 				userId,
-				error: error instanceof Error ? error.message : 'Unknown error',
+				error: errorMessage,
 			})
 
-			throw new Error(
-				error instanceof Error ? error.message : 'Failed to update team'
-			)
+			// Re-throw the original error message for better user experience
+			throw new Error(errorMessage)
 		}
 	}
 )

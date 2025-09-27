@@ -130,16 +130,18 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 				}
 			})
 		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Unknown error'
+
 			logger.error('Error updating offer status:', {
 				offerId,
 				status,
 				userId: auth!.uid,
-				error: error instanceof Error ? error.message : 'Unknown error',
+				error: errorMessage,
 			})
 
-			throw new Error(
-				error instanceof Error ? error.message : 'Failed to update offer status'
-			)
+			// Re-throw the original error message for better user experience
+			throw new Error(errorMessage)
 		}
 	}
 )
