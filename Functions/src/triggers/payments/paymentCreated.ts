@@ -48,6 +48,10 @@ export const onPaymentCreated = onDocumentCreated(
 				.doc(sid)
 				.get()
 
+			logger.info(
+				`Made it to breakpoint 0 for user: ${uid} (${dropbox.username})`
+			)
+
 			const paymentData = paymentDoc.data()
 			if (!paymentData || paymentData.status !== 'succeeded') {
 				logger.info(`Payment not succeeded for user: ${uid}`)
@@ -80,6 +84,8 @@ export const onPaymentCreated = onDocumentCreated(
 
 			await playerDoc.ref.update({ seasons: updatedSeasons })
 
+			logger.info(`Made it to breakpoint 1 for user: ${uid}`)
+
 			// Send Dropbox signature request
 			const signatureResponse = await dropbox.signatureRequestSendWithTemplate({
 				templateIds: [dropboxConfig.TEMPLATE_ID],
@@ -102,6 +108,8 @@ export const onPaymentCreated = onDocumentCreated(
 				testMode: dropboxConfig.TEST_MODE,
 			})
 
+			logger.info(`Made it to breakpoint 2 for user: ${uid}`, signatureResponse)
+
 			// Create waiver document
 			if (signatureResponse.body.signatureRequest?.signatureRequestId) {
 				await firestore.collection(Collections.WAIVERS).add({
@@ -112,6 +120,8 @@ export const onPaymentCreated = onDocumentCreated(
 					status: 'pending',
 					createdAt: new Date(),
 				})
+
+				logger.info(`Made it to breakpoint 3 for user: ${uid}`)
 			}
 
 			logger.info(
