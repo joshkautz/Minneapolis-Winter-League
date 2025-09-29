@@ -5,8 +5,8 @@
 import { getFirestore, DocumentReference } from 'firebase-admin/firestore'
 import * as functions from 'firebase-functions/v1'
 import { Collections, PlayerDocument, SeasonDocument } from '../../types.js'
-import { validateAuthentication } from '../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
+import { validateBasicAuthentication } from '../../shared/auth.js'
 
 /**
  * Request interface for creating a player
@@ -22,7 +22,7 @@ interface CreatePlayerRequest {
  * Creates a new player document in Firestore
  *
  * Security validations performed:
- * - User must be authenticated (validateAuthentication checks this)
+ * - User must be authenticated (but email verification is NOT required)
  * - Email must match authenticated user's email (explicitly validated)
  * - All required PlayerDocument fields must be provided (validated)
  * - Season must exist and be valid (validated)
@@ -32,6 +32,9 @@ interface CreatePlayerRequest {
  * - Document ID is automatically set to authenticated user's UID (prevents impersonation)
  * - Admin field is automatically set to false (prevents privilege escalation)
  * - All input is sanitized and validated server-side (prevents malicious data)
+ *
+ * Note: Email verification is NOT required to allow newly registered users
+ * to create their player profiles immediately after account creation.
  */
 export const createPlayer = functions
 	.region(FIREBASE_CONFIG.REGION)
@@ -41,7 +44,7 @@ export const createPlayer = functions
 			context: functions.https.CallableContext
 		) => {
 			// Validate authentication
-			validateAuthentication(context.auth)
+			validateBasicAuthentication(context.auth)
 
 			const { firstname, lastname, email, seasonId } = data
 			const userId = context.auth!.uid
