@@ -104,7 +104,8 @@ export const EmailVerificationSection = ({
 
 					{verificationEmailSent && (
 						<p className='text-xs text-muted-foreground text-center'>
-							Check your email inbox and click the verification link.
+							Check your email inbox and click the verification link. Check your
+							spam folder if you don't see it.
 						</p>
 					)}
 				</div>

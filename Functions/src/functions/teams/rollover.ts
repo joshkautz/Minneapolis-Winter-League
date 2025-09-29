@@ -60,31 +60,57 @@ export const rolloverTeam = functions
 				const seasonData = seasonDoc.data()!
 				const now = Timestamp.now()
 
-				// Validate registration is open
-				const registrationStart = seasonData.registrationStart.toDate()
-				const registrationEnd = seasonData.registrationEnd.toDate()
-				const currentTime = now.toDate()
+				// Get player document (needed for both admin check and later operations)
+				const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
+				const playerDoc = await playerRef.get()
 
-				if (currentTime < registrationStart || currentTime > registrationEnd) {
-					const formatDate = (date: Date) => {
-						const options: Intl.DateTimeFormatOptions = {
-							year: 'numeric',
-							month: 'long',
-							day: 'numeric',
-							hour: 'numeric',
-							minute: '2-digit',
-							timeZoneName: 'short',
-							...(timezone && { timeZone: timezone }),
-						}
-						return date.toLocaleDateString('en-US', options)
-					}
+				if (!playerDoc.exists) {
 					throw new functions.https.HttpsError(
-						'failed-precondition',
-						`Team registration is not currently open. Registration opens ${formatDate(registrationStart)} and closes ${formatDate(registrationEnd)}.`
+						'not-found',
+						'Player profile not found'
 					)
 				}
 
-				// Get original team to validate ownership and get team data
+				const playerDocument = playerDoc.data() as PlayerDocument | undefined
+
+				if (!playerDocument) {
+					throw new functions.https.HttpsError(
+						'internal',
+						'Unable to retrieve player data'
+					)
+				}
+
+				// Check if user is an admin
+				const isAdmin = playerDocument.admin === true
+
+				// Validate registration is open (skip for admins)
+				if (!isAdmin) {
+					const registrationStart = seasonData.registrationStart.toDate()
+					const registrationEnd = seasonData.registrationEnd.toDate()
+					const currentTime = now.toDate()
+
+					if (
+						currentTime < registrationStart ||
+						currentTime > registrationEnd
+					) {
+						const formatDate = (date: Date) => {
+							const options: Intl.DateTimeFormatOptions = {
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric',
+								hour: 'numeric',
+								minute: '2-digit',
+								timeZoneName: 'short',
+								...(timezone && { timeZone: timezone }),
+							}
+							return date.toLocaleDateString('en-US', options)
+						}
+						throw new functions.https.HttpsError(
+							'failed-precondition',
+							`Team registration is not currently open. Registration opens ${formatDate(registrationStart)} and closes ${formatDate(registrationEnd)}.`
+						)
+					}
+				} // Get original team to validate ownership and get team data
 				const originalTeamsQuery = await firestore
 					.collection(Collections.TEAMS)
 					.where('teamId', '==', originalTeamId)
@@ -126,26 +152,6 @@ export const rolloverTeam = functions
 					throw new functions.https.HttpsError(
 						'permission-denied',
 						'Only captains of the original team can rollover the team'
-					)
-				}
-
-				// Get player document
-				const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
-				const playerDoc = await playerRef.get()
-
-				if (!playerDoc.exists) {
-					throw new functions.https.HttpsError(
-						'not-found',
-						'Player profile not found'
-					)
-				}
-
-				const playerDocument = playerDoc.data() as PlayerDocument | undefined
-
-				if (!playerDocument) {
-					throw new functions.https.HttpsError(
-						'internal',
-						'Unable to retrieve player data'
 					)
 				}
 

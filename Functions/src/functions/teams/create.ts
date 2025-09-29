@@ -74,30 +74,7 @@ export const createTeam = functions
 				const seasonData = seasonDoc.data()!
 				const now = new Date()
 
-				// Validate registration is open
-				const registrationStart = seasonData.registrationStart.toDate()
-				const registrationEnd = seasonData.registrationEnd.toDate()
-
-				if (now < registrationStart || now > registrationEnd) {
-					const formatDate = (date: Date) => {
-						const options: Intl.DateTimeFormatOptions = {
-							year: 'numeric',
-							month: 'long',
-							day: 'numeric',
-							hour: 'numeric',
-							minute: '2-digit',
-							timeZoneName: 'short',
-							...(timezone && { timeZone: timezone }),
-						}
-						return date.toLocaleDateString('en-US', options)
-					}
-					throw new functions.https.HttpsError(
-						'failed-precondition',
-						`Team registration is not currently open. Registration opens ${formatDate(registrationStart)} and closes ${formatDate(registrationEnd)}.`
-					)
-				}
-
-				// Get player document
+				// Get player document (needed for both admin check and later operations)
 				const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
 				const playerDoc = await playerRef.get()
 
@@ -115,6 +92,34 @@ export const createTeam = functions
 						'internal',
 						'Unable to retrieve player data'
 					)
+				}
+
+				// Check if user is an admin
+				const isAdmin = playerDocument.admin === true
+
+				// Validate registration is open (skip for admins)
+				if (!isAdmin) {
+					const registrationStart = seasonData.registrationStart.toDate()
+					const registrationEnd = seasonData.registrationEnd.toDate()
+
+					if (now < registrationStart || now > registrationEnd) {
+						const formatDate = (date: Date) => {
+							const options: Intl.DateTimeFormatOptions = {
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric',
+								hour: 'numeric',
+								minute: '2-digit',
+								timeZoneName: 'short',
+								...(timezone && { timeZone: timezone }),
+							}
+							return date.toLocaleDateString('en-US', options)
+						}
+						throw new functions.https.HttpsError(
+							'failed-precondition',
+							`Team registration is not currently open. Registration opens ${formatDate(registrationStart)} and closes ${formatDate(registrationEnd)}.`
+						)
+					}
 				}
 
 				// Check if player is already on a team for this season
