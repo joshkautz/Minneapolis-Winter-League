@@ -38,7 +38,7 @@ export const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const firestore = getFirestore(app)
 export const storage = getStorage(app)
-export const functions = getFunctions(app, 'us-central1')
+export const functions = getFunctions(app)
 
 // Connect to emulators when enabled
 const useEmulators = import.meta.env.VITE_USE_EMULATORS === 'true'
