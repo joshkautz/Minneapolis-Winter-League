@@ -25,11 +25,7 @@ interface UpdateOfferStatusRequest {
  * - Atomic transaction with proper cleanup
  */
 export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
-	{
-		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
-		region: FIREBASE_CONFIG.REGION,
-		invoker: 'public',
-	},
+	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 

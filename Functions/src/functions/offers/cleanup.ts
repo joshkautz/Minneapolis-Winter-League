@@ -17,7 +17,6 @@ export const cleanupOffers = onCall(
 	{
 		region: FIREBASE_CONFIG.REGION,
 		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
-		invoker: 'public',
 	},
 	async (request) => {
 		// Validate authentication and admin privileges

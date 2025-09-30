@@ -58,11 +58,7 @@ interface AddNewSeasonToPlayersResponse {
  * - Uses Firestore batch writes for atomicity
  */
 export const addNewSeasonToAllPlayers = onCall<AddNewSeasonToPlayersRequest>(
-	{
-		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
-		region: FIREBASE_CONFIG.REGION,
-		invoker: 'public',
-	},
+	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		try {
 			const { data, auth: authContext } = request

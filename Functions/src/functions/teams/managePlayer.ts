@@ -26,7 +26,6 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 	{
 		region: FIREBASE_CONFIG.REGION,
 		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
-		invoker: 'public',
 	},
 	async (request) => {
 		validateAuthentication(request.auth)

@@ -20,7 +20,6 @@ export const createOffer = onCall<CreateOfferRequest>(
 	{
 		region: FIREBASE_CONFIG.REGION,
 		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
-		invoker: 'public',
 	},
 	async (request) => {
 		validateAuthentication(request.auth)

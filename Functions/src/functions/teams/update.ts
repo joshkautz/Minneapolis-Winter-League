@@ -31,7 +31,6 @@ export const updateTeam = onCall<EditTeamRequest>(
 	{
 		region: FIREBASE_CONFIG.REGION,
 		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
-		invoker: 'public',
 	},
 	async (request) => {
 		validateAuthentication(request.auth)
