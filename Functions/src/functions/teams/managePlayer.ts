@@ -23,10 +23,7 @@ interface ManagePlayerRequest {
 }
 
 export const manageTeamPlayer = onCall<ManagePlayerRequest>(
-	{
-		region: FIREBASE_CONFIG.REGION,
-		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
-	},
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		validateAuthentication(request.auth)
 
