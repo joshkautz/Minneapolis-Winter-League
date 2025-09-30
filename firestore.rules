@@ -46,15 +46,8 @@ service cloud.firestore {
     
     // OFFERS [Read]: Limited to involved parties only
     match /offers/{offerId} {
-      allow read: if isAuthenticated() && 
-                     (
-                       // Player involved in the offer
-                       request.auth.uid == resource.data.player.id ||
-                       // Admin can see all offers
-                       exists(/databases/$(database)/documents/players/$(request.auth.uid)) &&
-                       get(/databases/$(database)/documents/players/$(request.auth.uid)).data.get('admin', false) == true
-                     );
-            allow create: if false; // Use createOfferViaFunction
+      allow read: if true;
+      allow create: if false; // Use createOfferViaFunction
       allow update: if false; // Use updateOfferStatusViaFunction 
       allow delete: if false; // Handled automatically by Functions
     }
