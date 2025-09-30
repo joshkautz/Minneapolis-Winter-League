@@ -138,14 +138,17 @@ export const onOfferUpdated = onDocumentUpdated(
 		} catch (error) {
 			logger.error(`Error processing offer acceptance: ${offerId}`, error)
 
-			// Mark the offer as failed and revert status
+			// Mark the offer as failed but preserve the accepted status
+			// This allows admins to see the user's intent and retry processing
 			const firestore = getFirestore()
 			await firestore
 				.collection(Collections.OFFERS)
 				.doc(offerId)
 				.update({
-					status: 'rejected',
-					error: error instanceof Error ? error.message : 'Unknown error',
+					processed: false,
+					processingError:
+						error instanceof Error ? error.message : 'Unknown error',
+					processingFailedAt: new Date(),
 				})
 		}
 	}
