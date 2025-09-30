@@ -14,7 +14,10 @@ import { FIREBASE_CONFIG } from '../../config/constants.js'
  * Only admin users can run this cleanup
  */
 export const cleanupOffers = onCall(
-	{ region: FIREBASE_CONFIG.REGION },
+	{
+		region: FIREBASE_CONFIG.REGION,
+		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
+	},
 	async (request) => {
 		// Validate authentication and admin privileges
 		validateAuthentication(request.auth)

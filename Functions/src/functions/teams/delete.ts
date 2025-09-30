@@ -14,7 +14,10 @@ interface DeleteTeamRequest {
 }
 
 export const deleteTeam = onCall<DeleteTeamRequest>(
-	{ region: FIREBASE_CONFIG.REGION },
+	{
+		region: FIREBASE_CONFIG.REGION,
+		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
+	},
 	async (request) => {
 		validateAuthentication(request.auth)
 

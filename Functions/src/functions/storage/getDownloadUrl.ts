@@ -16,6 +16,7 @@ export const getDownloadUrl = onCall(
 	{
 		enforceAppCheck: true,
 		region: FIREBASE_CONFIG.REGION,
+		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
 	},
 	async (request) => {
 		try {
