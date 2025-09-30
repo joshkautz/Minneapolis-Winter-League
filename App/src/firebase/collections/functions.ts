@@ -6,7 +6,7 @@
  * Firestore operations.
  */
 
-import { httpsCallable } from 'firebase/functions'
+import { httpsCallable, httpsCallableFromURL } from 'firebase/functions'
 import { functions } from '../app'
 import type {
 	CreatePlayerRequest,
@@ -184,10 +184,11 @@ interface DeleteTeamResponse {
 export const deleteTeamViaFunction = async (
 	teamId: string
 ): Promise<DeleteTeamResponse> => {
-	const deleteTeam = httpsCallable<DeleteTeamRequest, DeleteTeamResponse>(
-		functions,
-		'deleteTeam'
-	)
+	const deleteTeam = httpsCallableFromURL<
+		DeleteTeamRequest,
+		DeleteTeamResponse
+	>(functions, 'https://deleteteam-r552gxidpq-uc.a.run.app')
+
 	const result = await deleteTeam({ teamId })
 	return result.data
 }
