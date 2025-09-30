@@ -37,8 +37,7 @@ export async function updateTeamRegistrationStatus(
 		if (teamDocument.registered !== shouldBeRegistered) {
 			await teamRef.update({
 				registered: shouldBeRegistered,
-				registeredDate: shouldBeRegistered ? new Date() : null,
-				registeredPlayerCount: registeredCount,
+				registeredDate: new Date(),
 			})
 
 			logger.info(`Updated team registration status`, {
