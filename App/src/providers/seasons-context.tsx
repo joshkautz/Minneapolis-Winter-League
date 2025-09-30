@@ -1,8 +1,6 @@
 import React, {
 	createContext,
-	Dispatch,
 	ReactNode,
-	SetStateAction,
 	useCallback,
 	useContext,
 	useEffect,
@@ -28,9 +26,9 @@ interface SeasonsContextValue {
 	selectedSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
-	setSelectedSeasonQueryDocumentSnapshot: Dispatch<
-		SetStateAction<QueryDocumentSnapshot<SeasonDocument> | undefined>
-	>
+	setSelectedSeasonQueryDocumentSnapshot: (
+		value: QueryDocumentSnapshot<SeasonDocument> | undefined
+	) => void
 }
 
 interface SeasonsContextProviderProps {
@@ -60,8 +58,21 @@ export const SeasonsContextProvider: React.FC<SeasonsContextProviderProps> = ({
 
 	const [
 		selectedSeasonQueryDocumentSnapshot,
-		setSelectedSeasonQueryDocumentSnapshot,
+		setSelectedSeasonQueryDocumentSnapshotState,
 	] = useState<QueryDocumentSnapshot<SeasonDocument> | undefined>()
+
+	// Wrapper to persist selected season to localStorage
+	const setSelectedSeasonQueryDocumentSnapshot = useCallback(
+		(value: QueryDocumentSnapshot<SeasonDocument> | undefined) => {
+			if (value) {
+				localStorage.setItem('season', value.id)
+			} else {
+				localStorage.removeItem('season')
+			}
+			setSelectedSeasonQueryDocumentSnapshotState(value)
+		},
+		[]
+	)
 
 	const [
 		currentSeasonQueryDocumentSnapshot,
@@ -76,9 +87,26 @@ export const SeasonsContextProvider: React.FC<SeasonsContextProviderProps> = ({
 			?.find((season) => season)
 	}, [seasonsQuerySnapshot])
 
+	// Initialize selected season from localStorage or fall back to most recent
 	useEffect(() => {
+		if (!seasonsQuerySnapshot) return
+
+		const storedSeasonId = localStorage.getItem('season')
+
+		if (storedSeasonId) {
+			// Try to find the stored season in the current seasons
+			const storedSeason = seasonsQuerySnapshot.docs.find(
+				(doc) => doc.id === storedSeasonId
+			)
+			if (storedSeason) {
+				setSelectedSeasonQueryDocumentSnapshot(storedSeason)
+				return
+			}
+		}
+
+		// If no stored season or it doesn't exist, use the most recent season
 		setSelectedSeasonQueryDocumentSnapshot(getMostRecentSeason())
-	}, [setSelectedSeasonQueryDocumentSnapshot, getMostRecentSeason])
+	}, [seasonsQuerySnapshot, getMostRecentSeason])
 
 	useEffect(() => {
 		setCurrentSeasonQueryDocumentSnapshot(getMostRecentSeason())
