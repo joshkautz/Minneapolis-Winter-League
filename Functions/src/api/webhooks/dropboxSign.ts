@@ -45,7 +45,6 @@ export const dropboxSignWebhook = onRequest(
 
 			// Verify that the callback came from Dropbox Sign
 			const dropboxConfig = getDropboxSignConfig()
-			logger.info(`dropboxConfig.API_KEY: ${dropboxConfig.API_KEY}`)
 			if (!EventCallbackHelper.isValid(dropboxConfig.API_KEY, callbackEvent)) {
 				logger.error('Invalid webhook signature')
 				resp.status(401).send('Unauthorized')

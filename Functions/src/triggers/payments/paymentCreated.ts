@@ -35,13 +35,6 @@ export const onPaymentCreated = onDocumentCreated(
 				`Processing payment creation for user: ${uid}, payment: ${sid}`
 			)
 
-			logger.info(
-				`Environment variable DROPBOX_SIGN_API_KEY is set: ${process.env.DROPBOX_SIGN_API_KEY}`
-			)
-			logger.info(
-				`Environment variable DROPBOX_SIGN_API_KEY is set: ${!!process.env.DROPBOX_SIGN_API_KEY}`
-			)
-
 			const firestore = getFirestore()
 			const dropboxConfig = getDropboxSignConfig()
 			const dropbox = new SignatureRequestApi()
@@ -54,10 +47,6 @@ export const onPaymentCreated = onDocumentCreated(
 				.collection('payments')
 				.doc(sid)
 				.get()
-
-			logger.info(
-				`Made it to breakpoint 0 for user: ${uid} (${dropbox.username})`
-			)
 
 			const paymentData = paymentDoc.data()
 			if (!paymentData || paymentData.status !== 'succeeded') {
@@ -91,8 +80,6 @@ export const onPaymentCreated = onDocumentCreated(
 
 			await playerDoc.ref.update({ seasons: updatedSeasons })
 
-			logger.info(`Made it to breakpoint 1 for user: ${uid}`)
-
 			// Send Dropbox signature request
 			const signatureResponse = await dropbox.signatureRequestSendWithTemplate({
 				templateIds: [dropboxConfig.TEMPLATE_ID],
@@ -115,8 +102,6 @@ export const onPaymentCreated = onDocumentCreated(
 				testMode: dropboxConfig.TEST_MODE,
 			})
 
-			logger.info(`Made it to breakpoint 2 for user: ${uid}`, signatureResponse)
-
 			// Create waiver document
 			if (signatureResponse.body.signatureRequest?.signatureRequestId) {
 				await firestore.collection(Collections.WAIVERS).add({
@@ -127,8 +112,6 @@ export const onPaymentCreated = onDocumentCreated(
 					status: 'pending',
 					createdAt: new Date(),
 				})
-
-				logger.info(`Made it to breakpoint 3 for user: ${uid}`)
 			}
 
 			logger.info(
