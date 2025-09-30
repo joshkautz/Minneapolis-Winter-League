@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/form'
 import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { updatePlayerViaFunction } from '@/firebase'
 import { DocumentSnapshot } from '@/firebase/firestore'
@@ -43,6 +43,8 @@ interface ProfileFormProps {
 export const ProfileForm = ({
 	authenticatedUserSnapshot,
 }: ProfileFormProps) => {
+	const [isSubmitting, setIsSubmitting] = useState(false)
+
 	const form = useForm<ProfileFormData>({
 		resolver: standardSchemaResolver(profileFormSchema),
 		defaultValues: { firstname: '', lastname: '', email: '' },
@@ -60,6 +62,7 @@ export const ProfileForm = ({
 	}, [authenticatedUserSnapshot, form])
 
 	const onSubmit = useCallback(async (data: ProfileFormData) => {
+		setIsSubmitting(true)
 		try {
 			await updatePlayerViaFunction({
 				firstname: data.firstname,
@@ -73,6 +76,8 @@ export const ProfileForm = ({
 				description:
 					err instanceof Error ? err.message : 'Failed to update profile',
 			})
+		} finally {
+			setIsSubmitting(false)
 		}
 	}, [])
 
@@ -141,8 +146,11 @@ export const ProfileForm = ({
 								</FormItem>
 							)}
 						/>
-						<Button disabled={!form.formState.isDirty} type='submit'>
-							Save Changes
+						<Button
+							disabled={!form.formState.isDirty || isSubmitting}
+							type='submit'
+						>
+							{isSubmitting ? 'Saving Changes...' : 'Save Changes'}
 						</Button>
 					</form>
 				</Form>
