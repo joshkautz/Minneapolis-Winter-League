@@ -35,6 +35,13 @@ export const onPaymentCreated = onDocumentCreated(
 				`Processing payment creation for user: ${uid}, payment: ${sid}`
 			)
 
+			logger.info(
+				`Environment variable DROPBOX_SIGN_API_KEY is set: ${process.env.DROPBOX_SIGN_API_KEY}`
+			)
+			logger.info(
+				`Environment variable DROPBOX_SIGN_API_KEY is set: ${!!process.env.DROPBOX_SIGN_API_KEY}`
+			)
+
 			const firestore = getFirestore()
 			const dropboxConfig = getDropboxSignConfig()
 			const dropbox = new SignatureRequestApi()

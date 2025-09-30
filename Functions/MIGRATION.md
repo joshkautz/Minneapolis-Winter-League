@@ -22,9 +22,12 @@ The following functions have been removed or renamed for better organization:
 - **`dropboxSignHandleWebhookEvents`** → **`dropboxSignWebhook`**
   - Moved to: `triggers/paymentTriggers.ts`
   - Better webhook validation and error handling
-- **`dropboxSignSendReminderEmail`** → **`resendWaiverEmail`**
-  - Moved to: `triggers/paymentTriggers.ts`
-  - Improved authentication validation
+- **`dropboxSignSendReminderEmail`** (NEW IMPLEMENTATION)
+  - Moved to: `functions/dropboxSign/dropboxSignSendReminderEmail.ts`
+  - Completely rewritten to use proper Dropbox Sign reminder API
+  - Previous `resendWaiverEmail` was deprecated (created duplicate signature requests)
+  - Now queries waivers collection for proper authorization
+  - Gen 1 callable function for consistency with other callable functions
 
 #### Team Registration Functions
 

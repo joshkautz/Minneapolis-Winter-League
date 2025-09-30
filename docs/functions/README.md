@@ -35,7 +35,10 @@ src/
 
 - **`onPaymentCreated`** - Processes successful payments and creates waiver requests
 - **`dropboxSignWebhook`** - Handles Dropbox Sign webhook events for waiver signing
-- **`resendWaiverEmail`** - Allows players to request waiver email reminders
+
+#### Dropbox Sign Functions
+
+- **`dropboxSignSendReminderEmail`** - Sends reminder email for existing signature requests
 
 #### Team Registration Triggers (`triggers/teamTriggers.ts`)
 

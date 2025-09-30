@@ -91,9 +91,5 @@ export { getFileMetadata } from './functions/storage/getFileMetadata.js'
 export { rebuildPlayerRankings } from './functions/playerRankings/rebuildPlayerRankings.js'
 export { updatePlayerRankings } from './functions/playerRankings/updatePlayerRankings.js'
 
-//////////////////////////////////////////////////////////////////////////////
-// SERVICES
-//////////////////////////////////////////////////////////////////////////////
-
-// Waiver service
-export { resendWaiverEmail } from './services/waiverService.js'
+// Dropbox Sign functions
+export { dropboxSignSendReminderEmail } from './functions/dropboxSign/dropboxSignSendReminderEmail.js'
