@@ -28,7 +28,11 @@ interface DeletePlayerRequest {
  * - Provides audit logging for deletions
  */
 export const deletePlayer = onCall<DeletePlayerRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{
+		cors: [...FIREBASE_CONFIG.CORS_ORIGINS],
+		region: FIREBASE_CONFIG.REGION,
+		invoker: 'public',
+	},
 	async (request) => {
 		const { data, auth } = request
 
