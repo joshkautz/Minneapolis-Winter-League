@@ -44,10 +44,7 @@ export { userDeleted } from './triggers/auth/userDeleted.js'
 // Document triggers
 export { onOfferUpdated } from './triggers/documents/offerUpdated.js'
 export { updateTeamRegistrationOnPlayerChange } from './triggers/documents/playerUpdated.js'
-export {
-	updateTeamRegistrationOnRosterChange,
-	updateTeamRegistrationDate,
-} from './triggers/documents/teamUpdated.js'
+export { updateTeamRegistrationOnRosterChange } from './triggers/documents/teamUpdated.js'
 
 // Payment triggers
 // export { onCheckoutSessionCreated } from './triggers/payments/checkoutSessionCreated.js'
