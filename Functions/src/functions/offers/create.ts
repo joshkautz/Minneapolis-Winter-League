@@ -2,7 +2,7 @@
  * Create offer callable function
  */
 
-import { onCall } from 'firebase-functions/v2/https'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerDocument, TeamDocument } from '../../types.js'
@@ -19,17 +19,30 @@ interface CreateOfferRequest {
 export const createOffer = onCall<CreateOfferRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
-		validateAuthentication(request.auth)
+		// Validate authentication
+		try {
+			validateAuthentication(request.auth)
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Authentication failed'
+			throw new HttpsError('unauthenticated', errorMessage)
+		}
 
 		const { playerId, teamId, type } = request.data
 		const userId = request.auth!.uid
 
 		if (!playerId || !teamId || !type) {
-			throw new Error('Player ID, team ID, and type are required')
+			throw new HttpsError(
+				'invalid-argument',
+				'Player ID, team ID, and type are required'
+			)
 		}
 
 		if (!['invitation', 'request'].includes(type)) {
-			throw new Error('Invalid offer type. Must be invitation or request')
+			throw new HttpsError(
+				'invalid-argument',
+				'Invalid offer type. Must be invitation or request'
+			)
 		}
 
 		try {
@@ -38,7 +51,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 			return await firestore.runTransaction(async (transaction) => {
 				const currentSeason = await getCurrentSeason()
 				if (!currentSeason) {
-					throw new Error('No current season found')
+					throw new HttpsError('failed-precondition', 'No current season found')
 				}
 				const seasonRef = await getCurrentSeasonRef()
 
@@ -54,14 +67,17 @@ export const createOffer = onCall<CreateOfferRequest>(
 				])
 
 				if (!playerDoc.exists || !teamDoc.exists) {
-					throw new Error('Player or team not found')
+					throw new HttpsError('not-found', 'Player or team not found')
 				}
 
 				const playerDocument = playerDoc.data() as PlayerDocument | undefined
 				const teamDocument = teamDoc.data() as TeamDocument | undefined
 
 				if (!playerDocument || !teamDocument) {
-					throw new Error('Unable to retrieve player or team data')
+					throw new HttpsError(
+						'internal',
+						'Unable to retrieve player or team data'
+					)
 				}
 
 				// Validate authorization based on offer type
@@ -71,12 +87,18 @@ export const createOffer = onCall<CreateOfferRequest>(
 						(member) => member.player.id === userId && member.captain
 					)
 					if (!userIsCaptain) {
-						throw new Error('Only team captains can send invitations')
+						throw new HttpsError(
+							'permission-denied',
+							'Only team captains can send invitations'
+						)
 					}
 				} else if (type === 'request') {
 					// User must be the player making the request
 					if (userId !== playerId) {
-						throw new Error('You can only create requests for yourself')
+						throw new HttpsError(
+							'permission-denied',
+							'You can only create requests for yourself'
+						)
 					}
 				}
 
@@ -86,7 +108,10 @@ export const createOffer = onCall<CreateOfferRequest>(
 				)
 
 				if (currentSeasonData?.team) {
-					throw new Error('Player is already on a team for this season')
+					throw new HttpsError(
+						'already-exists',
+						'Player is already on a team for this season'
+					)
 				}
 
 				// Check for existing pending offers between this player and team
@@ -98,27 +123,10 @@ export const createOffer = onCall<CreateOfferRequest>(
 					.get()
 
 				if (!existingOffersQuery.empty) {
-					throw new Error(
+					throw new HttpsError(
+						'already-exists',
 						'A pending offer already exists between this player and team'
 					)
-				}
-
-				// For invitations, prevent re-invitation if player previously rejected
-				// (but allow re-invitation if captain previously canceled)
-				if (type === 'invitation') {
-					const rejectedOffersQuery = await firestore
-						.collection(Collections.OFFERS)
-						.where('player', '==', playerRef)
-						.where('team', '==', teamRef)
-						.where('type', '==', 'invitation')
-						.where('status', '==', 'rejected')
-						.get()
-
-					if (!rejectedOffersQuery.empty) {
-						throw new Error(
-							'Cannot re-invite this player - they previously rejected an invitation from this team'
-						)
-					}
 				}
 
 				// Create offer document
@@ -151,17 +159,24 @@ export const createOffer = onCall<CreateOfferRequest>(
 				}
 			})
 		} catch (error) {
+			// If it's already an HttpsError, just re-throw it
+			if (error instanceof HttpsError) {
+				throw error
+			}
+
+			// Otherwise, log and convert to HttpsError
+			const errorMessage =
+				error instanceof Error ? error.message : 'Unknown error'
+
 			logger.error('Error creating offer:', {
 				playerId,
 				teamId,
 				type,
 				userId,
-				error: error instanceof Error ? error.message : 'Unknown error',
+				error: errorMessage,
 			})
 
-			throw new Error(
-				error instanceof Error ? error.message : 'Failed to create offer'
-			)
+			throw new HttpsError('internal', errorMessage)
 		}
 	}
 )

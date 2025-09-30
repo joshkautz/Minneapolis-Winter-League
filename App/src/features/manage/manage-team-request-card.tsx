@@ -42,10 +42,11 @@ export const ManageTeamRequestCard = () => {
 						description: 'you requested to join',
 					})
 				})
-				.catch(() => {
+				.catch((error: any) => {
+					// Firebase Functions errors have a message property
+					const errorMessage = error?.message || 'Failed to send request'
 					toast.error('Unable to send request', {
-						description:
-							'Ensure your email is verified. Please try again later.',
+						description: errorMessage,
 					})
 				})
 		},

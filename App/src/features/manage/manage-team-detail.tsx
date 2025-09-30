@@ -39,12 +39,11 @@ export const ManageTeamDetail = ({
 	const blockingOffers = offersForPlayerByTeamQuerySnapshot?.docs.filter(
 		(doc) => {
 			const offer = doc.data() as OfferDocument
-			// Block if pending (prevents duplicates) or rejected (captain said no)
-			// Allow if canceled (player changed mind)
-			return (
-				offer.status === OfferStatus.PENDING ||
-				offer.status === OfferStatus.REJECTED
-			)
+			// Only block if pending (prevents duplicate requests)
+			// Allow if rejected (captain said no, but player can try again)
+			// Allow if canceled (player changed mind previously)
+			// Allow if accepted (handled by team membership check)
+			return offer.status === OfferStatus.PENDING
 		}
 	)
 

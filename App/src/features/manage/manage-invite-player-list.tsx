@@ -54,9 +54,11 @@ export const ManageInvitePlayerList = () => {
 						description: `${playerQueryDocumentSnapshot.data().firstname} ${playerQueryDocumentSnapshot.data().lastname} has been invited to join ${teamQueryDocumentSnapshot?.data().name}.`,
 					})
 				})
-				.catch(() => {
+				.catch((error: any) => {
+					// Firebase Functions errors have a message property
+					const errorMessage = error?.message || 'Failed to send invite'
 					toast.error('Invite failed', {
-						description: 'Ensure your email is verified.',
+						description: errorMessage,
 					})
 				})
 		},

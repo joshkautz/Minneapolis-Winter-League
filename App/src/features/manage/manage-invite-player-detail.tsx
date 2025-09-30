@@ -67,12 +67,11 @@ export const ManageInvitePlayerDetail = ({
 	const blockingOffers = offersForPlayerByTeamQuerySnapshot?.docs.filter(
 		(doc) => {
 			const offer = doc.data() as OfferDocument
-			// Block if pending (prevents duplicates) or rejected (player said no)
-			// Allow if canceled (captain changed mind) or accepted (handled by team membership check)
-			return (
-				offer.status === OfferStatus.PENDING ||
-				offer.status === OfferStatus.REJECTED
-			)
+			// Only block if pending (prevents duplicate invitations)
+			// Allow if rejected (player said no, but captain can try again)
+			// Allow if canceled (captain changed mind previously)
+			// Allow if accepted (handled by team membership check)
+			return offer.status === OfferStatus.PENDING
 		}
 	)
 
@@ -84,8 +83,6 @@ export const ManageInvitePlayerDetail = ({
 		const latestOffer = blockingOffers[0].data() as OfferDocument
 		if (latestOffer.status === OfferStatus.PENDING) {
 			inviteStatus = 'Already invited'
-		} else if (latestOffer.status === OfferStatus.REJECTED) {
-			inviteStatus = 'Previously declined'
 		}
 	}
 
