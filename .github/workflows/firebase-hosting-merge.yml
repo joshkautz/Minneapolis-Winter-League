@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Rollup native bindings
+        run: npm install --no-save @rollup/rollup-linux-x64-gnu --workspace=App
+
       - name: Format App
         run: npm run format:check --workspace=App
 
