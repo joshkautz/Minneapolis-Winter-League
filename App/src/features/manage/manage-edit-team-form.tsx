@@ -145,14 +145,7 @@ export const ManageEditTeamForm = ({
 							className='w-full h-11'
 							size='lg'
 						>
-							{isSubmitting ? (
-								<>
-									<LoadingSpinner size='sm' />
-									<span className='ml-2'>Updating Team...</span>
-								</>
-							) : (
-								'Save Changes'
-							)}
+							{isSubmitting ? 'Updating Team...' : 'Save Changes'}
 						</Button>
 					</div>
 				</form>
