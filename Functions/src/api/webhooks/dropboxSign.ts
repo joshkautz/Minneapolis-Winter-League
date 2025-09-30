@@ -65,7 +65,7 @@ export const dropboxSignWebhook = onRequest(
 				}
 			}
 
-			resp.status(200).send('OK')
+			resp.status(200).send('Hello API Event Received')
 		} catch (error) {
 			logger.error('Error processing Dropbox Sign webhook:', error)
 			resp.status(500).send('Internal server error')
