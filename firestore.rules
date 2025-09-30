@@ -44,32 +44,20 @@ service cloud.firestore {
       allow delete: if false; // Use deletePlayerViaFunction
     }
     
-    // OFFERS [Read]: Limited to involved parties only
     match /offers/{offerId} {
       allow read: if true;
       allow create: if false; // Use createOfferViaFunction
       allow update: if false; // Use updateOfferStatusViaFunction 
-      allow delete: if false; // Handled automatically by Functions
+      allow delete: if false; // Manual process
     }
 
-    //////////////////////////////////////////////////////////////////////////////
-    // USER-SPECIFIC SENSITIVE DATA - Restricted access
-    //////////////////////////////////////////////////////////////////////////////
-    
-    // WAIVERS [Read/Write]: Users can only access their own waivers
     match /waivers/{waiverId} {
-      allow read: if isAuthenticated() && 
-                     request.auth.uid == resource.data.player.id;
-      
-      // WAIVERS [Create]: User can create their own waiver
-      allow create: if isAuthenticated() && 
-                       request.auth.uid == request.resource.data.player.id &&
-                       // Validate required fields
-                       request.resource.data.keys().hasAll(['player', 'season', 'signed']);
-      
-      // WAIVERS [Update/Delete]: Through Functions only for audit trail
-      allow update, delete: if false;
+      allow read: if true;
+      allow create: if false; // Use onPaymentCreated
+      allow update: if false; // Use dropboxSignWebhook 
+      allow delete: if false; // Manual process
     }
+
     //////////////////////////////////////////////////////////////////////////////
     // STRIPE INTEGRATION - Secure payment data access
     //////////////////////////////////////////////////////////////////////////////
