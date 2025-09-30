@@ -24,21 +24,17 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install App dependencies
-        working-directory: ./App
+      - name: Install dependencies
         run: npm ci
 
       - name: Format App
-        working-directory: ./App
-        run: npm run format:check
+        run: npm run format:check --workspace=App
 
       - name: Lint App
-        working-directory: ./App
-        run: npm run lint:check
+        run: npm run lint:check --workspace=App
 
       - name: Build App
-        working-directory: ./App
-        run: npm run build
+        run: npm run build --workspace=App
 
       - name: Deploy to Firebase Hosting Live Channel
         env:
@@ -65,21 +61,17 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Functions dependencies
-        working-directory: ./Functions
+      - name: Install dependencies
         run: npm ci
 
       - name: Format Functions
-        working-directory: ./Functions
-        run: npm run format:check
+        run: npm run format:check --workspace=Functions
 
       - name: Lint Functions
-        working-directory: ./Functions
-        run: npm run lint:check
+        run: npm run lint:check --workspace=Functions
 
       - name: Build Functions
-        working-directory: ./Functions
-        run: npm run build
+        run: npm run build --workspace=Functions
 
       - name: Deploy to Firebase Functions
         env:
