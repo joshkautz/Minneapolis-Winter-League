@@ -48,7 +48,7 @@ export const ManageNonCaptainActions = () => {
 					authenticatedUserSnapshot?.data()?.firstname ?? 'Player'
 				} has left the team`,
 				{
-					description: 'Send player invites to build up your roster.',
+					description: 'You can now join a different team or create your own.',
 				}
 			)
 		} catch (error) {
