@@ -35,9 +35,9 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Request rejected',
 			})
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Request not rejected'
+		} catch (error: any) {
+			// Firebase Functions errors have a message property
+			const errorMessage = error?.message || 'Request not rejected'
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -55,9 +55,9 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Request accepted',
 			})
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Request not accepted'
+		} catch (error: any) {
+			// Firebase Functions errors have a message property
+			const errorMessage = error?.message || 'Request not accepted'
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -75,9 +75,9 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Invite canceled',
 			})
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Invite not canceled'
+		} catch (error: any) {
+			// Firebase Functions errors have a message property
+			const errorMessage = error?.message || 'Invite not canceled'
 			toast.error('Failure', {
 				description: errorMessage,
 			})

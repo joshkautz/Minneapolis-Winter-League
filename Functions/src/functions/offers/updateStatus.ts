@@ -2,7 +2,7 @@
  * Update offer status callable function
  */
 
-import { onCall } from 'firebase-functions/v2/https'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, OfferDocument, TeamDocument } from '../../types.js'
@@ -30,17 +30,29 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 		const { data, auth } = request
 
 		// Validate authentication
-		validateAuthentication(auth)
+		try {
+			validateAuthentication(auth)
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Authentication failed'
+			throw new HttpsError('unauthenticated', errorMessage)
+		}
 
 		const { offerId, status } = data
 
 		// Validate inputs
 		if (!offerId || !status) {
-			throw new Error('Offer ID and status are required')
+			throw new HttpsError(
+				'invalid-argument',
+				'Offer ID and status are required'
+			)
 		}
 
 		if (!['accepted', 'rejected', 'canceled'].includes(status)) {
-			throw new Error('Invalid status. Must be accepted, rejected, or canceled')
+			throw new HttpsError(
+				'invalid-argument',
+				'Invalid status. Must be accepted, rejected, or canceled'
+			)
 		}
 
 		try {
@@ -52,23 +64,26 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 				const offerDoc = await transaction.get(offerRef)
 
 				if (!offerDoc.exists) {
-					throw new Error('Offer not found')
+					throw new HttpsError('not-found', 'Offer not found')
 				}
 
 				const offerData = offerDoc.data() as OfferDocument | undefined
 				if (!offerData) {
-					throw new Error('Invalid offer data')
+					throw new HttpsError('internal', 'Invalid offer data')
 				}
 
 				// Check if offer is still pending
 				if (offerData.status !== 'pending') {
-					throw new Error(`Offer has already been ${offerData.status}`)
+					throw new HttpsError(
+						'failed-precondition',
+						`Offer has already been ${offerData.status}`
+					)
 				}
 
 				// Check if offer has expired
 				const now = new Date()
 				if (offerData.expiresAt && offerData.expiresAt.toDate() < now) {
-					throw new Error('Offer has expired')
+					throw new HttpsError('failed-precondition', 'Offer has expired')
 				}
 
 				// Check if user is the creator of the offer (for cancellation)
@@ -86,15 +101,18 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 
 					if (!canRespondAsRecipient && !canCancelAsCreator) {
 						if (status === 'canceled' && !isCreator) {
-							throw new Error(
+							throw new HttpsError(
+								'permission-denied',
 								'Only the invitation creator can cancel this invitation'
 							)
 						} else if (status === 'rejected' && isCreator) {
-							throw new Error(
+							throw new HttpsError(
+								'permission-denied',
 								'Creators should use canceled status instead of rejected to cancel their invitations'
 							)
 						} else {
-							throw new Error(
+							throw new HttpsError(
+								'permission-denied',
 								'Only the invited player can respond to this invitation, or creator can cancel'
 							)
 						}
@@ -110,7 +128,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 						// Check if user is a team captain for accepting/rejecting
 						const teamDoc = await offerData.team.get()
 						if (!teamDoc.exists) {
-							throw new Error('Team not found')
+							throw new HttpsError('not-found', 'Team not found')
 						}
 
 						const teamDocument = teamDoc.data() as TeamDocument | undefined
@@ -120,13 +138,20 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 
 						if (!userIsCaptain) {
 							if (status === 'rejected') {
-								throw new Error('Only team captains can reject join requests')
+								throw new HttpsError(
+									'permission-denied',
+									'Only team captains can reject join requests'
+								)
 							} else if (status === 'canceled') {
-								throw new Error(
+								throw new HttpsError(
+									'permission-denied',
 									'Only the request creator can cancel their own request'
 								)
 							} else {
-								throw new Error('Only team captains can accept join requests')
+								throw new HttpsError(
+									'permission-denied',
+									'Only team captains can accept join requests'
+								)
 							}
 						}
 					}
@@ -166,6 +191,12 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 				}
 			})
 		} catch (error) {
+			// If it's already an HttpsError, just re-throw it
+			if (error instanceof HttpsError) {
+				throw error
+			}
+
+			// Otherwise, log and convert to HttpsError
 			const errorMessage =
 				error instanceof Error ? error.message : 'Unknown error'
 
@@ -176,8 +207,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 				error: errorMessage,
 			})
 
-			// Re-throw the original error message for better user experience
-			throw new Error(errorMessage)
+			throw new HttpsError('internal', errorMessage)
 		}
 	}
 )
