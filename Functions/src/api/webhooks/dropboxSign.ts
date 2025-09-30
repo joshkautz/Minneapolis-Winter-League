@@ -27,6 +27,7 @@ export const dropboxSignWebhook = onRequest(
 	{
 		region: FIREBASE_CONFIG.REGION,
 		secrets: ['DROPBOX_SIGN_API_KEY'],
+		invoker: 'public',
 	},
 	async (req, resp) => {
 		try {
