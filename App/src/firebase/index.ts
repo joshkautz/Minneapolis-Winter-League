@@ -13,6 +13,9 @@ export {
 	updatePlayer,
 } from './collections/players'
 
+// Player functions (Firebase Callable Functions)
+export { updatePlayerViaFunction } from './collections/functions'
+
 // Team operations
 export {
 	getTeamById,

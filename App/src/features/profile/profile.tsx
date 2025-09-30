@@ -45,10 +45,7 @@ export const Profile = () => {
 			/>
 
 			<div className='grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto'>
-				<ProfileForm
-					authStateUser={authStateUser}
-					authenticatedUserSnapshot={authenticatedUserSnapshot}
-				/>
+				<ProfileForm authenticatedUserSnapshot={authenticatedUserSnapshot} />
 
 				<ProfileActions
 					authStateUser={authStateUser}

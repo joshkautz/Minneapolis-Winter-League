@@ -20,8 +20,7 @@ import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import { updatePlayer } from '@/firebase/firestore'
-import { User } from 'firebase/auth'
+import { updatePlayerViaFunction } from '@/firebase'
 import { DocumentSnapshot } from '@/firebase/firestore'
 import { PlayerDocument } from '@/shared/utils'
 import {
@@ -31,7 +30,6 @@ import {
 import { UserCog } from 'lucide-react'
 
 interface ProfileFormProps {
-	authStateUser: User | null | undefined
 	authenticatedUserSnapshot: DocumentSnapshot<PlayerDocument> | undefined
 }
 
@@ -40,9 +38,9 @@ interface ProfileFormProps {
  *
  * Handles user profile editing (first name, last name, email)
  * Separated from main Profile component for better maintainability
+ * Uses Firebase Function for secure server-side updates
  */
 export const ProfileForm = ({
-	authStateUser,
 	authenticatedUserSnapshot,
 }: ProfileFormProps) => {
 	const form = useForm<ProfileFormData>({
@@ -61,25 +59,22 @@ export const ProfileForm = ({
 		}
 	}, [authenticatedUserSnapshot, form])
 
-	const onSubmit = useCallback(
-		(data: ProfileFormData) => {
-			updatePlayer(authStateUser, {
+	const onSubmit = useCallback(async (data: ProfileFormData) => {
+		try {
+			await updatePlayerViaFunction({
 				firstname: data.firstname,
 				lastname: data.lastname,
 			})
-				.then(() => {
-					toast.success('Success', {
-						description: 'User updated!',
-					})
-				})
-				.catch((err) => {
-					toast.error('Failure', {
-						description: `${err}`,
-					})
-				})
-		},
-		[authStateUser]
-	)
+			toast.success('Success', {
+				description: 'User updated!',
+			})
+		} catch (err) {
+			toast.error('Failure', {
+				description:
+					err instanceof Error ? err.message : 'Failed to update profile',
+			})
+		}
+	}, [])
 
 	return (
 		<Card className='h-fit'>
