@@ -25,19 +25,20 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
+        working-directory: ./App
         run: npm ci
 
-      - name: Install Rollup native bindings
-        run: npm install --no-save @rollup/rollup-linux-x64-gnu --workspace=App
-
       - name: Format App
-        run: npm run format:check --workspace=App
+        working-directory: ./App
+        run: npm run format:check
 
       - name: Lint App
-        run: npm run lint:check --workspace=App
+        working-directory: ./App
+        run: npm run lint:check
 
       - name: Build App
-        run: npm run build --workspace=App
+        working-directory: ./App
+        run: npm run build
 
       - name: Deploy to Firebase Hosting Preview Channel.
         env:
@@ -135,13 +136,17 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
+        working-directory: ./Functions
         run: npm ci
 
       - name: Format Functions
-        run: npm run format:check --workspace=Functions
+        working-directory: ./Functions
+        run: npm run format:check
 
       - name: Lint Functions
-        run: npm run lint:check --workspace=Functions
+        working-directory: ./Functions
+        run: npm run lint:check
 
       - name: Build Functions
-        run: npm run build --workspace=Functions
+        working-directory: ./Functions
+        run: npm run build
