@@ -137,7 +137,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./Functions
-        run: npm ci
+        run: npm install
 
       - name: Format Functions
         working-directory: ./Functions
