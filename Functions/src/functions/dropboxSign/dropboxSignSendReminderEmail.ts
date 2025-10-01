@@ -45,6 +45,9 @@ import {
  */
 export const dropboxSignSendReminderEmail = functions
 	.region(FIREBASE_CONFIG.REGION)
+	.runWith({
+		secrets: ['DROPBOX_SIGN_API_KEY'],
+	})
 	.https.onCall(
 		async (data: unknown, context: functions.https.CallableContext) => {
 			try {
@@ -110,6 +113,8 @@ export const dropboxSignSendReminderEmail = functions
 				const dropboxConfig = getDropboxSignConfig()
 				const dropbox = new SignatureRequestApi()
 				dropbox.username = dropboxConfig.API_KEY
+
+				logger.info(`Getting key: ${dropboxConfig.API_KEY}`)
 
 				// Create the reminder request
 				const reminderRequest = SignatureRequestRemindRequest.init({
