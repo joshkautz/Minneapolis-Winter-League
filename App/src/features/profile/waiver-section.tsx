@@ -10,6 +10,12 @@ import {
 	AlertCircle,
 	Calendar,
 } from 'lucide-react'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { toast } from 'sonner'
 import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
 import { formatTimestamp, SeasonDocument } from '@/shared/utils'
@@ -211,24 +217,34 @@ export const WaiverSection = ({
 						</Alert>
 					)}
 
-					<Button
-						onClick={sendDropboxEmailButtonOnClickHandler}
-						disabled={
-							isWaiverDisabled ||
-							dropboxEmailLoading ||
-							dropboxEmailSent ||
-							needsPayment ||
-							isUserBanned
-						}
-						className='w-full'
-					>
-						{dropboxEmailLoading ? (
-							<LoadingSpinner size='sm' className='mr-2' />
-						) : (
-							<FileText className='mr-2 h-4 w-4' />
-						)}
-						{dropboxEmailSent ? 'Waiver Email Sent!' : 'Send Waiver Email'}
-					</Button>
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<span className='w-full'>
+									<Button
+										onClick={sendDropboxEmailButtonOnClickHandler}
+										disabled={true}
+										className='w-full'
+									>
+										{dropboxEmailLoading ? (
+											<LoadingSpinner size='sm' className='mr-2' />
+										) : (
+											<FileText className='mr-2 h-4 w-4' />
+										)}
+										{dropboxEmailSent
+											? 'Waiver Email Sent!'
+											: 'Send Waiver Email'}
+									</Button>
+								</span>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>
+									Dropbox Sign is experiencing instability, please wait for
+									waiver emails to be delivered.
+								</p>
+							</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
 
 					{dropboxEmailSent && (
 						<p className='text-xs text-muted-foreground text-center'>
