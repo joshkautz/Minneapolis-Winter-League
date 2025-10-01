@@ -73,8 +73,7 @@ export const AdminDashboard: React.FC = () => {
 			} else {
 				toast.error(result.message)
 			}
-		} catch (error) {
-			console.error('Error adding season to players:', error)
+		} catch (_error) {
 			toast.error('Failed to add season to players. Please try again.')
 		} finally {
 			setIsAddingSeasonToPlayers(false)
@@ -105,7 +104,7 @@ export const AdminDashboard: React.FC = () => {
 							<h2 className='text-xl font-semibold'>Access Denied</h2>
 						</div>
 						<p className='text-muted-foreground'>
-							You don't have permission to access the admin dashboard.
+							You don&apos;t have permission to access the admin dashboard.
 						</p>
 					</CardContent>
 				</Card>
@@ -174,7 +173,7 @@ export const AdminDashboard: React.FC = () => {
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<p className='text-sm text-muted-foreground'>
-							Check which players have paid for registration but haven't signed
+							Check which players have paid for registration but haven&apos;t signed
 							their waiver yet.
 						</p>
 						<Button asChild className='w-full'>
@@ -292,6 +291,26 @@ export const AdminDashboard: React.FC = () => {
 						</div>
 					</CardContent>
 				</Card>
+                {/* Game Scores Management */}
+                <Card className='hover:shadow-lg transition-shadow'>
+                    <CardHeader>
+                        <CardTitle className='flex items-center gap-2'>
+                            <Trophy className='h-5 w-5 text-emerald-600' />
+                            Game Scores
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className='space-y-4'>
+                        <p className='text-sm text-muted-foreground'>
+                            View and update game scores for the current season.
+                        </p>
+                        <Button asChild className='w-full'>
+                            <Link to='/admin/game-scores'>
+                                <Trophy className='h-4 w-4 mr-2' />
+                                Manage Game Scores
+                            </Link>
+                        </Button>
+                    </CardContent>
+                </Card>
 				{/* System Analytics (placeholder for future) */}
 				<Card className='hover:shadow-lg transition-shadow opacity-50'>
 					<CardHeader>
