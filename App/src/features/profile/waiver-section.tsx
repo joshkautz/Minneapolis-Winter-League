@@ -232,15 +232,16 @@ export const WaiverSection = ({
 											<FileText className='mr-2 h-4 w-4' />
 										)}
 										{dropboxEmailSent
-											? 'Waiver Email Sent!'
-											: 'Send Waiver Email'}
+											? 'Waiver Email Resent!'
+											: 'Resend Waiver Email'}
 									</Button>
 								</span>
 							</TooltipTrigger>
 							<TooltipContent>
 								<p>
-									Dropbox Sign is experiencing instability, please wait for
-									waiver emails to be delivered.
+									Dropbox Sign is currently experiencing instability. Upon
+									payment, you will automatically be sent a waiver email. Please
+									patiently check your inbox or spam.
 								</p>
 							</TooltipContent>
 						</Tooltip>
