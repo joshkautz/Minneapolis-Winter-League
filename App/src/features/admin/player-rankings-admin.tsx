@@ -7,6 +7,7 @@
 import React, { useState } from 'react'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { useAuthState } from 'react-firebase-hooks/auth'
+import { Link } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
@@ -24,6 +25,7 @@ import {
 	SeasonDocument,
 } from '@/types'
 import { logger } from '@/shared/utils'
+import { LoadingSpinner } from '@/shared/components'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -52,9 +54,9 @@ import {
 	XCircle,
 	AlertCircle,
 	Settings,
-	AlertTriangle,
 	ChevronLeft,
 	ChevronRight,
+	ArrowLeft,
 } from 'lucide-react'
 
 export const PlayerRankingsAdmin: React.FC = () => {
@@ -175,36 +177,13 @@ export const PlayerRankingsAdmin: React.FC = () => {
 		setCurrentPage(page)
 	}
 
-	// Handle authentication loading
 	if (playerLoading) {
 		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<p>Loading...</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
-	// Handle non-admin users
-	if (!isAdmin) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access the Player Rankings admin
-							interface.
-						</p>
-					</CardContent>
-				</Card>
-			</div>
+			<LoadingSpinner
+				size='lg'
+				centered
+				label='Loading player rankings admin...'
+			/>
 		)
 	}
 
@@ -340,6 +319,16 @@ export const PlayerRankingsAdmin: React.FC = () => {
 				<p className='text-muted-foreground'>
 					Manage player rankings calculations and monitor system status
 				</p>
+			</div>
+
+			{/* Back to Dashboard */}
+			<div>
+				<Button variant='outline' asChild>
+					<Link to='/admin'>
+						<ArrowLeft className='h-4 w-4 mr-2' />
+						Back to Admin Dashboard
+					</Link>
+				</Button>
 			</div>
 
 			{/* Status Alerts */}

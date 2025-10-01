@@ -142,7 +142,7 @@ export const AdminDashboard: React.FC = () => {
 				</Card>
 
 				{/* User Management (placeholder for future) */}
-				<Card className='hover:shadow-lg transition-shadow opacity-50'>
+				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
 							<Users className='h-5 w-5 text-blue-600' />
@@ -153,9 +153,11 @@ export const AdminDashboard: React.FC = () => {
 						<p className='text-sm text-muted-foreground'>
 							Manage user accounts, permissions, and player profiles.
 						</p>
-						<Button disabled className='w-full'>
-							<Users className='h-4 w-4 mr-2' />
-							Coming Soon
+						<Button asChild className='w-full'>
+							<Link to='/admin/user-management'>
+								<Users className='h-4 w-4 mr-2' />
+								Manage Users
+							</Link>
 						</Button>
 					</CardContent>
 				</Card>

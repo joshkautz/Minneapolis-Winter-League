@@ -40,6 +40,10 @@ export const AdminDashboard = lazyImport(
 	() => import('@/features/admin'),
 	'AdminDashboard'
 )
+export const UserManagement = lazyImport(
+	() => import('@/features/admin'),
+	'UserManagement'
+)
 
 // Protected routes - require authentication
 export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')

@@ -6,3 +6,4 @@
 
 export { AdminDashboard } from './admin-dashboard'
 export { PlayerRankingsAdmin } from './player-rankings-admin'
+export { UserManagement } from './user-management'
