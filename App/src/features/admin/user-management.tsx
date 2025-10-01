@@ -5,31 +5,21 @@
  */
 
 import React, { useState } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { ArrowLeft, Mail, Users, AlertTriangle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-import { auth } from '@/firebase/auth'
-import { getPlayerRef } from '@/firebase/collections/players'
 import { updatePlayerEmailViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { PageContainer, PageHeader, LoadingSpinner } from '@/shared/components'
+import { PageContainer, PageHeader } from '@/shared/components'
 
 export const UserManagement: React.FC = () => {
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
-
 	const [playerId, setPlayerId] = useState('')
 	const [newEmail, setNewEmail] = useState('')
 	const [isUpdating, setIsUpdating] = useState(false)
-
-	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	const handleUpdateEmail = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -77,12 +67,6 @@ export const UserManagement: React.FC = () => {
 		} finally {
 			setIsUpdating(false)
 		}
-	}
-
-	if (playerLoading) {
-		return (
-			<LoadingSpinner size='lg' centered label='Loading user management...' />
-		)
 	}
 
 	return (

@@ -5,12 +5,9 @@
  */
 
 import React, { useState } from 'react'
-import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
-import { useAuthState } from 'react-firebase-hooks/auth'
+import { useCollection } from 'react-firebase-hooks/firestore'
 import { Link } from 'react-router-dom'
 
-import { auth } from '@/firebase/auth'
-import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	playerRankingsCalculationsQuery,
 	rebuildPlayerRankings,
@@ -25,7 +22,6 @@ import {
 	SeasonDocument,
 } from '@/types'
 import { logger } from '@/shared/utils'
-import { LoadingSpinner } from '@/shared/components'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -60,11 +56,6 @@ import {
 } from 'lucide-react'
 
 export const PlayerRankingsAdmin: React.FC = () => {
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
-
-	const isAdmin = playerSnapshot?.data()?.admin || false
 	const [isCalculating, setIsCalculating] = useState(false)
 	const [calculationError, setCalculationError] = useState<string | null>(null)
 	const [calculationSuccess, setCalculationSuccess] = useState<string | null>(
@@ -175,16 +166,6 @@ export const PlayerRankingsAdmin: React.FC = () => {
 
 	const handlePageClick = (page: number) => {
 		setCurrentPage(page)
-	}
-
-	if (playerLoading) {
-		return (
-			<LoadingSpinner
-				size='lg'
-				centered
-				label='Loading player rankings admin...'
-			/>
-		)
 	}
 
 	const handleTriggerCalculation = async (type: 'full' | 'incremental') => {
