@@ -17,6 +17,7 @@ import {
 	WaiverStatus,
 	EmailVerification,
 	PlayerRegistrationStatus,
+	PendingOffers,
 	Profile,
 	ManageTeam,
 	NotFound,
@@ -112,7 +113,6 @@ export const AppRoutes: React.FC = () => {
 						</PublicRoute>
 					}
 				/>
-
 				{/* Protected routes */}
 				<Route
 					path='/profile'
@@ -185,6 +185,16 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
+					path='/admin/pending-offers'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<PendingOffers />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
 					path='/admin/player-rankings'
 					element={
 						<AuthenticatedRoute>
@@ -193,8 +203,7 @@ export const AppRoutes: React.FC = () => {
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
-				/>
-
+				/>{' '}
 				{/* Error routes */}
 				<Route
 					path='*'

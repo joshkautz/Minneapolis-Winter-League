@@ -133,3 +133,14 @@ export const offersForPlayerByTeamQuery = (
 		where('team', '==', teamQueryDocumentSnapshot.ref)
 	) as Query<OfferDocument>
 }
+
+/**
+ * Creates a query for all pending offers (admin only)
+ * Returns all offers with status = 'pending'
+ */
+export const allPendingOffersQuery = (): Query<OfferDocument> => {
+	return query(
+		collection(firestore, Collections.OFFERS),
+		where('status', '==', OfferStatus.PENDING)
+	) as Query<OfferDocument>
+}

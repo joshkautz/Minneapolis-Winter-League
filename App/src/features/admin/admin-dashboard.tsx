@@ -36,6 +36,7 @@ import {
 	FileCheck,
 	CheckCircle,
 	ClipboardList,
+	Mail,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { SeasonDocument } from '@/types'
@@ -143,7 +144,6 @@ export const AdminDashboard: React.FC = () => {
 						</Button>
 					</CardContent>
 				</Card>
-
 				{/* User Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
@@ -164,7 +164,6 @@ export const AdminDashboard: React.FC = () => {
 						</Button>
 					</CardContent>
 				</Card>
-
 				{/* Waiver Status */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
@@ -186,7 +185,6 @@ export const AdminDashboard: React.FC = () => {
 						</Button>
 					</CardContent>
 				</Card>
-
 				{/* Email Verification */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
@@ -208,7 +206,7 @@ export const AdminDashboard: React.FC = () => {
 						</Button>
 					</CardContent>
 				</Card>
-
+				{/* Player Registration Status */}
 				{/* Player Registration Status */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
@@ -230,8 +228,28 @@ export const AdminDashboard: React.FC = () => {
 						</Button>
 					</CardContent>
 				</Card>
-
-				{/* Season Management */}
+				{/* Pending Offers */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Mail className='h-5 w-5 text-orange-600' />
+							Pending Offers
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							View all outstanding team invitations and join requests that are
+							awaiting response.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/pending-offers'>
+								<Mail className='h-4 w-4 mr-2' />
+								View Pending Offers
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* Season Management */} {/* Season Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
@@ -274,7 +292,6 @@ export const AdminDashboard: React.FC = () => {
 						</div>
 					</CardContent>
 				</Card>
-
 				{/* System Analytics (placeholder for future) */}
 				<Card className='hover:shadow-lg transition-shadow opacity-50'>
 					<CardHeader>

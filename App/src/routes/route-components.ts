@@ -56,6 +56,10 @@ export const PlayerRegistrationStatus = lazyImport(
 	() => import('@/features/admin'),
 	'PlayerRegistrationStatus'
 )
+export const PendingOffers = lazyImport(
+	() => import('@/features/admin'),
+	'PendingOffers'
+)
 
 // Protected routes - require authentication
 export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')
