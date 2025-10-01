@@ -115,12 +115,14 @@ export const createOffer = onCall<CreateOfferRequest>(
 				}
 
 				// Check for existing pending offers between this player and team
-				const existingOffersQuery = await firestore
-					.collection(Collections.OFFERS)
-					.where('player', '==', playerRef)
-					.where('team', '==', teamRef)
-					.where('status', '==', 'pending')
-					.get()
+				// Must be done inside transaction to prevent race conditions
+				const existingOffersQuery = await transaction.get(
+					firestore
+						.collection(Collections.OFFERS)
+						.where('player', '==', playerRef)
+						.where('team', '==', teamRef)
+						.where('status', '==', 'pending')
+				)
 
 				if (!existingOffersQuery.empty) {
 					throw new HttpsError(
