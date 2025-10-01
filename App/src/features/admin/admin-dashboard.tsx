@@ -35,6 +35,7 @@ import {
 	UserPlus,
 	FileCheck,
 	CheckCircle,
+	ClipboardList,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { SeasonDocument } from '@/types'
@@ -203,6 +204,28 @@ export const AdminDashboard: React.FC = () => {
 							<Link to='/admin/email-verification'>
 								<CheckCircle className='h-4 w-4 mr-2' />
 								Verify Email
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+
+				{/* Player Registration Status */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<ClipboardList className='h-5 w-5 text-indigo-600' />
+							Registration Status
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							View all players and their email verification, payment, and waiver
+							status.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/player-registration-status'>
+								<ClipboardList className='h-4 w-4 mr-2' />
+								View Registration Status
 							</Link>
 						</Button>
 					</CardContent>

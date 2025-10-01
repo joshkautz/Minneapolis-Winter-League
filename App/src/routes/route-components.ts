@@ -52,6 +52,10 @@ export const EmailVerification = lazyImport(
 	() => import('@/features/admin'),
 	'EmailVerification'
 )
+export const PlayerRegistrationStatus = lazyImport(
+	() => import('@/features/admin'),
+	'PlayerRegistrationStatus'
+)
 
 // Protected routes - require authentication
 export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')
