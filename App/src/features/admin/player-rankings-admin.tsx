@@ -5,9 +5,12 @@
  */
 
 import React, { useState } from 'react'
-import { useCollection } from 'react-firebase-hooks/firestore'
+import { useAuthState } from 'react-firebase-hooks/auth'
+import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { Link } from 'react-router-dom'
 
+import { auth } from '@/firebase/auth'
+import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	playerRankingsCalculationsQuery,
 	rebuildPlayerRankings,
@@ -53,9 +56,14 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	ArrowLeft,
+	AlertTriangle,
 } from 'lucide-react'
 
 export const PlayerRankingsAdmin: React.FC = () => {
+	const [user] = useAuthState(auth)
+	const playerRef = getPlayerRef(user)
+	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+
 	const [isCalculating, setIsCalculating] = useState(false)
 	const [calculationError, setCalculationError] = useState<string | null>(null)
 	const [calculationSuccess, setCalculationSuccess] = useState<string | null>(
@@ -65,6 +73,8 @@ export const PlayerRankingsAdmin: React.FC = () => {
 	// Pagination state for uncalculated games
 	const [currentPage, setCurrentPage] = useState(1)
 	const gamesPerPage = 20
+
+	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	const [calculationsSnapshot, loading, error] = useCollection(
 		playerRankingsCalculationsQuery()
@@ -287,6 +297,38 @@ export const PlayerRankingsAdmin: React.FC = () => {
 			logger.error('Error calculating duration', error as Error)
 			return 'N/A'
 		}
+	}
+
+	// Handle authentication and data loading
+	if (playerLoading) {
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<Card>
+					<CardContent className='p-6 text-center'>
+						<p>Loading...</p>
+					</CardContent>
+				</Card>
+			</div>
+		)
+	}
+
+	// Handle non-admin users
+	if (!isAdmin) {
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<Card>
+					<CardContent className='p-6 text-center'>
+						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
+							<AlertTriangle className='h-6 w-6' />
+							<h2 className='text-xl font-semibold'>Access Denied</h2>
+						</div>
+						<p className='text-muted-foreground'>
+							You don't have permission to access the admin dashboard.
+						</p>
+					</CardContent>
+				</Card>
+			</div>
+		)
 	}
 
 	return (
