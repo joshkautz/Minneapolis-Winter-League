@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { LoadingSpinner } from '@/shared/components'
 import { getInviteMessage, getRequestMessage } from '@/shared/utils'
 import { NotificationCardItem } from '@/shared/components'
+import { useState } from 'react'
 
 export const ManageCaptainsOffersPanel = () => {
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
@@ -19,6 +20,8 @@ export const ManageCaptainsOffersPanel = () => {
 		incomingOffersQuerySnapshotLoading,
 	} = useOffersContext()
 
+	const [loadingOfferId, setLoadingOfferId] = useState<string | null>(null)
+
 	const { offers: outgoingInvites, offersLoading: outgoingInvitesLoading } =
 		useOffer(outgoingOffersQuerySnapshot, currentSeasonTeamsQuerySnapshot)
 	const { offers: incomingRequests, offersLoading: incomingRequestsLoading } =
@@ -27,6 +30,7 @@ export const ManageCaptainsOffersPanel = () => {
 	const handleReject = async (
 		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
+		setLoadingOfferId(offerDocumentReference.id)
 		try {
 			await updateOfferStatusViaFunction({
 				offerId: offerDocumentReference.id,
@@ -41,12 +45,15 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.error('Failure', {
 				description: errorMessage,
 			})
+		} finally {
+			setLoadingOfferId(null)
 		}
 	}
 
 	const handleAccept = async (
 		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
+		setLoadingOfferId(offerDocumentReference.id)
 		try {
 			await updateOfferStatusViaFunction({
 				offerId: offerDocumentReference.id,
@@ -61,12 +68,15 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.error('Failure', {
 				description: errorMessage,
 			})
+		} finally {
+			setLoadingOfferId(null)
 		}
 	}
 
 	const handleCancel = async (
 		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
+		setLoadingOfferId(offerDocumentReference.id)
 		try {
 			await updateOfferStatusViaFunction({
 				offerId: offerDocumentReference.id,
@@ -81,14 +91,10 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.error('Failure', {
 				description: errorMessage,
 			})
+		} finally {
+			setLoadingOfferId(null)
 		}
 	}
-
-	const outgoingActions = [{ title: 'Cancel', action: handleCancel }]
-	const incomingActions = [
-		{ title: 'Accept', action: handleAccept },
-		{ title: 'Reject', action: handleReject },
-	]
 
 	return (
 		<div className='w-full space-y-4'>
@@ -113,16 +119,30 @@ export const ManageCaptainsOffersPanel = () => {
 						</div>
 					</div>
 				) : (
-					incomingRequests?.map((incomingRequest: OfferDocumentWithUI) => (
-						<NotificationCardItem
-							key={`incomingRequest-row-${incomingRequest.ref.id}`}
-							type={OfferDirection.INCOMING_REQUEST}
-							data={incomingRequest}
-							statusColor={'bg-primary'}
-							message={'would like to join'}
-							actionOptions={incomingActions}
-						/>
-					))
+					incomingRequests?.map((incomingRequest: OfferDocumentWithUI) => {
+						const isLoading = loadingOfferId === incomingRequest.ref.id
+						return (
+							<NotificationCardItem
+								key={`incomingRequest-row-${incomingRequest.ref.id}`}
+								type={OfferDirection.INCOMING_REQUEST}
+								data={incomingRequest}
+								statusColor={'bg-primary'}
+								message={'would like to join'}
+								actionOptions={[
+									{
+										title: 'Accept',
+										action: handleAccept,
+										isLoading: isLoading,
+									},
+									{
+										title: 'Reject',
+										action: handleReject,
+										isLoading: isLoading,
+									},
+								]}
+							/>
+						)
+					})
 				)}
 			</NotificationCard>
 			<NotificationCard
@@ -146,16 +166,25 @@ export const ManageCaptainsOffersPanel = () => {
 						</div>
 					</div>
 				) : (
-					outgoingInvites?.map((outgoingInvite: OfferDocumentWithUI) => (
-						<NotificationCardItem
-							key={`outgoingInvite-row-${outgoingInvite.ref.id}`}
-							type={OfferDirection.OUTGOING_INVITE}
-							data={outgoingInvite}
-							statusColor={'bg-muted-foreground'}
-							message={'invite sent for'}
-							actionOptions={outgoingActions}
-						/>
-					))
+					outgoingInvites?.map((outgoingInvite: OfferDocumentWithUI) => {
+						const isLoading = loadingOfferId === outgoingInvite.ref.id
+						return (
+							<NotificationCardItem
+								key={`outgoingInvite-row-${outgoingInvite.ref.id}`}
+								type={OfferDirection.OUTGOING_INVITE}
+								data={outgoingInvite}
+								statusColor={'bg-primary'}
+								message={'invited to join'}
+								actionOptions={[
+									{
+										title: 'Cancel',
+										action: handleCancel,
+										isLoading: isLoading,
+									},
+								]}
+							/>
+						)
+					})
 				)}
 			</NotificationCard>
 		</div>

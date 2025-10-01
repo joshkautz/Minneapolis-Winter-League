@@ -48,19 +48,34 @@ export const createOffer = onCall<CreateOfferRequest>(
 		try {
 			const firestore = getFirestore()
 
+			// Get current season info first (outside transaction)
+			const currentSeason = await getCurrentSeason()
+			if (!currentSeason) {
+				throw new HttpsError('failed-precondition', 'No current season found')
+			}
+			const seasonRef = await getCurrentSeasonRef()
+
+			// Setup references
+			const playerRef = firestore.collection(Collections.PLAYERS).doc(playerId)
+			const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
+
+			// Check for existing pending offers BEFORE transaction to avoid lock timeout
+			const existingOffersSnapshot = await firestore
+				.collection(Collections.OFFERS)
+				.where('player', '==', playerRef)
+				.where('team', '==', teamRef)
+				.where('status', '==', 'pending')
+				.get()
+
+			if (!existingOffersSnapshot.empty) {
+				throw new HttpsError(
+					'already-exists',
+					'A pending offer already exists between this player and team'
+				)
+			}
+
 			return await firestore.runTransaction(async (transaction) => {
-				const currentSeason = await getCurrentSeason()
-				if (!currentSeason) {
-					throw new HttpsError('failed-precondition', 'No current season found')
-				}
-				const seasonRef = await getCurrentSeasonRef()
-
 				// Get player and team documents
-				const playerRef = firestore
-					.collection(Collections.PLAYERS)
-					.doc(playerId)
-				const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
-
 				const [playerDoc, teamDoc] = await Promise.all([
 					transaction.get(playerRef),
 					transaction.get(teamRef),
@@ -111,23 +126,6 @@ export const createOffer = onCall<CreateOfferRequest>(
 					throw new HttpsError(
 						'already-exists',
 						'Player is already on a team for this season'
-					)
-				}
-
-				// Check for existing pending offers between this player and team
-				// Must be done inside transaction to prevent race conditions
-				const existingOffersQuery = await transaction.get(
-					firestore
-						.collection(Collections.OFFERS)
-						.where('player', '==', playerRef)
-						.where('team', '==', teamRef)
-						.where('status', '==', 'pending')
-				)
-
-				if (!existingOffersQuery.empty) {
-					throw new HttpsError(
-						'already-exists',
-						'A pending offer already exists between this player and team'
 					)
 				}
 

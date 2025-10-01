@@ -2,6 +2,7 @@ import { cn, OfferDocument, OfferDirection } from '@/shared/utils'
 import { Button } from '@/components/ui/button'
 import { DocumentReference } from '@/firebase/firestore'
 import { OfferDocumentWithUI } from '@/shared/hooks'
+import { LoadingSpinner } from '@/shared/components'
 
 export interface NotificationCardItemProps {
 	type: OfferDirection
@@ -11,6 +12,7 @@ export interface NotificationCardItemProps {
 	actionOptions: {
 		title: string
 		action: (offerDocumentReference: DocumentReference<OfferDocument>) => void
+		isLoading?: boolean
 	}[]
 }
 
@@ -43,16 +45,24 @@ export const NotificationCardItem = ({
 				</p>
 			</div>
 			<div className='flex justify-end flex-1 gap-2'>
-				{actionOptions.map(({ title, action }, index) => (
+				{actionOptions.map(({ title, action, isLoading }, index) => (
 					<Button
 						key={`action-${index}-${title}`}
 						size={'sm'}
 						variant={'outline'}
+						disabled={isLoading || actionOptions.some((opt) => opt.isLoading)}
 						onClick={() => {
 							action(data.ref)
 						}}
 					>
-						{title}
+						{isLoading ? (
+							<>
+								<LoadingSpinner size='sm' withMargin={false} />
+								<span className='ml-2'>Loading...</span>
+							</>
+						) : (
+							title
+						)}
 					</Button>
 				))}
 			</div>
