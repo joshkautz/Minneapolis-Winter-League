@@ -15,6 +15,7 @@ import {
 	AdminDashboard,
 	UserManagement,
 	WaiverStatus,
+	EmailVerification,
 	Profile,
 	ManageTeam,
 	NotFound,
@@ -158,6 +159,16 @@ export const AppRoutes: React.FC = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<WaiverStatus />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/email-verification'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<EmailVerification />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

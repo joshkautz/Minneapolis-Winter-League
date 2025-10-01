@@ -117,6 +117,39 @@ export const updatePlayerEmailViaFunction = async (
 	return result.data
 }
 
+interface VerifyUserEmailRequest {
+	/** User's email address OR Firebase Auth UID (one is required) */
+	email?: string
+	uid?: string
+}
+
+interface VerifyUserEmailResponse {
+	success: true
+	userId: string
+	email: string
+	message: string
+}
+
+/**
+ * Marks a user's email as verified via Firebase Function
+ *
+ * Security features:
+ * - Only admins can call this function
+ * - Accepts either email or UID
+ * - Updates Firebase Authentication only (no Firestore changes)
+ * - Comprehensive error handling and logging
+ */
+export const verifyUserEmailViaFunction = async (
+	data: VerifyUserEmailRequest
+): Promise<VerifyUserEmailResponse> => {
+	const verifyUserEmail = httpsCallable<
+		VerifyUserEmailRequest,
+		VerifyUserEmailResponse
+	>(functions, 'verifyUserEmail')
+	const result = await verifyUserEmail(data)
+	return result.data
+}
+
 interface AddNewSeasonToPlayersRequest {
 	/** Season ID to add to all players */
 	seasonId: string

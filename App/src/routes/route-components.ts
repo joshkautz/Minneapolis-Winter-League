@@ -48,6 +48,10 @@ export const WaiverStatus = lazyImport(
 	() => import('@/features/admin'),
 	'WaiverStatus'
 )
+export const EmailVerification = lazyImport(
+	() => import('@/features/admin'),
+	'EmailVerification'
+)
 
 // Protected routes - require authentication
 export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')
