@@ -55,17 +55,29 @@ export const dropboxSignSendReminderEmail = functions
 				validateAuthentication(context.auth)
 
 				const userId = context.auth!.uid
+				logger.info('Starting reminder email process', {
+					userId,
+					timestamp: new Date().toISOString(),
+				})
+
 				const firestore = getFirestore()
 
 				// Get the player document reference
 				const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
+				logger.info('Player reference created', { userId })
 
 				// Find the waiver document for this user
+				logger.info('Querying for waiver document', { userId })
 				const waiverQuery = await firestore
 					.collection(Collections.WAIVERS)
 					.where('player', '==', playerRef)
 					.limit(1)
 					.get()
+
+				logger.info('Waiver query completed', {
+					isEmpty: waiverQuery.empty,
+					resultCount: waiverQuery.size,
+				})
 
 				if (waiverQuery.empty) {
 					throw new functions.https.HttpsError(
@@ -77,6 +89,14 @@ export const dropboxSignSendReminderEmail = functions
 				const waiverDoc = waiverQuery.docs[0]
 				const waiverData = waiverDoc.data() as WaiverDocument | undefined
 
+				logger.info('Waiver document retrieved', {
+					hasData: !!waiverData,
+					waiverDocId: waiverDoc.id,
+					waiverFields: waiverData ? Object.keys(waiverData) : [],
+					signatureRequestId: waiverData?.signatureRequestId,
+					playerId: waiverData?.player.id,
+				})
+
 				if (!waiverData) {
 					throw new functions.https.HttpsError(
 						'internal',
@@ -84,13 +104,12 @@ export const dropboxSignSendReminderEmail = functions
 					)
 				}
 
-				logger.info(`Waiver data retrieved: ${JSON.stringify(waiverData)}`)
-				logger.info(waiverData)
-				logger.info(
-					`DROPBOX_SIGN_API_KEY from process env: ${process.env.DROPBOX_SIGN_API_KEY}`
-				)
-
 				const signatureRequestId = waiverData.signatureRequestId
+
+				logger.info('Signature request ID extracted', {
+					hasSignatureRequestId: !!signatureRequestId,
+					signatureRequestIdLength: signatureRequestId?.length,
+				})
 
 				if (!signatureRequestId) {
 					throw new functions.https.HttpsError(
@@ -100,12 +119,26 @@ export const dropboxSignSendReminderEmail = functions
 				}
 
 				// Get the player's email for the reminder
+				logger.info('Fetching player document', { userId })
 				const playerDoc = await playerRef.get()
+
+				logger.info('Player document retrieved', {
+					exists: playerDoc.exists,
+					hasData: !!playerDoc.data(),
+				})
+
 				if (!playerDoc.exists) {
 					throw new functions.https.HttpsError('not-found', 'Player not found')
 				}
 
 				const playerData = playerDoc.data()
+
+				logger.info('Player data parsed', {
+					hasPlayerData: !!playerData,
+					hasEmail: !!(playerData && playerData.email),
+					emailDomain: playerData?.email?.split('@')[1],
+				})
+
 				if (!playerData || !playerData.email) {
 					throw new functions.https.HttpsError(
 						'internal',
@@ -114,26 +147,74 @@ export const dropboxSignSendReminderEmail = functions
 				}
 
 				// Send reminder using Dropbox Sign API
+				logger.info('Initializing Dropbox Sign API')
 				const dropboxConfig = getDropboxSignConfig()
+
+				logger.info('Dropbox configuration loaded', {
+					hasApiKey: !!dropboxConfig.API_KEY,
+					apiKeyLength: dropboxConfig.API_KEY?.length,
+					apiKeyPrefix: dropboxConfig.API_KEY?.substring(0, 15) + '...',
+					hasTemplateId: !!dropboxConfig.TEMPLATE_ID,
+					testMode: dropboxConfig.TEST_MODE,
+				})
+
 				const dropbox = new SignatureRequestApi()
 				dropbox.username = dropboxConfig.API_KEY
 
-				logger.info(`Getting key: ${dropboxConfig.API_KEY}`)
-
-				// Create the reminder request
-				const reminderRequest = SignatureRequestRemindRequest.init({
+				logger.info('Dropbox Sign API configuration', {
+					hasApiKey: !!dropboxConfig.API_KEY,
+					apiKeyPrefix: dropboxConfig.API_KEY?.substring(0, 10),
+					signatureRequestId,
 					emailAddress: playerData.email,
 				})
 
-				await dropbox.signatureRequestRemind(
+				// Create the reminder request
+				const reminderRequest: SignatureRequestRemindRequest = {
+					emailAddress: playerData.email,
+				}
+
+				logger.info('Sending reminder request to Dropbox Sign API', {
 					signatureRequestId,
-					reminderRequest
-				)
+					reminderRequest,
+					requestType: 'signatureRequestRemind',
+				})
+
+				let response
+				try {
+					response = await dropbox.signatureRequestRemind(
+						signatureRequestId,
+						reminderRequest
+					)
+					logger.info('Dropbox Sign API call successful')
+				} catch (dropboxError) {
+					logger.error('Dropbox Sign API call failed', {
+						error:
+							dropboxError instanceof Error ? dropboxError.message : 'Unknown',
+						errorName:
+							dropboxError instanceof Error ? dropboxError.name : undefined,
+						errorStack:
+							dropboxError instanceof Error ? dropboxError.stack : undefined,
+						fullError: JSON.stringify(dropboxError, null, 2),
+					})
+					throw dropboxError
+				}
+
+				logger.info('Dropbox Sign API response received', {
+					hasResponse: !!response,
+					responseType: typeof response,
+					responseKeys: response ? Object.keys(response) : [],
+				})
 
 				logger.info('Sent reminder email for signature request', {
 					playerId: userId,
 					signatureRequestId,
 					emailAddress: playerData.email,
+				})
+
+				logger.info('Reminder email process completed successfully', {
+					userId,
+					signatureRequestId,
+					timestamp: new Date().toISOString(),
 				})
 
 				return {
@@ -146,7 +227,10 @@ export const dropboxSignSendReminderEmail = functions
 				logger.error('Error sending reminder email:', {
 					playerId: context.auth?.uid,
 					error: error instanceof Error ? error.message : 'Unknown error',
+					errorType:
+						error instanceof Error ? error.constructor.name : typeof error,
 					stack: error instanceof Error ? error.stack : undefined,
+					fullError: JSON.stringify(error, Object.getOwnPropertyNames(error)),
 				})
 
 				// If it's already an HttpsError, re-throw it
