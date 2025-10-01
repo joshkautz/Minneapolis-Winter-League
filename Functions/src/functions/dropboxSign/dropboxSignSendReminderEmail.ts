@@ -84,7 +84,11 @@ export const dropboxSignSendReminderEmail = functions
 					)
 				}
 
-				logger.info('Waiver data retrieved', waiverData)
+				logger.info(`Waiver data retrieved: ${JSON.stringify(waiverData)}`)
+				logger.info(waiverData)
+				logger.info(
+					`DROPBOX_SIGN_API_KEY from process env: ${process.env.DROPBOX_SIGN_API_KEY}`
+				)
 
 				const signatureRequestId = waiverData.signatureRequestId
 
