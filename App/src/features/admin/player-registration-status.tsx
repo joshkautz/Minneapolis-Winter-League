@@ -4,10 +4,9 @@
  * Displays all players with their email verification, payment, and waiver status
  */
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { collection } from 'firebase/firestore'
+import { useDocument } from 'react-firebase-hooks/firestore'
 import {
 	ArrowLeft,
 	Users,
@@ -16,14 +15,13 @@ import {
 	XCircle,
 	AlertTriangle,
 	Filter,
+	RefreshCw,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
-import { firestore } from '@/firebase/app'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { seasonsQuery } from '@/firebase/collections/seasons'
-import { Collections } from '@/shared/utils'
+import { getPlayerRegistrationStatusViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -44,7 +42,6 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { PageContainer, PageHeader } from '@/shared/components'
-import type { PlayerDocument } from '@/types'
 
 type FilterType =
 	| 'all'
@@ -63,7 +60,14 @@ interface PlayerStatus {
 	paid: boolean
 	signed: boolean
 	teamName: string | null
+	teamId: string | null
 	isComplete: boolean
+}
+
+interface RegistrationStatusData {
+	seasonId: string
+	seasonName: string
+	players: PlayerStatus[]
 }
 
 export const PlayerRegistrationStatus: React.FC = () => {
@@ -73,63 +77,44 @@ export const PlayerRegistrationStatus: React.FC = () => {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [filterType, setFilterType] = useState<FilterType>('all')
 
+	const [registrationData, setRegistrationData] =
+		useState<RegistrationStatusData | null>(null)
+	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
-	// Fetch all players - use collection directly since we need all players
-	const [playersSnapshot, playersLoading] = useCollection(
-		collection(firestore, Collections.PLAYERS)
-	)
-
-	// Fetch current season - get the first season from the list (most recent)
-	const [seasonsSnapshot, seasonsLoading] = useCollection(seasonsQuery())
-
-	const currentSeason =
-		seasonsSnapshot?.docs.find((doc) => doc.data().current === true) ||
-		seasonsSnapshot?.docs[0]
-
-	// Process player data
-	const playerStatuses = useMemo(() => {
-		if (!playersSnapshot || !currentSeason) return []
-
-		const statuses: PlayerStatus[] = []
-
-		playersSnapshot.docs.forEach((doc) => {
-			const playerData = doc.data() as PlayerDocument
-			const playerId = doc.id
-
-			// Find current season data for this player
-			const currentSeasonData = playerData.seasons?.find(
-				(season) => season.season.id === currentSeason.id
-			)
-
-			const emailVerified = playerData.emailVerified || false
-			const paid = currentSeasonData?.paid || false
-			const signed = currentSeasonData?.signed || false
-			const isComplete = emailVerified && paid && signed
-
-			// Get team name if available
-			let teamName: string | null = null
-			if (currentSeasonData?.team) {
-				// We'll need to handle this asynchronously or store team names in player data
-				teamName = null // For now, we'll leave this as null
-			}
-
-			statuses.push({
-				id: playerId,
-				firstname: playerData.firstname,
-				lastname: playerData.lastname,
-				email: playerData.email,
-				emailVerified,
-				paid,
-				signed,
-				teamName,
-				isComplete,
+	// Fetch registration data from Firebase Function
+	const fetchRegistrationData = async () => {
+		setIsLoading(true)
+		setError(null)
+		try {
+			const result = await getPlayerRegistrationStatusViaFunction()
+			setRegistrationData({
+				seasonId: result.seasonId,
+				seasonName: result.seasonName,
+				players: result.players,
 			})
-		})
+		} catch (err) {
+			console.error('Error fetching registration status:', err)
+			setError(
+				err instanceof Error
+					? err.message
+					: 'Failed to load registration status'
+			)
+		} finally {
+			setIsLoading(false)
+		}
+	}
 
-		// Sort by last name
-		return statuses.sort((a, b) => a.lastname.localeCompare(b.lastname))
-	}, [playersSnapshot, currentSeason])
+	// Load data on component mount if admin
+	useEffect(() => {
+		if (isAdmin && !playerLoading) {
+			fetchRegistrationData()
+		}
+	}, [isAdmin, playerLoading])
+
+	const playerStatuses = registrationData?.players || []
 
 	// Filter players based on search term and filter type
 	const filteredPlayers = useMemo(() => {
@@ -193,7 +178,7 @@ export const PlayerRegistrationStatus: React.FC = () => {
 	}, [playerStatuses])
 
 	// Handle authentication and data loading
-	if (playerLoading || playersLoading || seasonsLoading) {
+	if (playerLoading || isLoading) {
 		return (
 			<div className='container mx-auto px-4 py-8'>
 				<Card>
@@ -224,7 +209,33 @@ export const PlayerRegistrationStatus: React.FC = () => {
 		)
 	}
 
-	if (!currentSeason) {
+	// Handle errors
+	if (error) {
+		return (
+			<PageContainer withSpacing withGap>
+				<PageHeader
+					title='Player Registration Status'
+					description='Monitor player registration progress'
+					icon={Users}
+				/>
+				<Card>
+					<CardContent className='p-6 text-center'>
+						<AlertTriangle className='h-12 w-12 text-red-500 mx-auto mb-4' />
+						<p className='text-lg font-medium text-muted-foreground mb-4'>
+							{error}
+						</p>
+						<Button onClick={fetchRegistrationData}>
+							<RefreshCw className='h-4 w-4 mr-2' />
+							Retry
+						</Button>
+					</CardContent>
+				</Card>
+			</PageContainer>
+		)
+	}
+
+	// Handle no data
+	if (!registrationData) {
 		return (
 			<PageContainer withSpacing withGap>
 				<PageHeader
@@ -235,9 +246,13 @@ export const PlayerRegistrationStatus: React.FC = () => {
 				<Card>
 					<CardContent className='p-6 text-center'>
 						<AlertTriangle className='h-12 w-12 text-yellow-500 mx-auto mb-4' />
-						<p className='text-lg font-medium text-muted-foreground'>
-							No current season found
+						<p className='text-lg font-medium text-muted-foreground mb-4'>
+							No registration data available
 						</p>
+						<Button onClick={fetchRegistrationData}>
+							<RefreshCw className='h-4 w-4 mr-2' />
+							Load Data
+						</Button>
 					</CardContent>
 				</Card>
 			</PageContainer>
@@ -248,17 +263,23 @@ export const PlayerRegistrationStatus: React.FC = () => {
 		<PageContainer withSpacing withGap>
 			<PageHeader
 				title='Player Registration Status'
-				description={`Monitor player registration progress for ${currentSeason.data()?.name || 'current season'}`}
+				description={`Monitor player registration progress for ${registrationData.seasonName}`}
 				icon={Users}
 			/>
 
 			{/* Back to Dashboard */}
-			<div>
+			<div className='flex items-center justify-between'>
 				<Button variant='outline' asChild>
 					<Link to='/admin'>
 						<ArrowLeft className='h-4 w-4 mr-2' />
 						Back to Admin Dashboard
 					</Link>
+				</Button>
+				<Button onClick={fetchRegistrationData} disabled={isLoading}>
+					<RefreshCw
+						className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`}
+					/>
+					Refresh Data
 				</Button>
 			</div>
 
