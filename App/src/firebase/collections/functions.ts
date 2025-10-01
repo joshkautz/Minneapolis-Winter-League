@@ -144,7 +144,56 @@ export const addNewSeasonToAllPlayersViaFunction = async (
 	>(functions, 'addNewSeasonToAllPlayers')
 	const result = await addNewSeasonToAllPlayers(data)
 	return result.data
-} //////////////////////////////////////////////////////////////////////////////
+}
+
+interface PlayerWithPendingWaiver {
+	/** Player's unique ID (Firebase Auth UID) */
+	uid: string
+	/** Player's first name */
+	firstname: string
+	/** Player's last name */
+	lastname: string
+	/** Player's email address */
+	email: string
+	/** Team name (if rostered) */
+	teamName: string | null
+	/** Team ID (if rostered) */
+	teamId: string | null
+}
+
+interface GetPlayersWithPendingWaiversRequest {
+	// Empty - operates on current season by default
+}
+
+interface GetPlayersWithPendingWaiversResponse {
+	success: boolean
+	message: string
+	/** Season ID that was checked */
+	seasonId: string
+	/** Season name that was checked */
+	seasonName: string
+	/** Array of players with pending waivers */
+	players: PlayerWithPendingWaiver[]
+	/** Total count of players with pending waivers */
+	count: number
+}
+
+/**
+ * Gets all players who have paid for registration but haven't signed their waiver
+ * Only callable by admin users via the Admin Dashboard
+ */
+export const getPlayersWithPendingWaiversViaFunction = async (
+	data: GetPlayersWithPendingWaiversRequest = {}
+): Promise<GetPlayersWithPendingWaiversResponse> => {
+	const getPlayersWithPendingWaivers = httpsCallable<
+		GetPlayersWithPendingWaiversRequest,
+		GetPlayersWithPendingWaiversResponse
+	>(functions, 'getPlayersWithPendingWaivers')
+	const result = await getPlayersWithPendingWaivers(data)
+	return result.data
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // TEAM FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////
 

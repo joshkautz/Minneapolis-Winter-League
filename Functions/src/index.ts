@@ -91,3 +91,6 @@ export { updatePlayerRankings } from './functions/playerRankings/updatePlayerRan
 
 // Dropbox Sign functions
 export { dropboxSignSendReminderEmail } from './functions/dropboxSign/dropboxSignSendReminderEmail.js'
+
+// Admin functions
+export { getPlayersWithPendingWaivers } from './functions/admin/getPlayersWithPendingWaivers.js'

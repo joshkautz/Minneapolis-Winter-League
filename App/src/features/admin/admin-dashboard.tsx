@@ -33,6 +33,7 @@ import {
 	Shield,
 	Calendar,
 	UserPlus,
+	FileCheck,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { SeasonDocument } from '@/types'
@@ -141,7 +142,7 @@ export const AdminDashboard: React.FC = () => {
 					</CardContent>
 				</Card>
 
-				{/* User Management (placeholder for future) */}
+				{/* User Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
@@ -157,6 +158,28 @@ export const AdminDashboard: React.FC = () => {
 							<Link to='/admin/user-management'>
 								<Users className='h-4 w-4 mr-2' />
 								Manage Users
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+
+				{/* Waiver Status */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<FileCheck className='h-5 w-5 text-orange-600' />
+							Waiver Status
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Check which players have paid for registration but haven't signed
+							their waiver yet.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/waiver-status'>
+								<FileCheck className='h-4 w-4 mr-2' />
+								Check Waiver Status
 							</Link>
 						</Button>
 					</CardContent>

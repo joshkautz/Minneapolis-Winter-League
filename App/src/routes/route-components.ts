@@ -44,6 +44,10 @@ export const UserManagement = lazyImport(
 	() => import('@/features/admin'),
 	'UserManagement'
 )
+export const WaiverStatus = lazyImport(
+	() => import('@/features/admin'),
+	'WaiverStatus'
+)
 
 // Protected routes - require authentication
 export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')
