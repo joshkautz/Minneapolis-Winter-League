@@ -81,6 +81,8 @@ export const dropboxSignSendReminderEmail = functions
 					)
 				}
 
+				logger.info('Waiver data retrieved', waiverData)
+
 				const signatureRequestId = waiverData.signatureRequestId
 
 				if (!signatureRequestId) {
