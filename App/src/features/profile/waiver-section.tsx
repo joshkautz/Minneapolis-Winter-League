@@ -148,9 +148,9 @@ export const WaiverSection = ({
 
 	// For non-admin users, disable waiver actions if registration hasn't started yet or has ended
 	// For admin users, always allow waiver actions regardless of registration dates
-	const isWaiverDisabled =
-		!isAuthenticatedUserAdmin &&
-		(isRegistrationNotStarted || isRegistrationEnded)
+	// const isWaiverDisabled =
+	// 	!isAuthenticatedUserAdmin &&
+	// 	(isRegistrationNotStarted || isRegistrationEnded)
 	const isUserBanned = isAuthenticatedUserBanned
 	const needsPayment = !isAuthenticatedUserPaid
 
