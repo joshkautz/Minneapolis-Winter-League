@@ -12,10 +12,19 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
-import { formatTimestamp, SeasonDocument } from '@/shared/utils'
+import {
+	formatTimestamp,
+	SeasonDocument,
+	Collections,
+	WaiverDocument,
+} from '@/shared/utils'
 import { QueryDocumentSnapshot } from '@/firebase/firestore'
 import { Timestamp } from '@firebase/firestore'
 import { sendDropboxEmail } from '@/firebase/functions'
+import { useAuthContext } from '@/providers'
+import { collection, query, where, getDocs, limit } from 'firebase/firestore'
+import { firestore } from '@/firebase/app'
+import { getPlayerRef } from '@/firebase/collections/players'
 
 interface WaiverSectionProps {
 	isAuthenticatedUserSigned: boolean | undefined
@@ -44,41 +53,90 @@ export const WaiverSection = ({
 }: WaiverSectionProps) => {
 	const [dropboxEmailSent, setDropboxEmailSent] = useState(false)
 	const [dropboxEmailLoading, setDropboxEmailLoading] = useState(false)
+	const { authStateUser } = useAuthContext()
 
-	const sendDropboxEmailButtonOnClickHandler = useCallback(() => {
+	const sendDropboxEmailButtonOnClickHandler = useCallback(async () => {
+		if (!authStateUser?.uid || !currentSeasonQueryDocumentSnapshot) {
+			toast.error('Failure', {
+				description: 'User not authenticated or season not loaded',
+			})
+			return
+		}
+
 		setDropboxEmailLoading(true)
-		sendDropboxEmail()
-			.then((result) => {
-				const data: returnTypeT<SignatureRequestGetResponse> = result.data
-				setDropboxEmailSent(true)
-				setDropboxEmailLoading(false)
-				toast.success('Success', {
-					description: `Email sent to ${data.body.signatureRequest?.requesterEmailAddress}`,
-				})
+
+		try {
+			// Get the player document reference
+			const playerRef = getPlayerRef(authStateUser)
+
+			if (!playerRef) {
+				throw new Error('Could not get player reference')
+			}
+
+			// Query for the user's waiver for the current season
+			const waiverQuery = query(
+				collection(firestore, Collections.WAIVERS),
+				where('player', '==', playerRef),
+				limit(1)
+			)
+
+			const waiverSnapshot = await getDocs(waiverQuery)
+
+			if (waiverSnapshot.empty) {
+				throw new Error('No waiver found for this user')
+			}
+
+			const waiverData = waiverSnapshot.docs[0].data() as WaiverDocument
+
+			if (!waiverData.signatureRequestId) {
+				throw new Error('Waiver does not have a signature request ID')
+			}
+
+			// Send the reminder email with the signature request ID
+			const result = await sendDropboxEmail(waiverData.signatureRequestId)
+			const data: returnTypeT<SignatureRequestGetResponse> = result.data
+
+			setDropboxEmailSent(true)
+			setDropboxEmailLoading(false)
+			toast.success('Success', {
+				description: `Email sent to ${data.body.signatureRequest?.requesterEmailAddress}`,
 			})
-			.catch((error) => {
-				console.error('Dropbox error:', error)
-				setDropboxEmailSent(false)
-				setDropboxEmailLoading(false)
+		} catch (error) {
+			console.error('Dropbox error:', error)
+			setDropboxEmailSent(false)
+			setDropboxEmailLoading(false)
 
-				// Handle both HttpError from Dropbox SDK and other errors
-				let errorMessage = 'An unknown error occurred'
+			// Handle both HttpError from Dropbox SDK and other errors
+			let errorMessage = 'An unknown error occurred'
 
-				if (error?.code === 'functions/unknown' && error?.details) {
-					// Firebase Functions wrapped the HttpError
-					errorMessage = `Dropbox Error: ${error.details.body?.error?.errorMsg || error.message}`
-				} else if (error?.body?.error) {
-					// Direct HttpError from Dropbox
-					errorMessage = `Dropbox Error: ${error.body.error.errorMsg}`
-				} else if (error?.message) {
-					errorMessage = error.message
-				}
+			if (
+				typeof error === 'object' &&
+				error !== null &&
+				'code' in error &&
+				error.code === 'functions/unknown' &&
+				'details' in error
+			) {
+				// Firebase Functions wrapped the HttpError
+				const details = error.details as any
+				errorMessage = `Dropbox Error: ${details?.body?.error?.errorMsg || (error as any).message}`
+			} else if (
+				typeof error === 'object' &&
+				error !== null &&
+				'body' in error &&
+				typeof (error as any).body === 'object'
+			) {
+				// Direct HttpError from Dropbox
+				const body = (error as any).body
+				errorMessage = `Dropbox Error: ${body?.error?.errorMsg}`
+			} else if (error instanceof Error) {
+				errorMessage = error.message
+			}
 
-				toast.error('Failure', {
-					description: errorMessage,
-				})
+			toast.error('Failure', {
+				description: errorMessage,
 			})
-	}, [])
+		}
+	}, [authStateUser, currentSeasonQueryDocumentSnapshot])
 
 	const getStatusBadge = () => {
 		if (isLoading || isAuthenticatedUserSigned === undefined) {
