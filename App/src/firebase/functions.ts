@@ -9,18 +9,14 @@ import { app } from './app'
 
 const functions = getFunctions(app)
 
-interface SendDropboxEmailRequest {
-	signatureRequestId: string
-}
-
-const sendDropboxEmail = async (
-	signatureRequestId: string
-): Promise<HttpsCallableResult<returnTypeT<SignatureRequestGetResponse>>> => {
+const sendDropboxEmail = async (): Promise<
+	HttpsCallableResult<returnTypeT<SignatureRequestGetResponse>>
+> => {
 	const dropboxSignSendReminderEmail = httpsCallable<
-		SendDropboxEmailRequest,
+		unknown,
 		returnTypeT<SignatureRequestGetResponse>
 	>(functions, 'dropboxSignSendReminderEmail')
-	return dropboxSignSendReminderEmail({ signatureRequestId })
+	return dropboxSignSendReminderEmail()
 }
 
 export { sendDropboxEmail }

@@ -12,19 +12,10 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
-import {
-	formatTimestamp,
-	SeasonDocument,
-	Collections,
-	WaiverDocument,
-} from '@/shared/utils'
+import { formatTimestamp, SeasonDocument } from '@/shared/utils'
 import { QueryDocumentSnapshot } from '@/firebase/firestore'
 import { Timestamp } from '@firebase/firestore'
 import { sendDropboxEmail } from '@/firebase/functions'
-import { useAuthContext } from '@/providers'
-import { collection, query, where, getDocs, limit } from 'firebase/firestore'
-import { firestore } from '@/firebase/app'
-import { getPlayerRef } from '@/firebase/collections/players'
 
 interface WaiverSectionProps {
 	isAuthenticatedUserSigned: boolean | undefined
@@ -53,47 +44,13 @@ export const WaiverSection = ({
 }: WaiverSectionProps) => {
 	const [dropboxEmailSent, setDropboxEmailSent] = useState(false)
 	const [dropboxEmailLoading, setDropboxEmailLoading] = useState(false)
-	const { authStateUser } = useAuthContext()
 
 	const sendDropboxEmailButtonOnClickHandler = useCallback(async () => {
-		if (!authStateUser?.uid || !currentSeasonQueryDocumentSnapshot) {
-			toast.error('Failure', {
-				description: 'User not authenticated or season not loaded',
-			})
-			return
-		}
-
 		setDropboxEmailLoading(true)
 
 		try {
-			// Get the player document reference
-			const playerRef = getPlayerRef(authStateUser)
-
-			if (!playerRef) {
-				throw new Error('Could not get player reference')
-			}
-
-			// Query for the user's waiver for the current season
-			const waiverQuery = query(
-				collection(firestore, Collections.WAIVERS),
-				where('player', '==', playerRef),
-				limit(1)
-			)
-
-			const waiverSnapshot = await getDocs(waiverQuery)
-
-			if (waiverSnapshot.empty) {
-				throw new Error('No waiver found for this user')
-			}
-
-			const waiverData = waiverSnapshot.docs[0].data() as WaiverDocument
-
-			if (!waiverData.signatureRequestId) {
-				throw new Error('Waiver does not have a signature request ID')
-			}
-
-			// Send the reminder email with the signature request ID
-			const result = await sendDropboxEmail(waiverData.signatureRequestId)
+			// The backend function will automatically look up the user's waiver
+			const result = await sendDropboxEmail()
 			const data: returnTypeT<SignatureRequestGetResponse> = result.data
 
 			setDropboxEmailSent(true)
@@ -136,7 +93,7 @@ export const WaiverSection = ({
 				description: errorMessage,
 			})
 		}
-	}, [authStateUser, currentSeasonQueryDocumentSnapshot])
+	}, [])
 
 	const getStatusBadge = () => {
 		if (isLoading || isAuthenticatedUserSigned === undefined) {

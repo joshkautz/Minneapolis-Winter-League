@@ -32,55 +32,42 @@ import {
 } from '@dropbox/sign'
 
 /**
- * Request interface for sending a reminder email
- */
-interface SendReminderEmailRequest {
-	signatureRequestId: string
-}
-
-/**
  * Sends a reminder email for an existing Dropbox Sign signature request
  *
  * Note: This uses the signatureRequestRemind API endpoint, which is designed
  * for sending reminders about existing signature requests. This is more efficient
  * and correct than creating a new signature request.
  *
+ * The function automatically looks up the authenticated user's waiver and sends
+ * a reminder for their signature request.
+ *
  * @see https://developers.hellosign.com/api/reference/operation/signatureRequestRemind/
  */
 export const dropboxSignSendReminderEmail = functions
 	.region(FIREBASE_CONFIG.REGION)
 	.https.onCall(
-		async (
-			data: SendReminderEmailRequest,
-			context: functions.https.CallableContext
-		) => {
+		async (data: unknown, context: functions.https.CallableContext) => {
 			try {
 				// Validate authentication
 				validateAuthentication(context.auth)
 
-				const { signatureRequestId } = data
 				const userId = context.auth!.uid
-
-				if (!signatureRequestId) {
-					throw new functions.https.HttpsError(
-						'invalid-argument',
-						'Signature request ID is required'
-					)
-				}
-
 				const firestore = getFirestore()
 
-				// Find the waiver document by signature request ID
+				// Get the player document reference
+				const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
+
+				// Find the waiver document for this user
 				const waiverQuery = await firestore
 					.collection(Collections.WAIVERS)
-					.where('signatureRequestId', '==', signatureRequestId)
+					.where('player', '==', playerRef)
 					.limit(1)
 					.get()
 
 				if (waiverQuery.empty) {
 					throw new functions.https.HttpsError(
 						'not-found',
-						'Waiver not found for this signature request'
+						'No waiver found for this user. Please complete payment first.'
 					)
 				}
 
@@ -94,12 +81,12 @@ export const dropboxSignSendReminderEmail = functions
 					)
 				}
 
-				// Verify that the waiver belongs to this user
-				const playerRef = waiverData.player
-				if (playerRef.id !== userId) {
+				const signatureRequestId = waiverData.signatureRequestId
+
+				if (!signatureRequestId) {
 					throw new functions.https.HttpsError(
-						'permission-denied',
-						'You do not have permission to send a reminder for this signature request'
+						'not-found',
+						'No signature request found for your waiver'
 					)
 				}
 
@@ -147,7 +134,6 @@ export const dropboxSignSendReminderEmail = functions
 				// Log the error with context
 				logger.error('Error sending reminder email:', {
 					playerId: context.auth?.uid,
-					signatureRequestId: data?.signatureRequestId,
 					error: error instanceof Error ? error.message : 'Unknown error',
 					stack: error instanceof Error ? error.stack : undefined,
 				})
