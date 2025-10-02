@@ -17,12 +17,18 @@ import {
 	Clock,
 	UserPlus,
 	UserCheck,
+	CheckCircle,
+	XCircle,
+	Ban,
+	Loader2,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { allPendingOffersQuery } from '@/firebase/collections/offers'
+import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PageContainer, PageHeader } from '@/shared/components'
@@ -63,6 +69,9 @@ export const PendingOffers: React.FC = () => {
 	// Use state to hold the resolved offers
 	const [offers, setOffers] = useState<ProcessedOffer[]>([])
 	const [isProcessing, setIsProcessing] = useState(false)
+
+	// Track which offer is currently being updated
+	const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null)
 
 	// Process offers to resolve references
 	useEffect(() => {
@@ -174,6 +183,35 @@ export const PendingOffers: React.FC = () => {
 
 	const isExpired = (expiresAt: Date) => {
 		return expiresAt < new Date()
+	}
+
+	// Handle offer status update
+	const handleUpdateOfferStatus = async (
+		offerId: string,
+		status: 'accepted' | 'rejected' | 'canceled',
+		offerType: string
+	) => {
+		try {
+			setUpdatingOfferId(offerId)
+
+			await updateOfferStatusViaFunction({
+				offerId,
+				status,
+			})
+
+			toast.success(
+				`${offerType === 'invitation' ? 'Invitation' : 'Request'} ${status} successfully`
+			)
+
+			// The useCollection hook will automatically update with the new data
+		} catch (error) {
+			console.error('Error updating offer status:', error)
+			toast.error(
+				error instanceof Error ? error.message : 'Failed to update offer status'
+			)
+		} finally {
+			setUpdatingOfferId(null)
+		}
 	}
 
 	// Handle authentication and data loading
@@ -311,6 +349,7 @@ export const PendingOffers: React.FC = () => {
 										<TableHead>Created</TableHead>
 										<TableHead>Expires</TableHead>
 										<TableHead>Status</TableHead>
+										<TableHead>Actions</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -405,6 +444,67 @@ export const PendingOffers: React.FC = () => {
 														Active
 													</Badge>
 												)}
+											</TableCell>
+											<TableCell>
+												<div className='flex items-center gap-2'>
+													{updatingOfferId === offer.id ? (
+														<div className='flex items-center gap-2 text-muted-foreground'>
+															<Loader2 className='h-4 w-4 animate-spin' />
+															<span className='text-xs'>Updating...</span>
+														</div>
+													) : (
+														<>
+															<Button
+																size='sm'
+																variant='default'
+																className='h-7 gap-1 bg-green-600 hover:bg-green-700'
+																onClick={() =>
+																	handleUpdateOfferStatus(
+																		offer.id,
+																		'accepted',
+																		offer.offerType
+																	)
+																}
+																disabled={updatingOfferId !== null}
+															>
+																<CheckCircle className='h-3 w-3' />
+																Accept
+															</Button>
+															<Button
+																size='sm'
+																variant='destructive'
+																className='h-7 gap-1'
+																onClick={() =>
+																	handleUpdateOfferStatus(
+																		offer.id,
+																		'rejected',
+																		offer.offerType
+																	)
+																}
+																disabled={updatingOfferId !== null}
+															>
+																<XCircle className='h-3 w-3' />
+																Reject
+															</Button>
+															<Button
+																size='sm'
+																variant='outline'
+																className='h-7 gap-1'
+																onClick={() =>
+																	handleUpdateOfferStatus(
+																		offer.id,
+																		'canceled',
+																		offer.offerType
+																	)
+																}
+																disabled={updatingOfferId !== null}
+															>
+																<Ban className='h-3 w-3' />
+																Cancel
+															</Button>
+														</>
+													)}
+												</div>
 											</TableCell>
 										</TableRow>
 									))}

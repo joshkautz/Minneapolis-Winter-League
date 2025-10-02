@@ -86,72 +86,88 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 					throw new HttpsError('failed-precondition', 'Offer has expired')
 				}
 
+				// Check if user is admin (admins can update any offer)
+				const userDoc = await transaction.get(
+					firestore.collection(Collections.PLAYERS).doc(auth!.uid)
+				)
+				const isAdmin = userDoc.exists && userDoc.data()?.admin === true
+
 				// Check if user is the creator of the offer (for cancellation)
 				const isCreator =
 					offerData.createdBy && offerData.createdBy.id === auth!.uid
 
-				// Validate authorization based on offer type and action
-				if (offerData.type === 'invitation') {
-					// Player can accept/reject invitations sent to them
-					// Creator (captain) can cancel their own invitations
-					const canRespondAsRecipient =
-						auth!.uid === offerData.player.id &&
-						(status === 'accepted' || status === 'rejected')
-					const canCancelAsCreator = isCreator && status === 'canceled'
+				// If user is admin, allow them to update any offer
+				if (isAdmin) {
+					logger.info(`Admin user updating offer status`, {
+						offerId,
+						adminUserId: auth!.uid,
+						status,
+						offerType: offerData.type,
+					})
+				} else {
+					// Validate authorization based on offer type and action for non-admin users
+					if (offerData.type === 'invitation') {
+						// Player can accept/reject invitations sent to them
+						// Creator (captain) can cancel their own invitations
+						const canRespondAsRecipient =
+							auth!.uid === offerData.player.id &&
+							(status === 'accepted' || status === 'rejected')
+						const canCancelAsCreator = isCreator && status === 'canceled'
 
-					if (!canRespondAsRecipient && !canCancelAsCreator) {
-						if (status === 'canceled' && !isCreator) {
-							throw new HttpsError(
-								'permission-denied',
-								'Only the invitation creator can cancel this invitation'
-							)
-						} else if (status === 'rejected' && isCreator) {
-							throw new HttpsError(
-								'permission-denied',
-								'Creators should use canceled status instead of rejected to cancel their invitations'
-							)
-						} else {
-							throw new HttpsError(
-								'permission-denied',
-								'Only the invited player can respond to this invitation, or creator can cancel'
-							)
-						}
-					}
-				} else if (offerData.type === 'request') {
-					// Team captains can accept/reject requests to their team
-					// Creator (player) can cancel their own requests
-					const canCancelAsCreator = isCreator && status === 'canceled'
-
-					if (canCancelAsCreator) {
-						// Allow creator to cancel their own request
-					} else {
-						// Check if user is a team captain for accepting/rejecting
-						const teamDoc = await offerData.team.get()
-						if (!teamDoc.exists) {
-							throw new HttpsError('not-found', 'Team not found')
-						}
-
-						const teamDocument = teamDoc.data() as TeamDocument | undefined
-						const userIsCaptain = teamDocument?.roster?.some(
-							(member) => member.player.id === auth!.uid && member.captain
-						)
-
-						if (!userIsCaptain) {
-							if (status === 'rejected') {
+						if (!canRespondAsRecipient && !canCancelAsCreator) {
+							if (status === 'canceled' && !isCreator) {
 								throw new HttpsError(
 									'permission-denied',
-									'Only team captains can reject join requests'
+									'Only the invitation creator can cancel this invitation'
 								)
-							} else if (status === 'canceled') {
+							} else if (status === 'rejected' && isCreator) {
 								throw new HttpsError(
 									'permission-denied',
-									'Only the request creator can cancel their own request'
+									'Creators should use canceled status instead of rejected to cancel their invitations'
 								)
 							} else {
 								throw new HttpsError(
 									'permission-denied',
-									'Only team captains can accept join requests'
+									'Only the invited player can respond to this invitation, or creator can cancel'
 								)
+							}
+						}
+					} else if (offerData.type === 'request') {
+						// Team captains can accept/reject requests to their team
+						// Creator (player) can cancel their own requests
+						const canCancelAsCreator = isCreator && status === 'canceled'
+
+						if (canCancelAsCreator) {
+							// Allow creator to cancel their own request
+						} else {
+							// Check if user is a team captain for accepting/rejecting
+							const teamDoc = await offerData.team.get()
+							if (!teamDoc.exists) {
+								throw new HttpsError('not-found', 'Team not found')
+							}
+
+							const teamDocument = teamDoc.data() as TeamDocument | undefined
+							const userIsCaptain = teamDocument?.roster?.some(
+								(member) => member.player.id === auth!.uid && member.captain
+							)
+
+							if (!userIsCaptain) {
+								if (status === 'rejected') {
+									throw new HttpsError(
+										'permission-denied',
+										'Only team captains can reject join requests'
+									)
+								} else if (status === 'canceled') {
+									throw new HttpsError(
+										'permission-denied',
+										'Only the request creator can cancel their own request'
+									)
+								} else {
+									throw new HttpsError(
+										'permission-denied',
+										'Only team captains can accept join requests'
+									)
+								}
 							}
 						}
 					}
