@@ -8,9 +8,11 @@ import {
 } from '@/shared/components'
 import { useSeasonsContext } from '@/providers'
 import { Timestamp } from '@firebase/firestore'
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { TeamCard } from './team-card'
 import { Users } from 'lucide-react'
+import { PlayerDocument } from '@/types'
+import { getDoc } from 'firebase/firestore'
 
 // Types for better TypeScript support
 enum SeasonStatus {
@@ -41,6 +43,11 @@ export const Teams = () => {
 		}
 		return SeasonStatus.PAST
 	}, [selectedSeasonQueryDocumentSnapshot])
+
+	// State to store registered player counts for each team
+	const [registeredPlayerCounts, setRegisteredPlayerCounts] = useState<
+		Map<string, number>
+	>(new Map())
 
 	// Calculate team placements based on registration date
 	const teamsWithPlacements = useMemo(() => {
@@ -84,6 +91,52 @@ export const Teams = () => {
 		})
 	}, [selectedSeasonTeamsQuerySnapshot])
 
+	// Count registered players for each team
+	useEffect(() => {
+		if (
+			!selectedSeasonTeamsQuerySnapshot ||
+			!selectedSeasonQueryDocumentSnapshot
+		) {
+			return
+		}
+
+		const seasonId = selectedSeasonQueryDocumentSnapshot.id
+		const counts = new Map<string, number>()
+
+		const countRegisteredPlayers = async () => {
+			const promises = selectedSeasonTeamsQuerySnapshot.docs.map(
+				async (teamDoc) => {
+					const teamData = teamDoc.data()
+					const roster = teamData.roster || []
+
+					// Fetch all player documents
+					const playerDocs = await Promise.all(
+						roster.map((rosterEntry) => getDoc(rosterEntry.player))
+					)
+
+					// Count players who are registered (paid and signed for this season)
+					const registeredCount = playerDocs.filter((playerDoc) => {
+						if (!playerDoc.exists()) return false
+
+						const playerData = playerDoc.data() as PlayerDocument
+						const playerSeason = playerData.seasons?.find(
+							(s) => s.season.id === seasonId
+						)
+
+						return playerSeason?.paid === true && playerSeason?.signed === true
+					}).length
+
+					counts.set(teamDoc.id, registeredCount)
+				}
+			)
+
+			await Promise.all(promises)
+			setRegisteredPlayerCounts(new Map(counts))
+		}
+
+		countRegisteredPlayers()
+	}, [selectedSeasonTeamsQuerySnapshot, selectedSeasonQueryDocumentSnapshot])
+
 	const getEmptyStateMessage = (): string => {
 		switch (seasonStatus) {
 			case SeasonStatus.PAST:
@@ -122,6 +175,7 @@ export const Teams = () => {
 			) : (
 				<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
 					{teamsWithPlacements.map((team) => {
+						const registeredCount = registeredPlayerCounts.get(team.id) || 0
 						return (
 							<TeamCard
 								key={team.id}
@@ -131,7 +185,7 @@ export const Teams = () => {
 									logo: team.data.logo,
 									registered: team.data.registered,
 									registeredDate: team.data.registeredDate,
-									rosterCount: team.data.roster?.length || 0,
+									rosterCount: registeredCount,
 								}}
 								placement={team.placement}
 							/>
