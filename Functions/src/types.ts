@@ -187,6 +187,8 @@ export interface OfferDocument extends DocumentData {
 	team: DocumentReference<TeamDocument>
 	/** Type of offer: request or invitation */
 	type: OfferType
+	/** Reason why an offer was automatically canceled (e.g., player joined another team) */
+	canceledReason?: string
 }
 
 /**

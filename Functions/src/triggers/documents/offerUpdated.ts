@@ -155,8 +155,32 @@ export const onOfferUpdated = onDocumentUpdated(
 				// Mark offer as processed
 				transaction.update(offerRef, { processed: true })
 
+				// Cancel all other pending offers for this player in the current season
+				const pendingOffersQuery = await firestore
+					.collection(Collections.OFFERS)
+					.where('player', '==', playerRef)
+					.where('season', '==', seasonRef)
+					.where('status', '==', 'pending')
+					.get()
+
+				let canceledOffersCount = 0
+				pendingOffersQuery.forEach((offerDoc) => {
+					// Skip the current offer that was just accepted
+					if (offerDoc.id !== offerId) {
+						transaction.update(offerDoc.ref, {
+							status: 'canceled',
+							respondedAt: Timestamp.now(),
+							respondedBy: playerRef, // The player who accepted the other offer
+							canceledReason:
+								'Player joined another team by accepting a different offer',
+						})
+						canceledOffersCount++
+					}
+				})
+
 				logger.info(`Successfully processed offer acceptance: ${offerId}`, {
 					karmaBonus: isLookingForTeam ? 100 : 0,
+					canceledPendingOffers: canceledOffersCount,
 				})
 			})
 		} catch (error) {
