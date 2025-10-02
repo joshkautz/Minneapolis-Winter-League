@@ -151,15 +151,16 @@ export const TeamProfile = () => {
 						footerContent={
 							<div className='flex items-center justify-between gap-2'>
 								<div className='flex-1'>{registrationStatus}</div>
-								{teamDocumentSnapshot?.data()?.karma !== undefined &&
-									teamDocumentSnapshot?.data()?.karma! > 0 && (
+								{(() => {
+									const teamData = teamDocumentSnapshot?.data()
+									const karma = teamData?.karma
+									return karma !== undefined && karma > 0 ? (
 										<div className='text-xs text-muted-foreground flex items-center gap-1'>
-											<span className='text-primary font-medium'>
-												{teamDocumentSnapshot?.data()?.karma}
-											</span>
+											<span className='text-primary font-medium'>{karma}</span>
 											<span>karma</span>
 										</div>
-									)}
+									) : null
+								})()}
 							</div>
 						}
 					>

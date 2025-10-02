@@ -134,6 +134,8 @@ export const createPlayer = functions
 							season: seasonRef,
 							signed: false,
 							team: null,
+							lookingForTeam: false,
+							locked: false,
 						},
 					],
 				}
