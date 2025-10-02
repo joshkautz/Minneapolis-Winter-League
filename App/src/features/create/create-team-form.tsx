@@ -63,6 +63,7 @@ export const CreateTeamForm = ({
 										className='h-11'
 										autoComplete='off'
 										autoFocus
+										disabled={isTeamRegistrationFull}
 										{...field}
 										value={field.value ?? ''}
 										aria-describedby={
@@ -85,7 +86,7 @@ export const CreateTeamForm = ({
 							accept='image/*'
 							onChange={handleFileChange}
 							className='h-11'
-							disabled={isSubmitting}
+							disabled={isSubmitting || isTeamRegistrationFull}
 						/>
 					</div>
 

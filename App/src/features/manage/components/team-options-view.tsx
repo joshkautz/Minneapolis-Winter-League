@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { Users, UserPlus } from 'lucide-react'
+import { Users, UserPlus, AlertCircle } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { JoinTeam } from '@/features/join'
 import { CreateTeam } from '@/features/create/create-team'
+import { useTeamsContext } from '@/providers'
+import { useMemo } from 'react'
 
 interface TeamOptionsViewProps {
 	isLoading: boolean
@@ -15,6 +18,18 @@ interface TeamOptionsViewProps {
  */
 export const TeamOptionsView = ({ isLoading }: TeamOptionsViewProps) => {
 	const [activeTab, setActiveTab] = useState('join')
+	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
+
+	const isTeamRegistrationFull = useMemo(() => {
+		if (!currentSeasonTeamsQuerySnapshot) return false
+
+		// Count teams that are fully registered
+		const registeredTeamsCount = currentSeasonTeamsQuerySnapshot.docs.filter(
+			(teamDoc) => teamDoc.data().registered === true
+		).length
+
+		return registeredTeamsCount >= 12
+	}, [currentSeasonTeamsQuerySnapshot])
 
 	return (
 		<PageContainer withSpacing withGap>
@@ -47,6 +62,20 @@ export const TeamOptionsView = ({ isLoading }: TeamOptionsViewProps) => {
 				</TabsContent>
 
 				<TabsContent value='create' className='mt-6'>
+					{isTeamRegistrationFull && (
+						<div className='flex justify-center mb-6'>
+							<div className='w-full max-w-2xl'>
+								<Alert>
+									<AlertCircle className='h-4 w-4' />
+									<AlertTitle>Team Registration Full</AlertTitle>
+									<AlertDescription>
+										The league has reached the maximum of 12 fully registered
+										teams for this season. Team creation is currently disabled.
+									</AlertDescription>
+								</Alert>
+							</div>
+						</div>
+					)}
 					<CreateTeam />
 				</TabsContent>
 			</Tabs>

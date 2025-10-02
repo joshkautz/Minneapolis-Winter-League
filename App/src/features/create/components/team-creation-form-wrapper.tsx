@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 interface TeamCreationFormWrapperProps {
 	rolloverMode: boolean
 	onToggleMode: () => void
-	isTeamRegistrationFull: boolean
 	createNewForm: ReactNode
 	rolloverForm: ReactNode
 }
@@ -15,20 +14,11 @@ interface TeamCreationFormWrapperProps {
 export const TeamCreationFormWrapper = ({
 	rolloverMode,
 	onToggleMode,
-	isTeamRegistrationFull,
 	createNewForm,
 	rolloverForm,
 }: TeamCreationFormWrapperProps) => {
 	return (
 		<div className='w-full'>
-			{isTeamRegistrationFull && (
-				<div className='mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md'>
-					<p className='text-sm text-yellow-800 dark:text-yellow-200'>
-						<strong>Team registration is full.</strong> The league has reached
-						the maximum of 12 fully registered teams for this season.
-					</p>
-				</div>
-			)}
 			<Tabs
 				value={rolloverMode ? 'rollover' : 'create'}
 				onValueChange={(value) => {
@@ -40,12 +30,8 @@ export const TeamCreationFormWrapper = ({
 				className='w-full'
 			>
 				<TabsList className='grid w-full grid-cols-2 mb-6'>
-					<TabsTrigger value='create' disabled={isTeamRegistrationFull}>
-						Create New Team
-					</TabsTrigger>
-					<TabsTrigger value='rollover' disabled={isTeamRegistrationFull}>
-						Rollover Existing Team
-					</TabsTrigger>
+					<TabsTrigger value='create'>Create New Team</TabsTrigger>
+					<TabsTrigger value='rollover'>Rollover Existing Team</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value='create' className='mt-0'>

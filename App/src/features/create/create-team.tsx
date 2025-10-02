@@ -48,7 +48,6 @@ export const CreateTeam: React.FC = () => {
 					<TeamCreationFormWrapper
 						rolloverMode={rolloverMode}
 						onToggleMode={toggleRolloverMode}
-						isTeamRegistrationFull={isTeamRegistrationFull}
 						createNewForm={
 							<CreateTeamForm
 								setNewTeamDocument={setNewTeamDocument}

@@ -89,6 +89,7 @@ export const RolloverTeamForm = ({
 												field.onChange(value)
 												handleTeamChange(value)
 											}}
+											disabled={isTeamRegistrationFull}
 										>
 											<SelectTrigger
 												className='w-full h-11 justify-between min-h-11'
