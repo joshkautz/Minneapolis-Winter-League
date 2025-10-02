@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import { cn } from '@/shared/utils'
-import { CheckCircledIcon } from '@radix-ui/react-icons'
+import { cn, formatTimestampWithTime } from '@/shared/utils'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
 
 // Types for better TypeScript support
 interface TeamCardProps {
@@ -10,12 +10,36 @@ interface TeamCardProps {
 		name: string
 		logo?: string | null
 		registered: boolean
+		registeredDate?: any // Timestamp
+		rosterCount?: number // Number of players on roster
 	}
+	placement?: number // Placement number for registered teams
+}
+
+// Helper function to get ordinal suffix
+const getOrdinalSuffix = (num: number): string => {
+	const j = num % 10
+	const k = num % 100
+	if (j === 1 && k !== 11) {
+		return num + 'st'
+	}
+	if (j === 2 && k !== 12) {
+		return num + 'nd'
+	}
+	if (j === 3 && k !== 13) {
+		return num + 'rd'
+	}
+	return num + 'th'
 }
 
 // Team Card Component
-export const TeamCard = ({ teamId, teamData }: TeamCardProps) => {
-	const { name, logo, registered } = teamData
+export const TeamCard = ({ teamId, teamData, placement }: TeamCardProps) => {
+	const { name, logo, registered, registeredDate, rosterCount = 0 } = teamData
+	const MIN_PLAYERS_REQUIRED = 10
+	const progressPercentage = Math.min(
+		(rosterCount / MIN_PLAYERS_REQUIRED) * 100,
+		100
+	)
 
 	return (
 		<Link
@@ -63,15 +87,26 @@ export const TeamCard = ({ teamId, teamData }: TeamCardProps) => {
 				</CardContent>
 
 				<CardFooter className='pt-0 pb-4'>
-					<div className='mx-auto text-center'>
+					<div className='mx-auto text-center w-full px-2'>
 						{!registered ? (
-							<span className='text-sm text-muted-foreground italic'>
-								Registration in progress
-							</span>
+							<div className='flex flex-col gap-2'>
+								<span className='text-sm text-muted-foreground'>
+									{rosterCount}/{MIN_PLAYERS_REQUIRED} players
+								</span>
+								<Progress value={progressPercentage} className='h-2' />
+							</div>
 						) : (
-							<div className='inline-flex items-center gap-2 text-sm text-green-600 dark:text-green-500'>
-								<span>Registered</span>
-								<CheckCircledIcon className='h-4 w-4' />
+							<div className='flex flex-col items-center gap-1'>
+								<div className='text-sm text-green-600 dark:text-green-500'>
+									<span>
+										Registered {placement && `- ${getOrdinalSuffix(placement)}`}
+									</span>
+								</div>
+								{placement && registeredDate && (
+									<div className='text-xs text-muted-foreground'>
+										{formatTimestampWithTime(registeredDate)}
+									</div>
+								)}
 							</div>
 						)}
 					</div>

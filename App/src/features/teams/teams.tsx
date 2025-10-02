@@ -42,6 +42,48 @@ export const Teams = () => {
 		return SeasonStatus.PAST
 	}, [selectedSeasonQueryDocumentSnapshot])
 
+	// Calculate team placements based on registration date
+	const teamsWithPlacements = useMemo(() => {
+		if (!selectedSeasonTeamsQuerySnapshot) {
+			return []
+		}
+
+		// Get all registered teams with their registration dates
+		const registeredTeams = selectedSeasonTeamsQuerySnapshot.docs
+			.map((team) => {
+				const teamData = team.data()
+				return {
+					id: team.id,
+					data: teamData,
+					registeredDate: teamData.registered ? teamData.registeredDate : null,
+				}
+			})
+			.filter((team) => team.registeredDate !== null)
+
+		// Sort by registration date (oldest first)
+		registeredTeams.sort((a, b) => {
+			const aSeconds = a.registeredDate?.seconds || 0
+			const bSeconds = b.registeredDate?.seconds || 0
+			return aSeconds - bSeconds
+		})
+
+		// Create a map of team ID to placement
+		const placementMap = new Map<string, number>()
+		registeredTeams.forEach((team, index) => {
+			placementMap.set(team.id, index + 1)
+		})
+
+		// Map all teams with their placements
+		return selectedSeasonTeamsQuerySnapshot.docs.map((team) => {
+			const teamData = team.data()
+			return {
+				id: team.id,
+				data: teamData,
+				placement: placementMap.get(team.id),
+			}
+		})
+	}, [selectedSeasonTeamsQuerySnapshot])
+
 	const getEmptyStateMessage = (): string => {
 		switch (seasonStatus) {
 			case SeasonStatus.PAST:
@@ -79,19 +121,19 @@ export const Teams = () => {
 				</ComingSoon>
 			) : (
 				<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
-					{selectedSeasonTeamsQuerySnapshot.docs.map((team) => {
-						const teamData = team.data()
-						const teamId = team.id
-
+					{teamsWithPlacements.map((team) => {
 						return (
 							<TeamCard
-								key={teamId}
-								teamId={teamId}
+								key={team.id}
+								teamId={team.id}
 								teamData={{
-									name: teamData.name,
-									logo: teamData.logo,
-									registered: teamData.registered,
+									name: team.data.name,
+									logo: team.data.logo,
+									registered: team.data.registered,
+									registeredDate: team.data.registeredDate,
+									rosterCount: team.data.roster?.length || 0,
 								}}
+								placement={team.placement}
 							/>
 						)
 					})}

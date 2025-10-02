@@ -101,6 +101,45 @@ export const isToday = (date: Date): boolean => {
 }
 
 /**
+ * Format a Firebase Timestamp to MM/DD/YY HH:MM:SS format
+ */
+export const formatTimestampCompact = (
+	timestamp: Timestamp | undefined
+): string | undefined => {
+	if (!timestamp) {
+		return undefined
+	}
+
+	const date = new Date(timestamp.seconds * 1000)
+	const month = String(date.getMonth() + 1).padStart(2, '0')
+	const day = String(date.getDate()).padStart(2, '0')
+	const year = String(date.getFullYear()).slice(-2)
+	const hours = String(date.getHours()).padStart(2, '0')
+	const minutes = String(date.getMinutes()).padStart(2, '0')
+	const seconds = String(date.getSeconds()).padStart(2, '0')
+
+	return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`
+}
+
+/**
+ * Format a Firebase Timestamp to a short readable format (e.g., "Oct 1, 2025")
+ */
+export const formatTimestampShort = (
+	timestamp: Timestamp | undefined
+): string | undefined => {
+	if (!timestamp) {
+		return undefined
+	}
+
+	const date = new Date(timestamp.seconds * 1000)
+	return date.toLocaleDateString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		year: 'numeric',
+	})
+}
+
+/**
  * Check if a date is in the past
  */
 export const isPast = (date: Date): boolean => {
