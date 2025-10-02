@@ -26,6 +26,7 @@ export const stripeRegistration = async (
 			collection(firestore, `customers/${authValue?.uid}/checkout_sessions`),
 			{
 				mode: 'payment',
+				allow_promotion_codes: true,
 				price: getCurrentSeasonPrice(),
 				success_url: window.location.href,
 				cancel_url: window.location.href,
