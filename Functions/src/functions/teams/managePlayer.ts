@@ -114,7 +114,7 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 							playerRef,
 							playerDocument
 						)
-					case 'remove':
+					case 'remove': {
 						// For remove action, we need to check all roster players' registration status
 						// Fetch all player documents in the transaction
 						const rosterPlayerDocs = await Promise.all(
@@ -133,6 +133,7 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 							currentSeason.id,
 							rosterPlayerDocs
 						)
+					}
 					default:
 						throw new HttpsError('invalid-argument', 'Invalid action')
 				}
