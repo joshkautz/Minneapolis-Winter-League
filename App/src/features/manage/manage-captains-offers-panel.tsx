@@ -41,7 +41,9 @@ export const ManageCaptainsOffersPanel = () => {
 			})
 		} catch (error: any) {
 			// Firebase Functions errors have a message property
-			const errorMessage = error?.message || 'Request not rejected'
+			const errorMessage =
+				error?.message || error?.code || 'Failed to reject request'
+			console.error('Failed to reject offer:', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -64,7 +66,9 @@ export const ManageCaptainsOffersPanel = () => {
 			})
 		} catch (error: any) {
 			// Firebase Functions errors have a message property
-			const errorMessage = error?.message || 'Request not accepted'
+			const errorMessage =
+				error?.message || error?.code || 'Failed to accept request'
+			console.error('Failed to accept offer:', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -87,7 +91,9 @@ export const ManageCaptainsOffersPanel = () => {
 			})
 		} catch (error: any) {
 			// Firebase Functions errors have a message property
-			const errorMessage = error?.message || 'Invite not canceled'
+			const errorMessage =
+				error?.message || error?.code || 'Failed to cancel invite'
+			console.error('Failed to cancel offer:', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})

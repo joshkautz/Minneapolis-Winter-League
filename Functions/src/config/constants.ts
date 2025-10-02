@@ -7,7 +7,10 @@ import { getENV } from './environment.js'
 // Firebase Configuration (static - no env vars needed)
 export const FIREBASE_CONFIG = {
 	REGION: 'us-central1',
-	CORS_ORIGINS: ['https://mplswinterleague.com'],
+	CORS_ORIGINS: [
+		'https://mplswinterleague.com',
+		'https://www.mplswinterleague.com',
+	],
 } as const
 
 // Business Logic Constants (static)
