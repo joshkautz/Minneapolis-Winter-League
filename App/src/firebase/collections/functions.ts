@@ -293,6 +293,48 @@ export const getPlayerRegistrationStatusViaFunction = async (
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// DELETE UNREGISTERED TEAM (Admin)
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Request interface for deleting an unregistered team
+ */
+interface DeleteUnregisteredTeamRequest {
+	/** The team ID to delete */
+	teamId: string
+}
+
+/**
+ * Response interface for deleting an unregistered team
+ */
+interface DeleteUnregisteredTeamResponse {
+	success: boolean
+	message: string
+	/** ID of the deleted team */
+	teamId: string
+	/** Name of the deleted team */
+	teamName: string
+	/** Number of players removed from the team */
+	playersRemoved: number
+}
+
+/**
+ * Deletes an unregistered team via Firebase Function (Admin only)
+ * Only callable by admin users via the Admin Dashboard
+ * Team must be unregistered and belong to the current season
+ */
+export const deleteUnregisteredTeamViaFunction = async (
+	data: DeleteUnregisteredTeamRequest
+): Promise<DeleteUnregisteredTeamResponse> => {
+	const deleteUnregisteredTeam = httpsCallable<
+		DeleteUnregisteredTeamRequest,
+		DeleteUnregisteredTeamResponse
+	>(functions, 'deleteUnregisteredTeam')
+	const result = await deleteUnregisteredTeam(data)
+	return result.data
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // TEAM FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////
 

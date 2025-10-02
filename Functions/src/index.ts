@@ -97,3 +97,4 @@ export { dropboxSignSendReminderEmail } from './functions/dropboxSign/dropboxSig
 // Admin functions
 export { getPlayersWithPendingWaivers } from './functions/admin/getPlayersWithPendingWaivers.js'
 export { getPlayerRegistrationStatus } from './functions/admin/getPlayerRegistrationStatus.js'
+export { deleteUnregisteredTeam } from './functions/admin/deleteUnregisteredTeam.js'

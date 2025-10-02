@@ -18,6 +18,7 @@ import {
 	EmailVerification,
 	PlayerRegistrationStatus,
 	PendingOffers,
+	DeleteUnregisteredTeams,
 	Profile,
 	ManageTeam,
 	NotFound,
@@ -190,6 +191,16 @@ export const AppRoutes: React.FC = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<PendingOffers />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/delete-unregistered-teams'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<DeleteUnregisteredTeams />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

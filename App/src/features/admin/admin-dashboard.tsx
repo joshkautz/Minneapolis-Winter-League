@@ -37,6 +37,7 @@ import {
 	CheckCircle,
 	ClipboardList,
 	Mail,
+	Trash2,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { SeasonDocument } from '@/types'
@@ -290,6 +291,27 @@ export const AdminDashboard: React.FC = () => {
 									: 'Add Season to All Players'}
 							</Button>
 						</div>
+					</CardContent>
+				</Card>
+				{/* Delete Unregistered Teams */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Trash2 className='h-5 w-5 text-red-600' />
+							Delete Unregistered Teams
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Remove unregistered teams from the current season and properly
+							update all affected players.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/delete-unregistered-teams'>
+								<Trash2 className='h-4 w-4 mr-2' />
+								Manage Unregistered Teams
+							</Link>
+						</Button>
 					</CardContent>
 				</Card>
 				{/* System Analytics (placeholder for future) */}
