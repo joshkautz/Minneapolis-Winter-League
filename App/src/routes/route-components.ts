@@ -36,10 +36,6 @@ export const PlayerRankingsAdmin = lazyImport(
 	() => import('@/features/admin'),
 	'PlayerRankingsAdmin'
 )
-export const GameScores = lazyImport(
-	() => import('@/features/admin/game-scores'),
-	'GameScores'
-)
 export const AdminDashboard = lazyImport(
 	() => import('@/features/admin'),
 	'AdminDashboard'

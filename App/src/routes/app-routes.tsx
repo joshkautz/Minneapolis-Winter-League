@@ -12,7 +12,6 @@ import {
 	PlayerRankings,
 	PlayerRankingHistory,
 	PlayerRankingsAdmin,
-	GameScores,
 	AdminDashboard,
 	UserManagement,
 	WaiverStatus,
@@ -204,17 +203,7 @@ export const AppRoutes: React.FC = () => {
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
-				/>
-				<Route
-					path='/admin/game-scores'
-					element={
-						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<GameScores />
-							</ErrorBoundary>
-						</AuthenticatedRoute>
-					}
-				/>
+				/>{' '}
 				{/* Error routes */}
 				<Route
 					path='*'
