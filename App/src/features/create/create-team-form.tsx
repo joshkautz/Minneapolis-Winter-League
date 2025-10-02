@@ -28,12 +28,14 @@ interface CreateFormProps {
 		navigation: boolean
 	}) => void
 	seasonId: string
+	isTeamRegistrationFull?: boolean
 }
 
 export const CreateTeamForm = ({
 	setNewTeamDocument,
 	handleResult,
 	seasonId,
+	isTeamRegistrationFull = false,
 }: CreateFormProps) => {
 	const { form, onSubmit, handleFileChange, isSubmitting } = useCreateTeamForm({
 		setNewTeamDocument,
@@ -90,7 +92,7 @@ export const CreateTeamForm = ({
 					<div className='pt-2'>
 						<Button
 							type='submit'
-							disabled={isSubmitting}
+							disabled={isSubmitting || isTeamRegistrationFull}
 							className='w-full h-11'
 							size='lg'
 						>

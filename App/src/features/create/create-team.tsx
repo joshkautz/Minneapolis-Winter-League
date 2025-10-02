@@ -10,6 +10,7 @@ export const CreateTeam: React.FC = () => {
 		rolloverMode,
 		isLoading,
 		isRostered,
+		isTeamRegistrationFull,
 		currentSeasonQueryDocumentSnapshot,
 		setNewTeamDocument,
 		handleResult,
@@ -47,11 +48,13 @@ export const CreateTeam: React.FC = () => {
 					<TeamCreationFormWrapper
 						rolloverMode={rolloverMode}
 						onToggleMode={toggleRolloverMode}
+						isTeamRegistrationFull={isTeamRegistrationFull}
 						createNewForm={
 							<CreateTeamForm
 								setNewTeamDocument={setNewTeamDocument}
 								handleResult={handleResult}
 								seasonId={currentSeasonQueryDocumentSnapshot?.id || ''}
+								isTeamRegistrationFull={isTeamRegistrationFull}
 							/>
 						}
 						rolloverForm={
@@ -59,6 +62,7 @@ export const CreateTeam: React.FC = () => {
 								setNewTeamDocument={setNewTeamDocument}
 								handleResult={handleResult}
 								seasonId={currentSeasonQueryDocumentSnapshot?.id || ''}
+								isTeamRegistrationFull={isTeamRegistrationFull}
 							/>
 						}
 					/>

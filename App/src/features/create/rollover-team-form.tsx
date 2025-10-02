@@ -33,12 +33,14 @@ interface RolloverTeamFormProps {
 		navigation: boolean
 	}) => void
 	seasonId: string
+	isTeamRegistrationFull?: boolean
 }
 
 export const RolloverTeamForm = ({
 	setNewTeamDocument,
 	handleResult,
 	seasonId,
+	isTeamRegistrationFull = false,
 }: RolloverTeamFormProps) => {
 	const {
 		form,
@@ -160,7 +162,7 @@ export const RolloverTeamForm = ({
 						<div className='pt-2'>
 							<Button
 								type='submit'
-								disabled={isSubmitting}
+								disabled={isSubmitting || isTeamRegistrationFull}
 								className='w-full h-11'
 								size='lg'
 							>

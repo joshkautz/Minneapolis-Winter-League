@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Timestamp } from '@firebase/firestore'
 import { StorageReference } from '@/firebase/storage'
-import { useAuthContext, useSeasonsContext } from '@/providers'
+import { useAuthContext, useSeasonsContext, useTeamsContext } from '@/providers'
 import type { PlayerSeason } from '@/types'
 
 export interface TeamCreationData {
@@ -25,6 +25,7 @@ interface UseTeamCreationReturn {
 	isAdmin: boolean
 	isRostered: boolean
 	isRegistrationOpen: boolean
+	isTeamRegistrationFull: boolean
 	currentSeasonQueryDocumentSnapshot: ReturnType<
 		typeof useSeasonsContext
 	>['currentSeasonQueryDocumentSnapshot']
@@ -49,6 +50,7 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		seasonsQuerySnapshot,
 		seasonsQuerySnapshotLoading,
 	} = useSeasonsContext()
+	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 
 	const [newTeamDocument, setNewTeamDocument] = useState<TeamCreationData>() // Keep for backward compatibility
 	// This is used by child components to store team creation data
@@ -82,6 +84,17 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 					currentSeasonQueryDocumentSnapshot?.data().registrationEnd,
 			[currentSeasonQueryDocumentSnapshot]
 		) || false
+
+	const isTeamRegistrationFull = useMemo(() => {
+		if (!currentSeasonTeamsQuerySnapshot) return false
+
+		// Count teams that are fully registered
+		const registeredTeamsCount = currentSeasonTeamsQuerySnapshot.docs.filter(
+			(teamDoc) => teamDoc.data().registered === true
+		).length
+
+		return registeredTeamsCount >= 12
+	}, [currentSeasonTeamsQuerySnapshot])
 
 	const isLoading = useMemo(
 		() =>
@@ -129,6 +142,7 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		isAdmin,
 		isRostered,
 		isRegistrationOpen,
+		isTeamRegistrationFull,
 		currentSeasonQueryDocumentSnapshot,
 
 		// Actions
