@@ -115,6 +115,14 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 							playerDocument
 						)
 					case 'remove':
+						// For remove action, we need to check all roster players' registration status
+						// Fetch all player documents in the transaction
+						const rosterPlayerDocs = await Promise.all(
+							teamDocument.roster.map((member) =>
+								transaction.get(member.player)
+							)
+						)
+
 						return handleRemoveFromTeam(
 							transaction,
 							teamRef,
@@ -122,7 +130,8 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 							playerRef,
 							playerDocument,
 							playerId,
-							currentSeason.id
+							currentSeason.id,
+							rosterPlayerDocs
 						)
 					default:
 						throw new HttpsError('invalid-argument', 'Invalid action')
@@ -235,8 +244,14 @@ function handleRemoveFromTeam(
 	playerRef: FirebaseFirestore.DocumentReference,
 	playerDocument: PlayerDocument,
 	playerId: string,
-	seasonId: string
+	seasonId: string,
+	rosterPlayerDocs: FirebaseFirestore.DocumentSnapshot[]
 ): { success: boolean; action: string; message: string } {
+	// Get player's season data
+	const playerSeasonData = playerDocument.seasons?.find(
+		(season: PlayerSeason) => season.season.id === seasonId
+	)
+
 	// Check if this is the last captain
 	const playerIsCaptain = teamDocument.roster?.find(
 		(member: TeamRosterPlayer) => member.player.id === playerId
@@ -253,19 +268,71 @@ function handleRemoveFromTeam(
 		)
 	}
 
+	// Check if removing this player would cause team to lose registered status
+	if (teamDocument.registered) {
+		const minPlayersRequired = 10 // MIN_PLAYERS_FOR_REGISTRATION constant
+
+		// Count how many players on the team are actually registered (paid + signed)
+		// excluding the player who is leaving
+		const registeredPlayerCount = rosterPlayerDocs.filter((doc, index) => {
+			const member = teamDocument.roster[index]
+
+			// Don't count the player who is leaving
+			if (member.player.id === playerId) {
+				return false
+			}
+
+			// Check if this player is registered for the current season
+			const playerData = doc.data() as PlayerDocument
+			const seasonData = playerData.seasons?.find(
+				(s: PlayerSeason) => s.season.id === seasonId
+			)
+
+			return Boolean(seasonData?.paid && seasonData?.signed)
+		}).length
+
+		if (registeredPlayerCount < minPlayersRequired) {
+			throw new HttpsError(
+				'failed-precondition',
+				`You cannot leave your team at this time. Your departure would cause the team to lose its registered status. The team needs at least ${minPlayersRequired} fully registered players (paid and signed waiver), but would only have ${registeredPlayerCount} after your departure.`
+			)
+		}
+	}
+
+	// Check if player has lookingForTeam status (or locked, which counts as NOT lookingForTeam)
+	// Locked players are treated as lookingForTeam: false for karma purposes
+	const isLookingForTeam =
+		(playerSeasonData?.lookingForTeam || false) && !playerSeasonData?.locked
+	const currentKarma = teamDocument.karma || 0
+
 	// Remove player from team roster
 	const updatedRoster =
 		teamDocument.roster?.filter(
 			(member: TeamRosterPlayer) => member.player.id !== playerId
 		) || []
 
-	transaction.update(teamRef, { roster: updatedRoster })
+	// Update team with new roster and adjusted karma
+	const teamUpdates: Partial<TeamDocument> = {
+		roster: updatedRoster,
+	}
+
+	if (isLookingForTeam) {
+		teamUpdates.karma = Math.max(0, currentKarma - 100) // Don't go below 0
+	}
+
+	transaction.update(teamRef, teamUpdates)
 
 	// Update player seasons
+	// Note: locked and lookingForTeam status are permanent once set, so we preserve them
 	const updatedSeasons =
 		playerDocument.seasons?.map((season: PlayerSeason) =>
 			season.season.id === seasonId
-				? { ...season, team: null, captain: false }
+				? {
+						...season,
+						team: null,
+						captain: false,
+						// Don't modify locked or lookingForTeam - they're permanent once set
+					}
 				: season
 		) || []
 
@@ -274,6 +341,7 @@ function handleRemoveFromTeam(
 	logger.info(`Removed player from team`, {
 		teamId: teamRef.id,
 		playerId: playerRef.id,
+		karmaAdjustment: isLookingForTeam ? -100 : 0,
 	})
 
 	return {

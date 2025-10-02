@@ -196,6 +196,7 @@ export const rolloverTeam = functions
 					] as TeamDocument['roster'],
 					registered: false, // Always false initially
 					placement: null,
+					karma: 0, // Initialize karma to 0
 				}
 
 				const newTeamRef = (await firestore
@@ -221,6 +222,8 @@ export const rolloverTeam = functions
 						paid: false,
 						signed: false,
 						banned: false,
+						lookingForTeam: false, // Not looking for team since they're creating one
+						locked: false, // Not locked initially
 					})
 				}
 

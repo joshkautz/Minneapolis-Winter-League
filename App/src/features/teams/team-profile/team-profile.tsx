@@ -148,7 +148,20 @@ export const TeamProfile = () => {
 								: ``
 						}
 						className={'flex-1 basis-[360px] shrink-0'}
-						footerContent={registrationStatus}
+						footerContent={
+							<div className='flex items-center justify-between gap-2'>
+								<div className='flex-1'>{registrationStatus}</div>
+								{teamDocumentSnapshot?.data()?.karma !== undefined &&
+									teamDocumentSnapshot?.data()?.karma! > 0 && (
+										<div className='text-xs text-muted-foreground flex items-center gap-1'>
+											<span className='text-primary font-medium'>
+												{teamDocumentSnapshot?.data()?.karma}
+											</span>
+											<span>karma</span>
+										</div>
+									)}
+							</div>
+						}
 					>
 						{teamDocumentSnapshot?.data()?.roster?.map(
 							(

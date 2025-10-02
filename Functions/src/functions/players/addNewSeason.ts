@@ -161,6 +161,8 @@ export const addNewSeasonToAllPlayers = onCall<AddNewSeasonToPlayersRequest>(
 					paid: false,
 					signed: false,
 					banned: bannedStatus,
+					lookingForTeam: false, // Not looking initially
+					locked: false, // Not locked initially
 				}
 
 				// Add new season to existing seasons array

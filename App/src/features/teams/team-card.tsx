@@ -12,6 +12,7 @@ interface TeamCardProps {
 		registered: boolean
 		registeredDate?: any // Timestamp
 		rosterCount?: number // Number of players on roster
+		karma?: number // Team karma points
 	}
 	placement?: number // Placement number for registered teams
 }
@@ -34,7 +35,14 @@ const getOrdinalSuffix = (num: number): string => {
 
 // Team Card Component
 export const TeamCard = ({ teamId, teamData, placement }: TeamCardProps) => {
-	const { name, logo, registered, registeredDate, rosterCount = 0 } = teamData
+	const {
+		name,
+		logo,
+		registered,
+		registeredDate,
+		rosterCount = 0,
+		karma = 0,
+	} = teamData
 	const MIN_PLAYERS_REQUIRED = 10
 	const progressPercentage = Math.min(
 		(rosterCount / MIN_PLAYERS_REQUIRED) * 100,
@@ -97,10 +105,19 @@ export const TeamCard = ({ teamId, teamData, placement }: TeamCardProps) => {
 							</div>
 						) : (
 							<div className='flex flex-col items-center gap-1'>
-								<div className='text-sm text-green-600 dark:text-green-500'>
-									<span>
-										Registered {placement && `- ${getOrdinalSuffix(placement)}`}
-									</span>
+								<div className='flex items-center gap-2 justify-center w-full'>
+									<div className='text-sm text-green-600 dark:text-green-500'>
+										<span>
+											Registered{' '}
+											{placement && `- ${getOrdinalSuffix(placement)}`}
+										</span>
+									</div>
+									{karma > 0 && (
+										<div className='text-xs text-muted-foreground flex items-center gap-1'>
+											<span className='text-primary font-medium'>{karma}</span>
+											<span>karma</span>
+										</div>
+									)}
 								</div>
 								{placement && registeredDate && (
 									<div className='text-xs text-muted-foreground'>

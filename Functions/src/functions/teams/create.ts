@@ -195,6 +195,7 @@ export const createTeam = functions
 					] as TeamDocument['roster'],
 					registered: false,
 					placement: null,
+					karma: 0, // Initialize karma to 0
 					// registeredDate will be set when team becomes registered
 				}
 
@@ -221,6 +222,8 @@ export const createTeam = functions
 						paid: false,
 						signed: false,
 						banned: false,
+						lookingForTeam: false, // Not looking for team since they're creating one
+						locked: false, // Not locked initially
 					})
 				}
 
