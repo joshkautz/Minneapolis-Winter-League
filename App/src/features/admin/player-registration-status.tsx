@@ -50,6 +50,9 @@ type FilterType =
 	| 'missing-verification'
 	| 'missing-payment'
 	| 'missing-waiver'
+	| 'looking-for-team'
+	| 'on-registered-team'
+	| 'not-on-registered-team'
 
 interface PlayerStatus {
 	id: string
@@ -61,6 +64,8 @@ interface PlayerStatus {
 	signed: boolean
 	teamName: string | null
 	teamId: string | null
+	lookingForTeam: boolean
+	isOnFullyRegisteredTeam: boolean
 	isComplete: boolean
 }
 
@@ -148,6 +153,15 @@ export const PlayerRegistrationStatus: React.FC = () => {
 			case 'missing-waiver':
 				filtered = filtered.filter((player) => !player.signed)
 				break
+			case 'looking-for-team':
+				filtered = filtered.filter((player) => player.lookingForTeam)
+				break
+			case 'on-registered-team':
+				filtered = filtered.filter((player) => player.isOnFullyRegisteredTeam)
+				break
+			case 'not-on-registered-team':
+				filtered = filtered.filter((player) => !player.isOnFullyRegisteredTeam)
+				break
 			case 'all':
 			default:
 				// No additional filtering
@@ -166,6 +180,10 @@ export const PlayerRegistrationStatus: React.FC = () => {
 		).length
 		const missingPayment = playerStatuses.filter((p) => !p.paid).length
 		const missingWaiver = playerStatuses.filter((p) => !p.signed).length
+		const lookingForTeam = playerStatuses.filter((p) => p.lookingForTeam).length
+		const onRegisteredTeam = playerStatuses.filter(
+			(p) => p.isOnFullyRegisteredTeam
+		).length
 
 		return {
 			total,
@@ -174,6 +192,8 @@ export const PlayerRegistrationStatus: React.FC = () => {
 			missingVerification,
 			missingPayment,
 			missingWaiver,
+			lookingForTeam,
+			onRegisteredTeam,
 		}
 	}, [playerStatuses])
 
@@ -284,7 +304,7 @@ export const PlayerRegistrationStatus: React.FC = () => {
 			</div>
 
 			{/* Statistics Cards */}
-			<div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4'>
+			<div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
 				<Card>
 					<CardHeader className='pb-2'>
 						<CardTitle className='text-sm font-medium text-muted-foreground'>
@@ -356,6 +376,32 @@ export const PlayerRegistrationStatus: React.FC = () => {
 						<div className='text-2xl font-bold'>{stats.missingWaiver}</div>
 					</CardContent>
 				</Card>
+
+				<Card>
+					<CardHeader className='pb-2'>
+						<CardTitle className='text-sm font-medium text-blue-600'>
+							Looking for Team
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className='text-2xl font-bold text-blue-600'>
+							{stats.lookingForTeam}
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader className='pb-2'>
+						<CardTitle className='text-sm font-medium text-purple-600'>
+							On Registered Team
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<div className='text-2xl font-bold text-purple-600'>
+							{stats.onRegisteredTeam}
+						</div>
+					</CardContent>
+				</Card>
 			</div>
 
 			{/* Filters and Search */}
@@ -405,6 +451,15 @@ export const PlayerRegistrationStatus: React.FC = () => {
 										Missing Payment
 									</SelectItem>
 									<SelectItem value='missing-waiver'>Missing Waiver</SelectItem>
+									<SelectItem value='looking-for-team'>
+										Looking for Team
+									</SelectItem>
+									<SelectItem value='on-registered-team'>
+										On Registered Team
+									</SelectItem>
+									<SelectItem value='not-on-registered-team'>
+										Not on Registered Team
+									</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -431,13 +486,17 @@ export const PlayerRegistrationStatus: React.FC = () => {
 									<TableHead className='text-center'>Email Verified</TableHead>
 									<TableHead className='text-center'>Payment</TableHead>
 									<TableHead className='text-center'>Waiver</TableHead>
+									<TableHead className='text-center'>
+										Looking for Team
+									</TableHead>
+									<TableHead className='text-center'>Team Status</TableHead>
 									<TableHead className='text-center'>Status</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
 								{filteredPlayers.length === 0 ? (
 									<TableRow>
-										<TableCell colSpan={6} className='text-center py-8'>
+										<TableCell colSpan={8} className='text-center py-8'>
 											<p className='text-muted-foreground'>No players found</p>
 										</TableCell>
 									</TableRow>
@@ -469,6 +528,47 @@ export const PlayerRegistrationStatus: React.FC = () => {
 													<CheckCircle className='h-5 w-5 text-green-500 inline-block' />
 												) : (
 													<XCircle className='h-5 w-5 text-red-500 inline-block' />
+												)}
+											</TableCell>
+											<TableCell className='text-center'>
+												{player.lookingForTeam ? (
+													<Badge
+														variant='default'
+														className='bg-blue-100 text-blue-800 hover:bg-blue-200'
+													>
+														Yes
+													</Badge>
+												) : (
+													<Badge
+														variant='outline'
+														className='text-muted-foreground'
+													>
+														No
+													</Badge>
+												)}
+											</TableCell>
+											<TableCell className='text-center'>
+												{player.isOnFullyRegisteredTeam ? (
+													<Badge
+														variant='default'
+														className='bg-purple-100 text-purple-800 hover:bg-purple-200'
+													>
+														Registered
+													</Badge>
+												) : player.teamName ? (
+													<Badge
+														variant='default'
+														className='bg-orange-100 text-orange-800 hover:bg-orange-200'
+													>
+														Unregistered
+													</Badge>
+												) : (
+													<Badge
+														variant='outline'
+														className='text-muted-foreground'
+													>
+														No Team
+													</Badge>
 												)}
 											</TableCell>
 											<TableCell className='text-center'>

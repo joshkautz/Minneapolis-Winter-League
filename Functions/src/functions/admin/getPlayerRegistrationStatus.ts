@@ -44,6 +44,10 @@ interface PlayerRegistrationStatus {
 	teamName: string | null
 	/** Team ID (if rostered for current season) */
 	teamId: string | null
+	/** Whether the player is looking for a team */
+	lookingForTeam: boolean
+	/** Whether the player is on a fully registered team */
+	isOnFullyRegisteredTeam: boolean
 	/** Whether all registration steps are complete */
 	isComplete: boolean
 }
@@ -141,18 +145,22 @@ export const getPlayerRegistrationStatus =
 
 						const paid = currentSeasonData?.paid || false
 						const signed = currentSeasonData?.signed || false
+						const lookingForTeam = currentSeasonData?.lookingForTeam || false
 						const isComplete = emailVerified && paid && signed
 
-						// Get team name if player is rostered for current season
+						// Get team information if player is rostered for current season
 						let teamName: string | null = null
 						let teamId: string | null = null
+						let isOnFullyRegisteredTeam = false
 
 						if (currentSeasonData?.team) {
 							try {
 								const teamDoc = await currentSeasonData.team.get()
 								if (teamDoc.exists) {
-									teamName = teamDoc.data()?.name || null
+									const teamData = teamDoc.data()
+									teamName = teamData?.name || null
 									teamId = teamDoc.id
+									isOnFullyRegisteredTeam = teamData?.registered || false
 								}
 							} catch (error) {
 								logger.warn(`Failed to fetch team for player ${playerId}`, {
@@ -171,6 +179,8 @@ export const getPlayerRegistrationStatus =
 							signed,
 							teamName,
 							teamId,
+							lookingForTeam,
+							isOnFullyRegisteredTeam,
 							isComplete,
 						})
 					} catch (error) {

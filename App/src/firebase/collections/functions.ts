@@ -252,6 +252,10 @@ interface PlayerRegistrationStatus {
 	teamName: string | null
 	/** Team ID (if rostered for current season) */
 	teamId: string | null
+	/** Whether the player is looking for a team */
+	lookingForTeam: boolean
+	/** Whether the player is on a fully registered team */
+	isOnFullyRegisteredTeam: boolean
 	/** Whether all registration steps are complete */
 	isComplete: boolean
 }
