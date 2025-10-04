@@ -611,7 +611,7 @@ export function GameManagement() {
 											<SelectValue placeholder='Select home team' />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value='TBD'></SelectItem>
+											<SelectItem value='TBD' />
 											{sortedTeams.map((team) => (
 												<SelectItem key={team.id} value={team.id}>
 													{team.name}
@@ -636,7 +636,7 @@ export function GameManagement() {
 											<SelectValue placeholder='Select away team' />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value='TBD'></SelectItem>
+											<SelectItem value='TBD' />
 											{sortedTeams.map((team) => (
 												<SelectItem key={team.id} value={team.id}>
 													{team.name}
