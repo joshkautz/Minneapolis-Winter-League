@@ -91,3 +91,10 @@ export const teamsBySeasonQuery = (
 		where('season', '==', seasonRef)
 	) as Query<TeamDocument>
 }
+
+/**
+ * Creates a query for all teams
+ */
+export const allTeamsQuery = (): Query<TeamDocument> => {
+	return collection(firestore, Collections.TEAMS) as Query<TeamDocument>
+}

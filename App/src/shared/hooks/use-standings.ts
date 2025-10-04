@@ -28,6 +28,11 @@ export const useStandings = (
 
 			const { home, away, homeScore, awayScore } = gameData
 
+			// Skip games that haven't been played yet (null scores)
+			if (homeScore === null || awayScore === null) {
+				return
+			}
+
 			const updateTeamStanding = (
 				teamId: string,
 				pointsFor: number,

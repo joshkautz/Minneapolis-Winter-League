@@ -19,6 +19,7 @@ import {
 	PlayerRegistrationStatus,
 	PendingOffers,
 	DeleteUnregisteredTeams,
+	GameManagement,
 	Profile,
 	ManageTeam,
 	NotFound,
@@ -201,6 +202,16 @@ export const AppRoutes: React.FC = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<DeleteUnregisteredTeams />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/game-management'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<GameManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

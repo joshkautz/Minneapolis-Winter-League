@@ -555,6 +555,67 @@ export const cleanupOffersViaFunction =
 	}
 
 //////////////////////////////////////////////////////////////////////////////
+// GAME MANAGEMENT FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Create a new game via Firebase Function
+ *
+ * @param data Game creation parameters
+ * @returns Success response with game ID
+ */
+export const createGameViaFunction = async (data: {
+	homeTeamId: string | null
+	awayTeamId: string | null
+	homeScore: number | null
+	awayScore: number | null
+	field: number
+	type: 'regular' | 'playoff'
+	timestamp: string
+	seasonId: string
+}): Promise<{ success: true; gameId: string; message: string }> => {
+	const createGame = httpsCallable(functions, 'createGame')
+	const result = await createGame(data)
+	return result.data as { success: true; gameId: string; message: string }
+}
+
+/**
+ * Update an existing game via Firebase Function
+ *
+ * @param data Game update parameters
+ * @returns Success response
+ */
+export const updateGameViaFunction = async (data: {
+	gameId: string
+	homeTeamId?: string | null
+	awayTeamId?: string | null
+	homeScore?: number | null
+	awayScore?: number | null
+	field?: number
+	type?: 'regular' | 'playoff'
+	timestamp?: string
+	seasonId?: string
+}): Promise<{ success: true; gameId: string; message: string }> => {
+	const updateGame = httpsCallable(functions, 'updateGame')
+	const result = await updateGame(data)
+	return result.data as { success: true; gameId: string; message: string }
+}
+
+/**
+ * Delete a game via Firebase Function
+ *
+ * @param data Game deletion parameters
+ * @returns Success response
+ */
+export const deleteGameViaFunction = async (data: {
+	gameId: string
+}): Promise<{ success: true; gameId: string; message: string }> => {
+	const deleteGame = httpsCallable(functions, 'deleteGame')
+	const result = await deleteGame(data)
+	return result.data as { success: true; gameId: string; message: string }
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // MIGRATION HELPERS
 //////////////////////////////////////////////////////////////////////////////
 

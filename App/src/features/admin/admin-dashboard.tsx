@@ -314,6 +314,26 @@ export const AdminDashboard: React.FC = () => {
 						</Button>
 					</CardContent>
 				</Card>
+				{/* Game Management */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Calendar className='h-5 w-5 text-indigo-600' />
+							Game Management
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Create, view, and manage game schedules for the current season.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/game-management'>
+								<Calendar className='h-4 w-4 mr-2' />
+								Manage Games
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
 				{/* System Analytics (placeholder for future) */}
 				<Card className='hover:shadow-lg transition-shadow opacity-50'>
 					<CardHeader>

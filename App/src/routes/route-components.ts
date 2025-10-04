@@ -64,6 +64,10 @@ export const DeleteUnregisteredTeams = lazyImport(
 	() => import('@/features/admin'),
 	'DeleteUnregisteredTeams'
 )
+export const GameManagement = lazyImport(
+	() => import('@/features/admin'),
+	'GameManagement'
+)
 
 // Protected routes - require authentication
 export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')

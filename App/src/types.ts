@@ -194,16 +194,16 @@ export interface OfferDocument extends DocumentData {
 export interface GameDocument extends DocumentData {
 	/** Reference to the away team (null for placeholder games) */
 	away: DocumentReference<TeamDocument> | null
-	/** Away team's score */
-	awayScore: number
+	/** Away team's score (null if score not yet recorded) */
+	awayScore: number | null
 	/** Game date and time */
 	date: Timestamp
 	/** Field number where game is played */
 	field: number
 	/** Reference to the home team (null for placeholder games) */
 	home: DocumentReference<TeamDocument> | null
-	/** Home team's score */
-	homeScore: number
+	/** Home team's score (null if score not yet recorded) */
+	homeScore: number | null
 	/** Reference to the season this game belongs to */
 	season: DocumentReference<SeasonDocument>
 	/** Type of game: regular season or playoff */
