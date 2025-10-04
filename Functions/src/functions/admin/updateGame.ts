@@ -6,6 +6,7 @@
  */
 
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import type { DocumentReference } from 'firebase-admin/firestore'
 import * as functions from 'firebase-functions/v1'
 import { validateAdminUser } from '../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
@@ -160,7 +161,10 @@ export const updateGame = functions
 				const existingGameData = gameDoc.data()!
 
 				// Build update data object
-				const updateData: Record<string, any> = {}
+				const updateData: Record<
+					string,
+					Timestamp | number | null | GameType | DocumentReference
+				> = {}
 
 				// Handle timestamp update
 				let gameDate: Date | undefined
