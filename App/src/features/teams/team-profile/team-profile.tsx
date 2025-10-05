@@ -16,10 +16,13 @@ import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from '@firebase/firestore'
 
 import { CheckCircledIcon } from '@radix-ui/react-icons'
+import { Sparkles } from 'lucide-react'
 
 import { TeamHistory } from './team-history'
 import { useSeasonsContext } from '@/providers'
 import { formatTimestamp } from '@/shared/utils'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 const RESULT = {
 	VS: 'vs',
@@ -137,7 +140,29 @@ export const TeamProfile = () => {
 						</div>
 					)}
 				</div>
-			</div>{' '}
+			</div>
+			<div className='max-w-[1040px] mx-auto mb-4'>
+				<Card className='border-muted'>
+					<CardContent>
+						<div className='flex justify-center items-center gap-3'>
+							{teamDocumentSnapshot?.data()?.karma !== undefined &&
+							teamDocumentSnapshot.data()!.karma > 0 ? (
+								<Badge
+									variant='outline'
+									className='text-sm font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20 px-3 py-1.5'
+								>
+									<Sparkles className='h-4 w-4 mr-1.5' />
+									{teamDocumentSnapshot.data()!.karma} Karma
+								</Badge>
+							) : (
+								<p className='text-sm text-muted-foreground'>
+									No achievements yet
+								</p>
+							)}
+						</div>
+					</CardContent>
+				</Card>
+			</div>
 			<div className='max-w-[1040px] mx-auto'>
 				<div className='flex justify-center items-start gap-4 flex-wrap mb-4'>
 					<NotificationCard
@@ -151,16 +176,6 @@ export const TeamProfile = () => {
 						footerContent={
 							<div className='flex items-center justify-between gap-2'>
 								<div className='flex-1'>{registrationStatus}</div>
-								{(() => {
-									const teamData = teamDocumentSnapshot?.data()
-									const karma = teamData?.karma
-									return karma !== undefined && karma > 0 ? (
-										<div className='text-xs text-muted-foreground flex items-center gap-1'>
-											<span className='text-primary font-medium'>{karma}</span>
-											<span>karma</span>
-										</div>
-									) : null
-								})()}
 							</div>
 						}
 					>

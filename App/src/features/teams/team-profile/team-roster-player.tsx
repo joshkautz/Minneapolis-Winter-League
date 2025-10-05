@@ -12,6 +12,9 @@ import {
 } from '@/shared/utils'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { Badge } from '@/components/ui/badge'
+import { Sparkles } from 'lucide-react'
+
+const KARMA_BONUS_FOR_LOOKING_FOR_TEAM = 100
 
 export const TeamRosterPlayer = ({
 	playerRef,
@@ -39,16 +42,34 @@ export const TeamRosterPlayer = ({
 		[playerData, seasonRef]
 	)
 
+	const isLookingForTeam = useMemo(() => {
+		if (!playerData || !seasonRef) return false
+		const seasonData = playerData.seasons?.find(
+			(s) => s.season.id === seasonRef.id
+		)
+		// Locked players are treated as lookingForTeam: false for karma purposes
+		return (seasonData?.lookingForTeam || false) && !seasonData?.locked
+	}, [playerData, seasonRef])
+
 	return (
 		<div>
 			{playerSnapshot ? (
 				<div className='flex items-end gap-2 py-2'>
-					<div className='flex flex-row items-center'>
-						<p className='mr-2 select-none'>
+					<div className='flex flex-row items-center gap-2'>
+						<p className='select-none'>
 							{playerSnapshot.data()?.firstname}{' '}
 							{playerSnapshot.data()?.lastname}{' '}
 						</p>
 						{isPlayerCaptain && <StarFilledIcon className='text-primary' />}
+						{isLookingForTeam && (
+							<Badge
+								variant='outline'
+								className='text-xs font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
+							>
+								<Sparkles className='h-3 w-3 mr-1' />+
+								{KARMA_BONUS_FOR_LOOKING_FOR_TEAM}
+							</Badge>
+						)}
 					</div>
 					<div className='flex justify-end flex-1 gap-2'>
 						<div className='flex items-center'>
