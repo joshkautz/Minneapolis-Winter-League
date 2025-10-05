@@ -9,12 +9,14 @@
  */
 
 import { getAuth } from 'firebase-admin/auth'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import * as functions from 'firebase-functions/v1'
 import { validateAdminUser } from '../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { Collections } from '../../types.js'
 import type {
+	DocumentReference,
+	PlayerDocument,
 	PlayerSeason,
 	TeamDocument,
 	TeamRosterPlayer,
@@ -339,7 +341,7 @@ export const updatePlayerAdmin = functions
 				})
 
 				// Prepare update object for Firestore
-				const updates: Record<string, any> = {}
+				const updates: Record<string, unknown> = {}
 				const changes: UpdatePlayerAdminResponse['changes'] = {}
 
 				// Update basic fields
@@ -612,7 +614,7 @@ export const updatePlayerAdmin = functions
 								const teamRef = seasonUpdate.teamId
 									? (firestore
 											.collection(Collections.TEAMS)
-											.doc(seasonUpdate.teamId) as any)
+											.doc(seasonUpdate.teamId) as DocumentReference<TeamDocument>)
 									: null
 
 								return {
@@ -691,8 +693,8 @@ export const updatePlayerAdmin = functions
 											captain: seasonUpdate.captain,
 											player: firestore
 												.collection(Collections.PLAYERS)
-												.doc(playerId) as any,
-											dateJoined: new Date() as any,
+												.doc(playerId) as DocumentReference<PlayerDocument>,
+											dateJoined: Timestamp.now(),
 										}
 
 										await newTeamRef.update({
