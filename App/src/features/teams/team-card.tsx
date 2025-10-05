@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { cn, formatTimestampWithTime } from '@/shared/utils'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
+import { Sparkles } from 'lucide-react'
 
 // Types for better TypeScript support
 interface TeamCardProps {
@@ -104,25 +106,25 @@ export const TeamCard = ({ teamId, teamData, placement }: TeamCardProps) => {
 								<Progress value={progressPercentage} className='h-2' />
 							</div>
 						) : (
-							<div className='flex flex-col items-center gap-1'>
-								<div className='flex items-center gap-2 justify-center w-full'>
-									<div className='text-sm text-green-600 dark:text-green-500'>
-										<span>
-											Registered{' '}
-											{placement && `- ${getOrdinalSuffix(placement)}`}
-										</span>
-									</div>
-									{karma > 0 && (
-										<div className='text-xs text-muted-foreground flex items-center gap-1'>
-											<span className='text-primary font-medium'>{karma}</span>
-											<span>karma</span>
-										</div>
-									)}
+							<div className='flex flex-col items-center gap-2'>
+								<div className='text-sm text-green-600 dark:text-green-500'>
+									<span>
+										Registered {placement && `- ${getOrdinalSuffix(placement)}`}
+									</span>
 								</div>
 								{placement && registeredDate && (
 									<div className='text-xs text-muted-foreground'>
 										{formatTimestampWithTime(registeredDate)}
 									</div>
+								)}
+								{karma > 0 && (
+									<Badge
+										variant='outline'
+										className='text-xs font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
+									>
+										<Sparkles className='h-3 w-3 mr-1' />
+										{karma} Karma
+									</Badge>
 								)}
 							</div>
 						)}

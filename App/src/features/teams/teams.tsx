@@ -10,9 +10,10 @@ import { useSeasonsContext } from '@/providers'
 import { Timestamp } from '@firebase/firestore'
 import { useMemo, useState, useEffect } from 'react'
 import { TeamCard } from './team-card'
-import { Users } from 'lucide-react'
+import { Users, Sparkles } from 'lucide-react'
 import { PlayerDocument } from '@/types'
 import { getDoc } from 'firebase/firestore'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 // Types for better TypeScript support
 enum SeasonStatus {
@@ -173,26 +174,38 @@ export const Teams = () => {
 					<p>{getEmptyStateMessage()}</p>
 				</ComingSoon>
 			) : (
-				<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
-					{teamsWithPlacements.map((team) => {
-						const registeredCount = registeredPlayerCounts.get(team.id) || 0
-						return (
-							<TeamCard
-								key={team.id}
-								teamId={team.id}
-								teamData={{
-									name: team.data.name,
-									logo: team.data.logo,
-									registered: team.data.registered,
-									registeredDate: team.data.registeredDate,
-									rosterCount: registeredCount,
-									karma: team.data.karma || 0,
-								}}
-								placement={team.placement}
-							/>
-						)
-					})}
-				</div>
+				<>
+					<Alert className='mt-6'>
+						<Sparkles className='h-5 w-5' />
+						<AlertTitle>Experimental Features Now Live!</AlertTitle>
+						<AlertDescription>
+							The Karma and Achievement systems are now live in an experimental
+							state. Help your fellow players find teams to earn karma points,
+							and unlock achievements from now through the end of the season!
+							Achievements can be seen on individual team pages.
+						</AlertDescription>
+					</Alert>
+					<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
+						{teamsWithPlacements.map((team) => {
+							const registeredCount = registeredPlayerCounts.get(team.id) || 0
+							return (
+								<TeamCard
+									key={team.id}
+									teamId={team.id}
+									teamData={{
+										name: team.data.name,
+										logo: team.data.logo,
+										registered: team.data.registered,
+										registeredDate: team.data.registeredDate,
+										rosterCount: registeredCount,
+										karma: team.data.karma || 0,
+									}}
+									placement={team.placement}
+								/>
+							)
+						})}
+					</div>
+				</>
 			)}
 		</PageContainer>
 	)
