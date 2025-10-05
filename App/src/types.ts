@@ -87,7 +87,7 @@ export interface PlayerDocument extends DocumentData {
  */
 export interface PlayerSeason {
 	/** Whether the player is banned from the season */
-	banned: boolean
+	banned?: boolean
 	/** Whether the player is a team captain */
 	captain: boolean
 	/** Whether the player has paid for the season */
@@ -99,7 +99,7 @@ export interface PlayerSeason {
 	/** Reference to the team document (null if not on a team) */
 	team: DocumentReference<TeamDocument> | null
 	/** Whether the player is looking for a team (not locked to a registered team) */
-	lookingForTeam: boolean
+	lookingForTeam?: boolean
 	/** Whether the player is locked to their team (on a team when 12 teams registered) */
 	locked: boolean
 }

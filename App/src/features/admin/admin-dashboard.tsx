@@ -38,6 +38,7 @@ import {
 	ClipboardList,
 	Mail,
 	Trash2,
+	UserCog,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { SeasonDocument } from '@/types'
@@ -161,6 +162,27 @@ export const AdminDashboard: React.FC = () => {
 							<Link to='/admin/user-management'>
 								<Users className='h-4 w-4 mr-2' />
 								Manage Users
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* Player Management */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<UserCog className='h-5 w-5 text-purple-600' />
+							Player Management
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Search, view, and edit player documents including season data and
+							team assignments.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/player-management'>
+								<UserCog className='h-4 w-4 mr-2' />
+								Manage Players
 							</Link>
 						</Button>
 					</CardContent>

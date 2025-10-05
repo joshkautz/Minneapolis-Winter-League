@@ -150,6 +150,101 @@ export const verifyUserEmailViaFunction = async (
 	return result.data
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// UPDATE PLAYER (Admin)
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Season update data for a specific season
+ */
+interface SeasonUpdateData {
+	/** Season document ID */
+	seasonId: string
+	/** Whether the player is a team captain */
+	captain: boolean
+	/** Whether the player has paid for the season */
+	paid: boolean
+	/** Whether the player has signed the waiver */
+	signed: boolean
+	/** Whether the player is banned from the season (optional, defaults to false) */
+	banned?: boolean
+	/** Whether the player is looking for a team (optional, defaults to false) */
+	lookingForTeam?: boolean
+	/** Team document ID (null if not on a team) */
+	teamId: string | null
+}
+
+interface UpdatePlayerAdminRequest {
+	/** Player's Firebase Auth UID */
+	playerId: string
+	/** Player's first name (optional) */
+	firstname?: string
+	/** Player's last name (optional) */
+	lastname?: string
+	/** Admin status (optional) */
+	admin?: boolean
+	/** Email address (optional, will sync with Firebase Auth) */
+	email?: string
+	/** Season updates (optional) */
+	seasons?: SeasonUpdateData[]
+}
+
+/**
+ * Details about what changed in a season
+ */
+interface SeasonChanges {
+	seasonId: string
+	seasonName?: string
+	updated?: boolean
+	changes?: {
+		captain?: { from: boolean; to: boolean }
+		paid?: { from: boolean; to: boolean }
+		signed?: { from: boolean; to: boolean }
+		banned?: { from: boolean; to: boolean }
+		lookingForTeam?: { from: boolean; to: boolean }
+		team?: { from: string | null; to: string | null }
+	}
+}
+
+interface UpdatePlayerAdminResponse {
+	success: true
+	playerId: string
+	message: string
+	/** Detailed changes made to the player document */
+	changes: {
+		/** Whether and how firstname was updated */
+		firstname?: { from: string; to: string }
+		/** Whether and how lastname was updated */
+		lastname?: { from: string; to: string }
+		/** Whether and how email was updated */
+		email?: { from: string; to: string }
+		/** Whether and how admin status was updated */
+		admin?: { from: boolean; to: boolean }
+		/** Details about season changes */
+		seasons?: SeasonChanges[]
+	}
+}
+
+/**
+ * Updates a player's document via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can call this function
+ * - Can update basic info, admin status, and season data
+ * - Email updates automatically sync with Firebase Authentication
+ * - Comprehensive validation and error handling
+ */
+export const updatePlayerAdminViaFunction = async (
+	data: UpdatePlayerAdminRequest
+): Promise<UpdatePlayerAdminResponse> => {
+	const updatePlayerAdmin = httpsCallable<
+		UpdatePlayerAdminRequest,
+		UpdatePlayerAdminResponse
+	>(functions, 'updatePlayerAdmin')
+	const result = await updatePlayerAdmin(data)
+	return result.data
+}
+
 interface AddNewSeasonToPlayersRequest {
 	/** Season ID to add to all players */
 	seasonId: string

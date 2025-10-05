@@ -14,6 +14,7 @@ import {
 	PlayerRankingsAdmin,
 	AdminDashboard,
 	UserManagement,
+	PlayerManagement,
 	WaiverStatus,
 	EmailVerification,
 	PlayerRegistrationStatus,
@@ -152,6 +153,16 @@ export const AppRoutes: React.FC = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<UserManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/player-management'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<PlayerManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
