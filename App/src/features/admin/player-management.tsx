@@ -7,8 +7,8 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { doc } from 'firebase/firestore'
-import type { DocumentReference } from 'firebase/firestore'
+import { doc, query, collection, where, or, and } from 'firebase/firestore'
+import type { DocumentReference, Query } from 'firebase/firestore'
 import { toast } from 'sonner'
 import {
 	ArrowLeft,
@@ -26,7 +26,7 @@ import { Link } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
 import { firestore } from '@/firebase/app'
-import { getPlayerRef, getPlayersQuery } from '@/firebase/collections/players'
+import { getPlayerRef } from '@/firebase/collections/players'
 import { seasonsQuery } from '@/firebase/collections/seasons'
 import { teamsBySeasonQuery } from '@/firebase/collections/teams'
 import { updatePlayerAdminViaFunction } from '@/firebase/collections/functions'
@@ -85,8 +85,62 @@ export const PlayerManagement: React.FC = () => {
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
-	// Search for players
-	const searchQuery = useMemo(() => getPlayersQuery(searchTerm), [searchTerm])
+	// Search for players by name or email
+	const searchQuery = useMemo(() => {
+		if (searchTerm === '') {
+			return undefined
+		}
+
+		const trimmed = searchTerm.trim()
+		const searchLower = trimmed.toLowerCase()
+
+		// Check if it looks like an email (contains @)
+		if (trimmed.includes('@')) {
+			// Search by email only
+			return query(
+				collection(firestore, Collections.PLAYERS),
+				where('email', '>=', searchLower),
+				where('email', '<=', searchLower + '\uf8ff')
+			) as Query<PlayerDocument>
+		}
+
+		// Check if searching by full name (contains space)
+		if (trimmed.includes(' ')) {
+			const [firstname, lastname] = trimmed.split(' ', 2)
+			const firstCapitalized =
+				firstname.charAt(0).toUpperCase() + firstname.slice(1).toLowerCase()
+			const lastCapitalized =
+				lastname.charAt(0).toUpperCase() + lastname.slice(1).toLowerCase()
+
+			// Search by firstname AND lastname
+			return query(
+				collection(firestore, Collections.PLAYERS),
+				where('firstname', '>=', firstCapitalized),
+				where('firstname', '<=', firstCapitalized + '\uf8ff'),
+				where('lastname', '>=', lastCapitalized),
+				where('lastname', '<=', lastCapitalized + '\uf8ff')
+			) as Query<PlayerDocument>
+		}
+
+		// Search by firstname OR lastname
+		const searchCapitalized =
+			trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
+
+		return query(
+			collection(firestore, Collections.PLAYERS),
+			or(
+				and(
+					where('firstname', '>=', searchCapitalized),
+					where('firstname', '<=', searchCapitalized + '\uf8ff')
+				),
+				and(
+					where('lastname', '>=', searchCapitalized),
+					where('lastname', '<=', searchCapitalized + '\uf8ff')
+				)
+			)
+		) as Query<PlayerDocument>
+	}, [searchTerm])
+
 	const [playersSnapshot, playersLoading] = useCollection(searchQuery)
 
 	// Fetch all seasons
@@ -361,16 +415,16 @@ export const PlayerManagement: React.FC = () => {
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<div className='space-y-2'>
-							<Label htmlFor='search'>Player Name</Label>
+							<Label htmlFor='search'>Player Name or Email</Label>
 							<Input
 								id='search'
 								type='text'
-								placeholder='Search by name...'
+								placeholder='Search by name or email...'
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 							/>
 							<p className='text-xs text-muted-foreground'>
-								Enter first name, last name, or both
+								Enter first name, last name, or email address
 							</p>
 						</div>
 
