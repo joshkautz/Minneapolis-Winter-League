@@ -614,7 +614,9 @@ export const updatePlayerAdmin = functions
 								const teamRef = seasonUpdate.teamId
 									? (firestore
 											.collection(Collections.TEAMS)
-											.doc(seasonUpdate.teamId) as DocumentReference<TeamDocument>)
+											.doc(
+												seasonUpdate.teamId
+											) as DocumentReference<TeamDocument>)
 									: null
 
 								return {
