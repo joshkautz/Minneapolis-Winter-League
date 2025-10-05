@@ -122,6 +122,14 @@ export const AdminDashboard: React.FC = () => {
 				icon={Shield}
 			/>
 
+			<Alert>
+				<Settings className='h-4 w-4' />
+				<AlertDescription>
+					You have administrator privileges. Use these tools responsibly to
+					maintain system integrity and user experience.
+				</AlertDescription>
+			</Alert>
+
 			{/* Admin Functions Grid */}
 			<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6'>
 				{/* Player Management */}
@@ -335,41 +343,7 @@ export const AdminDashboard: React.FC = () => {
 						</Button>
 					</CardContent>
 				</Card>
-				{/* System Analytics (placeholder for future) */}
-				<Card className='hover:shadow-lg transition-shadow opacity-50'>
-					<CardHeader>
-						<CardTitle className='flex items-center gap-2'>
-							<BarChart3 className='h-5 w-5 text-green-600' />
-							Analytics
-						</CardTitle>
-					</CardHeader>
-					<CardContent className='space-y-4'>
-						<p className='text-sm text-muted-foreground'>
-							View system analytics, usage statistics, and performance metrics.
-						</p>
-						<Button disabled className='w-full'>
-							<BarChart3 className='h-4 w-4 mr-2' />
-							Coming Soon
-						</Button>
-					</CardContent>
-				</Card>
 			</div>
-
-			{/* Quick Actions */}
-			<Card>
-				<CardHeader>
-					<CardTitle>Quick Actions</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<Alert>
-						<Settings className='h-4 w-4' />
-						<AlertDescription>
-							You have administrator privileges. Use these tools responsibly to
-							maintain system integrity and user experience.
-						</AlertDescription>
-					</Alert>
-				</CardContent>
-			</Card>
 		</PageContainer>
 	)
 }
