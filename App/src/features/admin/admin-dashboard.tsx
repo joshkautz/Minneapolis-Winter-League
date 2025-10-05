@@ -27,7 +27,6 @@ import {
 import {
 	Settings,
 	Trophy,
-	BarChart3,
 	AlertTriangle,
 	Shield,
 	Calendar,
