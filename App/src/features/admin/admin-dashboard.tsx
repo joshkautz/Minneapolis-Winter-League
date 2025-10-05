@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/select'
 import {
 	Settings,
-	Users,
 	Trophy,
 	BarChart3,
 	AlertTriangle,
@@ -125,47 +124,6 @@ export const AdminDashboard: React.FC = () => {
 
 			{/* Admin Functions Grid */}
 			<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6'>
-				{/* Player Rankings Administration */}
-				<Card className='hover:shadow-lg transition-shadow'>
-					<CardHeader>
-						<CardTitle className='flex items-center gap-2'>
-							<Trophy className='h-5 w-5 text-yellow-600' />
-							Player Rankings
-						</CardTitle>
-					</CardHeader>
-					<CardContent className='space-y-4'>
-						<p className='text-sm text-muted-foreground'>
-							Manage player rankings calculations and monitor player rankings
-							system status.
-						</p>
-						<Button asChild className='w-full'>
-							<Link to='/admin/player-rankings'>
-								<Settings className='h-4 w-4 mr-2' />
-								Manage Player Rankings
-							</Link>
-						</Button>
-					</CardContent>
-				</Card>
-				{/* User Management */}
-				<Card className='hover:shadow-lg transition-shadow'>
-					<CardHeader>
-						<CardTitle className='flex items-center gap-2'>
-							<Users className='h-5 w-5 text-blue-600' />
-							User Management
-						</CardTitle>
-					</CardHeader>
-					<CardContent className='space-y-4'>
-						<p className='text-sm text-muted-foreground'>
-							Manage user accounts, permissions, and player profiles.
-						</p>
-						<Button asChild className='w-full'>
-							<Link to='/admin/user-management'>
-								<Users className='h-4 w-4 mr-2' />
-								Manage Users
-							</Link>
-						</Button>
-					</CardContent>
-				</Card>
 				{/* Player Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
@@ -183,6 +141,47 @@ export const AdminDashboard: React.FC = () => {
 							<Link to='/admin/player-management'>
 								<UserCog className='h-4 w-4 mr-2' />
 								Manage Players
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* Game Management */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Calendar className='h-5 w-5 text-indigo-600' />
+							Game Management
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Create, view, and manage game schedules for the current season.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/game-management'>
+								<Calendar className='h-4 w-4 mr-2' />
+								Manage Games
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* Player Rankings Administration */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Trophy className='h-5 w-5 text-yellow-600' />
+							Player Rankings
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Manage player rankings calculations and monitor player rankings
+							system status.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/player-rankings'>
+								<Settings className='h-4 w-4 mr-2' />
+								Manage Player Rankings
 							</Link>
 						</Button>
 					</CardContent>
@@ -332,26 +331,6 @@ export const AdminDashboard: React.FC = () => {
 							<Link to='/admin/delete-unregistered-teams'>
 								<Trash2 className='h-4 w-4 mr-2' />
 								Manage Unregistered Teams
-							</Link>
-						</Button>
-					</CardContent>
-				</Card>
-				{/* Game Management */}
-				<Card className='hover:shadow-lg transition-shadow'>
-					<CardHeader>
-						<CardTitle className='flex items-center gap-2'>
-							<Calendar className='h-5 w-5 text-indigo-600' />
-							Game Management
-						</CardTitle>
-					</CardHeader>
-					<CardContent className='space-y-4'>
-						<p className='text-sm text-muted-foreground'>
-							Create, view, and manage game schedules for the current season.
-						</p>
-						<Button asChild className='w-full'>
-							<Link to='/admin/game-management'>
-								<Calendar className='h-4 w-4 mr-2' />
-								Manage Games
 							</Link>
 						</Button>
 					</CardContent>

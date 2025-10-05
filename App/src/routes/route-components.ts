@@ -40,10 +40,6 @@ export const AdminDashboard = lazyImport(
 	() => import('@/features/admin'),
 	'AdminDashboard'
 )
-export const UserManagement = lazyImport(
-	() => import('@/features/admin'),
-	'UserManagement'
-)
 export const PlayerManagement = lazyImport(
 	() => import('@/features/admin'),
 	'PlayerManagement'
