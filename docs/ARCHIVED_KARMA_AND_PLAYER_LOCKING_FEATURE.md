@@ -1,11 +1,22 @@
-# Karma and Player Locking Feature
+# ⚠️ ARCHIVED - Karma and Player Locking Feature
+
+> **DEPRECATED**: This document describes an outdated implementation that included a "locked" field for players. The "locked" field has been removed from the system as it was redundant with the `lookingForTeam` field.
+>
+> For current karma system documentation, see:
+>
+> - [KARMA_TRANSACTION_SYSTEM.md](/docs/KARMA_TRANSACTION_SYSTEM.md)
+> - [KARMA_IMPLEMENTATION_SUMMARY.md](/KARMA_IMPLEMENTATION_SUMMARY.md)
+>
+> This file is kept for historical reference only.
+
+---
 
 ## Overview
 
-This document describes the implementation of two related features:
+This document describes the OLD implementation of two related features:
 
 1. **Team Karma System**: Rewards teams for adding players who are looking for teams
-2. **Player Locking System**: Locks rosters once 12 teams reach full registration
+2. **Player Locking System**: Locks rosters once 12 teams reach full registration (NO LONGER USED)
 
 ## Changes Made
 

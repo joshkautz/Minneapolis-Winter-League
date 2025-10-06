@@ -11,10 +11,17 @@ import {
 	PlayerDocument,
 	TeamRosterPlayer,
 	PlayerSeason,
+	SeasonDocument,
+	DocumentReference,
 } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 import { getCurrentSeason } from '../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
+import {
+	findKarmaTransactionForPlayerJoin,
+	createKarmaTransaction,
+	KARMA_AMOUNT,
+} from '../../shared/karma.js'
 
 interface ManagePlayerRequest {
 	teamId: string
@@ -123,6 +130,17 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 							)
 						)
 
+						// Check if team was awarded karma when this player joined
+						const seasonRef = firestore
+							.collection(Collections.SEASONS)
+							.doc(currentSeason.id) as DocumentReference<SeasonDocument>
+
+						const karmaTransaction = await findKarmaTransactionForPlayerJoin(
+							teamRef as DocumentReference<TeamDocument>,
+							playerRef as DocumentReference<PlayerDocument>,
+							seasonRef
+						)
+
 						return handleRemoveFromTeam(
 							transaction,
 							teamRef,
@@ -131,7 +149,9 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 							playerDocument,
 							playerId,
 							currentSeason.id,
-							rosterPlayerDocs
+							rosterPlayerDocs,
+							seasonRef,
+							karmaTransaction
 						)
 					}
 					default:
@@ -246,13 +266,10 @@ function handleRemoveFromTeam(
 	playerDocument: PlayerDocument,
 	playerId: string,
 	seasonId: string,
-	rosterPlayerDocs: FirebaseFirestore.DocumentSnapshot[]
+	rosterPlayerDocs: FirebaseFirestore.DocumentSnapshot[],
+	seasonRef: FirebaseFirestore.DocumentReference<SeasonDocument>,
+	karmaTransactionFound: any | null
 ): { success: boolean; action: string; message: string } {
-	// Get player's season data
-	const playerSeasonData = playerDocument.seasons?.find(
-		(season: PlayerSeason) => season.season.id === seasonId
-	)
-
 	// Check if this is the last captain
 	const playerIsCaptain = teamDocument.roster?.find(
 		(member: TeamRosterPlayer) => member.player.id === playerId
@@ -300,10 +317,6 @@ function handleRemoveFromTeam(
 		}
 	}
 
-	// Check if player has lookingForTeam status (or locked, which counts as NOT lookingForTeam)
-	// Locked players are treated as lookingForTeam: false for karma purposes
-	const isLookingForTeam =
-		(playerSeasonData?.lookingForTeam || false) && !playerSeasonData?.locked
 	const currentKarma = teamDocument.karma || 0
 
 	// Remove player from team roster
@@ -317,14 +330,27 @@ function handleRemoveFromTeam(
 		roster: updatedRoster,
 	}
 
-	if (isLookingForTeam) {
-		teamUpdates.karma = Math.max(0, currentKarma - 100) // Don't go below 0
+	// Only subtract karma if the team was awarded karma when this player joined
+	let karmaAdjustment = 0
+	if (karmaTransactionFound) {
+		karmaAdjustment = -KARMA_AMOUNT
+		teamUpdates.karma = Math.max(0, currentKarma + karmaAdjustment)
+
+		// Create a transaction record for the karma removal
+		createKarmaTransaction(
+			transaction,
+			teamRef as DocumentReference<TeamDocument>,
+			playerRef as DocumentReference<PlayerDocument>,
+			seasonRef,
+			karmaAdjustment,
+			'player_left'
+		)
 	}
 
 	transaction.update(teamRef, teamUpdates)
 
 	// Update player seasons
-	// Note: locked and lookingForTeam status are permanent once set, so we preserve them
+	// Note: lookingForTeam status is permanent once set, so we preserve it
 	const updatedSeasons =
 		playerDocument.seasons?.map((season: PlayerSeason) =>
 			season.season.id === seasonId
@@ -332,7 +358,7 @@ function handleRemoveFromTeam(
 						...season,
 						team: null,
 						captain: false,
-						// Don't modify locked or lookingForTeam - they're permanent once set
+						// Don't modify lookingForTeam - it's permanent once set
 					}
 				: season
 		) || []
@@ -342,7 +368,8 @@ function handleRemoveFromTeam(
 	logger.info(`Removed player from team`, {
 		teamId: teamRef.id,
 		playerId: playerRef.id,
-		karmaAdjustment: isLookingForTeam ? -100 : 0,
+		karmaAdjustment,
+		hadKarmaTransaction: !!karmaTransactionFound,
 	})
 
 	return {

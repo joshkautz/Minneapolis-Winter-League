@@ -16,6 +16,11 @@ import {
 } from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { getCurrentSeason } from '../../shared/database.js'
+import {
+	qualifiesForKarmaBonus,
+	createKarmaTransaction,
+	KARMA_AMOUNT,
+} from '../../shared/karma.js'
 
 /**
  * Triggered when an offer document is updated
@@ -87,11 +92,9 @@ export const onOfferUpdated = onDocumentUpdated(
 					throw new Error('Player is already on a team for this season')
 				}
 
-				// Check if player has lookingForTeam status for karma bonus
-				// Locked players are treated as lookingForTeam: false for karma purposes
-				const isLookingForTeam =
-					(currentSeasonData?.lookingForTeam || false) &&
-					!currentSeasonData?.locked
+				// Check if player qualifies for karma bonus
+				// Requirements: lookingForTeam=true and fully registered (paid + signed)
+				const qualifiesForKarma = qualifiesForKarmaBonus(currentSeasonData)
 				const currentKarma = teamDocument.karma || 0
 
 				// Add player to team roster
@@ -108,8 +111,22 @@ export const onOfferUpdated = onDocumentUpdated(
 					roster: updatedRoster,
 				}
 
-				if (isLookingForTeam) {
-					teamUpdates.karma = currentKarma + 100
+				if (qualifiesForKarma) {
+					teamUpdates.karma = currentKarma + KARMA_AMOUNT
+
+					// Create a karma transaction record
+					const seasonRef = firestore
+						.collection(Collections.SEASONS)
+						.doc(currentSeason.id) as DocumentReference<SeasonDocument>
+
+					createKarmaTransaction(
+						transaction,
+						teamRef,
+						playerRef,
+						seasonRef,
+						KARMA_AMOUNT,
+						'player_joined'
+					)
 				}
 
 				transaction.update(teamRef, teamUpdates)
@@ -128,12 +145,12 @@ export const onOfferUpdated = onDocumentUpdated(
 
 				if (existingSeasonIndex >= 0) {
 					// Update existing season data
-					// Note: locked and lookingForTeam are permanent once set, so we preserve them
+					// Note: lookingForTeam status is permanent once set, so we preserve it
 					updatedSeasons[existingSeasonIndex] = {
 						...updatedSeasons[existingSeasonIndex],
 						team: teamRef,
 						captain: false, // Players joining via offers are not captains
-						// Don't modify locked or lookingForTeam - they're permanent once set
+						// Don't modify lookingForTeam - it's permanent once set
 					}
 				} else {
 					// Create new season data if none exists
@@ -144,8 +161,7 @@ export const onOfferUpdated = onDocumentUpdated(
 						paid: false,
 						signed: false,
 						banned: false,
-						lookingForTeam: false, // Initial value - not yet locked
-						locked: false, // Initial value - not yet locked
+						lookingForTeam: false, // Initial value
 					}
 					updatedSeasons = [...updatedSeasons, newSeasonData]
 				}
@@ -179,7 +195,7 @@ export const onOfferUpdated = onDocumentUpdated(
 				})
 
 				logger.info(`Successfully processed offer acceptance: ${offerId}`, {
-					karmaBonus: isLookingForTeam ? 100 : 0,
+					karmaBonus: qualifiesForKarma ? KARMA_AMOUNT : 0,
 					canceledPendingOffers: canceledOffersCount,
 				})
 			})

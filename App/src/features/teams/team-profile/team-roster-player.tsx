@@ -47,9 +47,13 @@ export const TeamRosterPlayer = ({
 		const seasonData = playerData.seasons?.find(
 			(s) => s.season.id === seasonRef.id
 		)
-		// Locked players are treated as lookingForTeam: false for karma purposes
-		return (seasonData?.lookingForTeam || false) && !seasonData?.locked
+		return seasonData?.lookingForTeam || false
 	}, [playerData, seasonRef])
+
+	const isFullyRegistered = useMemo(
+		() => isPlayerPaid && isPlayerSigned,
+		[isPlayerPaid, isPlayerSigned]
+	)
 
 	return (
 		<div>
@@ -64,7 +68,11 @@ export const TeamRosterPlayer = ({
 						{isLookingForTeam && (
 							<Badge
 								variant='outline'
-								className='text-xs font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
+								className={
+									isFullyRegistered
+										? 'text-xs font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
+										: 'text-xs font-normal border-muted-foreground/20 text-muted-foreground bg-muted/50'
+								}
 							>
 								<Sparkles className='h-3 w-3 mr-1' />+
 								{KARMA_BONUS_FOR_LOOKING_FOR_TEAM}

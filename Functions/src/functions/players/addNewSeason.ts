@@ -2,7 +2,7 @@
  * Add new season to all players callable function
  *
  * This function is only invoked via the Admin Dashboard.
- * It adds a new PlayerSeason object to all PlayerDocuments for a specified season.
+ * It adds a new PlayerSeason object to all player documents for a specified season.
  */
 
 import { onCall } from 'firebase-functions/v2/https'
@@ -162,13 +162,10 @@ export const addNewSeasonToAllPlayers = onCall<AddNewSeasonToPlayersRequest>(
 					signed: false,
 					banned: bannedStatus,
 					lookingForTeam: false, // Not looking initially
-					locked: false, // Not locked initially
 				}
 
 				// Add new season to existing seasons array
-				const updatedSeasons = [...(playerData.seasons || []), newSeasonData]
-
-				// Add update to batch
+				const updatedSeasons = [...(playerData.seasons || []), newSeasonData] // Add update to batch
 				batch.update(playerDoc.ref, { seasons: updatedSeasons })
 				operationsInBatch++
 				playersUpdated++

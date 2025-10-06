@@ -98,10 +98,8 @@ export interface PlayerSeason {
 	signed: boolean
 	/** Reference to the team document (null if not on a team) */
 	team: DocumentReference<TeamDocument> | null
-	/** Whether the player is looking for a team (not locked to a registered team) */
+	/** Whether the player is looking for a team */
 	lookingForTeam?: boolean
-	/** Whether the player is locked to their team (on a team when 12 teams registered) */
-	locked: boolean
 }
 
 /**

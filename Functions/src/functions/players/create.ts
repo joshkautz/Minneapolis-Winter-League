@@ -135,7 +135,6 @@ export const createPlayer = functions
 							signed: false,
 							team: null,
 							lookingForTeam: false,
-							locked: false,
 						},
 					],
 				}

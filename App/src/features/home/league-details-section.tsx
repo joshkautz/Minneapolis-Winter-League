@@ -100,7 +100,7 @@ export const LeagueDetailsSection = () => {
 								<b>10-player minimum</b> requirement for teams, with{' '}
 								<u>no roster maximum.</u> The first twelve teams to meet this
 								requirement of ten fully registered players will be successfully
-								locked in. All other players have the option to:
+								registered. All other players have the option to:
 							</p>
 							<ul>
 								<li>1. Request a roster spot on an existing team.</li>

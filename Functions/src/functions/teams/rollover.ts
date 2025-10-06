@@ -223,10 +223,8 @@ export const rolloverTeam = functions
 						signed: false,
 						banned: false,
 						lookingForTeam: false, // Not looking for team since they're creating one
-						locked: false, // Not locked initially
 					})
 				}
-
 				await playerRef.update({ seasons: updatedSeasons })
 
 				functions.logger.info(
