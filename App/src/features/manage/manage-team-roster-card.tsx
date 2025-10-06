@@ -1,13 +1,10 @@
-import { DocumentReference } from '@/firebase/firestore'
-import { useTeamsContext } from '@/providers'
 import { ReactNode, useMemo, useState } from 'react'
+import { CheckCircledIcon } from '@radix-ui/react-icons'
+import { DocumentReference } from '@/firebase/firestore'
+import { useTeamsContext, useSeasonsContext } from '@/providers'
 import { NotificationCard } from '@/shared/components'
 import { ManageTeamRosterPlayer } from './manage-team-roster-player'
-import { PlayerDocument } from '@/shared/utils'
-import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { useSeasonsContext } from '@/providers'
-
-import { formatTimestamp } from '@/shared/utils'
+import { PlayerDocument, formatTimestamp } from '@/shared/utils'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {

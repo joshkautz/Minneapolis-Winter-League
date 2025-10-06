@@ -1,18 +1,17 @@
+import { useMemo, useState, useEffect } from 'react'
+import { getDoc } from 'firebase/firestore'
+import { Timestamp } from '@firebase/firestore'
+import { Users, Sparkles } from 'lucide-react'
 import { formatTimestamp } from '@/shared/utils'
-import { useTeamsContext } from '@/providers'
+import { useTeamsContext, useSeasonsContext } from '@/providers'
 import {
 	ComingSoon,
 	LoadingSpinner,
 	PageContainer,
 	PageHeader,
 } from '@/shared/components'
-import { useSeasonsContext } from '@/providers'
-import { Timestamp } from '@firebase/firestore'
-import { useMemo, useState, useEffect } from 'react'
 import { TeamCard } from './team-card'
-import { Users, Sparkles } from 'lucide-react'
 import { PlayerDocument } from '@/types'
-import { getDoc } from 'firebase/firestore'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 // Types for better TypeScript support

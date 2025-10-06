@@ -13,13 +13,13 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import * as functions from 'firebase-functions/v1'
 import { validateAdminUser } from '../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
-import { Collections } from '../../types.js'
-import type {
-	DocumentReference,
-	PlayerDocument,
-	PlayerSeason,
-	TeamDocument,
-	TeamRosterPlayer,
+import {
+	Collections,
+	type DocumentReference,
+	type PlayerDocument,
+	type PlayerSeason,
+	type TeamDocument,
+	type TeamRosterPlayer,
 } from '../../types.js'
 
 /**

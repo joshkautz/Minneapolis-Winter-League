@@ -2,15 +2,19 @@
  * Team-related Firestore operations
  */
 
-import { doc, query, where, collection, documentId } from 'firebase/firestore'
+import {
+	doc,
+	query,
+	where,
+	collection,
+	documentId,
+	type DocumentReference,
+	type QueryDocumentSnapshot,
+	type Query,
+} from 'firebase/firestore'
 
 import { firestore } from '../app'
 import { SeasonDocument, TeamDocument, Collections } from '@/shared/utils'
-import type {
-	DocumentReference,
-	QueryDocumentSnapshot,
-	Query,
-} from 'firebase/firestore'
 
 /**
  * Gets a team document reference by ID

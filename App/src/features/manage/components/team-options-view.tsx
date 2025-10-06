@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Users, UserPlus, AlertCircle } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -6,7 +6,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { JoinTeam } from '@/features/join'
 import { CreateTeam } from '@/features/create/create-team'
 import { useTeamsContext } from '@/providers'
-import { useMemo } from 'react'
 
 interface TeamOptionsViewProps {
 	isLoading: boolean

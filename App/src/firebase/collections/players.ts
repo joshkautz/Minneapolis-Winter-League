@@ -11,12 +11,10 @@ import {
 	collection,
 	or,
 	and,
-} from 'firebase/firestore'
-import type {
-	DocumentSnapshot,
-	DocumentReference,
-	Query,
-	UpdateData,
+	type DocumentSnapshot,
+	type DocumentReference,
+	type Query,
+	type UpdateData,
 } from 'firebase/firestore'
 
 import { firestore } from '../app'

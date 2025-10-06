@@ -21,7 +21,7 @@ export const useScheduleData = () => {
 			.sort((a, b) => a.data().date.seconds - b.data().date.seconds)
 			.forEach((queryDocumentSnapshot: QueryDocumentSnapshot<GameDocument>) => {
 				const currentTimestamp = queryDocumentSnapshot.data().date.seconds
-				if (previousTimestamp == 0) {
+				if (previousTimestamp === 0) {
 					previousTimestamp = currentTimestamp
 				}
 				if (previousTimestamp !== currentTimestamp) {

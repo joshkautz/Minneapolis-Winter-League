@@ -2,7 +2,14 @@
  * Offer-related Firestore operations (invitations and requests)
  */
 
-import { query, where, collection } from 'firebase/firestore'
+import {
+	query,
+	where,
+	collection,
+	type DocumentSnapshot,
+	type QueryDocumentSnapshot,
+	type Query,
+} from 'firebase/firestore'
 
 import { firestore } from '../app'
 import {
@@ -15,11 +22,6 @@ import {
 	Collections,
 	PlayerSeason,
 } from '@/shared/utils'
-import type {
-	DocumentSnapshot,
-	QueryDocumentSnapshot,
-	Query,
-} from 'firebase/firestore'
 
 /**
  * Creates a query for outgoing offers (invitations sent by captains or requests sent by players)

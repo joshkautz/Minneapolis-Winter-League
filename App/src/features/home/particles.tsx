@@ -1,6 +1,5 @@
 'use client'
-import { useId } from 'react'
-import { useEffect, useState } from 'react'
+import { useId, useEffect, useState } from 'react'
 import Particles, { initParticlesEngine } from '@tsparticles/react'
 import type {
 	Container,

@@ -1,6 +1,5 @@
 import React, { ReactNode } from 'react'
-import { LazyWrapper } from '@/shared/components'
-import { ProtectedRoute } from '@/shared/components'
+import { LazyWrapper, ProtectedRoute } from '@/shared/components'
 
 /**
  * Route wrapper components for consistent route configuration

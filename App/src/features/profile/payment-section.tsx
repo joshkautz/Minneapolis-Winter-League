@@ -1,4 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
+import { toast } from 'sonner'
+import { User } from 'firebase/auth'
+import { Timestamp } from '@firebase/firestore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -10,13 +13,8 @@ import {
 	AlertCircle,
 	Calendar,
 } from 'lucide-react'
-import { toast } from 'sonner'
-import { stripeRegistration } from '@/firebase/firestore'
-import { formatTimestamp } from '@/shared/utils'
-import { User } from 'firebase/auth'
-import { QueryDocumentSnapshot } from '@/firebase/firestore'
-import { SeasonDocument } from '@/shared/utils'
-import { Timestamp } from '@firebase/firestore'
+import { stripeRegistration, QueryDocumentSnapshot } from '@/firebase/firestore'
+import { formatTimestamp, SeasonDocument } from '@/shared/utils'
 
 interface PaymentSectionProps {
 	authStateUser: User | null | undefined

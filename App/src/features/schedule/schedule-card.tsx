@@ -1,5 +1,4 @@
-import { GameDocument } from '@/shared/utils'
-import { hasAssignedTeams } from '@/shared/utils'
+import { GameDocument, hasAssignedTeams } from '@/shared/utils'
 import {
 	Card,
 	CardContent,

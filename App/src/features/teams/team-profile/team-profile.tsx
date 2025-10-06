@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
+import { Timestamp } from '@firebase/firestore'
+import { CheckCircledIcon } from '@radix-ui/react-icons'
+import { Sparkles } from 'lucide-react'
 import { NotificationCard } from '@/shared/components'
 import {
 	DocumentReference,
@@ -9,18 +13,17 @@ import {
 	DocumentSnapshot,
 	teamsBySeasonQuery,
 } from '@/firebase/firestore'
-import { GameDocument, PlayerDocument, TeamDocument } from '@/shared/utils'
-import { hasAssignedTeams, getTeamRole } from '@/shared/utils'
+import {
+	GameDocument,
+	PlayerDocument,
+	TeamDocument,
+	hasAssignedTeams,
+	getTeamRole,
+	formatTimestamp,
+} from '@/shared/utils'
 import { TeamRosterPlayer } from './team-roster-player'
-import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
-import { Timestamp } from '@firebase/firestore'
-
-import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { Sparkles } from 'lucide-react'
-
 import { TeamHistory } from './team-history'
 import { useSeasonsContext } from '@/providers'
-import { formatTimestamp } from '@/shared/utils'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 

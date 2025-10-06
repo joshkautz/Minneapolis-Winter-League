@@ -2,13 +2,17 @@
  * Payment-related Firestore operations (Stripe integration)
  */
 
-import { addDoc, collection, onSnapshot } from 'firebase/firestore'
+import {
+	addDoc,
+	collection,
+	onSnapshot,
+	type DocumentReference,
+} from 'firebase/firestore'
 
 import { firestore } from '../app'
 import { User } from '../auth'
 import { getCurrentSeasonPrice } from '../stripe'
 import { CheckoutSessionDocument } from '@/shared/utils'
-import type { DocumentReference } from 'firebase/firestore'
 
 /**
  * Creates a Stripe checkout session for winter league registration

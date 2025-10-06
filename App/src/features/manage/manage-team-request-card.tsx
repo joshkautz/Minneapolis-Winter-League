@@ -1,13 +1,11 @@
+import { useCallback } from 'react'
+import { toast } from 'sonner'
 import { DocumentSnapshot, QueryDocumentSnapshot } from '@/firebase/firestore'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
-import { useTeamsContext } from '@/providers'
-import { useCallback } from 'react'
-import { NotificationCard } from '@/shared/components'
-import { useAuthContext } from '@/providers'
-import { toast } from 'sonner'
+import { useTeamsContext, useAuthContext } from '@/providers'
+import { NotificationCard, LoadingSpinner } from '@/shared/components'
 import { PlayerDocument, TeamDocument } from '@/shared/utils'
 import { ManageTeamDetail } from './manage-team-detail'
-import { LoadingSpinner } from '@/shared/components'
 
 export const ManageTeamRequestCard = () => {
 	const { authenticatedUserSnapshot } = useAuthContext()

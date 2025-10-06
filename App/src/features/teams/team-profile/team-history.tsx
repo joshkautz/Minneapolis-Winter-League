@@ -60,7 +60,7 @@ export const TeamHistory = ({
 								seasonsQuerySnapshot?.docs
 									.find(
 										(seasonQueryDocumentSnapshot) =>
-											seasonQueryDocumentSnapshot.id ==
+											seasonQueryDocumentSnapshot.id ===
 											historyQueryDocumentSnapshot.data().season.id
 									)
 									?.data().name

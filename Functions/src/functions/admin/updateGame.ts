@@ -5,8 +5,11 @@
  * for duplicate games (same time slot and field) and business logic constraints.
  */
 
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
-import type { DocumentReference } from 'firebase-admin/firestore'
+import {
+	getFirestore,
+	Timestamp,
+	type DocumentReference,
+} from 'firebase-admin/firestore'
 import * as functions from 'firebase-functions/v1'
 import { validateAdminUser } from '../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'

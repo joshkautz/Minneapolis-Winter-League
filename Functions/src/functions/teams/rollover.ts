@@ -5,7 +5,7 @@
  * preserving the teamId but creating a new team document.
  */
 
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import * as functions from 'firebase-functions/v1'
 import {
 	Collections,
@@ -15,7 +15,6 @@ import {
 	SeasonDocument,
 } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
-import { Timestamp } from 'firebase-admin/firestore'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 interface RolloverTeamRequest {

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import {
 	Table,
 	TableBody,
@@ -8,10 +9,8 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import { QuerySnapshot } from '@/firebase/firestore'
-import { TeamDocument } from '@/shared/utils'
+import { TeamDocument, cn } from '@/shared/utils'
 import { TeamStanding } from '@/shared/hooks'
-import { cn } from '@/shared/utils'
-import { Link } from 'react-router-dom'
 
 interface SharedStandingsTableProps {
 	data: {

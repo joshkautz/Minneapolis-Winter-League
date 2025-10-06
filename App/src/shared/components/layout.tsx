@@ -1,7 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { NavigationBar } from './navigation-bar'
-import { AuthModal } from '@/features/auth'
-import { useAuthModal } from '@/features/auth'
+import { AuthModal, useAuthModal } from '@/features/auth'
 import { cn } from '@/shared/utils'
 
 export type OutletContext = {

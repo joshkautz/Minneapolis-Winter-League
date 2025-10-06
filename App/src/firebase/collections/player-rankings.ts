@@ -2,7 +2,13 @@
  * Player Rankings related Firestore operations
  */
 
-import { query, collection, orderBy, limit } from 'firebase/firestore'
+import {
+	query,
+	collection,
+	orderBy,
+	limit,
+	type Query,
+} from 'firebase/firestore'
 import { httpsCallable } from 'firebase/functions'
 
 import { firestore, functions } from '../app'
@@ -11,7 +17,6 @@ import {
 	RankingsCalculationDocument,
 	Collections,
 } from '../../types'
-import type { Query } from 'firebase/firestore'
 
 /**
  * Creates a query for current player rankings

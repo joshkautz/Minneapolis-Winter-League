@@ -49,7 +49,7 @@ export const useOffer = (
 							teamsQuerySnapshot?.docs
 								.find(
 									(team: QueryDocumentSnapshot<TeamDocument>) =>
-										team.id == offerData.team.id
+										team.id === offerData.team.id
 								)
 								?.data().name || '',
 						creatorName: creatorSnapshot

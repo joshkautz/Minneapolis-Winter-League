@@ -1,7 +1,6 @@
-import { QueryDocumentSnapshot } from '@/firebase/firestore'
-import { TeamDocument } from '@/shared/utils'
-import { cn } from '@/shared/utils'
 import { Link } from 'react-router-dom'
+import { QueryDocumentSnapshot } from '@/firebase/firestore'
+import { TeamDocument, cn } from '@/shared/utils'
 
 export const TeamIcon = ({
 	team,

@@ -1,3 +1,5 @@
+import { useContext, useEffect, useState } from 'react'
+import { LaptopIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons'
 import {
 	Select,
 	SelectContent,
@@ -5,11 +7,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { useContext, useEffect, useState } from 'react'
 import { ThemeContext } from '@/providers'
-import { cn } from '@/shared/utils'
-import { logger } from '@/shared/utils'
-import { LaptopIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons'
+import { cn, logger } from '@/shared/utils'
 import { useAnimatedSelect } from '@/shared/hooks'
 
 const themeOptions = [

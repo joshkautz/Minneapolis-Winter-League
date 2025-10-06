@@ -1,22 +1,21 @@
+import { useMemo } from 'react'
+import { useCollection } from 'react-firebase-hooks/firestore'
+import { Mail } from 'lucide-react'
 import {
 	QueryDocumentSnapshot,
 	offersForPlayerByTeamQuery,
 } from '@/firebase/firestore'
-import { cn } from '@/shared/utils'
-import { useCollection } from 'react-firebase-hooks/firestore'
-import { Button } from '@/components/ui/button'
 import {
+	cn,
 	PlayerDocument,
 	TeamDocument,
 	OfferDocument,
 	OfferStatus,
 } from '@/shared/utils'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { useTeamsContext } from '@/providers'
-import { useMemo } from 'react'
-import { useSeasonsContext } from '@/providers'
-import { Mail } from 'lucide-react'
+import { useTeamsContext, useSeasonsContext } from '@/providers'
 
 export const ManageInvitePlayerDetail = ({
 	teamQueryDocumentSnapshot,

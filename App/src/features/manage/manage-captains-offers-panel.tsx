@@ -1,15 +1,20 @@
-import { OfferDocument, OfferDirection } from '@/shared/utils'
-import { NotificationCard } from '@/shared/components'
-import { useOffersContext } from '@/providers'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import {
+	OfferDocument,
+	OfferDirection,
+	getInviteMessage,
+	getRequestMessage,
+} from '@/shared/utils'
+import {
+	NotificationCard,
+	LoadingSpinner,
+	NotificationCardItem,
+} from '@/shared/components'
+import { useOffersContext, useTeamsContext } from '@/providers'
 import { useOffer, OfferDocumentWithUI } from '@/shared/hooks'
-import { useTeamsContext } from '@/providers'
 import { DocumentReference } from '@/firebase/firestore'
 import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
-import { toast } from 'sonner'
-import { LoadingSpinner } from '@/shared/components'
-import { getInviteMessage, getRequestMessage } from '@/shared/utils'
-import { NotificationCardItem } from '@/shared/components'
-import { useState } from 'react'
 
 export const ManageCaptainsOffersPanel = () => {
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()

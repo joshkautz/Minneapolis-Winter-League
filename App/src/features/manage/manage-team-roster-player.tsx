@@ -259,12 +259,12 @@ export const ManageTeamRosterPlayer = ({
 										</DropdownMenuItem>
 										<DestructiveConfirmationDialog
 											title={
-												playerSnapshot.id == authenticatedUserSnapshot?.id
+												playerSnapshot.id === authenticatedUserSnapshot?.id
 													? 'Are you sure you want to leave?'
 													: 'Are you sure?'
 											}
 											description={
-												playerSnapshot.id == authenticatedUserSnapshot?.id
+												playerSnapshot.id === authenticatedUserSnapshot?.id
 													? 'You will not be able to rejoin until a captain accepts you back on to the roster.'
 													: `${
 															playerSnapshot.data()?.firstname

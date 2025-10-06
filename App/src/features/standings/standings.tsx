@@ -1,13 +1,19 @@
-import { ComingSoon } from '@/shared/components'
-import { useTeamsContext } from '@/providers'
-import { useGamesContext } from '@/providers'
-import { LoadingSpinner, PageContainer, PageHeader } from '@/shared/components'
+import { Trophy } from 'lucide-react'
+import {
+	ComingSoon,
+	LoadingSpinner,
+	PageContainer,
+	PageHeader,
+} from '@/shared/components'
+import {
+	useTeamsContext,
+	useGamesContext,
+	useSeasonsContext,
+} from '@/providers'
 import { useStandings } from '@/shared/hooks'
 import { StandingsTable } from './standings-table'
 import { ResultsTable } from './results-table'
-import { useSeasonsContext } from '@/providers'
 import { formatTimestamp } from '@/shared/utils'
-import { Trophy } from 'lucide-react'
 
 export const Standings = () => {
 	const { selectedSeasonTeamsQuerySnapshot } = useTeamsContext()

@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
-import { useAuthContext } from '@/providers'
-import { useSeasonsContext } from '@/providers'
+import { useAuthContext, useSeasonsContext } from '@/providers'
 import type { PlayerSeason } from '@/types'
 
 /**

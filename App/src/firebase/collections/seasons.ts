@@ -2,11 +2,10 @@
  * Season-related Firestore operations
  */
 
-import { query, collection, orderBy } from 'firebase/firestore'
+import { query, collection, orderBy, type Query } from 'firebase/firestore'
 
 import { firestore } from '../app'
 import { SeasonDocument, Collections } from '@/shared/utils'
-import type { Query } from 'firebase/firestore'
 
 /**
  * Creates a query for all seasons

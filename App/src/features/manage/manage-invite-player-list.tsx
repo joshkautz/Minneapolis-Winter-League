@@ -1,15 +1,13 @@
+import { useCallback, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { getPlayersQuery, QueryDocumentSnapshot } from '@/firebase/firestore'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
-import { useCallback, useMemo, useState } from 'react'
 import { NotificationCard } from '@/shared/components'
-import { toast } from 'sonner'
 import { PlayerDocument, TeamDocument } from '@/shared/utils'
 import { ManageInvitePlayerDetail } from './manage-invite-player-detail'
 import { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
-import { usePlayersSearch } from '@/shared/hooks'
-import { useDebounce } from '@/shared/hooks'
+import { usePlayersSearch, useDebounce, useUserStatus } from '@/shared/hooks'
 import { useTeamsContext } from '@/providers'
-import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 export const ManageInvitePlayerList = () => {
 	const [search, setSearch] = useState('')

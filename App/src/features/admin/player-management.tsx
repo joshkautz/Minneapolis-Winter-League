@@ -7,8 +7,16 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { doc, query, collection, where, or, and } from 'firebase/firestore'
-import type { DocumentReference, Query } from 'firebase/firestore'
+import {
+	doc,
+	query,
+	collection,
+	where,
+	or,
+	and,
+	type DocumentReference,
+	type Query,
+} from 'firebase/firestore'
 import { toast } from 'sonner'
 import {
 	ArrowLeft,
