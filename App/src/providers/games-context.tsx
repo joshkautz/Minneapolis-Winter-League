@@ -27,6 +27,7 @@ interface GameProps {
 	playoffGamesQuerySnapshotError: FirestoreError | undefined
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const GamesContext = createContext<GameProps>({
 	gamesQuerySnapshot: undefined,
 	gamesQuerySnapshotLoading: false,
@@ -39,6 +40,7 @@ export const GamesContext = createContext<GameProps>({
 	playoffGamesQuerySnapshotError: undefined,
 })
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useGamesContext = () => useContext(GamesContext)
 
 export const GamesContextProvider: React.FC<PropsWithChildren> = ({

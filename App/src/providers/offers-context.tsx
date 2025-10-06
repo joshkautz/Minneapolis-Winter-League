@@ -24,6 +24,7 @@ interface OffersProps {
 	incomingOffersQuerySnapshotError: FirestoreError | undefined
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const OffersContext = createContext<OffersProps>({
 	outgoingOffersQuerySnapshot: undefined,
 	outgoingOffersQuerySnapshotLoading: false,
@@ -33,6 +34,7 @@ export const OffersContext = createContext<OffersProps>({
 	incomingOffersQuerySnapshotError: undefined,
 })
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useOffersContext = () => useContext(OffersContext)
 
 export const OffersContextProvider: React.FC<PropsWithChildren> = ({

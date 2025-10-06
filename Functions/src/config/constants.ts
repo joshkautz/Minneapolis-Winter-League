@@ -19,7 +19,11 @@ export const TEAM_CONFIG = {
 } as const
 
 // Dropbox Sign Configuration (lazy-loaded)
-export function getDropboxSignConfig() {
+export function getDropboxSignConfig(): {
+	readonly API_KEY: string
+	readonly TEMPLATE_ID: string
+	readonly TEST_MODE: boolean
+} {
 	const env = getENV()
 	return {
 		API_KEY: env.dropboxSignApiKey,
@@ -29,7 +33,10 @@ export function getDropboxSignConfig() {
 }
 
 // Stripe Configuration (lazy-loaded)
-export function getStripeConfig() {
+export function getStripeConfig(): {
+	readonly SECRET_KEY: string
+	readonly API_VERSION: '2025-08-27.basil'
+} {
 	const env = getENV()
 	return {
 		SECRET_KEY: env.stripeSecretKey,

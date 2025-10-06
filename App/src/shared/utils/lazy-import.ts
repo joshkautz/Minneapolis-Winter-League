@@ -9,6 +9,7 @@ import React, { lazy } from 'react'
  * @example
  * const Home = lazyImport(() => import('@/components/home/home'), 'Home')
  */
+
 export const lazyImport = <
 	T extends Record<string, React.ComponentType<any>>,
 	K extends keyof T,

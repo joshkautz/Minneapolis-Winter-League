@@ -47,7 +47,7 @@ export const playerRankingsCalculationsQuery =
  * Use this for initial setup or complete recalculation of all rankings
  */
 export const rebuildPlayerRankings = httpsCallable<
-	{}, // No parameters needed - decay is always applied
+	Record<string, never>, // No parameters needed - decay is always applied
 	{
 		calculationId: string
 		status: string
@@ -62,7 +62,7 @@ export const rebuildPlayerRankings = httpsCallable<
  * Use this for regular production updates when adding new games
  */
 export const updatePlayerRankings = httpsCallable<
-	{}, // No parameters needed - decay is always applied
+	Record<string, never>, // No parameters needed - decay is always applied
 	{
 		calculationId: string
 		status: string

@@ -25,8 +25,10 @@ export default [
 				{ allowConstantExport: true },
 			],
 			// App-specific overrides
-			'no-console': 'warn', // Allow console in development
-			'@typescript-eslint/no-explicit-any': 'warn', // More lenient for UI code
+			'no-console': 'warn',
+			'no-alert': 'warn',
+			'@typescript-eslint/no-empty-object-type': 'warn',
+			'@typescript-eslint/no-explicit-any': 'warn',
 		},
 	},
 	{

@@ -6,10 +6,12 @@ export default [
 		...nodeConfig,
 		rules: {
 			...nodeConfig.rules,
-			// Functions-specific rules
-			'@typescript-eslint/no-explicit-any': 'error', // Stricter for backend
-			'no-console': 'off', // Console allowed for logging
-			'@typescript-eslint/explicit-function-return-type': 'warn', // Better for API functions
+			// Functions-specific rules: off
+			'no-console': 'off',
+			'no-alert': 'off',
+			'@typescript-eslint/no-empty-object-type': 'off',
+			'@typescript-eslint/no-explicit-any': 'error',
+			'@typescript-eslint/explicit-function-return-type': 'error',
 		},
 	},
 	{

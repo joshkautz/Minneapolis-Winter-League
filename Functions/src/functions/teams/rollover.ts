@@ -92,7 +92,7 @@ export const rolloverTeam = functions
 						currentTime < registrationStart ||
 						currentTime > registrationEnd
 					) {
-						const formatDate = (date: Date) => {
+						const formatDate = (date: Date): string => {
 							const options: Intl.DateTimeFormatOptions = {
 								year: 'numeric',
 								month: 'long',

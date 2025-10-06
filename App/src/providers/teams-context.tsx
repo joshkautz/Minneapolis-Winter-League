@@ -31,6 +31,7 @@ interface TeamProps {
 		| undefined
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const TeamsContext = createContext<TeamProps>({
 	currentSeasonTeamsQuerySnapshot: undefined,
 	currentSeasonTeamsQuerySnapshotLoading: false,
@@ -43,6 +44,7 @@ export const TeamsContext = createContext<TeamProps>({
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError: undefined,
 })
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTeamsContext = () => useContext(TeamsContext)
 
 export const TeamsContextProvider: React.FC<PropsWithChildren> = ({

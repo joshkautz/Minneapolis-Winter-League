@@ -12,7 +12,7 @@ import { SeasonDocument, Collections } from '@/shared/utils'
  */
 export const seasonsQuery = (): Query<SeasonDocument> => {
 	return query(
-		collection(firestore, Collections.SEASONS) as any,
+		collection(firestore, Collections.SEASONS),
 		orderBy('dateStart', 'desc')
 	) as Query<SeasonDocument>
 }

@@ -162,7 +162,10 @@ export function isReactComponent(
 	value: unknown
 ): value is React.ComponentType<any> {
 	return (
-		isFunction(value) || (isObject(value) && isFunction((value as any).render))
+		isFunction(value) ||
+		(isObject(value) &&
+			hasProperty(value, 'render') &&
+			isFunction(value.render))
 	)
 }
 

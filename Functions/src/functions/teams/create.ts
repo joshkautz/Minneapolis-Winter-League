@@ -103,7 +103,7 @@ export const createTeam = functions
 					const registrationEnd = seasonData.registrationEnd.toDate()
 
 					if (now < registrationStart || now > registrationEnd) {
-						const formatDate = (date: Date) => {
+						const formatDate = (date: Date): string => {
 							const options: Intl.DateTimeFormatOptions = {
 								year: 'numeric',
 								month: 'long',
