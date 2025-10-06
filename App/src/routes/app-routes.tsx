@@ -16,7 +16,6 @@ import {
 	PlayerManagement,
 	WaiverStatus,
 	EmailVerification,
-	PlayerRegistrationStatus,
 	PendingOffers,
 	DeleteUnregisteredTeams,
 	GameManagement,
@@ -172,16 +171,6 @@ export const AppRoutes: React.FC = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<EmailVerification />
-							</ErrorBoundary>
-						</AuthenticatedRoute>
-					}
-				/>
-				<Route
-					path='/admin/player-registration-status'
-					element={
-						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<PlayerRegistrationStatus />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

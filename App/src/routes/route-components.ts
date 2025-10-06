@@ -52,10 +52,6 @@ export const EmailVerification = lazyImport(
 	() => import('@/features/admin'),
 	'EmailVerification'
 )
-export const PlayerRegistrationStatus = lazyImport(
-	() => import('@/features/admin'),
-	'PlayerRegistrationStatus'
-)
 export const PendingOffers = lazyImport(
 	() => import('@/features/admin'),
 	'PendingOffers'
