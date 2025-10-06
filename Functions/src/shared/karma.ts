@@ -10,6 +10,7 @@ import {
 	PlayerDocument,
 	TeamDocument,
 	SeasonDocument,
+	PlayerSeason,
 } from '../types.js'
 
 const KARMA_AMOUNT = 100
@@ -69,7 +70,9 @@ export async function findKarmaTransactionForPlayerJoin(
 /**
  * Checks if a player is fully registered for a season
  */
-export function isPlayerFullyRegistered(playerSeasonData: any): boolean {
+export function isPlayerFullyRegistered(
+	playerSeasonData: PlayerSeason
+): boolean {
 	return Boolean(playerSeasonData?.paid && playerSeasonData?.signed)
 }
 
@@ -77,7 +80,9 @@ export function isPlayerFullyRegistered(playerSeasonData: any): boolean {
  * Checks if a player qualifies for karma bonus
  * Requirements: lookingForTeam=true and fully registered
  */
-export function qualifiesForKarmaBonus(playerSeasonData: any): boolean {
+export function qualifiesForKarmaBonus(
+	playerSeasonData: PlayerSeason
+): boolean {
 	const isLookingForTeam = playerSeasonData?.lookingForTeam || false
 	const isFullyRegistered = isPlayerFullyRegistered(playerSeasonData)
 

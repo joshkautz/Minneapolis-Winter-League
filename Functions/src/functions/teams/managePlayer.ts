@@ -13,6 +13,7 @@ import {
 	PlayerSeason,
 	SeasonDocument,
 	DocumentReference,
+	KarmaTransaction,
 } from '../../types.js'
 import { validateAuthentication } from '../../shared/auth.js'
 import { getCurrentSeason } from '../../shared/database.js'
@@ -268,7 +269,7 @@ function handleRemoveFromTeam(
 	seasonId: string,
 	rosterPlayerDocs: FirebaseFirestore.DocumentSnapshot[],
 	seasonRef: FirebaseFirestore.DocumentReference<SeasonDocument>,
-	karmaTransactionFound: any | null
+	karmaTransactionFound: KarmaTransaction | null
 ): { success: boolean; action: string; message: string } {
 	// Check if this is the last captain
 	const playerIsCaptain = teamDocument.roster?.find(
