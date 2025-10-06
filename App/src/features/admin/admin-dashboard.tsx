@@ -298,23 +298,23 @@ export const AdminDashboard: React.FC = () => {
 						</div>
 					</CardContent>
 				</Card>
-				{/* Delete Unregistered Teams */}
+				{/* Teams Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
-							<Trash2 className='h-5 w-5 text-red-600' />
-							Delete Unregistered Teams
+							<Trash2 className='h-5 w-5 text-blue-600' />
+							Teams Management
 						</CardTitle>
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<p className='text-sm text-muted-foreground'>
-							Remove unregistered teams from the current season and properly
-							update all affected players.
+							View all teams for the current season and manage unregistered
+							teams.
 						</p>
 						<Button asChild className='w-full'>
-							<Link to='/admin/delete-unregistered-teams'>
+							<Link to='/admin/teams-management'>
 								<Trash2 className='h-4 w-4 mr-2' />
-								Manage Unregistered Teams
+								Manage Teams
 							</Link>
 						</Button>
 					</CardContent>

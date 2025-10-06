@@ -7,6 +7,7 @@
 import React, { useState, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
+import { QueryDocumentSnapshot } from 'firebase/firestore'
 import { toast } from 'sonner'
 import {
 	ArrowLeft,
@@ -23,10 +24,19 @@ import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { currentSeasonTeamsQuery } from '@/firebase/collections/teams'
 import { deleteUnregisteredTeamViaFunction } from '@/firebase/collections/functions'
+import { seasonsQuery } from '@/firebase/collections/seasons'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { Badge } from '@/components/ui/badge'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import {
 	Table,
 	TableBody,
@@ -45,7 +55,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { TeamDocument } from '@/types'
+import { TeamDocument, SeasonDocument } from '@/types'
 import { useSeasonsContext } from '@/providers'
 
 export const TeamsManagement: React.FC = () => {
@@ -56,9 +66,35 @@ export const TeamsManagement: React.FC = () => {
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
-	// Fetch all teams for current season
+	// Season selection state
+	const [selectedSeasonId, setSelectedSeasonId] = useState<string>('')
+
+	// Fetch all seasons
+	const [seasonsSnapshot] = useCollection(seasonsQuery())
+	const seasons = seasonsSnapshot?.docs.map((doc) => ({
+		id: doc.id,
+		...doc.data(),
+	})) as (SeasonDocument & { id: string })[] | undefined
+
+	// Set default selected season to current season
+	React.useEffect(() => {
+		if (currentSeasonQueryDocumentSnapshot && !selectedSeasonId) {
+			setSelectedSeasonId(currentSeasonQueryDocumentSnapshot.id)
+		}
+	}, [currentSeasonQueryDocumentSnapshot, selectedSeasonId])
+
+	// Get selected season snapshot
+	const selectedSeasonSnapshot = selectedSeasonId
+		? seasonsSnapshot?.docs.find((doc) => doc.id === selectedSeasonId)
+		: null
+
+	// Fetch teams for selected season
 	const [teamsSnapshot, teamsLoading] = useCollection(
-		currentSeasonTeamsQuery(currentSeasonQueryDocumentSnapshot)
+		selectedSeasonSnapshot
+			? currentSeasonTeamsQuery(
+					selectedSeasonSnapshot as QueryDocumentSnapshot<SeasonDocument>
+				)
+			: null
 	)
 
 	// State for delete confirmation dialog
@@ -169,84 +205,51 @@ export const TeamsManagement: React.FC = () => {
 		<PageContainer withSpacing withGap>
 			<PageHeader
 				title='Teams Management'
-				description='Manage registered and unregistered teams for the current season'
+				description='View and manage registered and unregistered teams by season'
 				icon={Shield}
 			/>
 
-			{/* Back to Dashboard */}
-			<div>
+			{/* Back to Dashboard and Season Selector */}
+			<div className='flex items-center justify-between gap-4'>
 				<Button variant='outline' asChild>
 					<Link to='/admin'>
 						<ArrowLeft className='h-4 w-4 mr-2' />
 						Back to Admin Dashboard
 					</Link>
 				</Button>
+
+				<div>
+					<Select
+						value={selectedSeasonId}
+						onValueChange={setSelectedSeasonId}
+						disabled={!seasons || seasons.length === 0}
+					>
+						<SelectTrigger>
+							<SelectValue placeholder='Select season' />
+						</SelectTrigger>
+						<SelectContent>
+							{seasons?.map((season) => (
+								<SelectItem key={season.id} value={season.id}>
+									{season.name}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
 			</div>
 
-			{/* Registered Teams Table */}
-			<Card>
-				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<CheckCircle className='h-5 w-5 text-green-600' />
-						Registered Teams ({registeredTeams.length})
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					{registeredTeams.length === 0 ? (
-						<div className='text-center py-12'>
-							<AlertTriangle className='h-12 w-12 text-yellow-500 mx-auto mb-4' />
-							<p className='text-lg font-medium text-muted-foreground'>
-								No Registered Teams
-							</p>
-							<p className='text-sm text-muted-foreground mt-2'>
-								No teams in the current season are registered yet.
-							</p>
-						</div>
-					) : (
-						<div className='overflow-x-auto'>
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Team Name</TableHead>
-										<TableHead>Roster Size</TableHead>
-										<TableHead>Status</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{registeredTeams.map((team) => (
-										<TableRow key={team.id}>
-											<TableCell>
-												<div className='flex items-center gap-2'>
-													<Link
-														to={`/teams/${team.id}`}
-														className='font-medium hover:underline'
-													>
-														{team.name}
-													</Link>
-												</div>
-											</TableCell>
-											<TableCell>
-												<div className='flex items-center gap-2'>
-													<UsersIcon className='h-4 w-4 text-muted-foreground' />
-													<span>{team.roster?.length || 0} players</span>
-												</div>
-											</TableCell>
-											<TableCell>
-												<Badge
-													variant='secondary'
-													className='bg-green-100 text-green-800'
-												>
-													Registered
-												</Badge>
-											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-						</div>
-					)}
-				</CardContent>
-			</Card>
+			{/* Important Notes Alert */}
+			<Alert>
+				<AlertTriangle className='h-4 w-4' />
+				<AlertDescription>
+					<ul className='space-y-2 list-disc list-inside'>
+						<li>
+							Deleting a team will remove all players from the roster, revoke
+							captain status, and delete all related offers.
+						</li>
+					</ul>
+				</AlertDescription>
+			</Alert>
 
 			{/* Unregistered Teams Table */}
 			<Card>
@@ -258,8 +261,8 @@ export const TeamsManagement: React.FC = () => {
 				</CardHeader>
 				<CardContent>
 					{unregisteredTeams.length === 0 ? (
-						<div className='text-center py-12'>
-							<CheckCircle className='h-12 w-12 text-green-500 mx-auto mb-4' />
+						<div className='text-center pb-12'>
+							<CheckCircle className='h-12 w-12 text-muted-foreground mx-auto mb-2' />
 							<p className='text-lg font-medium text-muted-foreground'>
 								No Unregistered Teams
 							</p>
@@ -324,34 +327,68 @@ export const TeamsManagement: React.FC = () => {
 				</CardContent>
 			</Card>
 
-			{/* Important Notes */}
+			{/* Registered Teams Table */}
 			<Card>
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
-						<AlertTriangle className='h-5 w-5 text-yellow-600' />
-						Important Notes
+						<CheckCircle className='h-5 w-5 text-green-600' />
+						Registered Teams ({registeredTeams.length})
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
-					<ul className='text-sm space-y-2 list-disc list-inside text-muted-foreground'>
-						<li>
-							Only unregistered teams from the current season can be deleted.
-						</li>
-						<li>
-							Deleting a team will remove all players from the team roster and
-							update their player documents.
-						</li>
-						<li>
-							Players who were captains of the deleted team will lose their
-							captain status.
-						</li>
-						<li>
-							All offers (invitations and requests) related to the team will be
-							deleted.
-						</li>
-						<li>This action cannot be undone.</li>
-						<li>Registered teams cannot be deleted using this tool.</li>
-					</ul>
+					{registeredTeams.length === 0 ? (
+						<div className='text-center pb-12'>
+							<AlertTriangle className='h-12 w-12 text-muted-foreground mx-auto mb-2' />
+							<p className='text-lg font-medium text-muted-foreground'>
+								No Registered Teams
+							</p>
+							<p className='text-sm text-muted-foreground mt-2'>
+								No teams in the current season are registered yet.
+							</p>
+						</div>
+					) : (
+						<div className='overflow-x-auto'>
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead>Team Name</TableHead>
+										<TableHead>Roster Size</TableHead>
+										<TableHead>Status</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{registeredTeams.map((team) => (
+										<TableRow key={team.id}>
+											<TableCell>
+												<div className='flex items-center gap-2'>
+													<Link
+														to={`/teams/${team.id}`}
+														className='font-medium hover:underline'
+													>
+														{team.name}
+													</Link>
+												</div>
+											</TableCell>
+											<TableCell>
+												<div className='flex items-center gap-2'>
+													<UsersIcon className='h-4 w-4 text-muted-foreground' />
+													<span>{team.roster?.length || 0} players</span>
+												</div>
+											</TableCell>
+											<TableCell>
+												<Badge
+													variant='secondary'
+													className='bg-green-100 text-green-800'
+												>
+													Registered
+												</Badge>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</div>
+					)}
 				</CardContent>
 			</Card>
 

@@ -56,9 +56,9 @@ export const PendingOffers = lazyImport(
 	() => import('@/features/admin'),
 	'PendingOffers'
 )
-export const DeleteUnregisteredTeams = lazyImport(
+export const TeamsManagement = lazyImport(
 	() => import('@/features/admin'),
-	'DeleteUnregisteredTeams'
+	'TeamsManagement'
 )
 export const GameManagement = lazyImport(
 	() => import('@/features/admin'),

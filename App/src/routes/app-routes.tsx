@@ -17,7 +17,7 @@ import {
 	WaiverStatus,
 	EmailVerification,
 	PendingOffers,
-	DeleteUnregisteredTeams,
+	TeamsManagement,
 	GameManagement,
 	Profile,
 	ManageTeam,
@@ -186,11 +186,11 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path='/admin/delete-unregistered-teams'
+					path='/admin/teams-management'
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>
-								<DeleteUnregisteredTeams />
+								<TeamsManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
