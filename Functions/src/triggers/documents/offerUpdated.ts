@@ -94,7 +94,9 @@ export const onOfferUpdated = onDocumentUpdated(
 
 				// Check if player qualifies for karma bonus
 				// Requirements: lookingForTeam=true and fully registered (paid + signed)
-				const qualifiesForKarma = qualifiesForKarmaBonus(currentSeasonData)
+				const qualifiesForKarma = currentSeasonData
+					? qualifiesForKarmaBonus(currentSeasonData)
+					: false
 				const currentKarma = teamDocument.karma || 0
 
 				// Add player to team roster
