@@ -29,6 +29,7 @@ export default [
 			'no-alert': 'warn',
 			'@typescript-eslint/no-empty-object-type': 'warn',
 			'@typescript-eslint/no-explicit-any': 'warn',
+			'react/no-unescaped-entities': 'off',
 		},
 	},
 	{

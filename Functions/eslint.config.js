@@ -12,6 +12,7 @@ export default [
 			'@typescript-eslint/no-empty-object-type': 'off',
 			'@typescript-eslint/no-explicit-any': 'error',
 			'@typescript-eslint/explicit-function-return-type': 'error',
+			'react/no-unescaped-entities': 'off',
 		},
 	},
 	{
