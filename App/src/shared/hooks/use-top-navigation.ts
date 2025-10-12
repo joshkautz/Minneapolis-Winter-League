@@ -104,11 +104,6 @@ export const useTopNavigation = () => {
 
 	const adminContent = [
 		{ label: 'Dashboard', path: '/admin', alt: 'admin dashboard' },
-		{
-			label: 'Player Rankings',
-			path: '/admin/player-rankings',
-			alt: 'player rankings',
-		},
 	]
 
 	const userContent = [
