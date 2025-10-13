@@ -66,7 +66,6 @@ src/
 - **`createOffer`** - Creates team invitations/requests
 - **`updateOfferStatus`** - Accepts/rejects offers
 - **`onOfferUpdated`** - Processes offer status changes
-- **`cleanupOffers`** - Removes stale offers (admin only)
 
 #### Storage Functions (`storageFunctions.ts`)
 

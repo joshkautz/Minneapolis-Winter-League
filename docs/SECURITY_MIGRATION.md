@@ -68,7 +68,7 @@ Add the new Functions to your `Functions/src/index.ts`:
 ```typescript
 // Add to Functions/src/index.ts
 export { createTeam, deleteTeam, manageTeamPlayer } from './teamFunctions'
-export { createOffer, onOfferUpdated, cleanupOffers } from './offerFunctions'
+export { createOffer, onOfferUpdated } from './offerFunctions'
 ```
 
 Deploy Functions:
@@ -239,7 +239,6 @@ The security migration has been **successfully completed** with the following ac
 | Team Player Management | ✅ Complete | `manageTeamPlayerViaFunction`  |
 | Offer Creation         | ✅ Complete | `createOfferViaFunction`       |
 | Offer Status Updates   | ✅ Complete | `updateOfferStatusViaFunction` |
-| Offer Cleanup          | ✅ Complete | `cleanupOffersViaFunction`     |
 
 ## Security Rule Breakdown
 

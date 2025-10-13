@@ -14,7 +14,6 @@ import {
 	Mail,
 	Users,
 	Calendar,
-	Clock,
 	UserPlus,
 	UserCheck,
 	CheckCircle,
@@ -51,7 +50,6 @@ interface ProcessedOffer {
 	teamId: string
 	offerType: OfferType
 	createdAt: Date
-	expiresAt: Date
 	createdByName: string
 	seasonName: string
 }
@@ -131,7 +129,6 @@ export const PendingOffers: React.FC = () => {
 							teamId,
 							offerType: offerData.type,
 							createdAt: offerData.createdAt.toDate(),
-							expiresAt: offerData.expiresAt.toDate(),
 							createdByName,
 							seasonName,
 						} as ProcessedOffer
@@ -179,10 +176,6 @@ export const PendingOffers: React.FC = () => {
 			hour: '2-digit',
 			minute: '2-digit',
 		})
-	}
-
-	const isExpired = (expiresAt: Date) => {
-		return expiresAt < new Date()
 	}
 
 	// Handle offer status update
@@ -347,8 +340,6 @@ export const PendingOffers: React.FC = () => {
 										<TableHead>Season</TableHead>
 										<TableHead>Created By</TableHead>
 										<TableHead>Created</TableHead>
-										<TableHead>Expires</TableHead>
-										<TableHead>Status</TableHead>
 										<TableHead>Actions</TableHead>
 									</TableRow>
 								</TableHeader>
@@ -414,36 +405,6 @@ export const PendingOffers: React.FC = () => {
 														{formatTime(offer.createdAt)}
 													</div>
 												</div>
-											</TableCell>
-											<TableCell>
-												<div className='text-sm'>
-													<div className='flex items-center gap-1'>
-														<Clock className='h-3 w-3 text-muted-foreground' />
-														{formatDate(offer.expiresAt)}
-													</div>
-													<div className='text-xs text-muted-foreground'>
-														{formatTime(offer.expiresAt)}
-													</div>
-												</div>
-											</TableCell>
-											<TableCell>
-												{isExpired(offer.expiresAt) ? (
-													<Badge
-														variant='destructive'
-														className='bg-red-100 text-red-800 hover:bg-red-200'
-													>
-														<Clock className='h-3 w-3 mr-1' />
-														Expired
-													</Badge>
-												) : (
-													<Badge
-														variant='default'
-														className='bg-green-100 text-green-800 hover:bg-green-200'
-													>
-														<Clock className='h-3 w-3 mr-1' />
-														Active
-													</Badge>
-												)}
 											</TableCell>
 											<TableCell>
 												<div className='flex items-center gap-2'>
@@ -543,30 +504,6 @@ export const PendingOffers: React.FC = () => {
 						</Badge>
 						<span className='text-muted-foreground'>
 							A player has requested to join a team
-						</span>
-					</div>
-					<div className='flex items-center gap-2 text-sm'>
-						<Badge
-							variant='default'
-							className='bg-green-100 text-green-800 hover:bg-green-200'
-						>
-							<Clock className='h-3 w-3 mr-1' />
-							Active
-						</Badge>
-						<span className='text-muted-foreground'>
-							Offer is still valid and can be accepted
-						</span>
-					</div>
-					<div className='flex items-center gap-2 text-sm'>
-						<Badge
-							variant='destructive'
-							className='bg-red-100 text-red-800 hover:bg-red-200'
-						>
-							<Clock className='h-3 w-3 mr-1' />
-							Expired
-						</Badge>
-						<span className='text-muted-foreground'>
-							Offer expiration date has passed (may need cleanup)
 						</span>
 					</div>
 				</CardContent>

@@ -40,7 +40,6 @@ Migration of client-side Firestore operations to secure server-side Firebase Fun
 - ✅ `acceptOffer` → `updateOfferStatusViaFunction` (status: 'accepted') **(NEW)**
 - ✅ `rejectOffer` → `updateOfferStatusViaFunction` (status: 'rejected') **(NEW)**
 - ✅ Automatic cleanup via `onOfferUpdated` trigger
-- ✅ Admin cleanup via `cleanupOffersViaFunction`
 
 **Security Benefits**: Authorization by role (player for invitations, captain for requests), prevents duplicate offers, automatic conflict resolution.
 

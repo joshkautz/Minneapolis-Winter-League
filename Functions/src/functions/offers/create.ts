@@ -138,7 +138,6 @@ export const createOffer = onCall<CreateOfferRequest>(
 					status: 'pending',
 					createdBy: firestore.collection(Collections.PLAYERS).doc(userId),
 					createdAt: new Date(),
-					expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
 				}
 
 				const offerRef = await firestore

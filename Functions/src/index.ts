@@ -81,7 +81,6 @@ export { manageTeamPlayer } from './functions/teams/managePlayer.js'
 // Offer management functions
 export { createOffer } from './functions/offers/create.js'
 export { updateOfferStatus } from './functions/offers/updateStatus.js'
-export { cleanupOffers } from './functions/offers/cleanup.js'
 
 // Storage functions
 export { getUploadUrl } from './functions/storage/getUploadUrl.js'

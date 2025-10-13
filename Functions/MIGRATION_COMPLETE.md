@@ -26,11 +26,11 @@ The Firebase Functions reorganization has been **successfully completed**! All f
 
 - `api/webhooks/dropboxSign.ts` - Dropbox Sign webhook handler
 
-**Callable Functions (15 functions):**
+**Callable Functions (14 functions):**
 
 - `functions/players/` - create, update, delete (3 functions)
 - `functions/teams/` - create, update, delete, managePlayer (4 functions)
-- `functions/offers/` - create, updateStatus, cleanup (3 functions)
+- `functions/offers/` - create, updateStatus (2 functions)
 - `functions/storage/` - getUploadUrl, getDownloadUrl, getFileMetadata (3 functions)
 
 **Services (2 functions):**

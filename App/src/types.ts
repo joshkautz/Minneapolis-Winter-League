@@ -166,8 +166,6 @@ export interface OfferDocument extends DocumentData {
 	createdBy?: DocumentReference<PlayerDocument>
 	/** Timestamp when the offer was created */
 	createdAt: Timestamp
-	/** Timestamp when the offer expires */
-	expiresAt: Timestamp
 	/** Reference to the player being invited/requested */
 	player: DocumentReference<PlayerDocument>
 	/** Timestamp when the offer was responded to (accepted/rejected) */

@@ -80,12 +80,6 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 					)
 				}
 
-				// Check if offer has expired
-				const now = new Date()
-				if (offerData.expiresAt && offerData.expiresAt.toDate() < now) {
-					throw new HttpsError('failed-precondition', 'Offer has expired')
-				}
-
 				// Check if user is admin (admins can update any offer)
 				const userDoc = await transaction.get(
 					firestore.collection(Collections.PLAYERS).doc(auth!.uid)

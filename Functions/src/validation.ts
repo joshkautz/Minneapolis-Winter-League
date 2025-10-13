@@ -133,7 +133,6 @@ export function isOfferDocument(obj: unknown): obj is OfferDocument {
 		'type' in obj &&
 		Object.values(OfferType).includes(obj.type as OfferType) &&
 		'createdAt' in obj &&
-		'expiresAt' in obj &&
 		'player' in obj &&
 		isRecord(obj.player) &&
 		'id' in obj.player &&

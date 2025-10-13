@@ -99,7 +99,6 @@ export function isOfferDocument(obj: any): obj is OfferDocument {
 		obj &&
 		Object.values(OfferType).includes(obj.type) &&
 		obj.createdAt &&
-		obj.expiresAt &&
 		obj.player &&
 		typeof obj.player === 'object' &&
 		'id' in obj.player &&

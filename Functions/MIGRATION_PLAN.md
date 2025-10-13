@@ -112,11 +112,6 @@ src/
    - Keep security validations
    - Use shared error handling
 
-3. **Cleanup Offers** (`offerFunctions.ts` → `functions/offers/cleanup.ts`)
-   - Extract cleanupOffers function
-   - Maintain admin-only access
-   - Add comprehensive logging
-
 ### Storage Functions Migration
 
 1. **Get Upload URL** (`storageFunctions.ts` → `functions/storage/getUploadUrl.ts`)

@@ -48,8 +48,7 @@ src/
 │   │   └── managePlayer.ts   # Add/remove/promote players
 │   ├── offers/
 │   │   ├── create.ts         # Create offer
-│   │   ├── updateStatus.ts   # Accept/reject offers
-│   │   └── cleanup.ts        # Clean up expired offers
+│   │   └── updateStatus.ts   # Accept/reject offers
 │   └── storage/
 │       ├── getUploadUrl.ts   # Generate upload URLs
 │       ├── getDownloadUrl.ts # Generate download URLs

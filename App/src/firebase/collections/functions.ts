@@ -561,29 +561,6 @@ export const updateOfferStatusViaFunction = async (
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// UTILITY FUNCTIONS
-//////////////////////////////////////////////////////////////////////////////
-
-interface CleanupOffersResponse {
-	success: boolean
-	cleanedCount: number
-	message: string
-}
-
-/**
- * Cleans up expired or conflicting offers (admin only)
- */
-export const cleanupOffersViaFunction =
-	async (): Promise<CleanupOffersResponse> => {
-		const cleanupOffers = httpsCallable<void, CleanupOffersResponse>(
-			functions,
-			'cleanupOffers'
-		)
-		const result = await cleanupOffers()
-		return result.data
-	}
-
-//////////////////////////////////////////////////////////////////////////////
 // GAME MANAGEMENT FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////
 
