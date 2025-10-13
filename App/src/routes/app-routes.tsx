@@ -16,7 +16,7 @@ import {
 	PlayerManagement,
 	WaiverStatus,
 	EmailVerification,
-	PendingOffers,
+	ManageOffers,
 	TeamsManagement,
 	GameManagement,
 	Profile,
@@ -176,11 +176,11 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path='/admin/pending-offers'
+					path='/admin/manage-offers'
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>
-								<PendingOffers />
+								<ManageOffers />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

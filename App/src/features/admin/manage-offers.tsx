@@ -1,10 +1,10 @@
 /**
- * Pending Offers admin component
+ * Manage Offers admin component
  *
- * Displays all outstanding offers with pending status
+ * Displays and manages all outstanding offers
  */
 
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
@@ -54,7 +54,7 @@ interface ProcessedOffer {
 	seasonName: string
 }
 
-export const PendingOffers: React.FC = () => {
+export const ManageOffers: React.FC = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)
@@ -148,21 +148,6 @@ export const PendingOffers: React.FC = () => {
 		processOffers()
 	}, [offersSnapshot])
 
-	// Calculate statistics
-	const stats = useMemo(() => {
-		const invitations = offers.filter(
-			(o) => o.offerType === OfferType.INVITATION
-		).length
-		const requests = offers.filter(
-			(o) => o.offerType === OfferType.REQUEST
-		).length
-		return {
-			total: offers.length,
-			invitations,
-			requests,
-		}
-	}, [offers])
-
 	const formatDate = (date: Date) => {
 		return date.toLocaleDateString('en-US', {
 			year: 'numeric',
@@ -242,8 +227,8 @@ export const PendingOffers: React.FC = () => {
 	return (
 		<PageContainer withSpacing withGap>
 			<PageHeader
-				title='Pending Offers'
-				description='View all outstanding team invitations and join requests'
+				title='Manage Offers'
+				description='View and manage all team invitations and join requests'
 				icon={Users}
 			/>
 
@@ -255,55 +240,6 @@ export const PendingOffers: React.FC = () => {
 						Back to Admin Dashboard
 					</Link>
 				</Button>
-			</div>
-
-			{/* Statistics Cards */}
-			<div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-				<Card>
-					<CardHeader className='pb-3'>
-						<CardTitle className='text-sm font-medium text-muted-foreground'>
-							Total Pending
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className='text-3xl font-bold'>{stats.total}</div>
-						<p className='text-xs text-muted-foreground mt-1'>
-							All outstanding offers
-						</p>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader className='pb-3'>
-						<CardTitle className='text-sm font-medium text-muted-foreground'>
-							Team Invitations
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className='text-3xl font-bold text-blue-600'>
-							{stats.invitations}
-						</div>
-						<p className='text-xs text-muted-foreground mt-1'>
-							Captains inviting players
-						</p>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader className='pb-3'>
-						<CardTitle className='text-sm font-medium text-muted-foreground'>
-							Join Requests
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<div className='text-3xl font-bold text-purple-600'>
-							{stats.requests}
-						</div>
-						<p className='text-xs text-muted-foreground mt-1'>
-							Players requesting to join
-						</p>
-					</CardContent>
-				</Card>
 			</div>
 
 			{/* Offers Table */}
@@ -473,39 +409,6 @@ export const PendingOffers: React.FC = () => {
 							</Table>
 						</div>
 					)}
-				</CardContent>
-			</Card>
-
-			{/* Legend */}
-			<Card>
-				<CardHeader>
-					<CardTitle className='text-sm'>Legend</CardTitle>
-				</CardHeader>
-				<CardContent className='space-y-2'>
-					<div className='flex items-center gap-2 text-sm'>
-						<Badge
-							variant='default'
-							className='bg-blue-100 text-blue-800 hover:bg-blue-200'
-						>
-							<UserPlus className='h-3 w-3 mr-1' />
-							Invitation
-						</Badge>
-						<span className='text-muted-foreground'>
-							A team captain has invited a player to join their team
-						</span>
-					</div>
-					<div className='flex items-center gap-2 text-sm'>
-						<Badge
-							variant='secondary'
-							className='bg-purple-100 text-purple-800 hover:bg-purple-200'
-						>
-							<UserCheck className='h-3 w-3 mr-1' />
-							Request
-						</Badge>
-						<span className='text-muted-foreground'>
-							A player has requested to join a team
-						</span>
-					</div>
 				</CardContent>
 			</Card>
 		</PageContainer>

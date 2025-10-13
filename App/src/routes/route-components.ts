@@ -52,9 +52,9 @@ export const EmailVerification = lazyImport(
 	() => import('@/features/admin'),
 	'EmailVerification'
 )
-export const PendingOffers = lazyImport(
+export const ManageOffers = lazyImport(
 	() => import('@/features/admin'),
-	'PendingOffers'
+	'ManageOffers'
 )
 export const TeamsManagement = lazyImport(
 	() => import('@/features/admin'),

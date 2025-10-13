@@ -234,23 +234,23 @@ export const AdminDashboard: React.FC = () => {
 						</Button>
 					</CardContent>
 				</Card>
-				{/* Pending Offers */}
+				{/* Offer Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
 							<Mail className='h-5 w-5 text-orange-600' />
-							Pending Offers
+							Offer Management
 						</CardTitle>
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<p className='text-sm text-muted-foreground'>
-							View all outstanding team invitations and join requests that are
-							awaiting response.
+							View and manage all team invitations and join requests. Accept,
+							reject, or cancel pending offers.
 						</p>
 						<Button asChild className='w-full'>
-							<Link to='/admin/pending-offers'>
+							<Link to='/admin/manage-offers'>
 								<Mail className='h-4 w-4 mr-2' />
-								View Pending Offers
+								Manage Offers
 							</Link>
 						</Button>
 					</CardContent>
