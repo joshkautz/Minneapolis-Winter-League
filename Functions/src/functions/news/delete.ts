@@ -104,7 +104,10 @@ export const deleteNews = onCall<DeleteNewsRequest>(
 				error: errorMessage,
 			})
 
-			throw new HttpsError('internal', `Failed to delete news post: ${errorMessage}`)
+			throw new HttpsError(
+				'internal',
+				`Failed to delete news post: ${errorMessage}`
+			)
 		}
 	}
 )

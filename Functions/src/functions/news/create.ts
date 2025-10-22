@@ -104,9 +104,7 @@ export const createNews = onCall<CreateNewsRequest>(
 			}
 
 			// Verify season exists
-			const seasonRef = firestore
-				.collection(Collections.SEASONS)
-				.doc(seasonId)
+			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)
 			const seasonDoc = await seasonRef.get()
 
 			if (!seasonDoc.exists) {
@@ -155,7 +153,10 @@ export const createNews = onCall<CreateNewsRequest>(
 				error: errorMessage,
 			})
 
-			throw new HttpsError('internal', `Failed to create news post: ${errorMessage}`)
+			throw new HttpsError(
+				'internal',
+				`Failed to create news post: ${errorMessage}`
+			)
 		}
 	}
 )

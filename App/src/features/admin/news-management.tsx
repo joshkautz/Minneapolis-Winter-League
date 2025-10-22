@@ -34,7 +34,11 @@ import {
 } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PageContainer, PageHeader, DestructiveConfirmationDialog } from '@/shared/components'
+import {
+	PageContainer,
+	PageHeader,
+	DestructiveConfirmationDialog,
+} from '@/shared/components'
 import {
 	Table,
 	TableBody,
@@ -109,7 +113,9 @@ export const NewsManagement: React.FC = () => {
 	// Fetch news for selected season
 	const selectedSeasonRef = useMemo(() => {
 		if (!selectedSeasonId || !seasonsSnapshot) return null
-		const seasonDoc = seasonsSnapshot.docs.find((doc) => doc.id === selectedSeasonId)
+		const seasonDoc = seasonsSnapshot.docs.find(
+			(doc) => doc.id === selectedSeasonId
+		)
 		return seasonDoc?.ref || null
 	}, [selectedSeasonId, seasonsSnapshot])
 
@@ -511,7 +517,10 @@ export const NewsManagement: React.FC = () => {
 			</Card>
 
 			{/* Create/Edit Dialog */}
-			<Dialog open={dialogMode !== 'closed'} onOpenChange={(open) => !open && handleCloseDialog()}>
+			<Dialog
+				open={dialogMode !== 'closed'}
+				onOpenChange={(open) => !open && handleCloseDialog()}
+			>
 				<DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
 					<DialogHeader>
 						<DialogTitle>
@@ -562,7 +571,9 @@ export const NewsManagement: React.FC = () => {
 								className='text-xs text-muted-foreground flex justify-between'
 							>
 								<span>3-200 characters</span>
-								<span className={titleCharCount > 200 ? 'text-destructive' : ''}>
+								<span
+									className={titleCharCount > 200 ? 'text-destructive' : ''}
+								>
 									{titleCharCount}/200
 								</span>
 							</p>
@@ -588,7 +599,9 @@ export const NewsManagement: React.FC = () => {
 								className='text-xs text-muted-foreground flex justify-between'
 							>
 								<span>10-10,000 characters (line breaks preserved)</span>
-								<span className={contentCharCount > 10000 ? 'text-destructive' : ''}>
+								<span
+									className={contentCharCount > 10000 ? 'text-destructive' : ''}
+								>
 									{contentCharCount}/10,000
 								</span>
 							</p>
@@ -596,7 +609,11 @@ export const NewsManagement: React.FC = () => {
 					</div>
 
 					<DialogFooter>
-						<Button variant='outline' onClick={handleCloseDialog} disabled={isSubmitting}>
+						<Button
+							variant='outline'
+							onClick={handleCloseDialog}
+							disabled={isSubmitting}
+						>
 							Cancel
 						</Button>
 						<Button onClick={handleSubmit} disabled={isSubmitting}>
@@ -606,9 +623,7 @@ export const NewsManagement: React.FC = () => {
 									{dialogMode === 'create' ? 'Creating...' : 'Updating...'}
 								</>
 							) : (
-								<>
-									{dialogMode === 'create' ? 'Create Post' : 'Update Post'}
-								</>
+								<>{dialogMode === 'create' ? 'Create Post' : 'Update Post'}</>
 							)}
 						</Button>
 					</DialogFooter>
