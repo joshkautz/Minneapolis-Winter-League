@@ -36,6 +36,7 @@ import {
 	Mail,
 	Trash2,
 	UserCog,
+	Newspaper,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { SeasonDocument } from '@/types'
@@ -315,6 +316,27 @@ export const AdminDashboard: React.FC = () => {
 							<Link to='/admin/teams-management'>
 								<Trash2 className='h-4 w-4 mr-2' />
 								Manage Teams
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* News Management */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Newspaper className='h-5 w-5 text-cyan-600' />
+							News Management
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Create, edit, and manage news posts to keep participants
+							up-to-date with league announcements.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/news-management'>
+								<Newspaper className='h-4 w-4 mr-2' />
+								Manage News
 							</Link>
 						</Button>
 					</CardContent>

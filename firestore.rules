@@ -11,11 +11,43 @@ service cloud.firestore {
     function isEmailVerified() {
       return request.auth != null && request.auth.token.email_verified == true;
     }
-    
     //////////////////////////////////////////////////////////////////////////////
-    // PUBLIC READ ACCESS - Prioritizing open access to league information
+    // STRIPE INTEGRATION - Secure payment data access
     //////////////////////////////////////////////////////////////////////////////
     
+    // CUSTOMERS: Users can only access their own payment data
+    match /customers/{uid} {
+      allow read: if isAuthenticated() && request.auth.uid == uid;
+      
+      // Checkout sessions: User-specific
+      match /checkout_sessions/{id} {
+        allow read, write: if isAuthenticated() && request.auth.uid == uid;
+      }
+      
+      // Subscriptions: Read-only for users
+      match /subscriptions/{id} {
+        allow read: if isAuthenticated() && request.auth.uid == uid;
+      }
+      
+      // Payments: Read-only for users  
+      match /payments/{id} {
+        allow read: if isAuthenticated() && request.auth.uid == uid;
+      }
+    }
+    
+    // PRODUCTS: Public read access for pricing display
+    match /products/{id} {
+      allow read: if true;
+      
+      match /prices/{id} {
+        allow read: if true;
+      }
+      
+      match /tax_rates/{id} {
+        allow read: if true;
+      }
+    }
+
     match /seasons/{seasonId} {
       allow read: if true;
       allow create: if false; // Force use of Functions
@@ -58,48 +90,13 @@ service cloud.firestore {
       allow delete: if false; // Manual process
     }
 
-    //////////////////////////////////////////////////////////////////////////////
-    // STRIPE INTEGRATION - Secure payment data access
-    //////////////////////////////////////////////////////////////////////////////
-    
-    // CUSTOMERS: Users can only access their own payment data
-    match /customers/{uid} {
-      allow read: if isAuthenticated() && request.auth.uid == uid;
-      
-      // Checkout sessions: User-specific
-      match /checkout_sessions/{id} {
-        allow read, write: if isAuthenticated() && request.auth.uid == uid;
-      }
-      
-      // Subscriptions: Read-only for users
-      match /subscriptions/{id} {
-        allow read: if isAuthenticated() && request.auth.uid == uid;
-      }
-      
-      // Payments: Read-only for users  
-      match /payments/{id} {
-        allow read: if isAuthenticated() && request.auth.uid == uid;
-      }
-    }
-    
-    // PRODUCTS: Public read access for pricing display
-    match /products/{id} {
-      allow read: if true;
-      
-      match /prices/{id} {
-        allow read: if true;
-      }
-      
-      match /tax_rates/{id} {
-        allow read: if true;
-      }
+    match /news/{newsId} {
+      allow read: if true; // Public read access for all users
+      allow create: if false; // Use createNewsViaFunction (future)
+      allow update: if false; // Use updateNewsViaFunction (future)
+      allow delete: if false; // Use deleteNewsViaFunction (future)
     }
 
-    //////////////////////////////////////////////////////////////////////////////
-    // PLAYER RANKINGS - Player rankings and calculation history
-    //////////////////////////////////////////////////////////////////////////////
-    
-    // Player rankings: Public read access
     match /rankings/{playerId} {
       allow read: if true;
       allow create: if false; // Functions only
@@ -107,7 +104,6 @@ service cloud.firestore {
       allow delete: if false; // Functions only
     }
     
-    // Rankings history: Public read access for historical data
     match /rankings-history/{snapshotId} {
       allow read: if true;
       allow create: if false; // Functions only
@@ -115,7 +111,6 @@ service cloud.firestore {
       allow delete: if false; // Functions only
     }
     
-    // Rankings calculations: Public read access, write access via Functions only
     match /rankings-calculations/{calculationId} {
       allow read: if true;
       allow create: if false; // Functions only
@@ -123,19 +118,13 @@ service cloud.firestore {
       allow delete: if false; // Functions only
     }
 
-    // Rankings calculated rounds: Public read access, write access via Functions only
     match /rankings-calculated-rounds/{roundId} {
       allow read: if true;
       allow create: if false; // Functions only
       allow update: if false; // Functions only
       allow delete: if false; // Functions only
     }
-
-    //////////////////////////////////////////////////////////////////////////////
-    // FALLBACK - DENY ALL OTHER ACCESS
-    //////////////////////////////////////////////////////////////////////////////
     
-    // Explicit deny for any paths not covered above
     match /{document=**} {
       allow read, write: if false;
     }

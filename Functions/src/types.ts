@@ -30,6 +30,7 @@ export type Timestamp = AdminTimestamp
 
 export enum Collections {
 	GAMES = 'games',
+	NEWS = 'news',
 	OFFERS = 'offers',
 	PLAYERS = 'players',
 	RANKINGS = 'rankings',
@@ -236,6 +237,24 @@ export interface WaiverDocument extends DocumentData {
 	player: DocumentReference<PlayerDocument>
 	/** Dropbox Sign signature request ID (optional) */
 	signatureRequestId: string
+}
+
+/**
+ * News post document structure
+ */
+export interface NewsDocument extends DocumentData {
+	/** Title of the news post */
+	title: string
+	/** Content/body of the news post */
+	content: string
+	/** Reference to the admin player who created the post */
+	author: DocumentReference<PlayerDocument>
+	/** Reference to the season this news post belongs to */
+	season: DocumentReference<SeasonDocument>
+	/** Timestamp when the post was created */
+	createdAt: Timestamp
+	/** Timestamp when the post was last updated */
+	updatedAt: Timestamp
 }
 
 /**

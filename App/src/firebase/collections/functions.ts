@@ -622,6 +622,101 @@ export const deleteGameViaFunction = async (data: {
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// NEWS MANAGEMENT FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////
+
+interface CreateNewsRequest {
+	title: string
+	content: string
+	seasonId: string
+}
+
+interface CreateNewsResponse {
+	success: true
+	newsId: string
+	message: string
+}
+
+/**
+ * Create a new news post via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can create news posts
+ * - Title and content are validated server-side
+ * - Season must exist
+ */
+export const createNewsViaFunction = async (
+	data: CreateNewsRequest
+): Promise<CreateNewsResponse> => {
+	const createNews = httpsCallable<CreateNewsRequest, CreateNewsResponse>(
+		functions,
+		'createNews'
+	)
+	const result = await createNews(data)
+	return result.data
+}
+
+interface UpdateNewsRequest {
+	newsId: string
+	title?: string
+	content?: string
+	seasonId?: string
+}
+
+interface UpdateNewsResponse {
+	success: true
+	newsId: string
+	message: string
+}
+
+/**
+ * Update an existing news post via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can update news posts
+ * - At least one field must be provided
+ * - Title and content are validated if provided
+ */
+export const updateNewsViaFunction = async (
+	data: UpdateNewsRequest
+): Promise<UpdateNewsResponse> => {
+	const updateNews = httpsCallable<UpdateNewsRequest, UpdateNewsResponse>(
+		functions,
+		'updateNews'
+	)
+	const result = await updateNews(data)
+	return result.data
+}
+
+interface DeleteNewsRequest {
+	newsId: string
+}
+
+interface DeleteNewsResponse {
+	success: true
+	newsId: string
+	message: string
+}
+
+/**
+ * Delete a news post via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can delete news posts
+ * - News post must exist
+ */
+export const deleteNewsViaFunction = async (
+	data: DeleteNewsRequest
+): Promise<DeleteNewsResponse> => {
+	const deleteNews = httpsCallable<DeleteNewsRequest, DeleteNewsResponse>(
+		functions,
+		'deleteNews'
+	)
+	const result = await deleteNews(data)
+	return result.data
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // MIGRATION HELPERS
 //////////////////////////////////////////////////////////////////////////////
 

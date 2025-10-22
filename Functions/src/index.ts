@@ -82,6 +82,11 @@ export { manageTeamPlayer } from './functions/teams/managePlayer.js'
 export { createOffer } from './functions/offers/create.js'
 export { updateOfferStatus } from './functions/offers/updateStatus.js'
 
+// News management functions
+export { createNews } from './functions/news/create.js'
+export { updateNews } from './functions/news/update.js'
+export { deleteNews } from './functions/news/delete.js'
+
 // Storage functions
 export { getUploadUrl } from './functions/storage/getUploadUrl.js'
 export { getDownloadUrl } from './functions/storage/getDownloadUrl.js'

@@ -12,12 +12,14 @@ import {
 	PlayerRankings,
 	PlayerRankingHistory,
 	PlayerRankingsAdmin,
+	News,
 	AdminDashboard,
 	PlayerManagement,
 	WaiverStatus,
 	EmailVerification,
 	ManageOffers,
 	TeamsManagement,
+	NewsManagement,
 	GameManagement,
 	Profile,
 	ManageTeam,
@@ -114,6 +116,16 @@ export const AppRoutes: React.FC = () => {
 						</PublicRoute>
 					}
 				/>
+				<Route
+					path='/news'
+					element={
+						<PublicRoute>
+							<ErrorBoundary>
+								<News />
+							</ErrorBoundary>
+						</PublicRoute>
+					}
+				/>
 				{/* Protected routes */}
 				<Route
 					path='/profile'
@@ -191,6 +203,16 @@ export const AppRoutes: React.FC = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<TeamsManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/news-management'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<NewsManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

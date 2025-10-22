@@ -100,6 +100,7 @@ export const useTopNavigation = () => {
 			path: '/player-rankings',
 			alt: 'player rankings',
 		},
+		{ label: 'News', path: '/news', alt: 'league news and announcements' },
 	]
 
 	const adminContent = [

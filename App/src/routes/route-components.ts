@@ -32,6 +32,7 @@ export const PlayerRankingHistory = lazyImport(
 	() => import('@/features/player-rankings'),
 	'PlayerRankingHistory'
 )
+export const News = lazyImport(() => import('@/features/news'), 'News')
 export const PlayerRankingsAdmin = lazyImport(
 	() => import('@/features/admin'),
 	'PlayerRankingsAdmin'
@@ -59,6 +60,10 @@ export const ManageOffers = lazyImport(
 export const TeamsManagement = lazyImport(
 	() => import('@/features/admin'),
 	'TeamsManagement'
+)
+export const NewsManagement = lazyImport(
+	() => import('@/features/admin'),
+	'NewsManagement'
 )
 export const GameManagement = lazyImport(
 	() => import('@/features/admin'),

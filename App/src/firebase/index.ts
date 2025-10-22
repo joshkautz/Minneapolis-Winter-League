@@ -43,6 +43,9 @@ export {
 // Season operations
 export { seasonsQuery } from './collections/seasons'
 
+// News operations
+export { newsQueryBySeason, allNewsQueryBySeason } from './collections/news'
+
 // Payment operations
 export { stripeRegistration } from './collections/payments'
 

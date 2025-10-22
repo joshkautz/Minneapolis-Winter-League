@@ -43,6 +43,20 @@
 			]
 		},
 		{
+			"collectionGroup": "games",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "season",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "date",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
 			"collectionGroup": "offers",
 			"queryScope": "COLLECTION",
 			"fields": [
@@ -95,6 +109,48 @@
 				{
 					"fieldPath": "lastname",
 					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "players",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "registered",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "team",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "players",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "lastname",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "firstname",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "news",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "season",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "createdAt",
+					"order": "DESCENDING"
 				}
 			]
 		}
