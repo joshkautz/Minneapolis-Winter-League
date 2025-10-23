@@ -92,6 +92,7 @@ export const useTopNavigation = () => {
 	// Navigation content configuration
 	const navContent = [
 		{ label: 'Home', path: '/', alt: 'home page' },
+		{ label: 'News', path: '/news', alt: 'league news and announcements' },
 		{ label: 'Schedule', path: '/schedule', alt: 'league schedule' },
 		{ label: 'Standings', path: '/standings', alt: 'league standings' },
 		{ label: 'Teams', path: '/teams', alt: 'team list' },
@@ -100,7 +101,6 @@ export const useTopNavigation = () => {
 			path: '/player-rankings',
 			alt: 'player rankings',
 		},
-		{ label: 'News', path: '/news', alt: 'league news and announcements' },
 	]
 
 	const adminContent = [

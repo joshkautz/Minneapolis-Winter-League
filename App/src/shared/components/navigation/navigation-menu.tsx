@@ -24,7 +24,9 @@ export const NavigationMenu = ({ items }: NavigationMenuProps) => {
 					}
 				>
 					{entry.label}
-					{entry.label === 'Player Rankings' && <NewBadge />}
+					{(entry.label === 'Player Rankings' || entry.label === 'News') && (
+						<NewBadge />
+					)}
 				</NavLink>
 			))}
 		</nav>
