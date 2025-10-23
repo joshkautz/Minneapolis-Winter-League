@@ -4,33 +4,22 @@
  * Provides navigation to various admin functions and system overview
  */
 
-import React, { useState } from 'react'
+import React from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
+import { useDocument } from 'react-firebase-hooks/firestore'
 import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { seasonsQuery } from '@/firebase/collections/seasons'
-import { addNewSeasonToAllPlayersViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
 import {
 	Settings,
 	Trophy,
 	AlertTriangle,
 	Shield,
 	Calendar,
-	UserPlus,
 	FileCheck,
 	CheckCircle,
 	Mail,
@@ -39,47 +28,13 @@ import {
 	Newspaper,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
-import { SeasonDocument } from '@/types'
 
 export const AdminDashboard: React.FC = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)
-	const [seasonsSnapshot] = useCollection(seasonsQuery())
-	const [selectedSeasonId, setSelectedSeasonId] = useState<string>('')
-	const [isAddingSeasonToPlayers, setIsAddingSeasonToPlayers] = useState(false)
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
-	const seasons = seasonsSnapshot?.docs.map((doc) => ({
-		id: doc.id,
-		...doc.data(),
-	})) as (SeasonDocument & { id: string })[] | undefined
-
-	const handleAddSeasonToAllPlayers = async () => {
-		if (!selectedSeasonId) {
-			toast.error('Please select a season')
-			return
-		}
-
-		setIsAddingSeasonToPlayers(true)
-		try {
-			const result = await addNewSeasonToAllPlayersViaFunction({
-				seasonId: selectedSeasonId,
-			})
-
-			if (result.success) {
-				toast.success(result.message)
-				setSelectedSeasonId('')
-			} else {
-				toast.error(result.message)
-			}
-		} catch (error) {
-			console.error('Error adding season to players:', error)
-			toast.error('Failed to add season to players. Please try again.')
-		} finally {
-			setIsAddingSeasonToPlayers(false)
-		}
-	}
 
 	// Handle authentication and data loading
 	if (playerLoading) {
@@ -256,7 +211,7 @@ export const AdminDashboard: React.FC = () => {
 						</Button>
 					</CardContent>
 				</Card>
-				{/* Season Management */} {/* Season Management */}
+				{/* Season Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
@@ -266,37 +221,15 @@ export const AdminDashboard: React.FC = () => {
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<p className='text-sm text-muted-foreground'>
-							Add new seasons to all player profiles. This creates PlayerSeason
-							entries for every player with default values.
+							Create, edit, and delete league seasons. Automatically manages
+							season data across all player profiles.
 						</p>
-						<div className='space-y-3'>
-							<Select
-								value={selectedSeasonId}
-								onValueChange={setSelectedSeasonId}
-								disabled={!seasons || seasons.length === 0}
-							>
-								<SelectTrigger className='w-full'>
-									<SelectValue placeholder='Select a season to add' />
-								</SelectTrigger>
-								<SelectContent>
-									{seasons?.map((season) => (
-										<SelectItem key={season.id} value={season.id}>
-											{season.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							<Button
-								onClick={handleAddSeasonToAllPlayers}
-								disabled={!selectedSeasonId || isAddingSeasonToPlayers}
-								className='w-full'
-							>
-								<UserPlus className='h-4 w-4 mr-2' />
-								{isAddingSeasonToPlayers
-									? 'Adding Season...'
-									: 'Add Season to All Players'}
-							</Button>
-						</div>
+						<Button asChild className='w-full'>
+							<Link to='/admin/season-management'>
+								<Calendar className='h-4 w-4 mr-2' />
+								Manage Seasons
+							</Link>
+						</Button>
 					</CardContent>
 				</Card>
 				{/* Teams Management */}

@@ -5,8 +5,8 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument } from '../../types.js'
-import { validateAuthentication } from '../../shared/auth.js'
+import { Collections } from '../../types.js'
+import { validateAdminUser } from '../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 interface CreateNewsRequest {
@@ -34,15 +34,6 @@ export const createNews = onCall<CreateNewsRequest>(
 	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
-
-		// Validate authentication
-		try {
-			validateAuthentication(auth)
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Authentication failed'
-			throw new HttpsError('unauthenticated', errorMessage)
-		}
 
 		const { title, content, seasonId } = data
 
@@ -87,21 +78,11 @@ export const createNews = onCall<CreateNewsRequest>(
 		try {
 			const firestore = getFirestore()
 
-			// Verify user is an admin
+			// Validate admin authentication
+			await validateAdminUser(auth, firestore)
+
+			// Get user reference
 			const userRef = firestore.collection(Collections.PLAYERS).doc(auth!.uid)
-			const userDoc = await userRef.get()
-
-			if (!userDoc.exists) {
-				throw new HttpsError('not-found', 'User profile not found')
-			}
-
-			const userData = userDoc.data() as PlayerDocument | undefined
-			if (!userData?.admin) {
-				throw new HttpsError(
-					'permission-denied',
-					'Only administrators can create news posts'
-				)
-			}
 
 			// Verify season exists
 			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)

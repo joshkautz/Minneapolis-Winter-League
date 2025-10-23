@@ -5,8 +5,8 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument } from '../../types.js'
-import { validateAuthentication } from '../../shared/auth.js'
+import { Collections } from '../../types.js'
+import { validateAdminUser } from '../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 
 interface DeleteNewsRequest {
@@ -32,15 +32,6 @@ export const deleteNews = onCall<DeleteNewsRequest>(
 	async (request) => {
 		const { data, auth } = request
 
-		// Validate authentication
-		try {
-			validateAuthentication(auth)
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Authentication failed'
-			throw new HttpsError('unauthenticated', errorMessage)
-		}
-
 		const { newsId } = data
 
 		// Validate required fields
@@ -51,21 +42,8 @@ export const deleteNews = onCall<DeleteNewsRequest>(
 		try {
 			const firestore = getFirestore()
 
-			// Verify user is an admin
-			const userRef = firestore.collection(Collections.PLAYERS).doc(auth!.uid)
-			const userDoc = await userRef.get()
-
-			if (!userDoc.exists) {
-				throw new HttpsError('not-found', 'User profile not found')
-			}
-
-			const userData = userDoc.data() as PlayerDocument | undefined
-			if (!userData?.admin) {
-				throw new HttpsError(
-					'permission-denied',
-					'Only administrators can delete news posts'
-				)
-			}
+			// Validate admin authentication
+			await validateAdminUser(auth, firestore)
 
 			// Get and verify news post exists
 			const newsRef = firestore.collection(Collections.NEWS).doc(newsId)

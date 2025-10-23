@@ -65,6 +65,10 @@ export const NewsManagement = lazyImport(
 	() => import('@/features/admin'),
 	'NewsManagement'
 )
+export const SeasonManagement = lazyImport(
+	() => import('@/features/admin'),
+	'SeasonManagement'
+)
 export const GameManagement = lazyImport(
 	() => import('@/features/admin'),
 	'GameManagement'

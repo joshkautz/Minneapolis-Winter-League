@@ -717,6 +717,108 @@ export const deleteNewsViaFunction = async (
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// SEASON MANAGEMENT FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////
+
+interface CreateSeasonRequest {
+	name: string
+	dateStart: Date
+	dateEnd: Date
+	registrationStart: Date
+	registrationEnd: Date
+	teamIds?: string[]
+}
+
+interface CreateSeasonResponse {
+	success: boolean
+	message: string
+	seasonId?: string
+}
+
+/**
+ * Create a new season via Firebase Function (admin only)
+ * Automatically adds the season to all existing players
+ *
+ * Security features:
+ * - Only admins can create seasons
+ * - Season name must be 3-100 characters
+ * - All date fields are required
+ */
+export const createSeasonViaFunction = async (
+	data: CreateSeasonRequest
+): Promise<CreateSeasonResponse> => {
+	const createSeason = httpsCallable<CreateSeasonRequest, CreateSeasonResponse>(
+		functions,
+		'createSeason'
+	)
+	const result = await createSeason(data)
+	return result.data
+}
+
+interface UpdateSeasonRequest {
+	seasonId: string
+	name: string
+	dateStart: Date
+	dateEnd: Date
+	registrationStart: Date
+	registrationEnd: Date
+	teamIds?: string[]
+}
+
+interface UpdateSeasonResponse {
+	success: boolean
+	message: string
+}
+
+/**
+ * Update a season via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can update seasons
+ * - Season must exist
+ * - Season name must be 3-100 characters
+ */
+export const updateSeasonViaFunction = async (
+	data: UpdateSeasonRequest
+): Promise<UpdateSeasonResponse> => {
+	const updateSeason = httpsCallable<UpdateSeasonRequest, UpdateSeasonResponse>(
+		functions,
+		'updateSeason'
+	)
+	const result = await updateSeason(data)
+	return result.data
+}
+
+interface DeleteSeasonRequest {
+	seasonId: string
+}
+
+interface DeleteSeasonResponse {
+	success: boolean
+	message: string
+}
+
+/**
+ * Delete a season via Firebase Function (admin only)
+ * Removes the season from all players' seasons arrays
+ *
+ * Security features:
+ * - Only admins can delete seasons
+ * - Season must exist
+ * - Orphans references in teams, games, offers (does not cascade delete)
+ */
+export const deleteSeasonViaFunction = async (
+	data: DeleteSeasonRequest
+): Promise<DeleteSeasonResponse> => {
+	const deleteSeason = httpsCallable<DeleteSeasonRequest, DeleteSeasonResponse>(
+		functions,
+		'deleteSeason'
+	)
+	const result = await deleteSeason(data)
+	return result.data
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // MIGRATION HELPERS
 //////////////////////////////////////////////////////////////////////////////
 

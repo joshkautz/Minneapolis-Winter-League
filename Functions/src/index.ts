@@ -87,6 +87,11 @@ export { createNews } from './functions/news/create.js'
 export { updateNews } from './functions/news/update.js'
 export { deleteNews } from './functions/news/delete.js'
 
+// Season management functions
+export { createSeason } from './functions/seasons/create.js'
+export { updateSeason } from './functions/seasons/update.js'
+export { deleteSeason } from './functions/seasons/delete.js'
+
 // Storage functions
 export { getUploadUrl } from './functions/storage/getUploadUrl.js'
 export { getDownloadUrl } from './functions/storage/getDownloadUrl.js'

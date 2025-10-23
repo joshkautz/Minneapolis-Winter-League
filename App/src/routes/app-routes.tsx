@@ -20,6 +20,7 @@ import {
 	ManageOffers,
 	TeamsManagement,
 	NewsManagement,
+	SeasonManagement,
 	GameManagement,
 	Profile,
 	ManageTeam,
@@ -209,6 +210,26 @@ export const AppRoutes: React.FC = () => {
 				/>
 				<Route
 					path='/admin/news-management'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<NewsManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/season-management'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<SeasonManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/game-management'
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>
