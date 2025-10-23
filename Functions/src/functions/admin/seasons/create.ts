@@ -5,7 +5,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument, SeasonDocument } from '../../../types.js'
+import {
+	Collections,
+	PlayerDocument,
+	SeasonDocument,
+	TeamDocument,
+} from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
@@ -91,11 +96,13 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				teamIds && teamIds.length > 0
 					? teamIds.map(
 							(teamId) =>
-								firestore.collection(Collections.TEAMS).doc(teamId) as any
+								firestore
+									.collection(Collections.TEAMS)
+									.doc(
+										teamId
+									) as FirebaseFirestore.DocumentReference<TeamDocument>
 						)
-					: []
-
-			// Create the season document
+					: [] // Create the season document
 			const seasonData: SeasonDocument = {
 				name: name.trim(),
 				dateStart: dateStartTimestamp,

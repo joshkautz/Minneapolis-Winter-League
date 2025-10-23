@@ -5,7 +5,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, SeasonDocument } from '../../../types.js'
+import { Collections, SeasonDocument, TeamDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
@@ -104,11 +104,13 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 				teamIds && teamIds.length > 0
 					? teamIds.map(
 							(teamId) =>
-								firestore.collection(Collections.TEAMS).doc(teamId) as any
+								firestore
+									.collection(Collections.TEAMS)
+									.doc(
+										teamId
+									) as FirebaseFirestore.DocumentReference<TeamDocument>
 						)
-					: []
-
-			// Update the season document
+					: [] // Update the season document
 			const updateData: Partial<SeasonDocument> = {
 				name: name.trim(),
 				dateStart: dateStartTimestamp,

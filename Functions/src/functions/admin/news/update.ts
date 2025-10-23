@@ -3,9 +3,9 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore, FieldValue } from 'firebase-admin/firestore'
+import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '../../../types.js'
+import { Collections, NewsDocument, SeasonDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
@@ -113,8 +113,8 @@ export const updateNews = onCall<UpdateNewsRequest>(
 			}
 
 			// Build update object
-			const updateData: any = {
-				updatedAt: FieldValue.serverTimestamp(),
+			const updateData: Partial<NewsDocument> = {
+				updatedAt: Timestamp.now(),
 			}
 
 			if (title !== undefined) {
@@ -128,10 +128,8 @@ export const updateNews = onCall<UpdateNewsRequest>(
 			if (seasonId) {
 				updateData.season = firestore
 					.collection(Collections.SEASONS)
-					.doc(seasonId)
-			}
-
-			// Update news post
+					.doc(seasonId) as FirebaseFirestore.DocumentReference<SeasonDocument>
+			} // Update news post
 			await newsRef.update(updateData)
 
 			logger.info('News post updated successfully', {
