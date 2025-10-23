@@ -25,11 +25,11 @@ export const useOffer = (
 
 	useEffect(() => {
 		if (!offersQuerySnapshot || !teamsQuerySnapshot) {
-			setOffersLoading(false)
-			return undefined
+			const timer = setTimeout(() => setOffersLoading(false), 0)
+			return () => clearTimeout(timer)
 		}
 
-		setOffersLoading(true)
+		const loadingTimer = setTimeout(() => setOffersLoading(true), 0)
 
 		Promise.all(
 			offersQuerySnapshot.docs.map(
@@ -63,6 +63,8 @@ export const useOffer = (
 			setOffersLoading(false)
 			setOffers(updatedOffers)
 		})
+
+		return () => clearTimeout(loadingTimer)
 	}, [offersQuerySnapshot, teamsQuerySnapshot])
 
 	return { offers, offersLoading }

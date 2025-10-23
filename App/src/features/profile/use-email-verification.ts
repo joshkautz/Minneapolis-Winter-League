@@ -68,8 +68,10 @@ export const useEmailVerification = ({
 	// Track when we're sending
 	useEffect(() => {
 		if (sendEmailVerificationSending) {
-			setWasRecentlySending(true)
+			const timer = setTimeout(() => setWasRecentlySending(true), 0)
+			return () => clearTimeout(timer)
 		}
+		return undefined
 	}, [sendEmailVerificationSending])
 
 	// Handle successful verification email sent
@@ -80,12 +82,16 @@ export const useEmailVerification = ({
 			!sendEmailVerificationSending &&
 			!sendEmailVerificationError
 		) {
-			setVerificationEmailSent(true)
-			setWasRecentlySending(false)
+			const timer = setTimeout(() => {
+				setVerificationEmailSent(true)
+				setWasRecentlySending(false)
+			}, 0)
 			toast.success('Verification email sent!', {
 				description: 'Check your inbox for the verification link.',
 			})
+			return () => clearTimeout(timer)
 		}
+		return undefined
 	}, [
 		wasRecentlySending,
 		sendEmailVerificationSending,
@@ -99,9 +105,13 @@ export const useEmailVerification = ({
 				description:
 					sendEmailVerificationError.message || 'Please try again later.',
 			})
-			setVerificationEmailSent(false)
-			setWasRecentlySending(false)
+			const timer = setTimeout(() => {
+				setVerificationEmailSent(false)
+				setWasRecentlySending(false)
+			}, 0)
+			return () => clearTimeout(timer)
 		}
+		return undefined
 	}, [sendEmailVerificationError])
 
 	return {

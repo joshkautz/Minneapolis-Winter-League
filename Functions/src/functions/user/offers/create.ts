@@ -7,7 +7,10 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerDocument, TeamDocument } from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
-import { getCurrentSeason, getCurrentSeasonRef } from '../../../shared/database.js'
+import {
+	getCurrentSeason,
+	getCurrentSeasonRef,
+} from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
 interface CreateOfferRequest {

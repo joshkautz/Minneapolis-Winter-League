@@ -6,7 +6,10 @@ import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerSeason, PlayerDocument } from '../../../types.js'
-import { validateAuthentication, validateAdminUser } from '../../../shared/auth.js'
+import {
+	validateAuthentication,
+	validateAdminUser,
+} from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
 /**

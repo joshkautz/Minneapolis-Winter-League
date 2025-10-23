@@ -36,12 +36,14 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 	// Close popovers when switching to mobile view
 	useEffect(() => {
 		if (isMobile && (isSettingsPopoverOpen || isAccountPopoverOpen)) {
-			// Force immediate close without animation to prevent jarring UX
-			setForceClosePopover(true)
-			setIsSettingsPopoverOpen(false)
-			setIsAccountPopoverOpen(false)
-			// Reset the force close flag after a brief moment
-			const timeout = setTimeout(() => setForceClosePopover(false), 100)
+			// Schedule state updates for next tick
+			const timeout = setTimeout(() => {
+				setForceClosePopover(true)
+				setIsSettingsPopoverOpen(false)
+				setIsAccountPopoverOpen(false)
+				// Reset the force close flag after a brief moment
+				setTimeout(() => setForceClosePopover(false), 100)
+			}, 0)
 			return () => clearTimeout(timeout)
 		}
 		// Return undefined for other code paths

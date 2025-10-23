@@ -53,7 +53,11 @@ export const ManageInvitePlayerDetail = ({
 								item.season.id === currentSeasonQueryDocumentSnapshot?.id
 						)?.team?.id
 			),
-		[currentSeasonTeamsQuerySnapshot, currentSeasonQueryDocumentSnapshot]
+		[
+			currentSeasonTeamsQuerySnapshot,
+			currentSeasonQueryDocumentSnapshot,
+			playerQueryDocumentSnapshot,
+		]
 	)
 
 	const playerData = playerQueryDocumentSnapshot.data()

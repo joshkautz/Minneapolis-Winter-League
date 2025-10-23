@@ -21,11 +21,14 @@ export const useResponsiveDrawer = (initialOpen = false) => {
 		if (!isMobile && isDrawerOpen) {
 			// Going to desktop - animate closed but remember user's intent
 			userIntendedOpen.current = true
-			setIsDrawerOpen(false)
+			const timer = setTimeout(() => setIsDrawerOpen(false), 0)
+			return () => clearTimeout(timer)
 		} else if (isMobile && !isDrawerOpen && userIntendedOpen.current) {
 			// Going back to mobile and user had it open before - animate back open
-			setIsDrawerOpen(true)
+			const timer = setTimeout(() => setIsDrawerOpen(true), 0)
+			return () => clearTimeout(timer)
 		}
+		return undefined
 	}, [isMobile, isDrawerOpen])
 
 	// Handle manual opening/closing by user

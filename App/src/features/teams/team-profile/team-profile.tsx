@@ -120,7 +120,7 @@ export const TeamProfile = () => {
 					.
 				</p>
 			),
-		[isLoading, teamDocumentSnapshot]
+		[isLoading, teamDocumentSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
 	return (

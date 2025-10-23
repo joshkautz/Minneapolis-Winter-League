@@ -97,7 +97,21 @@ export function GameManagement() {
 	const [gameToDelete, setGameToDelete] = useState<
 		(GameDocument & { id: string }) | null
 	>(null)
-	const [filterSeasonId, setFilterSeasonId] = useState<string>('')
+	const [filterSeasonId, setFilterSeasonId] = useState<string>(
+		() => currentSeasonQueryDocumentSnapshot?.id || ''
+	)
+
+	useEffect(() => {
+		// Update filter when current season changes and filter hasn't been manually set
+		if (currentSeasonQueryDocumentSnapshot?.id && !filterSeasonId) {
+			const timer = setTimeout(
+				() => setFilterSeasonId(currentSeasonQueryDocumentSnapshot.id),
+				0
+			)
+			return () => clearTimeout(timer)
+		}
+		return undefined
+	}, [currentSeasonQueryDocumentSnapshot?.id, filterSeasonId])
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 	const games = gamesSnapshot?.docs.map((doc) => ({
@@ -141,22 +155,23 @@ export function GameManagement() {
 		? [...teams].sort((a, b) => a.name.localeCompare(b.name))
 		: []
 
-	// Set current season as default when it loads
-	useEffect(() => {
-		if (currentSeasonQueryDocumentSnapshot && !formData.seasonId) {
-			setFormData((prev) => ({
-				...prev,
-				seasonId: currentSeasonQueryDocumentSnapshot.id,
-			}))
-		}
-	}, [currentSeasonQueryDocumentSnapshot, formData.seasonId])
+	// Set current season as default when it loads (only set initial value)
+	const initialSeasonId = currentSeasonQueryDocumentSnapshot?.id
+	const [hasSetInitialFormSeason, setHasSetInitialFormSeason] = useState(false)
 
-	// Set current season as default filter
 	useEffect(() => {
-		if (currentSeasonQueryDocumentSnapshot && !filterSeasonId) {
-			setFilterSeasonId(currentSeasonQueryDocumentSnapshot.id)
+		if (initialSeasonId && !formData.seasonId && !hasSetInitialFormSeason) {
+			const timer = setTimeout(() => {
+				setFormData((prev) => ({
+					...prev,
+					seasonId: initialSeasonId,
+				}))
+				setHasSetInitialFormSeason(true)
+			}, 0)
+			return () => clearTimeout(timer)
 		}
-	}, [currentSeasonQueryDocumentSnapshot, filterSeasonId])
+		return undefined
+	}, [initialSeasonId, formData.seasonId, hasSetInitialFormSeason])
 
 	const handleInputChange = (field: keyof GameFormData, value: string) => {
 		setFormData((prev) => ({ ...prev, [field]: value }))

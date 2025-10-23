@@ -89,8 +89,9 @@ export const SeasonsContextProvider: React.FC<SeasonsContextProviderProps> = ({
 	}, [seasonsQuerySnapshot])
 
 	// Initialize selected season from localStorage or fall back to most recent
+	const [hasInitialized, setHasInitialized] = useState(false)
 	useEffect(() => {
-		if (!seasonsQuerySnapshot) return
+		if (!seasonsQuerySnapshot || hasInitialized) return
 
 		const storedSeasonId = localStorage.getItem('season')
 
@@ -100,17 +101,32 @@ export const SeasonsContextProvider: React.FC<SeasonsContextProviderProps> = ({
 				(doc) => doc.id === storedSeasonId
 			)
 			if (storedSeason) {
-				setSelectedSeasonQueryDocumentSnapshot(storedSeason)
-				return
+				const timer = setTimeout(() => {
+					setSelectedSeasonQueryDocumentSnapshot(storedSeason)
+					setHasInitialized(true)
+				}, 0)
+				return () => clearTimeout(timer)
 			}
 		}
 
 		// If no stored season or it doesn't exist, use the most recent season
-		setSelectedSeasonQueryDocumentSnapshot(getMostRecentSeason())
-	}, [seasonsQuerySnapshot, getMostRecentSeason])
+		const timer = setTimeout(() => {
+			setSelectedSeasonQueryDocumentSnapshot(getMostRecentSeason())
+			setHasInitialized(true)
+		}, 0)
+		return () => clearTimeout(timer)
+	}, [
+		seasonsQuerySnapshot,
+		getMostRecentSeason,
+		hasInitialized,
+		setSelectedSeasonQueryDocumentSnapshot,
+	])
 
 	useEffect(() => {
-		setCurrentSeasonQueryDocumentSnapshot(getMostRecentSeason())
+		const timer = setTimeout(() => {
+			setCurrentSeasonQueryDocumentSnapshot(getMostRecentSeason())
+		}, 0)
+		return () => clearTimeout(timer)
 	}, [setCurrentSeasonQueryDocumentSnapshot, getMostRecentSeason])
 
 	const contextValue: SeasonsContextValue = {

@@ -49,8 +49,11 @@ export const PaymentSection = ({
 			toast.error('Failure', {
 				description: stripeError,
 			})
-			setStripeError(undefined)
+			// Schedule clearing for next tick
+			const timer = setTimeout(() => setStripeError(undefined), 0)
+			return () => clearTimeout(timer)
 		}
+		return undefined
 	}, [stripeError])
 
 	const registrationButtonOnClickHandler = useCallback(() => {

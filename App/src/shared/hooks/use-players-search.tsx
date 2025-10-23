@@ -21,11 +21,14 @@ export const usePlayersSearch = (
 
 	useEffect(() => {
 		if (!playersQuery) {
-			setPlayersQuerySnapshotLoading(false)
-			return undefined
+			const timer = setTimeout(() => setPlayersQuerySnapshotLoading(false), 0)
+			return () => clearTimeout(timer)
 		}
 
-		setPlayersQuerySnapshotLoading(true)
+		const loadingTimer = setTimeout(
+			() => setPlayersQuerySnapshotLoading(true),
+			0
+		)
 
 		getDocsFromServer(playersQuery)
 			.then((querySnapshot) => {
@@ -36,6 +39,8 @@ export const usePlayersSearch = (
 				setPlayersQuerySnapshotError(error)
 				setPlayersQuerySnapshotLoading(false)
 			})
+
+		return () => clearTimeout(loadingTimer)
 	}, [playersQuery])
 
 	return {

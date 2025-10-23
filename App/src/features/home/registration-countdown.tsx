@@ -56,8 +56,9 @@ export const RegistrationCountdown = () => {
 
 	useEffect(() => {
 		if (!targetDate) {
-			setRemaining(undefined)
-			return
+			// Schedule state update for next tick to avoid sync setState in effect
+			const timer = setTimeout(() => setRemaining(undefined), 0)
+			return () => clearTimeout(timer)
 		}
 
 		const updateRemaining = () => {

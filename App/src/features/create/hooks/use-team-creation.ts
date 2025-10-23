@@ -74,16 +74,16 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
-	const isRegistrationOpen =
-		useMemo(
-			() =>
-				currentSeasonQueryDocumentSnapshot &&
+	const isRegistrationOpen = useMemo(
+		() =>
+			(currentSeasonQueryDocumentSnapshot &&
 				Timestamp.now() >
 					currentSeasonQueryDocumentSnapshot?.data().registrationStart &&
 				Timestamp.now() <
-					currentSeasonQueryDocumentSnapshot?.data().registrationEnd,
-			[currentSeasonQueryDocumentSnapshot]
-		) || false
+					currentSeasonQueryDocumentSnapshot?.data().registrationEnd) ||
+			false,
+		[currentSeasonQueryDocumentSnapshot]
+	)
 
 	const isTeamRegistrationFull = useMemo(() => {
 		if (!currentSeasonTeamsQuerySnapshot) return false

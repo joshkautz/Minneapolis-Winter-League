@@ -33,12 +33,21 @@ export const SeasonSelect = ({ mobile = false }: { mobile?: boolean }) => {
 
 	useEffect(() => {
 		if (selectedSeasonQueryDocumentSnapshot) {
-			setStringValue(selectedSeasonQueryDocumentSnapshot.data().name)
+			const timer = setTimeout(() => {
+				setStringValue(selectedSeasonQueryDocumentSnapshot.data().name)
+			}, 0)
+			return () => clearTimeout(timer)
 		}
-		if (!initialSelection) {
-			setInitialSelection(true)
-		}
+		return undefined
 	}, [selectedSeasonQueryDocumentSnapshot])
+
+	useEffect(() => {
+		if (!initialSelection) {
+			const timer = setTimeout(() => setInitialSelection(true), 0)
+			return () => clearTimeout(timer)
+		}
+		return undefined
+	}, [initialSelection])
 
 	return (
 		<div className='w-full'>

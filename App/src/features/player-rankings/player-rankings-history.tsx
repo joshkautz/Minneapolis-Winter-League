@@ -254,19 +254,23 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 
 								{/* Simulate chart curves */}
 								<div className='absolute inset-4 flex items-end justify-between'>
-									{Array.from({ length: 8 }).map((_, i) => (
-										<div
-											key={i}
-											className='flex flex-col items-center space-y-1'
-										>
+									{Array.from({ length: 8 }).map((_, i) => {
+										// Generate height once per render using a deterministic value
+										const height = ((i * 7 + 13) % 60) + 20
+										return (
 											<div
-												className='w-2 bg-gray-300 animate-pulse relative overflow-hidden'
-												style={{ height: `${Math.random() * 60 + 20}%` }}
+												key={i}
+												className='flex flex-col items-center space-y-1'
 											>
-												<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
+												<div
+													className='w-2 bg-gray-300 animate-pulse relative overflow-hidden'
+													style={{ height: `${height}%` }}
+												>
+													<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
+												</div>
 											</div>
-										</div>
-									))}
+										)
+									})}
 								</div>
 
 								{/* Main shimmer overlay for the entire chart area */}

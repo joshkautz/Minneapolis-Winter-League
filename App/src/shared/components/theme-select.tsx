@@ -47,10 +47,14 @@ export const ThemeSelect = ({ mobile = false }: { mobile?: boolean }) => {
 	useEffect(() => {
 		if (!initialSelection) {
 			const currentTheme = getStoredTheme()
-			setStringValue(currentTheme)
-			setInitialSelection(true)
+			const timer = setTimeout(() => {
+				setStringValue(currentTheme)
+				setInitialSelection(true)
+			}, 0)
+			return () => clearTimeout(timer)
 		}
-	}, [])
+		return undefined
+	}, [initialSelection])
 
 	if (!themeContext) {
 		return null
