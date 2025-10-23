@@ -2,7 +2,7 @@
  * Firebase Functions Entry Point
  *
  * This file serves as the main entry point for all Firebase Functions.
- * Functions are organized by type and domain:
+ * Functions are organized by access level and domain:
  *
  * TRIGGERS:
  * - Authentication triggers (user lifecycle events)
@@ -12,18 +12,23 @@
  * API ENDPOINTS:
  * - Webhooks (external service callbacks)
  *
- * CALLABLE FUNCTIONS:
+ * CALLABLE FUNCTIONS (ADMIN-ONLY):
+ * - Player management (email updates, admin status, verification)
+ * - Team management (unregistered team deletion)
+ * - Game management (CRUD operations)
+ * - News management (CRUD operations)
+ * - Season management (CRUD operations with auto player integration)
+ * - Player rankings (rebuild and update)
+ *
+ * CALLABLE FUNCTIONS (USER-ACCESSIBLE):
  * - Player management (CRUD operations)
  * - Team management (CRUD operations)
  * - Offer management (invitation/request system)
  * - Storage management (file upload/download)
- *
- * SERVICES:
- * - Waiver management (signature requests)
- * - Team registration (status management)
+ * - Dropbox Sign (waiver reminders)
  *
  * This organization provides:
- * - Clear separation of concerns
+ * - Clear separation between admin and user functions
  * - Easy to find and maintain functions
  * - Consistent naming conventions
  * - Type safety and error handling
@@ -62,51 +67,55 @@ export { dropboxSignWebhook } from './api/webhooks/dropboxSign.js'
 // CALLABLE FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////
 
-// Player management functions
-export { createPlayer } from './functions/players/create.js'
-export { updatePlayer } from './functions/players/update.js'
-export { updatePlayerEmail } from './functions/players/updateEmail.js'
-export { updatePlayerAdmin } from './functions/players/updatePlayerAdmin.js'
-export { verifyUserEmail } from './functions/players/verifyUserEmail.js'
-export { deletePlayer } from './functions/players/delete.js'
-export { addNewSeasonToAllPlayers } from './functions/players/addNewSeason.js'
+// Player management functions (user-accessible)
+export { createPlayer } from './functions/user/players/create.js'
+export { updatePlayer } from './functions/user/players/update.js'
+export { deletePlayer } from './functions/user/players/delete.js'
+export { addNewSeasonToAllPlayers } from './functions/user/players/addNewSeason.js'
 
-// Team management functions
-export { createTeam } from './functions/teams/create.js'
-export { rolloverTeam } from './functions/teams/rollover.js'
-export { updateTeam } from './functions/teams/update.js'
-export { deleteTeam } from './functions/teams/delete.js'
-export { manageTeamPlayer } from './functions/teams/managePlayer.js'
+// Player management functions (admin-only)
+export { updatePlayerEmail } from './functions/admin/players/updateEmail.js'
+export { updatePlayerAdmin } from './functions/admin/players/updatePlayerAdmin.js'
+export { verifyUserEmail } from './functions/admin/players/verifyUserEmail.js'
 
-// Offer management functions
-export { createOffer } from './functions/offers/create.js'
-export { updateOfferStatus } from './functions/offers/updateStatus.js'
+// Team management functions (user-accessible)
+export { createTeam } from './functions/user/teams/create.js'
+export { rolloverTeam } from './functions/user/teams/rollover.js'
+export { updateTeam } from './functions/user/teams/update.js'
+export { deleteTeam } from './functions/user/teams/delete.js'
+export { manageTeamPlayer } from './functions/user/teams/managePlayer.js'
 
-// News management functions
-export { createNews } from './functions/news/create.js'
-export { updateNews } from './functions/news/update.js'
-export { deleteNews } from './functions/news/delete.js'
+// Team management functions (admin-only)
+export { deleteUnregisteredTeam } from './functions/admin/teams/deleteUnregisteredTeam.js'
 
-// Season management functions
-export { createSeason } from './functions/seasons/create.js'
-export { updateSeason } from './functions/seasons/update.js'
-export { deleteSeason } from './functions/seasons/delete.js'
+// Offer management functions (user-accessible)
+export { createOffer } from './functions/user/offers/create.js'
+export { updateOfferStatus } from './functions/user/offers/updateStatus.js'
 
-// Storage functions
-export { getUploadUrl } from './functions/storage/getUploadUrl.js'
-export { getDownloadUrl } from './functions/storage/getDownloadUrl.js'
-export { getFileMetadata } from './functions/storage/getFileMetadata.js'
+// News management functions (admin-only)
+export { createNews } from './functions/admin/news/create.js'
+export { updateNews } from './functions/admin/news/update.js'
+export { deleteNews } from './functions/admin/news/delete.js'
 
-// Player Rankings functions
-export { rebuildPlayerRankings } from './functions/playerRankings/rebuildPlayerRankings.js'
-export { updatePlayerRankings } from './functions/playerRankings/updatePlayerRankings.js'
+// Season management functions (admin-only)
+export { createSeason } from './functions/admin/seasons/create.js'
+export { updateSeason } from './functions/admin/seasons/update.js'
+export { deleteSeason } from './functions/admin/seasons/delete.js'
 
-// Dropbox Sign functions
-export { dropboxSignSendReminderEmail } from './functions/dropboxSign/dropboxSignSendReminderEmail.js'
+// Storage functions (user-accessible)
+export { getUploadUrl } from './functions/user/storage/getUploadUrl.js'
+export { getDownloadUrl } from './functions/user/storage/getDownloadUrl.js'
+export { getFileMetadata } from './functions/user/storage/getFileMetadata.js'
 
-// Admin functions
-export { getPlayersWithPendingWaivers } from './functions/admin/getPlayersWithPendingWaivers.js'
-export { deleteUnregisteredTeam } from './functions/admin/deleteUnregisteredTeam.js'
-export { createGame } from './functions/admin/createGame.js'
-export { updateGame } from './functions/admin/updateGame.js'
-export { deleteGame } from './functions/admin/deleteGame.js'
+// Player Rankings functions (admin-only)
+export { rebuildPlayerRankings } from './functions/admin/rankings/rebuildPlayerRankings.js'
+export { updatePlayerRankings } from './functions/admin/rankings/updatePlayerRankings.js'
+
+// Dropbox Sign functions (user-accessible)
+export { dropboxSignSendReminderEmail } from './functions/user/dropboxSign/dropboxSignSendReminderEmail.js'
+
+// Game management functions (admin-only)
+export { getPlayersWithPendingWaivers } from './functions/admin/games/getPlayersWithPendingWaivers.js'
+export { createGame } from './functions/admin/games/createGame.js'
+export { updateGame } from './functions/admin/games/updateGame.js'
+export { deleteGame } from './functions/admin/games/deleteGame.js'
