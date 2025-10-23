@@ -45,10 +45,6 @@ export const PlayerManagement = lazyImport(
 	() => import('@/features/admin'),
 	'PlayerManagement'
 )
-export const WaiverStatus = lazyImport(
-	() => import('@/features/admin'),
-	'WaiverStatus'
-)
 export const EmailVerification = lazyImport(
 	() => import('@/features/admin'),
 	'EmailVerification'

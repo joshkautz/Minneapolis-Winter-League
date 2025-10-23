@@ -6,7 +6,6 @@
 
 export { AdminDashboard } from './admin-dashboard'
 export { PlayerRankingsAdmin } from './player-rankings-admin'
-export { WaiverStatus } from './waiver-status'
 export { EmailVerification } from './email-verification'
 export { ManageOffers } from './manage-offers'
 export { TeamsManagement } from './teams-management'

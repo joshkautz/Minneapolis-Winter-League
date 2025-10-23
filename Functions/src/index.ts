@@ -115,7 +115,6 @@ export { updatePlayerRankings } from './functions/admin/rankings/updatePlayerRan
 export { dropboxSignSendReminderEmail } from './functions/user/dropboxSign/dropboxSignSendReminderEmail.js'
 
 // Game management functions (admin-only)
-export { getPlayersWithPendingWaivers } from './functions/admin/games/getPlayersWithPendingWaivers.js'
 export { createGame } from './functions/admin/games/createGame.js'
 export { updateGame } from './functions/admin/games/updateGame.js'
 export { deleteGame } from './functions/admin/games/deleteGame.js'
