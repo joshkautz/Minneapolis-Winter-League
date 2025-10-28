@@ -20,6 +20,8 @@ import {
 	XCircle,
 	Ban,
 	Loader2,
+	ArrowUp,
+	ArrowDown,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -54,6 +56,73 @@ interface ProcessedOffer {
 	seasonName: string
 }
 
+type SortColumn =
+	| 'type'
+	| 'player'
+	| 'team'
+	| 'season'
+	| 'createdBy'
+	| 'created'
+type SortDirection = 'asc' | 'desc'
+
+interface SortableColumnHeaderProps {
+	children: React.ReactNode
+	column: SortColumn
+	currentSortColumn: SortColumn
+	currentSortDirection: SortDirection
+	onSort: (column: SortColumn) => void
+}
+
+const SortableColumnHeader: React.FC<SortableColumnHeaderProps> = ({
+	children,
+	column,
+	currentSortColumn,
+	currentSortDirection,
+	onSort,
+}) => {
+	const isSorted = currentSortColumn === column
+
+	const handleClick = () => {
+		onSort(column)
+	}
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault()
+			onSort(column)
+		}
+	}
+
+	return (
+		<TableHead>
+			<button
+				type='button'
+				onClick={handleClick}
+				onKeyDown={handleKeyDown}
+				className='flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm px-1 -mx-1'
+				aria-sort={
+					isSorted
+						? currentSortDirection === 'asc'
+							? 'ascending'
+							: 'descending'
+						: 'none'
+				}
+			>
+				<span>{children}</span>
+				{isSorted && (
+					<span className='ml-1' aria-hidden='true'>
+						{currentSortDirection === 'asc' ? (
+							<ArrowUp className='h-3 w-3' />
+						) : (
+							<ArrowDown className='h-3 w-3' />
+						)}
+					</span>
+				)}
+			</button>
+		</TableHead>
+	)
+}
+
 export const ManageOffers: React.FC = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
@@ -70,6 +139,59 @@ export const ManageOffers: React.FC = () => {
 
 	// Track which offer is currently being updated
 	const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null)
+
+	// Sorting state
+	const [sortColumn, setSortColumn] = useState<SortColumn>('created')
+	const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+
+	// Sorted offers
+	const [sortedOffers, setSortedOffers] = useState<ProcessedOffer[]>([])
+
+	// Handle sorting
+	const handleSort = (column: SortColumn) => {
+		if (sortColumn === column) {
+			// Toggle direction if same column
+			setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+		} else {
+			// New column, default to ascending (except for 'created' which defaults to descending)
+			setSortColumn(column)
+			setSortDirection(column === 'created' ? 'desc' : 'asc')
+		}
+	}
+
+	// Sort offers whenever offers or sort state changes
+	useEffect(() => {
+		const sorted = [...offers].sort((a, b) => {
+			let comparison = 0
+
+			switch (sortColumn) {
+				case 'type':
+					comparison = a.offerType.localeCompare(b.offerType)
+					break
+				case 'player':
+					comparison = a.playerName.localeCompare(b.playerName)
+					break
+				case 'team':
+					comparison = a.teamName.localeCompare(b.teamName)
+					break
+				case 'season':
+					comparison = a.seasonName.localeCompare(b.seasonName)
+					break
+				case 'createdBy':
+					comparison = a.createdByName.localeCompare(b.createdByName)
+					break
+				case 'created':
+					comparison = a.createdAt.getTime() - b.createdAt.getTime()
+					break
+				default:
+					comparison = 0
+			}
+
+			return sortDirection === 'asc' ? comparison : -comparison
+		})
+
+		setSortedOffers(sorted)
+	}, [offers, sortColumn, sortDirection])
 
 	// Process offers to resolve references
 	useEffect(() => {
@@ -247,7 +369,7 @@ export const ManageOffers: React.FC = () => {
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
 						<Mail className='h-5 w-5 text-orange-600' />
-						Pending Offers ({offers.length})
+						Pending Offers ({sortedOffers.length})
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
@@ -270,17 +392,59 @@ export const ManageOffers: React.FC = () => {
 							<Table>
 								<TableHeader>
 									<TableRow>
-										<TableHead>Type</TableHead>
-										<TableHead>Player</TableHead>
-										<TableHead>Team</TableHead>
-										<TableHead>Season</TableHead>
-										<TableHead>Created By</TableHead>
-										<TableHead>Created</TableHead>
+										<SortableColumnHeader
+											column='type'
+											currentSortColumn={sortColumn}
+											currentSortDirection={sortDirection}
+											onSort={handleSort}
+										>
+											Type
+										</SortableColumnHeader>
+										<SortableColumnHeader
+											column='player'
+											currentSortColumn={sortColumn}
+											currentSortDirection={sortDirection}
+											onSort={handleSort}
+										>
+											Player
+										</SortableColumnHeader>
+										<SortableColumnHeader
+											column='team'
+											currentSortColumn={sortColumn}
+											currentSortDirection={sortDirection}
+											onSort={handleSort}
+										>
+											Team
+										</SortableColumnHeader>
+										<SortableColumnHeader
+											column='season'
+											currentSortColumn={sortColumn}
+											currentSortDirection={sortDirection}
+											onSort={handleSort}
+										>
+											Season
+										</SortableColumnHeader>
+										<SortableColumnHeader
+											column='createdBy'
+											currentSortColumn={sortColumn}
+											currentSortDirection={sortDirection}
+											onSort={handleSort}
+										>
+											Created By
+										</SortableColumnHeader>
+										<SortableColumnHeader
+											column='created'
+											currentSortColumn={sortColumn}
+											currentSortDirection={sortDirection}
+											onSort={handleSort}
+										>
+											Created
+										</SortableColumnHeader>
 										<TableHead>Actions</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{offers.map((offer) => (
+									{sortedOffers.map((offer) => (
 										<TableRow key={offer.id}>
 											<TableCell>
 												<Badge
