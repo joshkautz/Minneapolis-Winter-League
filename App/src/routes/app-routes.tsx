@@ -222,16 +222,6 @@ export const AppRoutes: React.FC = () => {
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>
-								<NewsManagement />
-							</ErrorBoundary>
-						</AuthenticatedRoute>
-					}
-				/>
-				<Route
-					path='/admin/game-management'
-					element={
-						<AuthenticatedRoute>
-							<ErrorBoundary>
 								<GameManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
