@@ -442,7 +442,11 @@ export function GameManagement() {
 		: []
 
 	const sortedGames = filteredGames.length
-		? [...filteredGames].sort((a, b) => a.date.toMillis() - b.date.toMillis())
+		? [...filteredGames].sort((a, b) => {
+				const dateCompare = a.date.toMillis() - b.date.toMillis()
+				if (dateCompare !== 0) return dateCompare
+				return a.field - b.field
+			})
 		: []
 
 	if (playerLoading) {
