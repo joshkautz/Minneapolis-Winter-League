@@ -9,7 +9,15 @@ import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
-import { ArrowLeft, Edit, Trash2, Calendar, AlertTriangle } from 'lucide-react'
+import {
+	ArrowLeft,
+	Edit,
+	Trash2,
+	Calendar,
+	AlertTriangle,
+	Plus,
+	Loader2,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
@@ -100,6 +108,8 @@ export function GameManagement() {
 	const [filterSeasonId, setFilterSeasonId] = useState<string>(
 		() => currentSeasonQueryDocumentSnapshot?.id || ''
 	)
+	const [formDialogOpen, setFormDialogOpen] = useState(false)
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	useEffect(() => {
 		// Update filter when current season changes and filter hasn't been manually set
@@ -208,8 +218,29 @@ export function GameManagement() {
 		{ value: '20:15', display: '8:15 PM' },
 	]
 
+	const openCreateDialog = () => {
+		setFormDialogOpen(true)
+		setEditingGameId(null)
+		setFormData(INITIAL_FORM_DATA)
+		// Set initial season if available
+		if (currentSeasonQueryDocumentSnapshot?.id) {
+			setFormData((prev) => ({
+				...prev,
+				seasonId: currentSeasonQueryDocumentSnapshot.id,
+			}))
+		}
+	}
+
+	const closeDialog = () => {
+		setFormDialogOpen(false)
+		setEditingGameId(null)
+		setFormData(INITIAL_FORM_DATA)
+	}
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
+
+		setIsSubmitting(true)
 
 		try {
 			// Validate required fields
@@ -346,27 +377,18 @@ export function GameManagement() {
 				toast.success('Success', {
 					description: 'Game created successfully',
 				})
-
-				// Reset only teams and scores, keep select values
-				setFormData((prev) => ({
-					...prev,
-					homeTeamId: '',
-					awayTeamId: '',
-					homeScore: '',
-					awayScore: '',
-				}))
-				return
 			}
 
-			// Reset form completely for edit mode
-			setFormData(INITIAL_FORM_DATA)
-			setEditingGameId(null)
+			// Close dialog and reset form
+			closeDialog()
 		} catch (error) {
 			console.error('Error saving game:', error)
 			toast.error('Error', {
 				description:
 					error instanceof Error ? error.message : 'Failed to save game',
 			})
+		} finally {
+			setIsSubmitting(false)
 		}
 	}
 
@@ -387,11 +409,7 @@ export function GameManagement() {
 			seasonId: game.season.id,
 		})
 		setEditingGameId(game.id)
-	}
-
-	const handleCancelEdit = () => {
-		setFormData(INITIAL_FORM_DATA)
-		setEditingGameId(null)
+		setFormDialogOpen(true)
 	}
 
 	const handleDeleteClick = (game: GameDocument & { id: string }) => {
@@ -488,36 +506,161 @@ export function GameManagement() {
 	}
 
 	return (
-		<PageContainer>
-			<div className='mb-6'>
-				<Button variant='ghost' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
-			</div>
-
+		<PageContainer withSpacing withGap>
 			<PageHeader
 				title='Game Management'
 				description='Create, edit, and manage game schedules for all seasons'
 				icon={Calendar}
 			/>
 
-			<div className='space-y-6'>
-				<Card>
-					<CardHeader>
-						<CardTitle>
+			{/* Back to Dashboard and Create Button */}
+			<div className='flex items-center justify-between'>
+				<Button variant='outline' asChild>
+					<Link to='/admin'>
+						<ArrowLeft className='h-4 w-4 mr-2' />
+						Back to Admin Dashboard
+					</Link>
+				</Button>
+				<Button onClick={openCreateDialog}>
+					<Plus className='h-4 w-4 mr-2' />
+					Create Game
+				</Button>
+			</div>
+
+			{/* Games Table */}
+			<Card>
+				<CardHeader>
+					<div className='flex items-center justify-between'>
+						<div>
+							<CardTitle>All Games</CardTitle>
+							<CardDescription>
+								View and manage all games in the system
+							</CardDescription>
+						</div>
+						<Select
+							value={filterSeasonId}
+							onValueChange={(value) => setFilterSeasonId(value)}
+						>
+							<SelectTrigger>
+								<SelectValue placeholder='Filter by season' />
+							</SelectTrigger>
+							<SelectContent>
+								{seasons?.map((season) => (
+									<SelectItem key={season.id} value={season.id}>
+										{season.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+				</CardHeader>
+				<CardContent>
+					{gamesLoading ? (
+						<div className='text-center py-12'>
+							<Loader2 className='h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground' />
+							<p className='text-muted-foreground'>Loading games...</p>
+						</div>
+					) : sortedGames.length === 0 ? (
+						<div className='text-center py-12'>
+							<Calendar className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
+							<p className='text-lg font-medium text-muted-foreground'>
+								No Games Found
+							</p>
+							<p className='text-sm text-muted-foreground mt-2'>
+								Create your first game to get started.
+							</p>
+						</div>
+					) : (
+						<div className='overflow-x-auto'>
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead>Date</TableHead>
+										<TableHead>Time</TableHead>
+										<TableHead>Field</TableHead>
+										<TableHead>Home Team</TableHead>
+										<TableHead>Away Team</TableHead>
+										<TableHead>Score</TableHead>
+										<TableHead>Type</TableHead>
+										<TableHead className='text-right'>Actions</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{sortedGames.map((game) => (
+										<TableRow key={game.id}>
+											<TableCell>{formatDate(game.date)}</TableCell>
+											<TableCell>{formatTime(game.date)}</TableCell>
+											<TableCell>Field {game.field}</TableCell>
+											<TableCell>
+												{game.home?.id
+													? allTeams?.find((t) => t.id === game.home?.id)
+															?.name || game.home.id
+													: 'TBD'}
+											</TableCell>
+											<TableCell>
+												{game.away?.id
+													? allTeams?.find((t) => t.id === game.away?.id)
+															?.name || game.away.id
+													: 'TBD'}
+											</TableCell>
+											<TableCell>
+												{game.homeScore !== null && game.awayScore !== null ? (
+													`${game.homeScore} - ${game.awayScore}`
+												) : (
+													<span className='text-muted-foreground'>
+														Not played yet
+													</span>
+												)}
+											</TableCell>
+											<TableCell className='capitalize'>{game.type}</TableCell>
+											<TableCell className='text-right'>
+												<div className='flex items-center justify-end gap-2'>
+													<Button
+														size='sm'
+														variant='outline'
+														onClick={() => handleEditGame(game)}
+													>
+														<Edit className='h-3 w-3 mr-1' />
+														Edit
+													</Button>
+													<Button
+														size='sm'
+														variant='destructive'
+														onClick={() => handleDeleteClick(game)}
+													>
+														<Trash2 className='h-3 w-3 mr-1' />
+														Delete
+													</Button>
+												</div>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</div>
+					)}
+				</CardContent>
+			</Card>
+
+			{/* Create/Edit Game Dialog */}
+			<Dialog
+				open={formDialogOpen}
+				onOpenChange={(open) => !open && closeDialog()}
+			>
+				<DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
+					<DialogHeader>
+						<DialogTitle>
 							{editingGameId ? 'Edit Game' : 'Create New Game'}
-						</CardTitle>
-						<CardDescription>
+						</DialogTitle>
+						<DialogDescription>
 							{editingGameId
 								? 'Update the game details below'
 								: 'Enter the game details below. Leave scores empty to create a game before it is played.'}
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<form onSubmit={handleSubmit} className='space-y-4'>
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className='space-y-4 py-4'>
+						<form onSubmit={handleSubmit} className='space-y-4' id='game-form'>
 							<div className='space-y-2'>
 								<Label htmlFor='season'>Season</Label>
 								<Select
@@ -695,139 +838,31 @@ export function GameManagement() {
 									/>
 								</div>
 							</div>
-
-							<div className='flex gap-2'>
-								<Button type='submit'>
-									{editingGameId ? 'Update Game' : 'Create Game'}
-								</Button>
-								{editingGameId && (
-									<Button
-										type='button'
-										variant='outline'
-										onClick={handleCancelEdit}
-									>
-										Cancel
-									</Button>
-								)}
-							</div>
 						</form>
-					</CardContent>
-				</Card>
+					</div>
 
-				<Card>
-					<CardHeader>
-						<div className='flex items-center justify-between'>
-							<div>
-								<CardTitle>All Games</CardTitle>
-								<CardDescription>
-									View and manage all games in the system
-								</CardDescription>
-							</div>
-							<div className='w-64'>
-								<Select
-									value={filterSeasonId}
-									onValueChange={(value) => setFilterSeasonId(value)}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder='Filter by season' />
-									</SelectTrigger>
-									<SelectContent>
-										{seasons?.map((season) => (
-											<SelectItem key={season.id} value={season.id}>
-												{season.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-						</div>
-					</CardHeader>
-					<CardContent>
-						<div className='overflow-x-auto'>
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Date</TableHead>
-										<TableHead>Time</TableHead>
-										<TableHead>Field</TableHead>
-										<TableHead>Home Team</TableHead>
-										<TableHead>Away Team</TableHead>
-										<TableHead>Score</TableHead>
-										<TableHead>Type</TableHead>
-										<TableHead>Actions</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{sortedGames.length === 0 ? (
-										<TableRow>
-											<TableCell
-												colSpan={8}
-												className='text-center text-muted-foreground'
-											>
-												No games found
-											</TableCell>
-										</TableRow>
-									) : (
-										sortedGames.map((game) => (
-											<TableRow key={game.id}>
-												<TableCell>{formatDate(game.date)}</TableCell>
-												<TableCell>{formatTime(game.date)}</TableCell>
-												<TableCell>Field {game.field}</TableCell>
-												<TableCell>
-													{game.home?.id
-														? allTeams?.find((t) => t.id === game.home?.id)
-																?.name || game.home.id
-														: 'TBD'}
-												</TableCell>
-												<TableCell>
-													{game.away?.id
-														? allTeams?.find((t) => t.id === game.away?.id)
-																?.name || game.away.id
-														: 'TBD'}
-												</TableCell>
-												<TableCell>
-													{game.homeScore !== null &&
-													game.awayScore !== null ? (
-														`${game.homeScore} - ${game.awayScore}`
-													) : (
-														<span className='text-muted-foreground'>
-															Not played yet
-														</span>
-													)}
-												</TableCell>
-												<TableCell className='capitalize'>
-													{game.type}
-												</TableCell>
-												<TableCell>
-													<div className='flex gap-1'>
-														<Button
-															size='sm'
-															variant='ghost'
-															onClick={() => handleEditGame(game)}
-															title='Edit game'
-														>
-															<Edit className='h-4 w-4' />
-														</Button>
-														<Button
-															size='sm'
-															variant='ghost'
-															onClick={() => handleDeleteClick(game)}
-															title='Delete game'
-															className='text-destructive hover:text-destructive'
-														>
-															<Trash2 className='h-4 w-4' />
-														</Button>
-													</div>
-												</TableCell>
-											</TableRow>
-										))
-									)}
-								</TableBody>
-							</Table>
-						</div>
-					</CardContent>
-				</Card>
-			</div>
+					<DialogFooter>
+						<Button
+							variant='outline'
+							onClick={closeDialog}
+							disabled={isSubmitting}
+							type='button'
+						>
+							Cancel
+						</Button>
+						<Button type='submit' form='game-form' disabled={isSubmitting}>
+							{isSubmitting ? (
+								<>
+									<Loader2 className='h-4 w-4 mr-2 animate-spin' />
+									{editingGameId ? 'Updating...' : 'Creating...'}
+								</>
+							) : (
+								<>{editingGameId ? 'Update Game' : 'Create Game'}</>
+							)}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
 				<DialogContent>
