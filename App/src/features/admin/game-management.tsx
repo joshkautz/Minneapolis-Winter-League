@@ -192,7 +192,9 @@ export function GameManagement() {
 		const saturdays: { date: string; display: string }[] = []
 
 		// Get the selected season
-		const selectedSeason = seasons?.find((season) => season.id === formData.seasonId)
+		const selectedSeason = seasons?.find(
+			(season) => season.id === formData.seasonId
+		)
 
 		if (!selectedSeason) {
 			return saturdays
@@ -233,7 +235,8 @@ export function GameManagement() {
 		setFormDialogOpen(true)
 		setEditingGameId(null)
 		// Pre-select the currently filtered season, or fall back to current season
-		const preSelectedSeasonId = filterSeasonId || currentSeasonQueryDocumentSnapshot?.id || ''
+		const preSelectedSeasonId =
+			filterSeasonId || currentSeasonQueryDocumentSnapshot?.id || ''
 		setFormData({
 			...INITIAL_FORM_DATA,
 			seasonId: preSelectedSeasonId,
