@@ -187,24 +187,35 @@ export function GameManagement() {
 		setFormData((prev) => ({ ...prev, [field]: value }))
 	}
 
-	// Generate Saturdays for November and December of current year
+	// Generate Saturdays based on the selected season's date range
 	const getSaturdays = () => {
 		const saturdays: { date: string; display: string }[] = []
-		const year = new Date().getFullYear()
 
-		for (let month = 10; month <= 11; month++) {
-			// 10 = November, 11 = December
-			const daysInMonth = new Date(year, month + 1, 0).getDate()
+		// Get the selected season
+		const selectedSeason = seasons?.find((season) => season.id === formData.seasonId)
 
-			for (let day = 1; day <= daysInMonth; day++) {
-				const date = new Date(year, month, day)
-				if (date.getDay() === 6) {
-					// 6 = Saturday
-					const dateStr = format(date, 'yyyy-MM-dd')
-					const displayStr = format(date, 'MMMM d, yyyy')
-					saturdays.push({ date: dateStr, display: displayStr })
-				}
+		if (!selectedSeason) {
+			return saturdays
+		}
+
+		// Get start and end dates from the season
+		const startDate = selectedSeason.dateStart.toDate()
+		const endDate = selectedSeason.dateEnd.toDate()
+
+		// Start from the first day of the start date
+		const currentDate = new Date(startDate)
+		currentDate.setHours(0, 0, 0, 0)
+
+		// Find all Saturdays between start and end dates
+		while (currentDate <= endDate) {
+			if (currentDate.getDay() === 6) {
+				// 6 = Saturday
+				const dateStr = format(currentDate, 'yyyy-MM-dd')
+				const displayStr = format(currentDate, 'MMMM d, yyyy')
+				saturdays.push({ date: dateStr, display: displayStr })
 			}
+			// Move to next day
+			currentDate.setDate(currentDate.getDate() + 1)
 		}
 
 		return saturdays
