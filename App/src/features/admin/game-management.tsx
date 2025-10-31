@@ -221,14 +221,12 @@ export function GameManagement() {
 	const openCreateDialog = () => {
 		setFormDialogOpen(true)
 		setEditingGameId(null)
-		setFormData(INITIAL_FORM_DATA)
-		// Set initial season if available
-		if (currentSeasonQueryDocumentSnapshot?.id) {
-			setFormData((prev) => ({
-				...prev,
-				seasonId: currentSeasonQueryDocumentSnapshot.id,
-			}))
-		}
+		// Pre-select the currently filtered season, or fall back to current season
+		const preSelectedSeasonId = filterSeasonId || currentSeasonQueryDocumentSnapshot?.id || ''
+		setFormData({
+			...INITIAL_FORM_DATA,
+			seasonId: preSelectedSeasonId,
+		})
 	}
 
 	const closeDialog = () => {
