@@ -162,7 +162,9 @@ export function RegistrationManagement() {
 				const nameB = `${b.lastname} ${b.firstname}`.toLowerCase()
 				compareValue = nameA.localeCompare(nameB)
 			} else if (field === 'email') {
-				compareValue = a.email.toLowerCase().localeCompare(b.email.toLowerCase())
+				compareValue = a.email
+					.toLowerCase()
+					.localeCompare(b.email.toLowerCase())
 			}
 
 			return direction === 'asc' ? compareValue : -compareValue
@@ -372,14 +374,18 @@ export function RegistrationManagement() {
 											<TableCell>{player.email}</TableCell>
 											<TableCell>
 												{player.paid ? (
-													<span className='text-green-600 font-medium'>✓ Yes</span>
+													<span className='text-green-600 font-medium'>
+														✓ Yes
+													</span>
 												) : (
 													<span className='text-muted-foreground'>✗ No</span>
 												)}
 											</TableCell>
 											<TableCell>
 												{player.signed ? (
-													<span className='text-green-600 font-medium'>✓ Yes</span>
+													<span className='text-green-600 font-medium'>
+														✓ Yes
+													</span>
 												) : (
 													<span className='text-muted-foreground'>✗ No</span>
 												)}
@@ -478,16 +484,24 @@ export function RegistrationManagement() {
 											<TableCell>{player.email}</TableCell>
 											<TableCell>
 												{player.paid ? (
-													<span className='text-green-600 font-medium'>✓ Yes</span>
+													<span className='text-green-600 font-medium'>
+														✓ Yes
+													</span>
 												) : (
-													<span className='text-orange-600 font-medium'>✗ No</span>
+													<span className='text-orange-600 font-medium'>
+														✗ No
+													</span>
 												)}
 											</TableCell>
 											<TableCell>
 												{player.signed ? (
-													<span className='text-green-600 font-medium'>✓ Yes</span>
+													<span className='text-green-600 font-medium'>
+														✓ Yes
+													</span>
 												) : (
-													<span className='text-orange-600 font-medium'>✗ No</span>
+													<span className='text-orange-600 font-medium'>
+														✗ No
+													</span>
 												)}
 											</TableCell>
 										</TableRow>
