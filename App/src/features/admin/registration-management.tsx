@@ -62,6 +62,23 @@ interface ProcessedPlayer {
 	teamName: string | null
 }
 
+const SortIcon = ({
+	field,
+	currentSort,
+}: {
+	field: SortField
+	currentSort: { field: SortField; direction: SortDirection }
+}) => {
+	if (currentSort.field !== field) {
+		return <ArrowUpDown className='ml-2 h-4 w-4 text-muted-foreground' />
+	}
+	return (
+		<ArrowUpDown
+			className={`ml-2 h-4 w-4 ${currentSort.direction === 'asc' ? 'rotate-180' : ''}`}
+		/>
+	)
+}
+
 export function RegistrationManagement() {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
@@ -199,23 +216,6 @@ export function RegistrationManagement() {
 		onTeamNotRegisteredSort.field,
 		onTeamNotRegisteredSort.direction
 	)
-
-	const SortIcon = ({
-		field,
-		currentSort,
-	}: {
-		field: SortField
-		currentSort: { field: SortField; direction: SortDirection }
-	}) => {
-		if (currentSort.field !== field) {
-			return <ArrowUpDown className='ml-2 h-4 w-4 text-muted-foreground' />
-		}
-		return (
-			<ArrowUpDown
-				className={`ml-2 h-4 w-4 ${currentSort.direction === 'asc' ? 'rotate-180' : ''}`}
-			/>
-		)
-	}
 
 	if (playerLoading) {
 		return (
