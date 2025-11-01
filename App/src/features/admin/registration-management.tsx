@@ -49,7 +49,7 @@ import {
 import { PageContainer, PageHeader } from '@/shared/components'
 import { PlayerDocument, SeasonDocument, Collections } from '@/types'
 
-type SortField = 'name' | 'email'
+type SortField = 'name' | 'email' | 'paid' | 'signed' | 'team'
 type SortDirection = 'asc' | 'desc'
 
 interface ProcessedPlayer {
@@ -89,11 +89,7 @@ export function RegistrationManagement() {
 	const [filterSeasonId, setFilterSeasonId] = useState<string>(
 		() => currentSeasonQueryDocumentSnapshot?.id || ''
 	)
-	const [registeredNoTeamSort, setRegisteredNoTeamSort] = useState<{
-		field: SortField
-		direction: SortDirection
-	}>({ field: 'name', direction: 'asc' })
-	const [onTeamNotRegisteredSort, setOnTeamNotRegisteredSort] = useState<{
+	const [sortConfig, setSortConfig] = useState<{
 		field: SortField
 		direction: SortDirection
 	}>({ field: 'name', direction: 'asc' })
@@ -122,13 +118,12 @@ export function RegistrationManagement() {
 	const isLoading = playerLoading || playersLoading
 
 	// Process players for the selected season
-	const { registeredNoTeam, onTeamNotRegistered } = useMemo(() => {
+	const allPlayers = useMemo(() => {
 		if (!playersSnapshot || !filterSeasonId) {
-			return { registeredNoTeam: [], onTeamNotRegistered: [] }
+			return []
 		}
 
-		const registered: ProcessedPlayer[] = []
-		const onTeam: ProcessedPlayer[] = []
+		const players: ProcessedPlayer[] = []
 
 		playersSnapshot.docs.forEach((doc) => {
 			const playerData = doc.data() as PlayerDocument
@@ -141,81 +136,71 @@ export function RegistrationManagement() {
 				return
 			}
 
-			const playerInfo: ProcessedPlayer = {
+			const hasPaid = seasonData.paid || false
+			const hasSigned = seasonData.signed || false
+			const hasTeam = !!seasonData.team
+
+			// Only include players who have paid, signed, or are on a team
+			if (!hasPaid && !hasSigned && !hasTeam) {
+				return
+			}
+
+			players.push({
 				id: doc.id,
 				firstname: playerData.firstname,
 				lastname: playerData.lastname,
 				email: playerData.email,
-				paid: seasonData.paid || false,
-				signed: seasonData.signed || false,
+				paid: hasPaid,
+				signed: hasSigned,
 				teamName: seasonData.team?.id || null,
-			}
-
-			// Registered (paid or signed) but no team - for reimbursement tracking
-			if ((seasonData.paid || seasonData.signed) && !seasonData.team) {
-				registered.push(playerInfo)
-			}
-
-			// On a team but not fully registered (not both paid AND signed)
-			if (seasonData.team && !(seasonData.paid && seasonData.signed)) {
-				onTeam.push(playerInfo)
-			}
+			})
 		})
 
-		return { registeredNoTeam: registered, onTeamNotRegistered: onTeam }
+		return players
 	}, [playersSnapshot, filterSeasonId])
 
-	// Sorting functions
-	const sortPlayers = (
-		players: ProcessedPlayer[],
-		field: SortField,
-		direction: SortDirection
-	): ProcessedPlayer[] => {
-		return [...players].sort((a, b) => {
+	// Sorting function
+	const sortedPlayers = useMemo(() => {
+		return [...allPlayers].sort((a, b) => {
 			let compareValue = 0
 
-			if (field === 'name') {
-				const nameA = `${a.lastname} ${a.firstname}`.toLowerCase()
-				const nameB = `${b.lastname} ${b.firstname}`.toLowerCase()
-				compareValue = nameA.localeCompare(nameB)
-			} else if (field === 'email') {
-				compareValue = a.email
-					.toLowerCase()
-					.localeCompare(b.email.toLowerCase())
+			switch (sortConfig.field) {
+				case 'name': {
+					const nameA = `${a.lastname} ${a.firstname}`.toLowerCase()
+					const nameB = `${b.lastname} ${b.firstname}`.toLowerCase()
+					compareValue = nameA.localeCompare(nameB)
+					break
+				}
+				case 'email':
+					compareValue = a.email
+						.toLowerCase()
+						.localeCompare(b.email.toLowerCase())
+					break
+				case 'paid':
+					compareValue = (a.paid ? 1 : 0) - (b.paid ? 1 : 0)
+					break
+				case 'signed':
+					compareValue = (a.signed ? 1 : 0) - (b.signed ? 1 : 0)
+					break
+				case 'team':
+					compareValue = (a.teamName ? 1 : 0) - (b.teamName ? 1 : 0)
+					break
 			}
 
-			return direction === 'asc' ? compareValue : -compareValue
+			return sortConfig.direction === 'asc' ? compareValue : -compareValue
 		})
-	}
+	}, [allPlayers, sortConfig])
 
-	const toggleSort = (
-		currentSort: { field: SortField; direction: SortDirection },
-		setSortFn: React.Dispatch<
-			React.SetStateAction<{ field: SortField; direction: SortDirection }>
-		>,
-		field: SortField
-	) => {
-		if (currentSort.field === field) {
-			setSortFn({
+	const toggleSort = (field: SortField) => {
+		if (sortConfig.field === field) {
+			setSortConfig({
 				field,
-				direction: currentSort.direction === 'asc' ? 'desc' : 'asc',
+				direction: sortConfig.direction === 'asc' ? 'desc' : 'asc',
 			})
 		} else {
-			setSortFn({ field, direction: 'asc' })
+			setSortConfig({ field, direction: 'asc' })
 		}
 	}
-
-	const sortedRegisteredNoTeam = sortPlayers(
-		registeredNoTeam,
-		registeredNoTeamSort.field,
-		registeredNoTeamSort.direction
-	)
-
-	const sortedOnTeamNotRegistered = sortPlayers(
-		onTeamNotRegistered,
-		onTeamNotRegisteredSort.field,
-		onTeamNotRegisteredSort.direction
-	)
 
 	if (playerLoading) {
 		return (
@@ -263,7 +248,7 @@ export function RegistrationManagement() {
 				icon={Users}
 			/>
 
-			{/* Back to Dashboard and Season Filter */}
+			{/* Back to Dashboard */}
 			<div className='flex items-center justify-between'>
 				<Button variant='outline' asChild>
 					<Link to='/admin'>
@@ -271,36 +256,37 @@ export function RegistrationManagement() {
 						Back to Admin Dashboard
 					</Link>
 				</Button>
-				<div className='w-64'>
-					<Select
-						value={filterSeasonId}
-						onValueChange={(value) => setFilterSeasonId(value)}
-					>
-						<SelectTrigger>
-							<SelectValue placeholder='Filter by season' />
-						</SelectTrigger>
-						<SelectContent>
-							{seasons?.map((season) => (
-								<SelectItem key={season.id} value={season.id}>
-									{season.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</div>
 			</div>
 
-			{/* Registered Players Without Teams */}
+			{/* All Players Table */}
 			<Card>
 				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<Users className='h-5 w-5 text-green-600' />
-						Registered Players Without Teams ({sortedRegisteredNoTeam.length})
-					</CardTitle>
-					<CardDescription>
-						Players who have paid and/or signed but are not assigned to a team
-						(for reimbursement tracking)
-					</CardDescription>
+					<div className='flex items-center justify-between'>
+						<div>
+							<CardTitle className='flex items-center gap-2'>
+								<Users className='h-5 w-5 text-purple-600' />
+								Players ({sortedPlayers.length})
+							</CardTitle>
+							<CardDescription>
+								View and manage all players in the system
+							</CardDescription>
+						</div>
+						<Select
+							value={filterSeasonId}
+							onValueChange={(value) => setFilterSeasonId(value)}
+						>
+							<SelectTrigger>
+								<SelectValue placeholder='Filter by season' />
+							</SelectTrigger>
+							<SelectContent>
+								{seasons?.map((season) => (
+									<SelectItem key={season.id} value={season.id}>
+										{season.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
 				</CardHeader>
 				<CardContent>
 					{playersLoading ? (
@@ -308,14 +294,14 @@ export function RegistrationManagement() {
 							<Loader2 className='h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground' />
 							<p className='text-muted-foreground'>Loading players...</p>
 						</div>
-					) : sortedRegisteredNoTeam.length === 0 ? (
+					) : sortedPlayers.length === 0 ? (
 						<div className='text-center py-12'>
 							<Users className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
 							<p className='text-lg font-medium text-muted-foreground'>
-								No Registered Players Without Teams
+								No Players Found
 							</p>
 							<p className='text-sm text-muted-foreground mt-2'>
-								All registered players are assigned to teams.
+								No players have paid, signed, or joined a team for this season.
 							</p>
 						</div>
 					) : (
@@ -326,47 +312,57 @@ export function RegistrationManagement() {
 										<TableHead>
 											<Button
 												variant='ghost'
-												onClick={() =>
-													toggleSort(
-														registeredNoTeamSort,
-														setRegisteredNoTeamSort,
-														'name'
-													)
-												}
+												onClick={() => toggleSort('name')}
 												className='h-auto p-0 hover:bg-transparent'
 											>
 												Name
-												<SortIcon
-													field='name'
-													currentSort={registeredNoTeamSort}
-												/>
+												<SortIcon field='name' currentSort={sortConfig} />
 											</Button>
 										</TableHead>
 										<TableHead>
 											<Button
 												variant='ghost'
-												onClick={() =>
-													toggleSort(
-														registeredNoTeamSort,
-														setRegisteredNoTeamSort,
-														'email'
-													)
-												}
+												onClick={() => toggleSort('email')}
 												className='h-auto p-0 hover:bg-transparent'
 											>
 												Email
-												<SortIcon
-													field='email'
-													currentSort={registeredNoTeamSort}
-												/>
+												<SortIcon field='email' currentSort={sortConfig} />
 											</Button>
 										</TableHead>
-										<TableHead>Paid</TableHead>
-										<TableHead>Signed</TableHead>
+										<TableHead>
+											<Button
+												variant='ghost'
+												onClick={() => toggleSort('paid')}
+												className='h-auto p-0 hover:bg-transparent'
+											>
+												Paid
+												<SortIcon field='paid' currentSort={sortConfig} />
+											</Button>
+										</TableHead>
+										<TableHead>
+											<Button
+												variant='ghost'
+												onClick={() => toggleSort('signed')}
+												className='h-auto p-0 hover:bg-transparent'
+											>
+												Signed
+												<SortIcon field='signed' currentSort={sortConfig} />
+											</Button>
+										</TableHead>
+										<TableHead>
+											<Button
+												variant='ghost'
+												onClick={() => toggleSort('team')}
+												className='h-auto p-0 hover:bg-transparent'
+											>
+												On Team
+												<SortIcon field='team' currentSort={sortConfig} />
+											</Button>
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{sortedRegisteredNoTeam.map((player) => (
+									{sortedPlayers.map((player) => (
 										<TableRow key={player.id}>
 											<TableCell className='font-medium'>
 												{player.firstname} {player.lastname}
@@ -390,118 +386,13 @@ export function RegistrationManagement() {
 													<span className='text-muted-foreground'>✗ No</span>
 												)}
 											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-						</div>
-					)}
-				</CardContent>
-			</Card>
-
-			{/* Players On Teams But Not Registered */}
-			<Card>
-				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<Users className='h-5 w-5 text-orange-600' />
-						Players On Teams But Not Fully Registered (
-						{sortedOnTeamNotRegistered.length})
-					</CardTitle>
-					<CardDescription>
-						Players who are assigned to teams but haven't completed both payment
-						and waiver signing
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					{playersLoading ? (
-						<div className='text-center py-12'>
-							<Loader2 className='h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground' />
-							<p className='text-muted-foreground'>Loading players...</p>
-						</div>
-					) : sortedOnTeamNotRegistered.length === 0 ? (
-						<div className='text-center py-12'>
-							<Users className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-							<p className='text-lg font-medium text-muted-foreground'>
-								No Unregistered Players On Teams
-							</p>
-							<p className='text-sm text-muted-foreground mt-2'>
-								All players on teams have completed registration.
-							</p>
-						</div>
-					) : (
-						<div className='overflow-x-auto'>
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>
-											<Button
-												variant='ghost'
-												onClick={() =>
-													toggleSort(
-														onTeamNotRegisteredSort,
-														setOnTeamNotRegisteredSort,
-														'name'
-													)
-												}
-												className='h-auto p-0 hover:bg-transparent'
-											>
-												Name
-												<SortIcon
-													field='name'
-													currentSort={onTeamNotRegisteredSort}
-												/>
-											</Button>
-										</TableHead>
-										<TableHead>
-											<Button
-												variant='ghost'
-												onClick={() =>
-													toggleSort(
-														onTeamNotRegisteredSort,
-														setOnTeamNotRegisteredSort,
-														'email'
-													)
-												}
-												className='h-auto p-0 hover:bg-transparent'
-											>
-												Email
-												<SortIcon
-													field='email'
-													currentSort={onTeamNotRegisteredSort}
-												/>
-											</Button>
-										</TableHead>
-										<TableHead>Paid</TableHead>
-										<TableHead>Signed</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{sortedOnTeamNotRegistered.map((player) => (
-										<TableRow key={player.id}>
-											<TableCell className='font-medium'>
-												{player.firstname} {player.lastname}
-											</TableCell>
-											<TableCell>{player.email}</TableCell>
 											<TableCell>
-												{player.paid ? (
+												{player.teamName ? (
 													<span className='text-green-600 font-medium'>
 														✓ Yes
 													</span>
 												) : (
-													<span className='text-orange-600 font-medium'>
-														✗ No
-													</span>
-												)}
-											</TableCell>
-											<TableCell>
-												{player.signed ? (
-													<span className='text-green-600 font-medium'>
-														✓ Yes
-													</span>
-												) : (
-													<span className='text-orange-600 font-medium'>
-														✗ No
-													</span>
+													<span className='text-muted-foreground'>✗ No</span>
 												)}
 											</TableCell>
 										</TableRow>

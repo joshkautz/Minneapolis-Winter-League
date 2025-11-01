@@ -544,7 +544,10 @@ export function GameManagement() {
 				<CardHeader>
 					<div className='flex items-center justify-between'>
 						<div>
-							<CardTitle>All Games</CardTitle>
+							<CardTitle className='flex items-center gap-2'>
+								<Calendar className='h-5 w-5 text-indigo-600' />
+								Games ({sortedGames.length})
+							</CardTitle>
 							<CardDescription>
 								View and manage all games in the system
 							</CardDescription>
