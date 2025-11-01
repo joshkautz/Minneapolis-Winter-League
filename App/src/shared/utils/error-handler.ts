@@ -191,6 +191,16 @@ class ErrorHandler {
 					return message
 				}
 			}
+
+			// Extract message from Firebase Functions HttpsError format
+			// Firebase Functions errors come in format: "Error: message" or just "message"
+			const functionsErrorMatch = error.message.match(/^(?:Error:\s*)?(.+)$/)
+			if (functionsErrorMatch && functionsErrorMatch[1]) {
+				const extractedMessage = functionsErrorMatch[1].trim()
+				if (this.isUserFriendlyMessage(extractedMessage)) {
+					return extractedMessage
+				}
+			}
 		}
 
 		// Return the original error message if it's user-friendly, otherwise use fallback

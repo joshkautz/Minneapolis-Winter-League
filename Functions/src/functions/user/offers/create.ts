@@ -5,7 +5,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument, TeamDocument } from '../../../types.js'
+import {
+	Collections,
+	PlayerDocument,
+	TeamDocument,
+	SeasonDocument,
+} from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import {
 	getCurrentSeason,
@@ -78,24 +83,61 @@ export const createOffer = onCall<CreateOfferRequest>(
 			}
 
 			return await firestore.runTransaction(async (transaction) => {
-				// Get player and team documents
-				const [playerDoc, teamDoc] = await Promise.all([
+				// Get player, team, and season documents
+				const [playerDoc, teamDoc, seasonDoc] = await Promise.all([
 					transaction.get(playerRef),
 					transaction.get(teamRef),
+					transaction.get(seasonRef),
 				])
 
 				if (!playerDoc.exists || !teamDoc.exists) {
 					throw new HttpsError('not-found', 'Player or team not found')
 				}
 
+				if (!seasonDoc.exists) {
+					throw new HttpsError('not-found', 'Season not found')
+				}
+
 				const playerDocument = playerDoc.data() as PlayerDocument | undefined
 				const teamDocument = teamDoc.data() as TeamDocument | undefined
+				const seasonData = seasonDoc.data() as SeasonDocument | undefined
 
-				if (!playerDocument || !teamDocument) {
+				if (!playerDocument || !teamDocument || !seasonData) {
 					throw new HttpsError(
 						'internal',
-						'Unable to retrieve player or team data'
+						'Unable to retrieve player, team, or season data'
 					)
+				}
+
+				// Get current user to check admin status
+				const currentUserRef = firestore
+					.collection(Collections.PLAYERS)
+					.doc(userId)
+				const currentUserDoc = await transaction.get(currentUserRef)
+				const isAdmin = currentUserDoc.data()?.admin === true
+
+				// Validate that season has not started yet (skip for admins)
+				if (!isAdmin) {
+					const now = new Date()
+					const seasonStart = seasonData.dateStart.toDate()
+
+					if (now >= seasonStart) {
+						const formatDate = (date: Date): string => {
+							const options: Intl.DateTimeFormatOptions = {
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric',
+								hour: 'numeric',
+								minute: '2-digit',
+								timeZoneName: 'short',
+							}
+							return date.toLocaleDateString('en-US', options)
+						}
+						throw new HttpsError(
+							'failed-precondition',
+							`Team roster changes are not allowed after the season has started. The season started on ${formatDate(seasonStart)}.`
+						)
+					}
 				}
 
 				// Validate authorization based on offer type

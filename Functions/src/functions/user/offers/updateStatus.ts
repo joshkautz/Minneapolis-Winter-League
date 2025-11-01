@@ -5,7 +5,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, OfferDocument, TeamDocument } from '../../../types.js'
+import {
+	Collections,
+	OfferDocument,
+	TeamDocument,
+	SeasonDocument,
+} from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
@@ -80,11 +85,43 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 					)
 				}
 
+				// Get season document to check dates
+				const seasonDoc = await transaction.get(offerData.season)
+				if (!seasonDoc.exists) {
+					throw new HttpsError('not-found', 'Season not found')
+				}
+
+				const seasonData = seasonDoc.data() as SeasonDocument
+
 				// Check if user is admin (admins can update any offer)
 				const userDoc = await transaction.get(
 					firestore.collection(Collections.PLAYERS).doc(auth!.uid)
 				)
 				const isAdmin = userDoc.exists && userDoc.data()?.admin === true
+
+				// Validate that season has not started yet (skip for admins)
+				if (!isAdmin) {
+					const now = new Date()
+					const seasonStart = seasonData.dateStart.toDate()
+
+					if (now >= seasonStart) {
+						const formatDate = (date: Date): string => {
+							const options: Intl.DateTimeFormatOptions = {
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric',
+								hour: 'numeric',
+								minute: '2-digit',
+								timeZoneName: 'short',
+							}
+							return date.toLocaleDateString('en-US', options)
+						}
+						throw new HttpsError(
+							'failed-precondition',
+							`Team roster changes are not allowed after the season has started. The season started on ${formatDate(seasonStart)}.`
+						)
+					}
+				}
 
 				// Check if user is the creator of the offer (for cancellation)
 				const isCreator =

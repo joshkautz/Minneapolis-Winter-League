@@ -79,6 +79,49 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 				const teamDocument = teamDoc.data() as TeamDocument
 				const playerDocument = playerDoc.data() as PlayerDocument
 
+				// Get season document to check dates
+				const seasonRef = firestore
+					.collection(Collections.SEASONS)
+					.doc(currentSeason.id)
+				const seasonDoc = await transaction.get(seasonRef)
+
+				if (!seasonDoc.exists) {
+					throw new HttpsError('not-found', 'Season not found')
+				}
+
+				const seasonData = seasonDoc.data() as SeasonDocument
+
+				// Check if user is an admin
+				const currentUserRef = firestore
+					.collection(Collections.PLAYERS)
+					.doc(userId)
+				const currentUserDoc = await transaction.get(currentUserRef)
+				const isAdmin = currentUserDoc.data()?.admin === true
+
+				// Validate that season has not started yet (skip for admins)
+				if (!isAdmin) {
+					const now = new Date()
+					const seasonStart = seasonData.dateStart.toDate()
+
+					if (now >= seasonStart) {
+						const formatDate = (date: Date): string => {
+							const options: Intl.DateTimeFormatOptions = {
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric',
+								hour: 'numeric',
+								minute: '2-digit',
+								timeZoneName: 'short',
+							}
+							return date.toLocaleDateString('en-US', options)
+						}
+						throw new HttpsError(
+							'failed-precondition',
+							`Team roster changes are not allowed after the season has started. The season started on ${formatDate(seasonStart)}.`
+						)
+					}
+				}
+
 				// Check if user is a captain of this team
 				const userIsCaptain = teamDocument?.roster?.some(
 					(member: TeamRosterPlayer) =>
