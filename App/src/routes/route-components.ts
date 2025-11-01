@@ -69,6 +69,10 @@ export const GameManagement = lazyImport(
 	() => import('@/features/admin'),
 	'GameManagement'
 )
+export const RegistrationManagement = lazyImport(
+	() => import('@/features/admin'),
+	'RegistrationManagement'
+)
 
 // Protected routes - require authentication
 export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')

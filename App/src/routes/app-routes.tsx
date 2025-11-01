@@ -21,6 +21,7 @@ import {
 	NewsManagement,
 	SeasonManagement,
 	GameManagement,
+	RegistrationManagement,
 	Profile,
 	ManageTeam,
 	NotFound,
@@ -236,7 +237,17 @@ export const AppRoutes: React.FC = () => {
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
-				/>{' '}
+				/>
+				<Route
+					path='/admin/registration-management'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<RegistrationManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
 				{/* Error routes */}
 				<Route
 					path='*'

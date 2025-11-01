@@ -25,6 +25,7 @@ import {
 	Trash2,
 	UserCog,
 	Newspaper,
+	Users,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 
@@ -248,6 +249,27 @@ export const AdminDashboard: React.FC = () => {
 							<Link to='/admin/news-management'>
 								<Newspaper className='h-4 w-4 mr-2' />
 								Manage News
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* Registration Management */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Users className='h-5 w-5 text-teal-600' />
+							Registration Management
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							View players registered without teams and players on teams without
+							registration.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/registration-management'>
+								<Users className='h-4 w-4 mr-2' />
+								Manage Registration
 							</Link>
 						</Button>
 					</CardContent>
