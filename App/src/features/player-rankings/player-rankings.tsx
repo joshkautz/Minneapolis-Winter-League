@@ -273,26 +273,62 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 							</p>
 						</div>
 
-						{/* Round-Based Inactivity Decay */}
+						{/* Universal Gravity Well & Asymmetric Decay */}
 						<div>
 							<h4 className='font-semibold mb-2'>
-								Round-Based Inactivity Decay
+								Universal Gravity Well & Asymmetric Decay
 							</h4>
 							<p className='text-muted-foreground mb-2'>
-								Player ratings decay gradually each round they don't
-								participate:
+								ALL players drift toward 1200 baseline every round, with
+								asymmetric rates that reward participation:
 							</p>
 							<div className='bg-muted/20 p-2 rounded text-center mb-2'>
-								<InlineMath math='R_{\text{new}} = 1200 + (R_{\text{old}} - 1200) \times 0.996^r' />
+								<InlineMath math='R_{\text{new}} = 1200 + (R_{\text{old}} - 1200) \times d' />
 							</div>
 							<p className='text-xs text-muted-foreground text-center mb-2'>
-								where <InlineMath math='r' /> = rounds of inactivity
+								where <InlineMath math='d' /> = decay factor (varies by
+								activity and rating)
 							</p>
+							<div className='grid grid-cols-2 gap-2 mb-2'>
+								<div className='bg-muted/30 p-2 rounded border'>
+									<p className='text-xs font-medium mb-1 text-center'>
+										Above 1200
+									</p>
+									<ul className='text-xs text-muted-foreground space-y-0.5'>
+										<li>Active: d = 0.998 (slow decay)</li>
+										<li>Inactive: d = 0.992 (fast decay)</li>
+									</ul>
+								</div>
+								<div className='bg-muted/30 p-2 rounded border'>
+									<p className='text-xs font-medium mb-1 text-center'>
+										Below 1200
+									</p>
+									<ul className='text-xs text-muted-foreground space-y-0.5'>
+										<li>Active: d = 0.992 (fast recovery)</li>
+										<li>Inactive: d = 0.998 (slow recovery)</li>
+									</ul>
+								</div>
+							</div>
 							<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
-								<li>• Decay applies per round, not per season</li>
-								<li>• ~0.4% rating loss per round above base (1200)</li>
-								<li>• Over 20 rounds: equivalent to ~5% seasonal decay</li>
-								<li>• Gradual adjustment ensures realistic rating evolution</li>
+								<li>
+									• <strong>Participation always benefits:</strong> Active
+									high-rated players decay slower; active low-rated players
+									recover faster
+								</li>
+								<li>
+									• <strong>Prevents "camping":</strong> Even active players at
+									1400 drift down ~5 points per season, requiring &gt;50% win
+									rate to maintain
+								</li>
+								<li>
+									• <strong>Rewards commitment:</strong> Active players gain
+									~7-21 point advantage over inactive players at same starting
+									rating
+								</li>
+								<li>
+									• <strong>Self-balancing:</strong> System naturally adjusts
+									for player turnover and skill changes
+								</li>
 							</ul>
 						</div>
 
@@ -410,13 +446,25 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 
 								<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
 									<span className='text-xs font-medium text-muted-foreground mb-1'>
-										ROUND DECAY
+										GRAVITY WELL (ACTIVE)
 									</span>
 									<span className='text-lg font-mono font-bold mb-1'>
-										0.996
+										0.998
 									</span>
 									<p className='text-xs text-muted-foreground'>
-										Rating decay per inactive round
+										Gentle drift per round (playing)
+									</p>
+								</div>
+
+								<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+									<span className='text-xs font-medium text-muted-foreground mb-1'>
+										DECAY (INACTIVE)
+									</span>
+									<span className='text-lg font-mono font-bold mb-1'>
+										0.992
+									</span>
+									<p className='text-xs text-muted-foreground'>
+										Strong drift per round (not playing)
 									</p>
 								</div>
 
@@ -454,8 +502,13 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 									• Full rebuilds process all historical data from scratch
 								</li>
 								<li>
-									• Round-based decay applies continuously during periods
-									without play
+									• <strong>Asymmetric gravity system:</strong> Above 1200 -
+									active players decay slower; below 1200 - active players
+									recover faster
+								</li>
+								<li>
+									• Universal gravity applies to ALL players every round,
+									regardless of activity status
 								</li>
 								<li>
 									• Logarithmic scaling prevents large point differential

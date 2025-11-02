@@ -15,8 +15,13 @@ export const ALGORITHM_CONSTANTS = {
 	// Exponential decay factor per season (each season back is multiplied by this)
 	SEASON_DECAY_FACTOR: 0.82, // Reduced from 0.85 - lower scoring means less clear skill signal
 
-	// Rating decay for inactive players (per round of inactivity within a season)
-	INACTIVITY_DECAY_PER_ROUND: 0.996, // Very small decay per round, accumulates over time
+	// Universal gravity well - all players drift toward 1200 baseline (active players)
+	// This represents regression to mean and requires continuous performance to maintain high ratings
+	GRAVITY_WELL_PER_ROUND: 0.998, // Gentle drift toward 1200 for all players (active or not)
+
+	// Additional decay for inactive players (stacks with gravity well)
+	// This represents skill rust and uncertainty about current ability
+	INACTIVITY_DECAY_PER_ROUND: 0.992, // Stronger penalty for not playing (0.992 = 0.998 gravity * 0.994 inactivity)
 
 	// Maximum rounds of inactivity before applying full seasonal decay
 	MAX_ROUNDS_FOR_SEASONAL_DECAY: 20, // Typical season has ~12-16 rounds
