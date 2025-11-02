@@ -286,8 +286,8 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 								<InlineMath math='R_{\text{new}} = 1200 + (R_{\text{old}} - 1200) \times d' />
 							</div>
 							<p className='text-xs text-muted-foreground text-center mb-2'>
-								where <InlineMath math='d' /> = decay factor (varies by
-								activity and rating)
+								where <InlineMath math='d' /> = decay factor (varies by activity
+								and rating)
 							</p>
 							<div className='grid grid-cols-2 gap-2 mb-2'>
 								<div className='bg-muted/30 p-2 rounded border'>
