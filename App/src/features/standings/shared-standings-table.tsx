@@ -75,10 +75,36 @@ export const SharedStandingsTable = ({
 							Team
 						</TableHead>
 						<TableHead className='w-12 text-center' scope='col'>
-							<abbr title='Wins'>W</abbr>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<button
+										type='button'
+										className='cursor-help font-medium'
+										aria-label='Wins'
+									>
+										W
+									</button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Wins</p>
+								</TooltipContent>
+							</Tooltip>
 						</TableHead>
 						<TableHead className='w-12 text-center' scope='col'>
-							<abbr title='Losses'>L</abbr>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<button
+										type='button'
+										className='cursor-help font-medium'
+										aria-label='Losses'
+									>
+										L
+									</button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Losses</p>
+								</TooltipContent>
+							</Tooltip>
 						</TableHead>
 						<TableHead className='w-16 text-center' scope='col'>
 							<Tooltip>
@@ -119,66 +145,39 @@ export const SharedStandingsTable = ({
 							return (
 								<TableRow
 									key={key}
-									className='group cursor-pointer hover:bg-muted/70 transition-colors'
+									className='group hover:bg-muted/70 transition-colors relative'
 								>
 									<TableCell className='font-medium text-center' role='cell'>
-										<Link
-											to={`/teams/${team?.id}`}
-											className='block w-full h-full focus:outline-none focus:ring-2 focus:ring-primary rounded-sm'
-											aria-label={`View ${teamDocument?.name} team details`}
-											tabIndex={-1}
-										>
-											{rankValue}
-										</Link>
+										{rankValue}
 									</TableCell>
 									<TableCell role='cell'>
-										<Link
-											to={`/teams/${team?.id}`}
-											className='block w-full focus:outline-none focus:ring-2 focus:ring-primary rounded-sm'
-											aria-label={`View ${teamDocument?.name} team details`}
-										>
-											<div className='flex items-center gap-3 py-1'>
-												<div className='flex-shrink-0 w-10 h-10 flex items-center justify-center'>
-													{url ? (
-														<img
-															className='w-8 h-8 rounded-full object-cover bg-muted border border-border'
-															src={url}
-															alt={`${teamDocument?.name} logo`}
-															loading='lazy'
-														/>
-													) : (
-														<div
-															className='w-8 h-8 rounded-full bg-gradient-to-r from-primary to-sky-300 border border-border'
-															aria-label={`${teamDocument?.name} default logo`}
-															role='img'
-														/>
-													)}
-												</div>
-												<span className='font-medium text-foreground group-hover:text-primary transition-colors truncate'>
-													{teamDocument?.name}
-												</span>
+										<div className='flex items-center gap-3 py-1'>
+											<div className='flex-shrink-0 w-10 h-10 flex items-center justify-center'>
+												{url ? (
+													<img
+														className='w-8 h-8 rounded-full object-cover bg-muted border border-border'
+														src={url}
+														alt={`${teamDocument?.name} logo`}
+														loading='lazy'
+													/>
+												) : (
+													<div
+														className='w-8 h-8 rounded-full bg-gradient-to-r from-primary to-sky-300 border border-border'
+														aria-label={`${teamDocument?.name} default logo`}
+														role='img'
+													/>
+												)}
 											</div>
-										</Link>
+											<span className='font-medium text-foreground group-hover:text-primary transition-colors truncate'>
+												{teamDocument?.name}
+											</span>
+										</div>
 									</TableCell>
 									<TableCell className='text-center font-medium' role='cell'>
-										<Link
-											to={`/teams/${team?.id}`}
-											className='block w-full h-full focus:outline-none focus:ring-2 focus:ring-primary rounded-sm'
-											aria-label={`View ${teamDocument?.name} team details`}
-											tabIndex={-1}
-										>
-											{wins}
-										</Link>
+										{wins}
 									</TableCell>
 									<TableCell className='text-center font-medium' role='cell'>
-										<Link
-											to={`/teams/${team?.id}`}
-											className='block w-full h-full focus:outline-none focus:ring-2 focus:ring-primary rounded-sm'
-											aria-label={`View ${teamDocument?.name} team details`}
-											tabIndex={-1}
-										>
-											{losses}
-										</Link>
+										{losses}
 									</TableCell>
 									<TableCell
 										className={cn(
@@ -187,16 +186,14 @@ export const SharedStandingsTable = ({
 										)}
 										role='cell'
 									>
-										<Link
-											to={`/teams/${team?.id}`}
-											className='block w-full h-full focus:outline-none focus:ring-2 focus:ring-primary rounded-sm'
-											aria-label={`View ${teamDocument?.name} team details`}
-											tabIndex={-1}
-										>
-											{differential > 0 ? '+' : ''}
-											{differential}
-										</Link>
+										{differential > 0 ? '+' : ''}
+										{differential}
 									</TableCell>
+									<Link
+										to={`/teams/${team?.id}`}
+										className='absolute inset-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset rounded-sm cursor-pointer'
+										aria-label={`View ${teamDocument?.name} team details`}
+									/>
 								</TableRow>
 							)
 						})}
