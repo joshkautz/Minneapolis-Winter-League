@@ -8,6 +8,11 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { QuerySnapshot } from '@/firebase/firestore'
 import { TeamDocument, cn } from '@/shared/utils'
 import { TeamStanding } from '@/shared/hooks'
@@ -76,7 +81,23 @@ export const SharedStandingsTable = ({
 							<abbr title='Losses'>L</abbr>
 						</TableHead>
 						<TableHead className='w-16 text-center' scope='col'>
-							<abbr title='Point Differential'>+/-</abbr>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<button
+										type='button'
+										className='cursor-help font-medium'
+										aria-label='Point Differential - The difference between points scored and points allowed'
+									>
+										+/-
+									</button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>
+										Point Differential: The difference between points scored and
+										points allowed
+									</p>
+								</TooltipContent>
+							</Tooltip>
 						</TableHead>
 					</TableRow>
 				</TableHeader>
@@ -96,14 +117,24 @@ export const SharedStandingsTable = ({
 							const rankValue = getRankValue(key, index, useTeamPlacement)
 
 							return (
-								<TableRow key={key} className='hover:bg-muted/50'>
+								<TableRow
+									key={key}
+									className='group cursor-pointer hover:bg-muted/70 transition-colors'
+								>
 									<TableCell className='font-medium text-center' role='cell'>
-										{rankValue}
+										<Link
+											to={`/teams/${team?.id}`}
+											className='block w-full h-full focus:outline-none focus:ring-2 focus:ring-primary rounded-sm'
+											aria-label={`View ${teamDocument?.name} team details`}
+											tabIndex={-1}
+										>
+											{rankValue}
+										</Link>
 									</TableCell>
 									<TableCell role='cell'>
 										<Link
 											to={`/teams/${team?.id}`}
-											className='focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm'
+											className='block w-full focus:outline-none focus:ring-2 focus:ring-primary rounded-sm'
 											aria-label={`View ${teamDocument?.name} team details`}
 										>
 											<div className='flex items-center gap-3 py-1'>
@@ -123,17 +154,31 @@ export const SharedStandingsTable = ({
 														/>
 													)}
 												</div>
-												<span className='font-medium text-foreground hover:text-primary transition-colors truncate'>
+												<span className='font-medium text-foreground group-hover:text-primary transition-colors truncate'>
 													{teamDocument?.name}
 												</span>
 											</div>
 										</Link>
 									</TableCell>
 									<TableCell className='text-center font-medium' role='cell'>
-										{wins}
+										<Link
+											to={`/teams/${team?.id}`}
+											className='block w-full h-full focus:outline-none focus:ring-2 focus:ring-primary rounded-sm'
+											aria-label={`View ${teamDocument?.name} team details`}
+											tabIndex={-1}
+										>
+											{wins}
+										</Link>
 									</TableCell>
 									<TableCell className='text-center font-medium' role='cell'>
-										{losses}
+										<Link
+											to={`/teams/${team?.id}`}
+											className='block w-full h-full focus:outline-none focus:ring-2 focus:ring-primary rounded-sm'
+											aria-label={`View ${teamDocument?.name} team details`}
+											tabIndex={-1}
+										>
+											{losses}
+										</Link>
 									</TableCell>
 									<TableCell
 										className={cn(
@@ -142,8 +187,15 @@ export const SharedStandingsTable = ({
 										)}
 										role='cell'
 									>
-										{differential > 0 ? '+' : ''}
-										{differential}
+										<Link
+											to={`/teams/${team?.id}`}
+											className='block w-full h-full focus:outline-none focus:ring-2 focus:ring-primary rounded-sm'
+											aria-label={`View ${teamDocument?.name} team details`}
+											tabIndex={-1}
+										>
+											{differential > 0 ? '+' : ''}
+											{differential}
+										</Link>
 									</TableCell>
 								</TableRow>
 							)
