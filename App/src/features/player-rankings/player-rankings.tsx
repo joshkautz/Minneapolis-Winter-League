@@ -33,6 +33,13 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
+import {
 	Trophy,
 	TrendingUp,
 	TrendingDown,
@@ -49,11 +56,637 @@ interface PlayerRankingsProps {
 	showAdminControls?: boolean
 }
 
+// Algorithm version definitions
+const ALGORITHM_VERSIONS = {
+	'v1.0': {
+		name: 'Genesis',
+		description: 'Initial ELO-based implementation with seasonal decay',
+		date: 'September 2025',
+	},
+	'v2.0': {
+		name: 'Ultimate Tuning',
+		description: 'Optimized for 20-point Ultimate Frisbee games',
+		date: 'September 2025',
+	},
+	'v3.0': {
+		name: 'Round Revolution',
+		description: 'Round-based instead of season-based decay',
+		date: 'September 2025',
+	},
+	'v4.0': {
+		name: 'Asymmetric Gravity',
+		description: 'Universal gravity well with asymmetric participation rewards',
+		date: 'November 2025',
+	},
+} as const
+
+const CURRENT_VERSION = 'v4.0'
+
+// Helper component to render version-specific algorithm details
+const AlgorithmVersionContent: React.FC<{ version: string }> = ({ version }) => {
+	switch (version) {
+		case 'v1.0':
+			return <AlgorithmV1Content />
+		case 'v2.0':
+			return <AlgorithmV2Content />
+		case 'v3.0':
+			return <AlgorithmV3Content />
+		case 'v4.0':
+			return <AlgorithmV4Content />
+		default:
+			return <AlgorithmV4Content />
+	}
+}
+
+// v1.0 - Genesis
+const AlgorithmV1Content: React.FC = () => (
+	<>
+		{/* Core Formula */}
+		<div>
+			<h4 className='font-semibold mb-3 text-base'>
+				Core ELO Rating Formula
+			</h4>
+			<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
+				<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^s \times f_p \times (S_{\text{actual}} - E)' />
+			</div>
+			<p className='text-muted-foreground'>
+				The initial implementation of the player ranking system using
+				traditional ELO mathematics with point differential analysis and
+				seasonal weighting.
+			</p>
+		</div>
+
+		{/* Point Differential System */}
+		<div>
+			<h4 className='font-semibold mb-2'>Point Differential Weighting</h4>
+			<p className='text-muted-foreground mb-2'>
+				Point differentials are weighted with logarithmic scaling for large
+				margins:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='d_{\text{weighted}} = \begin{cases} d & \text{if } |d| \leq 10 \\ \text{sign}(d) \times [10 + \ln(|d| - 9)] & \text{if } |d| > 10 \end{cases}' />
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>• Differentials up to 10 points receive full weight</li>
+				<li>• Larger differentials use logarithmic scaling</li>
+				<li>• Prevents blowout games from dominating ratings</li>
+			</ul>
+		</div>
+
+		{/* Team Strength Analysis */}
+		<div>
+			<h4 className='font-semibold mb-2'>Dynamic Team Strength</h4>
+			<p className='text-muted-foreground mb-2'>
+				Team strength calculated as average rating of roster players, with
+				seasonal decay:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='\bar{R}_{\text{team}} = \frac{1}{n} \sum_{i=1}^{n} [1200 + (R_i - 1200) \times 0.80^s]' />
+			</div>
+			<div className='bg-muted/20 p-2 rounded text-center'>
+				<InlineMath math='E = \frac{1}{1 + 10^{(\bar{R}_{\text{opponent}} - \bar{R}_{\text{team}})/400}}' />
+			</div>
+		</div>
+
+		{/* Inactivity System */}
+		<div>
+			<h4 className='font-semibold mb-2'>Season-Based Inactivity Decay</h4>
+			<p className='text-muted-foreground mb-2'>
+				Inactive players' ratings decay toward 1200 baseline per season:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='R_{\text{new}} = 1200 + (R_{\text{old}} - 1200) \times 0.95^{\text{seasons inactive}}' />
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>• Decay applied once per season of inactivity</li>
+				<li>• Simple but coarse-grained approach</li>
+				<li>• No distinction between missing 1 game vs entire season</li>
+			</ul>
+		</div>
+
+		{/* Algorithm Constants */}
+		<div>
+			<h4 className='font-semibold mb-3'>Key Algorithm Constants</h4>
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						K-FACTOR
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>32</span>
+					<p className='text-xs text-muted-foreground'>
+						Maximum rating change per game
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						SEASON DECAY
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.80</span>
+					<p className='text-xs text-muted-foreground'>
+						Weight reduction per past season
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						PLAYOFF MULTIPLIER
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>2.0</span>
+					<p className='text-xs text-muted-foreground'>
+						Postseason game importance factor
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						INACTIVITY DECAY
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.95</span>
+					<p className='text-xs text-muted-foreground'>
+						Per season of inactivity
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						MAX DIFFERENTIAL
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>10</span>
+					<p className='text-xs text-muted-foreground'>
+						Full weight point differential threshold
+					</p>
+				</div>
+			</div>
+		</div>
+
+		{/* Summary */}
+		<div className='border-t pt-4'>
+			<h4 className='font-semibold mb-2 text-xs'>Version Summary</h4>
+			<p className='text-xs text-muted-foreground'>
+				Genesis established the foundation with traditional ELO mechanics,
+				seasonal decay, and point differential weighting. Designed for general
+				ultimate frisbee games without sport-specific optimizations.
+			</p>
+		</div>
+	</>
+)
+
+// v2.0 - Ultimate Tuning
+const AlgorithmV2Content: React.FC = () => (
+	<>
+		{/* Core Formula */}
+		<div>
+			<h4 className='font-semibold mb-3 text-base'>
+				Core ELO Rating Formula
+			</h4>
+			<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
+				<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^s \times f_p \times (S_{\text{actual}} - E)' />
+			</div>
+			<p className='text-muted-foreground'>
+				Optimized for 40-minute Ultimate Frisbee games averaging ~20 total
+				points. Constants tuned based on the unique characteristics of
+				low-scoring ultimate games.
+			</p>
+		</div>
+
+		{/* Point Differential System */}
+		<div>
+			<h4 className='font-semibold mb-2'>Point Differential Weighting</h4>
+			<p className='text-muted-foreground mb-2'>
+				<strong>KEY CHANGE:</strong> Threshold reduced from 10 to 5 points to
+				better reflect significance in 20-point games:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='d_{\text{weighted}} = \begin{cases} d & \text{if } |d| \leq 5 \\ \text{sign}(d) \times [5 + 2.2 \times \ln(|d| - 4)] & \text{if } |d| > 5 \end{cases}' />
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>• Reduced from 10-point threshold in v1.0</li>
+				<li>• 5+ point margin is significant in lower-scoring games</li>
+				<li>• Enhanced logarithmic scaling coefficient (2.2 vs 1.0)</li>
+			</ul>
+		</div>
+
+		{/* Team Strength Analysis */}
+		<div>
+			<h4 className='font-semibold mb-2'>Dynamic Team Strength</h4>
+			<p className='text-muted-foreground mb-2'>
+				Team strength calculation with adjusted seasonal decay (0.82 vs 0.80):
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='\bar{R}_{\text{team}} = \frac{1}{n} \sum_{i=1}^{n} [1200 + (R_i - 1200) \times 0.82^s]' />
+			</div>
+			<div className='bg-muted/20 p-2 rounded text-center'>
+				<InlineMath math='E = \frac{1}{1 + 10^{(\bar{R}_{\text{opponent}} - \bar{R}_{\text{team}})/400}}' />
+			</div>
+		</div>
+
+		{/* Inactivity System */}
+		<div>
+			<h4 className='font-semibold mb-2'>Season-Based Inactivity Decay</h4>
+			<p className='text-muted-foreground mb-2'>
+				Inactive players' ratings decay toward 1200 baseline per season
+				(unchanged from v1.0):
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='R_{\text{new}} = 1200 + (R_{\text{old}} - 1200) \times 0.95^{\text{seasons inactive}}' />
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>• Same season-based approach as v1.0</li>
+				<li>• Still lacks granularity for partial participation</li>
+			</ul>
+		</div>
+
+		{/* Algorithm Constants */}
+		<div>
+			<h4 className='font-semibold mb-3'>Key Algorithm Constants</h4>
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						K-FACTOR
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>36</span>
+					<p className='text-xs text-muted-foreground'>
+						Increased from 32 (v1.0)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						SEASON DECAY
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.82</span>
+					<p className='text-xs text-muted-foreground'>
+						Increased from 0.80 (v1.0)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						PLAYOFF MULTIPLIER
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>1.8</span>
+					<p className='text-xs text-muted-foreground'>
+						Reduced from 2.0 (v1.0)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						INACTIVITY DECAY
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.95</span>
+					<p className='text-xs text-muted-foreground'>
+						Per season (unchanged from v1.0)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						MAX DIFFERENTIAL
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>5</span>
+					<p className='text-xs text-muted-foreground'>
+						Reduced from 10 (v1.0)
+					</p>
+				</div>
+			</div>
+		</div>
+
+		{/* Summary */}
+		<div className='border-t pt-4'>
+			<h4 className='font-semibold mb-2 text-xs'>Version Summary</h4>
+			<p className='text-xs text-muted-foreground'>
+				Ultimate Tuning refined constants for Minneapolis Winter League's
+				specific game format. Major changes: reduced differential threshold
+				(10→5), increased K-factor (32→36), adjusted seasonal decay (0.80→0.82),
+				and reduced playoff multiplier (2.0→1.8).
+			</p>
+		</div>
+	</>
+)
+
+// v3.0 - Round Revolution
+const AlgorithmV3Content: React.FC = () => (
+	<>
+		{/* Core Formula */}
+		<div>
+			<h4 className='font-semibold mb-3 text-base'>
+				Core ELO Rating Formula
+			</h4>
+			<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
+				<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^s \times f_p \times (S_{\text{actual}} - E)' />
+			</div>
+			<p className='text-muted-foreground'>
+				Core formula unchanged from v2.0. Major innovation: round-based decay
+				instead of season-based inactivity penalties for more granular
+				participation tracking.
+			</p>
+		</div>
+
+		{/* Point Differential System */}
+		<div>
+			<h4 className='font-semibold mb-2'>Point Differential Weighting</h4>
+			<p className='text-muted-foreground mb-2'>
+				Point differential calculation unchanged from v2.0:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='d_{\text{weighted}} = \begin{cases} d & \text{if } |d| \leq 5 \\ \text{sign}(d) \times [5 + 2.2 \times \ln(|d| - 4)] & \text{if } |d| > 5 \end{cases}' />
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>• Same 5-point threshold as v2.0</li>
+				<li>• Same logarithmic scaling for large differentials</li>
+			</ul>
+		</div>
+
+		{/* Team Strength Analysis */}
+		<div>
+			<h4 className='font-semibold mb-2'>Dynamic Team Strength</h4>
+			<p className='text-muted-foreground mb-2'>
+				Team strength calculation unchanged from v2.0:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='\bar{R}_{\text{team}} = \frac{1}{n} \sum_{i=1}^{n} [1200 + (R_i - 1200) \times 0.82^s]' />
+			</div>
+			<div className='bg-muted/20 p-2 rounded text-center'>
+				<InlineMath math='E = \frac{1}{1 + 10^{(\bar{R}_{\text{opponent}} - \bar{R}_{\text{team}})/400}}' />
+			</div>
+		</div>
+
+		{/* Inactivity System */}
+		<div>
+			<h4 className='font-semibold mb-2'>Round-Based Inactivity Decay</h4>
+			<p className='text-muted-foreground mb-2'>
+				<strong>KEY CHANGE:</strong> Decay now applies per round instead of per
+				season:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='R_{\text{new}} = 1200 + (R_{\text{old}} - 1200) \times 0.996^{\text{rounds inactive}}' />
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>
+					• Granular per-round decay (0.996) replaces coarse per-season decay
+					(0.95)
+				</li>
+				<li>• Accumulates to similar seasonal effect over ~20 rounds</li>
+				<li>• Fair to players who miss a few games vs entire season</li>
+				<li>• More responsive to actual participation patterns</li>
+			</ul>
+		</div>
+
+		{/* Algorithm Constants */}
+		<div>
+			<h4 className='font-semibold mb-3'>Key Algorithm Constants</h4>
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						K-FACTOR
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>36</span>
+					<p className='text-xs text-muted-foreground'>
+						(Unchanged from v2.0)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						SEASON DECAY
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.82</span>
+					<p className='text-xs text-muted-foreground'>
+						(Unchanged from v2.0)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						PLAYOFF MULTIPLIER
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>1.8</span>
+					<p className='text-xs text-muted-foreground'>
+						(Unchanged from v2.0)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						INACTIVITY DECAY
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.996</span>
+					<p className='text-xs text-muted-foreground'>
+						NEW: Per round (was 0.95 per season)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						MAX DIFFERENTIAL
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>5</span>
+					<p className='text-xs text-muted-foreground'>
+						(Unchanged from v2.0)
+					</p>
+				</div>
+			</div>
+		</div>
+
+		{/* Summary */}
+		<div className='border-t pt-4'>
+			<h4 className='font-semibold mb-2 text-xs'>Version Summary</h4>
+			<p className='text-xs text-muted-foreground'>
+				Round Revolution introduced per-round inactivity tracking (0.996 per
+				round) replacing coarse seasonal decay (0.95 per season). This makes the
+				system more responsive to participation patterns and fairer to players
+				with partial attendance.
+			</p>
+		</div>
+	</>
+)
+
+// v4.0 - Asymmetric Gravity (Current Version)
+const AlgorithmV4Content: React.FC = () => (
+	<>
+		{/* Core Formula */}
+		<div>
+			<h4 className='font-semibold mb-3 text-base'>
+				Core ELO Rating Formula
+			</h4>
+			<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
+				<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^s \times f_p \times (S_{\text{actual}} - E)' />
+			</div>
+			<p className='text-muted-foreground'>
+				Core formula unchanged from v3.0. Revolutionary innovation: universal
+				gravity well with asymmetric decay rates that always reward
+				participation.
+			</p>
+		</div>
+
+		{/* Point Differential System */}
+		<div>
+			<h4 className='font-semibold mb-2'>Point Differential Weighting</h4>
+			<p className='text-muted-foreground mb-2'>
+				Point differential calculation unchanged from v3.0:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='d_{\text{weighted}} = \begin{cases} d & \text{if } |d| \leq 5 \\ \text{sign}(d) \times [5 + 2.2 \times \ln(|d| - 4)] & \text{if } |d| > 5 \end{cases}' />
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>• Same 5-point threshold as v2.0 and v3.0</li>
+				<li>• Same logarithmic scaling for large differentials</li>
+				<li>• Optimized for ~20 point Ultimate Frisbee games</li>
+			</ul>
+		</div>
+
+		{/* Team Strength Analysis */}
+		<div>
+			<h4 className='font-semibold mb-2'>Dynamic Team Strength</h4>
+			<p className='text-muted-foreground mb-2'>
+				Team strength calculation unchanged from v3.0:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='\bar{R}_{\text{team}} = \frac{1}{n} \sum_{i=1}^{n} [1200 + (R_i - 1200) \times 0.82^s]' />
+			</div>
+			<div className='bg-muted/20 p-2 rounded text-center'>
+				<InlineMath math='E = \frac{1}{1 + 10^{(\bar{R}_{\text{opponent}} - \bar{R}_{\text{team}})/400}}' />
+			</div>
+		</div>
+
+		{/* Universal Gravity Well & Asymmetric Decay */}
+		<div>
+			<h4 className='font-semibold mb-2'>
+				Universal Gravity Well & Asymmetric Decay
+			</h4>
+			<p className='text-muted-foreground mb-2'>
+				<strong>KEY CHANGE:</strong> ALL players drift toward 1200 baseline
+				every round, with asymmetric rates that reward participation:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='R_{\text{new}} = 1200 + (R_{\text{old}} - 1200) \times d' />
+			</div>
+			<p className='text-xs text-muted-foreground text-center mb-2'>
+				where <InlineMath math='d' /> = decay factor (varies by activity and
+				rating)
+			</p>
+			<div className='grid grid-cols-2 gap-2 mb-2'>
+				<div className='bg-muted/30 p-2 rounded border'>
+					<p className='text-xs font-medium mb-1 text-center'>Above 1200</p>
+					<ul className='text-xs text-muted-foreground space-y-0.5'>
+						<li>Active: d = 0.998 (slow decay)</li>
+						<li>Inactive: d = 0.992 (fast decay)</li>
+					</ul>
+				</div>
+				<div className='bg-muted/30 p-2 rounded border'>
+					<p className='text-xs font-medium mb-1 text-center'>Below 1200</p>
+					<ul className='text-xs text-muted-foreground space-y-0.5'>
+						<li>Active: d = 0.992 (fast recovery)</li>
+						<li>Inactive: d = 0.998 (slow recovery)</li>
+					</ul>
+				</div>
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>
+					• Universal gravity (0.998) applied to ALL players every round
+				</li>
+				<li>
+					• Asymmetric rates: participation ALWAYS benefits regardless of rating
+				</li>
+				<li>
+					• Prevents "camping" - even active players at 1400 drift down ~5
+					points/season
+				</li>
+				<li>
+					• Active players gain ~7-21 point advantage over inactive players
+				</li>
+				<li>• Self-balancing system adjusts for turnover and skill changes</li>
+			</ul>
+		</div>
+
+		{/* Algorithm Constants */}
+		<div>
+			<h4 className='font-semibold mb-3'>Key Algorithm Constants</h4>
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						K-FACTOR
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>36</span>
+					<p className='text-xs text-muted-foreground'>
+						(Unchanged from v2.0)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						SEASON DECAY
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.82</span>
+					<p className='text-xs text-muted-foreground'>
+						(Unchanged from v2.0)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						PLAYOFF MULTIPLIER
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>1.8</span>
+					<p className='text-xs text-muted-foreground'>
+						(Unchanged from v2.0)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						GRAVITY WELL (ACTIVE)
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.998</span>
+					<p className='text-xs text-muted-foreground'>
+						NEW: Universal gentle drift (playing)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						DECAY (INACTIVE)
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.992</span>
+					<p className='text-xs text-muted-foreground'>
+						NEW: Strong drift (not playing)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						MAX DIFFERENTIAL
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>5</span>
+					<p className='text-xs text-muted-foreground'>
+						(Unchanged from v2.0)
+					</p>
+				</div>
+			</div>
+		</div>
+
+		{/* Summary */}
+		<div className='border-t pt-4'>
+			<h4 className='font-semibold mb-2 text-xs'>Version Summary</h4>
+			<p className='text-xs text-muted-foreground'>
+				Asymmetric Gravity replaces simple inactivity decay (0.996) with a
+				universal gravity well that applies to ALL players every round. The
+				asymmetric system (0.998 active, 0.992 inactive) always rewards
+				participation, prevents camping, and creates a self-balancing rating
+				ecosystem.
+			</p>
+		</div>
+	</>
+)
+
 export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 	showAdminControls = false,
 }) => {
 	const navigate = useNavigate()
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
+	const [selectedVersion, setSelectedVersion] = useState(CURRENT_VERSION)
 	const [rankingsSnapshot, loading, error] = useCollection(
 		currentPlayerRankingsQuery()
 	)
@@ -189,7 +822,7 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 				<DialogTrigger asChild>
 					<Alert className='cursor-pointer hover:bg-muted/50 transition-colors mb-6'>
 						<Info className='h-4 w-4' />
-						<AlertTitle>Player Ranking Algorithm</AlertTitle>
+						<AlertTitle>Player Ranking Algorithm ({CURRENT_VERSION})</AlertTitle>
 						<AlertDescription>
 							Rankings are calculated using an advanced ELO-based algorithm.
 							Click to learn more about how players are ranked.
@@ -207,319 +840,37 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 							</DialogDescription>
 						</DialogHeader>
 					</VisuallyHidden>
-					<div className='space-y-6 text-sm max-h-[70vh] overflow-y-auto pr-2'>
-						{/* Core Formula */}
-						<div>
-							<h4 className='font-semibold mb-3 text-base'>
-								Core ELO Rating Formula
-							</h4>
-							<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
-								<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^s \times f_p \times (S_{\text{actual}} - E)' />
+
+					{/* Version Selector */}
+					<div className='border-b pb-4 mb-4'>
+						<div className='flex items-center justify-between gap-4 pr-8'>
+							<div>
+								<h3 className='font-semibold text-lg'>Algorithm Version</h3>
+								<p className='text-sm text-muted-foreground'>
+									<span className='font-medium'>
+										{ALGORITHM_VERSIONS[selectedVersion as keyof typeof ALGORITHM_VERSIONS].date}
+									</span>
+									{' — '}
+									{ALGORITHM_VERSIONS[selectedVersion as keyof typeof ALGORITHM_VERSIONS].description}
+								</p>
 							</div>
-							<p className='text-muted-foreground'>
-								Each player starts with 1200 ELO rating. The formula combines
-								traditional ELO mathematics with sophisticated point
-								differential analysis, temporal weighting, and round-based
-								decay.
-							</p>
+							<Select value={selectedVersion} onValueChange={setSelectedVersion}>
+								<SelectTrigger className='w-[200px]'>
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{Object.entries(ALGORITHM_VERSIONS).map(([version, info]) => (
+										<SelectItem key={version} value={version}>
+											{version} - {info.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</div>
+					</div>
 
-						{/* Point Differential System */}
-						<div>
-							<h4 className='font-semibold mb-2'>
-								Point Differential Weighting
-							</h4>
-							<p className='text-muted-foreground mb-2'>
-								Unlike traditional win/loss ELO, our algorithm considers{' '}
-								<em>how much</em> you won or lost by using weighted
-								differentials:
-							</p>
-							<div className='bg-muted/20 p-2 rounded text-center mb-2'>
-								<InlineMath math='d_{\text{weighted}} = \begin{cases} d & \text{if } |d| \leq 5 \\ \text{sign}(d) \times [5 + 2.2 \times \ln(|d| - 4)] & \text{if } |d| > 5 \end{cases}' />
-							</div>
-							<div className='bg-muted/20 p-2 rounded text-center mb-2'>
-								<InlineMath math='S_{\text{actual}} = \text{clamp}(0.5 + \frac{d_{\text{weighted}}}{80}, 0, 1)' />
-							</div>
-							<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
-								<li>• Win by 4 points = 0.55 actual score</li>
-								<li>• Loss by 6 points = 0.41 actual score</li>
-								<li>
-									• Large differentials use logarithmic scaling to prevent
-									outliers
-								</li>
-								<li>• Optimized for ~20 point Ultimate Frisbee games</li>
-							</ul>
-						</div>
-
-						{/* Team Strength Analysis */}
-						<div>
-							<h4 className='font-semibold mb-2'>Dynamic Team Strength</h4>
-							<p className='text-muted-foreground mb-2'>
-								Team strength is calculated as the average rating of all roster
-								players, adjusted for historical seasons:
-							</p>
-							<div className='bg-muted/20 p-2 rounded text-center mb-2'>
-								<InlineMath math='\bar{R}_{\text{team}} = \frac{1}{n} \sum_{i=1}^{n} [1200 + (R_i - 1200) \times 0.82^s]' />
-							</div>
-							<p className='text-xs text-muted-foreground text-center mb-2'>
-								where <InlineMath math='s' /> = seasons back in time,{' '}
-								<InlineMath math='n' /> = roster size
-							</p>
-							<div className='bg-muted/20 p-2 rounded text-center'>
-								<InlineMath math='E = \frac{1}{1 + 10^{(\bar{R}_{\text{opponent}} - \bar{R}_{\text{team}})/400}}' />
-							</div>
-							<p className='text-xs text-muted-foreground text-center mt-1'>
-								Expected score uses standard ELO formula
-							</p>
-						</div>
-
-						{/* Universal Gravity Well & Asymmetric Decay */}
-						<div>
-							<h4 className='font-semibold mb-2'>
-								Universal Gravity Well & Asymmetric Decay
-							</h4>
-							<p className='text-muted-foreground mb-2'>
-								ALL players drift toward 1200 baseline every round, with
-								asymmetric rates that reward participation:
-							</p>
-							<div className='bg-muted/20 p-2 rounded text-center mb-2'>
-								<InlineMath math='R_{\text{new}} = 1200 + (R_{\text{old}} - 1200) \times d' />
-							</div>
-							<p className='text-xs text-muted-foreground text-center mb-2'>
-								where <InlineMath math='d' /> = decay factor (varies by activity
-								and rating)
-							</p>
-							<div className='grid grid-cols-2 gap-2 mb-2'>
-								<div className='bg-muted/30 p-2 rounded border'>
-									<p className='text-xs font-medium mb-1 text-center'>
-										Above 1200
-									</p>
-									<ul className='text-xs text-muted-foreground space-y-0.5'>
-										<li>Active: d = 0.998 (slow decay)</li>
-										<li>Inactive: d = 0.992 (fast decay)</li>
-									</ul>
-								</div>
-								<div className='bg-muted/30 p-2 rounded border'>
-									<p className='text-xs font-medium mb-1 text-center'>
-										Below 1200
-									</p>
-									<ul className='text-xs text-muted-foreground space-y-0.5'>
-										<li>Active: d = 0.992 (fast recovery)</li>
-										<li>Inactive: d = 0.998 (slow recovery)</li>
-									</ul>
-								</div>
-							</div>
-							<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
-								<li>
-									• <strong>Participation always benefits:</strong> Active
-									high-rated players decay slower; active low-rated players
-									recover faster
-								</li>
-								<li>
-									• <strong>Prevents "camping":</strong> Even active players at
-									1400 drift down ~5 points per season, requiring &gt;50% win
-									rate to maintain
-								</li>
-								<li>
-									• <strong>Rewards commitment:</strong> Active players gain
-									~7-21 point advantage over inactive players at same starting
-									rating
-								</li>
-								<li>
-									• <strong>Self-balancing:</strong> System naturally adjusts
-									for player turnover and skill changes
-								</li>
-							</ul>
-						</div>
-
-						{/* Temporal Factors */}
-						<div>
-							<h4 className='font-semibold mb-2'>Temporal Weighting System</h4>
-							<div className='grid grid-cols-2 gap-3 mb-2'>
-								<div>
-									<p className='text-xs font-medium mb-1'>
-										Season Decay (α = 0.82)
-									</p>
-									<ul className='text-xs text-muted-foreground space-y-0.5'>
-										<li>Current season: 100% weight</li>
-										<li>Previous season: 82% weight</li>
-										<li>2 seasons ago: 67% weight</li>
-									</ul>
-								</div>
-								<div>
-									<p className='text-xs font-medium mb-1'>
-										Game Type Multipliers
-									</p>
-									<ul className='text-xs text-muted-foreground space-y-0.5'>
-										<li>Regular season: 1.0×</li>
-										<li>Playoff games: 1.8×</li>
-										<li>K-factor = 36 × modifiers</li>
-									</ul>
-								</div>
-							</div>
-						</div>
-
-						{/* Advanced Features */}
-						<div>
-							<h4 className='font-semibold mb-2'>Advanced Features</h4>
-							<div className='space-y-2'>
-								<div>
-									<p className='text-xs font-medium'>
-										Confidence-Based Team Calculation
-									</p>
-									<p className='text-xs text-muted-foreground mb-2'>
-										Team confidence based on known player ratings:
-									</p>
-									<div className='text-center text-xs'>
-										<InlineMath math='\text{confidence} = \frac{\text{rated players}}{\text{total roster}} \geq 0.5' />
-									</div>
-									<p className='text-xs text-muted-foreground text-center mt-1'>
-										Low confidence teams use default strength (1200)
-									</p>
-								</div>
-								<div>
-									<p className='text-xs font-medium'>
-										Chronological Processing
-									</p>
-									<p className='text-xs text-muted-foreground'>
-										All games processed by rounds in chronological order to
-										ensure team strengths reflect accurate historical ratings at
-										game time
-									</p>
-								</div>
-								<div>
-									<p className='text-xs font-medium'>
-										Round-Based Incremental Updates
-									</p>
-									<p className='text-xs text-muted-foreground'>
-										System identifies uncalculated rounds for efficient
-										incremental updates while preserving existing player
-										statistics
-									</p>
-								</div>
-							</div>
-						</div>
-
-						{/* Algorithm Constants */}
-						<div>
-							<h4 className='font-semibold mb-3'>Key Algorithm Constants</h4>
-							<div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-								<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
-									<span className='text-xs font-medium text-muted-foreground mb-1'>
-										STARTING RATING
-									</span>
-									<span className='text-lg font-mono font-bold mb-1'>1200</span>
-									<p className='text-xs text-muted-foreground'>
-										Initial ELO rating for new players
-									</p>
-								</div>
-
-								<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
-									<span className='text-xs font-medium text-muted-foreground mb-1'>
-										K-FACTOR
-									</span>
-									<span className='text-lg font-mono font-bold mb-1'>36</span>
-									<p className='text-xs text-muted-foreground'>
-										Maximum rating change per game
-									</p>
-								</div>
-
-								<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
-									<span className='text-xs font-medium text-muted-foreground mb-1'>
-										SEASON DECAY
-									</span>
-									<span className='text-lg font-mono font-bold mb-1'>0.82</span>
-									<p className='text-xs text-muted-foreground'>
-										Weight reduction per past season
-									</p>
-								</div>
-
-								<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
-									<span className='text-xs font-medium text-muted-foreground mb-1'>
-										PLAYOFF MULTIPLIER
-									</span>
-									<span className='text-lg font-mono font-bold mb-1'>1.8</span>
-									<p className='text-xs text-muted-foreground'>
-										Postseason game importance factor
-									</p>
-								</div>
-
-								<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
-									<span className='text-xs font-medium text-muted-foreground mb-1'>
-										GRAVITY WELL (ACTIVE)
-									</span>
-									<span className='text-lg font-mono font-bold mb-1'>
-										0.998
-									</span>
-									<p className='text-xs text-muted-foreground'>
-										Gentle drift per round (playing)
-									</p>
-								</div>
-
-								<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
-									<span className='text-xs font-medium text-muted-foreground mb-1'>
-										DECAY (INACTIVE)
-									</span>
-									<span className='text-lg font-mono font-bold mb-1'>
-										0.992
-									</span>
-									<p className='text-xs text-muted-foreground'>
-										Strong drift per round (not playing)
-									</p>
-								</div>
-
-								<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
-									<span className='text-xs font-medium text-muted-foreground mb-1'>
-										MAX DIFFERENTIAL
-									</span>
-									<span className='text-lg font-mono font-bold mb-1'>5</span>
-									<p className='text-xs text-muted-foreground'>
-										Full weight point differential threshold
-									</p>
-								</div>
-							</div>
-						</div>
-
-						{/* Calculation Notes */}
-						<div className='border-t pt-4'>
-							<h4 className='font-semibold mb-2 text-xs'>Technical Notes</h4>
-							<ul className='text-xs text-muted-foreground space-y-1'>
-								<li>
-									• All calculations performed in chronological order by rounds
-								</li>
-								<li>
-									• Team strengths calculated at game time using historical
-									ratings
-								</li>
-								<li>
-									• Point differentials normalized for ~20-point Ultimate
-									Frisbee games
-								</li>
-								<li>
-									• Incremental updates process only new uncalculated rounds
-								</li>
-								<li>
-									• Full rebuilds process all historical data from scratch
-								</li>
-								<li>
-									• <strong>Asymmetric gravity system:</strong> Above 1200 -
-									active players decay slower; below 1200 - active players
-									recover faster
-								</li>
-								<li>
-									• Universal gravity applies to ALL players every round,
-									regardless of activity status
-								</li>
-								<li>
-									• Logarithmic scaling prevents large point differential
-									outliers
-								</li>
-								<li>
-									• Confidence thresholds ensure reliable team strength
-									calculations
-								</li>
-							</ul>
-						</div>
+					<div className='space-y-6 text-sm max-h-[60vh] overflow-y-auto pr-2'>
+						<AlgorithmVersionContent version={selectedVersion} />
 					</div>
 				</DialogContent>
 			</Dialog>
