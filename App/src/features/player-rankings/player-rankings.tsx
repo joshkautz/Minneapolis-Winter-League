@@ -83,7 +83,9 @@ const ALGORITHM_VERSIONS = {
 const CURRENT_VERSION = 'v4.0'
 
 // Helper component to render version-specific algorithm details
-const AlgorithmVersionContent: React.FC<{ version: string }> = ({ version }) => {
+const AlgorithmVersionContent: React.FC<{ version: string }> = ({
+	version,
+}) => {
 	switch (version) {
 		case 'v1.0':
 			return <AlgorithmV1Content />
@@ -103,9 +105,7 @@ const AlgorithmV1Content: React.FC = () => (
 	<>
 		{/* Core Formula */}
 		<div>
-			<h4 className='font-semibold mb-3 text-base'>
-				Core ELO Rating Formula
-			</h4>
+			<h4 className='font-semibold mb-3 text-base'>Core ELO Rating Formula</h4>
 			<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
 				<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^s \times f_p \times (S_{\text{actual}} - E)' />
 			</div>
@@ -237,9 +237,7 @@ const AlgorithmV2Content: React.FC = () => (
 	<>
 		{/* Core Formula */}
 		<div>
-			<h4 className='font-semibold mb-3 text-base'>
-				Core ELO Rating Formula
-			</h4>
+			<h4 className='font-semibold mb-3 text-base'>Core ELO Rating Formula</h4>
 			<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
 				<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^s \times f_p \times (S_{\text{actual}} - E)' />
 			</div>
@@ -371,9 +369,7 @@ const AlgorithmV3Content: React.FC = () => (
 	<>
 		{/* Core Formula */}
 		<div>
-			<h4 className='font-semibold mb-3 text-base'>
-				Core ELO Rating Formula
-			</h4>
+			<h4 className='font-semibold mb-3 text-base'>Core ELO Rating Formula</h4>
 			<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
 				<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^s \times f_p \times (S_{\text{actual}} - E)' />
 			</div>
@@ -443,9 +439,7 @@ const AlgorithmV3Content: React.FC = () => (
 						K-FACTOR
 					</span>
 					<span className='text-lg font-mono font-bold mb-1'>36</span>
-					<p className='text-xs text-muted-foreground'>
-						(Unchanged from v2.0)
-					</p>
+					<p className='text-xs text-muted-foreground'>(Unchanged from v2.0)</p>
 				</div>
 
 				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
@@ -453,9 +447,7 @@ const AlgorithmV3Content: React.FC = () => (
 						SEASON DECAY
 					</span>
 					<span className='text-lg font-mono font-bold mb-1'>0.82</span>
-					<p className='text-xs text-muted-foreground'>
-						(Unchanged from v2.0)
-					</p>
+					<p className='text-xs text-muted-foreground'>(Unchanged from v2.0)</p>
 				</div>
 
 				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
@@ -463,9 +455,7 @@ const AlgorithmV3Content: React.FC = () => (
 						PLAYOFF MULTIPLIER
 					</span>
 					<span className='text-lg font-mono font-bold mb-1'>1.8</span>
-					<p className='text-xs text-muted-foreground'>
-						(Unchanged from v2.0)
-					</p>
+					<p className='text-xs text-muted-foreground'>(Unchanged from v2.0)</p>
 				</div>
 
 				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
@@ -483,9 +473,7 @@ const AlgorithmV3Content: React.FC = () => (
 						MAX DIFFERENTIAL
 					</span>
 					<span className='text-lg font-mono font-bold mb-1'>5</span>
-					<p className='text-xs text-muted-foreground'>
-						(Unchanged from v2.0)
-					</p>
+					<p className='text-xs text-muted-foreground'>(Unchanged from v2.0)</p>
 				</div>
 			</div>
 		</div>
@@ -508,9 +496,7 @@ const AlgorithmV4Content: React.FC = () => (
 	<>
 		{/* Core Formula */}
 		<div>
-			<h4 className='font-semibold mb-3 text-base'>
-				Core ELO Rating Formula
-			</h4>
+			<h4 className='font-semibold mb-3 text-base'>Core ELO Rating Formula</h4>
 			<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
 				<BlockMath math='R_{\text{new}} = R_{\text{old}} + K \times \alpha^s \times f_p \times (S_{\text{actual}} - E)' />
 			</div>
@@ -584,9 +570,7 @@ const AlgorithmV4Content: React.FC = () => (
 				</div>
 			</div>
 			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
-				<li>
-					• Universal gravity (0.998) applied to ALL players every round
-				</li>
+				<li>• Universal gravity (0.998) applied to ALL players every round</li>
 				<li>
 					• Asymmetric rates: participation ALWAYS benefits regardless of rating
 				</li>
@@ -610,9 +594,7 @@ const AlgorithmV4Content: React.FC = () => (
 						K-FACTOR
 					</span>
 					<span className='text-lg font-mono font-bold mb-1'>36</span>
-					<p className='text-xs text-muted-foreground'>
-						(Unchanged from v2.0)
-					</p>
+					<p className='text-xs text-muted-foreground'>(Unchanged from v2.0)</p>
 				</div>
 
 				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
@@ -620,9 +602,7 @@ const AlgorithmV4Content: React.FC = () => (
 						SEASON DECAY
 					</span>
 					<span className='text-lg font-mono font-bold mb-1'>0.82</span>
-					<p className='text-xs text-muted-foreground'>
-						(Unchanged from v2.0)
-					</p>
+					<p className='text-xs text-muted-foreground'>(Unchanged from v2.0)</p>
 				</div>
 
 				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
@@ -630,9 +610,7 @@ const AlgorithmV4Content: React.FC = () => (
 						PLAYOFF MULTIPLIER
 					</span>
 					<span className='text-lg font-mono font-bold mb-1'>1.8</span>
-					<p className='text-xs text-muted-foreground'>
-						(Unchanged from v2.0)
-					</p>
+					<p className='text-xs text-muted-foreground'>(Unchanged from v2.0)</p>
 				</div>
 
 				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
@@ -660,9 +638,7 @@ const AlgorithmV4Content: React.FC = () => (
 						MAX DIFFERENTIAL
 					</span>
 					<span className='text-lg font-mono font-bold mb-1'>5</span>
-					<p className='text-xs text-muted-foreground'>
-						(Unchanged from v2.0)
-					</p>
+					<p className='text-xs text-muted-foreground'>(Unchanged from v2.0)</p>
 				</div>
 			</div>
 		</div>
@@ -822,7 +798,9 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 				<DialogTrigger asChild>
 					<Alert className='cursor-pointer hover:bg-muted/50 transition-colors mb-6'>
 						<Info className='h-4 w-4' />
-						<AlertTitle>Player Ranking Algorithm ({CURRENT_VERSION})</AlertTitle>
+						<AlertTitle>
+							Player Ranking Algorithm ({CURRENT_VERSION})
+						</AlertTitle>
 						<AlertDescription>
 							Rankings are calculated using an advanced ELO-based algorithm.
 							Click to learn more about how players are ranked.
@@ -848,13 +826,24 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 								<h3 className='font-semibold text-lg'>Algorithm Version</h3>
 								<p className='text-sm text-muted-foreground'>
 									<span className='font-medium'>
-										{ALGORITHM_VERSIONS[selectedVersion as keyof typeof ALGORITHM_VERSIONS].date}
+										{
+											ALGORITHM_VERSIONS[
+												selectedVersion as keyof typeof ALGORITHM_VERSIONS
+											].date
+										}
 									</span>
 									{' — '}
-									{ALGORITHM_VERSIONS[selectedVersion as keyof typeof ALGORITHM_VERSIONS].description}
+									{
+										ALGORITHM_VERSIONS[
+											selectedVersion as keyof typeof ALGORITHM_VERSIONS
+										].description
+									}
 								</p>
 							</div>
-							<Select value={selectedVersion} onValueChange={setSelectedVersion}>
+							<Select
+								value={selectedVersion}
+								onValueChange={setSelectedVersion}
+							>
 								<SelectTrigger className='w-[200px]'>
 									<SelectValue />
 								</SelectTrigger>
