@@ -216,6 +216,9 @@ export const BadgeManagement: React.FC = () => {
 		removeImage: false,
 	})
 
+	// Image preview state
+	const [imagePreview, setImagePreview] = useState<File | null>(null)
+
 	// Award badge form state
 	const [teamBadges, setTeamBadges] = useState<Record<string, boolean>>({})
 	const [loadingTeamBadges, setLoadingTeamBadges] = useState(false)
@@ -231,6 +234,7 @@ export const BadgeManagement: React.FC = () => {
 			imageFile: null,
 			removeImage: false,
 		})
+		setImagePreview(null)
 		setSelectedBadge(null)
 		setDialogMode('closed')
 	}
@@ -304,6 +308,7 @@ export const BadgeManagement: React.FC = () => {
 			}
 
 			setFormData((prev) => ({ ...prev, imageFile: file, removeImage: false }))
+			setImagePreview(file)
 		}
 	}
 
@@ -377,8 +382,6 @@ export const BadgeManagement: React.FC = () => {
 					removeImage: formData.removeImage,
 				}
 
-				console.log('Update payload:', updatePayload)
-
 				const result = await updateBadgeViaFunction(updatePayload)
 
 				toast.success(result.message)
@@ -387,7 +390,6 @@ export const BadgeManagement: React.FC = () => {
 			resetForm()
 		} catch (error) {
 			console.error('Error saving badge:', error)
-			console.error('Error details:', JSON.stringify(error, null, 2))
 
 			// Extract Firebase Functions error message
 			let errorMessage = 'Failed to save badge'
@@ -396,7 +398,6 @@ export const BadgeManagement: React.FC = () => {
 				if ('code' in error && 'message' in error) {
 					// Firebase Functions error
 					errorMessage = String(error.message)
-					console.error('Firebase error code:', error.code)
 				} else if ('message' in error && typeof error.message === 'string') {
 					errorMessage = error.message
 				} else if ('details' in error && typeof error.details === 'string') {
@@ -696,7 +697,7 @@ export const BadgeManagement: React.FC = () => {
 
 							<div className='space-y-2'>
 								<Label htmlFor='description'>
-									Description <span className='text-red-500'>*</span>
+									Badge Description <span className='text-red-500'>*</span>
 								</Label>
 								<Textarea
 									id='description'
@@ -714,27 +715,39 @@ export const BadgeManagement: React.FC = () => {
 							</div>
 
 							<div className='space-y-2'>
-								<Label htmlFor='image'>Badge Image</Label>
-								{selectedBadge?.imageUrl &&
-									!formData.imageFile &&
-									!formData.removeImage && (
-										<div className='mb-2'>
-											<img
-												src={selectedBadge.imageUrl}
-												alt={selectedBadge.name}
-												className='w-24 h-24 object-cover rounded'
-											/>
-										</div>
-									)}
+								<Label htmlFor='image'>Badge Logo (Optional)</Label>
+
 								<Input
 									id='image'
 									type='file'
 									accept='image/*'
 									onChange={handleFileChange}
 								/>
-								<p className='text-sm text-muted-foreground'>
-									PNG, JPG, GIF, WEBP, or SVG. Max 5MB.
-								</p>
+
+								{/* Image Preview */}
+								{imagePreview ? (
+									<div className='group flex items-center justify-center w-40 h-40 mx-auto rounded-md overflow-hidden'>
+										<img
+											src={URL.createObjectURL(imagePreview)}
+											alt='Badge image preview'
+											className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
+										/>
+									</div>
+								) : selectedBadge?.imageUrl && !formData.removeImage ? (
+									<div className='group flex items-center justify-center w-40 h-40 mx-auto rounded-md overflow-hidden'>
+										<img
+											src={selectedBadge.imageUrl}
+											alt={selectedBadge.name}
+											className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
+										/>
+									</div>
+								) : (
+									<div className='flex items-center justify-center w-40 h-40 mx-auto rounded-md bg-muted'>
+										<span className='text-sm text-muted-foreground'>
+											No image
+										</span>
+									</div>
+								)}
 								{dialogMode === 'edit' &&
 									selectedBadge?.imageUrl &&
 									!formData.removeImage && (
@@ -757,10 +770,7 @@ export const BadgeManagement: React.FC = () => {
 						</div>
 
 						<DialogFooter>
-							<Button type='button' variant='outline' onClick={resetForm}>
-								Cancel
-							</Button>
-							<Button type='submit' disabled={isSubmitting}>
+							<Button type='submit' disabled={isSubmitting} className='w-full'>
 								{isSubmitting && (
 									<Loader2 className='h-4 w-4 mr-2 animate-spin' />
 								)}

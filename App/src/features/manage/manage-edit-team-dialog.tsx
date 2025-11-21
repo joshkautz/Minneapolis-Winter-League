@@ -17,8 +17,8 @@ export const ManageEditTeamDialog = ({
 }) => {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='flex flex-col items-center'>
-				<DialogHeader className='text-center'>
+			<DialogContent className='max-w-2xl'>
+				<DialogHeader>
 					<DialogTitle>Edit team</DialogTitle>
 					<DialogDescription>{`Update your team's name or logo`}</DialogDescription>
 				</DialogHeader>

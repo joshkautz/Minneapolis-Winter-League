@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 import { LoadingSpinner } from '@/shared/components'
 import { useManageEditTeamForm } from './hooks/use-manage-edit-team-form'
 import { useTeamManagement } from './hooks/use-team-management'
@@ -70,7 +71,7 @@ export const ManageEditTeamForm = ({
 	}
 
 	return (
-		<div className='w-full max-w-[400px]'>
+		<div className='w-full'>
 			<Form {...form}>
 				<form
 					onSubmit={form.handleSubmit(onSubmit)}
@@ -86,7 +87,6 @@ export const ManageEditTeamForm = ({
 								<FormControl>
 									<Input
 										placeholder={team?.data().name ?? 'Team name'}
-										className='h-11'
 										autoComplete='off'
 										autoFocus
 										{...field}
@@ -102,15 +102,12 @@ export const ManageEditTeamForm = ({
 					/>
 
 					<div className='space-y-2'>
-						<label htmlFor='team-logo-upload' className='text-sm font-medium'>
-							Team Logo (Optional)
-						</label>
+						<Label htmlFor='team-logo-upload'>Team Logo (Optional)</Label>
 						<Input
 							id='team-logo-upload'
 							type='file'
 							accept='image/*'
 							onChange={handleFileChange}
-							className='h-11'
 							disabled={isSubmitting}
 						/>
 					</div>
@@ -142,8 +139,7 @@ export const ManageEditTeamForm = ({
 						<Button
 							type='submit'
 							disabled={isSubmitting}
-							className='w-full h-11'
-							size='lg'
+							className='w-full'
 						>
 							{isSubmitting ? 'Updating Team...' : 'Save Changes'}
 						</Button>
