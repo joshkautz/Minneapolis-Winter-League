@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from '@firebase/firestore'
+import { getDoc } from 'firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Award } from 'lucide-react'
 import { NotificationCard } from '@/shared/components'
 import {
 	DocumentReference,
@@ -13,10 +14,13 @@ import {
 	DocumentSnapshot,
 	teamsBySeasonQuery,
 } from '@/firebase/firestore'
+import { teamBadgesQuery } from '@/firebase/collections/badges'
 import {
 	GameDocument,
 	PlayerDocument,
 	TeamDocument,
+	BadgeDocument,
+	TeamBadgeDocument,
 	hasAssignedTeams,
 	getTeamRole,
 	formatTimestamp,
@@ -80,6 +84,62 @@ export const TeamProfile = () => {
 	const [gamesQuerySnapshot, gamesQuerySnapshotLoading] = useCollection(
 		gamesByTeamQuery(teamDocumentSnapshot?.ref)
 	)
+
+	// Fetch team badges
+	const [teamBadgesSnapshot, teamBadgesLoading] = useCollection(
+		teamBadgesQuery(teamDocumentSnapshot?.ref)
+	)
+
+	// Process team badges to resolve badge references
+	interface ProcessedBadge {
+		id: string
+		name: string
+		description: string
+		imageUrl: string | null
+		awardedAt: Date
+	}
+
+	const [teamBadges, setTeamBadges] = useState<ProcessedBadge[]>([])
+
+	useEffect(() => {
+		if (!teamBadgesSnapshot) {
+			setTeamBadges([])
+			return
+		}
+
+		const processBadges = async () => {
+			const results = await Promise.all(
+				teamBadgesSnapshot.docs.map(async (teamBadgeDoc) => {
+					const teamBadgeData = teamBadgeDoc.data() as TeamBadgeDocument
+
+					try {
+						// Fetch badge details
+						const badgeDoc = await getDoc(teamBadgeData.badge)
+						const badgeData = badgeDoc.data() as BadgeDocument | undefined
+
+						if (!badgeData) {
+							return null
+						}
+
+						return {
+							id: teamBadgeDoc.id,
+							name: badgeData.name,
+							description: badgeData.description,
+							imageUrl: badgeData.imageUrl,
+							awardedAt: teamBadgeData.awardedAt.toDate(),
+						} as ProcessedBadge
+					} catch (error) {
+						console.error(`Error processing badge ${teamBadgeDoc.id}:`, error)
+						return null
+					}
+				})
+			)
+
+			setTeamBadges(results.filter((badge) => badge !== null) as ProcessedBadge[])
+		}
+
+		processBadges()
+	}, [teamBadgesSnapshot])
 
 	const isLoading = useMemo(
 		() =>
@@ -166,6 +226,49 @@ export const TeamProfile = () => {
 					</CardContent>
 				</Card>
 			</div>
+
+			{/* Team Badges Section */}
+			{teamBadges.length > 0 && (
+				<div className='max-w-[1040px] mx-auto mb-4'>
+					<Card className='border-muted'>
+						<CardContent className='pt-6'>
+							<div className='space-y-4'>
+								<div className='flex items-center gap-2'>
+									<Award className='h-5 w-5 text-amber-600' />
+									<h3 className='text-lg font-semibold'>Team Badges</h3>
+								</div>
+								<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+									{teamBadges.map((badge) => (
+										<div
+											key={badge.id}
+											className='flex flex-col items-center p-4 rounded-lg border border-muted bg-card hover:bg-accent/50 transition-colors'
+										>
+											{badge.imageUrl ? (
+												<img
+													src={badge.imageUrl}
+													alt={badge.name}
+													className='w-16 h-16 object-cover rounded-full mb-3'
+												/>
+											) : (
+												<div className='w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center mb-3'>
+													<Award className='h-8 w-8 text-amber-600' />
+												</div>
+											)}
+											<h4 className='font-semibold text-center mb-1'>
+												{badge.name}
+											</h4>
+											<p className='text-xs text-muted-foreground text-center line-clamp-2'>
+												{badge.description}
+											</p>
+										</div>
+									))}
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+			)}
+
 			<div className='max-w-[1040px] mx-auto'>
 				<div className='flex justify-center items-start gap-4 flex-wrap mb-4'>
 					<NotificationCard

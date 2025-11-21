@@ -26,6 +26,7 @@ import {
 	UserCog,
 	Newspaper,
 	Users,
+	Award,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 
@@ -270,6 +271,27 @@ export const AdminDashboard: React.FC = () => {
 							<Link to='/admin/registration-management'>
 								<Users className='h-4 w-4 mr-2' />
 								Manage Registration
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* Badge Management */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Award className='h-5 w-5 text-amber-600' />
+							Badge Management
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Create and manage badges that can be awarded to teams for special
+							achievements.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/badge-management'>
+								<Award className='h-4 w-4 mr-2' />
+								Manage Badges
 							</Link>
 						</Button>
 					</CardContent>

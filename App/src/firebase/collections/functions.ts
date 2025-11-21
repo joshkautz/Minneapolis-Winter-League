@@ -772,6 +772,173 @@ export const deleteSeasonViaFunction = async (
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// BADGE MANAGEMENT FUNCTIONS (ADMIN ONLY)
+//////////////////////////////////////////////////////////////////////////////
+
+export interface CreateBadgeRequest {
+	name: string
+	description: string
+	imageBlob?: string // Base64 encoded image
+	imageContentType?: string // MIME type of the image
+}
+
+export interface CreateBadgeResponse {
+	success: true
+	badgeId: string
+	message: string
+}
+
+/**
+ * Creates a new badge via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can create badges
+ * - Name and description are validated
+ * - Image size limited to 5MB
+ * - Image stored in Firebase Storage
+ */
+export const createBadgeViaFunction = async (
+	data: CreateBadgeRequest
+): Promise<CreateBadgeResponse> => {
+	const createBadge = httpsCallable<CreateBadgeRequest, CreateBadgeResponse>(
+		functions,
+		'createBadge'
+	)
+	const result = await createBadge(data)
+	return result.data
+}
+
+export interface UpdateBadgeRequest {
+	badgeId: string
+	name?: string
+	description?: string
+	imageBlob?: string // Base64 encoded image
+	imageContentType?: string // MIME type of the image
+	removeImage?: boolean // Flag to remove existing image
+}
+
+export interface UpdateBadgeResponse {
+	success: true
+	badgeId: string
+	message: string
+}
+
+/**
+ * Updates an existing badge via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can update badges
+ * - Badge must exist
+ * - Fields are validated if provided
+ * - Old images are deleted when replaced or removed
+ */
+export const updateBadgeViaFunction = async (
+	data: UpdateBadgeRequest
+): Promise<UpdateBadgeResponse> => {
+	const updateBadge = httpsCallable<UpdateBadgeRequest, UpdateBadgeResponse>(
+		functions,
+		'updateBadge'
+	)
+	const result = await updateBadge(data)
+	return result.data
+}
+
+export interface DeleteBadgeRequest {
+	badgeId: string
+}
+
+export interface DeleteBadgeResponse {
+	success: true
+	badgeId: string
+	message: string
+	teamsAffected: number
+}
+
+/**
+ * Deletes a badge and removes it from all teams via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can delete badges
+ * - Badge must exist
+ * - Automatically removes badge from all teams that have it
+ * - Deletes badge image from storage
+ */
+export const deleteBadgeViaFunction = async (
+	data: DeleteBadgeRequest
+): Promise<DeleteBadgeResponse> => {
+	const deleteBadge = httpsCallable<DeleteBadgeRequest, DeleteBadgeResponse>(
+		functions,
+		'deleteBadge'
+	)
+	const result = await deleteBadge(data)
+	return result.data
+}
+
+export interface AwardBadgeRequest {
+	badgeId: string
+	teamId: string
+}
+
+export interface AwardBadgeResponse {
+	success: true
+	badgeId: string
+	teamId: string
+	message: string
+}
+
+/**
+ * Awards a badge to a specific team via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can award badges
+ * - Badge and team must exist
+ * - Prevents duplicate badge awards
+ * - Records who awarded the badge and when
+ */
+export const awardBadgeViaFunction = async (
+	data: AwardBadgeRequest
+): Promise<AwardBadgeResponse> => {
+	const awardBadge = httpsCallable<AwardBadgeRequest, AwardBadgeResponse>(
+		functions,
+		'awardBadge'
+	)
+	const result = await awardBadge(data)
+	return result.data
+}
+
+export interface RevokeBadgeRequest {
+	badgeId: string
+	teamId: string
+}
+
+export interface RevokeBadgeResponse {
+	success: true
+	badgeId: string
+	teamId: string
+	message: string
+}
+
+/**
+ * Revokes a badge from a specific team via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can revoke badges
+ * - Badge and team must exist
+ * - Team must have the badge to revoke it
+ * - Records who revoked the badge
+ */
+export const revokeBadgeViaFunction = async (
+	data: RevokeBadgeRequest
+): Promise<RevokeBadgeResponse> => {
+	const revokeBadge = httpsCallable<RevokeBadgeRequest, RevokeBadgeResponse>(
+		functions,
+		'revokeBadge'
+	)
+	const result = await revokeBadge(data)
+	return result.data
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // MIGRATION HELPERS
 //////////////////////////////////////////////////////////////////////////////
 

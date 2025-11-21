@@ -19,6 +19,7 @@
  * - News management (CRUD operations)
  * - Season management (CRUD operations with auto player integration)
  * - Player rankings (rebuild and update)
+ * - Badge management (CRUD operations, award/revoke badges)
  *
  * CALLABLE FUNCTIONS (USER-ACCESSIBLE):
  * - Player management (CRUD operations)
@@ -118,3 +119,10 @@ export { dropboxSignSendReminderEmail } from './functions/user/dropboxSign/dropb
 export { createGame } from './functions/admin/games/create.js'
 export { updateGame } from './functions/admin/games/update.js'
 export { deleteGame } from './functions/admin/games/delete.js'
+
+// Badge management functions (admin-only)
+export { createBadge } from './functions/admin/badges/create.js'
+export { updateBadge } from './functions/admin/badges/update.js'
+export { deleteBadge } from './functions/admin/badges/delete.js'
+export { awardBadge } from './functions/admin/badges/awardBadge.js'
+export { revokeBadge } from './functions/admin/badges/revokeBadge.js'

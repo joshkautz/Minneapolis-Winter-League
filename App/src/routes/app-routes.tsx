@@ -22,6 +22,7 @@ import {
 	SeasonManagement,
 	GameManagement,
 	RegistrationManagement,
+	BadgeManagement,
 	Profile,
 	ManageTeam,
 	NotFound,
@@ -244,6 +245,16 @@ export const AppRoutes: React.FC = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<RegistrationManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/badge-management'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<BadgeManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
