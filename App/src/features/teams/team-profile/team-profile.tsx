@@ -19,12 +19,11 @@ import {
 	GameDocument,
 	PlayerDocument,
 	TeamDocument,
-	BadgeDocument,
-	TeamBadgeDocument,
 	hasAssignedTeams,
 	getTeamRole,
 	formatTimestamp,
 } from '@/shared/utils'
+import { BadgeDocument, TeamBadgeDocument } from '@/types'
 import { TeamRosterPlayer } from './team-roster-player'
 import { TeamHistory } from './team-history'
 import { useSeasonsContext } from '@/providers'
@@ -86,7 +85,7 @@ export const TeamProfile = () => {
 	)
 
 	// Fetch team badges
-	const [teamBadgesSnapshot, teamBadgesLoading] = useCollection(
+	const [teamBadgesSnapshot] = useCollection(
 		teamBadgesQuery(teamDocumentSnapshot?.ref)
 	)
 
@@ -102,12 +101,12 @@ export const TeamProfile = () => {
 	const [teamBadges, setTeamBadges] = useState<ProcessedBadge[]>([])
 
 	useEffect(() => {
-		if (!teamBadgesSnapshot) {
-			setTeamBadges([])
-			return
-		}
-
 		const processBadges = async () => {
+			if (!teamBadgesSnapshot) {
+				setTeamBadges([])
+				return
+			}
+
 			const results = await Promise.all(
 				teamBadgesSnapshot.docs.map(async (teamBadgeDoc) => {
 					const teamBadgeData = teamBadgeDoc.data() as TeamBadgeDocument

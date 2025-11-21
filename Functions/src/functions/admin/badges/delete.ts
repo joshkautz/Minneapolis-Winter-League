@@ -81,7 +81,7 @@ export const deleteBadge = onCall<DeleteBadgeRequest>(
 
 			// Find all teams that have this badge using collectionGroup query
 			const teamBadgesQuery = firestore
-				.collectionGroup(Collections.TEAM_BADGES)
+				.collectionGroup(Collections.BADGES)
 				.where('badge', '==', badgeRef)
 
 			const teamBadgesSnapshot = await teamBadgesQuery.get()

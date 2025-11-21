@@ -5,11 +5,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import {
-	Collections,
-	BadgeDocument,
-	TeamDocument,
-} from '../../../types.js'
+import { Collections, BadgeDocument, TeamDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
@@ -77,9 +73,7 @@ export const revokeBadge = onCall<RevokeBadgeRequest>(
 			const team = teamDoc.data() as TeamDocument
 
 			// Check if team has this badge
-			const teamBadgeRef = teamRef
-				.collection(Collections.TEAM_BADGES)
-				.doc(badgeId)
+			const teamBadgeRef = teamRef.collection(Collections.BADGES).doc(badgeId)
 			const teamBadgeDoc = await teamBadgeRef.get()
 
 			if (!teamBadgeDoc.exists) {

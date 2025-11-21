@@ -60,7 +60,7 @@ export const getTeamBadgesCollectionRef = (
 	if (!teamRef) return undefined
 	return collection(
 		teamRef,
-		Collections.TEAM_BADGES
+		Collections.BADGES
 	) as CollectionReference<TeamBadgeDocument>
 }
 
@@ -96,7 +96,7 @@ export const getTeamBadgeRef = (
 	if (!teamRef || !badgeId) return undefined
 	return doc(
 		teamRef,
-		Collections.TEAM_BADGES,
+		Collections.BADGES,
 		badgeId
 	) as DocumentReference<TeamBadgeDocument>
 }
@@ -112,7 +112,7 @@ export const teamsWithBadgeQuery = (
 ): Query<TeamBadgeDocument> | undefined => {
 	if (!badgeRef) return undefined
 	return query(
-		collectionGroup(firestore, Collections.TEAM_BADGES),
+		collectionGroup(firestore, Collections.BADGES),
 		where('badge', '==', badgeRef)
 	) as Query<TeamBadgeDocument>
 }

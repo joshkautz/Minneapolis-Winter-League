@@ -9,7 +9,6 @@ import { logger } from 'firebase-functions/v2'
 import { Collections, BadgeDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import * as crypto from 'crypto'
 
 interface CreateBadgeRequest {
 	name: string
@@ -114,8 +113,10 @@ export const createBadge = onCall<CreateBadgeRequest>(
 			// Get user reference
 			const userRef = firestore.collection(Collections.PLAYERS).doc(auth!.uid)
 
-			// Generate unique badge ID
-			const badgeId = crypto.randomUUID()
+			// Create badge reference with auto-generated ID
+			const badgeRef = firestore.collection(Collections.BADGES).doc()
+			const badgeId = badgeRef.id
+
 			const now = FieldValue.serverTimestamp()
 
 			let imageUrl: string | null = null
@@ -160,8 +161,6 @@ export const createBadge = onCall<CreateBadgeRequest>(
 			}
 
 			// Create badge document
-			const badgeRef = firestore.collection(Collections.BADGES).doc(badgeId)
-
 			const badgeDocument: Omit<BadgeDocument, 'createdAt' | 'updatedAt'> & {
 				createdAt: FirebaseFirestore.FieldValue
 				updatedAt: FirebaseFirestore.FieldValue

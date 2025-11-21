@@ -81,9 +81,7 @@ export const awardBadge = onCall<AwardBadgeRequest>(
 			const team = teamDoc.data() as TeamDocument
 
 			// Check if team already has this badge
-			const teamBadgeRef = teamRef
-				.collection(Collections.TEAM_BADGES)
-				.doc(badgeId)
+			const teamBadgeRef = teamRef.collection(Collections.BADGES).doc(badgeId)
 			const teamBadgeDoc = await teamBadgeRef.get()
 
 			if (teamBadgeDoc.exists) {
@@ -136,10 +134,7 @@ export const awardBadge = onCall<AwardBadgeRequest>(
 				error: errorMessage,
 			})
 
-			throw new HttpsError(
-				'internal',
-				`Failed to award badge: ${errorMessage}`
-			)
+			throw new HttpsError('internal', `Failed to award badge: ${errorMessage}`)
 		}
 	}
 )

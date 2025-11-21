@@ -27,8 +27,9 @@ import { formatDistanceToNow } from 'date-fns'
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { allBadgesQuery } from '@/firebase/collections/badges'
-import { currentSeasonTeamsQuery } from '@/firebase/collections/teams'
-import { useSeasonsContext } from '@/shared/hooks/context/seasons-context'
+import { teamsBySeasonQuery } from '@/firebase/collections/teams'
+import { seasonsQuery } from '@/firebase/collections/seasons'
+import { useSeasonsContext } from '@/providers'
 import {
 	createBadgeViaFunction,
 	updateBadgeViaFunction,
@@ -36,7 +37,13 @@ import {
 	awardBadgeViaFunction,
 	revokeBadgeViaFunction,
 } from '@/firebase/collections/functions'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
 	PageContainer,
@@ -74,7 +81,7 @@ import {
 	BadgeDocument,
 	TeamDocument,
 	PlayerDocument,
-	TeamBadgeDocument,
+	SeasonDocument,
 } from '@/types'
 import { Badge } from '@/components/ui/badge'
 
@@ -100,9 +107,33 @@ export const BadgeManagement: React.FC = () => {
 	// Fetch all badges
 	const [badgesSnapshot, badgesLoading] = useCollection(allBadgesQuery())
 
-	// Fetch all teams for current season
+	// Fetch all seasons
+	const [seasonsSnapshot] = useCollection(seasonsQuery())
+	const seasons = seasonsSnapshot?.docs.map((doc) => ({
+		id: doc.id,
+		...doc.data(),
+	})) as (SeasonDocument & { id: string })[] | undefined
+
+	// Selected season for team queries
+	const [selectedSeasonId, setSelectedSeasonId] = useState<string>(
+		() => currentSeasonQueryDocumentSnapshot?.id || ''
+	)
+
+	// Update selected season when current season changes
+	useEffect(() => {
+		if (currentSeasonQueryDocumentSnapshot?.id && !selectedSeasonId) {
+			setSelectedSeasonId(currentSeasonQueryDocumentSnapshot.id)
+		}
+	}, [currentSeasonQueryDocumentSnapshot?.id, selectedSeasonId])
+
+	// Get the selected season's document reference for querying teams
+	const selectedSeasonRef = seasons
+		? seasonsSnapshot?.docs.find((doc) => doc.id === selectedSeasonId)
+		: undefined
+
+	// Fetch teams for selected season
 	const [teamsSnapshot, teamsLoading] = useCollection(
-		currentSeasonTeamsQuery(currentSeasonQueryDocumentSnapshot)
+		teamsBySeasonQuery(selectedSeasonRef?.ref)
 	)
 
 	const teams = teamsSnapshot?.docs.map((doc) => ({
@@ -186,7 +217,6 @@ export const BadgeManagement: React.FC = () => {
 	})
 
 	// Award badge form state
-	const [awardTeamId, setAwardTeamId] = useState<string>('')
 	const [teamBadges, setTeamBadges] = useState<Record<string, boolean>>({})
 	const [loadingTeamBadges, setLoadingTeamBadges] = useState(false)
 
@@ -201,7 +231,6 @@ export const BadgeManagement: React.FC = () => {
 			imageFile: null,
 			removeImage: false,
 		})
-		setAwardTeamId('')
 		setSelectedBadge(null)
 		setDialogMode('closed')
 	}
@@ -227,7 +256,6 @@ export const BadgeManagement: React.FC = () => {
 	// Open award dialog
 	const handleAward = (badge: ProcessedBadge) => {
 		setSelectedBadge(badge)
-		setAwardTeamId('')
 		setDialogMode('award')
 		// Load team badges for this badge
 		loadTeamBadges(badge.id)
@@ -335,7 +363,8 @@ export const BadgeManagement: React.FC = () => {
 
 				const result = await updateBadgeViaFunction({
 					badgeId: selectedBadge.id,
-					name: formData.name !== selectedBadge.name ? formData.name : undefined,
+					name:
+						formData.name !== selectedBadge.name ? formData.name : undefined,
 					description:
 						formData.description !== selectedBadge.description
 							? formData.description
@@ -419,18 +448,20 @@ export const BadgeManagement: React.FC = () => {
 	// Loading state
 	if (playerLoading || badgesLoading || isProcessing) {
 		return (
-			<PageContainer>
-				<div className='flex items-center justify-center min-h-[400px]'>
-					<LoadingSpinner size='lg' />
-				</div>
-			</PageContainer>
+			<div className='container mx-auto px-4 py-8'>
+				<Card>
+					<CardContent className='p-6 text-center'>
+						<LoadingSpinner size='lg' />
+					</CardContent>
+				</Card>
+			</div>
 		)
 	}
 
 	// Access denied
 	if (!isAdmin) {
 		return (
-			<PageContainer>
+			<div className='container mx-auto px-4 py-8'>
 				<Card>
 					<CardContent className='p-6 text-center'>
 						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
@@ -440,52 +471,63 @@ export const BadgeManagement: React.FC = () => {
 						<p className='text-muted-foreground'>
 							You don't have permission to access badge management.
 						</p>
-						<Button asChild className='mt-4'>
-							<Link to='/admin'>
-								<ArrowLeft className='h-4 w-4 mr-2' />
-								Back to Admin Dashboard
-							</Link>
-						</Button>
 					</CardContent>
 				</Card>
-			</PageContainer>
+			</div>
 		)
 	}
 
 	return (
-		<PageContainer>
-			<PageHeader>
-				<div className='flex items-center justify-between w-full'>
-					<div className='flex items-center gap-4'>
-						<Button asChild variant='outline' size='sm'>
-							<Link to='/admin'>
-								<ArrowLeft className='h-4 w-4 mr-2' />
-								Back to Admin
-							</Link>
-						</Button>
-						<div>
-							<div className='flex items-center gap-2'>
-								<Award className='h-6 w-6' />
-								<h1 className='text-3xl font-bold'>Badge Management</h1>
-							</div>
-							<p className='text-muted-foreground mt-1'>
-								Create and manage badges that can be awarded to teams
-							</p>
-						</div>
-					</div>
-					<Button onClick={handleCreate}>
-						<Plus className='h-4 w-4 mr-2' />
-						Create Badge
-					</Button>
-				</div>
-			</PageHeader>
+		<PageContainer withSpacing withGap>
+			<PageHeader
+				title='Badge Management'
+				description='Create and manage badges that can be awarded to teams for special achievements'
+				icon={Award}
+			/>
 
+			{/* Back to Dashboard */}
+			<div className='flex items-center justify-between gap-4'>
+				<Button variant='outline' asChild>
+					<Link to='/admin'>
+						<ArrowLeft className='h-4 w-4 mr-2' />
+						Back to Admin Dashboard
+					</Link>
+				</Button>
+				<Button onClick={handleCreate}>
+					<Plus className='h-4 w-4 mr-2' />
+					Create Badge
+				</Button>
+			</div>
+
+			{/* Badges Table */}
 			<Card>
 				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<Trophy className='h-5 w-5' />
-						All Badges ({badgesList.length})
-					</CardTitle>
+					<div className='flex items-center justify-between'>
+						<div>
+							<CardTitle className='flex items-center gap-2'>
+								<Trophy className='h-5 w-5' />
+								Badges ({badgesList.length})
+							</CardTitle>
+							<CardDescription>
+								View and manage all badges in the system
+							</CardDescription>
+						</div>
+						<Select
+							value={selectedSeasonId}
+							onValueChange={(value) => setSelectedSeasonId(value)}
+						>
+							<SelectTrigger>
+								<SelectValue placeholder='Filter by season' />
+							</SelectTrigger>
+							<SelectContent>
+								{seasons?.map((season) => (
+									<SelectItem key={season.id} value={season.id}>
+										{season.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
 				</CardHeader>
 				<CardContent>
 					{badgesList.length === 0 ? (
@@ -570,7 +612,10 @@ export const BadgeManagement: React.FC = () => {
 			</Card>
 
 			{/* Create/Edit Dialog */}
-			<Dialog open={dialogMode === 'create' || dialogMode === 'edit'} onOpenChange={() => resetForm()}>
+			<Dialog
+				open={dialogMode === 'create' || dialogMode === 'edit'}
+				onOpenChange={() => resetForm()}
+			>
 				<DialogContent className='max-w-2xl'>
 					<DialogHeader>
 						<DialogTitle>
@@ -621,15 +666,17 @@ export const BadgeManagement: React.FC = () => {
 
 							<div className='space-y-2'>
 								<Label htmlFor='image'>Badge Image</Label>
-								{selectedBadge?.imageUrl && !formData.imageFile && !formData.removeImage && (
-									<div className='mb-2'>
-										<img
-											src={selectedBadge.imageUrl}
-											alt={selectedBadge.name}
-											className='w-24 h-24 object-cover rounded'
-										/>
-									</div>
-								)}
+								{selectedBadge?.imageUrl &&
+									!formData.imageFile &&
+									!formData.removeImage && (
+										<div className='mb-2'>
+											<img
+												src={selectedBadge.imageUrl}
+												alt={selectedBadge.name}
+												className='w-24 h-24 object-cover rounded'
+											/>
+										</div>
+									)}
 								<Input
 									id='image'
 									type='file'
@@ -639,19 +686,21 @@ export const BadgeManagement: React.FC = () => {
 								<p className='text-sm text-muted-foreground'>
 									PNG, JPG, GIF, WEBP, or SVG. Max 5MB.
 								</p>
-								{dialogMode === 'edit' && selectedBadge?.imageUrl && !formData.removeImage && (
-									<Button
-										type='button'
-										variant='outline'
-										size='sm'
-										onClick={() =>
-											setFormData((prev) => ({ ...prev, removeImage: true }))
-										}
-									>
-										<X className='h-4 w-4 mr-2' />
-										Remove Current Image
-									</Button>
-								)}
+								{dialogMode === 'edit' &&
+									selectedBadge?.imageUrl &&
+									!formData.removeImage && (
+										<Button
+											type='button'
+											variant='outline'
+											size='sm'
+											onClick={() =>
+												setFormData((prev) => ({ ...prev, removeImage: true }))
+											}
+										>
+											<X className='h-4 w-4 mr-2' />
+											Remove Current Image
+										</Button>
+									)}
 								{formData.removeImage && (
 									<Badge variant='destructive'>Image will be removed</Badge>
 								)}
@@ -759,7 +808,9 @@ export const BadgeManagement: React.FC = () => {
 				onConfirm={confirmDelete}
 				title='Delete Badge'
 				description={`Are you sure you want to delete "${badgeToDelete?.name}"? This will also remove it from all teams that have been awarded this badge. This action cannot be undone.`}
-			/>
+			>
+				<></>
+			</DestructiveConfirmationDialog>
 		</PageContainer>
 	)
 }

@@ -37,7 +37,6 @@ export enum Collections {
 	RANKINGS_CALCULATED_ROUNDS = 'rankings-calculated-rounds',
 	SEASONS = 'seasons',
 	TEAMS = 'teams',
-	TEAM_BADGES = 'badges',
 	WAIVERS = 'waivers',
 }
 
