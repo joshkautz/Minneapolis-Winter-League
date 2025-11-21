@@ -361,18 +361,25 @@ export const BadgeManagement: React.FC = () => {
 					imageContentType = formData.imageFile.type
 				}
 
-				const result = await updateBadgeViaFunction({
+				// Prepare update payload
+				const updatePayload = {
 					badgeId: selectedBadge.id,
 					name:
-						formData.name !== selectedBadge.name ? formData.name : undefined,
+						formData.name.trim() !== selectedBadge.name
+							? formData.name.trim()
+							: undefined,
 					description:
-						formData.description !== selectedBadge.description
-							? formData.description
+						formData.description.trim() !== selectedBadge.description
+							? formData.description.trim()
 							: undefined,
 					imageBlob,
 					imageContentType,
 					removeImage: formData.removeImage,
-				})
+				}
+
+				console.log('Update payload:', updatePayload)
+
+				const result = await updateBadgeViaFunction(updatePayload)
 
 				toast.success(result.message)
 			}
@@ -380,9 +387,31 @@ export const BadgeManagement: React.FC = () => {
 			resetForm()
 		} catch (error) {
 			console.error('Error saving badge:', error)
-			toast.error(
-				error instanceof Error ? error.message : 'Failed to save badge'
-			)
+			console.error('Error details:', JSON.stringify(error, null, 2))
+
+			// Extract Firebase Functions error message
+			let errorMessage = 'Failed to save badge'
+			if (error && typeof error === 'object') {
+				// Check for Firebase Functions error structure
+				if ('code' in error && 'message' in error) {
+					// Firebase Functions error
+					errorMessage = String(error.message)
+					console.error('Firebase error code:', error.code)
+				} else if ('message' in error && typeof error.message === 'string') {
+					errorMessage = error.message
+				} else if ('details' in error && typeof error.details === 'string') {
+					errorMessage = error.details
+				}
+			} else if (error instanceof Error) {
+				errorMessage = error.message
+			}
+
+			toast.error(errorMessage, {
+				description:
+					dialogMode === 'create'
+						? 'Badge creation failed'
+						: 'Badge update failed',
+			})
 		} finally {
 			setIsSubmitting(false)
 		}
@@ -406,9 +435,18 @@ export const BadgeManagement: React.FC = () => {
 			setBadgeToDelete(null)
 		} catch (error) {
 			console.error('Error deleting badge:', error)
-			toast.error(
-				error instanceof Error ? error.message : 'Failed to delete badge'
-			)
+
+			// Extract Firebase Functions error message
+			let errorMessage = 'Failed to delete badge'
+			if (error && typeof error === 'object' && 'message' in error) {
+				errorMessage = String(error.message)
+			} else if (error instanceof Error) {
+				errorMessage = error.message
+			}
+
+			toast.error(errorMessage, {
+				description: 'Badge deletion failed',
+			})
 		}
 	}
 
@@ -439,9 +477,20 @@ export const BadgeManagement: React.FC = () => {
 			loadTeamBadges(selectedBadge.id)
 		} catch (error) {
 			console.error('Error toggling badge:', error)
-			toast.error(
-				error instanceof Error ? error.message : 'Failed to update badge award'
-			)
+
+			// Extract Firebase Functions error message
+			let errorMessage = 'Failed to update badge award'
+			if (error && typeof error === 'object' && 'message' in error) {
+				errorMessage = String(error.message)
+			} else if (error instanceof Error) {
+				errorMessage = error.message
+			}
+
+			toast.error(errorMessage, {
+				description: hasBadge
+					? 'Failed to revoke badge'
+					: 'Failed to award badge',
+			})
 		}
 	}
 
@@ -481,7 +530,7 @@ export const BadgeManagement: React.FC = () => {
 		<PageContainer withSpacing withGap>
 			<PageHeader
 				title='Badge Management'
-				description='Create and manage badges that can be awarded to teams for special achievements'
+				description='Create and manage badges that can be awarded to teams for special accomplishments'
 				icon={Award}
 			/>
 

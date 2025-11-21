@@ -134,7 +134,9 @@ export const TeamProfile = () => {
 				})
 			)
 
-			setTeamBadges(results.filter((badge) => badge !== null) as ProcessedBadge[])
+			setTeamBadges(
+				results.filter((badge) => badge !== null) as ProcessedBadge[]
+			)
 		}
 
 		processBadges()
@@ -203,70 +205,91 @@ export const TeamProfile = () => {
 					)}
 				</div>
 			</div>
+			{/* Karma and Badges Section */}
 			<div className='max-w-[1040px] mx-auto mb-4'>
 				<Card className='border-muted'>
-					<CardContent>
-						<div className='flex justify-center items-center gap-3'>
-							{teamDocumentSnapshot?.data()?.karma !== undefined &&
-							teamDocumentSnapshot.data()!.karma > 0 ? (
-								<Badge
-									variant='outline'
-									className='text-sm font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20 px-3 py-1.5'
-								>
-									<Sparkles className='h-4 w-4 mr-1.5' />
-									{teamDocumentSnapshot.data()!.karma} Karma
-								</Badge>
+					<CardContent className='pt-6'>
+						<div className='space-y-6'>
+							{/* Karma Display */}
+							<div className='flex justify-center items-center'>
+								{teamDocumentSnapshot?.data()?.karma !== undefined &&
+								teamDocumentSnapshot.data()!.karma > 0 ? (
+									<Badge
+										variant='outline'
+										className='text-sm font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20 px-3 py-1.5'
+									>
+										<Sparkles className='h-4 w-4 mr-1.5' />
+										{teamDocumentSnapshot.data()!.karma} Karma
+									</Badge>
+								) : null}
+							</div>
+
+							{/* Team Badges */}
+							{teamBadges.length > 0 ? (
+								<div className='space-y-4'>
+									<div className='flex items-center justify-center gap-2'>
+										<Award
+											className='h-5 w-5 text-amber-600'
+											aria-hidden='true'
+										/>
+										<h3 className='text-lg font-semibold'>Team Badges</h3>
+									</div>
+									<div
+										className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+										role='list'
+										aria-label='Team badges'
+									>
+										{teamBadges.map((badge) => (
+											<div
+												key={badge.id}
+												role='listitem'
+												className='flex flex-col items-center p-4 rounded-lg border border-muted bg-card hover:bg-accent/50 transition-colors focus-within:ring-2 focus-within:ring-amber-500 focus-within:ring-offset-2'
+												tabIndex={0}
+												aria-label={`${badge.name}: ${badge.description}`}
+											>
+												{badge.imageUrl ? (
+													<img
+														src={badge.imageUrl}
+														alt=''
+														role='presentation'
+														className='w-16 h-16 object-cover rounded-full mb-3'
+													/>
+												) : (
+													<div
+														className='w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center mb-3'
+														aria-hidden='true'
+													>
+														<Award className='h-8 w-8 text-amber-600' />
+													</div>
+												)}
+												<h4 className='font-semibold text-center mb-1 text-sm'>
+													{badge.name}
+												</h4>
+												<p className='text-xs text-muted-foreground text-center line-clamp-2'>
+													{badge.description}
+												</p>
+											</div>
+										))}
+									</div>
+								</div>
 							) : (
-								<p className='text-sm text-muted-foreground'>
-									No achievements yet
-								</p>
+								<div className='text-center py-8'>
+									<Award
+										className='h-12 w-12 mx-auto text-muted-foreground/50 mb-3'
+										aria-hidden='true'
+									/>
+									<p className='text-sm text-muted-foreground'>
+										No badges earned yet
+									</p>
+									<p className='text-xs text-muted-foreground mt-1'>
+										Badges are awarded for special achievements
+									</p>
+								</div>
 							)}
 						</div>
 					</CardContent>
 				</Card>
 			</div>
-
-			{/* Team Badges Section */}
-			{teamBadges.length > 0 && (
-				<div className='max-w-[1040px] mx-auto mb-4'>
-					<Card className='border-muted'>
-						<CardContent className='pt-6'>
-							<div className='space-y-4'>
-								<div className='flex items-center gap-2'>
-									<Award className='h-5 w-5 text-amber-600' />
-									<h3 className='text-lg font-semibold'>Team Badges</h3>
-								</div>
-								<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
-									{teamBadges.map((badge) => (
-										<div
-											key={badge.id}
-											className='flex flex-col items-center p-4 rounded-lg border border-muted bg-card hover:bg-accent/50 transition-colors'
-										>
-											{badge.imageUrl ? (
-												<img
-													src={badge.imageUrl}
-													alt={badge.name}
-													className='w-16 h-16 object-cover rounded-full mb-3'
-												/>
-											) : (
-												<div className='w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center mb-3'>
-													<Award className='h-8 w-8 text-amber-600' />
-												</div>
-											)}
-											<h4 className='font-semibold text-center mb-1'>
-												{badge.name}
-											</h4>
-											<p className='text-xs text-muted-foreground text-center line-clamp-2'>
-												{badge.description}
-											</p>
-										</div>
-									))}
-								</div>
-							</div>
-						</CardContent>
-					</Card>
-				</div>
-			)}
 
 			<div className='max-w-[1040px] mx-auto'>
 				<div className='flex justify-center items-start gap-4 flex-wrap mb-4'>

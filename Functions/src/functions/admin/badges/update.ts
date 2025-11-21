@@ -55,11 +55,10 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 
 		// Validate at least one field is being updated
 		if (
-			!name &&
-			!description &&
+			name === undefined &&
+			description === undefined &&
 			!imageBlob &&
-			!removeImage &&
-			imageContentType === undefined
+			!removeImage
 		) {
 			throw new HttpsError(
 				'invalid-argument',
@@ -68,7 +67,7 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 		}
 
 		// Validate name if provided
-		if (name !== undefined) {
+		if (name !== undefined && name !== null) {
 			if (name.trim().length < 3) {
 				throw new HttpsError(
 					'invalid-argument',
@@ -85,7 +84,7 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 		}
 
 		// Validate description if provided
-		if (description !== undefined) {
+		if (description !== undefined && description !== null) {
 			if (description.trim().length < 10) {
 				throw new HttpsError(
 					'invalid-argument',
@@ -153,11 +152,11 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 				updatedAt: FieldValue.serverTimestamp(),
 			}
 
-			if (name !== undefined) {
+			if (name !== undefined && name !== null) {
 				updates.name = name.trim()
 			}
 
-			if (description !== undefined) {
+			if (description !== undefined && description !== null) {
 				updates.description = description.trim()
 			}
 

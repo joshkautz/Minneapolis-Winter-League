@@ -178,10 +178,10 @@ export const Teams = () => {
 						<Sparkles className='h-5 w-5' />
 						<AlertTitle>Experimental Features Now Live!</AlertTitle>
 						<AlertDescription>
-							The Karma and Achievement systems are now live in an experimental
-							state. Help your fellow players find teams to earn karma points,
-							and unlock achievements from now through the end of the season!
-							Achievements can be seen on individual team pages.
+							The Karma system is now live in an experimental state. Help your
+							fellow players find teams to earn karma points, and unlock future
+							badges from now through the end of the season! Badges will be
+							visible on individual team pages.
 						</AlertDescription>
 					</Alert>
 					<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
