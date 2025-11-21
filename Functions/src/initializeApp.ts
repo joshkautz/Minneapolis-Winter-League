@@ -31,6 +31,12 @@ import {
  * 2. If no apps exist, initialize a new default app with `_initializeApp()`
  * 3. If an app already exists, get the existing default app with `getApp()`
  *
+ * **Emulator Best Practice:**
+ * When running in the Firebase Emulator Suite, we use a demo project ID
+ * (demo-minneapolis-winter-league) to prevent the "Application Default
+ * Credentials detected" warning and ensure we never accidentally connect
+ * to production services. The demo- prefix tells Firebase to use emulators only.
+ *
  * This makes Firebase initialization **idempotent** - safe to call multiple times.
  *
  * @returns void - Firebase Admin app is available globally after initialization
@@ -48,7 +54,17 @@ import {
  */
 export const initializeApp = (): void => {
 	if (getApps().length === 0) {
-		_initializeApp()
+		// When running in emulator, use demo project to avoid ADC warning
+		// and prevent accidental production access
+		const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true'
+
+		if (isEmulator) {
+			_initializeApp({
+				projectId: 'demo-minneapolis-winter-league',
+			})
+		} else {
+			_initializeApp()
+		}
 	} else {
 		getApp()
 	}
