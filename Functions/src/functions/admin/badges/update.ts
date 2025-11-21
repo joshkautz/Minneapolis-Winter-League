@@ -145,7 +145,9 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 			const existingBadge = badgeDoc.data() as BadgeDocument
 
 			// Prepare update object
-			const updates: Partial<BadgeDocument> & {
+			const updates: Partial<
+				Omit<BadgeDocument, 'updatedAt' | 'createdAt' | 'createdBy'>
+			> & {
 				updatedAt: FirebaseFirestore.FieldValue
 			} = {
 				updatedAt: FieldValue.serverTimestamp(),
