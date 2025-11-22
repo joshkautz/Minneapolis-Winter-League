@@ -440,7 +440,7 @@ export const TeamProfile = () => {
 						title={'Record'}
 						className={'flex-1 basis-[360px] shrink-0 min-w-[360px]'}
 					>
-						<div className='flex flex-col gap-3 py-2'>
+						<div className='flex flex-col gap-3 py-2 overflow-x-auto'>
 							{gamesQuerySnapshot?.docs.map((game, index) => {
 								const gameData = game.data()
 
@@ -472,7 +472,7 @@ export const TeamProfile = () => {
 								return (
 									<div
 										key={index}
-										className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pb-3 border-b last:border-b-0 last:pb-0'
+										className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pb-3 border-b last:border-b-0 last:pb-0 min-w-max sm:min-w-0'
 									>
 										{/* Date, Time, Field - Mobile: stacked, Desktop: inline */}
 										<div className='flex items-center gap-2 text-xs text-muted-foreground min-w-0'>
