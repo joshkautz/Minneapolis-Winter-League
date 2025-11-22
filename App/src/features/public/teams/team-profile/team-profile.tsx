@@ -278,7 +278,7 @@ export const TeamProfile = () => {
 					<NotificationCard
 						title={'Badges'}
 						description={`${allBadgesWithStats.filter((b) => b.isEarned).length} of ${allBadgesWithStats.length} earned`}
-						className={'flex-1 basis-full shrink-0 max-w-full'}
+						className={'flex-1 basis-full shrink-0 max-w-full min-w-[360px]'}
 					>
 						{allBadgesWithStats.length > 0 ? (
 							<div
@@ -413,7 +413,7 @@ export const TeamProfile = () => {
 								? `${teamDocumentSnapshot?.data()?.name} team players and captains`
 								: ``
 						}
-						className={'flex-1 basis-[360px] shrink-0'}
+						className={'flex-1 basis-[360px] shrink-0 min-w-[360px]'}
 						footerContent={
 							<div className='flex items-center justify-between gap-2'>
 								<div className='flex-1'>{registrationStatus}</div>
@@ -438,9 +438,9 @@ export const TeamProfile = () => {
 					</NotificationCard>
 					<NotificationCard
 						title={'Record'}
-						className={'flex-1 basis-[360px] shrink-0'}
+						className={'flex-1 basis-[360px] shrink-0 min-w-[360px]'}
 					>
-						<div className='flex flex-col gap-2 py-2'>
+						<div className='flex flex-col gap-3 py-2'>
 							{gamesQuerySnapshot?.docs.map((game, index) => {
 								const gameData = game.data()
 
@@ -463,35 +463,52 @@ export const TeamProfile = () => {
 									return null
 								}
 
+								const gameDate = gameData.date.toDate()
+								const opponentName =
+									teamsQuerySnapshot?.docs
+										.find((team) => team.id === opponentTeamRef.id)
+										?.data().name || 'TBD'
+
 								return (
 									<div
 										key={index}
-										className='flex items-center gap-3 w-full min-h-8'
+										className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pb-3 border-b last:border-b-0 last:pb-0'
 									>
-										<p className='text-sm text-muted-foreground shrink-0 w-20'>
-											{gameData.date.toDate().toLocaleDateString('en-US', {
-												month: 'numeric',
-												day: 'numeric',
-											})}
-										</p>
-										<p className='text-sm font-medium shrink-0 w-16 text-center'>
-											{result}
-										</p>
-										<Link
-											className='flex-1 min-w-0 text-sm transition-colors hover:text-primary truncate'
-											to={`/teams/${opponentTeamRef.id}`}
-											title={
-												teamsQuerySnapshot?.docs
-													.find((team) => team.id === opponentTeamRef.id)
-													?.data().name
-											}
-										>
-											{
-												teamsQuerySnapshot?.docs
-													.find((team) => team.id === opponentTeamRef.id)
-													?.data().name
-											}
-										</Link>
+										{/* Date, Time, Field - Mobile: stacked, Desktop: inline */}
+										<div className='flex items-center gap-2 text-xs text-muted-foreground min-w-0'>
+											<time
+												dateTime={gameDate.toISOString()}
+												className='shrink-0'
+											>
+												{gameDate.toLocaleDateString('en-US', {
+													month: 'short',
+													day: 'numeric',
+												})}
+											</time>
+											<span className='shrink-0'>•</span>
+											<span className='shrink-0'>
+												{gameDate.toLocaleTimeString('en-US', {
+													hour: 'numeric',
+													minute: '2-digit',
+												})}
+											</span>
+											<span className='shrink-0'>•</span>
+											<span className='shrink-0'>Field {gameData.field}</span>
+										</div>
+
+										{/* Score and Opponent - Mobile: full width, Desktop: flex */}
+										<div className='flex items-center gap-3 min-w-0 sm:flex-1'>
+											<p className='text-sm font-medium shrink-0 w-16 text-center'>
+												{result}
+											</p>
+											<Link
+												className='flex-1 min-w-0 text-sm transition-colors hover:text-primary truncate'
+												to={`/teams/${opponentTeamRef.id}`}
+												title={opponentName}
+											>
+												vs {opponentName}
+											</Link>
+										</div>
 									</div>
 								)
 							})}
