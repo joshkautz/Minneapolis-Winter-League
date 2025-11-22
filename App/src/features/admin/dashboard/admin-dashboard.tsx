@@ -212,12 +212,12 @@ export const AdminDashboard: React.FC = () => {
 						</Button>
 					</CardContent>
 				</Card>
-				{/* Teams Management */}
+				{/* Team Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
 							<Trash2 className='h-5 w-5 text-blue-600' />
-							Teams Management
+							Team Management
 						</CardTitle>
 					</CardHeader>
 					<CardContent className='space-y-4'>

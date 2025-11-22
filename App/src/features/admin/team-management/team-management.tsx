@@ -1,5 +1,5 @@
 /**
- * Teams Management admin component
+ * Team Management admin component
  *
  * Displays all teams for the current season and allows admin to manage them
  */
@@ -210,7 +210,9 @@ export const TeamManagement: React.FC = () => {
 	}
 
 	// Handle authentication and data loading
-	if (playerLoading || teamsLoading) {
+	// Only show full loading screen on initial page load (when player data is loading)
+	// For season changes, keep the page structure and show loading state in tables
+	if (playerLoading) {
 		return (
 			<div className='container mx-auto px-4 py-8'>
 				<Card>
@@ -244,7 +246,7 @@ export const TeamManagement: React.FC = () => {
 	return (
 		<PageContainer withSpacing withGap>
 			<PageHeader
-				title='Teams Management'
+				title='Team Management'
 				description='View and manage registered and unregistered teams by season'
 				icon={Shield}
 			/>
@@ -300,7 +302,14 @@ export const TeamManagement: React.FC = () => {
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
-					{unregisteredTeams.length === 0 ? (
+					{teamsLoading ? (
+						<div className='text-center pb-12'>
+							<RefreshCw className='h-12 w-12 text-muted-foreground mx-auto mb-2 animate-spin' />
+							<p className='text-lg font-medium text-muted-foreground'>
+								Loading Teams...
+							</p>
+						</div>
+					) : unregisteredTeams.length === 0 ? (
 						<div className='text-center pb-12'>
 							<CheckCircle className='h-12 w-12 text-muted-foreground mx-auto mb-2' />
 							<p className='text-lg font-medium text-muted-foreground'>
@@ -354,7 +363,11 @@ export const TeamManagement: React.FC = () => {
 														variant='outline'
 														size='sm'
 														onClick={() =>
-															handleManageBadgesClick(team.id, team.name, team.ref)
+															handleManageBadgesClick(
+																team.id,
+																team.name,
+																team.ref
+															)
 														}
 													>
 														<Award className='h-4 w-4 mr-2' />
@@ -388,7 +401,14 @@ export const TeamManagement: React.FC = () => {
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
-					{registeredTeams.length === 0 ? (
+					{teamsLoading ? (
+						<div className='text-center pb-12'>
+							<RefreshCw className='h-12 w-12 text-muted-foreground mx-auto mb-2 animate-spin' />
+							<p className='text-lg font-medium text-muted-foreground'>
+								Loading Teams...
+							</p>
+						</div>
+					) : registeredTeams.length === 0 ? (
 						<div className='text-center pb-12'>
 							<AlertTriangle className='h-12 w-12 text-muted-foreground mx-auto mb-2' />
 							<p className='text-lg font-medium text-muted-foreground'>
@@ -442,7 +462,11 @@ export const TeamManagement: React.FC = () => {
 														variant='outline'
 														size='sm'
 														onClick={() =>
-															handleManageBadgesClick(team.id, team.name, team.ref)
+															handleManageBadgesClick(
+																team.id,
+																team.name,
+																team.ref
+															)
 														}
 													>
 														<Award className='h-4 w-4 mr-2' />
