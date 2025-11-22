@@ -472,7 +472,7 @@ export const TeamProfile = () => {
 								return (
 									<div
 										key={index}
-										className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pb-3 border-b last:border-b-0 last:pb-0 min-w-max sm:min-w-0'
+										className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pb-3 border-b last:border-b-0 last:pb-0 min-w-max'
 									>
 										{/* Date, Time, Field - Mobile: stacked, Desktop: inline */}
 										<div className='flex items-center gap-2 text-xs text-muted-foreground min-w-0'>
