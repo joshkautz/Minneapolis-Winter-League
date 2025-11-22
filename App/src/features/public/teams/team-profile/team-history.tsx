@@ -31,7 +31,7 @@ export const TeamHistory = ({
 		<NotificationCard
 			title={'History'}
 			description={`${teamDocumentSnapshot?.data()?.name} past seasons`}
-			className={'w-full max-w-full'}
+			className={'flex-1 basis-full shrink-0 max-w-full min-w-[360px]'}
 		>
 			{historyQuerySnapshot?.docs
 				.sort((a, b) => {

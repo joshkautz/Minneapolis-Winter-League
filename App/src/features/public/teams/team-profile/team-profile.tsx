@@ -472,7 +472,7 @@ export const TeamProfile = () => {
 								return (
 									<div
 										key={index}
-										className='flex flex-wrap items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0 min-w-max'
+										className='flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0 min-w-max'
 									>
 										{/* Date, Time, Field */}
 										<div className='flex items-center gap-2 text-xs text-muted-foreground shrink-0'>
@@ -514,13 +514,13 @@ export const TeamProfile = () => {
 							})}
 						</div>
 					</NotificationCard>
+					{historyQuerySnapshot && (
+						<TeamHistory
+							teamDocumentSnapshot={teamDocumentSnapshot}
+							historyQuerySnapshot={historyQuerySnapshot}
+						/>
+					)}
 				</div>
-				{historyQuerySnapshot && (
-					<TeamHistory
-						teamDocumentSnapshot={teamDocumentSnapshot}
-						historyQuerySnapshot={historyQuerySnapshot}
-					/>
-				)}
 			</div>
 		</div>
 	)
