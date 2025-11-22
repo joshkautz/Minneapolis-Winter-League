@@ -237,7 +237,7 @@ export const TeamProfile = () => {
 
 	return (
 		<div className={'container'}>
-			<div className={'w-1/2 md:w-1/4 my-8 mx-auto group'}>
+			<div className='w-full max-w-64 my-8 mx-auto group'>
 				<div className='aspect-square w-full overflow-hidden rounded-lg bg-muted'>
 					{teamDocumentSnapshot?.data()?.logo && !imageError ? (
 						<img
