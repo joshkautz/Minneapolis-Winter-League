@@ -506,7 +506,7 @@ export const TeamProfile = () => {
 												to={`/teams/${opponentTeamRef.id}`}
 												title={opponentName}
 											>
-												vs {opponentName}
+												{opponentName}
 											</Link>
 										</div>
 									</div>
