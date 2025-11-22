@@ -161,9 +161,16 @@ export const createBadge = onCall<CreateBadgeRequest>(
 			}
 
 			// Create badge document
-			const badgeDocument: Omit<BadgeDocument, 'createdAt' | 'updatedAt'> & {
+			const badgeDocument: Omit<
+				BadgeDocument,
+				'createdAt' | 'updatedAt' | 'stats'
+			> & {
 				createdAt: FirebaseFirestore.FieldValue
 				updatedAt: FirebaseFirestore.FieldValue
+				stats: {
+					totalTeamsAwarded: number
+					lastUpdated: FirebaseFirestore.FieldValue
+				}
 			} = {
 				badgeId,
 				name: name.trim(),
@@ -173,6 +180,10 @@ export const createBadge = onCall<CreateBadgeRequest>(
 				createdBy: userRef,
 				createdAt: now,
 				updatedAt: now,
+				stats: {
+					totalTeamsAwarded: 0,
+					lastUpdated: now,
+				},
 			}
 
 			await badgeRef.set(badgeDocument)

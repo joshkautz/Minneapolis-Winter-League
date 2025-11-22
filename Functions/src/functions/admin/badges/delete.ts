@@ -114,6 +114,11 @@ export const deleteBadge = onCall<DeleteBadgeRequest>(
 			// Add badge deletion to the last batch
 			currentBatch.delete(badgeRef)
 
+			// Ensure the current batch is in the batches array
+			if (!batches.includes(currentBatch)) {
+				batches.push(currentBatch)
+			}
+
 			// Commit all batches
 			for (const batch of batches) {
 				await batch.commit()

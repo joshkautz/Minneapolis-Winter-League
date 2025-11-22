@@ -302,6 +302,13 @@ export interface BadgeDocument extends DocumentData {
 	createdBy: DocumentReference<PlayerDocument>
 	/** Timestamp when the badge was last updated */
 	updatedAt: Timestamp
+	/** Statistics about badge awards (optional for backward compatibility) */
+	stats?: {
+		/** Number of unique teamIds that have been awarded this badge */
+		totalTeamsAwarded: number
+		/** Timestamp when stats were last updated */
+		lastUpdated: Timestamp
+	}
 }
 
 /**

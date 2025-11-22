@@ -103,12 +103,60 @@ export const awardBadge = onCall<AwardBadgeRequest>(
 
 			await teamBadgeRef.set(teamBadgeDocument)
 
+			// Check if this is the first time this unique teamId has received this badge
+			// Query all teams with this teamId to see if any already had the badge
+			const teamsWithSameTeamId = await firestore
+				.collection(Collections.TEAMS)
+				.where('teamId', '==', team.teamId)
+				.get()
+
+			let shouldIncrementStats = true
+
+			// Check if any other team instance with same teamId already has this badge
+			for (const otherTeam of teamsWithSameTeamId.docs) {
+				// Skip the current team we just awarded to
+				if (otherTeam.id === teamId) {
+					continue
+				}
+
+				// Check if this other team has the badge
+				const otherTeamBadgeDoc = await otherTeam.ref
+					.collection(Collections.BADGES)
+					.doc(badgeId)
+					.get()
+
+				if (otherTeamBadgeDoc.exists) {
+					// Another team with same teamId already has this badge
+					shouldIncrementStats = false
+					break
+				}
+			}
+
+			// Increment the badge stats if this is the first time this teamId earned it
+			if (shouldIncrementStats) {
+				// Initialize stats if they don't exist (for badges created before stats field)
+				if (!badge.stats) {
+					await badgeRef.update({
+						stats: {
+							totalTeamsAwarded: 1,
+							lastUpdated: FieldValue.serverTimestamp(),
+						},
+					})
+				} else {
+					await badgeRef.update({
+						'stats.totalTeamsAwarded': FieldValue.increment(1),
+						'stats.lastUpdated': FieldValue.serverTimestamp(),
+					})
+				}
+			}
+
 			logger.info('Badge awarded to team successfully', {
 				badgeId,
 				badgeName: badge.name,
 				teamId,
 				teamName: team.name,
 				awardedBy: auth!.uid,
+				incrementedStats: shouldIncrementStats,
 			})
 
 			return {

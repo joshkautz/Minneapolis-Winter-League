@@ -3,7 +3,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, BadgeDocument, TeamDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
@@ -86,12 +86,50 @@ export const revokeBadge = onCall<RevokeBadgeRequest>(
 			// Delete team badge document
 			await teamBadgeRef.delete()
 
+			// Check if any other teams with the same teamId still have this badge
+			// Query all teams with this teamId
+			const teamsWithSameTeamId = await firestore
+				.collection(Collections.TEAMS)
+				.where('teamId', '==', team.teamId)
+				.get()
+
+			let shouldDecrementStats = true
+
+			// Check if any other team instance with same teamId still has this badge
+			for (const otherTeam of teamsWithSameTeamId.docs) {
+				// Skip the current team we just revoked from
+				if (otherTeam.id === teamId) {
+					continue
+				}
+
+				// Check if this other team still has the badge
+				const otherTeamBadgeDoc = await otherTeam.ref
+					.collection(Collections.BADGES)
+					.doc(badgeId)
+					.get()
+
+				if (otherTeamBadgeDoc.exists) {
+					// Another team with same teamId still has this badge
+					shouldDecrementStats = false
+					break
+				}
+			}
+
+			// Decrement the badge stats if no other teams with this teamId have the badge
+			if (shouldDecrementStats) {
+				await badgeRef.update({
+					'stats.totalTeamsAwarded': FieldValue.increment(-1),
+					'stats.lastUpdated': FieldValue.serverTimestamp(),
+				})
+			}
+
 			logger.info('Badge revoked from team successfully', {
 				badgeId,
 				badgeName: badge.name,
 				teamId,
 				teamName: team.name,
 				revokedBy: auth!.uid,
+				decrementedStats: shouldDecrementStats,
 			})
 
 			return {

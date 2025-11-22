@@ -126,14 +126,14 @@ service cloud.firestore {
     }
 
     match /badges/{badgeId} {
-      allow read: if true; // Public read access for all users
+      allow read: if true;
       allow create: if false; // Use createBadgeViaFunction
       allow update: if false; // Use updateBadgeViaFunction
       allow delete: if false; // Use deleteBadgeViaFunction
     }
 
     match /teams/{teamId}/badges/{badgeId} {
-      allow read: if true; // Public read access for all users
+      allow read: if true;
       allow create: if false; // Use awardBadgeViaFunction
       allow update: if false; // Badges are immutable once awarded
       allow delete: if false; // Use revokeBadgeViaFunction
