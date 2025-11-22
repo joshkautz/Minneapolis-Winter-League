@@ -440,7 +440,7 @@ export const TeamProfile = () => {
 						title={'Record'}
 						className={'flex-1 basis-[360px] shrink-0'}
 					>
-						<div className='flex flex-col items-end gap-2 py-2'>
+						<div className='flex flex-col gap-2 py-2'>
 							{gamesQuerySnapshot?.docs.map((game, index) => {
 								const gameData = game.data()
 
@@ -466,35 +466,32 @@ export const TeamProfile = () => {
 								return (
 									<div
 										key={index}
-										className={'flex items-center justify-between w-full h-8'}
+										className='flex items-center gap-3 w-full min-h-8'
 									>
-										<p
-											className={
-												'flex grow-1 select-none basis-[92px] shrink-0'
-											}
-										>
-											{gameData.date.toDate().toLocaleDateString()}
+										<p className='text-sm text-muted-foreground shrink-0 w-20'>
+											{gameData.date.toDate().toLocaleDateString('en-US', {
+												month: 'numeric',
+												day: 'numeric',
+											})}
 										</p>
-										<p
-											className={
-												'flex grow-1 text-center basis-[74px] shrink-0 select-none'
-											}
-										>
+										<p className='text-sm font-medium shrink-0 w-16 text-center'>
 											{result}
 										</p>
-										<div className='flex grow-3 shrink-0 basis-[100px] overflow-hidden text-clip'>
-											<Link
-												className='flex flex-col transition duration-300 group w-max'
-												to={`/teams/${opponentTeamRef.id}`}
-											>
-												{
-													teamsQuerySnapshot?.docs
-														.find((team) => team.id === opponentTeamRef.id)
-														?.data().name
-												}
-												<span className='max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-primary' />
-											</Link>
-										</div>
+										<Link
+											className='flex-1 min-w-0 text-sm transition-colors hover:text-primary truncate'
+											to={`/teams/${opponentTeamRef.id}`}
+											title={
+												teamsQuerySnapshot?.docs
+													.find((team) => team.id === opponentTeamRef.id)
+													?.data().name
+											}
+										>
+											{
+												teamsQuerySnapshot?.docs
+													.find((team) => team.id === opponentTeamRef.id)
+													?.data().name
+											}
+										</Link>
 									</div>
 								)
 							})}
