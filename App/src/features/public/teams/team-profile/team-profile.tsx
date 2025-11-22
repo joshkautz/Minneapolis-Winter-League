@@ -282,7 +282,7 @@ export const TeamProfile = () => {
 					>
 						{allBadgesWithStats.length > 0 ? (
 							<div
-								className='grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3 py-2'
+								className='flex flex-wrap gap-3 py-2'
 								role='list'
 								aria-label='Team badges'
 							>
@@ -291,7 +291,7 @@ export const TeamProfile = () => {
 										<HoverCardTrigger asChild>
 											<div
 												role='listitem'
-												className='relative flex items-center justify-center aspect-square cursor-pointer transition-transform hover:scale-110'
+												className='relative flex items-center justify-center w-16 h-16 cursor-pointer transition-transform hover:scale-110 flex-shrink-0'
 												aria-label={
 													badge.isEarned
 														? `${badge.name} - Earned`
