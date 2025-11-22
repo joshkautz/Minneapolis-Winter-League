@@ -278,7 +278,7 @@ export const TeamProfile = () => {
 					<NotificationCard
 						title={'Badges'}
 						description={`${allBadgesWithStats.filter((b) => b.isEarned).length} of ${allBadgesWithStats.length} earned`}
-						className={'flex-1 basis-full shrink-0'}
+						className={'flex-1 basis-full shrink-0 max-w-full'}
 					>
 						{allBadgesWithStats.length > 0 ? (
 							<div
