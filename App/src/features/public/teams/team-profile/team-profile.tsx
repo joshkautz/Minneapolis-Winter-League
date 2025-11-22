@@ -472,10 +472,10 @@ export const TeamProfile = () => {
 								return (
 									<div
 										key={index}
-										className='flex flex-col md:flex-row md:items-center gap-2 md:gap-3 pb-3 border-b last:border-b-0 last:pb-0 min-w-max'
+										className='flex flex-wrap items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0 min-w-max'
 									>
-										{/* Date, Time, Field - Mobile: stacked, Desktop: inline */}
-										<div className='flex items-center gap-2 text-xs text-muted-foreground min-w-0'>
+										{/* Date, Time, Field */}
+										<div className='flex items-center gap-2 text-xs text-muted-foreground shrink-0'>
 											<time
 												dateTime={gameDate.toISOString()}
 												className='shrink-0'
@@ -496,8 +496,8 @@ export const TeamProfile = () => {
 											<span className='shrink-0'>Field {gameData.field}</span>
 										</div>
 
-										{/* Score and Opponent - Mobile: full width, Desktop: flex */}
-										<div className='flex items-center gap-3 min-w-0 md:flex-1'>
+										{/* Score and Opponent */}
+										<div className='flex items-center gap-3 min-w-0 flex-1'>
 											<p className='text-sm font-medium shrink-0 w-16 text-center'>
 												{result}
 											</p>
