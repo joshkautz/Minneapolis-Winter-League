@@ -24,7 +24,10 @@ import { Link } from 'react-router-dom'
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { currentSeasonTeamsQuery } from '@/firebase/collections/teams'
-import { deleteUnregisteredTeamViaFunction } from '@/firebase/collections/functions'
+import {
+	deleteUnregisteredTeamViaFunction,
+	deleteTeamViaFunction,
+} from '@/firebase/collections/functions'
 import { seasonsQuery } from '@/firebase/collections/seasons'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -105,6 +108,7 @@ export const TeamManagement: React.FC = () => {
 		id: string
 		name: string
 		rosterSize: number
+		isRegistered: boolean
 	} | null>(null)
 	const [isDeleting, setIsDeleting] = useState(false)
 
@@ -143,11 +147,15 @@ export const TeamManagement: React.FC = () => {
 			.sort((a, b) => a.name.localeCompare(b.name))
 	}, [teamsSnapshot])
 
-	const handleDeleteClick = (team: TeamDocument & { id: string }) => {
+	const handleDeleteClick = (
+		team: TeamDocument & { id: string },
+		isRegistered: boolean
+	) => {
 		setTeamToDelete({
 			id: team.id,
 			name: team.name,
 			rosterSize: team.roster?.length || 0,
+			isRegistered,
 		})
 	}
 
@@ -168,18 +176,26 @@ export const TeamManagement: React.FC = () => {
 
 		setIsDeleting(true)
 		try {
-			const result = await deleteUnregisteredTeamViaFunction({
-				teamId: teamToDelete.id,
-			})
-
-			toast.success(result.message, {
-				description: `${result.playersRemoved} player${result.playersRemoved !== 1 ? 's' : ''} removed from team`,
-			})
+			if (teamToDelete.isRegistered) {
+				// For registered teams, use the generic delete function
+				await deleteTeamViaFunction(teamToDelete.id)
+				toast.success('Team deleted successfully', {
+					description: `${teamToDelete.name} has been permanently deleted`,
+				})
+			} else {
+				// For unregistered teams, use the specialized function with detailed response
+				const result = await deleteUnregisteredTeamViaFunction({
+					teamId: teamToDelete.id,
+				})
+				toast.success(result.message, {
+					description: `${result.playersRemoved} player${result.playersRemoved !== 1 ? 's' : ''} removed from team`,
+				})
+			}
 
 			// Close dialog
 			setTeamToDelete(null)
 		} catch (error: unknown) {
-			console.error('Error deleting unregistered team:', error)
+			console.error('Error deleting team:', error)
 
 			// Extract error message from Firebase Functions error
 			let errorMessage = 'Failed to delete team. Please try again.'
@@ -347,7 +363,7 @@ export const TeamManagement: React.FC = () => {
 													<Button
 														variant='destructive'
 														size='sm'
-														onClick={() => handleDeleteClick(team)}
+														onClick={() => handleDeleteClick(team, false)}
 													>
 														<Trash2 className='h-4 w-4 mr-2' />
 														Delete Team
@@ -421,16 +437,26 @@ export const TeamManagement: React.FC = () => {
 												</Badge>
 											</TableCell>
 											<TableCell className='text-right'>
-												<Button
-													variant='outline'
-													size='sm'
-													onClick={() =>
-														handleManageBadgesClick(team.id, team.name, team.ref)
-													}
-												>
-													<Award className='h-4 w-4 mr-2' />
-													Badges
-												</Button>
+												<div className='flex items-center justify-end gap-2'>
+													<Button
+														variant='outline'
+														size='sm'
+														onClick={() =>
+															handleManageBadgesClick(team.id, team.name, team.ref)
+														}
+													>
+														<Award className='h-4 w-4 mr-2' />
+														Badges
+													</Button>
+													<Button
+														variant='destructive'
+														size='sm'
+														onClick={() => handleDeleteClick(team, true)}
+													>
+														<Trash2 className='h-4 w-4 mr-2' />
+														Delete Team
+													</Button>
+												</div>
 											</TableCell>
 										</TableRow>
 									))}
