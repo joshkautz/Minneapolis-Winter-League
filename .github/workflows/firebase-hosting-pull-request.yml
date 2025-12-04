@@ -23,24 +23,9 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Debug prettier version
-        working-directory: ./App
-        run: |
-          echo "Prettier version:"
-          npx prettier --version
-          echo "===== FOOTER.TSX DIFF ====="
-          npx prettier src/features/home/footer.tsx > /tmp/formatted.tsx
-          diff src/features/home/footer.tsx /tmp/formatted.tsx || true
-          echo "===== USE-USER-STATUS.TS DIFF ====="
-          npx prettier src/shared/hooks/use-user-status.ts > /tmp/formatted.ts
-          diff src/shared/hooks/use-user-status.ts /tmp/formatted.ts || true
-          echo "===== PRETTIER CONFIG ====="
-          cat .prettierrc
 
       - name: Format App
         working-directory: ./App
