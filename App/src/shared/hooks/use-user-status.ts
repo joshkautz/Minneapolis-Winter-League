@@ -15,34 +15,20 @@ export const useUserStatus = () => {
 	} = useAuthContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
-	// Loading states
-	const isLoading = useMemo(
-		() =>
-			Boolean(
-				(!authStateUser &&
-					authStateLoading &&
-					!authenticatedUserSnapshot &&
-					authenticatedUserSnapshotLoading) ||
-				(!authStateUser &&
-					authStateLoading &&
-					!authenticatedUserSnapshot &&
-					!authenticatedUserSnapshotLoading) ||
-				(authStateUser &&
-					!authStateLoading &&
-					!authenticatedUserSnapshot &&
-					!authenticatedUserSnapshotLoading) ||
-				(authStateUser &&
-					!authStateLoading &&
-					!authenticatedUserSnapshot &&
-					authenticatedUserSnapshotLoading)
-			),
-		[
-			authStateUser,
-			authStateLoading,
-			authenticatedUserSnapshot,
-			authenticatedUserSnapshotLoading,
-		]
-	)
+	// Loading states - we're loading if:
+	// 1. Auth state is still loading (no user yet)
+	// 2. OR we have a user but no snapshot yet (snapshot still loading)
+	const isLoading = useMemo(() => {
+		// Still determining auth state
+		if (authStateLoading && !authStateUser) {
+			return true
+		}
+		// Have user but snapshot not yet loaded
+		if (authStateUser && !authenticatedUserSnapshot) {
+			return true
+		}
+		return false
+	}, [authStateUser, authStateLoading, authenticatedUserSnapshot])
 
 	// Get current season data for the user
 	const currentSeasonData = useMemo(
