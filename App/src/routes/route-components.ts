@@ -82,4 +82,7 @@ export const ManageTeam = lazyImport(
 )
 
 // Error pages
-export const NotFound = lazyImport(() => import('@/pages'), 'NotFound')
+export const NotFound = lazyImport(
+	() => import('@/features/not-found'),
+	'NotFound'
+)
