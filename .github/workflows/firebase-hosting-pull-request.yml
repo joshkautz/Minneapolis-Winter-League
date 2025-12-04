@@ -29,7 +29,9 @@ jobs:
 
       - name: Format App
         working-directory: ./App
-        run: npm run format:check
+        run: |
+          npm run format:fix
+          git diff --exit-code || (echo "::error::Files were not formatted correctly. Please run 'npm run format:fix' locally and commit the changes." && exit 1)
 
       - name: Lint App
         working-directory: ./App
