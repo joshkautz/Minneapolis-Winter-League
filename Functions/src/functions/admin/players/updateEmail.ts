@@ -224,7 +224,7 @@ export const updatePlayerEmail = functions
 					playerId,
 					oldEmail,
 					newEmail: trimmedNewEmail,
-					updatedBy: context.auth!.uid,
+					updatedBy: auth?.uid,
 					timestamp: new Date().toISOString(),
 				})
 
@@ -238,7 +238,7 @@ export const updatePlayerEmail = functions
 				functions.logger.error('Error updating player email', {
 					playerId,
 					newEmail: trimmedNewEmail,
-					adminUserId: context.auth!.uid,
+					adminUserId: auth?.uid,
 					error: error instanceof Error ? error.message : 'Unknown error',
 					stack: error instanceof Error ? error.stack : undefined,
 				})

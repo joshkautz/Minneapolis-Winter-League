@@ -23,6 +23,7 @@ import {
 	RankingsCalculationDocument,
 	GameDocument,
 	SeasonDocument,
+	Timestamp,
 } from '@/types'
 import { logger } from '@/shared/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -246,7 +247,7 @@ export const PlayerRankingsAdmin: React.FC = () => {
 		)
 	}
 
-	const formatDate = (timestamp: any) => {
+	const formatDate = (timestamp: Timestamp | null | undefined) => {
 		if (!timestamp) return 'N/A'
 		try {
 			return timestamp.toDate().toLocaleString()
@@ -255,7 +256,7 @@ export const PlayerRankingsAdmin: React.FC = () => {
 		}
 	}
 
-	const formatGameDate = (date: any) => {
+	const formatGameDate = (date: Timestamp | null | undefined) => {
 		try {
 			if (date && typeof date.toDate === 'function') {
 				return date.toDate().toLocaleDateString()
@@ -267,7 +268,7 @@ export const PlayerRankingsAdmin: React.FC = () => {
 		}
 	}
 
-	const formatGameTime = (date: any) => {
+	const formatGameTime = (date: Timestamp | null | undefined) => {
 		try {
 			if (date && typeof date.toDate === 'function') {
 				return date.toDate().toLocaleTimeString()
@@ -279,7 +280,10 @@ export const PlayerRankingsAdmin: React.FC = () => {
 		}
 	}
 
-	const formatDuration = (startTime: any, endTime: any) => {
+	const formatDuration = (
+		startTime: Timestamp | null | undefined,
+		endTime: Timestamp | null | undefined
+	) => {
 		if (!startTime) return 'N/A'
 
 		try {

@@ -547,31 +547,26 @@ export const updatePlayerAdmin = functions
 							)
 
 							if (seasonUpdate) {
-								// Track what changed
-								const seasonChange: SeasonChanges = {
-									seasonId: seasonUpdate.seasonId,
-									seasonName: seasonNames.get(seasonUpdate.seasonId),
-									updated: true,
-									changes: {},
-								}
+								// Track what changed - initialize changes as non-optional object
+								const changes: NonNullable<SeasonChanges['changes']> = {}
 
 								// Track individual field changes
 								if (seasonUpdate.captain !== currentSeason.captain) {
-									seasonChange.changes!.captain = {
+									changes.captain = {
 										from: currentSeason.captain,
 										to: seasonUpdate.captain,
 									}
 								}
 
 								if (seasonUpdate.paid !== currentSeason.paid) {
-									seasonChange.changes!.paid = {
+									changes.paid = {
 										from: currentSeason.paid,
 										to: seasonUpdate.paid,
 									}
 								}
 
 								if (seasonUpdate.signed !== currentSeason.signed) {
-									seasonChange.changes!.signed = {
+									changes.signed = {
 										from: currentSeason.signed,
 										to: seasonUpdate.signed,
 									}
@@ -580,7 +575,7 @@ export const updatePlayerAdmin = functions
 								const oldBanned = currentSeason.banned ?? false
 								const newBanned = seasonUpdate.banned ?? oldBanned
 								if (newBanned !== oldBanned) {
-									seasonChange.changes!.banned = {
+									changes.banned = {
 										from: oldBanned,
 										to: newBanned,
 									}
@@ -590,7 +585,7 @@ export const updatePlayerAdmin = functions
 								const newLookingForTeam =
 									seasonUpdate.lookingForTeam ?? oldLookingForTeam
 								if (newLookingForTeam !== oldLookingForTeam) {
-									seasonChange.changes!.lookingForTeam = {
+									changes.lookingForTeam = {
 										from: oldLookingForTeam,
 										to: newLookingForTeam,
 									}
@@ -599,14 +594,20 @@ export const updatePlayerAdmin = functions
 								const oldTeamId = currentSeason.team?.id || null
 								const newTeamId = seasonUpdate.teamId
 								if (oldTeamId !== newTeamId) {
-									seasonChange.changes!.team = {
+									changes.team = {
 										from: oldTeamId,
 										to: newTeamId,
 									}
 								}
 
 								// Only add to changes if something actually changed
-								if (Object.keys(seasonChange.changes!).length > 0) {
+								if (Object.keys(changes).length > 0) {
+									const seasonChange: SeasonChanges = {
+										seasonId: seasonUpdate.seasonId,
+										seasonName: seasonNames.get(seasonUpdate.seasonId),
+										updated: true,
+										changes,
+									}
 									seasonChanges.push(seasonChange)
 								}
 

@@ -278,7 +278,11 @@ export const NewsManagement: React.FC = () => {
 
 			handleCloseDialog()
 		} catch (error) {
-			console.error('Error saving news post:', error)
+			logger.error(
+				'Error saving news post',
+				error instanceof Error ? error : undefined,
+				{ component: 'NewsManagement', action: 'saveNews' }
+			)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to save news post'
 			)
@@ -298,7 +302,11 @@ export const NewsManagement: React.FC = () => {
 			toast.success(result.message)
 			setDeletingNewsId(null)
 		} catch (error) {
-			console.error('Error deleting news post:', error)
+			logger.error(
+				'Error deleting news post',
+				error instanceof Error ? error : undefined,
+				{ component: 'NewsManagement', action: 'deleteNews' }
+			)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to delete news post'
 			)
