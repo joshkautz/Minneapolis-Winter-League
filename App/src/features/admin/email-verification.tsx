@@ -36,7 +36,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { PageContainer, PageHeader } from '@/shared/components'
-import { Collections, type PlayerDocument } from '@/shared/utils'
+import { Collections, type PlayerDocument, logger } from '@/shared/utils'
 
 export const EmailVerification: React.FC = () => {
 	const [user] = useAuthState(auth)
@@ -139,7 +139,11 @@ export const EmailVerification: React.FC = () => {
 				// Keep player selected and search term intact
 			}
 		} catch (error: unknown) {
-			console.error('Error verifying user email:', error)
+			logger.error(
+				'Error verifying user email',
+				error instanceof Error ? error : undefined,
+				{ component: 'EmailVerification', action: 'verifyEmail' }
+			)
 
 			// Extract error message from Firebase Functions error
 			let errorMessage = 'Failed to verify email. Please try again.'

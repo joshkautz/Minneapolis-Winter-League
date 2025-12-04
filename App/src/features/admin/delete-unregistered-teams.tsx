@@ -47,6 +47,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { TeamDocument } from '@/types'
 import { useSeasonsContext } from '@/providers'
+import { logger } from '@/shared/utils'
 
 export const TeamsManagement: React.FC = () => {
 	const [user] = useAuthState(auth)
@@ -119,7 +120,11 @@ export const TeamsManagement: React.FC = () => {
 			// Close dialog
 			setTeamToDelete(null)
 		} catch (error: unknown) {
-			console.error('Error deleting unregistered team:', error)
+			logger.error(
+				'Error deleting unregistered team',
+				error instanceof Error ? error : undefined,
+				{ component: 'TeamsManagement', action: 'deleteTeam' }
+			)
 
 			// Extract error message from Firebase Functions error
 			let errorMessage = 'Failed to delete team. Please try again.'

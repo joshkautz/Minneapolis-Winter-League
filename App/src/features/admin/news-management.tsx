@@ -66,6 +66,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { NewsDocument, PlayerDocument, SeasonDocument } from '@/types'
+import { logger } from '@/shared/utils'
 
 interface ProcessedNews {
 	id: string
@@ -166,7 +167,11 @@ export const NewsManagement: React.FC = () => {
 							updatedAt: newsData.updatedAt.toDate(),
 						} as ProcessedNews
 					} catch (error) {
-						console.error('Error processing news post', newsId, error)
+						logger.error(
+							'Error processing news post',
+							error instanceof Error ? error : undefined,
+							{ component: 'NewsManagement', action: 'processNews', newsId }
+						)
 						return null
 					}
 				})
