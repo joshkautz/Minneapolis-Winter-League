@@ -13,7 +13,6 @@ export default defineConfig({
 			'@/features': path.resolve(__dirname, './src/features'),
 			'@/shared': path.resolve(__dirname, './src/shared'),
 			'@/providers': path.resolve(__dirname, './src/providers'),
-			'@/pages': path.resolve(__dirname, './src/pages'),
 			'@/routes': path.resolve(__dirname, './src/routes'),
 			'@/firebase': path.resolve(__dirname, './src/firebase'),
 			'@/components': path.resolve(__dirname, './src/components'),
