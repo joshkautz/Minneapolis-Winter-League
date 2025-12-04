@@ -22,11 +22,11 @@ jobs:
       - name: Set Node version
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
+          cache: 'npm'
 
       - name: Install dependencies
-        working-directory: ./App
-        run: npm install
+        run: npm ci
 
       - name: Format App
         working-directory: ./App
@@ -64,10 +64,10 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+          cache: 'npm'
 
       - name: Install dependencies
-        working-directory: ./Functions
-        run: npm install
+        run: npm ci
 
       - name: Format Functions
         working-directory: ./Functions
