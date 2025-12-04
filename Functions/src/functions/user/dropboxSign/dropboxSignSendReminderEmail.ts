@@ -54,7 +54,7 @@ export const dropboxSignSendReminderEmail = functions
 				// Validate authentication
 				validateAuthentication(context.auth)
 
-				const userId = context.auth!.uid
+				const userId = context.auth?.uid ?? ''
 				logger.info('Starting reminder email process', {
 					userId,
 					timestamp: new Date().toISOString(),
