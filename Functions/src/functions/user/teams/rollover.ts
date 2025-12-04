@@ -34,7 +34,7 @@ export const rolloverTeam = functions
 			validateAuthentication(context.auth)
 
 			const { originalTeamId, seasonId, timezone } = data
-			const userId = context.auth!.uid
+			const userId = context.auth?.uid ?? ''
 
 			if (!originalTeamId || !seasonId) {
 				throw new functions.https.HttpsError(
@@ -56,7 +56,13 @@ export const rolloverTeam = functions
 					throw new functions.https.HttpsError('not-found', 'Invalid season ID')
 				}
 
-				const seasonData = seasonDoc.data()!
+				const seasonData = seasonDoc.data()
+				if (!seasonData) {
+					throw new functions.https.HttpsError(
+						'internal',
+						'Unable to retrieve season data'
+					)
+				}
 				const now = Timestamp.now()
 
 				// Get player document (needed for both admin check and later operations)

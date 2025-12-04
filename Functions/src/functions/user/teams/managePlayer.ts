@@ -36,7 +36,7 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 		validateAuthentication(request.auth)
 
 		const { teamId, playerId, action } = request.data
-		const userId = request.auth!.uid
+		const userId = request.auth?.uid ?? ''
 
 		if (!teamId || !playerId || !action) {
 			throw new HttpsError(
