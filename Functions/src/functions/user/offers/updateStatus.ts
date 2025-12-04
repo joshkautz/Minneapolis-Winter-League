@@ -229,7 +229,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 				// If accepted, the onOfferUpdated trigger will handle adding player to team
 				logger.info(`Offer accepted: ${offerId}`, {
 					type: offerData.type,
-					respondedBy: auth!.uid,
+					respondedBy: userId,
 				})
 
 				return {
@@ -251,7 +251,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 			logger.error('Error updating offer status:', {
 				offerId,
 				status,
-				userId: auth!.uid,
+				userId: auth?.uid,
 				error: errorMessage,
 			})
 
