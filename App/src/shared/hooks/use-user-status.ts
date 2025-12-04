@@ -23,18 +23,18 @@ export const useUserStatus = () => {
 					authStateLoading &&
 					!authenticatedUserSnapshot &&
 					authenticatedUserSnapshotLoading) ||
-					(!authStateUser &&
-						authStateLoading &&
-						!authenticatedUserSnapshot &&
-						!authenticatedUserSnapshotLoading) ||
-					(authStateUser &&
-						!authStateLoading &&
-						!authenticatedUserSnapshot &&
-						!authenticatedUserSnapshotLoading) ||
-					(authStateUser &&
-						!authStateLoading &&
-						!authenticatedUserSnapshot &&
-						authenticatedUserSnapshotLoading)
+				(!authStateUser &&
+					authStateLoading &&
+					!authenticatedUserSnapshot &&
+					!authenticatedUserSnapshotLoading) ||
+				(authStateUser &&
+					!authStateLoading &&
+					!authenticatedUserSnapshot &&
+					!authenticatedUserSnapshotLoading) ||
+				(authStateUser &&
+					!authStateLoading &&
+					!authenticatedUserSnapshot &&
+					authenticatedUserSnapshotLoading)
 			),
 		[
 			authStateUser,
