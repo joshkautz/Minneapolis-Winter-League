@@ -40,9 +40,11 @@ export const ManageTeamRequestCard = () => {
 						description: 'you requested to join',
 					})
 				})
-				.catch((error: any) => {
+				.catch((error: unknown) => {
 					// Firebase Functions errors have a message property
-					const errorMessage = error?.message || 'Failed to send request'
+					const firebaseError = error as { message?: string }
+					const errorMessage =
+						firebaseError?.message || 'Failed to send request'
 					toast.error('Unable to send request', {
 						description: errorMessage,
 					})

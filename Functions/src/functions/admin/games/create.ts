@@ -305,7 +305,7 @@ export const createGame = functions
 					gameId: gameRef.id,
 					field,
 					timestamp,
-					createdBy: context.auth!.uid,
+					createdBy: auth?.uid,
 				})
 
 				return {
@@ -315,7 +315,7 @@ export const createGame = functions
 				}
 			} catch (error) {
 				functions.logger.error('Error creating game', {
-					adminUserId: context.auth!.uid,
+					adminUserId: auth?.uid,
 					error: error instanceof Error ? error.message : 'Unknown error',
 					stack: error instanceof Error ? error.stack : undefined,
 				})

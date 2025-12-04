@@ -42,7 +42,7 @@ export const getFileMetadata = onCall(
 			const [metadata] = await file.getMetadata()
 
 			logger.info('Retrieved file metadata', {
-				uid: request.auth!.uid,
+				uid: request.auth?.uid,
 				filePath,
 				size: metadata.size,
 				contentType: metadata.contentType,

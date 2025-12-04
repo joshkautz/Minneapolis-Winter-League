@@ -34,7 +34,7 @@ export const updateTeam = onCall<EditTeamRequest>(
 
 		const { teamId, name, logo, storagePath, logoBlob, logoContentType } =
 			request.data
-		const userId = request.auth!.uid
+		const userId = request.auth?.uid ?? ''
 
 		if (!teamId) {
 			throw new Error('Team ID is required')

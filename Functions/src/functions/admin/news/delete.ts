@@ -58,7 +58,7 @@ export const deleteNews = onCall<DeleteNewsRequest>(
 
 			logger.info('News post deleted successfully', {
 				newsId,
-				deletedBy: auth!.uid,
+				deletedBy: auth?.uid,
 			})
 
 			return {
@@ -78,7 +78,7 @@ export const deleteNews = onCall<DeleteNewsRequest>(
 
 			logger.error('Error deleting news post:', {
 				newsId: data.newsId,
-				userId: auth!.uid,
+				userId: auth?.uid,
 				error: errorMessage,
 			})
 

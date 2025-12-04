@@ -46,12 +46,13 @@ export const updatePlayer = functions
 			validateBasicAuthentication(auth)
 
 			const { playerId, firstname, lastname } = data
+			const userId = auth?.uid ?? ''
 
 			// Determine target player ID (defaults to authenticated user)
-			const targetPlayerId = playerId || auth!.uid
+			const targetPlayerId = playerId || userId
 
 			// Check if user is trying to update someone else's profile
-			if (targetPlayerId !== auth!.uid) {
+			if (targetPlayerId !== userId) {
 				// Only admins can update other players
 				const firestore = getFirestore()
 				await validateAdminUser(auth, firestore)
@@ -114,7 +115,7 @@ export const updatePlayer = functions
 					`Successfully updated player: ${targetPlayerId}`,
 					{
 						updatedFields: Object.keys(updateData),
-						updatedBy: auth!.uid,
+						updatedBy: userId,
 					}
 				)
 
@@ -126,7 +127,7 @@ export const updatePlayer = functions
 			} catch (error) {
 				functions.logger.error('Error updating player:', {
 					targetPlayerId,
-					updatedBy: auth!.uid,
+					updatedBy: userId,
 					error: error instanceof Error ? error.message : 'Unknown error',
 				})
 

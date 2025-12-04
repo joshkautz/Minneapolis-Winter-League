@@ -29,6 +29,7 @@ export function isArray<T>(value: unknown): value is T[] {
 	return Array.isArray(value)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- Generic function type guard needs broad Function type
 export function isFunction(value: unknown): value is Function {
 	return typeof value === 'function'
 }
@@ -36,7 +37,7 @@ export function isFunction(value: unknown): value is Function {
 export function isPromise<T = unknown>(value: unknown): value is Promise<T> {
 	return (
 		value instanceof Promise ||
-		(isObject(value) && isFunction((value as any).then))
+		(isObject(value) && 'then' in value && isFunction(value.then))
 	)
 }
 
@@ -125,6 +126,7 @@ export function assertIsArray<T>(
 export function assertIsFunction(
 	value: unknown,
 	message?: string
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type -- Generic function assertion needs broad Function type
 ): asserts value is Function {
 	if (!isFunction(value)) {
 		throw new TypeError(message || 'Value must be a function')
@@ -160,6 +162,7 @@ export function isReactElement(value: unknown): value is React.ReactElement {
 
 export function isReactComponent(
 	value: unknown
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- React.ComponentType requires any for generic component props
 ): value is React.ComponentType<any> {
 	return (
 		isFunction(value) ||

@@ -6,6 +6,7 @@ import { useSeasonsContext } from '@/providers'
 import { newsQueryBySeason } from '@/firebase/collections/news'
 import { NewsDocument } from '@/types'
 import { PageContainer, PageHeader, LoadingSpinner } from '@/shared/components'
+import { logger } from '@/shared/utils'
 import { NewsCard } from './news-card'
 import { NewsEmptyState } from './news-empty-state'
 
@@ -87,7 +88,7 @@ export const News = () => {
 				setHasMore(false)
 			}
 		} catch (err) {
-			console.error('Error loading more news:', err)
+			logger.error('Error loading more news:', err)
 		} finally {
 			setIsLoadingMore(false)
 		}

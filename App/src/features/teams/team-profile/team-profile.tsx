@@ -148,14 +148,13 @@ export const TeamProfile = () => {
 				<Card className='border-muted'>
 					<CardContent>
 						<div className='flex justify-center items-center gap-3'>
-							{teamDocumentSnapshot?.data()?.karma !== undefined &&
-							teamDocumentSnapshot.data()!.karma > 0 ? (
+							{(teamDocumentSnapshot?.data()?.karma ?? 0) > 0 ? (
 								<Badge
 									variant='outline'
 									className='text-sm font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20 px-3 py-1.5'
 								>
 									<Sparkles className='h-4 w-4 mr-1.5' />
-									{teamDocumentSnapshot.data()!.karma} Karma
+									{teamDocumentSnapshot?.data()?.karma} Karma
 								</Badge>
 							) : (
 								<p className='text-sm text-muted-foreground'>

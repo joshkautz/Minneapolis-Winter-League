@@ -94,8 +94,9 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 				const seasonData = seasonDoc.data() as SeasonDocument
 
 				// Check if user is admin (admins can update any offer)
+				const userId = auth?.uid ?? ''
 				const userDoc = await transaction.get(
-					firestore.collection(Collections.PLAYERS).doc(auth!.uid)
+					firestore.collection(Collections.PLAYERS).doc(userId)
 				)
 				const isAdmin = userDoc.exists && userDoc.data()?.admin === true
 
@@ -125,13 +126,13 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 
 				// Check if user is the creator of the offer (for cancellation)
 				const isCreator =
-					offerData.createdBy && offerData.createdBy.id === auth!.uid
+					offerData.createdBy && offerData.createdBy.id === userId
 
 				// If user is admin, allow them to update any offer
 				if (isAdmin) {
 					logger.info(`Admin user updating offer status`, {
 						offerId,
-						adminUserId: auth!.uid,
+						adminUserId: userId,
 						status,
 						offerType: offerData.type,
 					})
@@ -141,7 +142,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 						// Player can accept/reject invitations sent to them
 						// Creator (captain) can cancel their own invitations
 						const canRespondAsRecipient =
-							auth!.uid === offerData.player.id &&
+							userId === offerData.player.id &&
 							(status === 'accepted' || status === 'rejected')
 						const canCancelAsCreator = isCreator && status === 'canceled'
 
@@ -179,7 +180,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 
 							const teamDocument = teamDoc.data() as TeamDocument | undefined
 							const userIsCaptain = teamDocument?.roster?.some(
-								(member) => member.player.id === auth!.uid && member.captain
+								(member) => member.player.id === userId && member.captain
 							)
 
 							if (!userIsCaptain) {
@@ -208,14 +209,14 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 				transaction.update(offerRef, {
 					status,
 					respondedAt: new Date(),
-					respondedBy: firestore.collection(Collections.PLAYERS).doc(auth!.uid),
+					respondedBy: firestore.collection(Collections.PLAYERS).doc(userId),
 				})
 
 				// If rejected or canceled, we're done - the trigger will handle cleanup
 				if (status === 'rejected' || status === 'canceled') {
 					logger.info(`Offer ${status}: ${offerId}`, {
 						type: offerData.type,
-						respondedBy: auth!.uid,
+						respondedBy: userId,
 					})
 
 					return {
@@ -228,7 +229,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 				// If accepted, the onOfferUpdated trigger will handle adding player to team
 				logger.info(`Offer accepted: ${offerId}`, {
 					type: offerData.type,
-					respondedBy: auth!.uid,
+					respondedBy: userId,
 				})
 
 				return {
@@ -250,7 +251,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 			logger.error('Error updating offer status:', {
 				offerId,
 				status,
-				userId: auth!.uid,
+				userId: auth?.uid,
 				error: errorMessage,
 			})
 

@@ -75,15 +75,21 @@ class Logger {
 		}
 	}
 
-	error(message: string, error?: Error, context?: LogContext): void {
+	error(message: string, error?: unknown, context?: LogContext): void {
 		if (this.shouldLog(LogLevel.ERROR)) {
+			const normalizedError =
+				error instanceof Error
+					? error
+					: error !== undefined
+						? new Error(String(error))
+						: undefined
 			const errorContext = {
 				...context,
-				error: error
+				error: normalizedError
 					? {
-							name: error.name,
-							message: error.message,
-							stack: error.stack,
+							name: normalizedError.name,
+							message: normalizedError.message,
+							stack: normalizedError.stack,
 						}
 					: undefined,
 			}

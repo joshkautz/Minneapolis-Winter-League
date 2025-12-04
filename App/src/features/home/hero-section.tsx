@@ -23,7 +23,7 @@ export const HeroSection = () => {
 	return (
 		<section
 			className={
-				'h-[80vh] max-h-[620px] relative bg-background text-foreground z-10'
+				'h-[80vh] max-h-[620px] relative bg-foreground text-background dark:bg-background dark:text-foreground z-10'
 			}
 		>
 			<div className='container'>
@@ -57,28 +57,24 @@ export const HeroSection = () => {
 			</div>
 			<div
 				className='absolute inset-x-0 bottom-0 w-full -z-10'
-				style={{ color: '#8893A6' }}
+				style={{ color: '#11274c' }}
 			>
 				<CitySvg className='w-full h-auto max-h-[400px]' />
 			</div>
 			<img
-				src={'/snowman.png'}
-				alt={'A snowman shaped like a duck.'}
+				src={'/winter-duck.png'}
+				alt={'A duck all dressed up for the winter.'}
 				className={
 					'absolute z-40 w-[120px] md:w-[240px] lg:w-[300px] h-auto -bottom-16 lg:-bottom-10 right-8 lg:right-[15%]'
 				}
 			/>
 			<svg
-				className='w-full h-auto absolute bottom-[-10px] inset-x-0 pointer-events-none'
+				className='w-full h-auto absolute bottom-[-10px] inset-x-0 pointer-events-none fill-background dark:fill-foreground'
 				viewBox='0 0 1200 120'
 				preserveAspectRatio='none'
-				fill='#8893A6'
 			>
 				<path d='M0,80 C150,20 300,100 450,60 C600,20 750,80 900,40 C1050,0 1200,60 1200,60 L1200,120 L0,120 Z' />
-				<path
-					d='M0,100 C150,40 300,120 450,80 C600,40 750,100 900,60 C1050,20 1200,80 1200,80 L1200,120 L0,120 Z'
-					opacity='0.7'
-				/>
+				<path d='M0,100 C150,40 300,120 450,80 C600,40 750,100 900,60 C1050,20 1200,80 1200,80 L1200,120 L0,120 Z' />
 			</svg>
 		</section>
 	)

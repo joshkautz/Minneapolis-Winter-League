@@ -42,7 +42,7 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { OfferDocument, OfferType } from '@/shared/utils'
+import { OfferDocument, OfferType, logger } from '@/shared/utils'
 
 interface ProcessedOffer {
 	id: string
@@ -233,8 +233,11 @@ export const ManageOffers: React.FC = () => {
 								if (creatorData) {
 									createdByName = `${creatorData.firstname} ${creatorData.lastname}`
 								}
-							} catch (error) {
-								console.warn('Failed to fetch creator data', error)
+							} catch (_error) {
+								logger.warn('Failed to fetch creator data', {
+									component: 'ManageOffers',
+									action: 'fetchCreatorData',
+								})
 							}
 						}
 
@@ -255,7 +258,11 @@ export const ManageOffers: React.FC = () => {
 							seasonName,
 						} as ProcessedOffer
 					} catch (error) {
-						console.error('Error processing offer', offerId, error)
+						logger.error(
+							'Error processing offer',
+							error instanceof Error ? error : undefined,
+							{ component: 'ManageOffers', action: 'processOffer', offerId }
+						)
 						return null
 					}
 				})
@@ -305,7 +312,11 @@ export const ManageOffers: React.FC = () => {
 
 			// The useCollection hook will automatically update with the new data
 		} catch (error) {
-			console.error('Error updating offer status:', error)
+			logger.error(
+				'Error updating offer status',
+				error instanceof Error ? error : undefined,
+				{ component: 'ManageOffers', action: 'updateOfferStatus', offerId }
+			)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to update offer status'
 			)

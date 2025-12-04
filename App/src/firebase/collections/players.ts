@@ -19,7 +19,7 @@ import {
 
 import { firestore } from '../app'
 import { User } from '../auth'
-import { PlayerDocument, Collections } from '@/shared/utils'
+import { PlayerDocument, Collections, logger } from '@/shared/utils'
 
 /**
  * Gets a player document snapshot by reference
@@ -131,8 +131,11 @@ export const updatePlayer = (
 	authValue: User | null | undefined,
 	data: UpdateData<PlayerDocument>
 ): Promise<void> => {
-	console.warn(
-		'⚠️  updatePlayer is deprecated. Use updatePlayerViaFunction for better security.'
+	logger.warn(
+		'updatePlayer is deprecated. Use updatePlayerViaFunction for better security.'
 	)
-	return updateDoc(doc(firestore, Collections.PLAYERS, authValue!.uid), data)
+	if (!authValue) {
+		throw new Error('User must be authenticated to update player')
+	}
+	return updateDoc(doc(firestore, Collections.PLAYERS, authValue.uid), data)
 }

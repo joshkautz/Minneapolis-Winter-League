@@ -19,7 +19,7 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 		validateAuthentication(request.auth)
 
 		const { teamId } = request.data
-		const userId = request.auth!.uid
+		const userId = request.auth?.uid ?? ''
 
 		if (!teamId) {
 			throw new Error('Team ID is required')

@@ -90,7 +90,7 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 			const data = doc.data()
 			const rankings = data.rankings || []
 			if (Array.isArray(rankings)) {
-				rankings.forEach((player: any) => {
+				rankings.forEach((player: { playerId?: string }) => {
 					if (player.playerId) {
 						playersWithHistory.add(player.playerId)
 					}
@@ -138,7 +138,8 @@ export function PlayerRankingHistory({ className }: PlayerRankingHistoryProps) {
 			if (!Array.isArray(rankings)) return
 
 			const playerData = rankings.find(
-				(player: any) => player.playerId === playerId
+				(player: { playerId?: string; rank?: number; eloRating?: number }) =>
+					player.playerId === playerId
 			)
 
 			if (!playerData) return

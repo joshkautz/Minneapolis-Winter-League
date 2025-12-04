@@ -81,8 +81,10 @@ export const createNews = onCall<CreateNewsRequest>(
 			// Validate admin authentication
 			await validateAdminUser(auth, firestore)
 
-			// Get user reference
-			const userRef = firestore.collection(Collections.PLAYERS).doc(auth!.uid)
+			// Get user reference (auth is validated by validateAdminUser above)
+			const userRef = firestore
+				.collection(Collections.PLAYERS)
+				.doc(auth?.uid ?? '')
 
 			// Verify season exists
 			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)
@@ -107,7 +109,7 @@ export const createNews = onCall<CreateNewsRequest>(
 
 			logger.info('News post created successfully', {
 				newsId: newsRef.id,
-				authorId: auth!.uid,
+				authorId: auth?.uid,
 				seasonId,
 				titleLength: title.length,
 				contentLength: content.length,
@@ -129,7 +131,7 @@ export const createNews = onCall<CreateNewsRequest>(
 				error instanceof Error ? error.message : 'Unknown error'
 
 			logger.error('Error creating news post:', {
-				userId: auth!.uid,
+				userId: auth?.uid,
 				seasonId: data.seasonId,
 				error: errorMessage,
 			})
