@@ -60,14 +60,14 @@ export const rebuildPlayerRankings = functions
 				rebuildRankingsSchema.parse(data)
 
 				functions.logger.info('Starting complete Player Rankings rebuild', {
-					triggeredBy: context.auth!.uid,
+					triggeredBy: context.auth?.uid,
 					applyDecay: true, // Always applied
 				})
 
 				// Create calculation state document for tracking
 				const calculationId = await createCalculationState(
 					'fresh',
-					context.auth!.uid
+					context.auth?.uid ?? 'unknown'
 				)
 
 				try {
