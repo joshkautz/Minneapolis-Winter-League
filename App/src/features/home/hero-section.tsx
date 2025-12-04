@@ -62,8 +62,8 @@ export const HeroSection = () => {
 				<CitySvg className='w-full h-auto max-h-[400px]' />
 			</div>
 			<img
-				src={'/snowman.png'}
-				alt={'A snowman shaped like a duck.'}
+				src={'/winter-duck.png'}
+				alt={'A duck all dressed up for the winter.'}
 				className={
 					'absolute z-40 w-[120px] md:w-[240px] lg:w-[300px] h-auto -bottom-16 lg:-bottom-10 right-8 lg:right-[15%]'
 				}
