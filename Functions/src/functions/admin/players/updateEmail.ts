@@ -97,7 +97,7 @@ export const updatePlayerEmail = functions
 			const trimmedNewEmail = newEmail.trim().toLowerCase()
 
 			try {
-				const auth = getAuth()
+				const firebaseAuth = getAuth()
 
 				// Check if target user exists
 				functions.logger.info('Fetching target user from Authentication', {
@@ -105,7 +105,7 @@ export const updatePlayerEmail = functions
 				})
 				let userRecord
 				try {
-					userRecord = await auth.getUser(playerId)
+					userRecord = await firebaseAuth.getUser(playerId)
 				} catch (error) {
 					functions.logger.error('Target user not found in Authentication', {
 						playerId,
@@ -141,7 +141,8 @@ export const updatePlayerEmail = functions
 					newEmail: trimmedNewEmail,
 				})
 				try {
-					const existingUser = await auth.getUserByEmail(trimmedNewEmail)
+					const existingUser =
+						await firebaseAuth.getUserByEmail(trimmedNewEmail)
 					if (existingUser.uid !== playerId) {
 						functions.logger.warn('Email already in use by another user', {
 							newEmail: trimmedNewEmail,
@@ -176,7 +177,7 @@ export const updatePlayerEmail = functions
 					oldEmail,
 					newEmail: trimmedNewEmail,
 				})
-				await auth.updateUser(playerId, {
+				await firebaseAuth.updateUser(playerId, {
 					email: trimmedNewEmail,
 					emailVerified: true, // Mark email as verified
 				})
