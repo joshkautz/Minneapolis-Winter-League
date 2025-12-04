@@ -119,7 +119,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			logger.info(`Season created: ${seasonRef.id}`, {
 				seasonId: seasonRef.id,
 				name: seasonData.name,
-				createdBy: auth!.uid,
+				createdBy: auth?.uid,
 			})
 
 			// Add this season to all existing players
@@ -180,7 +180,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 
 			logger.error('Error creating season:', {
 				name,
-				userId: auth!.uid,
+				userId: auth?.uid,
 				error: errorMessage,
 			})
 

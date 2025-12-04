@@ -39,12 +39,13 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 		validateAuthentication(auth)
 
 		const { playerId, adminOverride } = data
+		const userId = auth?.uid ?? ''
 
 		// Determine target player ID (defaults to authenticated user)
-		const targetPlayerId = playerId || auth!.uid
+		const targetPlayerId = playerId || userId
 
 		// Check if user is trying to delete someone else's profile
-		if (targetPlayerId !== auth!.uid) {
+		if (targetPlayerId !== userId) {
 			// Only admins can delete other players
 			if (!adminOverride) {
 				throw new Error('Admin override required to delete other players')
@@ -89,7 +90,7 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 			await playerRef.delete()
 
 			logger.info(`Successfully deleted player: ${targetPlayerId}`, {
-				deletedBy: auth!.uid,
+				deletedBy: userId,
 				playerDocument: {
 					email: playerDocument?.email,
 					name: `${playerDocument?.firstname} ${playerDocument?.lastname}`,
@@ -105,7 +106,7 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 		} catch (error) {
 			logger.error('Error deleting player:', {
 				targetPlayerId,
-				deletedBy: auth!.uid,
+				deletedBy: userId,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
 

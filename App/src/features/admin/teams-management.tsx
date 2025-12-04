@@ -21,6 +21,7 @@ import {
 import { Link } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
+import { logger } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { currentSeasonTeamsQuery } from '@/firebase/collections/teams'
 import { deleteUnregisteredTeamViaFunction } from '@/firebase/collections/functions'
@@ -155,7 +156,7 @@ export const TeamsManagement: React.FC = () => {
 			// Close dialog
 			setTeamToDelete(null)
 		} catch (error: unknown) {
-			console.error('Error deleting unregistered team:', error)
+			logger.error('Error deleting unregistered team:', error)
 
 			// Extract error message from Firebase Functions error
 			let errorMessage = 'Failed to delete team. Please try again.'

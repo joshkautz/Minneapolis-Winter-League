@@ -6,6 +6,7 @@ import {
 } from 'firebase/storage'
 import { httpsCallable } from 'firebase/functions'
 import { functions } from './app'
+import { logger } from '@/shared/utils'
 
 const storage = getStorage()
 
@@ -144,7 +145,10 @@ export const uploadFile = async (
 			filePath: storagePath,
 		}
 	} catch (error) {
-		console.error('File upload error:', error)
+		logger.error('File upload error', error, {
+			component: 'storage',
+			action: 'upload_file',
+		})
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : 'Unknown error occurred',

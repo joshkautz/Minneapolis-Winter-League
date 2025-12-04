@@ -47,7 +47,7 @@ export const getDownloadUrl = onCall(
 			})
 
 			logger.info('Generated download URL', {
-				uid: request.auth!.uid,
+				uid: request.auth?.uid,
 				filePath,
 			})
 

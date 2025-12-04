@@ -98,7 +98,7 @@ export const deleteSeason = onCall<DeleteSeasonRequest>(
 			logger.info(`Season deleted: ${seasonId}`, {
 				seasonId,
 				seasonName,
-				deletedBy: auth!.uid,
+				deletedBy: auth?.uid,
 				playersUpdated,
 			})
 
@@ -118,7 +118,7 @@ export const deleteSeason = onCall<DeleteSeasonRequest>(
 
 			logger.error('Error deleting season:', {
 				seasonId,
-				userId: auth!.uid,
+				userId: auth?.uid,
 				error: errorMessage,
 			})
 

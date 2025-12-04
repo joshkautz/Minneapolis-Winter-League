@@ -60,6 +60,7 @@ import {
 	type PlayerSeason,
 	type SeasonDocument,
 	type TeamDocument,
+	logger,
 } from '@/shared/utils'
 
 interface SeasonFormData {
@@ -154,12 +155,14 @@ export const PlayerManagement: React.FC = () => {
 	// Fetch all seasons
 	const [seasonsSnapshot] = useCollection(seasonsQuery())
 
-	// Fetch selected player
+	// Fetch selected player - create document reference directly since we have a raw UID
 	const [selectedPlayerSnapshot] = useDocument(
 		selectedPlayerId
-			? (getPlayerRef({
-					uid: selectedPlayerId,
-				} as any) as any)
+			? (doc(
+					firestore,
+					Collections.PLAYERS,
+					selectedPlayerId
+				) as DocumentReference<PlayerDocument>)
 			: undefined
 	)
 
@@ -316,7 +319,11 @@ export const PlayerManagement: React.FC = () => {
 
 			setIsEditing(false)
 		} catch (error: unknown) {
-			console.error('Error updating player:', error)
+			logger.error(
+				'Error updating player',
+				error instanceof Error ? error : undefined,
+				{ component: 'PlayerManagement', action: 'updatePlayer' }
+			)
 
 			let errorMessage = 'Failed to update player. Please try again.'
 			if (error && typeof error === 'object' && 'message' in error) {

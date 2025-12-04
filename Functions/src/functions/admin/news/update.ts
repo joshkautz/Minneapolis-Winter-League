@@ -134,7 +134,7 @@ export const updateNews = onCall<UpdateNewsRequest>(
 
 			logger.info('News post updated successfully', {
 				newsId,
-				updatedBy: auth!.uid,
+				updatedBy: auth?.uid,
 				updatedFields: Object.keys(updateData).filter((k) => k !== 'updatedAt'),
 			})
 
@@ -155,7 +155,7 @@ export const updateNews = onCall<UpdateNewsRequest>(
 
 			logger.error('Error updating news post:', {
 				newsId: data.newsId,
-				userId: auth!.uid,
+				userId: auth?.uid,
 				error: errorMessage,
 			})
 

@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { NewsDocument, PlayerDocument } from '@/types'
+import { logger } from '@/shared/utils'
 
 interface NewsCardProps {
 	post: NewsDocument
@@ -37,7 +38,7 @@ export const NewsCard = ({ post }: NewsCardProps) => {
 					setAuthorName('Unknown Author')
 				}
 			} catch (error) {
-				console.error('Error fetching author:', error)
+				logger.error('Error fetching author:', error)
 				setAuthorName('Unknown Author')
 			}
 		}
@@ -49,7 +50,7 @@ export const NewsCard = ({ post }: NewsCardProps) => {
 		try {
 			const date = timestamp.toDate()
 			return formatDistanceToNow(date, { addSuffix: true })
-		} catch (error) {
+		} catch {
 			return 'Recently'
 		}
 	}

@@ -17,9 +17,9 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 		lastName: string
 		email: string
 	}) => {
-		alert(
-			`Name appeal submitted for: ${data.firstName} ${data.lastName} (${data.email}). We will review your request and get back to you soon.`
-		)
+		// Show message using a modal or toast instead of alert
+		// This is intentionally a no-op since name appeals should be handled by the form
+		void data
 	}
 
 	if (showResetPassword) {

@@ -1,4 +1,11 @@
-import { FC, ReactNode, createContext, useEffect, useState } from 'react'
+import {
+	FC,
+	ReactNode,
+	createContext,
+	useCallback,
+	useEffect,
+	useState,
+} from 'react'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -36,17 +43,20 @@ export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
 	)
 	const [theme, setTheme] = useState<'light' | 'dark'>(() => getInitialTheme())
 
-	const handleSetTheme = (input: Theme) => {
-		const value = input === 'system' ? systemPreference : input
-		const root = document.documentElement
-		const isDark = value === 'dark'
+	const handleSetTheme = useCallback(
+		(input: Theme) => {
+			const value = input === 'system' ? systemPreference : input
+			const root = document.documentElement
+			const isDark = value === 'dark'
 
-		root.classList.toggle('light', !isDark)
-		root.classList.toggle('dark', isDark)
+			root.classList.toggle('light', !isDark)
+			root.classList.toggle('dark', isDark)
 
-		setTheme(value)
-		localStorage.setItem('theme', value)
-	}
+			setTheme(value)
+			localStorage.setItem('theme', value)
+		},
+		[systemPreference]
+	)
 
 	useEffect(() => {
 		const updateSystemPreference = (event: MediaQueryListEvent) => {
@@ -65,7 +75,7 @@ export const ThemeProvider: FC<{ children: ReactNode }> = ({ children }) => {
 		return () => {
 			mediaQuery.removeEventListener('change', updateSystemPreference)
 		}
-	}, [systemPreference])
+	}, [systemPreference, theme, handleSetTheme])
 
 	return (
 		<ThemeContext.Provider value={{ theme, setTheme: handleSetTheme }}>

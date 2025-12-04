@@ -114,7 +114,7 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 				seasonId: currentSeason.id,
 				seasonName: currentSeason.name,
 				rosterSize,
-				adminUserId: authContext!.uid,
+				adminUserId: authContext?.uid,
 			})
 
 			// Use transaction to ensure data consistency
@@ -170,7 +170,7 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 				teamName,
 				seasonId: currentSeason.id,
 				rosterSize,
-				adminUserId: authContext!.uid,
+				adminUserId: authContext?.uid,
 			})
 
 			return {

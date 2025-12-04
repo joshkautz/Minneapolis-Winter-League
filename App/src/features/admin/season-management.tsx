@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { getDocs } from 'firebase/firestore'
+import { getDocs, QueryDocumentSnapshot } from 'firebase/firestore'
 import {
 	ArrowLeft,
 	AlertTriangle,
@@ -23,6 +23,7 @@ import { toast } from 'sonner'
 import { format } from 'date-fns'
 
 import { auth } from '@/firebase/auth'
+import { logger } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { seasonsQuery } from '@/firebase/collections/seasons'
 import { teamsBySeasonQuery } from '@/firebase/collections/teams'
@@ -136,7 +137,7 @@ export const SeasonManagement: React.FC = () => {
 							teamCount: teamIds.length,
 						} as ProcessedSeason
 					} catch (error) {
-						console.error('Error processing season', seasonId, error)
+						logger.error('Error processing season', error, { seasonId })
 						return null
 					}
 				})
@@ -166,14 +167,16 @@ export const SeasonManagement: React.FC = () => {
 
 					if (teamsQuery) {
 						const teamsSnapshot = await getDocs(teamsQuery)
-						const teams = teamsSnapshot.docs.map((doc: any) => ({
-							id: doc.id,
-							name: (doc.data() as TeamDocument).name,
-						}))
+						const teams = teamsSnapshot.docs.map(
+							(doc: QueryDocumentSnapshot<TeamDocument>) => ({
+								id: doc.id,
+								name: doc.data().name,
+							})
+						)
 						setAvailableTeams(teams)
 					}
 				} catch (error) {
-					console.error('Error loading teams:', error)
+					logger.error('Error loading teams:', error)
 				}
 			}
 
@@ -289,7 +292,7 @@ export const SeasonManagement: React.FC = () => {
 
 			closeDialog()
 		} catch (error) {
-			console.error('Error submitting season:', error)
+			logger.error('Error submitting season:', error)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to save season'
 			)
@@ -314,7 +317,7 @@ export const SeasonManagement: React.FC = () => {
 			setDeleteDialogOpen(false)
 			setSeasonToDelete(null)
 		} catch (error) {
-			console.error('Error deleting season:', error)
+			logger.error('Error deleting season:', error)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to delete season'
 			)

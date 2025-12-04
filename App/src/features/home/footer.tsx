@@ -82,8 +82,8 @@ export const Footer = () => {
 				<div className='pt-8 border-t border-border'>
 					<div className='flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0'>
 						<p className='text-xs text-muted-foreground'>
-							© {new Date().getFullYear()} Minneapolis Winter League. All
-							rights reserved.
+							© {new Date().getFullYear()} Minneapolis Winter League. All rights
+							reserved.
 						</p>
 						<div className='flex space-x-8'>
 							<a

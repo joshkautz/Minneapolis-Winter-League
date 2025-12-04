@@ -5,6 +5,7 @@ import {
 	OfferDirection,
 	getInviteMessage,
 	getRequestMessage,
+	logger,
 } from '@/shared/utils'
 import {
 	NotificationCard,
@@ -44,11 +45,14 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Request rejected',
 			})
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Firebase Functions errors have a message property
+			const firebaseError = error as { message?: string; code?: string }
 			const errorMessage =
-				error?.message || error?.code || 'Failed to reject request'
-			console.error('Failed to reject offer:', error)
+				firebaseError?.message ||
+				firebaseError?.code ||
+				'Failed to reject request'
+			logger.error('Failed to reject offer:', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -69,11 +73,14 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Request accepted',
 			})
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Firebase Functions errors have a message property
+			const firebaseError = error as { message?: string; code?: string }
 			const errorMessage =
-				error?.message || error?.code || 'Failed to accept request'
-			console.error('Failed to accept offer:', error)
+				firebaseError?.message ||
+				firebaseError?.code ||
+				'Failed to accept request'
+			logger.error('Failed to accept offer:', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -94,11 +101,14 @@ export const ManageCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Invite canceled',
 			})
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Firebase Functions errors have a message property
+			const firebaseError = error as { message?: string; code?: string }
 			const errorMessage =
-				error?.message || error?.code || 'Failed to cancel invite'
-			console.error('Failed to cancel offer:', error)
+				firebaseError?.message ||
+				firebaseError?.code ||
+				'Failed to cancel invite'
+			logger.error('Failed to cancel offer:', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})

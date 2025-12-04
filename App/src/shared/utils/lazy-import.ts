@@ -11,6 +11,7 @@ import React, { lazy } from 'react'
  */
 
 export const lazyImport = <
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- React.ComponentType requires any for generic component props
 	T extends Record<string, React.ComponentType<any>>,
 	K extends keyof T,
 >(

@@ -11,13 +11,12 @@ import { DotsVerticalIcon, StarFilledIcon } from '@radix-ui/react-icons'
 import { useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PlayerDocument } from '@/shared/utils'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { DestructiveConfirmationDialog } from '@/shared/components'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
-import { logger, errorHandler } from '@/shared/utils'
+import { logger, errorHandler, PlayerDocument } from '@/shared/utils'
 import type { PlayerSeason } from '@/types'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 
@@ -33,7 +32,7 @@ export const ManageTeamRosterPlayer = ({
 		isCaptain: isAuthenticatedUserCaptain,
 		currentSeasonData,
 	} = useUserStatus()
-	const [playerSnapshot] = useDocument(playerRef as any)
+	const [playerSnapshot] = useDocument(playerRef)
 
 	const team = useMemo(
 		() =>
