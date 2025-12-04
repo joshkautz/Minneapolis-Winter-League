@@ -750,7 +750,10 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 				const playerIds = tiedGroups.get(rating) ?? []
 				return playerIds
 					.map((id) => playerLookup.get(id))
-					.filter((player): player is PlayerRanking => player !== undefined)
+					.filter(
+						(player): player is PlayerRankingDocument & { id: string } =>
+							player !== undefined
+					)
 			}),
 		}
 	}
