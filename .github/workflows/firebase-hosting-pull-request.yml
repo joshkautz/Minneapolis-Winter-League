@@ -33,10 +33,14 @@ jobs:
         run: |
           echo "Prettier version:"
           npx prettier --version
-          echo "Format check result for specific files:"
-          npx prettier --check src/features/home/footer.tsx src/shared/hooks/use-user-status.ts || true
-          echo "Prettier config being used:"
-          npx prettier --find-config-path src/features/home/footer.tsx
+          echo "===== FOOTER.TSX DIFF ====="
+          npx prettier src/features/home/footer.tsx > /tmp/formatted.tsx
+          diff src/features/home/footer.tsx /tmp/formatted.tsx || true
+          echo "===== USE-USER-STATUS.TS DIFF ====="
+          npx prettier src/shared/hooks/use-user-status.ts > /tmp/formatted.ts
+          diff src/shared/hooks/use-user-status.ts /tmp/formatted.ts || true
+          echo "===== PRETTIER CONFIG ====="
+          cat .prettierrc
 
       - name: Format App
         working-directory: ./App
