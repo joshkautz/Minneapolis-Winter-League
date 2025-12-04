@@ -41,7 +41,8 @@ export const useScheduleData = () => {
 		today.setHours(0, 0, 0, 0)
 
 		const upcoming: Array<{ round: GameDocument[]; originalIndex: number }> = []
-		const completed: Array<{ round: GameDocument[]; originalIndex: number }> = []
+		const completed: Array<{ round: GameDocument[]; originalIndex: number }> =
+			[]
 
 		rounds.forEach((round, index) => {
 			if (round.length === 0) return
