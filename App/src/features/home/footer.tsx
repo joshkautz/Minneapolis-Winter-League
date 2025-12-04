@@ -2,7 +2,7 @@ export const Footer = () => {
 	return (
 		<footer className='bg-muted/30 border-t border-border mt-20'>
 			<div className='container mx-auto px-6 py-16'>
-				<div className='flex items-center justify-start mb-12'>
+				<div className='flex items-center justify-center mb-12 mx-auto'>
 					<img
 						src={'/mpls-logo.png'}
 						alt='Minneapolis Winter League Logo'
