@@ -53,7 +53,7 @@ export const useLoginForm = ({ onSuccess }: UseLoginFormProps) => {
 				false,
 				error instanceof Error ? error : new Error(String(error))
 			)
-			console.error('Login error:', error)
+			logger.error('Login error:', error)
 			toast.error('Failed to log in. Please try again.')
 		}
 	}

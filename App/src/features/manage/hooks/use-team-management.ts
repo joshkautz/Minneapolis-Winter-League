@@ -1,7 +1,8 @@
 import { useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
+import { QueryDocumentSnapshot } from 'firebase/firestore'
 import { useAuthContext, useTeamsContext, useSeasonsContext } from '@/providers'
-import type { PlayerSeason } from '@/types'
+import type { PlayerSeason, TeamDocument } from '@/types'
 
 interface TeamManagementResult {
 	success: boolean
@@ -15,7 +16,7 @@ interface UseTeamManagementReturn {
 	isAdmin: boolean
 	isCaptain: boolean
 	hasTeam: boolean
-	team: any | undefined // Team document snapshot
+	team: QueryDocumentSnapshot<TeamDocument> | undefined
 	currentSeasonData: PlayerSeason | undefined
 	handleResult: (result: TeamManagementResult) => void
 }

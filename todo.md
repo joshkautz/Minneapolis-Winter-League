@@ -65,3 +65,22 @@ Update the firebase function that the PlayerRegistrationStatus component page ca
 Create a firebase function that can be called from the admin UI to take a backup of the entire firestore database and save it to a new file in the storage bucket. The file should be named with the current date and time, like "backup-YYYY-MM-DD-HH-MM-SS.json". This function should be callable from the admin UI, and should show a loading indicator while it's running, and then show a success message when it's done, or an error message if it fails. There should also be a list of previous backups with the date and time they were created, and a button to download each backup file.
 
 Create a firebase function that can be called from the admin UI to restore the entire firestore database from a backup file in the storage bucket. This function should take the name of the backup file as a parameter, and should show a loading indicator while its running, and then show a success message when its done, or an error message if it fails. There should also be a list of previous backups with the date and time they were created, and a button to restore from each backup file.
+
+Show karma on the badges section still.
+
+There is a heavy refactor that I want to do. Right now, in the Teams firestore collection, we have a document for every unique instance of a
+team. And we have a "teamID" field in the Team document which helps us know if a team has continuity between seasons. I've been toying around
+with the idea of refactoring our system so that each unique team document in the Teams firestore collection represents an entirely different
+team, and if there are instances of teams carrying over between seasons, then that would be reflected within the team document. Because right
+now I think the system design is limiting ourselves. I think each Team document should be a unique team, and we can have each document have an
+array or map field that keeps track of all the seasons in which the team participates. The idea isn't fully fleshed out, but that's the gist of
+what I'm thinking. I want to do this because I think it will make it easier to tracking Badges awarded to teams throughout the history of the
+team across seasons. What do you think? Can you think of any system design improvements of this nature? I understand that a lot of our firebase
+functions and our application logic for the react web application would need to be refactored.
+
+Which one follows Firebase Firestore industry standards and best practices?
+
+What other changes and optimizations should we do to our data structure models in Firestore and in the application so that we're following
+Firestore and Firebase best practices and industry standards? Please analyze and audit all of our collections and document structures.
+
+How would you go about migrating the data to the new structure?
