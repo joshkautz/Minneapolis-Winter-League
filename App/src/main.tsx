@@ -5,7 +5,10 @@ import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from './components/ui/sonner.tsx'
 import { ProvidersWrapper } from '@/providers'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root')
+if (!rootElement) throw new Error('Root element not found')
+
+ReactDOM.createRoot(rootElement).render(
 	<ProvidersWrapper>
 		<BrowserRouter>
 			<App />

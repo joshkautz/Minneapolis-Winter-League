@@ -78,24 +78,22 @@ export const ThemeSelect = ({ mobile = false }: { mobile?: boolean }) => {
 					)}
 				>
 					<SelectValue placeholder='Select theme'>
-						{stringValue && getCurrentThemeOption() && (
-							<div
-								className={cn(
-									'flex items-center gap-2',
-									getTransitionClasses()
-								)}
-							>
-								{(() => {
-									const IconComponent = getCurrentThemeOption()!.icon
-									return (
-										<IconComponent
-											className={cn('w-4 h-4', getIconClasses())}
-										/>
-									)
-								})()}
-								<span>{getCurrentThemeOption()!.label}</span>
-							</div>
-						)}
+						{(() => {
+							const currentOption = getCurrentThemeOption()
+							if (!stringValue || !currentOption) return null
+							const IconComponent = currentOption.icon
+							return (
+								<div
+									className={cn(
+										'flex items-center gap-2',
+										getTransitionClasses()
+									)}
+								>
+									<IconComponent className={cn('w-4 h-4', getIconClasses())} />
+									<span>{currentOption.label}</span>
+								</div>
+							)
+						})()}
 					</SelectValue>
 				</SelectTrigger>
 				<SelectContent>

@@ -694,18 +694,21 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 		rankings.forEach((player) => {
 			const roundedRating = Math.round(player.eloRating * 1000000) / 1000000
 
-			if (!tiedGroups.has(roundedRating)) {
-				tiedGroups.set(roundedRating, [])
+			const existing = tiedGroups.get(roundedRating)
+			if (existing) {
+				existing.push(player.id)
+			} else {
+				tiedGroups.set(roundedRating, [player.id])
 			}
-			tiedGroups.get(roundedRating)!.push(player.id)
 		})
 
 		// Sort players within each rating group alphabetically by name
 		tiedGroups.forEach((playerIds, rating) => {
 			if (playerIds.length > 1) {
 				playerIds.sort((a, b) => {
-					const playerA = playerLookup.get(a)!
-					const playerB = playerLookup.get(b)!
+					const playerA = playerLookup.get(a)
+					const playerB = playerLookup.get(b)
+					if (!playerA || !playerB) return 0
 					return playerA.playerName.localeCompare(playerB.playerName)
 				})
 				tiedGroups.set(rating, playerIds)
@@ -717,7 +720,8 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 		const sortedRatings = Array.from(tiedGroups.keys()).sort((a, b) => b - a) // Highest first
 
 		sortedRatings.forEach((rating) => {
-			const playerIds = tiedGroups.get(rating)!
+			const playerIds = tiedGroups.get(rating)
+			if (!playerIds) return
 
 			if (playerIds.length > 1) {
 				// These players are tied
@@ -743,8 +747,10 @@ export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
 			trueRankMap,
 			medalEligibilityMap,
 			sortedRankings: sortedRatings.flatMap((rating) => {
-				const playerIds = tiedGroups.get(rating)!
-				return playerIds.map((id) => playerLookup.get(id)!)
+				const playerIds = tiedGroups.get(rating) ?? []
+				return playerIds
+					.map((id) => playerLookup.get(id))
+					.filter((player): player is PlayerRanking => player !== undefined)
 			}),
 		}
 	}

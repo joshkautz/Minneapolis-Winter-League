@@ -3,6 +3,7 @@ import { useUploadFile, useDownloadURL } from 'react-firebase-hooks/storage'
 import { StorageReference } from '@/firebase/storage'
 import { toast } from 'sonner'
 import type { FileUploadHookReturn } from '@/shared/types'
+import { logger } from '@/shared/utils'
 
 interface UseFileUploadOptions {
 	autoReset?: boolean
@@ -59,7 +60,10 @@ export const useFileUpload = (
 			const errorObj = error instanceof Error ? error : new Error(String(error))
 			onError?.(errorObj)
 			toast.error('Failed to upload file')
-			console.error('File upload error:', error)
+			logger.error('File upload error', error, {
+				component: 'useFileUpload',
+				action: 'upload_file',
+			})
 		}
 	}
 

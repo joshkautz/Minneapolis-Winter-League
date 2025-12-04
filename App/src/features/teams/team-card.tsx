@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Sparkles } from 'lucide-react'
+import { Timestamp } from '@firebase/firestore'
 
 // Types for better TypeScript support
 interface TeamCardProps {
@@ -12,7 +13,7 @@ interface TeamCardProps {
 		name: string
 		logo?: string | null
 		registered: boolean
-		registeredDate?: any // Timestamp
+		registeredDate?: Timestamp
 		rosterCount?: number // Number of players on roster
 		karma?: number // Team karma points
 	}
