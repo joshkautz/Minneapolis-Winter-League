@@ -806,7 +806,7 @@ export const updatePlayerAdmin = functions
 				// Log successful operation for audit trail
 				functions.logger.info('Player update completed successfully', {
 					playerId,
-					updatedBy: context.auth!.uid,
+					updatedBy: auth?.uid,
 					changes: Object.keys(changes),
 					timestamp: new Date().toISOString(),
 				})
@@ -820,7 +820,7 @@ export const updatePlayerAdmin = functions
 			} catch (error) {
 				functions.logger.error('Error updating player', {
 					playerId,
-					adminUserId: context.auth!.uid,
+					adminUserId: auth?.uid,
 					error: error instanceof Error ? error.message : 'Unknown error',
 					stack: error instanceof Error ? error.stack : undefined,
 				})
