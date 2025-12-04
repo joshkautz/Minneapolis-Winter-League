@@ -8,7 +8,7 @@ export const RegistrationSection = () => {
 	return (
 		<div
 			className={
-				'border border-transparent xl:max-w-none container text-foreground bg-background'
+				'border border-transparent xl:max-w-none container text-background bg-foreground dark:text-foreground dark:bg-background'
 			}
 		>
 			<section
@@ -17,7 +17,7 @@ export const RegistrationSection = () => {
 					'my-32 flex justify-center md:items-stretch gap-8 flex-col md:flex-row items-center'
 				}
 			>
-				<div className='group flex items-center justify-center flex-1 rounded-lg overflow-hidden bg-primary max-w-[500px] cursor-pointer'>
+				<div className='group flex items-center justify-center flex-1 rounded-lg overflow-hidden bg-primary max-w-[500px] cursor-pointer dark:bg-secondary'>
 					<img
 						src='/Map.png'
 						alt='University of Minnesota URW Sports Field Complex Map'

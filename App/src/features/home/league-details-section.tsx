@@ -10,7 +10,11 @@ import { Snowflake } from './snowflake'
  */
 export const LeagueDetailsSection = () => {
 	return (
-		<div className={'w-full min-h-screen bg-background text-foreground'}>
+		<div
+			className={
+				'w-full min-h-screen bg-background text-foreground dark:text-background dark:bg-foreground'
+			}
+		>
 			<section id='league-details' className={'container pb-40'}>
 				<div className='flex flex-row'>
 					<Snowflake className='-mt-32 max-w-[400px] flex-1 basis-[80px] shrink-0 fill-accent z-10 hidden lg:flex' />
@@ -32,7 +36,7 @@ export const LeagueDetailsSection = () => {
 				<div className={'flex flex-wrap items-center gap-20 mt-32 w-full'}>
 					<Card
 						className={
-							'flex flex-col flex-1 basis-[320px] shrink-0 rounded-2xl bg-card text-card-foreground'
+							'flex flex-col flex-1 basis-[320px] shrink-0 rounded-2xl bg-foreground text-background dark:bg-background dark:text-foreground'
 						}
 					>
 						<CardHeader>
