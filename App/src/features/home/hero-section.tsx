@@ -72,13 +72,10 @@ export const HeroSection = () => {
 				className='w-full h-auto absolute bottom-[-10px] inset-x-0 pointer-events-none'
 				viewBox='0 0 1200 120'
 				preserveAspectRatio='none'
-				fill='#8893A6'
+				fill='#ffffff'
 			>
 				<path d='M0,80 C150,20 300,100 450,60 C600,20 750,80 900,40 C1050,0 1200,60 1200,60 L1200,120 L0,120 Z' />
-				<path
-					d='M0,100 C150,40 300,120 450,80 C600,40 750,100 900,60 C1050,20 1200,80 1200,80 L1200,120 L0,120 Z'
-					opacity='0.7'
-				/>
+				<path d='M0,100 C150,40 300,120 450,80 C600,40 750,100 900,60 C1050,20 1200,80 1200,80 L1200,120 L0,120 Z' />
 			</svg>
 		</section>
 	)
