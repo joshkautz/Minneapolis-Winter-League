@@ -11,17 +11,18 @@ import {
 	TeamProfile,
 	PlayerRankings,
 	PlayerRankingHistory,
-	PlayerRankingsAdmin,
+	PlayerRankingManagement,
 	News,
 	AdminDashboard,
 	PlayerManagement,
 	EmailVerification,
-	ManageOffers,
-	TeamsManagement,
+	OfferManagement,
+	TeamManagement,
 	NewsManagement,
 	SeasonManagement,
 	GameManagement,
 	RegistrationManagement,
+	BadgeManagement,
 	Profile,
 	ManageTeam,
 	NotFound,
@@ -179,21 +180,21 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path='/admin/manage-offers'
+					path='/admin/offer-management'
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>
-								<ManageOffers />
+								<OfferManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
 				/>
 				<Route
-					path='/admin/teams-management'
+					path='/admin/team-management'
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>
-								<TeamsManagement />
+								<TeamManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
@@ -229,11 +230,11 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path='/admin/player-rankings'
+					path='/admin/player-ranking-management'
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>
-								<PlayerRankingsAdmin />
+								<PlayerRankingManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
@@ -244,6 +245,16 @@ export const AppRoutes: React.FC = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<RegistrationManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/badge-management'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<BadgeManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

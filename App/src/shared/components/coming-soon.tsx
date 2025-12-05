@@ -1,7 +1,7 @@
 import { ReactNode, useMemo } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { cn } from '@/shared/utils'
-import { SparklesCore } from '@/features/home/particles'
+import { SparklesCore } from '@/features/public/home/particles'
 
 export const ComingSoon = ({
 	children,

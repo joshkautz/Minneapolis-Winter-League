@@ -7,81 +7,105 @@ import { lazyImport } from '@/shared/utils'
  * - Track which components are being lazy-loaded
  * - Update import paths consistently
  * - Analyze bundle splitting
+ *
+ * Organization:
+ * - Public routes: features/public/* (accessible without authentication)
+ * - Player routes: features/player/* (require authentication)
+ * - Admin routes: features/admin/* (require authentication + admin role)
  */
 
-// Public routes - accessible without authentication
-export const Home = lazyImport(() => import('@/features/home'), 'Home')
+// ==================== PUBLIC ROUTES ====================
+// Accessible without authentication
+
+export const Home = lazyImport(() => import('@/features/public/home'), 'Home')
 export const Schedule = lazyImport(
-	() => import('@/features/schedule'),
+	() => import('@/features/public/schedule'),
 	'Schedule'
 )
 export const Standings = lazyImport(
-	() => import('@/features/standings'),
+	() => import('@/features/public/standings'),
 	'Standings'
 )
-export const Teams = lazyImport(() => import('@/features/teams'), 'Teams')
+export const Teams = lazyImport(
+	() => import('@/features/public/teams'),
+	'Teams'
+)
 export const TeamProfile = lazyImport(
-	() => import('@/features/teams'),
+	() => import('@/features/public/teams'),
 	'TeamProfile'
 )
 export const PlayerRankings = lazyImport(
-	() => import('@/features/player-rankings'),
+	() => import('@/features/public/rankings'),
 	'PlayerRankings'
 )
 export const PlayerRankingHistory = lazyImport(
-	() => import('@/features/player-rankings'),
+	() => import('@/features/public/rankings'),
 	'PlayerRankingHistory'
 )
-export const News = lazyImport(() => import('@/features/news'), 'News')
-export const PlayerRankingsAdmin = lazyImport(
-	() => import('@/features/admin'),
-	'PlayerRankingsAdmin'
-)
-export const AdminDashboard = lazyImport(
-	() => import('@/features/admin'),
-	'AdminDashboard'
-)
-export const PlayerManagement = lazyImport(
-	() => import('@/features/admin'),
-	'PlayerManagement'
-)
-export const EmailVerification = lazyImport(
-	() => import('@/features/admin'),
-	'EmailVerification'
-)
-export const ManageOffers = lazyImport(
-	() => import('@/features/admin'),
-	'ManageOffers'
-)
-export const TeamsManagement = lazyImport(
-	() => import('@/features/admin'),
-	'TeamsManagement'
-)
-export const NewsManagement = lazyImport(
-	() => import('@/features/admin'),
-	'NewsManagement'
-)
-export const SeasonManagement = lazyImport(
-	() => import('@/features/admin'),
-	'SeasonManagement'
-)
-export const GameManagement = lazyImport(
-	() => import('@/features/admin'),
-	'GameManagement'
-)
-export const RegistrationManagement = lazyImport(
-	() => import('@/features/admin'),
-	'RegistrationManagement'
-)
+export const News = lazyImport(() => import('@/features/public/news'), 'News')
 
-// Protected routes - require authentication
-export const Profile = lazyImport(() => import('@/features/profile'), 'Profile')
+// ==================== PLAYER ROUTES ====================
+// Require authentication
+
+export const Profile = lazyImport(
+	() => import('@/features/player/profile'),
+	'Profile'
+)
 export const ManageTeam = lazyImport(
-	() => import('@/features/manage'),
+	() => import('@/features/player/team'),
 	'ManageTeam'
 )
 
-// Error pages
+// ==================== ADMIN ROUTES ====================
+// Require authentication + admin role
+
+export const AdminDashboard = lazyImport(
+	() => import('@/features/admin/dashboard'),
+	'AdminDashboard'
+)
+export const BadgeManagement = lazyImport(
+	() => import('@/features/admin/badge-management'),
+	'BadgeManagement'
+)
+export const EmailVerification = lazyImport(
+	() => import('@/features/admin/email-verification'),
+	'EmailVerification'
+)
+export const GameManagement = lazyImport(
+	() => import('@/features/admin/game-management'),
+	'GameManagement'
+)
+export const OfferManagement = lazyImport(
+	() => import('@/features/admin/offer-management'),
+	'OfferManagement'
+)
+export const NewsManagement = lazyImport(
+	() => import('@/features/admin/news-management'),
+	'NewsManagement'
+)
+export const PlayerManagement = lazyImport(
+	() => import('@/features/admin/player-management'),
+	'PlayerManagement'
+)
+export const PlayerRankingManagement = lazyImport(
+	() => import('@/features/admin/player-ranking-management'),
+	'PlayerRankingManagement'
+)
+export const RegistrationManagement = lazyImport(
+	() => import('@/features/admin/registration-management'),
+	'RegistrationManagement'
+)
+export const SeasonManagement = lazyImport(
+	() => import('@/features/admin/season-management'),
+	'SeasonManagement'
+)
+export const TeamManagement = lazyImport(
+	() => import('@/features/admin/team-management'),
+	'TeamManagement'
+)
+
+// ==================== ERROR PAGES ====================
+
 export const NotFound = lazyImport(
 	() => import('@/features/not-found'),
 	'NotFound'
