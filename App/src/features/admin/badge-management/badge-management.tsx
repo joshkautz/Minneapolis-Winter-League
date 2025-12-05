@@ -74,11 +74,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import {
-	BadgeDocument,
-	PlayerDocument,
-	SeasonDocument,
-} from '@/types'
+import { BadgeDocument, PlayerDocument, SeasonDocument } from '@/types'
 import { Badge } from '@/components/ui/badge'
 
 interface ProcessedBadge {
@@ -121,7 +117,6 @@ export const BadgeManagement: React.FC = () => {
 			setSelectedSeasonId(currentSeasonQueryDocumentSnapshot.id)
 		}
 	}, [currentSeasonQueryDocumentSnapshot?.id, selectedSeasonId])
-
 
 	// Process badges to resolve references
 	const [badgesList, setBadgesList] = useState<ProcessedBadge[]>([])
@@ -200,7 +195,6 @@ export const BadgeManagement: React.FC = () => {
 	// Image preview state
 	const [imagePreview, setImagePreview] = useState<File | null>(null)
 
-
 	// Loading states
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -234,7 +228,6 @@ export const BadgeManagement: React.FC = () => {
 		})
 		setDialogMode('edit')
 	}
-
 
 	// Handle file selection
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -396,7 +389,6 @@ export const BadgeManagement: React.FC = () => {
 			})
 		}
 	}
-
 
 	// Loading state
 	if (playerLoading || badgesLoading || isProcessing) {

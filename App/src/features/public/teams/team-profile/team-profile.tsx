@@ -13,10 +13,7 @@ import {
 	DocumentSnapshot,
 	teamsBySeasonQuery,
 } from '@/firebase/firestore'
-import {
-	teamBadgesQuery,
-	allBadgesQuery,
-} from '@/firebase/collections/badges'
+import { teamBadgesQuery, allBadgesQuery } from '@/firebase/collections/badges'
 import { allTeamsQuery } from '@/firebase/collections/teams'
 import {
 	GameDocument,
@@ -113,9 +110,9 @@ export const TeamProfile = () => {
 		percentageEarned: number // Percentage of unique teams that have this badge
 	}
 
-	const [allBadgesWithStats, setAllBadgesWithStats] = useState<
-		EnhancedBadge[]
-	>([])
+	const [allBadgesWithStats, setAllBadgesWithStats] = useState<EnhancedBadge[]>(
+		[]
+	)
 
 	// Process all badges with stats (percentage, earned status)
 	useEffect(() => {
@@ -163,7 +160,9 @@ export const TeamProfile = () => {
 					// Fallback to 0 for badges created before stats field was added
 					const totalTeamsAwarded = badgeData.stats?.totalTeamsAwarded ?? 0
 					const percentageEarned =
-						totalUniqueTeams > 0 ? (totalTeamsAwarded / totalUniqueTeams) * 100 : 0
+						totalUniqueTeams > 0
+							? (totalTeamsAwarded / totalUniqueTeams) * 100
+							: 0
 
 					return {
 						id: badgeId,
@@ -342,7 +341,9 @@ export const TeamProfile = () => {
 										>
 											<div className='space-y-2'>
 												<div className='flex items-start justify-between gap-2'>
-													<h4 className='text-sm font-semibold'>{badge.name}</h4>
+													<h4 className='text-sm font-semibold'>
+														{badge.name}
+													</h4>
 													{badge.imageUrl && (
 														<img
 															src={badge.imageUrl}
@@ -357,7 +358,9 @@ export const TeamProfile = () => {
 												</p>
 												<div className='pt-2 border-t space-y-1'>
 													<div className='flex justify-between text-xs'>
-														<span className='text-muted-foreground'>Status:</span>
+														<span className='text-muted-foreground'>
+															Status:
+														</span>
 														<span
 															className={
 																badge.isEarned

@@ -63,7 +63,9 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
-export const PlayerRankingHistory: React.FC<PlayerRankingHistoryProps> = ({ className }) => {
+export const PlayerRankingHistory: React.FC<PlayerRankingHistoryProps> = ({
+	className,
+}) => {
 	const { playerId } = useParams<{ playerId: string }>()
 	const navigate = useNavigate()
 

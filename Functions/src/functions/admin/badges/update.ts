@@ -187,9 +187,7 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 						const bucket = storage.bucket()
 						const oldFile = bucket.file(existingBadge.storagePath)
 						await oldFile.delete()
-						logger.info(
-							`Deleted old badge image: ${existingBadge.storagePath}`
-						)
+						logger.info(`Deleted old badge image: ${existingBadge.storagePath}`)
 					} catch (deleteError) {
 						logger.warn(
 							'Failed to delete old badge image (may not exist):',
@@ -241,7 +239,9 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 			logger.info('Badge updated successfully', {
 				badgeId,
 				updatedBy: auth!.uid,
-				fieldsUpdated: Object.keys(updates).filter((key) => key !== 'updatedAt'),
+				fieldsUpdated: Object.keys(updates).filter(
+					(key) => key !== 'updatedAt'
+				),
 			})
 
 			return {

@@ -136,11 +136,7 @@ export const ManageEditTeamForm = ({
 					)}
 
 					<div className='pt-2'>
-						<Button
-							type='submit'
-							disabled={isSubmitting}
-							className='w-full'
-						>
+						<Button type='submit' disabled={isSubmitting} className='w-full'>
 							{isSubmitting ? 'Updating Team...' : 'Save Changes'}
 						</Button>
 					</div>
