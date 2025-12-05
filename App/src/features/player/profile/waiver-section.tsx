@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/tooltip'
 import { toast } from 'sonner'
 import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
-import { formatTimestamp, SeasonDocument } from '@/shared/utils'
+import { formatTimestamp, SeasonDocument, logger } from '@/shared/utils'
 import { QueryDocumentSnapshot } from '@/firebase/firestore'
 import { Timestamp } from '@firebase/firestore'
 import { sendDropboxEmail } from '@/firebase/functions'
@@ -65,32 +65,50 @@ export const WaiverSection = ({
 				description: `Email sent to ${data.body.signatureRequest?.requesterEmailAddress}`,
 			})
 		} catch (error) {
-			console.error('Dropbox error:', error)
+			logger.error('Dropbox waiver email error', error, {
+				component: 'WaiverSection',
+				action: 'send_dropbox_email',
+			})
 			setDropboxEmailSent(false)
 			setDropboxEmailLoading(false)
 
 			// Handle both HttpError from Dropbox SDK and other errors
 			let errorMessage = 'An unknown error occurred'
 
-			if (
-				typeof error === 'object' &&
-				error !== null &&
-				'code' in error &&
-				error.code === 'functions/unknown' &&
-				'details' in error
-			) {
+			// Type guard for Firebase Functions error with details
+			interface FirebaseFunctionsError {
+				code: string
+				details?: {
+					body?: { error?: { errorMsg?: string } }
+				}
+				message?: string
+			}
+
+			// Type guard for Dropbox HttpError
+			interface DropboxHttpError {
+				body?: { error?: { errorMsg?: string } }
+			}
+
+			const isFirebaseFunctionsError = (
+				err: unknown
+			): err is FirebaseFunctionsError =>
+				typeof err === 'object' &&
+				err !== null &&
+				'code' in err &&
+				(err as FirebaseFunctionsError).code === 'functions/unknown'
+
+			const isDropboxHttpError = (err: unknown): err is DropboxHttpError =>
+				typeof err === 'object' &&
+				err !== null &&
+				'body' in err &&
+				typeof (err as DropboxHttpError).body === 'object'
+
+			if (isFirebaseFunctionsError(error)) {
 				// Firebase Functions wrapped the HttpError
-				const details = error.details as any
-				errorMessage = `Dropbox Error: ${details?.body?.error?.errorMsg || (error as any).message}`
-			} else if (
-				typeof error === 'object' &&
-				error !== null &&
-				'body' in error &&
-				typeof (error as any).body === 'object'
-			) {
+				errorMessage = `Dropbox Error: ${error.details?.body?.error?.errorMsg || error.message}`
+			} else if (isDropboxHttpError(error)) {
 				// Direct HttpError from Dropbox
-				const body = (error as any).body
-				errorMessage = `Dropbox Error: ${body?.error?.errorMsg}`
+				errorMessage = `Dropbox Error: ${error.body?.error?.errorMsg}`
 			} else if (error instanceof Error) {
 				errorMessage = error.message
 			}

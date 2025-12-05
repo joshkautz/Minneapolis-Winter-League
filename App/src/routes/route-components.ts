@@ -106,4 +106,7 @@ export const TeamManagement = lazyImport(
 
 // ==================== ERROR PAGES ====================
 
-export const NotFound = lazyImport(() => import('@/pages'), 'NotFound')
+export const NotFound = lazyImport(
+	() => import('@/features/not-found'),
+	'NotFound'
+)

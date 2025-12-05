@@ -5,6 +5,7 @@ import {
 	OfferDirection,
 	getInviteMessage,
 	getRequestMessage,
+	logger,
 } from '@/shared/utils'
 import {
 	NotificationCard,
@@ -44,9 +45,11 @@ export const ManageNonCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Invite rejected',
 			})
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Firebase Functions errors have a message property
-			const errorMessage = error?.message || 'Invite not rejected'
+			const firebaseError = error as { message?: string }
+			const errorMessage = firebaseError?.message || 'Invite not rejected'
+			logger.error('Invite rejection failed:', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -67,9 +70,11 @@ export const ManageNonCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Invite accepted',
 			})
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Firebase Functions errors have a message property
-			const errorMessage = error?.message || 'Invite not accepted'
+			const firebaseError = error as { message?: string }
+			const errorMessage = firebaseError?.message || 'Invite not accepted'
+			logger.error('Invite acceptance failed:', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -90,9 +95,11 @@ export const ManageNonCaptainsOffersPanel = () => {
 			toast.success('Success', {
 				description: 'Request canceled',
 			})
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Firebase Functions errors have a message property
-			const errorMessage = error?.message || 'Request not canceled'
+			const firebaseError = error as { message?: string }
+			const errorMessage = firebaseError?.message || 'Request not canceled'
+			logger.error('Request cancellation failed:', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})

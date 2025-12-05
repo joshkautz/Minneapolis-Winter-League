@@ -34,7 +34,7 @@ export function groupGamesByRounds(games: GameProcessingData[]): GameRound[] {
 			})
 		}
 
-		roundsMap.get(roundId)!.games.push(game)
+		roundsMap.get(roundId)?.games.push(game)
 	}
 
 	// Convert to array and sort by start time

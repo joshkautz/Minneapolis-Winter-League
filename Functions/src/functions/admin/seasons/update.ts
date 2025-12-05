@@ -125,7 +125,7 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 			logger.info(`Season updated: ${seasonId}`, {
 				seasonId,
 				name: updateData.name,
-				updatedBy: auth!.uid,
+				updatedBy: auth?.uid,
 			})
 
 			return {
@@ -145,7 +145,7 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 			logger.error('Error updating season:', {
 				seasonId,
 				name,
-				userId: auth!.uid,
+				userId: auth?.uid,
 				error: errorMessage,
 			})
 

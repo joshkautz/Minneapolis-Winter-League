@@ -95,7 +95,7 @@ export const verifyUserEmail = functions
 			}
 
 			try {
-				const auth = getAuth()
+				const firebaseAuth = getAuth()
 
 				// Fetch user by email or uid
 				functions.logger.info('Fetching user from Authentication', {
@@ -106,9 +106,11 @@ export const verifyUserEmail = functions
 				let userRecord
 				try {
 					if (uid) {
-						userRecord = await auth.getUser(uid.trim())
+						userRecord = await firebaseAuth.getUser(uid.trim())
 					} else if (email) {
-						userRecord = await auth.getUserByEmail(email.trim().toLowerCase())
+						userRecord = await firebaseAuth.getUserByEmail(
+							email.trim().toLowerCase()
+						)
 					}
 				} catch (error) {
 					functions.logger.error('User not found in Authentication', {
@@ -122,54 +124,62 @@ export const verifyUserEmail = functions
 					)
 				}
 
+				// At this point userRecord is guaranteed to exist (we throw above if not found)
+				if (!userRecord) {
+					throw new functions.https.HttpsError(
+						'not-found',
+						'User not found. Please verify the email or User ID is correct.'
+					)
+				}
+
 				// Check if email is already verified
-				if (userRecord!.emailVerified) {
+				if (userRecord.emailVerified) {
 					functions.logger.info('Email already verified', {
-						userId: userRecord!.uid,
-						email: userRecord!.email,
+						userId: userRecord.uid,
+						email: userRecord.email,
 					})
 					return {
 						success: true,
-						userId: userRecord!.uid,
-						email: userRecord!.email || '',
-						message: `Email ${userRecord!.email} is already verified`,
+						userId: userRecord.uid,
+						email: userRecord.email || '',
+						message: `Email ${userRecord.email} is already verified`,
 					}
 				}
 
 				// Mark email as verified
 				functions.logger.info('Marking email as verified', {
-					userId: userRecord!.uid,
-					email: userRecord!.email,
+					userId: userRecord.uid,
+					email: userRecord.email,
 				})
 
-				await auth.updateUser(userRecord!.uid, {
+				await firebaseAuth.updateUser(userRecord.uid, {
 					emailVerified: true,
 				})
 
 				functions.logger.info('Email successfully marked as verified', {
-					userId: userRecord!.uid,
-					email: userRecord!.email,
+					userId: userRecord.uid,
+					email: userRecord.email,
 				})
 
 				// Log successful operation for audit trail
 				functions.logger.info('Email verification completed successfully', {
-					userId: userRecord!.uid,
-					email: userRecord!.email,
-					verifiedBy: context.auth!.uid,
+					userId: userRecord.uid,
+					email: userRecord.email,
+					verifiedBy: auth?.uid,
 					timestamp: new Date().toISOString(),
 				})
 
 				return {
 					success: true,
-					userId: userRecord!.uid,
-					email: userRecord!.email || '',
-					message: `Email ${userRecord!.email} has been successfully marked as verified`,
+					userId: userRecord.uid,
+					email: userRecord.email || '',
+					message: `Email ${userRecord.email} has been successfully marked as verified`,
 				}
 			} catch (error) {
 				functions.logger.error('Error verifying user email', {
 					email,
 					uid,
-					adminUserId: context.auth!.uid,
+					adminUserId: auth?.uid,
 					error: error instanceof Error ? error.message : 'Unknown error',
 					stack: error instanceof Error ? error.stack : undefined,
 				})

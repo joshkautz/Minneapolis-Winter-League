@@ -161,7 +161,13 @@ export const updateGame = functions
 					)
 				}
 
-				const existingGameData = gameDoc.data()!
+				const existingGameData = gameDoc.data()
+				if (!existingGameData) {
+					throw new functions.https.HttpsError(
+						'not-found',
+						'Game data not found.'
+					)
+				}
 
 				// Build update data object
 				const updateData: Record<
@@ -378,7 +384,7 @@ export const updateGame = functions
 
 				functions.logger.info('Game updated successfully', {
 					gameId,
-					updatedBy: context.auth!.uid,
+					updatedBy: auth?.uid,
 				})
 
 				return {
@@ -389,7 +395,7 @@ export const updateGame = functions
 			} catch (error) {
 				functions.logger.error('Error updating game', {
 					gameId,
-					adminUserId: context.auth!.uid,
+					adminUserId: auth?.uid,
 					error: error instanceof Error ? error.message : 'Unknown error',
 					stack: error instanceof Error ? error.stack : undefined,
 				})

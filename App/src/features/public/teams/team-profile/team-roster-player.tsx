@@ -23,9 +23,9 @@ export const TeamRosterPlayer = ({
 	playerRef: DocumentReference<PlayerDocument>
 	seasonRef: DocumentReference<SeasonDocument> | undefined
 }) => {
-	const [playerSnapshot] = useDocument(playerRef as any)
+	const [playerSnapshot] = useDocument(playerRef)
 
-	const playerData = playerSnapshot?.data() as PlayerDocument | undefined
+	const playerData = playerSnapshot?.data()
 
 	const isPlayerCaptain = useMemo(
 		() => isPlayerCaptainForSeason(playerData, seasonRef),

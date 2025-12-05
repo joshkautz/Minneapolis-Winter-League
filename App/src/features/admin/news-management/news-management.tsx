@@ -66,6 +66,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { NewsDocument, PlayerDocument, SeasonDocument } from '@/types'
+import { logger } from '@/shared/utils'
 
 interface ProcessedNews {
 	id: string
@@ -166,7 +167,11 @@ export const NewsManagement: React.FC = () => {
 							updatedAt: newsData.updatedAt.toDate(),
 						} as ProcessedNews
 					} catch (error) {
-						console.error('Error processing news post', newsId, error)
+						logger.error(
+							'Error processing news post',
+							error instanceof Error ? error : undefined,
+							{ component: 'NewsManagement', action: 'processNews', newsId }
+						)
 						return null
 					}
 				})
@@ -273,7 +278,11 @@ export const NewsManagement: React.FC = () => {
 
 			handleCloseDialog()
 		} catch (error) {
-			console.error('Error saving news post:', error)
+			logger.error(
+				'Error saving news post',
+				error instanceof Error ? error : undefined,
+				{ component: 'NewsManagement', action: 'saveNews' }
+			)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to save news post'
 			)
@@ -293,7 +302,11 @@ export const NewsManagement: React.FC = () => {
 			toast.success(result.message)
 			setDeletingNewsId(null)
 		} catch (error) {
-			console.error('Error deleting news post:', error)
+			logger.error(
+				'Error deleting news post',
+				error instanceof Error ? error : undefined,
+				{ component: 'NewsManagement', action: 'deleteNews' }
+			)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to delete news post'
 			)

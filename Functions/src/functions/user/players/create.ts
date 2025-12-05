@@ -47,7 +47,7 @@ export const createPlayer = functions
 			validateBasicAuthentication(context.auth)
 
 			const { firstname, lastname, email, seasonId } = data
-			const userId = context.auth!.uid
+			const userId = context.auth?.uid ?? ''
 
 			// Validate required fields
 			if (
@@ -83,7 +83,7 @@ export const createPlayer = functions
 			}
 
 			// Validate email matches authenticated user
-			if (context.auth!.token.email !== email) {
+			if (context.auth?.token.email !== email) {
 				throw new functions.https.HttpsError(
 					'permission-denied',
 					'Email must match authenticated user email'

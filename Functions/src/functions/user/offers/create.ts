@@ -37,7 +37,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 		}
 
 		const { playerId, teamId, type } = request.data
-		const userId = request.auth!.uid
+		const userId = request.auth?.uid ?? ''
 
 		if (!playerId || !teamId || !type) {
 			throw new HttpsError(

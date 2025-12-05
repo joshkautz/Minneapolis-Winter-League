@@ -64,14 +64,14 @@ export const updatePlayerRankings = functions
 				updateRankingsSchema.parse(data)
 
 				functions.logger.info('Starting incremental Player Rankings update', {
-					triggeredBy: context.auth!.uid,
+					triggeredBy: context.auth?.uid,
 					applyDecay: true, // Always applied
 				})
 
 				// Create calculation state document for tracking
 				const calculationId = await createCalculationState(
 					'incremental',
-					context.auth!.uid
+					context.auth?.uid ?? 'unknown'
 				)
 
 				try {

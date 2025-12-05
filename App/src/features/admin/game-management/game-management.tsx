@@ -65,7 +65,9 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import { PageContainer, PageHeader } from '@/shared/components'
+import { logger } from '@/shared/utils'
 import { GameDocument, SeasonDocument, TeamDocument } from '@/types'
+import { Timestamp } from '@firebase/firestore'
 
 interface GameFormData {
 	date: string
@@ -394,7 +396,11 @@ export const GameManagement: React.FC = () => {
 			// Close dialog and reset form
 			closeDialog()
 		} catch (error) {
-			console.error('Error saving game:', error)
+			logger.error(
+				'Error saving game',
+				error instanceof Error ? error : undefined,
+				{ component: 'GameManagement', action: 'saveGame' }
+			)
 			toast.error('Error', {
 				description:
 					error instanceof Error ? error.message : 'Failed to save game',
@@ -442,7 +448,11 @@ export const GameManagement: React.FC = () => {
 			setDeleteDialogOpen(false)
 			setGameToDelete(null)
 		} catch (error) {
-			console.error('Error deleting game:', error)
+			logger.error(
+				'Error deleting game',
+				error instanceof Error ? error : undefined,
+				{ component: 'GameManagement', action: 'deleteGame' }
+			)
 			toast.error('Error', {
 				description:
 					error instanceof Error ? error.message : 'Failed to delete game',
@@ -455,12 +465,12 @@ export const GameManagement: React.FC = () => {
 		setGameToDelete(null)
 	}
 
-	const formatDate = (timestamp: any) => {
+	const formatDate = (timestamp: Timestamp) => {
 		const date = timestamp.toDate()
 		return format(date, 'MMM dd, yyyy')
 	}
 
-	const formatTime = (timestamp: any) => {
+	const formatTime = (timestamp: Timestamp) => {
 		const date = timestamp.toDate()
 		return format(date, 'h:mm a')
 	}

@@ -36,6 +36,34 @@ export const useScheduleData = () => {
 		return result
 	}, [gamesQuerySnapshot])
 
+	const { upcomingRounds, completedRounds } = useMemo(() => {
+		const today = new Date()
+		today.setHours(0, 0, 0, 0)
+
+		const upcoming: Array<{ round: GameDocument[]; originalIndex: number }> = []
+		const completed: Array<{ round: GameDocument[]; originalIndex: number }> =
+			[]
+
+		rounds.forEach((round, index) => {
+			if (round.length === 0) return
+
+			// All games in a round share the same timestamp, so check the first game's date
+			const gameDate = round[0].date.toDate()
+			gameDate.setHours(0, 0, 0, 0)
+
+			if (gameDate < today) {
+				completed.push({ round, originalIndex: index })
+			} else {
+				upcoming.push({ round, originalIndex: index })
+			}
+		})
+
+		return {
+			upcomingRounds: upcoming,
+			completedRounds: completed,
+		}
+	}, [rounds])
+
 	const generateRoundTitle = (index: number): string => {
 		return `Week ${Math.ceil((index + 1) / 4)} | Round ${(index % 4) + 1}`
 	}
@@ -43,6 +71,8 @@ export const useScheduleData = () => {
 	return {
 		gamesQuerySnapshot,
 		rounds,
+		upcomingRounds,
+		completedRounds,
 		generateRoundTitle,
 		isLoading: !gamesQuerySnapshot,
 		hasGames: gamesQuerySnapshot && gamesQuerySnapshot.docs.length > 0,
