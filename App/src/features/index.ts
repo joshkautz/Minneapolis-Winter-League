@@ -1,15 +1,14 @@
 /**
- * Features barrel export
+ * Features module barrel export
  *
- * Main entry point for all feature modules
+ * Provides a clean interface for importing feature components organized by role
  */
 
-export * from './auth'
-export * from './home'
-export * from './profile'
-export * from './teams'
-export * from './schedule'
-export * from './standings'
-export * from './create'
-export * from './manage'
-export * from './player-rankings'
+// Admin features
+export * from './admin'
+
+// Player features
+export * from './player'
+
+// Public features
+export * from './public'

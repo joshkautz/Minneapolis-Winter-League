@@ -37,9 +37,7 @@ export const OffersContext = createContext<OffersProps>({
 // eslint-disable-next-line react-refresh/only-export-components
 export const useOffersContext = () => useContext(OffersContext)
 
-export const OffersContextProvider: React.FC<PropsWithChildren> = ({
-	children,
-}) => {
+export const OffersContextProvider = ({ children }: PropsWithChildren) => {
 	const { authenticatedUserSnapshot } = useAuthContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 

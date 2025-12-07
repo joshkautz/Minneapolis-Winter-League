@@ -5,21 +5,21 @@
  * with optional route context for better error reporting.
  */
 
-import React from 'react'
+import { ErrorInfo, ReactNode } from 'react'
 import { ErrorBoundary } from './error-boundary'
 
 interface RouteErrorBoundaryProps {
-	children: React.ReactNode
+	children: ReactNode
 	routeName?: string
-	onError?: (error: Error, errorInfo: React.ErrorInfo) => void
+	onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 
-export const RouteErrorBoundary: React.FC<RouteErrorBoundaryProps> = ({
+export const RouteErrorBoundary = ({
 	children,
 	routeName,
 	onError,
-}) => {
-	const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
+}: RouteErrorBoundaryProps) => {
+	const handleError = (error: Error, errorInfo: ErrorInfo) => {
 		// Add route context to the error if routeName is provided
 		if (routeName) {
 			// eslint-disable-next-line no-console

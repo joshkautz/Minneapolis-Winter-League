@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react'
+import { ReactNode } from 'react'
 import { LazyWrapper, ProtectedRoute } from '@/shared/components'
 
 /**
@@ -15,16 +15,14 @@ interface RouteWrapperProps {
 /**
  * Wrapper for public routes that only need lazy loading
  */
-export const PublicRoute: React.FC<RouteWrapperProps> = ({ children }) => {
+export const PublicRoute = ({ children }: RouteWrapperProps) => {
 	return <LazyWrapper>{children}</LazyWrapper>
 }
 
 /**
  * Wrapper for authenticated routes that need both protection and lazy loading
  */
-export const AuthenticatedRoute: React.FC<RouteWrapperProps> = ({
-	children,
-}) => {
+export const AuthenticatedRoute = ({ children }: RouteWrapperProps) => {
 	return (
 		<ProtectedRoute>
 			<LazyWrapper>{children}</LazyWrapper>

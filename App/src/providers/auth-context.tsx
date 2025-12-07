@@ -1,5 +1,5 @@
 // React
-import React, { PropsWithChildren, createContext, useContext } from 'react'
+import { PropsWithChildren, createContext, useContext } from 'react'
 
 // Firebase Hooks
 import {
@@ -75,9 +75,7 @@ export const useAuthContext = (): AuthContextValue => {
 	return context
 }
 
-export const AuthContextProvider: React.FC<PropsWithChildren> = ({
-	children,
-}) => {
+export const AuthContextProvider = ({ children }: PropsWithChildren) => {
 	const [authStateUser, authStateLoading, authStateError] = useAuthState(auth)
 	const [
 		authenticatedUserSnapshot,

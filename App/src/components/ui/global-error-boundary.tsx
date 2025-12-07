@@ -5,7 +5,7 @@
  * route-level error boundaries or occur in the app shell itself.
  */
 
-import React from 'react'
+import { ReactNode } from 'react'
 import { ErrorBoundary } from './error-boundary'
 import { Card, CardContent, CardHeader, CardTitle } from './card'
 import { Alert, AlertDescription } from './alert'
@@ -13,10 +13,10 @@ import { Button } from './button'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 
 interface GlobalErrorBoundaryProps {
-	children: React.ReactNode
+	children: ReactNode
 }
 
-const GlobalErrorFallback: React.FC = () => {
+const GlobalErrorFallback = () => {
 	const handleGoHome = () => {
 		window.location.href = '/'
 	}
@@ -76,9 +76,7 @@ const GlobalErrorFallback: React.FC = () => {
 	)
 }
 
-export const GlobalErrorBoundary: React.FC<GlobalErrorBoundaryProps> = ({
-	children,
-}) => {
+export const GlobalErrorBoundary = ({ children }: GlobalErrorBoundaryProps) => {
 	return (
 		<ErrorBoundary
 			fallback={<GlobalErrorFallback />}

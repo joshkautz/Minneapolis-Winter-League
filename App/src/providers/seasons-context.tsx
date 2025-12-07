@@ -1,4 +1,4 @@
-import React, {
+import {
 	createContext,
 	ReactNode,
 	useCallback,
@@ -48,9 +48,9 @@ export const useSeasonsContext = (): SeasonsContextValue => {
 	return context
 }
 
-export const SeasonsContextProvider: React.FC<SeasonsContextProviderProps> = ({
+export const SeasonsContextProvider = ({
 	children,
-}) => {
+}: SeasonsContextProviderProps) => {
 	const [
 		seasonsQuerySnapshot,
 		seasonsQuerySnapshotLoading,

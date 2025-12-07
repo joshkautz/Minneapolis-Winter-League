@@ -2,7 +2,7 @@
  * Error Boundary component for handling React errors gracefully
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react'
+import { Component, ErrorInfo, ReactNode } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './card'
 import { Alert, AlertDescription } from './alert'
 import { Button } from './button'
@@ -157,11 +157,11 @@ interface ErrorBoundaryWrapperProps {
 	onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 
-export const ErrorBoundaryWrapper: React.FC<ErrorBoundaryWrapperProps> = ({
+export const ErrorBoundaryWrapper = ({
 	children,
 	fallback,
 	onError,
-}) => {
+}: ErrorBoundaryWrapperProps) => {
 	return (
 		<ErrorBoundary fallback={fallback} onError={onError}>
 			{children}

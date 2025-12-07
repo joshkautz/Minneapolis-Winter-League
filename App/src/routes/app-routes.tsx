@@ -1,4 +1,3 @@
-import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from '@/shared/components'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
@@ -11,17 +10,18 @@ import {
 	TeamProfile,
 	PlayerRankings,
 	PlayerRankingHistory,
-	PlayerRankingsAdmin,
+	PlayerRankingManagement,
 	News,
 	AdminDashboard,
 	PlayerManagement,
 	EmailVerification,
-	ManageOffers,
-	TeamsManagement,
+	OfferManagement,
+	TeamManagement,
 	NewsManagement,
 	SeasonManagement,
 	GameManagement,
 	RegistrationManagement,
+	BadgeManagement,
 	Profile,
 	ManageTeam,
 	NotFound,
@@ -41,7 +41,7 @@ import {
  *
  * For route-specific error handling, consider using RouteErrorBoundary instead.
  */
-export const AppRoutes: React.FC = () => {
+export const AppRoutes = () => {
 	return (
 		<Routes>
 			{/* Main layout routes */}
@@ -179,21 +179,21 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path='/admin/manage-offers'
+					path='/admin/offer-management'
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>
-								<ManageOffers />
+								<OfferManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
 				/>
 				<Route
-					path='/admin/teams-management'
+					path='/admin/team-management'
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>
-								<TeamsManagement />
+								<TeamManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
@@ -229,11 +229,11 @@ export const AppRoutes: React.FC = () => {
 					}
 				/>
 				<Route
-					path='/admin/player-rankings'
+					path='/admin/player-ranking-management'
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>
-								<PlayerRankingsAdmin />
+								<PlayerRankingManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
@@ -244,6 +244,16 @@ export const AppRoutes: React.FC = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<RegistrationManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/badge-management'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<BadgeManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

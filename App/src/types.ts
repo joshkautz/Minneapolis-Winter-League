@@ -26,6 +26,7 @@ export type Timestamp = ClientTimestamp
 /////////////////////////////////////////////////////////////////
 
 export enum Collections {
+	BADGES = 'badges',
 	GAMES = 'games',
 	NEWS = 'news',
 	OFFERS = 'offers',
@@ -257,6 +258,48 @@ export interface CheckoutSessionDocument extends DocumentData {
 	success_url: string
 	/** Checkout session URL */
 	url: string
+}
+
+/**
+ * Badge document structure representing a badge that can be awarded to teams
+ */
+export interface BadgeDocument extends DocumentData {
+	/** Unique badge identifier */
+	badgeId: string
+	/** Badge name/title */
+	name: string
+	/** Description of what the badge represents */
+	description: string
+	/** URL to the badge image */
+	imageUrl: string | null
+	/** Storage path for the badge image (for file management) */
+	storagePath: string | null
+	/** Timestamp when the badge was created */
+	createdAt: Timestamp
+	/** Reference to the admin player who created the badge */
+	createdBy: DocumentReference<PlayerDocument>
+	/** Timestamp when the badge was last updated */
+	updatedAt: Timestamp
+	/** Statistics about badge awards (optional for backward compatibility) */
+	stats?: {
+		/** Number of unique teamIds that have been awarded this badge */
+		totalTeamsAwarded: number
+		/** Timestamp when stats were last updated */
+		lastUpdated: Timestamp
+	}
+}
+
+/**
+ * Team badge document structure representing a badge awarded to a specific team
+ * Stored as a subcollection under teams/{teamId}/badges
+ */
+export interface TeamBadgeDocument extends DocumentData {
+	/** Reference to the badge definition */
+	badge: DocumentReference<BadgeDocument>
+	/** Timestamp when the badge was awarded to the team */
+	awardedAt: Timestamp
+	/** Reference to the admin player who awarded the badge */
+	awardedBy: DocumentReference<PlayerDocument>
 }
 
 /////////////////////////////////////////////////////////////////
