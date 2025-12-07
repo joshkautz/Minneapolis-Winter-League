@@ -238,7 +238,7 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 
 			logger.info('Badge updated successfully', {
 				badgeId,
-				updatedBy: auth!.uid,
+				updatedBy: auth?.uid,
 				fieldsUpdated: Object.keys(updates).filter(
 					(key) => key !== 'updatedAt'
 				),
@@ -260,7 +260,7 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 				error instanceof Error ? error.message : 'Unknown error'
 
 			logger.error('Error updating badge:', {
-				userId: auth!.uid,
+				userId: auth?.uid,
 				badgeId: data.badgeId,
 				error: errorMessage,
 			})

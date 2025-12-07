@@ -126,7 +126,7 @@ export const deleteBadge = onCall<DeleteBadgeRequest>(
 
 			logger.info('Badge deleted successfully', {
 				badgeId,
-				deletedBy: auth!.uid,
+				deletedBy: auth?.uid,
 				teamsAffected,
 				hadImage: !!badge.storagePath,
 			})
@@ -148,7 +148,7 @@ export const deleteBadge = onCall<DeleteBadgeRequest>(
 				error instanceof Error ? error.message : 'Unknown error'
 
 			logger.error('Error deleting badge:', {
-				userId: auth!.uid,
+				userId: auth?.uid,
 				badgeId: data.badgeId,
 				error: errorMessage,
 			})

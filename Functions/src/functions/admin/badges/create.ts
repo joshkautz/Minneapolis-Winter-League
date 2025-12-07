@@ -110,8 +110,9 @@ export const createBadge = onCall<CreateBadgeRequest>(
 			// Validate admin authentication
 			await validateAdminUser(auth, firestore)
 
-			// Get user reference
-			const userRef = firestore.collection(Collections.PLAYERS).doc(auth!.uid)
+			// Get user reference - auth is validated by validateAdminUser above
+			const uid = auth?.uid ?? ''
+			const userRef = firestore.collection(Collections.PLAYERS).doc(uid)
 
 			// Create badge reference with auto-generated ID
 			const badgeRef = firestore.collection(Collections.BADGES).doc()
@@ -190,7 +191,7 @@ export const createBadge = onCall<CreateBadgeRequest>(
 
 			logger.info('Badge created successfully', {
 				badgeId,
-				createdBy: auth!.uid,
+				createdBy: uid,
 				nameLength: name.length,
 				descriptionLength: description.length,
 				hasImage: !!imageUrl,
@@ -212,7 +213,7 @@ export const createBadge = onCall<CreateBadgeRequest>(
 				error instanceof Error ? error.message : 'Unknown error'
 
 			logger.error('Error creating badge:', {
-				userId: auth!.uid,
+				userId: auth?.uid,
 				error: errorMessage,
 			})
 

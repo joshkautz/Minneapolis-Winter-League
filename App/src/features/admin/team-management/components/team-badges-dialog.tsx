@@ -5,6 +5,8 @@ import { Award, Plus, X, Loader2, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
+import { logger } from '@/shared/utils'
+
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -122,7 +124,7 @@ export const TeamBadgesDialog = ({
 							awardedByName,
 						} as ProcessedTeamBadge
 					} catch (error) {
-						console.error(`Error processing team badge ${badgeId}:`, error)
+						logger.error(`Error processing team badge ${badgeId}:`, error)
 						return null
 					}
 				})
@@ -180,7 +182,7 @@ export const TeamBadgesDialog = ({
 			toast.success(result.message)
 			setShowAddBadges(false)
 		} catch (error) {
-			console.error('Error awarding badge:', error)
+			logger.error('Error awarding badge:', error)
 			let errorMessage = 'Failed to award badge'
 			if (error && typeof error === 'object' && 'message' in error) {
 				errorMessage = String(error.message)
@@ -200,7 +202,7 @@ export const TeamBadgesDialog = ({
 			})
 			toast.success(result.message)
 		} catch (error) {
-			console.error('Error revoking badge:', error)
+			logger.error('Error revoking badge:', error)
 			let errorMessage = 'Failed to remove badge'
 			if (error && typeof error === 'object' && 'message' in error) {
 				errorMessage = String(error.message)

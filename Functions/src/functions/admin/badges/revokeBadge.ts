@@ -128,7 +128,7 @@ export const revokeBadge = onCall<RevokeBadgeRequest>(
 				badgeName: badge.name,
 				teamId,
 				teamName: team.name,
-				revokedBy: auth!.uid,
+				revokedBy: auth?.uid,
 				decrementedStats: shouldDecrementStats,
 			})
 
@@ -149,7 +149,7 @@ export const revokeBadge = onCall<RevokeBadgeRequest>(
 				error instanceof Error ? error.message : 'Unknown error'
 
 			logger.error('Error revoking badge from team:', {
-				userId: auth!.uid,
+				userId: auth?.uid,
 				badgeId: data.badgeId,
 				teamId: data.teamId,
 				error: errorMessage,

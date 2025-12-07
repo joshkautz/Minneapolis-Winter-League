@@ -25,6 +25,7 @@ import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
 import { auth } from '@/firebase/auth'
+import { logger } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { allBadgesQuery } from '@/firebase/collections/badges'
 import { seasonsQuery } from '@/firebase/collections/seasons'
@@ -154,7 +155,7 @@ export const BadgeManagement = () => {
 							createdAt: badgeData.createdAt.toDate(),
 						} as ProcessedBadge
 					} catch (error) {
-						console.error(`Error processing badge ${badgeId}:`, error)
+						logger.error(`Error processing badge ${badgeId}:`, error)
 						return {
 							id: badgeId,
 							name: badgeData.name,
@@ -328,7 +329,7 @@ export const BadgeManagement = () => {
 
 			resetForm()
 		} catch (error) {
-			console.error('Error saving badge:', error)
+			logger.error('Error saving badge:', error)
 
 			// Extract Firebase Functions error message
 			let errorMessage = 'Failed to save badge'
@@ -374,7 +375,7 @@ export const BadgeManagement = () => {
 			setDeleteDialogOpen(false)
 			setBadgeToDelete(null)
 		} catch (error) {
-			console.error('Error deleting badge:', error)
+			logger.error('Error deleting badge:', error)
 
 			// Extract Firebase Functions error message
 			let errorMessage = 'Failed to delete badge'
