@@ -1,4 +1,3 @@
-import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from '@/shared/components'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
@@ -42,7 +41,7 @@ import {
  *
  * For route-specific error handling, consider using RouteErrorBoundary instead.
  */
-export const AppRoutes: React.FC = () => {
+export const AppRoutes = () => {
 	return (
 		<Routes>
 			{/* Main layout routes */}

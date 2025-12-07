@@ -4,7 +4,7 @@
  * Allows admin users to create, edit, and delete seasons
  */
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { getDocs, QueryDocumentSnapshot } from 'firebase/firestore'
@@ -70,7 +70,7 @@ interface ProcessedSeason {
 
 type DialogMode = 'create' | 'edit' | null
 
-export const SeasonManagement: React.FC = () => {
+export const SeasonManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)

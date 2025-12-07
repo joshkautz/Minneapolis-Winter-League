@@ -4,7 +4,6 @@
  * Provides navigation to various admin functions and system overview
  */
 
-import React from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { Link } from 'react-router-dom'
@@ -30,7 +29,7 @@ import {
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 
-export const AdminDashboard: React.FC = () => {
+export const AdminDashboard = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)

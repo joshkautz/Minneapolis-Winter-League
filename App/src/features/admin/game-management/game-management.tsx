@@ -4,7 +4,7 @@
  * Allows administrators to create, edit, and delete games
  */
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { format } from 'date-fns'
@@ -93,7 +93,7 @@ const INITIAL_FORM_DATA: GameFormData = {
 	seasonId: '',
 }
 
-export const GameManagement: React.FC = () => {
+export const GameManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)

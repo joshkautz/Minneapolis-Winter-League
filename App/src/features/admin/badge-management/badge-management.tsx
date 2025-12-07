@@ -4,7 +4,7 @@
  * Allows admins to create, edit, and delete badges
  */
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
@@ -88,7 +88,7 @@ interface ProcessedBadge {
 
 type DialogMode = 'create' | 'edit' | 'closed'
 
-export const BadgeManagement: React.FC = () => {
+export const BadgeManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)

@@ -4,7 +4,7 @@
  * Allows administrators to trigger calculations and monitor progress
  */
 
-import React, { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { Link } from 'react-router-dom'
@@ -60,7 +60,7 @@ import {
 	AlertTriangle,
 } from 'lucide-react'
 
-export const PlayerRankingManagement: React.FC = () => {
+export const PlayerRankingManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)
@@ -99,7 +99,7 @@ export const PlayerRankingManagement: React.FC = () => {
 	})) as (RankingsCalculationDocument & { id: string })[] | undefined
 
 	// Process uncalculated games
-	const uncalculatedGames = React.useMemo(() => {
+	const uncalculatedGames = useMemo(() => {
 		try {
 			if (!allGamesSnapshot || !calculatedRoundsSnapshot || !seasonsSnapshot) {
 				return []

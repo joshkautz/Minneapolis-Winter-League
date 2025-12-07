@@ -5,7 +5,7 @@
  * and players who are on a team but not fully registered
  */
 
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { collection, query } from 'firebase/firestore'
@@ -79,7 +79,7 @@ const SortIcon = ({
 	)
 }
 
-export const RegistrationManagement: React.FC = () => {
+export const RegistrationManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)

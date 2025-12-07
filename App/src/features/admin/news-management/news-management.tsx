@@ -4,7 +4,7 @@
  * Allows admins to create, edit, and delete news posts
  */
 
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
@@ -81,7 +81,7 @@ interface ProcessedNews {
 
 type DialogMode = 'create' | 'edit' | 'closed'
 
-export const NewsManagement: React.FC = () => {
+export const NewsManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)

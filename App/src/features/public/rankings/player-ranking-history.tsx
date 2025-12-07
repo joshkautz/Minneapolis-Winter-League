@@ -5,7 +5,7 @@
  * Accessible at /player-rankings/player/{playerId}
  */
 
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
@@ -63,9 +63,9 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
-export const PlayerRankingHistory: React.FC<PlayerRankingHistoryProps> = ({
+export const PlayerRankingHistory = ({
 	className,
-}) => {
+}: PlayerRankingHistoryProps) => {
 	const { playerId } = useParams<{ playerId: string }>()
 	const navigate = useNavigate()
 

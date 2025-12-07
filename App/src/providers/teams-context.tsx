@@ -47,9 +47,7 @@ export const TeamsContext = createContext<TeamProps>({
 // eslint-disable-next-line react-refresh/only-export-components
 export const useTeamsContext = () => useContext(TeamsContext)
 
-export const TeamsContextProvider: React.FC<PropsWithChildren> = ({
-	children,
-}) => {
+export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 	const {
 		selectedSeasonQueryDocumentSnapshot,
 		currentSeasonQueryDocumentSnapshot,

@@ -4,7 +4,7 @@
  * Displays and manages all outstanding offers
  */
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect, ReactNode, KeyboardEvent } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
@@ -66,27 +66,27 @@ type SortColumn =
 type SortDirection = 'asc' | 'desc'
 
 interface SortableColumnHeaderProps {
-	children: React.ReactNode
+	children: ReactNode
 	column: SortColumn
 	currentSortColumn: SortColumn
 	currentSortDirection: SortDirection
 	onSort: (column: SortColumn) => void
 }
 
-const SortableColumnHeader: React.FC<SortableColumnHeaderProps> = ({
+const SortableColumnHeader = ({
 	children,
 	column,
 	currentSortColumn,
 	currentSortDirection,
 	onSort,
-}) => {
+}: SortableColumnHeaderProps) => {
 	const isSorted = currentSortColumn === column
 
 	const handleClick = () => {
 		onSort(column)
 	}
 
-	const handleKeyDown = (e: React.KeyboardEvent) => {
+	const handleKeyDown = (e: KeyboardEvent) => {
 		if (e.key === 'Enter' || e.key === ' ') {
 			e.preventDefault()
 			onSort(column)
@@ -123,7 +123,7 @@ const SortableColumnHeader: React.FC<SortableColumnHeaderProps> = ({
 	)
 }
 
-export const OfferManagement: React.FC = () => {
+export const OfferManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)

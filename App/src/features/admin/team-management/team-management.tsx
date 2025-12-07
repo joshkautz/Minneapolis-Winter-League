@@ -4,7 +4,7 @@
  * Displays all teams for the current season and allows admin to manage them
  */
 
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { QueryDocumentSnapshot } from 'firebase/firestore'
@@ -65,7 +65,7 @@ import { useSeasonsContext } from '@/providers'
 import { TeamBadgesDialog } from './components/team-badges-dialog'
 import { DocumentReference } from '@/firebase/firestore'
 
-export const TeamManagement: React.FC = () => {
+export const TeamManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)
@@ -84,7 +84,7 @@ export const TeamManagement: React.FC = () => {
 	})) as (SeasonDocument & { id: string })[] | undefined
 
 	// Set default selected season to current season
-	React.useEffect(() => {
+	useEffect(() => {
 		if (currentSeasonQueryDocumentSnapshot && !selectedSeasonId) {
 			setSelectedSeasonId(currentSeasonQueryDocumentSnapshot.id)
 		}

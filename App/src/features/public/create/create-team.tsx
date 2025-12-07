@@ -1,11 +1,10 @@
-import React from 'react'
 import { LoadingSpinner, NotificationCard } from '@/shared/components'
 import { CreateTeamForm } from './create-team-form'
 import { RolloverTeamForm } from './rollover-team-form'
 import { TeamCreationStatusCard, TeamCreationFormWrapper } from './components'
 import { useTeamCreation } from './hooks'
 
-export const CreateTeam: React.FC = () => {
+export const CreateTeam = () => {
 	const {
 		rolloverMode,
 		isLoading,

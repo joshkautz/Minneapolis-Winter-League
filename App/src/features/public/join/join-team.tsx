@@ -1,4 +1,3 @@
-import React from 'react'
 import { ManageTeamRequestCard } from '@/features/player/team/manage-team-request-card'
 import { ManageNonCaptainsOffersPanel } from '@/features/player/team/manage-non-captains-offers-panel'
 
@@ -6,7 +5,7 @@ import { ManageNonCaptainsOffersPanel } from '@/features/player/team/manage-non-
  * JoinTeam component for users to join existing teams
  * Displays team request form and available offers/invites
  */
-export const JoinTeam: React.FC = () => {
+export const JoinTeam = () => {
 	return (
 		<div className='flex flex-col lg:flex-row justify-center items-center lg:items-start gap-4 max-w-6xl mx-auto'>
 			{/* Main request card - appears first on mobile, left side on desktop */}

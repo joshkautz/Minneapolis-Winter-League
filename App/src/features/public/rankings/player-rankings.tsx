@@ -4,7 +4,7 @@
  * Displays the player rankings in a sophisticated leaderboard format
  */
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { InlineMath, BlockMath } from 'react-katex'
@@ -83,9 +83,7 @@ const ALGORITHM_VERSIONS = {
 const CURRENT_VERSION = 'v4.0'
 
 // Helper component to render version-specific algorithm details
-const AlgorithmVersionContent: React.FC<{ version: string }> = ({
-	version,
-}) => {
+const AlgorithmVersionContent = ({ version }: { version: string }) => {
 	switch (version) {
 		case 'v1.0':
 			return <AlgorithmV1Content />
@@ -101,7 +99,7 @@ const AlgorithmVersionContent: React.FC<{ version: string }> = ({
 }
 
 // v1.0 - Genesis
-const AlgorithmV1Content: React.FC = () => (
+const AlgorithmV1Content = () => (
 	<>
 		{/* Core Formula */}
 		<div>
@@ -233,7 +231,7 @@ const AlgorithmV1Content: React.FC = () => (
 )
 
 // v2.0 - Ultimate Tuning
-const AlgorithmV2Content: React.FC = () => (
+const AlgorithmV2Content = () => (
 	<>
 		{/* Core Formula */}
 		<div>
@@ -365,7 +363,7 @@ const AlgorithmV2Content: React.FC = () => (
 )
 
 // v3.0 - Round Revolution
-const AlgorithmV3Content: React.FC = () => (
+const AlgorithmV3Content = () => (
 	<>
 		{/* Core Formula */}
 		<div>
@@ -492,7 +490,7 @@ const AlgorithmV3Content: React.FC = () => (
 )
 
 // v4.0 - Asymmetric Gravity (Current Version)
-const AlgorithmV4Content: React.FC = () => (
+const AlgorithmV4Content = () => (
 	<>
 		{/* Core Formula */}
 		<div>
@@ -657,9 +655,9 @@ const AlgorithmV4Content: React.FC = () => (
 	</>
 )
 
-export const PlayerRankings: React.FC<PlayerRankingsProps> = ({
+export const PlayerRankings = ({
 	showAdminControls = false,
-}) => {
+}: PlayerRankingsProps) => {
 	const navigate = useNavigate()
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [selectedVersion, setSelectedVersion] = useState(CURRENT_VERSION)

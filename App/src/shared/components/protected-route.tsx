@@ -1,9 +1,9 @@
-import { useAuthContext } from '@/providers'
-import { LoadingSpinner } from '@/shared/components'
 import { PropsWithChildren } from 'react'
 import { Navigate } from 'react-router-dom'
+import { useAuthContext } from '@/providers'
+import { LoadingSpinner } from '@/shared/components'
 
-export const ProtectedRoute: React.FC<PropsWithChildren> = ({ children }) => {
+export const ProtectedRoute = ({ children }: PropsWithChildren) => {
 	const { authStateUser, authStateLoading } = useAuthContext()
 
 	if (authStateLoading) {

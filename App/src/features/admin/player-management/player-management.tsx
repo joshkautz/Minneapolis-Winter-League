@@ -4,7 +4,7 @@
  * Allows admins to search for, view, and edit player documents
  */
 
-import React, { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import {
@@ -81,7 +81,7 @@ interface PlayerFormData {
 	seasons: SeasonFormData[]
 }
 
-export const PlayerManagement: React.FC = () => {
+export const PlayerManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)
@@ -654,12 +654,12 @@ interface SeasonCardProps {
 	) => void
 }
 
-const SeasonCard: React.FC<SeasonCardProps> = ({
+const SeasonCard = ({
 	seasonData,
 	seasons,
 	isEditing,
 	onFieldChange,
-}) => {
+}: SeasonCardProps) => {
 	const season = seasons?.find((s) => s.id === seasonData.seasonId)
 	const seasonName = season?.name || 'Unknown Season'
 

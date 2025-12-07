@@ -4,7 +4,7 @@
  * Allows admins to mark user emails as verified
  */
 
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import {
@@ -38,7 +38,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { Collections, type PlayerDocument, logger } from '@/shared/utils'
 
-export const EmailVerification: React.FC = () => {
+export const EmailVerification = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading] = useDocument(playerRef)

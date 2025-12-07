@@ -43,9 +43,7 @@ export const GamesContext = createContext<GameProps>({
 // eslint-disable-next-line react-refresh/only-export-components
 export const useGamesContext = () => useContext(GamesContext)
 
-export const GamesContextProvider: React.FC<PropsWithChildren> = ({
-	children,
-}) => {
+export const GamesContextProvider = ({ children }: PropsWithChildren) => {
 	const { selectedSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const [
