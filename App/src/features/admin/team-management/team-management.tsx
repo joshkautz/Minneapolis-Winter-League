@@ -121,7 +121,9 @@ export const TeamManagement = () => {
 				component: 'TeamManagement',
 				error: seasonsError.message,
 			})
-			toast.error('Failed to load seasons', { description: seasonsError.message })
+			toast.error('Failed to load seasons', {
+				description: seasonsError.message,
+			})
 		}
 	}, [seasonsError])
 

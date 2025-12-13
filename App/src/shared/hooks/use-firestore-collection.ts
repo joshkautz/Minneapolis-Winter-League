@@ -107,10 +107,10 @@ export const useFirestoreCollection = <T extends DocumentData = DocumentData>(
 						/https:\/\/console\.firebase\.google\.com[^\s)]+/
 					)
 					if (indexUrlMatch) {
-						logger.info(
-							`Create the required index here: ${indexUrlMatch[0]}`,
-							{ component: 'useFirestoreCollection', queryName }
-						)
+						logger.info(`Create the required index here: ${indexUrlMatch[0]}`, {
+							component: 'useFirestoreCollection',
+							queryName,
+						})
 					}
 				}
 			}
@@ -128,7 +128,7 @@ export const useFirestoreCollection = <T extends DocumentData = DocumentData>(
 					error.message.includes('permission') ||
 					('code' in error && error.code === 'permission-denied')
 				) {
-					description = 'You don\'t have permission to access this data.'
+					description = "You don't have permission to access this data."
 				}
 
 				toast.error(toastTitle, {

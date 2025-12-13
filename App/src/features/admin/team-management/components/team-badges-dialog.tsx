@@ -60,9 +60,8 @@ export const TeamBadgesDialog = ({
 	teamRef,
 }: TeamBadgesDialogProps) => {
 	// Fetch team's badges
-	const [teamBadgesSnapshot, teamBadgesLoading, teamBadgesError] = useCollection(
-		open ? teamBadgesQuery(teamRef) : null
-	)
+	const [teamBadgesSnapshot, teamBadgesLoading, teamBadgesError] =
+		useCollection(open ? teamBadgesQuery(teamRef) : null)
 
 	// Fetch all available badges
 	const [allBadgesSnapshot, allBadgesLoading, allBadgesError] = useCollection(

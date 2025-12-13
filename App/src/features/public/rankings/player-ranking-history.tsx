@@ -72,9 +72,10 @@ export const PlayerRankingHistory = ({
 	const navigate = useNavigate()
 
 	// Fetch all players for the dropdown
-	const [allPlayersSnapshot, allPlayersLoading, allPlayersError] = useCollection(
-		collection(firestore, Collections.PLAYERS) as Query<PlayerDocument>
-	)
+	const [allPlayersSnapshot, allPlayersLoading, allPlayersError] =
+		useCollection(
+			collection(firestore, Collections.PLAYERS) as Query<PlayerDocument>
+		)
 
 	// Fetch all rankings history data from rankings-history collection
 	const [rankingHistorySnapshot, historyLoading, error] = useCollection(

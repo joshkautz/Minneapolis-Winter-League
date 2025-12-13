@@ -99,9 +99,8 @@ export const BadgeManagement = () => {
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	// Fetch all badges
-	const [badgesSnapshot, badgesLoading, badgesError] = useCollection(
-		allBadgesQuery()
-	)
+	const [badgesSnapshot, badgesLoading, badgesError] =
+		useCollection(allBadgesQuery())
 
 	// Fetch all seasons
 	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())

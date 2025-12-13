@@ -131,8 +131,9 @@ export const OfferManagement = () => {
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	// Fetch all pending offers
-	const [offersSnapshot, offersLoading, offersError] =
-		useCollection(allPendingOffersQuery())
+	const [offersSnapshot, offersLoading, offersError] = useCollection(
+		allPendingOffersQuery()
+	)
 
 	// Log and notify on query errors
 	useEffect(() => {

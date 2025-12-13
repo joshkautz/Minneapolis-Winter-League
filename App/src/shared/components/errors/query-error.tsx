@@ -43,8 +43,7 @@ interface QueryErrorProps {
  */
 const categorizeError = (error: Error | FirestoreError): ErrorCategory => {
 	const message = error.message.toLowerCase()
-	const code =
-		'code' in error ? (error as FirestoreError).code : ''
+	const code = 'code' in error ? (error as FirestoreError).code : ''
 
 	if (code === 'permission-denied' || message.includes('permission')) {
 		return 'permission'
@@ -72,14 +71,14 @@ const getErrorContent = (
 			return {
 				title: 'Access Denied',
 				description:
-					'You don\'t have permission to access this data. Please try signing in again or contact support if the problem persists.',
+					"You don't have permission to access this data. Please try signing in again or contact support if the problem persists.",
 				action: 'Sign in again',
 			}
 		case 'index':
 			return {
 				title: 'Database Configuration Required',
 				description:
-					'This query requires a database index that hasn\'t been created yet. Check the browser console for a link to create the required index.',
+					"This query requires a database index that hasn't been created yet. Check the browser console for a link to create the required index.",
 				action: 'Check console for index link',
 			}
 		case 'network':

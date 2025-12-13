@@ -75,7 +75,10 @@ export const GamesContextProvider = ({ children }: PropsWithChildren) => {
 	useEffect(() => {
 		const errors = [
 			{ error: gamesQuerySnapshotError, name: 'games' },
-			{ error: regularSeasonGamesQuerySnapshotError, name: 'regular season games' },
+			{
+				error: regularSeasonGamesQuerySnapshotError,
+				name: 'regular season games',
+			},
 			{ error: playoffGamesQuerySnapshotError, name: 'playoff games' },
 		].filter((e) => e.error)
 

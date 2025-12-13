@@ -54,7 +54,11 @@ export const ManageInvitePlayerDetail = ({
 				description: offersError.message,
 			})
 		}
-	}, [offersError, playerQueryDocumentSnapshot.id, teamQueryDocumentSnapshot?.id])
+	}, [
+		offersError,
+		playerQueryDocumentSnapshot.id,
+		teamQueryDocumentSnapshot?.id,
+	])
 
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()

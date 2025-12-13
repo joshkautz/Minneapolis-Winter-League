@@ -87,9 +87,11 @@ export const PlayerRankingManagement = () => {
 		useCollection(allGamesQuery())
 
 	// Fetch calculated rounds
-	const [calculatedRoundsSnapshot, calculatedRoundsLoading, calculatedRoundsError] = useCollection(
-		calculatedRoundsQuery()
-	)
+	const [
+		calculatedRoundsSnapshot,
+		calculatedRoundsLoading,
+		calculatedRoundsError,
+	] = useCollection(calculatedRoundsQuery())
 
 	// Fetch seasons for reference
 	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
@@ -125,7 +127,9 @@ export const PlayerRankingManagement = () => {
 				component: 'PlayerRankingManagement',
 				error: allGamesError.message,
 			})
-			toast.error('Failed to load games', { description: allGamesError.message })
+			toast.error('Failed to load games', {
+				description: allGamesError.message,
+			})
 		}
 	}, [allGamesError])
 

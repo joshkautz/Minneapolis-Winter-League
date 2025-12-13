@@ -93,9 +93,18 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 	// Log and notify on teams query errors
 	useEffect(() => {
 		const errors = [
-			{ error: selectedSeasonTeamsQuerySnapshotError, name: 'selected season teams' },
-			{ error: currentSeasonTeamsQuerySnapshotError, name: 'current season teams' },
-			{ error: teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError, name: 'captain teams' },
+			{
+				error: selectedSeasonTeamsQuerySnapshotError,
+				name: 'selected season teams',
+			},
+			{
+				error: currentSeasonTeamsQuerySnapshotError,
+				name: 'current season teams',
+			},
+			{
+				error: teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
+				name: 'captain teams',
+			},
 		].filter((e) => e.error)
 
 		errors.forEach(({ error, name }) => {
