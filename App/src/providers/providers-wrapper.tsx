@@ -6,6 +6,7 @@ import {
 	TeamsContextProvider,
 	GamesContextProvider,
 	OffersContextProvider,
+	BadgesContextProvider,
 } from '@/providers'
 
 interface ProvidersWrapperProps {
@@ -25,7 +26,9 @@ export const ProvidersWrapper = ({ children }: ProvidersWrapperProps) => {
 				<SeasonsContextProvider>
 					<TeamsContextProvider>
 						<GamesContextProvider>
-							<OffersContextProvider>{children}</OffersContextProvider>
+							<OffersContextProvider>
+								<BadgesContextProvider>{children}</BadgesContextProvider>
+							</OffersContextProvider>
 						</GamesContextProvider>
 					</TeamsContextProvider>
 				</SeasonsContextProvider>

@@ -14,7 +14,7 @@ import {
 	DocumentSnapshot,
 	teamsBySeasonQuery,
 } from '@/firebase/firestore'
-import { teamBadgesQuery, allBadgesQuery } from '@/firebase/collections/badges'
+import { teamBadgesQuery } from '@/firebase/collections/badges'
 import { allTeamsQuery } from '@/firebase/collections/teams'
 import {
 	GameDocument,
@@ -28,7 +28,7 @@ import {
 import { BadgeDocument, TeamBadgeDocument } from '@/types'
 import { TeamRosterPlayer } from './team-roster-player'
 import { TeamHistory } from './team-history'
-import { useSeasonsContext } from '@/providers'
+import { useSeasonsContext, useBadgesContext } from '@/providers'
 import { Badge } from '@/components/ui/badge'
 import {
 	HoverCard,
@@ -73,6 +73,7 @@ const formatGameResult = (
 export const TeamProfile = () => {
 	const { id } = useParams()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const { allBadgesQuerySnapshot: allBadgesSnapshot } = useBadgesContext()
 
 	const [teamDocumentSnapshot, teamDocumentSnapshotLoading, teamError] =
 		useDocument(getTeamById(id))
@@ -90,9 +91,6 @@ export const TeamProfile = () => {
 	const [teamBadgesSnapshot, , teamBadgesError] = useCollection(
 		teamBadgesQuery(teamDocumentSnapshot?.ref)
 	)
-
-	// Fetch all badges
-	const [allBadgesSnapshot, , allBadgesError] = useCollection(allBadgesQuery())
 
 	// Fetch all teams to calculate unique teamIds
 	const [allTeamsSnapshot, , allTeamsError] = useCollection(allTeamsQuery())
@@ -158,18 +156,6 @@ export const TeamProfile = () => {
 			})
 		}
 	}, [teamBadgesError])
-
-	useEffect(() => {
-		if (allBadgesError) {
-			logger.error('Failed to load badges:', {
-				component: 'TeamProfile',
-				error: allBadgesError.message,
-			})
-			toast.error('Failed to load badges', {
-				description: allBadgesError.message,
-			})
-		}
-	}, [allBadgesError])
 
 	useEffect(() => {
 		if (allTeamsError) {
