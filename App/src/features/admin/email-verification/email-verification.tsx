@@ -4,7 +4,7 @@
  * Allows admins to mark user emails as verified
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import {
@@ -41,7 +41,7 @@ import { Collections, type PlayerDocument, logger } from '@/shared/utils'
 export const EmailVerification = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
@@ -105,7 +105,33 @@ export const EmailVerification = () => {
 		) as Query<PlayerDocument>
 	}, [searchTerm])
 
-	const [playersSnapshot, playersLoading] = useCollection(searchQuery)
+	const [playersSnapshot, playersLoading, playersError] =
+		useCollection(searchQuery)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'EmailVerification',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (playersError) {
+			logger.error('Failed to search players:', {
+				component: 'EmailVerification',
+				error: playersError.message,
+			})
+			toast.error('Failed to search players', {
+				description: playersError.message,
+			})
+		}
+	}, [playersError])
 
 	const searchResults = useMemo(() => {
 		if (!playersSnapshot) return []

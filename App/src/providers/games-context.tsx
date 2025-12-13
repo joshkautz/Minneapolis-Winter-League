@@ -1,8 +1,9 @@
 // React
-import { PropsWithChildren, createContext, useContext } from 'react'
+import { PropsWithChildren, createContext, useContext, useEffect } from 'react'
 
 // Firebase Hooks
 import { useCollection } from 'react-firebase-hooks/firestore'
+import { toast } from 'sonner'
 
 // Winter League
 import {
@@ -12,7 +13,7 @@ import {
 	FirestoreError,
 	QuerySnapshot,
 } from '@/firebase/firestore'
-import { GameDocument } from '@/shared/utils'
+import { GameDocument, logger } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 
 interface GameProps {
@@ -69,6 +70,34 @@ export const GamesContextProvider = ({ children }: PropsWithChildren) => {
 	] = useCollection(
 		currentSeasonPlayoffGamesQuery(selectedSeasonQueryDocumentSnapshot)
 	)
+
+	// Log and notify on games query errors
+	useEffect(() => {
+		const errors = [
+			{ error: gamesQuerySnapshotError, name: 'games' },
+			{
+				error: regularSeasonGamesQuerySnapshotError,
+				name: 'regular season games',
+			},
+			{ error: playoffGamesQuerySnapshotError, name: 'playoff games' },
+		].filter((e) => e.error)
+
+		errors.forEach(({ error, name }) => {
+			if (error) {
+				logger.error(`Failed to load ${name}:`, {
+					component: 'GamesContextProvider',
+					error: error.message,
+				})
+				toast.error(`Failed to load ${name}`, {
+					description: error.message,
+				})
+			}
+		})
+	}, [
+		gamesQuerySnapshotError,
+		regularSeasonGamesQuerySnapshotError,
+		playoffGamesQuerySnapshotError,
+	])
 
 	return (
 		<GamesContext.Provider

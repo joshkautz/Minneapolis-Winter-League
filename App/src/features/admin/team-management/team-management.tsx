@@ -33,7 +33,7 @@ import { seasonsQuery } from '@/firebase/collections/seasons'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { PageContainer, PageHeader } from '@/shared/components'
+import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import { Badge } from '@/components/ui/badge'
 import {
 	Select,
@@ -68,7 +68,7 @@ import { DocumentReference } from '@/firebase/firestore'
 export const TeamManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
@@ -77,7 +77,7 @@ export const TeamManagement = () => {
 	const [selectedSeasonId, setSelectedSeasonId] = useState<string>('')
 
 	// Fetch all seasons
-	const [seasonsSnapshot] = useCollection(seasonsQuery())
+	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),
@@ -96,13 +96,46 @@ export const TeamManagement = () => {
 		: null
 
 	// Fetch teams for selected season
-	const [teamsSnapshot, teamsLoading] = useCollection(
+	const [teamsSnapshot, teamsLoading, teamsError] = useCollection(
 		selectedSeasonSnapshot
 			? currentSeasonTeamsQuery(
 					selectedSeasonSnapshot as QueryDocumentSnapshot<SeasonDocument>
 				)
 			: null
 	)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'TeamManagement',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', { description: playerError.message })
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (seasonsError) {
+			logger.error('Failed to load seasons:', {
+				component: 'TeamManagement',
+				error: seasonsError.message,
+			})
+			toast.error('Failed to load seasons', {
+				description: seasonsError.message,
+			})
+		}
+	}, [seasonsError])
+
+	useEffect(() => {
+		if (teamsError) {
+			logger.error('Failed to load teams:', {
+				component: 'TeamManagement',
+				error: teamsError.message,
+			})
+			toast.error('Failed to load teams', { description: teamsError.message })
+		}
+	}, [teamsError])
 
 	// State for delete confirmation dialog
 	const [teamToDelete, setTeamToDelete] = useState<{
@@ -221,6 +254,20 @@ export const TeamManagement = () => {
 						<p>Loading...</p>
 					</CardContent>
 				</Card>
+			</div>
+		)
+	}
+
+	// Handle query errors
+	if (seasonsError || teamsError) {
+		const error = seasonsError || teamsError
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<QueryError
+					error={error!}
+					title={seasonsError ? 'Error Loading Seasons' : 'Error Loading Teams'}
+					onRetry={() => window.location.reload()}
+				/>
 			</div>
 		)
 	}

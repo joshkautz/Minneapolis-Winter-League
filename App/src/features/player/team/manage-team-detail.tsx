@@ -1,9 +1,11 @@
+import { useEffect } from 'react'
 import {
 	QueryDocumentSnapshot,
 	DocumentSnapshot,
 	offersForPlayerByTeamQuery,
 } from '@/firebase/firestore'
 import { useCollection } from 'react-firebase-hooks/firestore'
+import { toast } from 'sonner'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,6 +13,7 @@ import {
 	TeamDocument,
 	OfferDocument,
 	OfferStatus,
+	logger,
 } from '@/shared/utils'
 import { Link } from 'react-router-dom'
 
@@ -28,12 +31,26 @@ export const ManageTeamDetail = ({
 	currentSeasonTeamsQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument>
 	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument> | undefined
 }) => {
-	const [offersForPlayerByTeamQuerySnapshot] = useCollection(
+	const [offersForPlayerByTeamQuerySnapshot, , offersError] = useCollection(
 		offersForPlayerByTeamQuery(
 			playerDocumentSnapshot,
 			currentSeasonTeamsQueryDocumentSnapshot
 		)
 	)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (offersError) {
+			logger.error('Failed to load offers:', {
+				component: 'ManageTeamDetail',
+				teamId: currentSeasonTeamsQueryDocumentSnapshot.id,
+				error: offersError.message,
+			})
+			toast.error('Failed to load offers', {
+				description: offersError.message,
+			})
+		}
+	}, [offersError, currentSeasonTeamsQueryDocumentSnapshot.id])
 
 	// Check for offers that should block new requests
 	const blockingOffers = offersForPlayerByTeamQuerySnapshot?.docs.filter(

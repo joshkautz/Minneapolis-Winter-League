@@ -34,7 +34,7 @@ import {
 } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PageContainer, PageHeader } from '@/shared/components'
+import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import {
 	Table,
 	TableBody,
@@ -73,12 +73,38 @@ type DialogMode = 'create' | 'edit' | null
 export const SeasonManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	// Fetch all seasons
-	const [seasonsSnapshot, seasonsLoading] = useCollection(seasonsQuery())
+	const [seasonsSnapshot, seasonsLoading, seasonsError] =
+		useCollection(seasonsQuery())
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'SeasonManagement',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (seasonsError) {
+			logger.error('Failed to load seasons:', {
+				component: 'SeasonManagement',
+				error: seasonsError.message,
+			})
+			toast.error('Failed to load seasons', {
+				description: seasonsError.message,
+			})
+		}
+	}, [seasonsError])
 
 	// Dialog state
 	const [dialogMode, setDialogMode] = useState<DialogMode>(null)
@@ -333,6 +359,19 @@ export const SeasonManagement = () => {
 						<p>Loading...</p>
 					</CardContent>
 				</Card>
+			</div>
+		)
+	}
+
+	// Handle query errors
+	if (seasonsError) {
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<QueryError
+					error={seasonsError}
+					title='Error Loading Seasons'
+					onRetry={() => window.location.reload()}
+				/>
 			</div>
 		)
 	}

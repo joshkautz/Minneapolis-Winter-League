@@ -1,7 +1,10 @@
-import { DocumentReference } from '@/firebase/firestore'
-
+import { useEffect, useMemo } from 'react'
+import { useDocument } from 'react-firebase-hooks/firestore'
+import { toast } from 'sonner'
 import { StarFilledIcon } from '@radix-ui/react-icons'
-import { useMemo } from 'react'
+import { Sparkles } from 'lucide-react'
+
+import { DocumentReference } from '@/firebase/firestore'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
 	PlayerDocument,
@@ -9,10 +12,9 @@ import {
 	isPlayerCaptainForSeason,
 	isPlayerPaidForSeason,
 	isPlayerSignedForSeason,
+	logger,
 } from '@/shared/utils'
-import { useDocument } from 'react-firebase-hooks/firestore'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles } from 'lucide-react'
 
 const KARMA_BONUS_FOR_LOOKING_FOR_TEAM = 100
 
@@ -23,7 +25,21 @@ export const TeamRosterPlayer = ({
 	playerRef: DocumentReference<PlayerDocument>
 	seasonRef: DocumentReference<SeasonDocument> | undefined
 }) => {
-	const [playerSnapshot] = useDocument(playerRef)
+	const [playerSnapshot, , playerError] = useDocument(playerRef)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'TeamRosterPlayer',
+				playerId: playerRef.id,
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError, playerRef.id])
 
 	const playerData = playerSnapshot?.data()
 

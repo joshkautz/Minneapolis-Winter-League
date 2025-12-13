@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Mail } from 'lucide-react'
+import { toast } from 'sonner'
 import {
 	QueryDocumentSnapshot,
 	offersForPlayerByTeamQuery,
@@ -11,6 +12,7 @@ import {
 	TeamDocument,
 	OfferDocument,
 	OfferStatus,
+	logger,
 } from '@/shared/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,12 +34,32 @@ export const ManageInvitePlayerDetail = ({
 		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined
 	) => void
 }) => {
-	const [offersForPlayerByTeamQuerySnapshot] = useCollection(
+	const [offersForPlayerByTeamQuerySnapshot, , offersError] = useCollection(
 		offersForPlayerByTeamQuery(
 			playerQueryDocumentSnapshot,
 			teamQueryDocumentSnapshot
 		)
 	)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (offersError) {
+			logger.error('Failed to load offers:', {
+				component: 'ManageInvitePlayerDetail',
+				playerId: playerQueryDocumentSnapshot.id,
+				teamId: teamQueryDocumentSnapshot?.id,
+				error: offersError.message,
+			})
+			toast.error('Failed to load offers', {
+				description: offersError.message,
+			})
+		}
+	}, [
+		offersError,
+		playerQueryDocumentSnapshot.id,
+		teamQueryDocumentSnapshot?.id,
+	])
+
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 

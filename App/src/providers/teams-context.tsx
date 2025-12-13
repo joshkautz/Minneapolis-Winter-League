@@ -1,8 +1,15 @@
 // React
-import { PropsWithChildren, createContext, useContext, useMemo } from 'react'
+import {
+	PropsWithChildren,
+	createContext,
+	useContext,
+	useEffect,
+	useMemo,
+} from 'react'
 
 // Firebase Hooks
 import { useCollection } from 'react-firebase-hooks/firestore'
+import { toast } from 'sonner'
 
 // Winter League
 import {
@@ -11,7 +18,7 @@ import {
 	QuerySnapshot,
 	teamsQuery,
 } from '@/firebase/firestore'
-import { TeamDocument } from '@/shared/utils'
+import { TeamDocument, logger } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 import { useAuthContext } from './auth-context'
 
@@ -82,6 +89,40 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotLoading,
 		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
 	] = useCollection(teamsQuery(teamsForWhichAuthenticatedUserIsCaptain))
+
+	// Log and notify on teams query errors
+	useEffect(() => {
+		const errors = [
+			{
+				error: selectedSeasonTeamsQuerySnapshotError,
+				name: 'selected season teams',
+			},
+			{
+				error: currentSeasonTeamsQuerySnapshotError,
+				name: 'current season teams',
+			},
+			{
+				error: teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
+				name: 'captain teams',
+			},
+		].filter((e) => e.error)
+
+		errors.forEach(({ error, name }) => {
+			if (error) {
+				logger.error(`Failed to load ${name}:`, {
+					component: 'TeamsContextProvider',
+					error: error.message,
+				})
+				toast.error(`Failed to load ${name}`, {
+					description: error.message,
+				})
+			}
+		})
+	}, [
+		selectedSeasonTeamsQuerySnapshotError,
+		currentSeasonTeamsQuerySnapshotError,
+		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
+	])
 
 	return (
 		<TeamsContext.Provider

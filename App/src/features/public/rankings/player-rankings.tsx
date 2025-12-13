@@ -4,9 +4,10 @@
  * Displays the player rankings in a sophisticated leaderboard format
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
+import { toast } from 'sonner'
 import { InlineMath, BlockMath } from 'react-katex'
 import 'katex/dist/katex.min.css'
 
@@ -48,7 +49,7 @@ import {
 	Award,
 	Info,
 } from 'lucide-react'
-import { cn } from '@/shared/utils'
+import { cn, logger } from '@/shared/utils'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { PageContainer, PageHeader } from '@/shared/components'
 
@@ -664,6 +665,19 @@ export const PlayerRankings = ({
 	const [rankingsSnapshot, loading, error] = useCollection(
 		currentPlayerRankingsQuery()
 	)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (error) {
+			logger.error('Failed to load player rankings:', {
+				component: 'PlayerRankings',
+				error: error.message,
+			})
+			toast.error('Failed to load player rankings', {
+				description: error.message,
+			})
+		}
+	}, [error])
 
 	const rankings = rankingsSnapshot?.docs.map((doc) => ({
 		id: doc.id,

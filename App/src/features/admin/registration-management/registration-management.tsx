@@ -17,9 +17,11 @@ import {
 	ArrowUpDown,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { auth } from '@/firebase/auth'
 import { firestore } from '@/firebase/app'
+import { logger } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { seasonsQuery } from '@/firebase/collections/seasons'
 import { useSeasonsContext } from '@/providers'
@@ -46,7 +48,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { PageContainer, PageHeader } from '@/shared/components'
+import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import { PlayerDocument, SeasonDocument, Collections } from '@/types'
 
 type SortField = 'name' | 'email' | 'paid' | 'signed' | 'team'
@@ -82,8 +84,8 @@ const SortIcon = ({
 export const RegistrationManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
-	const [seasonsSnapshot] = useCollection(seasonsQuery())
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
+	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const [filterSeasonId, setFilterSeasonId] = useState<string>(
@@ -96,7 +98,45 @@ export const RegistrationManagement = () => {
 
 	// Query all players
 	const allPlayersQuery = query(collection(firestore, Collections.PLAYERS))
-	const [playersSnapshot, playersLoading] = useCollection(allPlayersQuery)
+	const [playersSnapshot, playersLoading, playersError] =
+		useCollection(allPlayersQuery)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'RegistrationManagement',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (seasonsError) {
+			logger.error('Failed to load seasons:', {
+				component: 'RegistrationManagement',
+				error: seasonsError.message,
+			})
+			toast.error('Failed to load seasons', {
+				description: seasonsError.message,
+			})
+		}
+	}, [seasonsError])
+
+	useEffect(() => {
+		if (playersError) {
+			logger.error('Failed to load players:', {
+				component: 'RegistrationManagement',
+				error: playersError.message,
+			})
+			toast.error('Failed to load players', {
+				description: playersError.message,
+			})
+		}
+	}, [playersError])
 
 	useEffect(() => {
 		if (currentSeasonQueryDocumentSnapshot?.id && !filterSeasonId) {
@@ -208,6 +248,22 @@ export const RegistrationManagement = () => {
 				<div className='flex justify-center items-center h-64'>
 					<p>Loading...</p>
 				</div>
+			</PageContainer>
+		)
+	}
+
+	// Handle query errors
+	if (seasonsError || playersError) {
+		const error = seasonsError || playersError
+		return (
+			<PageContainer>
+				<QueryError
+					error={error!}
+					title={
+						seasonsError ? 'Error Loading Seasons' : 'Error Loading Players'
+					}
+					onRetry={() => window.location.reload()}
+				/>
 			</PageContainer>
 		)
 	}

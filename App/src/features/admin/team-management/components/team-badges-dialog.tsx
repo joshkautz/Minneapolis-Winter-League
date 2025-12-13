@@ -5,6 +5,7 @@ import { Award, Plus, X, Loader2, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
+import { logger } from '@/shared/utils'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -59,14 +60,36 @@ export const TeamBadgesDialog = ({
 	teamRef,
 }: TeamBadgesDialogProps) => {
 	// Fetch team's badges
-	const [teamBadgesSnapshot, teamBadgesLoading] = useCollection(
-		open ? teamBadgesQuery(teamRef) : null
-	)
+	const [teamBadgesSnapshot, teamBadgesLoading, teamBadgesError] =
+		useCollection(open ? teamBadgesQuery(teamRef) : null)
 
 	// Fetch all available badges
-	const [allBadgesSnapshot, allBadgesLoading] = useCollection(
+	const [allBadgesSnapshot, allBadgesLoading, allBadgesError] = useCollection(
 		open ? allBadgesQuery() : null
 	)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (teamBadgesError) {
+			logger.error('Failed to load team badges:', {
+				component: 'TeamBadgesDialog',
+				teamId,
+				error: teamBadgesError.message,
+			})
+			toast.error('Failed to load team badges', {
+				description: teamBadgesError.message,
+			})
+		}
+		if (allBadgesError) {
+			logger.error('Failed to load available badges:', {
+				component: 'TeamBadgesDialog',
+				error: allBadgesError.message,
+			})
+			toast.error('Failed to load available badges', {
+				description: allBadgesError.message,
+			})
+		}
+	}, [teamBadgesError, allBadgesError, teamId])
 
 	// Processed team badges
 	const [teamBadges, setTeamBadges] = useState<ProcessedTeamBadge[]>([])

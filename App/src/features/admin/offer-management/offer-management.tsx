@@ -32,7 +32,7 @@ import { allPendingOffersQuery } from '@/firebase/collections/offers'
 import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PageContainer, PageHeader } from '@/shared/components'
+import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import {
 	Table,
 	TableBody,
@@ -126,12 +126,39 @@ const SortableColumnHeader = ({
 export const OfferManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	// Fetch all pending offers
-	const [offersSnapshot, offersLoading] = useCollection(allPendingOffersQuery())
+	const [offersSnapshot, offersLoading, offersError] = useCollection(
+		allPendingOffersQuery()
+	)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'OfferManagement',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (offersError) {
+			logger.error('Failed to load offers:', {
+				component: 'OfferManagement',
+				error: offersError.message,
+			})
+			toast.error('Failed to load offers', {
+				description: offersError.message,
+			})
+		}
+	}, [offersError])
 
 	// Use state to hold the resolved offers
 	const [offers, setOffers] = useState<ProcessedOffer[]>([])
@@ -334,6 +361,19 @@ export const OfferManagement = () => {
 						<p>Loading...</p>
 					</CardContent>
 				</Card>
+			</div>
+		)
+	}
+
+	// Handle query errors
+	if (offersError) {
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<QueryError
+					error={offersError}
+					title='Error Loading Offers'
+					onRetry={() => window.location.reload()}
+				/>
 			</div>
 		)
 	}
