@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from '@firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { Sparkles, Award, Lock } from 'lucide-react'
+import { Sparkles, Award, Lock, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { NotificationCard } from '@/shared/components'
 import {
@@ -87,15 +87,16 @@ export const TeamProfile = () => {
 		useCollection(gamesByTeamQuery(teamDocumentSnapshot?.ref))
 
 	// Fetch team badges
-	const [teamBadgesSnapshot, , teamBadgesError] = useCollection(
-		teamBadgesQuery(teamDocumentSnapshot?.ref)
-	)
+	const [teamBadgesSnapshot, teamBadgesLoading, teamBadgesError] =
+		useCollection(teamBadgesQuery(teamDocumentSnapshot?.ref))
 
 	// Fetch all badges
-	const [allBadgesSnapshot, , allBadgesError] = useCollection(allBadgesQuery())
+	const [allBadgesSnapshot, allBadgesLoading, allBadgesError] =
+		useCollection(allBadgesQuery())
 
 	// Fetch all teams to calculate unique teamIds
-	const [allTeamsSnapshot, , allTeamsError] = useCollection(allTeamsQuery())
+	const [allTeamsSnapshot, allTeamsLoading, allTeamsError] =
+		useCollection(allTeamsQuery())
 
 	// Log and notify on query errors
 	useEffect(() => {
@@ -290,6 +291,11 @@ export const TeamProfile = () => {
 		]
 	)
 
+	const badgesLoading = useMemo(
+		() => teamBadgesLoading || allBadgesLoading || allTeamsLoading,
+		[teamBadgesLoading, allBadgesLoading, allTeamsLoading]
+	)
+
 	const [imageError, setImageError] = useState(false)
 
 	const registrationStatus = useMemo(
@@ -360,10 +366,21 @@ export const TeamProfile = () => {
 					{/* Badges Card */}
 					<NotificationCard
 						title={'Badges'}
-						description={`${allBadgesWithStats.filter((b) => b.isEarned).length} of ${allBadgesWithStats.length} earned`}
+						description={
+							badgesLoading
+								? 'Loading badges...'
+								: `${allBadgesWithStats.filter((b) => b.isEarned).length} of ${allBadgesWithStats.length} earned`
+						}
 						className={'flex-1 basis-full shrink-0 max-w-full min-w-[360px]'}
 					>
-						{allBadgesWithStats.length > 0 ? (
+						{badgesLoading ? (
+							<div className='flex items-center justify-center py-8'>
+								<Loader2
+									className='h-8 w-8 animate-spin text-muted-foreground'
+									aria-label='Loading badges'
+								/>
+							</div>
+						) : allBadgesWithStats.length > 0 ? (
 							<div
 								className='flex flex-wrap gap-3 py-2'
 								role='list'
