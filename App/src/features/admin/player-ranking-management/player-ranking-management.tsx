@@ -4,10 +4,11 @@
  * Allows administrators to trigger calculations and monitor progress
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
@@ -63,7 +64,7 @@ import {
 export const PlayerRankingManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 
 	const [isCalculating, setIsCalculating] = useState(false)
 	const [calculationError, setCalculationError] = useState<string | null>(null)
@@ -86,12 +87,71 @@ export const PlayerRankingManagement = () => {
 		useCollection(allGamesQuery())
 
 	// Fetch calculated rounds
-	const [calculatedRoundsSnapshot, calculatedRoundsLoading] = useCollection(
+	const [calculatedRoundsSnapshot, calculatedRoundsLoading, calculatedRoundsError] = useCollection(
 		calculatedRoundsQuery()
 	)
 
 	// Fetch seasons for reference
-	const [seasonsSnapshot] = useCollection(seasonsQuery())
+	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'PlayerRankingManagement',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (error) {
+			logger.error('Failed to load calculations:', {
+				component: 'PlayerRankingManagement',
+				error: error.message,
+			})
+			toast.error('Failed to load calculations', {
+				description: error.message,
+			})
+		}
+	}, [error])
+
+	useEffect(() => {
+		if (allGamesError) {
+			logger.error('Failed to load games:', {
+				component: 'PlayerRankingManagement',
+				error: allGamesError.message,
+			})
+			toast.error('Failed to load games', { description: allGamesError.message })
+		}
+	}, [allGamesError])
+
+	useEffect(() => {
+		if (calculatedRoundsError) {
+			logger.error('Failed to load calculated rounds:', {
+				component: 'PlayerRankingManagement',
+				error: calculatedRoundsError.message,
+			})
+			toast.error('Failed to load calculated rounds', {
+				description: calculatedRoundsError.message,
+			})
+		}
+	}, [calculatedRoundsError])
+
+	useEffect(() => {
+		if (seasonsError) {
+			logger.error('Failed to load seasons:', {
+				component: 'PlayerRankingManagement',
+				error: seasonsError.message,
+			})
+			toast.error('Failed to load seasons', {
+				description: seasonsError.message,
+			})
+		}
+	}, [seasonsError])
 
 	const calculations = calculationsSnapshot?.docs.map((doc) => ({
 		id: doc.id,

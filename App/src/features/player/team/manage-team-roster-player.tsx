@@ -8,7 +8,7 @@ import {
 	DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
 import { DotsVerticalIcon, StarFilledIcon } from '@radix-ui/react-icons'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDocument } from 'react-firebase-hooks/firestore'
@@ -32,7 +32,21 @@ export const ManageTeamRosterPlayer = ({
 		isCaptain: isAuthenticatedUserCaptain,
 		currentSeasonData,
 	} = useUserStatus()
-	const [playerSnapshot] = useDocument(playerRef)
+	const [playerSnapshot, , playerError] = useDocument(playerRef)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'ManageTeamRosterPlayer',
+				playerId: playerRef.id,
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError, playerRef.id])
 
 	const team = useMemo(
 		() =>

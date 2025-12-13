@@ -7,13 +7,14 @@ import {
 	useState,
 } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
+import { toast } from 'sonner'
 import {
 	QuerySnapshot,
 	seasonsQuery,
 	FirestoreError,
 	QueryDocumentSnapshot,
 } from '@/firebase/firestore'
-import { SeasonDocument } from '@/shared/utils'
+import { SeasonDocument, logger } from '@/shared/utils'
 
 interface SeasonsContextValue {
 	currentSeasonQueryDocumentSnapshot:
@@ -56,6 +57,19 @@ export const SeasonsContextProvider = ({
 		seasonsQuerySnapshotLoading,
 		seasonsQuerySnapshotError,
 	] = useCollection(seasonsQuery())
+
+	// Log and notify on seasons query errors
+	useEffect(() => {
+		if (seasonsQuerySnapshotError) {
+			logger.error('Failed to load seasons:', {
+				component: 'SeasonsContextProvider',
+				error: seasonsQuerySnapshotError.message,
+			})
+			toast.error('Failed to load seasons', {
+				description: seasonsQuerySnapshotError.message,
+			})
+		}
+	}, [seasonsQuerySnapshotError])
 
 	const [
 		selectedSeasonQueryDocumentSnapshot,

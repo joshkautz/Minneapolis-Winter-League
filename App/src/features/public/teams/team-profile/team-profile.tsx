@@ -4,6 +4,7 @@ import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from '@firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { Sparkles, Award, Lock } from 'lucide-react'
+import { toast } from 'sonner'
 import { NotificationCard } from '@/shared/components'
 import {
 	DocumentReference,
@@ -22,6 +23,7 @@ import {
 	hasAssignedTeams,
 	getTeamRole,
 	formatTimestamp,
+	logger,
 } from '@/shared/utils'
 import { BadgeDocument, TeamBadgeDocument } from '@/types'
 import { TeamRosterPlayer } from './team-roster-player'
@@ -72,32 +74,114 @@ export const TeamProfile = () => {
 	const { id } = useParams()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
-	const [teamDocumentSnapshot, teamDocumentSnapshotLoading] = useDocument(
-		getTeamById(id)
-	)
+	const [teamDocumentSnapshot, teamDocumentSnapshotLoading, teamError] =
+		useDocument(getTeamById(id))
 
-	const [historyQuerySnapshot, historyQuerySnapshotLoading] = useCollection(
-		teamsHistoryQuery(teamDocumentSnapshot?.data()?.teamId)
-	)
+	const [historyQuerySnapshot, historyQuerySnapshotLoading, historyError] =
+		useCollection(teamsHistoryQuery(teamDocumentSnapshot?.data()?.teamId))
 
-	const [teamsQuerySnapshot, teamsQuerySnapshotLoading] = useCollection(
-		teamsBySeasonQuery(teamDocumentSnapshot?.data()?.season)
-	)
+	const [teamsQuerySnapshot, teamsQuerySnapshotLoading, teamsError] =
+		useCollection(teamsBySeasonQuery(teamDocumentSnapshot?.data()?.season))
 
-	const [gamesQuerySnapshot, gamesQuerySnapshotLoading] = useCollection(
-		gamesByTeamQuery(teamDocumentSnapshot?.ref)
-	)
+	const [gamesQuerySnapshot, gamesQuerySnapshotLoading, gamesError] =
+		useCollection(gamesByTeamQuery(teamDocumentSnapshot?.ref))
 
 	// Fetch team badges
-	const [teamBadgesSnapshot] = useCollection(
+	const [teamBadgesSnapshot, , teamBadgesError] = useCollection(
 		teamBadgesQuery(teamDocumentSnapshot?.ref)
 	)
 
 	// Fetch all badges
-	const [allBadgesSnapshot] = useCollection(allBadgesQuery())
+	const [allBadgesSnapshot, , allBadgesError] = useCollection(allBadgesQuery())
 
 	// Fetch all teams to calculate unique teamIds
-	const [allTeamsSnapshot] = useCollection(allTeamsQuery())
+	const [allTeamsSnapshot, , allTeamsError] = useCollection(allTeamsQuery())
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (teamError) {
+			logger.error('Failed to load team:', {
+				component: 'TeamProfile',
+				teamId: id,
+				error: teamError.message,
+			})
+			toast.error('Failed to load team', {
+				description: teamError.message,
+			})
+		}
+	}, [teamError, id])
+
+	useEffect(() => {
+		if (historyError) {
+			logger.error('Failed to load team history:', {
+				component: 'TeamProfile',
+				error: historyError.message,
+			})
+			toast.error('Failed to load team history', {
+				description: historyError.message,
+			})
+		}
+	}, [historyError])
+
+	useEffect(() => {
+		if (teamsError) {
+			logger.error('Failed to load season teams:', {
+				component: 'TeamProfile',
+				error: teamsError.message,
+			})
+			toast.error('Failed to load season teams', {
+				description: teamsError.message,
+			})
+		}
+	}, [teamsError])
+
+	useEffect(() => {
+		if (gamesError) {
+			logger.error('Failed to load games:', {
+				component: 'TeamProfile',
+				error: gamesError.message,
+			})
+			toast.error('Failed to load games', {
+				description: gamesError.message,
+			})
+		}
+	}, [gamesError])
+
+	useEffect(() => {
+		if (teamBadgesError) {
+			logger.error('Failed to load team badges:', {
+				component: 'TeamProfile',
+				error: teamBadgesError.message,
+			})
+			toast.error('Failed to load team badges', {
+				description: teamBadgesError.message,
+			})
+		}
+	}, [teamBadgesError])
+
+	useEffect(() => {
+		if (allBadgesError) {
+			logger.error('Failed to load badges:', {
+				component: 'TeamProfile',
+				error: allBadgesError.message,
+			})
+			toast.error('Failed to load badges', {
+				description: allBadgesError.message,
+			})
+		}
+	}, [allBadgesError])
+
+	useEffect(() => {
+		if (allTeamsError) {
+			logger.error('Failed to load all teams:', {
+				component: 'TeamProfile',
+				error: allTeamsError.message,
+			})
+			toast.error('Failed to load all teams', {
+				description: allTeamsError.message,
+			})
+		}
+	}, [allTeamsError])
 
 	// Enhanced badge interface with earned status and percentage
 	interface EnhancedBadge {

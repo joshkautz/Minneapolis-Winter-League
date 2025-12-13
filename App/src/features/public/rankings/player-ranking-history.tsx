@@ -5,13 +5,15 @@
  * Accessible at /player-rankings/player/{playerId}
  */
 
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
+import { toast } from 'sonner'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { collection, Query } from 'firebase/firestore'
 
 import { firestore } from '@/firebase/app'
+import { logger } from '@/shared/utils'
 import { PlayerDocument, Collections, RankingHistoryDocument } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -70,7 +72,7 @@ export const PlayerRankingHistory = ({
 	const navigate = useNavigate()
 
 	// Fetch all players for the dropdown
-	const [allPlayersSnapshot, allPlayersLoading] = useCollection(
+	const [allPlayersSnapshot, allPlayersLoading, allPlayersError] = useCollection(
 		collection(firestore, Collections.PLAYERS) as Query<PlayerDocument>
 	)
 
@@ -78,6 +80,32 @@ export const PlayerRankingHistory = ({
 	const [rankingHistorySnapshot, historyLoading, error] = useCollection(
 		collection(firestore, 'rankings-history') as Query<RankingHistoryDocument>
 	)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (allPlayersError) {
+			logger.error('Failed to load players:', {
+				component: 'PlayerRankingHistory',
+				error: allPlayersError.message,
+			})
+			toast.error('Failed to load players', {
+				description: allPlayersError.message,
+			})
+		}
+	}, [allPlayersError])
+
+	useEffect(() => {
+		if (error) {
+			logger.error('Failed to load ranking history:', {
+				component: 'PlayerRankingHistory',
+				playerId,
+				error: error.message,
+			})
+			toast.error('Failed to load ranking history', {
+				description: error.message,
+			})
+		}
+	}, [error, playerId])
 
 	const loading = historyLoading || allPlayersLoading
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
+import { toast } from 'sonner'
 import { getDocs, type DocumentSnapshot } from 'firebase/firestore'
 import { Newspaper } from 'lucide-react'
 import { useSeasonsContext } from '@/providers'
@@ -34,6 +35,19 @@ export const News = () => {
 		: null
 
 	const [snapshot, loading, error] = useCollection(initialQuery)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (error) {
+			logger.error('Failed to load news:', {
+				component: 'News',
+				error: error.message,
+			})
+			toast.error('Failed to load news', {
+				description: error.message,
+			})
+		}
+	}, [error])
 
 	// Initialize posts from first query
 	useEffect(() => {

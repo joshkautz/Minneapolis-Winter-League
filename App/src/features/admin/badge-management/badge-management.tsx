@@ -47,6 +47,7 @@ import {
 	PageHeader,
 	DestructiveConfirmationDialog,
 	LoadingSpinner,
+	QueryError,
 } from '@/shared/components'
 import {
 	Table,
@@ -75,6 +76,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { BadgeDocument, PlayerDocument, SeasonDocument } from '@/types'
+import { logger } from '@/shared/utils'
 import { Badge } from '@/components/ui/badge'
 
 interface ProcessedBadge {
@@ -91,16 +93,18 @@ type DialogMode = 'create' | 'edit' | 'closed'
 export const BadgeManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	// Fetch all badges
-	const [badgesSnapshot, badgesLoading] = useCollection(allBadgesQuery())
+	const [badgesSnapshot, badgesLoading, badgesError] = useCollection(
+		allBadgesQuery()
+	)
 
 	// Fetch all seasons
-	const [seasonsSnapshot] = useCollection(seasonsQuery())
+	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),
@@ -117,6 +121,31 @@ export const BadgeManagement = () => {
 			setSelectedSeasonId(currentSeasonQueryDocumentSnapshot.id)
 		}
 	}, [currentSeasonQueryDocumentSnapshot?.id, selectedSeasonId])
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'BadgeManagement',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (seasonsError) {
+			logger.error('Failed to load seasons:', {
+				component: 'BadgeManagement',
+				error: seasonsError.message,
+			})
+			toast.error('Failed to load seasons', {
+				description: seasonsError.message,
+			})
+		}
+	}, [seasonsError])
 
 	// Process badges to resolve references
 	const [badgesList, setBadgesList] = useState<ProcessedBadge[]>([])
@@ -399,6 +428,19 @@ export const BadgeManagement = () => {
 						<LoadingSpinner size='lg' />
 					</CardContent>
 				</Card>
+			</div>
+		)
+	}
+
+	// Error state
+	if (badgesError) {
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<QueryError
+					error={badgesError}
+					title='Error Loading Badges'
+					onRetry={() => window.location.reload()}
+				/>
 			</div>
 		)
 	}

@@ -64,7 +64,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { PageContainer, PageHeader } from '@/shared/components'
+import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import { logger } from '@/shared/utils'
 import { GameDocument, SeasonDocument, TeamDocument } from '@/types'
 import { Timestamp } from '@firebase/firestore'
@@ -96,10 +96,44 @@ const INITIAL_FORM_DATA: GameFormData = {
 export const GameManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
-	const [gamesSnapshot, gamesLoading] = useCollection(allGamesQuery())
-	const [seasonsSnapshot] = useCollection(seasonsQuery())
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
+	const [gamesSnapshot, gamesLoading, gamesError] =
+		useCollection(allGamesQuery())
+	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'GameManagement',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', { description: playerError.message })
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (gamesError) {
+			logger.error('Failed to load games:', {
+				component: 'GameManagement',
+				error: gamesError.message,
+			})
+			toast.error('Failed to load games', { description: gamesError.message })
+		}
+	}, [gamesError])
+
+	useEffect(() => {
+		if (seasonsError) {
+			logger.error('Failed to load seasons:', {
+				component: 'GameManagement',
+				error: seasonsError.message,
+			})
+			toast.error('Failed to load seasons', {
+				description: seasonsError.message,
+			})
+		}
+	}, [seasonsError])
 
 	const [formData, setFormData] = useState<GameFormData>(INITIAL_FORM_DATA)
 	const [editingGameId, setEditingGameId] = useState<string | null>(null)
@@ -145,12 +179,34 @@ export const GameManagement = () => {
 		: undefined
 
 	// Query teams for the selected season (for form dropdowns)
-	const [teamsSnapshot] = useCollection(
+	const [teamsSnapshot, , teamsError] = useCollection(
 		teamsBySeasonQuery(selectedSeasonRef?.ref)
 	)
 
 	// Query all teams (for displaying team names in the table)
-	const [allTeamsSnapshot] = useCollection(allTeamsQuery())
+	const [allTeamsSnapshot, , allTeamsError] = useCollection(allTeamsQuery())
+
+	useEffect(() => {
+		if (teamsError) {
+			logger.error('Failed to load teams:', {
+				component: 'GameManagement',
+				error: teamsError.message,
+			})
+			toast.error('Failed to load teams', { description: teamsError.message })
+		}
+	}, [teamsError])
+
+	useEffect(() => {
+		if (allTeamsError) {
+			logger.error('Failed to load all teams:', {
+				component: 'GameManagement',
+				error: allTeamsError.message,
+			})
+			toast.error('Failed to load all teams', {
+				description: allTeamsError.message,
+			})
+		}
+	}, [allTeamsError])
 
 	const teams = teamsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
@@ -495,6 +551,20 @@ export const GameManagement = () => {
 				<div className='flex justify-center items-center h-64'>
 					<p>Loading...</p>
 				</div>
+			</PageContainer>
+		)
+	}
+
+	// Handle query errors
+	if (gamesError || seasonsError) {
+		const error = gamesError || seasonsError
+		return (
+			<PageContainer>
+				<QueryError
+					error={error!}
+					title={gamesError ? 'Error Loading Games' : 'Error Loading Seasons'}
+					onRetry={() => window.location.reload()}
+				/>
 			</PageContainer>
 		)
 	}

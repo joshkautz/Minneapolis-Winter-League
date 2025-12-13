@@ -53,7 +53,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { PageContainer, PageHeader } from '@/shared/components'
+import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import {
 	Collections,
 	type PlayerDocument,
@@ -84,7 +84,7 @@ interface PlayerFormData {
 export const PlayerManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
@@ -150,13 +150,51 @@ export const PlayerManagement = () => {
 		) as Query<PlayerDocument>
 	}, [searchTerm])
 
-	const [playersSnapshot, playersLoading] = useCollection(searchQuery)
+	const [playersSnapshot, playersLoading, playersError] =
+		useCollection(searchQuery)
 
 	// Fetch all seasons
-	const [seasonsSnapshot] = useCollection(seasonsQuery())
+	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'PlayerManagement',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (playersError) {
+			logger.error('Failed to search players:', {
+				component: 'PlayerManagement',
+				error: playersError.message,
+			})
+			toast.error('Failed to search players', {
+				description: playersError.message,
+			})
+		}
+	}, [playersError])
+
+	useEffect(() => {
+		if (seasonsError) {
+			logger.error('Failed to load seasons:', {
+				component: 'PlayerManagement',
+				error: seasonsError.message,
+			})
+			toast.error('Failed to load seasons', {
+				description: seasonsError.message,
+			})
+		}
+	}, [seasonsError])
 
 	// Fetch selected player - create document reference directly since we have a raw UID
-	const [selectedPlayerSnapshot] = useDocument(
+	const [selectedPlayerSnapshot, , selectedPlayerError] = useDocument(
 		selectedPlayerId
 			? (doc(
 					firestore,
@@ -165,6 +203,19 @@ export const PlayerManagement = () => {
 				) as DocumentReference<PlayerDocument>)
 			: undefined
 	)
+
+	useEffect(() => {
+		if (selectedPlayerError) {
+			logger.error('Failed to load selected player:', {
+				component: 'PlayerManagement',
+				playerId: selectedPlayerId,
+				error: selectedPlayerError.message,
+			})
+			toast.error('Failed to load selected player', {
+				description: selectedPlayerError.message,
+			})
+		}
+	}, [selectedPlayerError, selectedPlayerId])
 
 	// Fetch teams for all seasons (for dropdowns)
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
@@ -360,6 +411,19 @@ export const PlayerManagement = () => {
 						<p>Loading...</p>
 					</CardContent>
 				</Card>
+			</div>
+		)
+	}
+
+	// Handle query errors
+	if (seasonsError) {
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<QueryError
+					error={seasonsError}
+					title='Error Loading Seasons'
+					onRetry={() => window.location.reload()}
+				/>
 			</div>
 		)
 	}
@@ -665,7 +729,7 @@ const SeasonCard = ({
 
 	// Fetch teams for this season
 	// We need to get the season snapshot to create the proper query
-	const [seasonSnapshot] = useDocument(
+	const [seasonSnapshot, , seasonError] = useDocument(
 		season
 			? (doc(
 					firestore,
@@ -675,9 +739,36 @@ const SeasonCard = ({
 			: undefined
 	)
 
-	const [teamsSnapshot] = useCollection(
+	const [teamsSnapshot, , teamsError] = useCollection(
 		seasonSnapshot ? teamsBySeasonQuery(seasonSnapshot.ref) : undefined
 	)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (seasonError) {
+			logger.error('Failed to load season:', {
+				component: 'SeasonCard',
+				seasonId: season?.id,
+				error: seasonError.message,
+			})
+			toast.error('Failed to load season', {
+				description: seasonError.message,
+			})
+		}
+	}, [seasonError, season?.id])
+
+	useEffect(() => {
+		if (teamsError) {
+			logger.error('Failed to load teams:', {
+				component: 'SeasonCard',
+				seasonId: season?.id,
+				error: teamsError.message,
+			})
+			toast.error('Failed to load teams', {
+				description: teamsError.message,
+			})
+		}
+	}, [teamsError, season?.id])
 
 	const teams = useMemo(() => {
 		if (!teamsSnapshot) return []

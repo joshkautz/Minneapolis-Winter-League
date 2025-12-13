@@ -4,12 +4,15 @@
  * Provides navigation to various admin functions and system overview
  */
 
+import { useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
+import { logger } from '@/shared/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -32,9 +35,22 @@ import { PageContainer, PageHeader } from '@/shared/components'
 export const AdminDashboard = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'AdminDashboard',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError])
 
 	// Handle authentication and data loading
 	if (playerLoading) {

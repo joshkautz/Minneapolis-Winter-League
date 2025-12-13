@@ -38,6 +38,7 @@ import {
 	PageContainer,
 	PageHeader,
 	DestructiveConfirmationDialog,
+	QueryError,
 } from '@/shared/components'
 import {
 	Table,
@@ -84,12 +85,12 @@ type DialogMode = 'create' | 'edit' | 'closed'
 export const NewsManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
+	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	// Fetch all seasons
-	const [seasonsSnapshot] = useCollection(seasonsQuery())
+	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),
@@ -120,9 +121,46 @@ export const NewsManagement = () => {
 		return seasonDoc?.ref || null
 	}, [selectedSeasonId, seasonsSnapshot])
 
-	const [newsSnapshot, newsLoading] = useCollection(
+	const [newsSnapshot, newsLoading, newsError] = useCollection(
 		selectedSeasonRef ? allNewsQueryBySeason(selectedSeasonRef) : null
 	)
+
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'NewsManagement',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', {
+				description: playerError.message,
+			})
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (seasonsError) {
+			logger.error('Failed to load seasons:', {
+				component: 'NewsManagement',
+				error: seasonsError.message,
+			})
+			toast.error('Failed to load seasons', {
+				description: seasonsError.message,
+			})
+		}
+	}, [seasonsError])
+
+	useEffect(() => {
+		if (newsError) {
+			logger.error('Failed to load news:', {
+				component: 'NewsManagement',
+				error: newsError.message,
+			})
+			toast.error('Failed to load news', {
+				description: newsError.message,
+			})
+		}
+	}, [newsError])
 
 	// Process news to resolve references
 	const [newsList, setNewsList] = useState<ProcessedNews[]>([])
@@ -347,6 +385,20 @@ export const NewsManagement = () => {
 						<p>Loading...</p>
 					</CardContent>
 				</Card>
+			</div>
+		)
+	}
+
+	// Handle query errors
+	if (seasonsError || newsError) {
+		const error = seasonsError || newsError
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<QueryError
+					error={error!}
+					title={seasonsError ? 'Error Loading Seasons' : 'Error Loading News'}
+					onRetry={() => window.location.reload()}
+				/>
 			</div>
 		)
 	}
