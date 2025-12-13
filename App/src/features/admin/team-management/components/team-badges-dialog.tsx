@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
 import { logger } from '@/shared/utils'
+import { useBadgesContext } from '@/providers'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -19,7 +20,7 @@ import {
 	awardBadgeViaFunction,
 	revokeBadgeViaFunction,
 } from '@/firebase/collections/functions'
-import { allBadgesQuery, teamBadgesQuery } from '@/firebase/collections/badges'
+import { teamBadgesQuery } from '@/firebase/collections/badges'
 import {
 	BadgeDocument,
 	TeamBadgeDocument,
@@ -63,10 +64,11 @@ export const TeamBadgesDialog = ({
 	const [teamBadgesSnapshot, teamBadgesLoading, teamBadgesError] =
 		useCollection(open ? teamBadgesQuery(teamRef) : null)
 
-	// Fetch all available badges
-	const [allBadgesSnapshot, allBadgesLoading, allBadgesError] = useCollection(
-		open ? allBadgesQuery() : null
-	)
+	// Get all badges from context (pre-loaded)
+	const {
+		allBadgesQuerySnapshot: allBadgesSnapshot,
+		allBadgesQuerySnapshotLoading: allBadgesLoading,
+	} = useBadgesContext()
 
 	// Log and notify on query errors
 	useEffect(() => {
@@ -80,16 +82,7 @@ export const TeamBadgesDialog = ({
 				description: teamBadgesError.message,
 			})
 		}
-		if (allBadgesError) {
-			logger.error('Failed to load available badges:', {
-				component: 'TeamBadgesDialog',
-				error: allBadgesError.message,
-			})
-			toast.error('Failed to load available badges', {
-				description: allBadgesError.message,
-			})
-		}
-	}, [teamBadgesError, allBadgesError, teamId])
+	}, [teamBadgesError, teamId])
 
 	// Processed team badges
 	const [teamBadges, setTeamBadges] = useState<ProcessedTeamBadge[]>([])
