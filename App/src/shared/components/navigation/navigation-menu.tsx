@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/shared/utils'
-import { NewBadge } from '../new-badge'
 
 interface NavigationMenuProps {
 	items: Array<{ label: string; path: string; alt: string }>

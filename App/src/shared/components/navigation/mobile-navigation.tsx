@@ -16,7 +16,6 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { SeasonSelect } from '../season-select'
 import { ThemeSelect } from '../theme-select'
 import { NotificationBadge } from './notification-badge'
-import { NewBadge } from '../new-badge'
 
 interface MobileNavigationProps {
 	navItems: Array<{ label: string; path: string; alt: string }>
