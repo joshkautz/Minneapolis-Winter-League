@@ -22,15 +22,24 @@ export const ResultsTable = ({
 		const bPlacement = teamsQuerySnapshot?.docs
 			.find((team) => team.id === b[0])
 			?.data()?.placement
-		if (aPlacement && bPlacement) {
-			if (aPlacement < bPlacement) {
-				return -1
-			}
-			if (aPlacement > bPlacement) {
-				return 1
-			}
+
+		const aHasPlacement = aPlacement !== null && aPlacement !== undefined
+		const bHasPlacement = bPlacement !== null && bPlacement !== undefined
+
+		// Both have placement - sort by placement (lower is better)
+		if (aHasPlacement && bHasPlacement) {
+			return aPlacement - bPlacement
 		}
-		return 0
+
+		// Only one has placement - that team comes first
+		if (aHasPlacement) return -1
+		if (bHasPlacement) return 1
+
+		// Neither has placement - fall back to wins, then differential
+		if (a[1].wins !== b[1].wins) {
+			return b[1].wins - a[1].wins // More wins = higher rank
+		}
+		return b[1].differential - a[1].differential // Higher differential = higher rank
 	}
 
 	return (
