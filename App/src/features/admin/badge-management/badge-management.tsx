@@ -26,9 +26,8 @@ import { formatDistanceToNow } from 'date-fns'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { allBadgesQuery } from '@/firebase/collections/badges'
 import { seasonsQuery } from '@/firebase/collections/seasons'
-import { useSeasonsContext } from '@/providers'
+import { useSeasonsContext, useBadgesContext } from '@/providers'
 import {
 	createBadgeViaFunction,
 	updateBadgeViaFunction,
@@ -95,12 +94,13 @@ export const BadgeManagement = () => {
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const {
+		allBadgesQuerySnapshot: badgesSnapshot,
+		allBadgesQuerySnapshotLoading: badgesLoading,
+		allBadgesQuerySnapshotError: badgesError,
+	} = useBadgesContext()
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
-
-	// Fetch all badges
-	const [badgesSnapshot, badgesLoading, badgesError] =
-		useCollection(allBadgesQuery())
 
 	// Fetch all seasons
 	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
