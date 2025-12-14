@@ -136,6 +136,39 @@ export const GameManagement = () => {
 		}
 	}, [seasonsError])
 
+	// Log and notify on query errors
+	useEffect(() => {
+		if (playerError) {
+			logger.error('Failed to load player:', {
+				component: 'GameManagement',
+				error: playerError.message,
+			})
+			toast.error('Failed to load player', { description: playerError.message })
+		}
+	}, [playerError])
+
+	useEffect(() => {
+		if (gamesError) {
+			logger.error('Failed to load games:', {
+				component: 'GameManagement',
+				error: gamesError.message,
+			})
+			toast.error('Failed to load games', { description: gamesError.message })
+		}
+	}, [gamesError])
+
+	useEffect(() => {
+		if (seasonsError) {
+			logger.error('Failed to load seasons:', {
+				component: 'GameManagement',
+				error: seasonsError.message,
+			})
+			toast.error('Failed to load seasons', {
+				description: seasonsError.message,
+			})
+		}
+	}, [seasonsError])
+
 	const [formData, setFormData] = useState<GameFormData>(INITIAL_FORM_DATA)
 	const [editingGameId, setEditingGameId] = useState<string | null>(null)
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
