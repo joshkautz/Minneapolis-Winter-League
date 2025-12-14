@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from '@firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { Sparkles, Award, Lock } from 'lucide-react'
+import { Sparkles, Award, Lock, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { NotificationCard } from '@/shared/components'
 import {
@@ -14,8 +14,7 @@ import {
 	DocumentSnapshot,
 	teamsBySeasonQuery,
 } from '@/firebase/firestore'
-import { teamBadgesQuery, allBadgesQuery } from '@/firebase/collections/badges'
-import { allTeamsQuery } from '@/firebase/collections/teams'
+import { teamBadgesQuery } from '@/firebase/collections/badges'
 import {
 	GameDocument,
 	PlayerDocument,
@@ -28,7 +27,11 @@ import {
 import { BadgeDocument, TeamBadgeDocument } from '@/types'
 import { TeamRosterPlayer } from './team-roster-player'
 import { TeamHistory } from './team-history'
-import { useSeasonsContext } from '@/providers'
+import {
+	useSeasonsContext,
+	useBadgesContext,
+	useTeamsContext,
+} from '@/providers'
 import { Badge } from '@/components/ui/badge'
 import {
 	HoverCard,
@@ -73,6 +76,8 @@ const formatGameResult = (
 export const TeamProfile = () => {
 	const { id } = useParams()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const { allBadgesQuerySnapshot: allBadgesSnapshot } = useBadgesContext()
+	const { allTeamsQuerySnapshot: allTeamsSnapshot } = useTeamsContext()
 
 	const [teamDocumentSnapshot, teamDocumentSnapshotLoading, teamError] =
 		useDocument(getTeamById(id))
@@ -90,12 +95,6 @@ export const TeamProfile = () => {
 	const [teamBadgesSnapshot, , teamBadgesError] = useCollection(
 		teamBadgesQuery(teamDocumentSnapshot?.ref)
 	)
-
-	// Fetch all badges
-	const [allBadgesSnapshot, , allBadgesError] = useCollection(allBadgesQuery())
-
-	// Fetch all teams to calculate unique teamIds
-	const [allTeamsSnapshot, , allTeamsError] = useCollection(allTeamsQuery())
 
 	// Log and notify on query errors
 	useEffect(() => {
@@ -159,30 +158,6 @@ export const TeamProfile = () => {
 		}
 	}, [teamBadgesError])
 
-	useEffect(() => {
-		if (allBadgesError) {
-			logger.error('Failed to load badges:', {
-				component: 'TeamProfile',
-				error: allBadgesError.message,
-			})
-			toast.error('Failed to load badges', {
-				description: allBadgesError.message,
-			})
-		}
-	}, [allBadgesError])
-
-	useEffect(() => {
-		if (allTeamsError) {
-			logger.error('Failed to load all teams:', {
-				component: 'TeamProfile',
-				error: allTeamsError.message,
-			})
-			toast.error('Failed to load all teams', {
-				description: allTeamsError.message,
-			})
-		}
-	}, [allTeamsError])
-
 	// Enhanced badge interface with earned status and percentage
 	interface EnhancedBadge {
 		id: string
@@ -194,86 +169,70 @@ export const TeamProfile = () => {
 		percentageEarned: number // Percentage of unique teams that have this badge
 	}
 
-	const [allBadgesWithStats, setAllBadgesWithStats] = useState<EnhancedBadge[]>(
-		[]
-	)
-
-	// Process all badges with stats (percentage, earned status)
-	useEffect(() => {
-		const processAllBadgesWithStats = async () => {
-			if (!allBadgesSnapshot || !allTeamsSnapshot || !teamBadgesSnapshot) {
-				setAllBadgesWithStats([])
-				return
-			}
-
-			// Calculate total unique teamIds across all teams
-			const uniqueTeamIds = new Set<string>()
-			allTeamsSnapshot.docs.forEach((teamDoc) => {
-				const teamData = teamDoc.data() as TeamDocument
-				uniqueTeamIds.add(teamData.teamId)
-			})
-			const totalUniqueTeams = uniqueTeamIds.size
-
-			// Create a set of earned badge IDs for this team
-			const earnedBadgeIds = new Set(
-				teamBadgesSnapshot.docs.map((doc) => doc.id)
-			)
-
-			// Process each badge
-			const results = await Promise.all(
-				allBadgesSnapshot.docs.map(async (badgeDoc) => {
-					const badgeData = badgeDoc.data() as BadgeDocument
-					const badgeId = badgeDoc.id
-
-					// Check if this team has earned this badge
-					const isEarned = earnedBadgeIds.has(badgeId)
-
-					// Get awarded date if earned
-					let awardedAt: Date | null = null
-					if (isEarned) {
-						const teamBadgeDoc = teamBadgesSnapshot.docs.find(
-							(doc) => doc.id === badgeId
-						)
-						if (teamBadgeDoc) {
-							const teamBadgeData = teamBadgeDoc.data() as TeamBadgeDocument
-							awardedAt = teamBadgeData.awardedAt.toDate()
-						}
-					}
-
-					// Calculate percentage using pre-calculated stats
-					// Fallback to 0 for badges created before stats field was added
-					const totalTeamsAwarded = badgeData.stats?.totalTeamsAwarded ?? 0
-					const percentageEarned =
-						totalUniqueTeams > 0
-							? (totalTeamsAwarded / totalUniqueTeams) * 100
-							: 0
-
-					return {
-						id: badgeId,
-						name: badgeData.name,
-						description: badgeData.description,
-						imageUrl: badgeData.imageUrl,
-						isEarned,
-						awardedAt,
-						percentageEarned,
-					} as EnhancedBadge
-				})
-			)
-
-			// Sort badges: earned first (alphabetical), then unearned (alphabetical)
-			const sortedBadges = results.sort((a, b) => {
-				// First, sort by earned status (earned = true comes first)
-				if (a.isEarned !== b.isEarned) {
-					return a.isEarned ? -1 : 1
-				}
-				// Then sort alphabetically by name within each group
-				return a.name.localeCompare(b.name)
-			})
-
-			setAllBadgesWithStats(sortedBadges)
+	// Process all badges with stats (percentage, earned status) - synchronously via useMemo
+	const allBadgesWithStats = useMemo((): EnhancedBadge[] | null => {
+		// Return null while waiting for data (distinct from empty array = no badges)
+		if (!allBadgesSnapshot || !allTeamsSnapshot || !teamBadgesSnapshot) {
+			return null
 		}
 
-		processAllBadgesWithStats()
+		// Calculate total unique teamIds across all teams
+		const uniqueTeamIds = new Set<string>()
+		allTeamsSnapshot.docs.forEach((teamDoc) => {
+			const teamData = teamDoc.data() as TeamDocument
+			uniqueTeamIds.add(teamData.teamId)
+		})
+		const totalUniqueTeams = uniqueTeamIds.size
+
+		// Create a set of earned badge IDs for this team
+		const earnedBadgeIds = new Set(teamBadgesSnapshot.docs.map((doc) => doc.id))
+
+		// Process each badge
+		const results = allBadgesSnapshot.docs.map((badgeDoc) => {
+			const badgeData = badgeDoc.data() as BadgeDocument
+			const badgeId = badgeDoc.id
+
+			// Check if this team has earned this badge
+			const isEarned = earnedBadgeIds.has(badgeId)
+
+			// Get awarded date if earned
+			let awardedAt: Date | null = null
+			if (isEarned) {
+				const teamBadgeDoc = teamBadgesSnapshot.docs.find(
+					(doc) => doc.id === badgeId
+				)
+				if (teamBadgeDoc) {
+					const teamBadgeData = teamBadgeDoc.data() as TeamBadgeDocument
+					awardedAt = teamBadgeData.awardedAt.toDate()
+				}
+			}
+
+			// Calculate percentage using pre-calculated stats
+			// Fallback to 0 for badges created before stats field was added
+			const totalTeamsAwarded = badgeData.stats?.totalTeamsAwarded ?? 0
+			const percentageEarned =
+				totalUniqueTeams > 0 ? (totalTeamsAwarded / totalUniqueTeams) * 100 : 0
+
+			return {
+				id: badgeId,
+				name: badgeData.name,
+				description: badgeData.description,
+				imageUrl: badgeData.imageUrl,
+				isEarned,
+				awardedAt,
+				percentageEarned,
+			} as EnhancedBadge
+		})
+
+		// Sort badges: earned first (alphabetical), then unearned (alphabetical)
+		return results.sort((a, b) => {
+			// First, sort by earned status (earned = true comes first)
+			if (a.isEarned !== b.isEarned) {
+				return a.isEarned ? -1 : 1
+			}
+			// Then sort alphabetically by name within each group
+			return a.name.localeCompare(b.name)
+		})
 	}, [allBadgesSnapshot, allTeamsSnapshot, teamBadgesSnapshot])
 
 	const isLoading = useMemo(
@@ -289,6 +248,9 @@ export const TeamProfile = () => {
 			gamesQuerySnapshotLoading,
 		]
 	)
+
+	// Badges are loading until we have processed data (null = still loading)
+	const badgesLoading = allBadgesWithStats === null
 
 	const [imageError, setImageError] = useState(false)
 
@@ -360,10 +322,21 @@ export const TeamProfile = () => {
 					{/* Badges Card */}
 					<NotificationCard
 						title={'Badges'}
-						description={`${allBadgesWithStats.filter((b) => b.isEarned).length} of ${allBadgesWithStats.length} earned`}
+						description={
+							badgesLoading
+								? 'Loading badges...'
+								: `${allBadgesWithStats.filter((b) => b.isEarned).length} of ${allBadgesWithStats.length} earned`
+						}
 						className={'flex-1 basis-full shrink-0 max-w-full min-w-[360px]'}
 					>
-						{allBadgesWithStats.length > 0 ? (
+						{badgesLoading ? (
+							<div className='flex items-center justify-center py-8'>
+								<Loader2
+									className='h-8 w-8 animate-spin text-muted-foreground'
+									aria-label='Loading badges'
+								/>
+							</div>
+						) : allBadgesWithStats.length > 0 ? (
 							<div
 								className='flex flex-wrap gap-3 py-2'
 								role='list'

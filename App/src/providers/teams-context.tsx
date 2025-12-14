@@ -18,6 +18,7 @@ import {
 	QuerySnapshot,
 	teamsQuery,
 } from '@/firebase/firestore'
+import { allTeamsQuery } from '@/firebase/collections/teams'
 import { TeamDocument, logger } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 import { useAuthContext } from './auth-context'
@@ -36,6 +37,9 @@ interface TeamProps {
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError:
 		| FirestoreError
 		| undefined
+	allTeamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
+	allTeamsQuerySnapshotLoading: boolean
+	allTeamsQuerySnapshotError: FirestoreError | undefined
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -49,6 +53,9 @@ export const TeamsContext = createContext<TeamProps>({
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot: undefined,
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotLoading: false,
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError: undefined,
+	allTeamsQuerySnapshot: undefined,
+	allTeamsQuerySnapshotLoading: false,
+	allTeamsQuerySnapshotError: undefined,
 })
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -90,6 +97,12 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
 	] = useCollection(teamsQuery(teamsForWhichAuthenticatedUserIsCaptain))
 
+	const [
+		allTeamsQuerySnapshot,
+		allTeamsQuerySnapshotLoading,
+		allTeamsQuerySnapshotError,
+	] = useCollection(allTeamsQuery())
+
 	// Log and notify on teams query errors
 	useEffect(() => {
 		const errors = [
@@ -104,6 +117,10 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 			{
 				error: teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
 				name: 'captain teams',
+			},
+			{
+				error: allTeamsQuerySnapshotError,
+				name: 'all teams',
 			},
 		].filter((e) => e.error)
 
@@ -122,6 +139,7 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 		selectedSeasonTeamsQuerySnapshotError,
 		currentSeasonTeamsQuerySnapshotError,
 		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
+		allTeamsQuerySnapshotError,
 	])
 
 	return (
@@ -136,6 +154,9 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 				teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
 				teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotLoading,
 				teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
+				allTeamsQuerySnapshot,
+				allTeamsQuerySnapshotLoading,
+				allTeamsQuerySnapshotError,
 			}}
 		>
 			{children}
