@@ -430,9 +430,7 @@ export const TeamProfile = () => {
 									// Desktop: wrap in HoverCard
 									return (
 										<HoverCard key={badge.id} openDelay={200}>
-											<HoverCardTrigger asChild>
-												{badgeVisual}
-											</HoverCardTrigger>
+											<HoverCardTrigger asChild>{badgeVisual}</HoverCardTrigger>
 											<HoverCardContent
 												className='w-80'
 												side='top'
@@ -680,7 +678,9 @@ export const TeamProfile = () => {
 							</span>
 						</div>
 						<div className='flex justify-between py-2 border-b'>
-							<span className='text-sm text-muted-foreground'>Date awarded</span>
+							<span className='text-sm text-muted-foreground'>
+								Date awarded
+							</span>
 							<span className='text-sm'>
 								{selectedBadge?.isEarned && selectedBadge?.awardedAt
 									? selectedBadge.awardedAt.toLocaleDateString()
