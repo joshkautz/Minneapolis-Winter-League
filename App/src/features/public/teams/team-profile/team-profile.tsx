@@ -360,7 +360,7 @@ export const TeamProfile = () => {
 										<button
 											type='button'
 											role='listitem'
-											className='relative flex items-center justify-center w-16 h-16 cursor-pointer transition-transform hover:scale-110 flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-full'
+											className='relative flex items-center justify-center w-16 h-16 cursor-pointer transition-shadow flex-shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 hover:ring-2 hover:ring-primary/50 hover:ring-offset-2'
 											aria-label={
 												badge.isEarned
 													? `${badge.name} - Earned. Click for details.`
