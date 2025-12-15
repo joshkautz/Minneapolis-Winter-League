@@ -34,18 +34,10 @@ import {
 } from '@/providers'
 import { Badge } from '@/components/ui/badge'
 import {
-	HoverCard,
-	HoverCardContent,
-	HoverCardTrigger,
-} from '@/components/ui/hover-card'
-import {
-	Drawer,
-	DrawerContent,
-	DrawerHeader,
-	DrawerTitle,
-	DrawerDescription,
-} from '@/components/ui/drawer'
-import { useIsMobile } from '@/shared/hooks/use-mobile'
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover'
 
 const RESULT = {
 	VS: 'vs',
@@ -260,10 +252,6 @@ export const TeamProfile = () => {
 	// Badges are loading until we have processed data (null = still loading)
 	const badgesLoading = allBadgesWithStats === null
 
-	// Mobile drawer state for badge details
-	const isMobile = useIsMobile()
-	const [selectedBadge, setSelectedBadge] = useState<EnhancedBadge | null>(null)
-
 	const [imageError, setImageError] = useState(false)
 
 	const registrationStatus = useMemo(
@@ -354,144 +342,112 @@ export const TeamProfile = () => {
 								role='list'
 								aria-label='Team badges'
 							>
-								{allBadgesWithStats.map((badge) => {
-									// Badge visual element (shared between mobile and desktop)
-									const badgeVisual = (
-										<div
-											role='listitem'
-											className='relative flex items-center justify-center w-16 h-16 cursor-pointer transition-transform hover:scale-110 flex-shrink-0'
-											aria-label={
-												badge.isEarned
-													? `${badge.name} - Earned`
-													: `${badge.name} - Locked`
-											}
-											onClick={
-												isMobile ? () => setSelectedBadge(badge) : undefined
-											}
-											onKeyDown={
-												isMobile
-													? (e) => {
-															if (e.key === 'Enter' || e.key === ' ') {
-																e.preventDefault()
-																setSelectedBadge(badge)
-															}
-														}
-													: undefined
-											}
-											tabIndex={isMobile ? 0 : undefined}
-										>
-											{/* Badge Image */}
-											{badge.imageUrl ? (
-												<img
-													src={badge.imageUrl}
-													alt=''
-													role='presentation'
-													className={`w-full h-full object-cover rounded-full ${
-														!badge.isEarned ? 'grayscale opacity-40' : ''
-													}`}
-												/>
-											) : (
-												<div
-													className={`w-full h-full bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center ${
-														!badge.isEarned ? 'grayscale opacity-40' : ''
-													}`}
-													aria-hidden='true'
-												>
-													<Award
-														className={`h-6 w-6 ${
-															badge.isEarned
-																? 'text-amber-600'
-																: 'text-muted-foreground'
+								{allBadgesWithStats.map((badge) => (
+									<Popover key={badge.id}>
+										<PopoverTrigger asChild>
+											<button
+												type='button'
+												role='listitem'
+												className='relative flex items-center justify-center w-16 h-16 cursor-pointer transition-transform hover:scale-110 flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-full'
+												aria-label={
+													badge.isEarned
+														? `${badge.name} - Earned. Click for details.`
+														: `${badge.name} - Locked. Click for details.`
+												}
+											>
+												{/* Badge Image */}
+												{badge.imageUrl ? (
+													<img
+														src={badge.imageUrl}
+														alt=''
+														role='presentation'
+														className={`w-full h-full object-cover rounded-full ${
+															!badge.isEarned ? 'grayscale opacity-40' : ''
 														}`}
 													/>
-												</div>
-											)}
+												) : (
+													<div
+														className={`w-full h-full bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center ${
+															!badge.isEarned ? 'grayscale opacity-40' : ''
+														}`}
+														aria-hidden='true'
+													>
+														<Award
+															className={`h-6 w-6 ${
+																badge.isEarned
+																	? 'text-amber-600'
+																	: 'text-muted-foreground'
+															}`}
+														/>
+													</div>
+												)}
 
-											{/* Lock Icon for Unearned Badges */}
-											{!badge.isEarned && (
-												<div className='absolute inset-0 flex items-center justify-center'>
-													<div className='bg-background/80 backdrop-blur-sm rounded-full p-2'>
-														<Lock className='h-4 w-4 text-muted-foreground' />
+												{/* Lock Icon for Unearned Badges */}
+												{!badge.isEarned && (
+													<div className='absolute inset-0 flex items-center justify-center'>
+														<div className='bg-background/80 backdrop-blur-sm rounded-full p-2'>
+															<Lock className='h-4 w-4 text-muted-foreground' />
+														</div>
+													</div>
+												)}
+											</button>
+										</PopoverTrigger>
+										<PopoverContent className='w-80' side='top' align='center'>
+											<div className='space-y-2'>
+												<div className='flex items-start justify-between gap-2'>
+													<h4 className='text-sm font-semibold'>
+														{badge.name}
+													</h4>
+													{badge.imageUrl && (
+														<img
+															src={badge.imageUrl}
+															alt=''
+															role='presentation'
+															className='w-8 h-8 object-cover rounded-full flex-shrink-0'
+														/>
+													)}
+												</div>
+												<p className='text-xs text-muted-foreground'>
+													{badge.description}
+												</p>
+												<div className='pt-2 border-t space-y-1'>
+													<div className='flex justify-between text-xs'>
+														<span className='text-muted-foreground'>
+															Status:
+														</span>
+														<span
+															className={
+																badge.isEarned
+																	? 'text-green-600 dark:text-green-400 font-medium'
+																	: 'text-muted-foreground'
+															}
+														>
+															{badge.isEarned ? 'Earned' : 'Locked'}
+														</span>
+													</div>
+													<div className='flex justify-between text-xs'>
+														<span className='text-muted-foreground'>
+															Date awarded:
+														</span>
+														<span className='text-muted-foreground'>
+															{badge.isEarned && badge.awardedAt
+																? badge.awardedAt.toLocaleDateString()
+																: 'Locked'}
+														</span>
+													</div>
+													<div className='flex justify-between text-xs'>
+														<span className='text-muted-foreground'>
+															Teams with badge:
+														</span>
+														<span className='text-muted-foreground'>
+															{badge.percentageEarned.toFixed(1)}%
+														</span>
 													</div>
 												</div>
-											)}
-										</div>
-									)
-
-									// Mobile: just render the badge (tap opens drawer)
-									if (isMobile) {
-										return (
-											<div key={badge.id} role='listitem'>
-												{badgeVisual}
 											</div>
-										)
-									}
-
-									// Desktop: wrap in HoverCard
-									return (
-										<HoverCard key={badge.id} openDelay={200}>
-											<HoverCardTrigger asChild>{badgeVisual}</HoverCardTrigger>
-											<HoverCardContent
-												className='w-80'
-												side='top'
-												align='center'
-											>
-												<div className='space-y-2'>
-													<div className='flex items-start justify-between gap-2'>
-														<h4 className='text-sm font-semibold'>
-															{badge.name}
-														</h4>
-														{badge.imageUrl && (
-															<img
-																src={badge.imageUrl}
-																alt=''
-																role='presentation'
-																className='w-8 h-8 object-cover rounded-full flex-shrink-0'
-															/>
-														)}
-													</div>
-													<p className='text-xs text-muted-foreground'>
-														{badge.description}
-													</p>
-													<div className='pt-2 border-t space-y-1'>
-														<div className='flex justify-between text-xs'>
-															<span className='text-muted-foreground'>
-																Status:
-															</span>
-															<span
-																className={
-																	badge.isEarned
-																		? 'text-green-600 dark:text-green-400 font-medium'
-																		: 'text-muted-foreground'
-																}
-															>
-																{badge.isEarned ? 'Earned' : 'Locked'}
-															</span>
-														</div>
-														<div className='flex justify-between text-xs'>
-															<span className='text-muted-foreground'>
-																Date awarded:
-															</span>
-															<span className='text-muted-foreground'>
-																{badge.isEarned && badge.awardedAt
-																	? badge.awardedAt.toLocaleDateString()
-																	: 'Locked'}
-															</span>
-														</div>
-														<div className='flex justify-between text-xs'>
-															<span className='text-muted-foreground'>
-																Teams with badge:
-															</span>
-															<span className='text-muted-foreground'>
-																{badge.percentageEarned.toFixed(1)}%
-															</span>
-														</div>
-													</div>
-												</div>
-											</HoverCardContent>
-										</HoverCard>
-									)
-								})}
+										</PopoverContent>
+									</Popover>
+								))}
 							</div>
 						) : (
 							<div className='text-center py-8'>
@@ -623,81 +579,6 @@ export const TeamProfile = () => {
 					)}
 				</div>
 			</div>
-
-			{/* Mobile Badge Details Drawer */}
-			<Drawer
-				open={!!selectedBadge}
-				onOpenChange={(open) => !open && setSelectedBadge(null)}
-			>
-				<DrawerContent>
-					<DrawerHeader className='text-left'>
-						<div className='flex items-start justify-between gap-4'>
-							<div className='flex-1'>
-								<DrawerTitle>{selectedBadge?.name}</DrawerTitle>
-								<DrawerDescription className='mt-2'>
-									{selectedBadge?.description}
-								</DrawerDescription>
-							</div>
-							{selectedBadge?.imageUrl ? (
-								<img
-									src={selectedBadge.imageUrl}
-									alt=''
-									role='presentation'
-									className={`w-16 h-16 object-cover rounded-full flex-shrink-0 ${
-										!selectedBadge?.isEarned ? 'grayscale opacity-40' : ''
-									}`}
-								/>
-							) : (
-								<div
-									className={`w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center flex-shrink-0 ${
-										!selectedBadge?.isEarned ? 'grayscale opacity-40' : ''
-									}`}
-								>
-									<Award
-										className={`h-8 w-8 ${
-											selectedBadge?.isEarned
-												? 'text-amber-600'
-												: 'text-muted-foreground'
-										}`}
-									/>
-								</div>
-							)}
-						</div>
-					</DrawerHeader>
-					<div className='px-4 pb-6 space-y-3'>
-						<div className='flex justify-between py-2 border-b'>
-							<span className='text-sm text-muted-foreground'>Status</span>
-							<span
-								className={`text-sm font-medium ${
-									selectedBadge?.isEarned
-										? 'text-green-600 dark:text-green-400'
-										: 'text-muted-foreground'
-								}`}
-							>
-								{selectedBadge?.isEarned ? 'Earned' : 'Locked'}
-							</span>
-						</div>
-						<div className='flex justify-between py-2 border-b'>
-							<span className='text-sm text-muted-foreground'>
-								Date awarded
-							</span>
-							<span className='text-sm'>
-								{selectedBadge?.isEarned && selectedBadge?.awardedAt
-									? selectedBadge.awardedAt.toLocaleDateString()
-									: 'Locked'}
-							</span>
-						</div>
-						<div className='flex justify-between py-2'>
-							<span className='text-sm text-muted-foreground'>
-								Teams with badge
-							</span>
-							<span className='text-sm'>
-								{selectedBadge?.percentageEarned.toFixed(1)}%
-							</span>
-						</div>
-					</div>
-				</DrawerContent>
-			</Drawer>
 		</div>
 	)
 }
