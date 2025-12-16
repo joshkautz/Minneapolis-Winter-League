@@ -32,7 +32,6 @@ import {
 	useBadgesContext,
 	useTeamsContext,
 } from '@/providers'
-import { Badge } from '@/components/ui/badge'
 import {
 	Popover,
 	PopoverContent,
@@ -292,42 +291,53 @@ export const TeamProfile = () => {
 		[isLoading, teamDocumentSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
+	const teamName = teamDocumentSnapshot?.data()?.name
+	const teamKarma = teamDocumentSnapshot?.data()?.karma
+
 	return (
 		<div className={'container'}>
-			<div className='w-full max-w-64 my-8 mx-auto group'>
-				<div className='aspect-square w-full overflow-hidden rounded-lg bg-muted'>
-					{teamDocumentSnapshot?.data()?.logo && !imageError ? (
-						<img
-							src={teamDocumentSnapshot.data()?.logo || undefined}
-							alt={`${teamDocumentSnapshot.data()?.name || 'Team'} logo`}
-							className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg'
-							onError={() => setImageError(true)}
-						/>
-					) : (
-						<div className='flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-sky-300'>
-							<span className='text-4xl font-bold text-primary-foreground'>
-								{teamDocumentSnapshot?.data()?.name?.charAt(0)?.toUpperCase() ||
-									'T'}
-							</span>
+			{/* Team Header Section */}
+			<header className='my-8 max-w-[1040px] mx-auto'>
+				<div className='flex flex-col sm:flex-row items-center gap-6 sm:gap-8'>
+					{/* Team Logo */}
+					<div className='w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 group'>
+						<div className='aspect-square w-full overflow-hidden rounded-xl bg-muted shadow-md'>
+							{teamDocumentSnapshot?.data()?.logo && !imageError ? (
+								<img
+									src={teamDocumentSnapshot.data()?.logo || undefined}
+									alt={`${teamName || 'Team'} logo`}
+									className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-105'
+									onError={() => setImageError(true)}
+								/>
+							) : (
+								<div className='flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-sky-300'>
+									<span className='text-4xl sm:text-5xl font-bold text-primary-foreground'>
+										{teamName?.charAt(0)?.toUpperCase() || 'T'}
+									</span>
+								</div>
+							)}
 						</div>
-					)}
+					</div>
+
+					{/* Team Info */}
+					<div className='flex flex-col items-center sm:items-start text-center sm:text-left'>
+						<h1 className='text-2xl sm:text-3xl font-bold tracking-tight'>
+							{teamName || 'Team'}
+						</h1>
+
+						{/* Karma Display */}
+						{teamKarma !== undefined && teamKarma > 0 && (
+							<div
+								className='mt-2 inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400'
+								aria-label={`${teamKarma} karma points`}
+							>
+								<Sparkles className='h-4 w-4' aria-hidden='true' />
+								<span className='text-sm font-medium'>{teamKarma} Karma</span>
+							</div>
+						)}
+					</div>
 				</div>
-			</div>
-			{/* Karma Display */}
-			<div className='max-w-[1040px] mx-auto mb-4'>
-				<div className='flex justify-center items-center'>
-					{teamDocumentSnapshot?.data()?.karma !== undefined &&
-					teamDocumentSnapshot.data()!.karma > 0 ? (
-						<Badge
-							variant='outline'
-							className='text-sm font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20 px-3 py-1.5'
-						>
-							<Sparkles className='h-4 w-4 mr-1.5' />
-							{teamDocumentSnapshot.data()!.karma} Karma
-						</Badge>
-					) : null}
-				</div>
-			</div>
+			</header>
 
 			<div className='max-w-[1040px] mx-auto'>
 				<div className='flex justify-center items-start gap-4 flex-wrap mb-4'>
