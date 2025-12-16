@@ -13,7 +13,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { collection, Query } from 'firebase/firestore'
 
 import { firestore } from '@/firebase/app'
-import { logger } from '@/shared/utils'
+import { logger, GameDocument, hasAssignedTeams } from '@/shared/utils'
 import { PlayerDocument, Collections, RankingHistoryDocument } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -73,6 +73,9 @@ interface TeamHistoryEntry {
 	seasonName: string
 	teamId: string | null
 	teamName: string | null
+	teamLogo: string | null
+	wins: number
+	losses: number
 	isCaptain: boolean
 }
 
@@ -95,6 +98,11 @@ export const PlayerRankingHistory = ({
 	// Fetch all rankings history data from rankings-history collection
 	const [rankingHistorySnapshot, historyLoading, error] = useCollection(
 		collection(firestore, 'rankings-history') as Query<RankingHistoryDocument>
+	)
+
+	// Fetch all games for calculating team records
+	const [allGamesSnapshot] = useCollection(
+		collection(firestore, Collections.GAMES) as Query<GameDocument>
 	)
 
 	// Log and notify on query errors
@@ -229,6 +237,47 @@ export const PlayerRankingHistory = ({
 		return playerHistory.sort((a, b) => a.timestamp - b.timestamp)
 	}, [rankingHistorySnapshot, playerId])
 
+	// Calculate team records from games
+	const teamRecords = useMemo(() => {
+		const records: Record<string, { wins: number; losses: number }> = {}
+
+		if (!allGamesSnapshot?.docs) return records
+
+		allGamesSnapshot.docs.forEach((gameDoc) => {
+			const gameData = gameDoc.data()
+
+			// Skip games with null team references (placeholder games)
+			if (!hasAssignedTeams(gameData)) return
+
+			const { home, away, homeScore, awayScore } = gameData
+
+			// Skip games that haven't been played yet (null scores)
+			if (homeScore === null || awayScore === null) return
+
+			// Update home team record
+			if (!records[home.id]) {
+				records[home.id] = { wins: 0, losses: 0 }
+			}
+			if (homeScore > awayScore) {
+				records[home.id].wins++
+			} else if (homeScore < awayScore) {
+				records[home.id].losses++
+			}
+
+			// Update away team record
+			if (!records[away.id]) {
+				records[away.id] = { wins: 0, losses: 0 }
+			}
+			if (awayScore > homeScore) {
+				records[away.id].wins++
+			} else if (awayScore < homeScore) {
+				records[away.id].losses++
+			}
+		})
+
+		return records
+	}, [allGamesSnapshot])
+
 	// Process player's team history from their seasons array
 	const teamHistory = useMemo((): TeamHistoryEntry[] => {
 		if (!allPlayersSnapshot?.docs || !playerId) return []
@@ -253,10 +302,11 @@ export const PlayerRankingHistory = ({
 				const seasonName = seasonDoc?.data()?.name || 'Unknown Season'
 				const seasonId = seasonDoc?.id || ''
 
-				// Get team name from context
+				// Get team data from context
 				const teamRef = seasonEntry.team
 				let teamId: string | null = null
 				let teamName: string | null = null
+				let teamLogo: string | null = null
 
 				if (teamRef) {
 					const teamDoc = allTeamsQuerySnapshot?.docs.find(
@@ -264,13 +314,20 @@ export const PlayerRankingHistory = ({
 					)
 					teamId = teamDoc?.id || null
 					teamName = teamDoc?.data()?.name || 'Unknown Team'
+					teamLogo = teamDoc?.data()?.logo || null
 				}
+
+				// Get team record
+				const record = teamId ? teamRecords[teamId] : null
 
 				return {
 					seasonId,
 					seasonName,
 					teamId,
 					teamName,
+					teamLogo,
+					wins: record?.wins || 0,
+					losses: record?.losses || 0,
 					isCaptain: seasonEntry.captain || false,
 				}
 			})
@@ -284,6 +341,7 @@ export const PlayerRankingHistory = ({
 		playerId,
 		seasonsQuerySnapshot,
 		allTeamsQuerySnapshot,
+		teamRecords,
 	])
 
 	// Handle player selection change
@@ -688,46 +746,69 @@ export const PlayerRankingHistory = ({
 						Team History
 					</CardTitle>
 				</CardHeader>
-				<CardContent>
+				<CardContent className='p-0'>
 					{teamHistory.length > 0 ? (
-						<div className='space-y-3' role='list' aria-label='Team history'>
+						<div role='list' aria-label='Team history'>
 							{teamHistory.map((entry, index) => (
-								<div
+								<Link
 									key={`${entry.seasonId}-${entry.teamId}-${index}`}
-									className='flex items-center justify-between gap-4 py-2 border-b last:border-b-0'
+									to={entry.teamId ? `/teams/${entry.teamId}` : '#'}
+									className='flex items-center gap-4 px-6 py-3 border-b last:border-b-0 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
 									role='listitem'
+									aria-label={`${entry.teamName}, ${entry.seasonName}, ${entry.wins} wins ${entry.losses} losses${entry.isCaptain ? ', Team Captain' : ''}`}
 								>
-									<div className='flex items-center gap-3 min-w-0'>
-										{entry.teamId ? (
-											<Link
-												to={`/teams/${entry.teamId}`}
-												className='font-medium text-foreground hover:text-primary transition-colors truncate'
-											>
-												{entry.teamName}
-											</Link>
+									{/* Team Logo */}
+									<div className='flex-shrink-0'>
+										{entry.teamLogo ? (
+											<img
+												src={entry.teamLogo}
+												alt=''
+												className='w-10 h-10 rounded-full object-cover bg-muted'
+											/>
 										) : (
-											<span className='font-medium text-muted-foreground truncate'>
-												{entry.teamName || 'No Team'}
-											</span>
-										)}
-										{entry.isCaptain && (
-											<Badge
-												variant='secondary'
-												className='flex items-center gap-1 shrink-0'
-											>
-												<Shield className='h-3 w-3' />
-												<span className='sr-only sm:not-sr-only'>Captain</span>
-											</Badge>
+											<div className='w-10 h-10 rounded-full bg-gradient-to-br from-primary to-sky-300 flex items-center justify-center'>
+												<span className='text-sm font-bold text-primary-foreground'>
+													{entry.teamName?.charAt(0)?.toUpperCase() || 'T'}
+												</span>
+											</div>
 										)}
 									</div>
-									<span className='text-sm text-muted-foreground shrink-0'>
-										{entry.seasonName}
-									</span>
-								</div>
+
+									{/* Team Info */}
+									<div className='flex-1 min-w-0'>
+										<div className='flex items-center gap-2'>
+											<span className='font-medium text-foreground truncate'>
+												{entry.teamName}
+											</span>
+											{entry.isCaptain && (
+												<Badge
+													variant='secondary'
+													className='flex items-center gap-1 shrink-0'
+												>
+													<Shield className='h-3 w-3' />
+													<span className='sr-only sm:not-sr-only'>
+														Captain
+													</span>
+												</Badge>
+											)}
+										</div>
+										<span className='text-sm text-muted-foreground'>
+											{entry.seasonName}
+										</span>
+									</div>
+
+									{/* Win-Loss Record */}
+									<div className='flex-shrink-0 text-right'>
+										<div className='text-sm font-medium'>
+											{entry.wins}-{entry.losses}
+										</div>
+										<div className='text-xs text-muted-foreground'>Record</div>
+									</div>
+								</Link>
 							))}
 						</div>
 					) : (
-						<p className='text-sm text-muted-foreground text-center py-4'>
+						<p className='text-sm text-muted-foreground text-center py-6 px-6'>
 							No team history available for this player.
 						</p>
 					)}
