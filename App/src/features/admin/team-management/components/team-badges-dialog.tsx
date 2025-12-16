@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
-import { Award, Plus, Trash2, Loader2, Lock } from 'lucide-react'
+import { Award, Trash2, Loader2, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -101,9 +101,8 @@ export const TeamBadgesDialog = ({
 	// Available badges (not yet awarded to team)
 	const [availableBadges, setAvailableBadges] = useState<AvailableBadge[]>([])
 
-	// Dialog state
-	const [showAddBadges, setShowAddBadges] = useState(false)
-	const [isSubmitting, setIsSubmitting] = useState(false)
+	// Track which badge is currently being awarded (for loading state)
+	const [awardingBadgeId, setAwardingBadgeId] = useState<string | null>(null)
 
 	// Badge removal confirmation state
 	const [badgeToRemove, setBadgeToRemove] = useState<{
@@ -204,14 +203,13 @@ export const TeamBadgesDialog = ({
 
 	// Award badge to team
 	const handleAwardBadge = async (badgeId: string) => {
-		setIsSubmitting(true)
+		setAwardingBadgeId(badgeId)
 		try {
 			const result = await awardBadgeViaFunction({
 				badgeId,
 				teamId,
 			})
 			toast.success(result.message)
-			setShowAddBadges(false)
 		} catch (error) {
 			console.error('Error awarding badge:', error)
 			let errorMessage = 'Failed to award badge'
@@ -220,7 +218,7 @@ export const TeamBadgesDialog = ({
 			}
 			toast.error(errorMessage)
 		} finally {
-			setIsSubmitting(false)
+			setAwardingBadgeId(null)
 		}
 	}
 
@@ -253,128 +251,112 @@ export const TeamBadgesDialog = ({
 		}
 	}
 
+	const isLoading = teamBadgesLoading || isProcessing || allBadgesLoading
+
 	return (
 		<>
 			<Dialog open={open} onOpenChange={onOpenChange}>
-				<DialogContent className='max-w-2xl'>
+				<DialogContent className='max-w-2xl max-h-[85vh] flex flex-col'>
 					<DialogHeader>
 						<DialogTitle>Manage Badges: {teamName}</DialogTitle>
 						<DialogDescription>
-							Award or revoke badges for this team
+							Award or remove badges for this team
 						</DialogDescription>
 					</DialogHeader>
 
-					<div className='space-y-4 py-4'>
-						{/* Current Badges Section */}
-						<div>
-							<div className='flex items-center justify-between mb-3'>
-								<h3 className='font-semibold text-sm'>Current Badges</h3>
-								{!showAddBadges && (
-									<Button
-										size='sm'
-										onClick={() => setShowAddBadges(true)}
-										disabled={availableBadges.length === 0}
-									>
-										<Plus className='h-4 w-4 mr-2' />
-										Add Badge
-									</Button>
-								)}
-							</div>
-
-							{teamBadgesLoading || isProcessing ? (
-								<div className='flex items-center justify-center py-8'>
-									<Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-								</div>
-							) : teamBadges.length === 0 ? (
-								<div className='text-center py-8 border rounded-lg'>
-									<Award className='h-12 w-12 mx-auto text-muted-foreground/50 mb-3' />
-									<p className='text-sm text-muted-foreground'>
-										No badges earned yet
-									</p>
-								</div>
-							) : (
-								<div className='space-y-2 max-h-[300px] overflow-y-auto'>
-									{teamBadges.map((badge) => (
-										<div
-											key={badge.id}
-											className='flex items-start gap-3 p-3 border rounded-lg'
-										>
-											{/* Badge Image */}
-											<div className='flex-shrink-0'>
-												{badge.imageUrl ? (
-													<img
-														src={badge.imageUrl}
-														alt={badge.name}
-														className='w-12 h-12 object-cover rounded'
-													/>
-												) : (
-													<div className='w-12 h-12 bg-muted rounded flex items-center justify-center'>
-														<Award className='h-6 w-6 text-muted-foreground' />
-													</div>
-												)}
-											</div>
-
-											{/* Badge Info */}
-											<div className='flex-1 min-w-0'>
-												<h4 className='font-medium text-sm'>{badge.name}</h4>
-												<p className='text-xs text-muted-foreground mt-1 line-clamp-2'>
-													{badge.description}
-												</p>
-												<div className='flex items-center gap-2 mt-2'>
-													<Badge variant='secondary' className='text-xs'>
-														Awarded{' '}
-														{formatDistanceToNow(badge.awardedAt, {
-															addSuffix: true,
-														})}
-													</Badge>
-													<span className='text-xs text-muted-foreground'>
-														by {badge.awardedByName}
-													</span>
-												</div>
-											</div>
-
-											{/* Remove Button */}
-											<Button
-												variant='destructive'
-												size='sm'
-												onClick={() => handleRemoveClick(badge.id, badge.name)}
-											>
-												<Trash2 className='h-4 w-4 mr-1' />
-												Remove
-											</Button>
-										</div>
-									))}
-								</div>
-							)}
+					{isLoading ? (
+						<div className='flex items-center justify-center py-12'>
+							<Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
 						</div>
-
-						{/* Add Badges Section */}
-						{showAddBadges && (
+					) : (
+						<div className='space-y-6 overflow-y-auto flex-1 pr-2'>
+							{/* Current Badges Section */}
 							<div>
-								<div className='flex items-center justify-between mb-3'>
-									<h3 className='font-semibold text-sm'>Available Badges</h3>
-									<Button
-										variant='outline'
-										size='sm'
-										onClick={() => setShowAddBadges(false)}
-									>
-										Cancel
-									</Button>
-								</div>
+								<h3 className='font-semibold text-sm mb-3 flex items-center gap-2'>
+									<Award className='h-4 w-4' />
+									Awarded Badges ({teamBadges.length})
+								</h3>
 
-								{allBadgesLoading ? (
-									<div className='flex items-center justify-center py-8'>
-										<Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-									</div>
-								) : availableBadges.length === 0 ? (
-									<div className='text-center py-8 border rounded-lg'>
-										<Lock className='h-12 w-12 mx-auto text-muted-foreground/50 mb-3' />
+								{teamBadges.length === 0 ? (
+									<div className='text-center py-6 border rounded-lg bg-muted/30'>
 										<p className='text-sm text-muted-foreground'>
-											All available badges have been earned!
+											No badges awarded yet
 										</p>
 									</div>
 								) : (
-									<div className='space-y-2 max-h-[300px] overflow-y-auto'>
+									<div className='space-y-2'>
+										{teamBadges.map((badge) => (
+											<div
+												key={badge.id}
+												className='flex items-start gap-3 p-3 border rounded-lg bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-900'
+											>
+												{/* Badge Image */}
+												<div className='flex-shrink-0'>
+													{badge.imageUrl ? (
+														<img
+															src={badge.imageUrl}
+															alt={badge.name}
+															className='w-10 h-10 object-cover rounded'
+														/>
+													) : (
+														<div className='w-10 h-10 bg-muted rounded flex items-center justify-center'>
+															<Award className='h-5 w-5 text-muted-foreground' />
+														</div>
+													)}
+												</div>
+
+												{/* Badge Info */}
+												<div className='flex-1 min-w-0'>
+													<h4 className='font-medium text-sm'>{badge.name}</h4>
+													<p className='text-xs text-muted-foreground mt-0.5 line-clamp-1'>
+														{badge.description}
+													</p>
+													<div className='flex items-center gap-2 mt-1.5 flex-wrap'>
+														<Badge variant='secondary' className='text-xs'>
+															{formatDistanceToNow(badge.awardedAt, {
+																addSuffix: true,
+															})}
+														</Badge>
+														<span className='text-xs text-muted-foreground'>
+															by {badge.awardedByName}
+														</span>
+													</div>
+												</div>
+
+												{/* Remove Button */}
+												<Button
+													variant='destructive'
+													size='sm'
+													onClick={() =>
+														handleRemoveClick(badge.id, badge.name)
+													}
+													className='flex-shrink-0'
+												>
+													<Trash2 className='h-4 w-4 sm:mr-1' />
+													<span className='hidden sm:inline'>Remove</span>
+												</Button>
+											</div>
+										))}
+									</div>
+								)}
+							</div>
+
+							{/* Available Badges Section */}
+							<div>
+								<h3 className='font-semibold text-sm mb-3 flex items-center gap-2'>
+									<Award className='h-4 w-4' />
+									Available Badges ({availableBadges.length})
+								</h3>
+
+								{availableBadges.length === 0 ? (
+									<div className='text-center py-6 border rounded-lg bg-muted/30'>
+										<CheckCircle className='h-8 w-8 mx-auto text-green-600 mb-2' />
+										<p className='text-sm text-muted-foreground'>
+											All badges have been awarded!
+										</p>
+									</div>
+								) : (
+									<div className='space-y-2'>
 										{availableBadges.map((badge) => (
 											<div
 												key={badge.id}
@@ -386,11 +368,11 @@ export const TeamBadgesDialog = ({
 														<img
 															src={badge.imageUrl}
 															alt={badge.name}
-															className='w-12 h-12 object-cover rounded'
+															className='w-10 h-10 object-cover rounded'
 														/>
 													) : (
-														<div className='w-12 h-12 bg-muted rounded flex items-center justify-center'>
-															<Award className='h-6 w-6 text-muted-foreground' />
+														<div className='w-10 h-10 bg-muted rounded flex items-center justify-center'>
+															<Award className='h-5 w-5 text-muted-foreground' />
 														</div>
 													)}
 												</div>
@@ -398,7 +380,7 @@ export const TeamBadgesDialog = ({
 												{/* Badge Info */}
 												<div className='flex-1 min-w-0'>
 													<h4 className='font-medium text-sm'>{badge.name}</h4>
-													<p className='text-xs text-muted-foreground mt-1'>
+													<p className='text-xs text-muted-foreground mt-0.5 line-clamp-2'>
 														{badge.description}
 													</p>
 												</div>
@@ -407,22 +389,23 @@ export const TeamBadgesDialog = ({
 												<Button
 													size='sm'
 													onClick={() => handleAwardBadge(badge.id)}
-													disabled={isSubmitting}
+													disabled={awardingBadgeId !== null}
+													className='flex-shrink-0'
 												>
-													{isSubmitting ? (
-														<Loader2 className='h-4 w-4 mr-1 animate-spin' />
+													{awardingBadgeId === badge.id ? (
+														<Loader2 className='h-4 w-4 sm:mr-1 animate-spin' />
 													) : (
-														<Award className='h-4 w-4 mr-1' />
+														<Award className='h-4 w-4 sm:mr-1' />
 													)}
-													Award
+													<span className='hidden sm:inline'>Award</span>
 												</Button>
 											</div>
 										))}
 									</div>
 								)}
 							</div>
-						)}
-					</div>
+						</div>
+					)}
 				</DialogContent>
 			</Dialog>
 
