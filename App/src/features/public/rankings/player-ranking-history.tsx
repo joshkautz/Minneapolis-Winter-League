@@ -6,7 +6,7 @@
  */
 
 import { useMemo, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
@@ -18,6 +18,7 @@ import { PlayerDocument, Collections, RankingHistoryDocument } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import {
 	ChartConfig,
 	ChartContainer,
@@ -32,7 +33,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { Trophy, ArrowLeft } from 'lucide-react'
+import { Trophy, ArrowLeft, Users, Shield } from 'lucide-react'
+import { useSeasonsContext, useTeamsContext } from '@/providers'
 
 interface PlayerRankingHistoryProps {
 	/** Optional class name for styling */
@@ -65,11 +67,24 @@ const chartConfig = {
 	},
 } satisfies ChartConfig
 
+// Interface for processed team history entry
+interface TeamHistoryEntry {
+	seasonId: string
+	seasonName: string
+	teamId: string | null
+	teamName: string | null
+	isCaptain: boolean
+}
+
 export const PlayerRankingHistory = ({
 	className,
 }: PlayerRankingHistoryProps) => {
 	const { playerId } = useParams<{ playerId: string }>()
 	const navigate = useNavigate()
+
+	// Get seasons and teams data from contexts
+	const { seasonsQuerySnapshot } = useSeasonsContext()
+	const { allTeamsQuerySnapshot } = useTeamsContext()
 
 	// Fetch all players for the dropdown
 	const [allPlayersSnapshot, allPlayersLoading, allPlayersError] =
@@ -213,6 +228,63 @@ export const PlayerRankingHistory = ({
 		// Sort by timestamp to ensure proper chronological order
 		return playerHistory.sort((a, b) => a.timestamp - b.timestamp)
 	}, [rankingHistorySnapshot, playerId])
+
+	// Process player's team history from their seasons array
+	const teamHistory = useMemo((): TeamHistoryEntry[] => {
+		if (!allPlayersSnapshot?.docs || !playerId) return []
+
+		// Find the current player's document
+		const playerDoc = allPlayersSnapshot.docs.find((doc) => doc.id === playerId)
+		if (!playerDoc) return []
+
+		const playerData = playerDoc.data()
+		const seasons = playerData.seasons || []
+
+		if (!Array.isArray(seasons) || seasons.length === 0) return []
+
+		// Process each season entry
+		const history: TeamHistoryEntry[] = seasons
+			.map((seasonEntry) => {
+				// Get season name from context
+				const seasonRef = seasonEntry.season
+				const seasonDoc = seasonsQuerySnapshot?.docs.find(
+					(doc) => doc.ref.path === seasonRef?.path
+				)
+				const seasonName = seasonDoc?.data()?.name || 'Unknown Season'
+				const seasonId = seasonDoc?.id || ''
+
+				// Get team name from context
+				const teamRef = seasonEntry.team
+				let teamId: string | null = null
+				let teamName: string | null = null
+
+				if (teamRef) {
+					const teamDoc = allTeamsQuerySnapshot?.docs.find(
+						(doc) => doc.ref.path === teamRef.path
+					)
+					teamId = teamDoc?.id || null
+					teamName = teamDoc?.data()?.name || 'Unknown Team'
+				}
+
+				return {
+					seasonId,
+					seasonName,
+					teamId,
+					teamName,
+					isCaptain: seasonEntry.captain || false,
+				}
+			})
+			// Filter out entries without a team (free agents)
+			.filter((entry) => entry.teamId !== null)
+
+		// Sort by season name (most recent first - assuming format like "Winter 2024")
+		return history.sort((a, b) => b.seasonName.localeCompare(a.seasonName))
+	}, [
+		allPlayersSnapshot,
+		playerId,
+		seasonsQuerySnapshot,
+		allTeamsQuerySnapshot,
+	])
 
 	// Handle player selection change
 	const handlePlayerChange = (newPlayerId: string) => {
@@ -605,6 +677,60 @@ export const PlayerRankingHistory = ({
 							<ChartLegend content={<ChartLegendContent />} />
 						</AreaChart>
 					</ChartContainer>
+				</CardContent>
+			</Card>
+
+			{/* Team History Card */}
+			<Card>
+				<CardHeader className='pb-3'>
+					<CardTitle className='flex items-center gap-2 text-lg'>
+						<Users className='h-5 w-5' />
+						Team History
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{teamHistory.length > 0 ? (
+						<div className='space-y-3' role='list' aria-label='Team history'>
+							{teamHistory.map((entry, index) => (
+								<div
+									key={`${entry.seasonId}-${entry.teamId}-${index}`}
+									className='flex items-center justify-between gap-4 py-2 border-b last:border-b-0'
+									role='listitem'
+								>
+									<div className='flex items-center gap-3 min-w-0'>
+										{entry.teamId ? (
+											<Link
+												to={`/teams/${entry.teamId}`}
+												className='font-medium text-foreground hover:text-primary transition-colors truncate'
+											>
+												{entry.teamName}
+											</Link>
+										) : (
+											<span className='font-medium text-muted-foreground truncate'>
+												{entry.teamName || 'No Team'}
+											</span>
+										)}
+										{entry.isCaptain && (
+											<Badge
+												variant='secondary'
+												className='flex items-center gap-1 shrink-0'
+											>
+												<Shield className='h-3 w-3' />
+												<span className='sr-only sm:not-sr-only'>Captain</span>
+											</Badge>
+										)}
+									</div>
+									<span className='text-sm text-muted-foreground shrink-0'>
+										{entry.seasonName}
+									</span>
+								</div>
+							))}
+						</div>
+					) : (
+						<p className='text-sm text-muted-foreground text-center py-4'>
+							No team history available for this player.
+						</p>
+					)}
 				</CardContent>
 			</Card>
 		</div>
