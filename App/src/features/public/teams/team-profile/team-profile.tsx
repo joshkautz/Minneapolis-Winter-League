@@ -422,7 +422,7 @@ export const TeamProfile = () => {
 										<Popover key={badge.id}>
 											<PopoverTrigger asChild>{badgeButton}</PopoverTrigger>
 											<PopoverContent
-												className='w-80'
+												className='w-80 z-40'
 												side='top'
 												align='center'
 											>
