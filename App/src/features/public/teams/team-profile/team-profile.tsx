@@ -425,6 +425,7 @@ export const TeamProfile = () => {
 												className='w-80 z-40'
 												side='top'
 												align='center'
+												avoidCollisions={false}
 											>
 												<div className='space-y-2'>
 													<div className='flex items-start justify-between gap-2'>
