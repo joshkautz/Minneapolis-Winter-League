@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
-import { Award, Plus, X, Loader2, Lock } from 'lucide-react'
+import { Award, Plus, Trash2, Loader2, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -15,6 +15,16 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import {
 	awardBadgeViaFunction,
@@ -94,6 +104,13 @@ export const TeamBadgesDialog = ({
 	// Dialog state
 	const [showAddBadges, setShowAddBadges] = useState(false)
 	const [isSubmitting, setIsSubmitting] = useState(false)
+
+	// Badge removal confirmation state
+	const [badgeToRemove, setBadgeToRemove] = useState<{
+		id: string
+		name: string
+	} | null>(null)
+	const [isRemoving, setIsRemoving] = useState(false)
 
 	// Process team badges to resolve references
 	useEffect(() => {
@@ -207,14 +224,23 @@ export const TeamBadgesDialog = ({
 		}
 	}
 
-	// Revoke badge from team
-	const handleRevokeBadge = async (badgeId: string) => {
+	// Handle remove button click - opens confirmation dialog
+	const handleRemoveClick = (badgeId: string, badgeName: string) => {
+		setBadgeToRemove({ id: badgeId, name: badgeName })
+	}
+
+	// Confirm badge removal
+	const handleConfirmRemove = async () => {
+		if (!badgeToRemove) return
+
+		setIsRemoving(true)
 		try {
 			const result = await revokeBadgeViaFunction({
-				badgeId,
+				badgeId: badgeToRemove.id,
 				teamId,
 			})
 			toast.success(result.message)
+			setBadgeToRemove(null)
 		} catch (error) {
 			console.error('Error revoking badge:', error)
 			let errorMessage = 'Failed to remove badge'
@@ -222,133 +248,56 @@ export const TeamBadgesDialog = ({
 				errorMessage = String(error.message)
 			}
 			toast.error(errorMessage)
+		} finally {
+			setIsRemoving(false)
 		}
 	}
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='max-w-2xl'>
-				<DialogHeader>
-					<DialogTitle>Manage Badges: {teamName}</DialogTitle>
-					<DialogDescription>
-						Award or revoke badges for this team
-					</DialogDescription>
-				</DialogHeader>
+		<>
+			<Dialog open={open} onOpenChange={onOpenChange}>
+				<DialogContent className='max-w-2xl'>
+					<DialogHeader>
+						<DialogTitle>Manage Badges: {teamName}</DialogTitle>
+						<DialogDescription>
+							Award or revoke badges for this team
+						</DialogDescription>
+					</DialogHeader>
 
-				<div className='space-y-4 py-4'>
-					{/* Current Badges Section */}
-					<div>
-						<div className='flex items-center justify-between mb-3'>
-							<h3 className='font-semibold text-sm'>Current Badges</h3>
-							{!showAddBadges && (
-								<Button
-									size='sm'
-									onClick={() => setShowAddBadges(true)}
-									disabled={availableBadges.length === 0}
-								>
-									<Plus className='h-4 w-4 mr-2' />
-									Add Badge
-								</Button>
-							)}
-						</div>
-
-						{teamBadgesLoading || isProcessing ? (
-							<div className='flex items-center justify-center py-8'>
-								<Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
-							</div>
-						) : teamBadges.length === 0 ? (
-							<div className='text-center py-8 border rounded-lg'>
-								<Award className='h-12 w-12 mx-auto text-muted-foreground/50 mb-3' />
-								<p className='text-sm text-muted-foreground'>
-									No badges earned yet
-								</p>
-							</div>
-						) : (
-							<div className='space-y-2 max-h-[300px] overflow-y-auto'>
-								{teamBadges.map((badge) => (
-									<div
-										key={badge.id}
-										className='flex items-start gap-3 p-3 border rounded-lg'
-									>
-										{/* Badge Image */}
-										<div className='flex-shrink-0'>
-											{badge.imageUrl ? (
-												<img
-													src={badge.imageUrl}
-													alt={badge.name}
-													className='w-12 h-12 object-cover rounded'
-												/>
-											) : (
-												<div className='w-12 h-12 bg-muted rounded flex items-center justify-center'>
-													<Award className='h-6 w-6 text-muted-foreground' />
-												</div>
-											)}
-										</div>
-
-										{/* Badge Info */}
-										<div className='flex-1 min-w-0'>
-											<h4 className='font-medium text-sm'>{badge.name}</h4>
-											<p className='text-xs text-muted-foreground mt-1 line-clamp-2'>
-												{badge.description}
-											</p>
-											<div className='flex items-center gap-2 mt-2'>
-												<Badge variant='secondary' className='text-xs'>
-													Awarded{' '}
-													{formatDistanceToNow(badge.awardedAt, {
-														addSuffix: true,
-													})}
-												</Badge>
-												<span className='text-xs text-muted-foreground'>
-													by {badge.awardedByName}
-												</span>
-											</div>
-										</div>
-
-										{/* Remove Button */}
-										<Button
-											variant='ghost'
-											size='sm'
-											onClick={() => handleRevokeBadge(badge.id)}
-										>
-											<X className='h-4 w-4' />
-										</Button>
-									</div>
-								))}
-							</div>
-						)}
-					</div>
-
-					{/* Add Badges Section */}
-					{showAddBadges && (
+					<div className='space-y-4 py-4'>
+						{/* Current Badges Section */}
 						<div>
 							<div className='flex items-center justify-between mb-3'>
-								<h3 className='font-semibold text-sm'>Available Badges</h3>
-								<Button
-									variant='outline'
-									size='sm'
-									onClick={() => setShowAddBadges(false)}
-								>
-									Cancel
-								</Button>
+								<h3 className='font-semibold text-sm'>Current Badges</h3>
+								{!showAddBadges && (
+									<Button
+										size='sm'
+										onClick={() => setShowAddBadges(true)}
+										disabled={availableBadges.length === 0}
+									>
+										<Plus className='h-4 w-4 mr-2' />
+										Add Badge
+									</Button>
+								)}
 							</div>
 
-							{allBadgesLoading ? (
+							{teamBadgesLoading || isProcessing ? (
 								<div className='flex items-center justify-center py-8'>
 									<Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
 								</div>
-							) : availableBadges.length === 0 ? (
+							) : teamBadges.length === 0 ? (
 								<div className='text-center py-8 border rounded-lg'>
-									<Lock className='h-12 w-12 mx-auto text-muted-foreground/50 mb-3' />
+									<Award className='h-12 w-12 mx-auto text-muted-foreground/50 mb-3' />
 									<p className='text-sm text-muted-foreground'>
-										All available badges have been earned!
+										No badges earned yet
 									</p>
 								</div>
 							) : (
 								<div className='space-y-2 max-h-[300px] overflow-y-auto'>
-									{availableBadges.map((badge) => (
+									{teamBadges.map((badge) => (
 										<div
 											key={badge.id}
-											className='flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors'
+											className='flex items-start gap-3 p-3 border rounded-lg'
 										>
 											{/* Badge Image */}
 											<div className='flex-shrink-0'>
@@ -368,32 +317,155 @@ export const TeamBadgesDialog = ({
 											{/* Badge Info */}
 											<div className='flex-1 min-w-0'>
 												<h4 className='font-medium text-sm'>{badge.name}</h4>
-												<p className='text-xs text-muted-foreground mt-1'>
+												<p className='text-xs text-muted-foreground mt-1 line-clamp-2'>
 													{badge.description}
 												</p>
+												<div className='flex items-center gap-2 mt-2'>
+													<Badge variant='secondary' className='text-xs'>
+														Awarded{' '}
+														{formatDistanceToNow(badge.awardedAt, {
+															addSuffix: true,
+														})}
+													</Badge>
+													<span className='text-xs text-muted-foreground'>
+														by {badge.awardedByName}
+													</span>
+												</div>
 											</div>
 
-											{/* Award Button */}
+											{/* Remove Button */}
 											<Button
+												variant='destructive'
 												size='sm'
-												onClick={() => handleAwardBadge(badge.id)}
-												disabled={isSubmitting}
+												onClick={() => handleRemoveClick(badge.id, badge.name)}
 											>
-												{isSubmitting ? (
-													<Loader2 className='h-4 w-4 mr-1 animate-spin' />
-												) : (
-													<Award className='h-4 w-4 mr-1' />
-												)}
-												Award
+												<Trash2 className='h-4 w-4 mr-1' />
+												Remove
 											</Button>
 										</div>
 									))}
 								</div>
 							)}
 						</div>
-					)}
-				</div>
-			</DialogContent>
-		</Dialog>
+
+						{/* Add Badges Section */}
+						{showAddBadges && (
+							<div>
+								<div className='flex items-center justify-between mb-3'>
+									<h3 className='font-semibold text-sm'>Available Badges</h3>
+									<Button
+										variant='outline'
+										size='sm'
+										onClick={() => setShowAddBadges(false)}
+									>
+										Cancel
+									</Button>
+								</div>
+
+								{allBadgesLoading ? (
+									<div className='flex items-center justify-center py-8'>
+										<Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
+									</div>
+								) : availableBadges.length === 0 ? (
+									<div className='text-center py-8 border rounded-lg'>
+										<Lock className='h-12 w-12 mx-auto text-muted-foreground/50 mb-3' />
+										<p className='text-sm text-muted-foreground'>
+											All available badges have been earned!
+										</p>
+									</div>
+								) : (
+									<div className='space-y-2 max-h-[300px] overflow-y-auto'>
+										{availableBadges.map((badge) => (
+											<div
+												key={badge.id}
+												className='flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors'
+											>
+												{/* Badge Image */}
+												<div className='flex-shrink-0'>
+													{badge.imageUrl ? (
+														<img
+															src={badge.imageUrl}
+															alt={badge.name}
+															className='w-12 h-12 object-cover rounded'
+														/>
+													) : (
+														<div className='w-12 h-12 bg-muted rounded flex items-center justify-center'>
+															<Award className='h-6 w-6 text-muted-foreground' />
+														</div>
+													)}
+												</div>
+
+												{/* Badge Info */}
+												<div className='flex-1 min-w-0'>
+													<h4 className='font-medium text-sm'>{badge.name}</h4>
+													<p className='text-xs text-muted-foreground mt-1'>
+														{badge.description}
+													</p>
+												</div>
+
+												{/* Award Button */}
+												<Button
+													size='sm'
+													onClick={() => handleAwardBadge(badge.id)}
+													disabled={isSubmitting}
+												>
+													{isSubmitting ? (
+														<Loader2 className='h-4 w-4 mr-1 animate-spin' />
+													) : (
+														<Award className='h-4 w-4 mr-1' />
+													)}
+													Award
+												</Button>
+											</div>
+										))}
+									</div>
+								)}
+							</div>
+						)}
+					</div>
+				</DialogContent>
+			</Dialog>
+
+			{/* Badge Removal Confirmation Dialog */}
+			<AlertDialog
+				open={!!badgeToRemove}
+				onOpenChange={(open) => !open && setBadgeToRemove(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle className='flex items-center gap-2'>
+							<Trash2 className='h-5 w-5 text-red-600' />
+							Remove Badge "{badgeToRemove?.name}"?
+						</AlertDialogTitle>
+						<AlertDialogDescription className='space-y-2'>
+							<p>
+								This will remove the badge from {teamName}. The badge can be
+								re-awarded later if needed.
+							</p>
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={isRemoving}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleConfirmRemove}
+							disabled={isRemoving}
+							className='bg-red-600 hover:bg-red-700'
+						>
+							{isRemoving ? (
+								<>
+									<Loader2 className='h-4 w-4 mr-2 animate-spin' />
+									Removing...
+								</>
+							) : (
+								<>
+									<Trash2 className='h-4 w-4 mr-2' />
+									Remove Badge
+								</>
+							)}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</>
 	)
 }
