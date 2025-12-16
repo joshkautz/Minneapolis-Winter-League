@@ -80,7 +80,25 @@ interface TeamHistoryEntry {
 	teamLogo: string | null
 	wins: number
 	losses: number
+	placement: number | null
 	isCaptain: boolean
+}
+
+// Format placement with ordinal suffix and medal emoji for top 3
+const formatPlacement = (placement: number | null) => {
+	if (placement === null) return 'TBD'
+	if (placement === 1) return '1st 🥇'
+	if (placement === 2) return '2nd 🥈'
+	if (placement === 3) return '3rd 🥉'
+	const suffix =
+		placement % 10 === 1 && placement !== 11
+			? 'st'
+			: placement % 10 === 2 && placement !== 12
+				? 'nd'
+				: placement % 10 === 3 && placement !== 13
+					? 'rd'
+					: 'th'
+	return `${placement}${suffix}`
 }
 
 export const PlayerRankingHistory = ({
@@ -307,6 +325,7 @@ export const PlayerRankingHistory = ({
 				let teamId: string | null = null
 				let teamName: string | null = null
 				let teamLogo: string | null = null
+				let placement: number | null = null
 
 				if (teamRef) {
 					const teamDoc = allTeamsQuerySnapshot?.docs.find(
@@ -315,6 +334,7 @@ export const PlayerRankingHistory = ({
 					teamId = teamDoc?.id || null
 					teamName = teamDoc?.data()?.name || 'Unknown Team'
 					teamLogo = teamDoc?.data()?.logo || null
+					placement = teamDoc?.data()?.placement ?? null
 				}
 
 				// Get team record
@@ -328,6 +348,7 @@ export const PlayerRankingHistory = ({
 					teamLogo,
 					wins: record?.wins || 0,
 					losses: record?.losses || 0,
+					placement,
 					isCaptain: seasonEntry.captain || false,
 				}
 			})
@@ -755,7 +776,7 @@ export const PlayerRankingHistory = ({
 									to={entry.teamId ? `/teams/${entry.teamId}` : '#'}
 									className='flex items-center gap-4 px-6 py-3 border-b last:border-b-0 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
 									role='listitem'
-									aria-label={`${entry.teamName}, ${entry.seasonName}, ${entry.wins} wins ${entry.losses} losses${entry.isCaptain ? ', Team Captain' : ''}`}
+									aria-label={`${entry.teamName}, ${entry.seasonName}, ${entry.wins} wins ${entry.losses} losses, finished ${formatPlacement(entry.placement)}${entry.isCaptain ? ', Team Captain' : ''}`}
 								>
 									{/* Team Logo */}
 									<div className='flex-shrink-0'>
@@ -798,11 +819,19 @@ export const PlayerRankingHistory = ({
 									</div>
 
 									{/* Win-Loss Record */}
-									<div className='flex-shrink-0 text-right'>
+									<div className='flex-shrink-0 text-center'>
 										<div className='text-sm font-medium'>
 											{entry.wins}-{entry.losses}
 										</div>
 										<div className='text-xs text-muted-foreground'>Record</div>
+									</div>
+
+									{/* Placement */}
+									<div className='flex-shrink-0 text-right min-w-[60px]'>
+										<div className='text-sm font-medium'>
+											{formatPlacement(entry.placement)}
+										</div>
+										<div className='text-xs text-muted-foreground'>Finish</div>
 									</div>
 								</Link>
 							))}
