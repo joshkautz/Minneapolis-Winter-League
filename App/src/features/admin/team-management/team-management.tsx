@@ -341,105 +341,6 @@ export const TeamManagement = () => {
 				</AlertDescription>
 			</Alert>
 
-			{/* Unregistered Teams Table */}
-			<Card>
-				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<Trash2 className='h-5 w-5 text-red-600' />
-						Unregistered Teams ({unregisteredTeams.length})
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					{teamsLoading ? (
-						<div className='text-center pb-12'>
-							<RefreshCw className='h-12 w-12 text-muted-foreground mx-auto mb-2 animate-spin' />
-							<p className='text-lg font-medium text-muted-foreground'>
-								Loading Teams...
-							</p>
-						</div>
-					) : unregisteredTeams.length === 0 ? (
-						<div className='text-center pb-12'>
-							<CheckCircle className='h-12 w-12 text-muted-foreground mx-auto mb-2' />
-							<p className='text-lg font-medium text-muted-foreground'>
-								No Unregistered Teams
-							</p>
-							<p className='text-sm text-muted-foreground mt-2'>
-								All teams in the current season are registered.
-							</p>
-						</div>
-					) : (
-						<div className='overflow-x-auto'>
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Team Name</TableHead>
-										<TableHead>Roster Size</TableHead>
-										<TableHead>Status</TableHead>
-										<TableHead className='text-right'>Actions</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{unregisteredTeams.map((team) => (
-										<TableRow key={team.id}>
-											<TableCell>
-												<div className='flex items-center gap-2'>
-													<Link
-														to={`/teams/${team.id}`}
-														className='font-medium hover:underline'
-													>
-														{team.name}
-													</Link>
-												</div>
-											</TableCell>
-											<TableCell>
-												<div className='flex items-center gap-2'>
-													<UsersIcon className='h-4 w-4 text-muted-foreground' />
-													<span>{team.roster?.length || 0} players</span>
-												</div>
-											</TableCell>
-											<TableCell>
-												<Badge
-													variant='secondary'
-													className='bg-red-100 text-red-800'
-												>
-													Unregistered
-												</Badge>
-											</TableCell>
-											<TableCell className='text-right'>
-												<div className='flex items-center justify-end gap-2'>
-													<Button
-														variant='outline'
-														size='sm'
-														onClick={() =>
-															handleManageBadgesClick(
-																team.id,
-																team.name,
-																team.ref
-															)
-														}
-													>
-														<Award className='h-4 w-4 mr-2' />
-														Badges
-													</Button>
-													<Button
-														variant='destructive'
-														size='sm'
-														onClick={() => handleDeleteClick(team, false)}
-													>
-														<Trash2 className='h-4 w-4 mr-2' />
-														Delete Team
-													</Button>
-												</div>
-											</TableCell>
-										</TableRow>
-									))}
-								</TableBody>
-							</Table>
-						</div>
-					)}
-				</CardContent>
-			</Card>
-
 			{/* Registered Teams Table */}
 			<Card>
 				<CardHeader>
@@ -524,6 +425,105 @@ export const TeamManagement = () => {
 														variant='destructive'
 														size='sm'
 														onClick={() => handleDeleteClick(team, true)}
+													>
+														<Trash2 className='h-4 w-4 mr-2' />
+														Delete Team
+													</Button>
+												</div>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</div>
+					)}
+				</CardContent>
+			</Card>
+
+			{/* Unregistered Teams Table */}
+			<Card>
+				<CardHeader>
+					<CardTitle className='flex items-center gap-2'>
+						<Trash2 className='h-5 w-5 text-red-600' />
+						Unregistered Teams ({unregisteredTeams.length})
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{teamsLoading ? (
+						<div className='text-center pb-12'>
+							<RefreshCw className='h-12 w-12 text-muted-foreground mx-auto mb-2 animate-spin' />
+							<p className='text-lg font-medium text-muted-foreground'>
+								Loading Teams...
+							</p>
+						</div>
+					) : unregisteredTeams.length === 0 ? (
+						<div className='text-center pb-12'>
+							<CheckCircle className='h-12 w-12 text-muted-foreground mx-auto mb-2' />
+							<p className='text-lg font-medium text-muted-foreground'>
+								No Unregistered Teams
+							</p>
+							<p className='text-sm text-muted-foreground mt-2'>
+								All teams in the current season are registered.
+							</p>
+						</div>
+					) : (
+						<div className='overflow-x-auto'>
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead>Team Name</TableHead>
+										<TableHead>Roster Size</TableHead>
+										<TableHead>Status</TableHead>
+										<TableHead className='text-right'>Actions</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{unregisteredTeams.map((team) => (
+										<TableRow key={team.id}>
+											<TableCell>
+												<div className='flex items-center gap-2'>
+													<Link
+														to={`/teams/${team.id}`}
+														className='font-medium hover:underline'
+													>
+														{team.name}
+													</Link>
+												</div>
+											</TableCell>
+											<TableCell>
+												<div className='flex items-center gap-2'>
+													<UsersIcon className='h-4 w-4 text-muted-foreground' />
+													<span>{team.roster?.length || 0} players</span>
+												</div>
+											</TableCell>
+											<TableCell>
+												<Badge
+													variant='secondary'
+													className='bg-red-100 text-red-800'
+												>
+													Unregistered
+												</Badge>
+											</TableCell>
+											<TableCell className='text-right'>
+												<div className='flex items-center justify-end gap-2'>
+													<Button
+														variant='outline'
+														size='sm'
+														onClick={() =>
+															handleManageBadgesClick(
+																team.id,
+																team.name,
+																team.ref
+															)
+														}
+													>
+														<Award className='h-4 w-4 mr-2' />
+														Badges
+													</Button>
+													<Button
+														variant='destructive'
+														size='sm'
+														onClick={() => handleDeleteClick(team, false)}
 													>
 														<Trash2 className='h-4 w-4 mr-2' />
 														Delete Team
