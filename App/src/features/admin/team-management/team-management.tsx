@@ -29,7 +29,6 @@ import {
 	deleteUnregisteredTeamViaFunction,
 	deleteTeamViaFunction,
 } from '@/firebase/collections/functions'
-import { seasonsQuery } from '@/firebase/collections/seasons'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -69,15 +68,16 @@ export const TeamManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const {
+		seasonsQuerySnapshot: seasonsSnapshot,
+		seasonsQuerySnapshotError: seasonsError,
+		currentSeasonQueryDocumentSnapshot,
+	} = useSeasonsContext()
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	// Season selection state
 	const [selectedSeasonId, setSelectedSeasonId] = useState<string>('')
-
-	// Fetch all seasons
-	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),

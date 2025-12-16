@@ -38,6 +38,7 @@ export {
 	currentSeasonPlayoffGamesQuery,
 	currentSeasonGamesQuery,
 	gamesByTeamQuery,
+	allGamesQuery,
 } from './collections/games'
 
 // Season operations

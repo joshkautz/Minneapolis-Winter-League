@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
+import { useDocument } from 'react-firebase-hooks/firestore'
 import { getDocs, QueryDocumentSnapshot } from 'firebase/firestore'
 import {
 	ArrowLeft,
@@ -25,7 +25,7 @@ import { format } from 'date-fns'
 import { auth } from '@/firebase/auth'
 import { logger } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { seasonsQuery } from '@/firebase/collections/seasons'
+import { useSeasonsContext } from '@/providers'
 import { teamsBySeasonQuery } from '@/firebase/collections/teams'
 import {
 	createSeasonViaFunction,
@@ -77,9 +77,12 @@ export const SeasonManagement = () => {
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
-	// Fetch all seasons
-	const [seasonsSnapshot, seasonsLoading, seasonsError] =
-		useCollection(seasonsQuery())
+	// Get all seasons from context
+	const {
+		seasonsQuerySnapshot: seasonsSnapshot,
+		seasonsQuerySnapshotLoading: seasonsLoading,
+		seasonsQuerySnapshotError: seasonsError,
+	} = useSeasonsContext()
 
 	// Log and notify on query errors
 	useEffect(() => {

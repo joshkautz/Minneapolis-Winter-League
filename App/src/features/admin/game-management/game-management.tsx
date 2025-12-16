@@ -22,10 +22,12 @@ import { Link } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { allGamesQuery } from '@/firebase/collections/games'
-import { seasonsQuery } from '@/firebase/collections/seasons'
 import { teamsBySeasonQuery } from '@/firebase/collections/teams'
-import { useSeasonsContext, useTeamsContext } from '@/providers'
+import {
+	useSeasonsContext,
+	useTeamsContext,
+	useGamesContext,
+} from '@/providers'
 import {
 	createGameViaFunction,
 	updateGameViaFunction,
@@ -97,11 +99,17 @@ export const GameManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
-	const [gamesSnapshot, gamesLoading, gamesError] =
-		useCollection(allGamesQuery())
-	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const {
+		seasonsQuerySnapshot: seasonsSnapshot,
+		seasonsQuerySnapshotError: seasonsError,
+		currentSeasonQueryDocumentSnapshot,
+	} = useSeasonsContext()
 	const { allTeamsQuerySnapshot } = useTeamsContext()
+	const {
+		allGamesQuerySnapshot: gamesSnapshot,
+		allGamesQuerySnapshotLoading: gamesLoading,
+		allGamesQuerySnapshotError: gamesError,
+	} = useGamesContext()
 
 	// Log and notify on query errors
 	useEffect(() => {

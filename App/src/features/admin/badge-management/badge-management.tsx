@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
+import { useDocument } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
 import {
 	ArrowLeft,
@@ -26,7 +26,6 @@ import { formatDistanceToNow } from 'date-fns'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { seasonsQuery } from '@/firebase/collections/seasons'
 import { useSeasonsContext, useBadgesContext } from '@/providers'
 import {
 	createBadgeViaFunction,
@@ -93,7 +92,11 @@ export const BadgeManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const {
+		seasonsQuerySnapshot: seasonsSnapshot,
+		seasonsQuerySnapshotError: seasonsError,
+		currentSeasonQueryDocumentSnapshot,
+	} = useSeasonsContext()
 	const {
 		allBadgesQuerySnapshot: badgesSnapshot,
 		allBadgesQuerySnapshotLoading: badgesLoading,
@@ -101,9 +104,6 @@ export const BadgeManagement = () => {
 	} = useBadgesContext()
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
-
-	// Fetch all seasons
-	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),

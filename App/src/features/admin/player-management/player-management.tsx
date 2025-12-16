@@ -35,7 +35,7 @@ import { Link } from 'react-router-dom'
 import { auth } from '@/firebase/auth'
 import { firestore } from '@/firebase/app'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { seasonsQuery } from '@/firebase/collections/seasons'
+import { useSeasonsContext } from '@/providers'
 import { teamsBySeasonQuery } from '@/firebase/collections/teams'
 import { updatePlayerAdminViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -153,8 +153,11 @@ export const PlayerManagement = () => {
 	const [playersSnapshot, playersLoading, playersError] =
 		useCollection(searchQuery)
 
-	// Fetch all seasons
-	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
+	// Get all seasons from context
+	const {
+		seasonsQuerySnapshot: seasonsSnapshot,
+		seasonsQuerySnapshotError: seasonsError,
+	} = useSeasonsContext()
 
 	// Log and notify on query errors
 	useEffect(() => {

@@ -13,7 +13,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { collection, Query } from 'firebase/firestore'
 
 import { firestore } from '@/firebase/app'
-import { logger, GameDocument, hasAssignedTeams } from '@/shared/utils'
+import { logger, hasAssignedTeams } from '@/shared/utils'
 import { PlayerDocument, Collections, RankingHistoryDocument } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -34,7 +34,11 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Trophy, ArrowLeft, Users, Shield } from 'lucide-react'
-import { useSeasonsContext, useTeamsContext } from '@/providers'
+import {
+	useSeasonsContext,
+	useTeamsContext,
+	useGamesContext,
+} from '@/providers'
 
 interface PlayerRankingHistoryProps {
 	/** Optional class name for styling */
@@ -85,9 +89,10 @@ export const PlayerRankingHistory = ({
 	const { playerId } = useParams<{ playerId: string }>()
 	const navigate = useNavigate()
 
-	// Get seasons and teams data from contexts
+	// Get seasons, teams, and games data from contexts
 	const { seasonsQuerySnapshot } = useSeasonsContext()
 	const { allTeamsQuerySnapshot } = useTeamsContext()
+	const { allGamesQuerySnapshot: allGamesSnapshot } = useGamesContext()
 
 	// Fetch all players for the dropdown
 	const [allPlayersSnapshot, allPlayersLoading, allPlayersError] =
@@ -98,11 +103,6 @@ export const PlayerRankingHistory = ({
 	// Fetch all rankings history data from rankings-history collection
 	const [rankingHistorySnapshot, historyLoading, error] = useCollection(
 		collection(firestore, 'rankings-history') as Query<RankingHistoryDocument>
-	)
-
-	// Fetch all games for calculating team records
-	const [allGamesSnapshot] = useCollection(
-		collection(firestore, Collections.GAMES) as Query<GameDocument>
 	)
 
 	// Log and notify on query errors

@@ -26,7 +26,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { allNewsQueryBySeason } from '@/firebase/collections/news'
-import { seasonsQuery } from '@/firebase/collections/seasons'
+import { useSeasonsContext } from '@/providers'
 import {
 	createNewsViaFunction,
 	updateNewsViaFunction,
@@ -89,8 +89,11 @@ export const NewsManagement = () => {
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
-	// Fetch all seasons
-	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
+	// Get all seasons from context
+	const {
+		seasonsQuerySnapshot: seasonsSnapshot,
+		seasonsQuerySnapshotError: seasonsError,
+	} = useSeasonsContext()
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),

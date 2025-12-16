@@ -23,7 +23,6 @@ import { auth } from '@/firebase/auth'
 import { firestore } from '@/firebase/app'
 import { logger } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { seasonsQuery } from '@/firebase/collections/seasons'
 import { useSeasonsContext } from '@/providers'
 import {
 	Card,
@@ -85,8 +84,11 @@ export const RegistrationManagement = () => {
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
-	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const {
+		seasonsQuerySnapshot: seasonsSnapshot,
+		seasonsQuerySnapshotError: seasonsError,
+		currentSeasonQueryDocumentSnapshot,
+	} = useSeasonsContext()
 
 	const [filterSeasonId, setFilterSeasonId] = useState<string>(
 		() => currentSeasonQueryDocumentSnapshot?.id || ''

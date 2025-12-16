@@ -17,9 +17,8 @@ import {
 	rebuildPlayerRankings,
 	updatePlayerRankings,
 } from '@/firebase/collections/player-rankings'
-import { allGamesQuery } from '@/firebase/collections/games'
 import { calculatedRoundsQuery } from '@/firebase/collections/calculated-rounds'
-import { seasonsQuery } from '@/firebase/collections/seasons'
+import { useSeasonsContext, useGamesContext } from '@/providers'
 import {
 	RankingsCalculationDocument,
 	GameDocument,
@@ -82,9 +81,12 @@ export const PlayerRankingManagement = () => {
 		playerRankingsCalculationsQuery()
 	)
 
-	// Fetch all games (will filter for completed games client-side)
-	const [allGamesSnapshot, allGamesLoading, allGamesError] =
-		useCollection(allGamesQuery())
+	// Fetch all games from context (will filter for completed games client-side)
+	const {
+		allGamesQuerySnapshot: allGamesSnapshot,
+		allGamesQuerySnapshotLoading: allGamesLoading,
+		allGamesQuerySnapshotError: allGamesError,
+	} = useGamesContext()
 
 	// Fetch calculated rounds
 	const [
@@ -93,8 +95,11 @@ export const PlayerRankingManagement = () => {
 		calculatedRoundsError,
 	] = useCollection(calculatedRoundsQuery())
 
-	// Fetch seasons for reference
-	const [seasonsSnapshot, , seasonsError] = useCollection(seasonsQuery())
+	// Get seasons from context
+	const {
+		seasonsQuerySnapshot: seasonsSnapshot,
+		seasonsQuerySnapshotError: seasonsError,
+	} = useSeasonsContext()
 
 	// Log and notify on query errors
 	useEffect(() => {
