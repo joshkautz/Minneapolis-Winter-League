@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from '@firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { Sparkles, Award, Lock, Loader2, Calendar } from 'lucide-react'
+import { Sparkles, Award, Lock, Loader2, Calendar, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 import { NotificationCard } from '@/shared/components'
 import {
@@ -50,6 +50,23 @@ const RESULT = {
 	VS: 'vs',
 	UNREPORTED: 'Unreported',
 } as const
+
+// Format placement with ordinal suffix and medal emoji for top 3
+const formatPlacement = (placement: number | null | undefined) => {
+	if (placement === null || placement === undefined) return null
+	if (placement === 1) return { text: '1st Place', emoji: '🥇' }
+	if (placement === 2) return { text: '2nd Place', emoji: '🥈' }
+	if (placement === 3) return { text: '3rd Place', emoji: '🥉' }
+	const suffix =
+		placement % 10 === 1 && placement !== 11
+			? 'st'
+			: placement % 10 === 2 && placement !== 12
+				? 'nd'
+				: placement % 10 === 3 && placement !== 13
+					? 'rd'
+					: 'th'
+	return { text: `${placement}${suffix} Place`, emoji: null }
+}
 
 const formatGameResult = (
 	team: DocumentSnapshot<TeamDocument> | undefined,
@@ -295,6 +312,8 @@ export const TeamProfile = () => {
 	const teamName = teamDocumentSnapshot?.data()?.name
 	const teamKarma = teamDocumentSnapshot?.data()?.karma
 	const teamSeasonRef = teamDocumentSnapshot?.data()?.season
+	const teamPlacement = teamDocumentSnapshot?.data()?.placement
+	const formattedPlacement = formatPlacement(teamPlacement)
 
 	// Get the season name from the seasons query snapshot
 	const teamSeasonName = useMemo(() => {
@@ -336,7 +355,7 @@ export const TeamProfile = () => {
 							{teamName || 'Team'}
 						</h1>
 
-						{/* Season and Karma Row */}
+						{/* Season, Placement, and Karma Row */}
 						<div className='mt-2 flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1'>
 							{/* Season Display */}
 							{teamSeasonName && (
@@ -346,6 +365,25 @@ export const TeamProfile = () => {
 								>
 									<Calendar className='h-4 w-4' aria-hidden='true' />
 									<span className='text-sm'>{teamSeasonName}</span>
+								</div>
+							)}
+
+							{/* Placement Display */}
+							{formattedPlacement && (
+								<div
+									className='inline-flex items-center gap-1.5 text-primary'
+									aria-label={`Finished ${formattedPlacement.text}`}
+								>
+									{formattedPlacement.emoji ? (
+										<span className='text-base' role='img' aria-hidden='true'>
+											{formattedPlacement.emoji}
+										</span>
+									) : (
+										<Trophy className='h-4 w-4' aria-hidden='true' />
+									)}
+									<span className='text-sm font-medium'>
+										{formattedPlacement.text}
+									</span>
 								</div>
 							)}
 
