@@ -46,14 +46,14 @@ export const SparklesCore = ({
 	const defaultColor = isHearts ? '#ff6b9d' : '#ffffff'
 	const shapeType = isHearts ? 'heart' : 'circle'
 
-	// Initialize particles engine once
+	// Initialize particles engine once (idempotent - safe to call multiple times)
 	useEffect(() => {
 		initParticlesEngine(async (engine) => {
 			await loadSlim(engine)
 			await loadHeartShape(engine)
-		}).then(() => {
-			setInit(true)
 		})
+			.then(() => setInit(true))
+			.catch(console.error)
 	}, [])
 
 	// Memoize callback to prevent unnecessary re-renders
