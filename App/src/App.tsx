@@ -1,21 +1,13 @@
 import { AppRoutes } from '@/routes'
 import { GlobalErrorBoundary } from '@/components/ui/global-error-boundary'
-import { useEmailVerificationPolling } from '@/shared/hooks'
 
 /**
  * Main Application Component
  *
- * Handles top-level application concerns:
- * - Email verification polling for authenticated users
- * - Route configuration and rendering
- *
- * This component is now focused solely on application-level orchestration,
- * with route definitions, lazy loading, and auth logic extracted to separate modules.
+ * Route configuration and rendering with global error handling.
+ * User data refresh (including email verification) is handled by AuthContextProvider.
  */
 const App = () => {
-	// Handle email verification polling
-	useEmailVerificationPolling()
-
 	return (
 		<GlobalErrorBoundary>
 			<AppRoutes />

@@ -1,5 +1,12 @@
 // React
-import { PropsWithChildren, createContext, useContext } from 'react'
+import {
+	PropsWithChildren,
+	createContext,
+	useContext,
+	useEffect,
+	useState,
+	useCallback,
+} from 'react'
 
 // Firebase Hooks
 import {
@@ -29,10 +36,17 @@ import {
 } from '@/firebase/firestore'
 import { PlayerDocument } from '@/shared/utils'
 
+/** How often to refresh user data from Firebase Auth (in milliseconds) */
+const USER_REFRESH_INTERVAL = 30000 // 30 seconds
+
 interface AuthContextValue {
 	authStateUser: User | null | undefined
 	authStateLoading: boolean
 	authStateError: Error | undefined
+	/** Counter that increments when user data is refreshed, triggering re-renders */
+	userRefreshCount: number
+	/** Manually trigger a user data refresh */
+	refreshUser: () => Promise<void>
 	authenticatedUserSnapshot: DocumentSnapshot<PlayerDocument> | undefined
 	authenticatedUserSnapshotLoading: boolean
 	authenticatedUserSnapshotError: FirestoreError | undefined
@@ -106,10 +120,42 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
 		sendPasswordResetEmailError,
 	] = useSendPasswordResetEmail(auth)
 
+	// State to track user data refreshes and trigger re-renders
+	const [userRefreshCount, setUserRefreshCount] = useState(0)
+
+	// Function to manually refresh user data
+	const refreshUser = useCallback(async () => {
+		if (authStateUser) {
+			await authStateUser.reload()
+			// Also refresh the ID token to get updated claims
+			await authStateUser.getIdToken(true)
+			setUserRefreshCount((prev) => prev + 1)
+		}
+	}, [authStateUser])
+
+	// Periodically refresh user data from Firebase Auth
+	useEffect(() => {
+		if (!authStateUser) return
+
+		const interval = setInterval(async () => {
+			try {
+				await authStateUser.reload()
+				// Increment counter to trigger re-renders in consuming components
+				setUserRefreshCount((prev) => prev + 1)
+			} catch {
+				// Silently handle errors (user might have been signed out)
+			}
+		}, USER_REFRESH_INTERVAL)
+
+		return () => clearInterval(interval)
+	}, [authStateUser])
+
 	const contextValue: AuthContextValue = {
 		authStateUser,
 		authStateLoading,
 		authStateError,
+		userRefreshCount,
+		refreshUser,
 		authenticatedUserSnapshot: authenticatedUserSnapshot as
 			| DocumentSnapshot<PlayerDocument>
 			| undefined,

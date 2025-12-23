@@ -21,6 +21,7 @@ export const useTopNavigation = () => {
 		signOut,
 		signOutLoading,
 		signOutError,
+		userRefreshCount,
 	} = useAuthContext()
 	const { incomingOffersQuerySnapshot } = useOffersContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
@@ -66,6 +67,7 @@ export const useTopNavigation = () => {
 	)
 
 	// Count of required tasks for profile completion
+	// Note: userRefreshCount is included to re-evaluate when user data is refreshed
 	const requiredTasksCount = useMemo(() => {
 		if (!authStateUser) return 0
 
@@ -87,7 +89,13 @@ export const useTopNavigation = () => {
 		}
 
 		return count
-	}, [authStateUser, isAuthenticatedUserPaid, isAuthenticatedUserSigned])
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [
+		authStateUser,
+		isAuthenticatedUserPaid,
+		isAuthenticatedUserSigned,
+		userRefreshCount,
+	])
 
 	// Navigation content configuration
 	const navContent = [

@@ -12,6 +12,7 @@ export const useUserStatus = () => {
 		authStateLoading,
 		authenticatedUserSnapshot,
 		authenticatedUserSnapshotLoading,
+		userRefreshCount,
 	} = useAuthContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
@@ -74,9 +75,11 @@ export const useUserStatus = () => {
 	)
 
 	// Email verification status
+	// Note: userRefreshCount is included to re-evaluate when user data is refreshed
 	const isEmailVerified = useMemo(
 		() => Boolean(authStateUser?.emailVerified),
-		[authStateUser]
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[authStateUser, userRefreshCount]
 	)
 
 	// Combined status checks
