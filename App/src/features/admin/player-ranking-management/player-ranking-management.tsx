@@ -410,10 +410,10 @@ export const PlayerRankingManagement = () => {
 			<div className='text-center space-y-4'>
 				<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
 					<Settings className='h-8 w-8' />
-					Player Rankings Administration
+					Rankings Management
 				</h1>
 				<p className='text-muted-foreground'>
-					Manage player rankings calculations and monitor system status
+					Manage player ranking calculations and monitor system status
 				</p>
 			</div>
 
@@ -447,7 +447,7 @@ export const PlayerRankingManagement = () => {
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
 						<Play className='h-5 w-5' />
-						Trigger Player Rankings Calculation
+						Trigger Rankings Calculation
 					</CardTitle>
 				</CardHeader>
 				<CardContent className='space-y-4'>
@@ -466,7 +466,7 @@ export const PlayerRankingManagement = () => {
 									) : (
 										<RefreshCcw className='h-4 w-4' />
 									)}
-									Rebuild Player Rankings (Full)
+									Rebuild Rankings (Full)
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent side='bottom' align='center'>
@@ -492,7 +492,7 @@ export const PlayerRankingManagement = () => {
 									) : (
 										<IterationCcw className='h-4 w-4' />
 									)}
-									Update Player Rankings (Incremental)
+									Update Rankings (Incremental)
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent side='bottom' align='center'>

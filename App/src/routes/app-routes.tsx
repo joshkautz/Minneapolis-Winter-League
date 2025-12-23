@@ -98,7 +98,7 @@ export const AppRoutes = () => {
 					}
 				/>
 				<Route
-					path='/player-rankings'
+					path='/players'
 					element={
 						<PublicRoute>
 							<ErrorBoundary>
@@ -108,7 +108,7 @@ export const AppRoutes = () => {
 					}
 				/>
 				<Route
-					path='/player-rankings/player/:playerId'
+					path='/players/:playerId'
 					element={
 						<PublicRoute>
 							<ErrorBoundary>
@@ -229,7 +229,7 @@ export const AppRoutes = () => {
 					}
 				/>
 				<Route
-					path='/admin/player-ranking-management'
+					path='/admin/rankings-management'
 					element={
 						<AuthenticatedRoute>
 							<ErrorBoundary>

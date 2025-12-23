@@ -79,7 +79,7 @@ export const LeagueDetailsSection = () => {
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>New!</p>
-								<span>{`Player Rankings algorithm!`}</span>
+								<span>{`Ranking algorithm!`}</span>
 							</div>
 						</CardContent>
 					</Card>

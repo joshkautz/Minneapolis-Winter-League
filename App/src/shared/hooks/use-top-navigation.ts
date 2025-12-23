@@ -97,8 +97,8 @@ export const useTopNavigation = () => {
 		{ label: 'Standings', path: '/standings', alt: 'league standings' },
 		{ label: 'Teams', path: '/teams', alt: 'team list' },
 		{
-			label: 'Player Rankings',
-			path: '/player-rankings',
+			label: 'Players',
+			path: '/players',
 			alt: 'player rankings',
 		},
 	]

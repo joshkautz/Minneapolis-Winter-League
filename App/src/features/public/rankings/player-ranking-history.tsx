@@ -2,7 +2,7 @@
  * PlayerRankingHistory component
  *
  * Displays a player's rankings history throughout their career using interactive charts
- * Accessible at /player-rankings/player/{playerId}
+ * Accessible at /players/{playerId}
  */
 
 import { useMemo, useEffect } from 'react'
@@ -367,7 +367,7 @@ export const PlayerRankingHistory = ({
 
 	// Handle player selection change
 	const handlePlayerChange = (newPlayerId: string) => {
-		navigate(`/player-rankings/player/${newPlayerId}`)
+		navigate(`/players/${newPlayerId}`)
 	}
 
 	// Handle missing playerId
@@ -474,11 +474,11 @@ export const PlayerRankingHistory = ({
 					<Button
 						variant='outline'
 						size='sm'
-						onClick={() => navigate('/player-rankings')}
+						onClick={() => navigate('/players')}
 						className='flex items-center gap-2'
 					>
 						<ArrowLeft className='h-4 w-4' />
-						Back to Player Rankings
+						Back to Players
 					</Button>
 				</div>
 
@@ -532,11 +532,11 @@ export const PlayerRankingHistory = ({
 					<Button
 						variant='outline'
 						size='sm'
-						onClick={() => navigate('/player-rankings')}
+						onClick={() => navigate('/players')}
 						className='flex items-center gap-2'
 					>
 						<ArrowLeft className='h-4 w-4' />
-						Back to Player Rankings
+						Back to Players
 					</Button>
 				</div>
 
@@ -589,11 +589,11 @@ export const PlayerRankingHistory = ({
 				<Button
 					variant='outline'
 					size='sm'
-					onClick={() => navigate('/player-rankings')}
+					onClick={() => navigate('/players')}
 					className='flex items-center gap-2'
 				>
 					<ArrowLeft className='h-4 w-4' />
-					Back to Player Rankings
+					Back to Players
 				</Button>
 			</div>
 

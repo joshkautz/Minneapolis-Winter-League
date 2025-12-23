@@ -48,10 +48,13 @@ import {
 	Crown,
 	Award,
 	Info,
+	User,
+	Search,
 } from 'lucide-react'
 import { cn, logger } from '@/shared/utils'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { PageContainer, PageHeader } from '@/shared/components'
+import { Input } from '@/components/ui/input'
 
 interface PlayerRankingsProps {
 	showAdminControls?: boolean
@@ -662,6 +665,7 @@ export const PlayerRankings = ({
 	const navigate = useNavigate()
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [selectedVersion, setSelectedVersion] = useState(CURRENT_VERSION)
+	const [searchQuery, setSearchQuery] = useState('')
 	const [rankingsSnapshot, loading, error] = useCollection(
 		currentPlayerRankingsQuery()
 	)
@@ -779,8 +783,13 @@ export const PlayerRankings = ({
 			}
 
 	const handlePlayerClick = (playerId: string) => {
-		navigate(`/player-rankings/player/${playerId}`)
+		navigate(`/players/${playerId}`)
 	}
+
+	// Filter rankings by search query
+	const filteredRankings = sortedRankings.filter((player) =>
+		player.playerName.toLowerCase().includes(searchQuery.toLowerCase())
+	)
 
 	if (error) {
 		return (
@@ -788,17 +797,17 @@ export const PlayerRankings = ({
 				{/* Header */}
 				<div className='text-center space-y-4'>
 					<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
-						<Medal className='h-8 w-8' />
-						Player Rankings
+						<User className='h-8 w-8' />
+						Players
 					</h1>
 					<p className='text-muted-foreground'>
-						Player rankings based on performance and ELO rating system
+						Players ranked by performance and ELO rating system
 					</p>
 				</div>
 				<Card>
 					<CardContent className='p-6'>
 						<p className='text-red-600'>
-							Error loading Player Rankings: {error.message}
+							Error loading players: {error.message}
 						</p>
 					</CardContent>
 				</Card>
@@ -809,9 +818,9 @@ export const PlayerRankings = ({
 	return (
 		<PageContainer withSpacing withGap>
 			<PageHeader
-				title='Player Rankings'
-				description='Player rankings based on performance and ELO rating system'
-				icon={Medal}
+				title='Players'
+				description='Players ranked by performance and ELO rating system'
+				icon={User}
 			/>
 
 			{/* Informational Alert */}
@@ -819,9 +828,7 @@ export const PlayerRankings = ({
 				<DialogTrigger asChild>
 					<Alert className='cursor-pointer hover:bg-muted/50 transition-colors mb-6'>
 						<Info className='h-4 w-4' />
-						<AlertTitle>
-							Player Ranking Algorithm ({CURRENT_VERSION})
-						</AlertTitle>
+						<AlertTitle>Ranking Algorithm ({CURRENT_VERSION})</AlertTitle>
 						<AlertDescription>
 							Rankings are calculated using an advanced ELO-based algorithm.
 							Click to learn more about how players are ranked.
@@ -832,10 +839,10 @@ export const PlayerRankings = ({
 					<VisuallyHidden>
 						<DialogHeader>
 							<DialogTitle className='flex items-center gap-2'>
-								Player Ranking Algorithm
+								Ranking Algorithm
 							</DialogTitle>
 							<DialogDescription>
-								Understanding how the Player Rankings are calculated
+								Understanding how the player rankings are calculated
 							</DialogDescription>
 						</DialogHeader>
 					</VisuallyHidden>
@@ -888,10 +895,23 @@ export const PlayerRankings = ({
 			{/* Rankings Table */}
 			<Card>
 				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<Medal className='h-5 w-5' />
-						Player Rankings
-					</CardTitle>
+					<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+						<CardTitle className='flex items-center gap-2'>
+							<User className='h-5 w-5' />
+							Players
+						</CardTitle>
+						<div className='relative w-full sm:w-64'>
+							<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+							<Input
+								type='search'
+								placeholder='Search players...'
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className='pl-9'
+								aria-label='Search players by name'
+							/>
+						</div>
+					</div>
 				</CardHeader>
 				<CardContent>
 					{loading ? (
@@ -952,89 +972,98 @@ export const PlayerRankings = ({
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{sortedRankings.map((player) => {
-										const trueRank = trueRankMap.get(player.id) || player.rank
-										const isMedalEligible =
-											medalEligibilityMap.get(player.id) || false
-
-										return (
-											<TableRow
-												key={player.id}
-												onClick={() => handlePlayerClick(player.id)}
-												className={cn(
-													'hover:bg-muted/50 cursor-pointer transition-colors',
-													isMedalEligible &&
-														'bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-900/20'
-												)}
+									{filteredRankings.length === 0 ? (
+										<TableRow>
+											<TableCell
+												colSpan={6}
+												className='text-center py-8 text-muted-foreground'
 											>
-												<TableCell className='font-medium'>
-													<div className='flex items-center gap-2'>
-														{trueRank === 1 && (
-															<Crown className='h-4 w-4 text-yellow-500' />
-														)}
-														{trueRank === 2 && (
-															<Award className='h-4 w-4 text-gray-400' />
-														)}
-														{trueRank === 3 && (
-															<Medal className='h-4 w-4 text-amber-600' />
-														)}
-														<div className='flex items-center gap-1'>
-															#{trueRank}
-														</div>
-													</div>
-												</TableCell>
-												<TableCell>
-													<div className='space-y-1'>
-														<div
-															className={cn(
-																'font-medium',
-																player.rank <= 3 && 'dark:text-foreground'
-															)}
-														>
-															{player.playerName}
-														</div>
-													</div>
-												</TableCell>
-												<TableCell className='text-center'>
-													{player.eloRating.toFixed(6)}
-												</TableCell>
-												<TableCell className='text-center'>
-													{player.lastRatingChange !== 0 && (
-														<div
-															className={cn(
-																'flex items-center justify-center gap-1',
-																player.lastRatingChange > 0
-																	? 'text-green-600'
-																	: 'text-red-600'
-															)}
-														>
-															{player.lastRatingChange > 0 ? (
-																<TrendingUp className='h-3 w-3' />
-															) : (
-																<TrendingDown className='h-3 w-3' />
-															)}
-															{Math.abs(player.lastRatingChange)}
-														</div>
+												No players found matching "{searchQuery}"
+											</TableCell>
+										</TableRow>
+									) : (
+										filteredRankings.map((player) => {
+											const trueRank = trueRankMap.get(player.id) || player.rank
+											const isMedalEligible =
+												medalEligibilityMap.get(player.id) || false
+
+											return (
+												<TableRow
+													key={player.id}
+													onClick={() => handlePlayerClick(player.id)}
+													className={cn(
+														'hover:bg-muted/50 cursor-pointer transition-colors',
+														isMedalEligible &&
+															'bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-900/20'
 													)}
-												</TableCell>
-												<TableCell className='text-center'>
-													{player.totalGames}
-												</TableCell>
-												<TableCell className='text-center'>
-													{player.totalSeasons}
-												</TableCell>
-											</TableRow>
-										)
-									})}
+												>
+													<TableCell className='font-medium'>
+														<div className='flex items-center gap-2'>
+															{trueRank === 1 && (
+																<Crown className='h-4 w-4 text-yellow-500' />
+															)}
+															{trueRank === 2 && (
+																<Award className='h-4 w-4 text-gray-400' />
+															)}
+															{trueRank === 3 && (
+																<Medal className='h-4 w-4 text-amber-600' />
+															)}
+															<div className='flex items-center gap-1'>
+																#{trueRank}
+															</div>
+														</div>
+													</TableCell>
+													<TableCell>
+														<div className='space-y-1'>
+															<div
+																className={cn(
+																	'font-medium',
+																	player.rank <= 3 && 'dark:text-foreground'
+																)}
+															>
+																{player.playerName}
+															</div>
+														</div>
+													</TableCell>
+													<TableCell className='text-center'>
+														{player.eloRating.toFixed(6)}
+													</TableCell>
+													<TableCell className='text-center'>
+														{player.lastRatingChange !== 0 && (
+															<div
+																className={cn(
+																	'flex items-center justify-center gap-1',
+																	player.lastRatingChange > 0
+																		? 'text-green-600'
+																		: 'text-red-600'
+																)}
+															>
+																{player.lastRatingChange > 0 ? (
+																	<TrendingUp className='h-3 w-3' />
+																) : (
+																	<TrendingDown className='h-3 w-3' />
+																)}
+																{Math.abs(player.lastRatingChange)}
+															</div>
+														)}
+													</TableCell>
+													<TableCell className='text-center'>
+														{player.totalGames}
+													</TableCell>
+													<TableCell className='text-center'>
+														{player.totalSeasons}
+													</TableCell>
+												</TableRow>
+											)
+										})
+									)}
 								</TableBody>
 							</Table>
 						</div>
 					) : (
 						<div className='text-center py-8'>
 							<Trophy className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-							<p className='text-muted-foreground'>
-								No player rankings available yet.
-							</p>
+							<p className='text-muted-foreground'>No players available yet.</p>
 							<p className='text-sm text-muted-foreground mt-2'>
 								Rankings will appear after the first calculation is completed.
 							</p>

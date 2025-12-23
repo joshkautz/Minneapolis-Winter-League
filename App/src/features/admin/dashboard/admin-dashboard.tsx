@@ -143,23 +143,23 @@ export const AdminDashboard = () => {
 						</Button>
 					</CardContent>
 				</Card>
-				{/* Player Rankings Administration */}
+				{/* Rankings Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
 							<Trophy className='h-5 w-5 text-yellow-600' />
-							Player Rankings
+							Rankings Management
 						</CardTitle>
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<p className='text-sm text-muted-foreground'>
-							Manage player rankings calculations and monitor player rankings
+							Manage player ranking calculations and monitor the ELO rating
 							system status.
 						</p>
 						<Button asChild className='w-full'>
-							<Link to='/admin/player-ranking-management'>
+							<Link to='/admin/rankings-management'>
 								<Settings className='h-4 w-4 mr-2' />
-								Manage Player Rankings
+								Manage Rankings
 							</Link>
 						</Button>
 					</CardContent>
