@@ -606,6 +606,57 @@ export const updatePlayerAdmin = functions
 						}
 					}
 
+					// Validate captain demotions - prevent removing the last captain from a team
+					for (const seasonUpdate of seasons) {
+						const currentSeason = currentSeasons.find(
+							(cs) => cs.season.id === seasonUpdate.seasonId
+						)
+
+						if (!currentSeason) continue
+
+						// Check if player is being demoted from captain
+						const isDemotingCaptain =
+							currentSeason.captain === true && seasonUpdate.captain === false
+
+						// Get the team ID (could be staying on same team or moving to new team)
+						const teamId = seasonUpdate.teamId || currentSeason.team?.id
+
+						if (isDemotingCaptain && teamId) {
+							// Fetch the team to check roster
+							const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
+							const teamDoc = await teamRef.get()
+
+							if (teamDoc.exists) {
+								const teamData = teamDoc.data() as TeamDocument
+
+								// Count captains on the team (excluding this player)
+								const otherCaptains = teamData.roster.filter(
+									(rp: TeamRosterPlayer) =>
+										rp.captain === true && rp.player.id !== playerId
+								)
+
+								if (otherCaptains.length === 0) {
+									const seasonName =
+										seasonNames.get(seasonUpdate.seasonId) ||
+										seasonUpdate.seasonId
+									functions.logger.warn(
+										'Cannot demote last captain from team',
+										{
+											playerId,
+											teamId,
+											teamName: teamData.name,
+											seasonId: seasonUpdate.seasonId,
+										}
+									)
+									throw new functions.https.HttpsError(
+										'failed-precondition',
+										`Cannot remove captain status from ${playerData?.firstname} ${playerData?.lastname}. They are the only captain on team "${teamData.name}" for ${seasonName}. Please assign another captain first.`
+									)
+								}
+							}
+						}
+					}
+
 					// Build updated seasons array
 					const updatedSeasons: PlayerSeason[] = currentSeasons.map(
 						(currentSeason) => {
