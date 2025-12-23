@@ -91,7 +91,8 @@ export const PlayerManagement = () => {
 	const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
 	const [isSaving, setIsSaving] = useState(false)
 	const [formData, setFormData] = useState<PlayerFormData | null>(null)
-	const [originalFormData, setOriginalFormData] = useState<PlayerFormData | null>(null)
+	const [originalFormData, setOriginalFormData] =
+		useState<PlayerFormData | null>(null)
 
 	// Check if form has changes compared to original data
 	const hasChanges = useMemo(() => {
