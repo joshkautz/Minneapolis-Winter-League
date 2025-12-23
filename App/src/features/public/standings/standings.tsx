@@ -14,6 +14,7 @@ import { useStandings } from '@/shared/hooks'
 import { StandingsTable } from './standings-table'
 import { ResultsTable } from './results-table'
 import { formatTimestamp } from '@/shared/utils'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const Standings = () => {
 	const { selectedSeasonTeamsQuerySnapshot } = useTeamsContext()
@@ -26,52 +27,62 @@ export const Standings = () => {
 
 	return (
 		<PageContainer withSpacing withGap>
-			<div className='max-w-[1040px] mx-auto'>
-				<PageHeader
-					title='Standings'
-					description='Regular season and playoff results for all teams'
-					icon={Trophy}
-				/>
+			<PageHeader
+				title='Standings'
+				description='Regular season and playoff results for all teams'
+				icon={Trophy}
+			/>
 
-				{!regularSeasonGamesQuerySnapshot ? (
-					<div className='absolute inset-0 flex items-center justify-center'>
-						<LoadingSpinner size='lg' />
-					</div>
-				) : Object.keys(standings).length === 0 &&
-				  Object.keys(results).length === 0 ? (
-					<ComingSoon>
-						<p>
-							{`No standings yet exists for the season. Check back after games start on ${formatTimestamp(selectedSeasonQueryDocumentSnapshot?.data()?.dateStart)}.`}
-						</p>
-					</ComingSoon>
-				) : (
-					<>
-						{/* Regular Season Section */}
-						{Object.keys(standings).length > 0 && (
-							<div className='space-y-4'>
-								<h2 className='text-xl font-semibold'>
+			{!regularSeasonGamesQuerySnapshot ? (
+				<div className='flex items-center justify-center min-h-[400px]'>
+					<LoadingSpinner size='lg' />
+				</div>
+			) : Object.keys(standings).length === 0 &&
+			  Object.keys(results).length === 0 ? (
+				<ComingSoon>
+					<p>
+						{`No standings yet exists for the season. Check back after games start on ${formatTimestamp(selectedSeasonQueryDocumentSnapshot?.data()?.dateStart)}.`}
+					</p>
+				</ComingSoon>
+			) : (
+				<>
+					{/* Regular Season Section */}
+					{Object.keys(standings).length > 0 && (
+						<Card>
+							<CardHeader>
+								<CardTitle className='flex items-center gap-2'>
+									<Trophy className='h-5 w-5' />
 									Weeks 1-5 (Regular Season)
-								</h2>
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
 								<StandingsTable
 									standings={standings}
 									teamsQuerySnapshot={selectedSeasonTeamsQuerySnapshot}
 								/>
-							</div>
-						)}
+							</CardContent>
+						</Card>
+					)}
 
-						{/* Playoff Section */}
-						{Object.keys(results).length > 0 && (
-							<div className='space-y-4'>
-								<h2 className='text-xl font-semibold'>Weeks 6-7 (Playoffs)</h2>
+					{/* Playoff Section */}
+					{Object.keys(results).length > 0 && (
+						<Card>
+							<CardHeader>
+								<CardTitle className='flex items-center gap-2'>
+									<Trophy className='h-5 w-5' />
+									Weeks 6-7 (Playoffs)
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
 								<ResultsTable
 									results={results}
 									teamsQuerySnapshot={selectedSeasonTeamsQuerySnapshot}
 								/>
-							</div>
-						)}
-					</>
-				)}
-			</div>
+							</CardContent>
+						</Card>
+					)}
+				</>
+			)}
 		</PageContainer>
 	)
 }

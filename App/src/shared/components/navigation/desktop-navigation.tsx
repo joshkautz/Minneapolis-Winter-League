@@ -37,7 +37,7 @@ export const DesktopNavigation = ({
 	requiredTasksCount,
 }: DesktopNavigationProps) => {
 	return (
-		<div className='hidden mr-4 md:flex md:flex-1 items-center justify-between w-full'>
+		<div className='hidden md:flex md:flex-1 items-center justify-between w-full'>
 			<NavigationMenu items={navItems} />
 			<div className='flex items-center justify-end gap-4 flex-shrink-0'>
 				<SettingsSection
