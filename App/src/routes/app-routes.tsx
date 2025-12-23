@@ -14,7 +14,6 @@ import {
 	News,
 	AdminDashboard,
 	PlayerManagement,
-	EmailVerification,
 	OfferManagement,
 	TeamManagement,
 	NewsManagement,
@@ -168,17 +167,7 @@ export const AppRoutes = () => {
 						</AuthenticatedRoute>
 					}
 				/>
-				<Route
-					path='/admin/email-verification'
-					element={
-						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<EmailVerification />
-							</ErrorBoundary>
-						</AuthenticatedRoute>
-					}
-				/>
-				<Route
+					<Route
 					path='/admin/offer-management'
 					element={
 						<AuthenticatedRoute>

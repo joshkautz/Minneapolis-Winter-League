@@ -56,6 +56,8 @@ interface UpdatePlayerAdminRequest {
 	admin?: boolean
 	/** Email address (optional, will sync with Firebase Auth) */
 	email?: string
+	/** Email verification status (optional, will update Firebase Auth) */
+	emailVerified?: boolean
 	/** Season updates (optional) */
 	seasons?: SeasonUpdate[]
 }
@@ -94,6 +96,8 @@ interface UpdatePlayerAdminResponse {
 		email?: { from: string; to: string }
 		/** Whether and how admin status was updated */
 		admin?: { from: boolean; to: boolean }
+		/** Whether and how email verification status was updated */
+		emailVerified?: { from: boolean; to: boolean }
 		/** Details about season changes */
 		seasons?: SeasonChanges[]
 	}
@@ -129,6 +133,7 @@ export const updatePlayerAdmin = functions
 				adminUserId: auth?.uid,
 				targetPlayerId: data.playerId,
 				hasEmailUpdate: !!data.email,
+				hasEmailVerifiedUpdate: data.emailVerified !== undefined,
 				hasSeasonsUpdate: !!data.seasons,
 			})
 
@@ -136,7 +141,15 @@ export const updatePlayerAdmin = functions
 			const firestore = getFirestore()
 			await validateAdminUser(auth, firestore)
 
-			const { playerId, firstname, lastname, admin, email, seasons } = data
+			const {
+				playerId,
+				firstname,
+				lastname,
+				admin,
+				email,
+				emailVerified,
+				seasons,
+			} = data
 
 			// Validate required fields
 			if (!playerId || typeof playerId !== 'string') {
@@ -153,6 +166,7 @@ export const updatePlayerAdmin = functions
 				lastname === undefined &&
 				admin === undefined &&
 				email === undefined &&
+				emailVerified === undefined &&
 				!seasons
 			) {
 				functions.logger.warn('No fields to update', { playerId })
@@ -210,6 +224,17 @@ export const updatePlayerAdmin = functions
 				throw new functions.https.HttpsError(
 					'invalid-argument',
 					'Admin status must be a boolean value'
+				)
+			}
+
+			// Validate emailVerified if provided
+			if (emailVerified !== undefined && typeof emailVerified !== 'boolean') {
+				functions.logger.warn('Invalid emailVerified value provided', {
+					emailVerified,
+				})
+				throw new functions.https.HttpsError(
+					'invalid-argument',
+					'Email verified status must be a boolean value'
 				)
 			}
 
@@ -447,6 +472,49 @@ export const updatePlayerAdmin = functions
 							playerId,
 							email: trimmedNewEmail,
 						})
+					}
+				}
+
+				// Handle emailVerified update (independent of email change)
+				if (emailVerified !== undefined) {
+					// Get current email verification status from Firebase Auth
+					const currentUser = await authInstance.getUser(playerId)
+					const currentEmailVerified = currentUser.emailVerified
+
+					if (emailVerified !== currentEmailVerified) {
+						functions.logger.info(
+							'Updating email verification status in Firebase Authentication',
+							{
+								playerId,
+								from: currentEmailVerified,
+								to: emailVerified,
+							}
+						)
+
+						await authInstance.updateUser(playerId, {
+							emailVerified: emailVerified,
+						})
+
+						functions.logger.info(
+							'Email verification status successfully updated',
+							{
+								playerId,
+								emailVerified,
+							}
+						)
+
+						changes.emailVerified = {
+							from: currentEmailVerified,
+							to: emailVerified,
+						}
+					} else {
+						functions.logger.info(
+							'Email verification status unchanged, skipping update',
+							{
+								playerId,
+								emailVerified,
+							}
+						)
 					}
 				}
 

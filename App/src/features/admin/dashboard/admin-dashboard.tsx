@@ -22,7 +22,6 @@ import {
 	AlertTriangle,
 	Shield,
 	Calendar,
-	CheckCircle,
 	Mail,
 	Trash2,
 	UserCog,
@@ -164,28 +163,7 @@ export const AdminDashboard = () => {
 						</Button>
 					</CardContent>
 				</Card>
-				{/* Email Verification */}
-				<Card className='hover:shadow-lg transition-shadow'>
-					<CardHeader>
-						<CardTitle className='flex items-center gap-2'>
-							<CheckCircle className='h-5 w-5 text-green-600' />
-							Email Verification
-						</CardTitle>
-					</CardHeader>
-					<CardContent className='space-y-4'>
-						<p className='text-sm text-muted-foreground'>
-							Manually mark user email addresses as verified in Firebase
-							Authentication.
-						</p>
-						<Button asChild className='w-full'>
-							<Link to='/admin/email-verification'>
-								<CheckCircle className='h-4 w-4 mr-2' />
-								Verify Email
-							</Link>
-						</Button>
-					</CardContent>
-				</Card>
-				{/* Offer Management */}
+					{/* Offer Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>

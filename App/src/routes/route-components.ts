@@ -67,10 +67,6 @@ export const BadgeManagement = lazyImport(
 	() => import('@/features/admin/badge-management'),
 	'BadgeManagement'
 )
-export const EmailVerification = lazyImport(
-	() => import('@/features/admin/email-verification'),
-	'EmailVerification'
-)
 export const GameManagement = lazyImport(
 	() => import('@/features/admin/game-management'),
 	'GameManagement'
