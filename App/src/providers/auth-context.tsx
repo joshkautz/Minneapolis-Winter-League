@@ -37,7 +37,7 @@ import {
 import { PlayerDocument } from '@/shared/utils'
 
 /** How often to refresh user data from Firebase Auth (in milliseconds) */
-const USER_REFRESH_INTERVAL = 30000 // 30 seconds
+const USER_REFRESH_INTERVAL = 10000 // 10 seconds
 
 interface AuthContextValue {
 	authStateUser: User | null | undefined
