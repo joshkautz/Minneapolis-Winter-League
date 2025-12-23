@@ -606,7 +606,7 @@ export const updatePlayerAdmin = functions
 						}
 					}
 
-					// Validate captain demotions - prevent removing the last captain from a team
+					// Validate captain changes - prevent leaving a team without any captains
 					for (const seasonUpdate of seasons) {
 						const currentSeason = currentSeasons.find(
 							(cs) => cs.season.id === seasonUpdate.seasonId
@@ -614,16 +614,25 @@ export const updatePlayerAdmin = functions
 
 						if (!currentSeason) continue
 
-						// Check if player is being demoted from captain
+						const oldTeamId = currentSeason.team?.id || null
+						const newTeamId = seasonUpdate.teamId
+						const wasCaptain = currentSeason.captain === true
+						const willBeCaptain = seasonUpdate.captain === true
+
+						// Case 1: Player is being demoted from captain while staying on the team
 						const isDemotingCaptain =
-							currentSeason.captain === true && seasonUpdate.captain === false
+							wasCaptain && !willBeCaptain && oldTeamId === newTeamId && newTeamId
 
-						// Get the team ID (could be staying on same team or moving to new team)
-						const teamId = seasonUpdate.teamId || currentSeason.team?.id
+						// Case 2: Captain is being removed from team (moved to different team or no team)
+						const isRemovingCaptainFromTeam =
+							wasCaptain && oldTeamId && oldTeamId !== newTeamId
 
-						if (isDemotingCaptain && teamId) {
-							// Fetch the team to check roster
-							const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
+						if (isDemotingCaptain || isRemovingCaptainFromTeam) {
+							// Check the team the captain is leaving/being demoted on
+							const teamIdToCheck = oldTeamId!
+							const teamRef = firestore
+								.collection(Collections.TEAMS)
+								.doc(teamIdToCheck)
 							const teamDoc = await teamRef.get()
 
 							if (teamDoc.exists) {
@@ -639,19 +648,37 @@ export const updatePlayerAdmin = functions
 									const seasonName =
 										seasonNames.get(seasonUpdate.seasonId) ||
 										seasonUpdate.seasonId
-									functions.logger.warn(
-										'Cannot demote last captain from team',
-										{
-											playerId,
-											teamId,
-											teamName: teamData.name,
-											seasonId: seasonUpdate.seasonId,
-										}
-									)
-									throw new functions.https.HttpsError(
-										'failed-precondition',
-										`Cannot remove captain status from ${playerData?.firstname} ${playerData?.lastname}. They are the only captain on team "${teamData.name}" for ${seasonName}. Please assign another captain first.`
-									)
+
+									if (isDemotingCaptain) {
+										functions.logger.warn(
+											'Cannot demote last captain from team',
+											{
+												playerId,
+												teamId: teamIdToCheck,
+												teamName: teamData.name,
+												seasonId: seasonUpdate.seasonId,
+											}
+										)
+										throw new functions.https.HttpsError(
+											'failed-precondition',
+											`Cannot remove captain status from ${playerData?.firstname} ${playerData?.lastname}. They are the only captain on team "${teamData.name}" for ${seasonName}. Please assign another captain first.`
+										)
+									} else {
+										functions.logger.warn(
+											'Cannot remove last captain from team',
+											{
+												playerId,
+												teamId: teamIdToCheck,
+												teamName: teamData.name,
+												seasonId: seasonUpdate.seasonId,
+												newTeamId,
+											}
+										)
+										throw new functions.https.HttpsError(
+											'failed-precondition',
+											`Cannot remove ${playerData?.firstname} ${playerData?.lastname} from team "${teamData.name}". They are the only captain for ${seasonName}. Please assign another captain first.`
+										)
+									}
 								}
 							}
 						}
