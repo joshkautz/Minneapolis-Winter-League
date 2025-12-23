@@ -163,7 +163,7 @@ export const AdminDashboard = () => {
 						</Button>
 					</CardContent>
 				</Card>
-					{/* Offer Management */}
+				{/* Offer Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>

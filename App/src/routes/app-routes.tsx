@@ -167,7 +167,7 @@ export const AppRoutes = () => {
 						</AuthenticatedRoute>
 					}
 				/>
-					<Route
+				<Route
 					path='/admin/offer-management'
 					element={
 						<AuthenticatedRoute>
