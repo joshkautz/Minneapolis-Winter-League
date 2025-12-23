@@ -185,6 +185,8 @@ interface UpdatePlayerAdminRequest {
 	admin?: boolean
 	/** Email address (optional, will sync with Firebase Auth) */
 	email?: string
+	/** Email verification status (optional, will update Firebase Auth) */
+	emailVerified?: boolean
 	/** Season updates (optional) */
 	seasons?: SeasonUpdateData[]
 }
@@ -220,6 +222,8 @@ interface UpdatePlayerAdminResponse {
 		email?: { from: string; to: string }
 		/** Whether and how admin status was updated */
 		admin?: { from: boolean; to: boolean }
+		/** Whether and how email verification status was updated */
+		emailVerified?: { from: boolean; to: boolean }
 		/** Details about season changes */
 		seasons?: SeasonChanges[]
 	}

@@ -27,8 +27,6 @@ import {
 	Mail,
 	Shield,
 	UserCog,
-	CheckCircle,
-	XCircle,
 	Loader2,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -38,10 +36,7 @@ import { firestore } from '@/firebase/app'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import { teamsBySeasonQuery } from '@/firebase/collections/teams'
-import {
-	updatePlayerAdminViaFunction,
-	verifyUserEmailViaFunction,
-} from '@/firebase/collections/functions'
+import { updatePlayerAdminViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -57,6 +52,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
 import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import {
 	Collections,
@@ -82,6 +78,7 @@ interface PlayerFormData {
 	lastname: string
 	email: string
 	admin: boolean
+	emailVerified: boolean
 	seasons: SeasonFormData[]
 }
 
@@ -95,12 +92,6 @@ export const PlayerManagement = () => {
 	const [isSaving, setIsSaving] = useState(false)
 	const [formData, setFormData] = useState<PlayerFormData | null>(null)
 	const [originalFormData, setOriginalFormData] = useState<PlayerFormData | null>(null)
-
-	// Email verification state
-	const [emailVerified, setEmailVerified] = useState<boolean | null>(null)
-	const [emailVerifiedLoading, setEmailVerifiedLoading] = useState(false)
-	const [isTogglingEmailVerification, setIsTogglingEmailVerification] =
-		useState(false)
 
 	// Check if form has changes compared to original data
 	const hasChanges = useMemo(() => {
@@ -251,6 +242,9 @@ export const PlayerManagement = () => {
 				lastname: playerData.lastname,
 				email: playerData.email,
 				admin: playerData.admin,
+				// Email verification status will need to be fetched from Firebase Auth
+				// For now, default to false - backend will handle the actual status
+				emailVerified: false,
 				seasons: playerData.seasons.map((ps: PlayerSeason) => ({
 					seasonId: ps.season.id,
 					captain: ps.captain,
@@ -277,15 +271,6 @@ export const PlayerManagement = () => {
 
 	const handleSelectPlayer = (playerId: string) => {
 		setSelectedPlayerId(playerId)
-		// Reset email verification status when selecting a new player
-		setEmailVerified(null)
-		setEmailVerifiedLoading(true)
-		// TODO: Fetch actual email verification status from Firebase Auth via function
-		// For now, we'll show "Unknown" until we have a backend function
-		// The backend function will need to be created: getUserAuthInfo({ uid: playerId })
-		setTimeout(() => {
-			setEmailVerifiedLoading(false)
-		}, 500)
 	}
 
 	const handleSave = async () => {
@@ -322,6 +307,7 @@ export const PlayerManagement = () => {
 				lastname: formData.lastname,
 				email: formData.email,
 				admin: formData.admin,
+				emailVerified: formData.emailVerified,
 				seasons: formData.seasons,
 			})
 
@@ -343,6 +329,12 @@ export const PlayerManagement = () => {
 			if (result.changes.admin !== undefined) {
 				changesList.push(
 					`Admin status: ${result.changes.admin.to ? 'enabled' : 'disabled'}`
+				)
+			}
+
+			if (result.changes.emailVerified !== undefined) {
+				changesList.push(
+					`Email verification: ${result.changes.emailVerified.to ? 'verified' : 'unverified'}`
 				)
 			}
 
@@ -403,37 +395,6 @@ export const PlayerManagement = () => {
 				s.seasonId === seasonId ? { ...s, [field]: value } : s
 			),
 		})
-	}
-
-	const handleToggleEmailVerification = async () => {
-		if (!selectedPlayerId) return
-
-		setIsTogglingEmailVerification(true)
-		try {
-			const result = await verifyUserEmailViaFunction({ uid: selectedPlayerId })
-
-			if (result.success) {
-				setEmailVerified(true)
-				toast.success('Email Verified', {
-					description: `Email for ${formData?.firstname} ${formData?.lastname} has been marked as verified.`,
-				})
-			}
-		} catch (error: unknown) {
-			logger.error(
-				'Error verifying user email',
-				error instanceof Error ? error : undefined,
-				{ component: 'PlayerManagement', action: 'verifyEmail' }
-			)
-
-			let errorMessage = 'Failed to verify email. Please try again.'
-			if (error && typeof error === 'object' && 'message' in error) {
-				errorMessage = (error as { message: string }).message
-			}
-
-			toast.error(errorMessage)
-		} finally {
-			setIsTogglingEmailVerification(false)
-		}
 	}
 
 	// Handle authentication and data loading
@@ -514,8 +475,8 @@ export const PlayerManagement = () => {
 							in real-time
 						</li>
 						<li>
-							Email verification can be toggled in the Authentication Status
-							section - this updates Firebase Authentication directly
+							Email verification status can be toggled in Basic Information and
+							updates Firebase Authentication when saved
 						</li>
 					</ul>
 				</AlertDescription>
@@ -677,94 +638,34 @@ export const PlayerManagement = () => {
 												</Label>
 											</div>
 										</div>
-									</div>
-								</div>
 
-								<Separator />
-
-								{/* Authentication Status */}
-								<div className='space-y-4'>
-									<h3 className='text-lg font-semibold'>Authentication Status</h3>
-
-									<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border rounded-lg bg-muted/30'>
-										<div className='flex items-center gap-3'>
-											<div
-												className={`flex items-center justify-center w-10 h-10 rounded-full ${
-													emailVerifiedLoading
-														? 'bg-muted'
-														: emailVerified === true
-															? 'bg-green-100 dark:bg-green-900/30'
-															: emailVerified === false
-																? 'bg-red-100 dark:bg-red-900/30'
-																: 'bg-muted'
-												}`}
-												aria-hidden='true'
-											>
-												{emailVerifiedLoading ? (
-													<Loader2 className='h-5 w-5 text-muted-foreground animate-spin' />
-												) : emailVerified === true ? (
-													<CheckCircle className='h-5 w-5 text-green-600 dark:text-green-400' />
-												) : emailVerified === false ? (
-													<XCircle className='h-5 w-5 text-red-600 dark:text-red-400' />
-												) : (
-													<Mail className='h-5 w-5 text-muted-foreground' />
-												)}
+										<div className='space-y-2'>
+											<Label htmlFor='emailVerified'>Email Verified</Label>
+											<div className='flex items-center justify-between h-9 px-3 border rounded-md bg-background'>
+												<Label
+													htmlFor='emailVerified'
+													className='flex items-center gap-2 cursor-pointer text-sm font-normal'
+												>
+													<Mail className='h-4 w-4 text-muted-foreground' />
+													{formData.emailVerified ? 'Verified' : 'Not Verified'}
+												</Label>
+												<Switch
+													id='emailVerified'
+													checked={formData.emailVerified}
+													onCheckedChange={(checked) =>
+														setFormData({
+															...formData,
+															emailVerified: checked,
+														})
+													}
+													aria-label='Toggle email verification status'
+												/>
 											</div>
-											<div>
-												<p className='font-medium'>Email Verification</p>
-												<p className='text-sm text-muted-foreground'>
-													{emailVerifiedLoading
-														? 'Checking status...'
-														: emailVerified === true
-															? 'Email is verified'
-															: emailVerified === false
-																? 'Email is not verified'
-																: 'Status unknown - use button to verify'}
-												</p>
-											</div>
+											<p className='text-xs text-muted-foreground'>
+												Updates Firebase Authentication status
+											</p>
 										</div>
-
-										<Button
-											onClick={handleToggleEmailVerification}
-											disabled={
-												isTogglingEmailVerification ||
-												emailVerifiedLoading ||
-												emailVerified === true
-											}
-											variant={emailVerified === true ? 'outline' : 'default'}
-											size='sm'
-											className='shrink-0'
-											aria-label={
-												emailVerified === true
-													? 'Email already verified'
-													: 'Mark email as verified'
-											}
-										>
-											{isTogglingEmailVerification ? (
-												<>
-													<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-													Verifying...
-												</>
-											) : emailVerified === true ? (
-												<>
-													<CheckCircle className='h-4 w-4 mr-2' />
-													Verified
-												</>
-											) : (
-												<>
-													<CheckCircle className='h-4 w-4 mr-2' />
-													Mark as Verified
-												</>
-											)}
-										</Button>
 									</div>
-
-									<p className='text-xs text-muted-foreground'>
-										Email verification status is managed in Firebase
-										Authentication. Marking an email as verified will allow the
-										user to access all features without needing to click a
-										verification link.
-									</p>
 								</div>
 
 								<Separator />
