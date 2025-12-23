@@ -41,17 +41,17 @@ export const LeagueDetailsSection = () => {
 					>
 						<CardHeader>
 							<CardTitle className={'text-2xl font-bold self-center'}>
-								2025 Fall | Dates + Details
+								2026 Spring Season
 							</CardTitle>
 						</CardHeader>
 						<CardContent className={'flex flex-col gap-4'}>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>What:</p>
-								<span>{`5v5 Open Ultimate on Artificial Grass Fields.`}</span>
+								<span>{`5v5 Indoor Open Ultimate on Artificial Grass Fields.`}</span>
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>When:</p>
-								<span>{`November 1st, 8th, 15th, 22nd. December 6th, 13th, 20th.`}</span>
+								<span>{`February 14th, 28th. March 7th, 14th, 21st, 28th. April 4th.`}</span>
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>Where:</p>
@@ -75,11 +75,11 @@ export const LeagueDetailsSection = () => {
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>Cost:</p>
-								<span>{`$100 for the 2025 Fall season. 7 weeks of games. 2 games a night.`}</span>
+								<span>{`$100 for 7 weeks of games. 2 games a night.`}</span>
 							</div>
 							<div className={'flex'}>
-								<p className={'w-16 mr-2 font-bold min-w-16'}>New!</p>
-								<span>{`Ranking algorithm!`}</span>
+								<p className={'w-16 mr-2 font-bold min-w-16'}>What's New?</p>
+								<span>{`Badges and Discounts!`}</span>
 							</div>
 						</CardContent>
 					</Card>
