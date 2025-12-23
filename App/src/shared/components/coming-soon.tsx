@@ -25,11 +25,11 @@ export const ComingSoon = ({
 	}, [])
 
 	return (
-		<Card className={cn('w-full', className)}>
+		<Card className={cn('w-full py-0 gap-0 overflow-hidden', className)}>
 			<CardHeader
 				className={cn(
-					'relative flex items-center justify-center h-40 text-2xl font-bold rounded-t-lg md:h-60 overflow-hidden',
-					'bg-primary/10 text-primary dark:bg-primary/20'
+					'relative flex items-center justify-center h-40 text-2xl font-bold md:h-60 overflow-hidden px-0',
+					'bg-primary/10 text-primary dark:bg-primary/20 dark:text-white'
 				)}
 			>
 				<div className='absolute inset-0 w-full h-full pointer-events-none opacity-60 dark:opacity-40'>
@@ -37,7 +37,7 @@ export const ComingSoon = ({
 				</div>
 				<span className='relative z-10'>Coming Soon</span>
 			</CardHeader>
-			<CardContent className='pb-6 text-center text-base text-muted-foreground [&>p]:text-base'>
+			<CardContent className='py-6 text-center text-base text-muted-foreground [&>p]:text-base'>
 				{children}
 			</CardContent>
 		</Card>
