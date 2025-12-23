@@ -621,7 +621,10 @@ export const updatePlayerAdmin = functions
 
 						// Case 1: Player is being demoted from captain while staying on the team
 						const isDemotingCaptain =
-							wasCaptain && !willBeCaptain && oldTeamId === newTeamId && newTeamId
+							wasCaptain &&
+							!willBeCaptain &&
+							oldTeamId === newTeamId &&
+							newTeamId
 
 						// Case 2: Captain is being removed from team (moved to different team or no team)
 						const isRemovingCaptainFromTeam =
