@@ -23,7 +23,7 @@ export const NavigationMenu = ({ items }: NavigationMenuProps) => {
 					}
 				>
 					{entry.label}
-					{/* {(entry.label === 'Player Rankings' || entry.label === 'News') && (
+					{/* {(entry.label === 'Players' || entry.label === 'News') && (
 						<NewBadge />
 					)} */}
 				</NavLink>

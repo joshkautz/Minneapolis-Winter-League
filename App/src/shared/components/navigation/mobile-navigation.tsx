@@ -180,7 +180,7 @@ const MobileNavigationContent = ({
 						className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset cursor-pointer flex items-center justify-between'
 					>
 						{label}
-						{/* {(label === 'Player Rankings' || label === 'News') && <NewBadge />} */}
+						{/* {(label === 'Players' || label === 'News') && <NewBadge />} */}
 					</Link>
 				))}
 

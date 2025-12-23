@@ -99,7 +99,7 @@ export const useTopNavigation = () => {
 		{
 			label: 'Players',
 			path: '/players',
-			alt: 'player rankings',
+			alt: 'player list and rankings',
 		},
 	]
 

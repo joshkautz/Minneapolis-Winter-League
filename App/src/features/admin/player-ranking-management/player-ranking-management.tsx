@@ -1,5 +1,5 @@
 /**
- * Admin interface for Player Rankings calculations
+ * Admin interface for managing player ranking calculations
  *
  * Allows administrators to trigger calculations and monitor progress
  */

@@ -1,7 +1,7 @@
 /**
- * Player Rankings page component
+ * Players page component
  *
- * Displays the player rankings in a sophisticated leaderboard format
+ * Displays players in a ranked leaderboard format based on ELO ratings
  */
 
 import { useState, useEffect } from 'react'
@@ -673,11 +673,11 @@ export const PlayerRankings = ({
 	// Log and notify on query errors
 	useEffect(() => {
 		if (error) {
-			logger.error('Failed to load player rankings:', {
+			logger.error('Failed to load players:', {
 				component: 'PlayerRankings',
 				error: error.message,
 			})
-			toast.error('Failed to load player rankings', {
+			toast.error('Failed to load players', {
 				description: error.message,
 			})
 		}
