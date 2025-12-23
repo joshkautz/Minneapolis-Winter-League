@@ -6,7 +6,7 @@ import { ComingSoon } from '@/shared/components'
 export const NewsEmptyState = () => {
 	return (
 		<ComingSoon>
-			<p className='text-lg'>
+			<p>
 				No news posts yet for this season. Check back soon for updates and
 				announcements!
 			</p>
