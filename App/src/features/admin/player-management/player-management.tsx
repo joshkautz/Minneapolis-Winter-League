@@ -618,7 +618,28 @@ export const PlayerManagement = () => {
 
 										<div className='space-y-2'>
 											<Label htmlFor='admin'>Admin Status</Label>
-											<div className='flex items-center h-9 px-3 border rounded-md bg-background'>
+											<div
+												role='button'
+												tabIndex={0}
+												onClick={() =>
+													setFormData({
+														...formData,
+														admin: !formData.admin,
+													})
+												}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter' || e.key === ' ') {
+														e.preventDefault()
+														setFormData({
+															...formData,
+															admin: !formData.admin,
+														})
+													}
+												}}
+												className='flex items-center h-9 px-3 border rounded-md bg-background cursor-pointer transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+												aria-pressed={formData.admin}
+												aria-label='Toggle admin privileges'
+											>
 												<Checkbox
 													id='admin'
 													checked={formData.admin}
@@ -628,27 +649,44 @@ export const PlayerManagement = () => {
 															admin: checked as boolean,
 														})
 													}
+													onClick={(e) => e.stopPropagation()}
+													tabIndex={-1}
 												/>
-												<Label
-													htmlFor='admin'
-													className='flex items-center gap-2 ml-2 cursor-pointer text-sm font-normal'
-												>
+												<span className='flex items-center gap-2 ml-2 text-sm'>
 													<Shield className='h-4 w-4 text-yellow-600' />
 													Admin Privileges
-												</Label>
+												</span>
 											</div>
 										</div>
 
 										<div className='space-y-2'>
 											<Label htmlFor='emailVerified'>Email Verified</Label>
-											<div className='flex items-center justify-between h-9 px-3 border rounded-md bg-background'>
-												<Label
-													htmlFor='emailVerified'
-													className='flex items-center gap-2 cursor-pointer text-sm font-normal'
-												>
+											<div
+												role='button'
+												tabIndex={0}
+												onClick={() =>
+													setFormData({
+														...formData,
+														emailVerified: !formData.emailVerified,
+													})
+												}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter' || e.key === ' ') {
+														e.preventDefault()
+														setFormData({
+															...formData,
+															emailVerified: !formData.emailVerified,
+														})
+													}
+												}}
+												className='flex items-center justify-between h-9 px-3 border rounded-md bg-background cursor-pointer transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+												aria-pressed={formData.emailVerified}
+												aria-label='Toggle email verification status'
+											>
+												<span className='flex items-center gap-2 text-sm'>
 													<Mail className='h-4 w-4 text-muted-foreground' />
 													{formData.emailVerified ? 'Verified' : 'Not Verified'}
-												</Label>
+												</span>
 												<Switch
 													id='emailVerified'
 													checked={formData.emailVerified}
@@ -658,7 +696,8 @@ export const PlayerManagement = () => {
 															emailVerified: checked,
 														})
 													}
-													aria-label='Toggle email verification status'
+													onClick={(e) => e.stopPropagation()}
+													tabIndex={-1}
 												/>
 											</div>
 											<p className='text-xs text-muted-foreground'>
