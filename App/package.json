@@ -54,6 +54,7 @@
 		"@testing-library/user-event": "^14.6.1",
 		"@tsparticles/engine": "^3.9.1",
 		"@tsparticles/react": "^3.0.0",
+		"@tsparticles/shape-heart": "^3.9.1",
 		"@tsparticles/slim": "^3.9.1",
 		"bad-words": "^4.0.0",
 		"class-variance-authority": "^0.7.1",

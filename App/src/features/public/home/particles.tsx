@@ -8,6 +8,7 @@ import type {
 	SingleOrMultiple,
 } from '@tsparticles/engine'
 import { loadSlim } from '@tsparticles/slim'
+import { loadHeartShape } from '@tsparticles/shape-heart'
 import { cn } from '@/shared/utils'
 import { motion, useAnimation } from 'framer-motion'
 
@@ -41,21 +42,15 @@ export const SparklesCore = (props: ParticlesProps) => {
 	const isHearts = variant === 'hearts'
 	const direction = isHearts ? 'top' : 'bottom'
 	const defaultColor = isHearts ? '#ff6b9d' : '#ffffff'
-	const shapeType = isHearts ? 'character' : 'circle'
-	const shapeOptions = isHearts
-		? {
-				character: {
-					value: ['❤', '💕', '💗', '♥'],
-					font: 'Verdana',
-					weight: '400',
-					fill: true,
-				},
-			}
-		: {}
+
+	// Use heart shape for hearts variant, circle for snow
+	const shapeType = isHearts ? 'heart' : 'circle'
+	const shapeOptions = {}
 	const [init, setInit] = useState(false)
 	useEffect(() => {
 		initParticlesEngine(async (engine) => {
 			await loadSlim(engine)
+			await loadHeartShape(engine)
 		}).then(() => {
 			setInit(true)
 		})
