@@ -14,12 +14,13 @@ export const ComingSoon = ({
 		return (
 			<SparklesCore
 				background='transparent'
-				minSize={0.4}
-				maxSize={1.2}
-				particleDensity={60}
+				minSize={2}
+				maxSize={4}
+				particleDensity={40}
 				className='w-full h-full'
-				particleColor='#FFFFFF'
+				particleColor='#ff6b9d'
 				speed={2}
+				variant='hearts'
 			/>
 		)
 	}, [])

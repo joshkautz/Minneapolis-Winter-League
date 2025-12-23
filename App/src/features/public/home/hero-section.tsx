@@ -11,8 +11,8 @@ export const HeroSection = () => {
 		return (
 			<SparklesCore
 				background='transparent'
-				minSize={4}
-				maxSize={10}
+				minSize={3}
+				maxSize={6}
 				particleDensity={50}
 				className='w-full h-full'
 				variant='hearts'
