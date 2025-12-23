@@ -23,9 +23,7 @@ import {
 	Users,
 	AlertTriangle,
 	Search,
-	Edit,
 	Save,
-	X,
 	Mail,
 	Shield,
 	UserCog,
@@ -94,15 +92,21 @@ export const PlayerManagement = () => {
 
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
-	const [isEditing, setIsEditing] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
 	const [formData, setFormData] = useState<PlayerFormData | null>(null)
+	const [originalFormData, setOriginalFormData] = useState<PlayerFormData | null>(null)
 
 	// Email verification state
 	const [emailVerified, setEmailVerified] = useState<boolean | null>(null)
 	const [emailVerifiedLoading, setEmailVerifiedLoading] = useState(false)
 	const [isTogglingEmailVerification, setIsTogglingEmailVerification] =
 		useState(false)
+
+	// Check if form has changes compared to original data
+	const hasChanges = useMemo(() => {
+		if (!formData || !originalFormData) return false
+		return JSON.stringify(formData) !== JSON.stringify(originalFormData)
+	}, [formData, originalFormData])
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
@@ -240,9 +244,9 @@ export const PlayerManagement = () => {
 
 	// Initialize form data when a player is selected
 	useEffect(() => {
-		if (selectedPlayerSnapshot?.exists() && !isEditing) {
+		if (selectedPlayerSnapshot?.exists()) {
 			const playerData = selectedPlayerSnapshot.data() as PlayerDocument
-			setFormData({
+			const newFormData = {
 				firstname: playerData.firstname,
 				lastname: playerData.lastname,
 				email: playerData.email,
@@ -256,9 +260,11 @@ export const PlayerManagement = () => {
 					lookingForTeam: ps.lookingForTeam ?? false,
 					teamId: ps.team?.id || null,
 				})),
-			})
+			}
+			setFormData(newFormData)
+			setOriginalFormData(newFormData)
 		}
-	}, [selectedPlayerSnapshot, isEditing])
+	}, [selectedPlayerSnapshot])
 
 	const searchResults = useMemo(() => {
 		if (!playersSnapshot) return []
@@ -271,7 +277,6 @@ export const PlayerManagement = () => {
 
 	const handleSelectPlayer = (playerId: string) => {
 		setSelectedPlayerId(playerId)
-		setIsEditing(false)
 		// Reset email verification status when selecting a new player
 		setEmailVerified(null)
 		setEmailVerifiedLoading(true)
@@ -281,33 +286,6 @@ export const PlayerManagement = () => {
 		setTimeout(() => {
 			setEmailVerifiedLoading(false)
 		}, 500)
-	}
-
-	const handleEdit = () => {
-		setIsEditing(true)
-	}
-
-	const handleCancel = () => {
-		setIsEditing(false)
-		// Reset form data to current player data
-		if (selectedPlayerSnapshot?.exists()) {
-			const playerData = selectedPlayerSnapshot.data() as PlayerDocument
-			setFormData({
-				firstname: playerData.firstname,
-				lastname: playerData.lastname,
-				email: playerData.email,
-				admin: playerData.admin,
-				seasons: playerData.seasons.map((ps: PlayerSeason) => ({
-					seasonId: ps.season.id,
-					captain: ps.captain,
-					paid: ps.paid,
-					signed: ps.signed,
-					banned: ps.banned ?? false,
-					lookingForTeam: ps.lookingForTeam ?? false,
-					teamId: ps.team?.id || null,
-				})),
-			})
-		}
 	}
 
 	const handleSave = async () => {
@@ -392,7 +370,8 @@ export const PlayerManagement = () => {
 				description,
 			})
 
-			setIsEditing(false)
+			// Update original form data to reflect saved state
+			setOriginalFormData(formData)
 		} catch (error: unknown) {
 			logger.error(
 				'Error updating player',
@@ -606,40 +585,10 @@ export const PlayerManagement = () => {
 				{/* Player Details Panel */}
 				<Card className='lg:col-span-2'>
 					<CardHeader>
-						<div className='flex items-center justify-between'>
-							<CardTitle className='flex items-center gap-2'>
-								<Users className='h-5 w-5 text-green-600' />
-								Player Details
-							</CardTitle>
-							{selectedPlayerId && !isEditing && (
-								<Button onClick={handleEdit} size='sm'>
-									<Edit className='h-4 w-4 mr-2' />
-									Edit
-								</Button>
-							)}
-							{isEditing && (
-								<div className='flex gap-2'>
-									<Button
-										onClick={handleSave}
-										disabled={isSaving}
-										size='sm'
-										variant='default'
-									>
-										<Save className='h-4 w-4 mr-2' />
-										{isSaving ? 'Saving...' : 'Save'}
-									</Button>
-									<Button
-										onClick={handleCancel}
-										disabled={isSaving}
-										size='sm'
-										variant='outline'
-									>
-										<X className='h-4 w-4 mr-2' />
-										Cancel
-									</Button>
-								</div>
-							)}
-						</div>
+						<CardTitle className='flex items-center gap-2'>
+							<Users className='h-5 w-5 text-green-600' />
+							Player Details
+						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{!selectedPlayerId && (
@@ -670,7 +619,6 @@ export const PlayerManagement = () => {
 														firstname: e.target.value,
 													})
 												}
-												disabled={!isEditing}
 											/>
 										</div>
 
@@ -685,53 +633,50 @@ export const PlayerManagement = () => {
 														lastname: e.target.value,
 													})
 												}
-												disabled={!isEditing}
 											/>
 										</div>
-									</div>
 
-									<div className='space-y-2'>
-										<Label htmlFor='email'>Email Address</Label>
-										<div className='flex gap-2 items-center'>
-											<Mail className='h-4 w-4 text-muted-foreground' />
-											<Input
-												id='email'
-												type='email'
-												value={formData.email}
-												onChange={(e) =>
-													setFormData({ ...formData, email: e.target.value })
-												}
-												disabled={!isEditing}
-												className='flex-1'
-											/>
-										</div>
-										{isEditing && (
+										<div className='space-y-2'>
+											<Label htmlFor='email'>Email Address</Label>
+											<div className='relative'>
+												<Mail className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+												<Input
+													id='email'
+													type='email'
+													value={formData.email}
+													onChange={(e) =>
+														setFormData({ ...formData, email: e.target.value })
+													}
+													className='pl-9'
+												/>
+											</div>
 											<p className='text-xs text-muted-foreground'>
-												Changing the email will also update Firebase
-												Authentication and mark it as verified
+												Changing email updates Firebase Auth
 											</p>
-										)}
-									</div>
+										</div>
 
-									<div className='flex items-center space-x-2'>
-										<Checkbox
-											id='admin'
-											checked={formData.admin}
-											onCheckedChange={(checked) =>
-												setFormData({
-													...formData,
-													admin: checked as boolean,
-												})
-											}
-											disabled={!isEditing}
-										/>
-										<Label
-											htmlFor='admin'
-											className='flex items-center gap-2 cursor-pointer'
-										>
-											<Shield className='h-4 w-4 text-yellow-600' />
-											Admin Privileges
-										</Label>
+										<div className='space-y-2'>
+											<Label htmlFor='admin'>Admin Status</Label>
+											<div className='flex items-center h-9 px-3 border rounded-md bg-background'>
+												<Checkbox
+													id='admin'
+													checked={formData.admin}
+													onCheckedChange={(checked) =>
+														setFormData({
+															...formData,
+															admin: checked as boolean,
+														})
+													}
+												/>
+												<Label
+													htmlFor='admin'
+													className='flex items-center gap-2 ml-2 cursor-pointer text-sm font-normal'
+												>
+													<Shield className='h-4 w-4 text-yellow-600' />
+													Admin Privileges
+												</Label>
+											</div>
+										</div>
 									</div>
 								</div>
 
@@ -839,11 +784,30 @@ export const PlayerManagement = () => {
 											key={seasonData.seasonId}
 											seasonData={seasonData}
 											seasons={seasons}
-											isEditing={isEditing}
 											onFieldChange={handleSeasonFieldChange}
 										/>
 									))}
 								</div>
+
+								{/* Save Button */}
+								<Button
+									onClick={handleSave}
+									disabled={isSaving || !hasChanges}
+									className='w-full'
+									size='lg'
+								>
+									{isSaving ? (
+										<>
+											<Loader2 className='h-4 w-4 mr-2 animate-spin' />
+											Saving Changes...
+										</>
+									) : (
+										<>
+											<Save className='h-4 w-4 mr-2' />
+											Save Changes
+										</>
+									)}
+								</Button>
 							</div>
 						)}
 					</CardContent>
@@ -856,7 +820,6 @@ export const PlayerManagement = () => {
 interface SeasonCardProps {
 	seasonData: SeasonFormData
 	seasons: (SeasonDocument & { id: string })[] | undefined
-	isEditing: boolean
 	onFieldChange: (
 		seasonId: string,
 		field: keyof SeasonFormData,
@@ -867,7 +830,6 @@ interface SeasonCardProps {
 const SeasonCard = ({
 	seasonData,
 	seasons,
-	isEditing,
 	onFieldChange,
 }: SeasonCardProps) => {
 	const season = seasons?.find((s) => s.id === seasonData.seasonId)
@@ -947,7 +909,6 @@ const SeasonCard = ({
 									checked as boolean
 								)
 							}
-							disabled={!isEditing}
 						/>
 						<Label
 							htmlFor={`captain-${seasonData.seasonId}`}
@@ -964,7 +925,6 @@ const SeasonCard = ({
 							onCheckedChange={(checked) =>
 								onFieldChange(seasonData.seasonId, 'paid', checked as boolean)
 							}
-							disabled={!isEditing}
 						/>
 						<Label
 							htmlFor={`paid-${seasonData.seasonId}`}
@@ -981,7 +941,6 @@ const SeasonCard = ({
 							onCheckedChange={(checked) =>
 								onFieldChange(seasonData.seasonId, 'signed', checked as boolean)
 							}
-							disabled={!isEditing}
 						/>
 						<Label
 							htmlFor={`signed-${seasonData.seasonId}`}
@@ -998,7 +957,6 @@ const SeasonCard = ({
 							onCheckedChange={(checked) =>
 								onFieldChange(seasonData.seasonId, 'banned', checked as boolean)
 							}
-							disabled={!isEditing}
 						/>
 						<Label
 							htmlFor={`banned-${seasonData.seasonId}`}
@@ -1019,7 +977,6 @@ const SeasonCard = ({
 									checked as boolean
 								)
 							}
-							disabled={!isEditing}
 						/>
 						<Label
 							htmlFor={`lookingForTeam-${seasonData.seasonId}`}
@@ -1041,7 +998,6 @@ const SeasonCard = ({
 								value === 'none' ? null : value
 							)
 						}
-						disabled={!isEditing}
 					>
 						<SelectTrigger
 							id={`team-${seasonData.seasonId}`}
