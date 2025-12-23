@@ -21,6 +21,8 @@ type ParticlesProps = {
 	speed?: number
 	particleColor?: string
 	particleDensity?: number
+	/** Particle style variant: 'snow' for falling snowflakes, 'hearts' for floating hearts */
+	variant?: 'snow' | 'hearts'
 }
 export const SparklesCore = (props: ParticlesProps) => {
 	const {
@@ -32,7 +34,24 @@ export const SparklesCore = (props: ParticlesProps) => {
 		speed,
 		particleColor,
 		particleDensity,
+		variant = 'snow',
 	} = props
+
+	// Configuration based on variant
+	const isHearts = variant === 'hearts'
+	const direction = isHearts ? 'top' : 'bottom'
+	const defaultColor = isHearts ? '#ff6b9d' : '#ffffff'
+	const shapeType = isHearts ? 'character' : 'circle'
+	const shapeOptions = isHearts
+		? {
+				character: {
+					value: ['❤', '💕', '💗', '♥'],
+					font: 'Verdana',
+					weight: '400',
+					fill: true,
+				},
+			}
+		: {}
 	const [init, setInit] = useState(false)
 	useEffect(() => {
 		initParticlesEngine(async (engine) => {
@@ -126,7 +145,7 @@ export const SparklesCore = (props: ParticlesProps) => {
 								},
 							},
 							color: {
-								value: particleColor || '#ffffff',
+								value: particleColor || defaultColor,
 								animation: {
 									h: {
 										count: 0,
@@ -185,7 +204,7 @@ export const SparklesCore = (props: ParticlesProps) => {
 								},
 								decay: 0,
 								distance: {},
-								direction: 'bottom',
+								direction: direction,
 								drift: 0,
 								enable: true,
 								gravity: {
@@ -268,8 +287,8 @@ export const SparklesCore = (props: ParticlesProps) => {
 							shape: {
 								close: true,
 								fill: true,
-								options: {},
-								type: 'circle',
+								options: shapeOptions,
+								type: shapeType,
 							},
 							size: {
 								value: {

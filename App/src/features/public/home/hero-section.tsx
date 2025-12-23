@@ -11,11 +11,11 @@ export const HeroSection = () => {
 		return (
 			<SparklesCore
 				background='transparent'
-				minSize={0.6}
-				maxSize={1.4}
-				particleDensity={100}
+				minSize={8}
+				maxSize={16}
+				particleDensity={40}
 				className='w-full h-full'
-				particleColor='#FFFFFF'
+				variant='hearts'
 			/>
 		)
 	}, [])
