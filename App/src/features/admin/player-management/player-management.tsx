@@ -36,7 +36,10 @@ import { firestore } from '@/firebase/app'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import { teamsBySeasonQuery } from '@/firebase/collections/teams'
-import { updatePlayerAdminViaFunction } from '@/firebase/collections/functions'
+import {
+	updatePlayerAdminViaFunction,
+	getPlayerAuthInfoViaFunction,
+} from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -236,30 +239,49 @@ export const PlayerManagement = () => {
 
 	// Initialize form data when a player is selected
 	useEffect(() => {
-		if (selectedPlayerSnapshot?.exists()) {
-			const playerData = selectedPlayerSnapshot.data() as PlayerDocument
-			const newFormData = {
-				firstname: playerData.firstname,
-				lastname: playerData.lastname,
-				email: playerData.email,
-				admin: playerData.admin,
-				// Email verification status will need to be fetched from Firebase Auth
-				// For now, default to false - backend will handle the actual status
-				emailVerified: false,
-				seasons: playerData.seasons.map((ps: PlayerSeason) => ({
-					seasonId: ps.season.id,
-					captain: ps.captain,
-					paid: ps.paid,
-					signed: ps.signed,
-					banned: ps.banned ?? false,
-					lookingForTeam: ps.lookingForTeam ?? false,
-					teamId: ps.team?.id || null,
-				})),
+		const initializeFormData = async () => {
+			if (selectedPlayerSnapshot?.exists() && selectedPlayerId) {
+				const playerData = selectedPlayerSnapshot.data() as PlayerDocument
+
+				// Fetch email verification status from Firebase Auth
+				let emailVerified = false
+				try {
+					const authInfo = await getPlayerAuthInfoViaFunction({
+						playerId: selectedPlayerId,
+					})
+					emailVerified = authInfo.emailVerified
+				} catch (error) {
+					logger.error('Failed to fetch player auth info:', {
+						component: 'PlayerManagement',
+						playerId: selectedPlayerId,
+						error: error instanceof Error ? error.message : 'Unknown error',
+					})
+					// Default to false if we can't fetch the status
+				}
+
+				const newFormData = {
+					firstname: playerData.firstname,
+					lastname: playerData.lastname,
+					email: playerData.email,
+					admin: playerData.admin,
+					emailVerified,
+					seasons: playerData.seasons.map((ps: PlayerSeason) => ({
+						seasonId: ps.season.id,
+						captain: ps.captain,
+						paid: ps.paid,
+						signed: ps.signed,
+						banned: ps.banned ?? false,
+						lookingForTeam: ps.lookingForTeam ?? false,
+						teamId: ps.team?.id || null,
+					})),
+				}
+				setFormData(newFormData)
+				setOriginalFormData(newFormData)
 			}
-			setFormData(newFormData)
-			setOriginalFormData(newFormData)
 		}
-	}, [selectedPlayerSnapshot])
+
+		initializeFormData()
+	}, [selectedPlayerSnapshot, selectedPlayerId])
 
 	const searchResults = useMemo(() => {
 		if (!playersSnapshot) return []

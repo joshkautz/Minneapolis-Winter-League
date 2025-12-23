@@ -249,6 +249,41 @@ export const updatePlayerAdminViaFunction = async (
 	return result.data
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// GET PLAYER AUTH INFO (Admin)
+//////////////////////////////////////////////////////////////////////////////
+
+interface GetPlayerAuthInfoRequest {
+	/** Player's Firebase Auth UID */
+	playerId: string
+}
+
+interface GetPlayerAuthInfoResponse {
+	success: true
+	playerId: string
+	/** Whether the user's email is verified */
+	emailVerified: boolean
+	/** The user's email address from Firebase Auth */
+	email: string | undefined
+}
+
+/**
+ * Gets Firebase Authentication info for a player (admin only)
+ *
+ * Returns the player's Firebase Auth info including email verification status.
+ * This is needed because emailVerified is stored in Firebase Auth, not Firestore.
+ */
+export const getPlayerAuthInfoViaFunction = async (
+	data: GetPlayerAuthInfoRequest
+): Promise<GetPlayerAuthInfoResponse> => {
+	const getPlayerAuthInfo = httpsCallable<
+		GetPlayerAuthInfoRequest,
+		GetPlayerAuthInfoResponse
+	>(functions, 'getPlayerAuthInfo')
+	const result = await getPlayerAuthInfo(data)
+	return result.data
+}
+
 interface AddNewSeasonToPlayersRequest {
 	/** Season ID to add to all players */
 	seasonId: string

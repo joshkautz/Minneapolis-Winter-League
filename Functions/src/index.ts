@@ -78,6 +78,7 @@ export { addNewSeasonToAllPlayers } from './functions/user/players/addNewSeason.
 export { updatePlayerEmail } from './functions/admin/players/updateEmail.js'
 export { updatePlayerAdmin } from './functions/admin/players/updatePlayerAdmin.js'
 export { verifyUserEmail } from './functions/admin/players/verifyUserEmail.js'
+export { getPlayerAuthInfo } from './functions/admin/players/getPlayerAuthInfo.js'
 
 // Team management functions (user-accessible)
 export { createTeam } from './functions/user/teams/create.js'
