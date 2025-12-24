@@ -48,7 +48,6 @@ import {
 	Settings,
 	ArrowLeft,
 	AlertTriangle,
-	Info,
 } from 'lucide-react'
 
 export const PlayerRankingManagement = () => {
@@ -277,29 +276,6 @@ export const PlayerRankingManagement = () => {
 				</Alert>
 			)}
 
-			{/* TrueSkill Info Card */}
-			<Card className='border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/20'>
-				<CardContent className='p-4'>
-					<div className='flex gap-3'>
-						<Info
-							className='h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5'
-							aria-hidden='true'
-						/>
-						<div className='space-y-1'>
-							<p className='font-medium text-blue-900 dark:text-blue-100'>
-								TrueSkill Rating System
-							</p>
-							<p className='text-sm text-blue-700 dark:text-blue-300'>
-								Player rankings use the TrueSkill algorithm which tracks both
-								skill (μ) and uncertainty (σ). Full rebuilds process all games
-								chronologically to ensure accurate sigma values are maintained.
-								This produces the most reliable rankings.
-							</p>
-						</div>
-					</div>
-				</CardContent>
-			</Card>
-
 			{/* Calculation Controls */}
 			<Card>
 				<CardHeader>
@@ -455,26 +431,9 @@ export const PlayerRankingManagement = () => {
 							<p className='text-lg font-medium text-muted-foreground'>
 								No calculations found
 							</p>
-							<p className='text-sm text-muted-foreground mt-2 mb-4'>
-								Player rankings haven't been calculated yet. Run your first
-								TrueSkill calculation to generate the leaderboard.
+							<p className='text-sm text-muted-foreground mt-2'>
+								Player rankings haven't been calculated yet.
 							</p>
-							<Button
-								onClick={handleRebuildRankings}
-								disabled={isCalculating}
-								size='sm'
-								aria-busy={isCalculating}
-							>
-								{isCalculating ? (
-									<RefreshCw
-										className='h-4 w-4 animate-spin mr-2'
-										aria-hidden='true'
-									/>
-								) : (
-									<Play className='h-4 w-4 mr-2' aria-hidden='true' />
-								)}
-								{isCalculating ? 'Starting...' : 'Run First Calculation'}
-							</Button>
 						</div>
 					)}
 				</CardContent>
