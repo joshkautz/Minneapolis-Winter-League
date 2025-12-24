@@ -200,9 +200,9 @@
 
 	/* Valentine's Day theme variant */
 	.valentine {
-		--accent: 340 82% 65%;
+		--accent: 340 80 84%;
 		--accent-foreground: 340 10% 15%;
-		--primary: 350 80% 50%;
+		--primary: 352 100% 28%;
 		--primary-foreground: 0 0% 100%;
 		--ring: 340 82% 55%;
 	}
