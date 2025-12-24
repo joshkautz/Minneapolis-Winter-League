@@ -31,6 +31,7 @@ export const Standings = () => {
 				title='Standings'
 				description='Regular season and playoff results for all teams'
 				icon={Trophy}
+				showSeasonIndicator
 			/>
 
 			{!regularSeasonGamesQuerySnapshot ? (

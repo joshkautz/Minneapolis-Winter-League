@@ -20,6 +20,7 @@ export const Schedule = () => {
 				title='Schedule'
 				description='View all games and match schedules organized by rounds'
 				icon={Calendar}
+				showSeasonIndicator
 			/>
 
 			{isLoading ? (

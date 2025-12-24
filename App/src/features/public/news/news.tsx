@@ -146,6 +146,7 @@ export const News = () => {
 					title='News'
 					description='Stay up-to-date with league announcements and updates'
 					icon={Newspaper}
+					showSeasonIndicator
 				/>
 				<div className='text-center text-destructive mt-8'>
 					<p>Error loading news posts. Please try again later.</p>
@@ -161,6 +162,7 @@ export const News = () => {
 					title='News'
 					description='Stay up-to-date with league announcements and updates'
 					icon={Newspaper}
+					showSeasonIndicator
 				/>
 				<div
 					className='flex items-center justify-center min-h-[400px]'
@@ -179,6 +181,7 @@ export const News = () => {
 				title='News'
 				description='Stay up-to-date with league announcements and updates'
 				icon={Newspaper}
+				showSeasonIndicator
 			/>
 
 			{allPosts.length === 0 ? (

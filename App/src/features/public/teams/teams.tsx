@@ -158,6 +158,7 @@ export const Teams = () => {
 				title='Teams'
 				description='Explore all the teams competing in this season'
 				icon={Users}
+				showSeasonIndicator
 			/>
 
 			{!selectedSeasonTeamsQuerySnapshot ? (
