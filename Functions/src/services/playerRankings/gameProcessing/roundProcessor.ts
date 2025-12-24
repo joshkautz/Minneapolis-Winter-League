@@ -1,7 +1,6 @@
 import { logger } from 'firebase-functions/v2'
 import { processGame } from './gameProcessor.js'
 import { saveRoundSnapshot } from '../snapshots/roundSnapshotSaver.js'
-import { shouldCountGame } from '../incremental/gameCounter.js'
 import { applyRoundBasedDecay } from '../algorithms/decay.js'
 import {
 	updateGameProgress,
@@ -9,11 +8,6 @@ import {
 } from '../persistence/progressTracker.js'
 import { GameProcessingData, PlayerRatingState } from '../types.js'
 import { groupGamesByRounds, formatRoundInfo } from './roundGrouper.js'
-import {
-	isRoundCalculated,
-	markRoundCalculated,
-	filterUncalculatedRounds,
-} from '../persistence/roundTracker.js'
 
 /**
  * Extracts all player IDs participating in the games of a round
@@ -64,47 +58,35 @@ async function getPlayersInRound(
 }
 
 /**
- * Processes games by rounds in chronological order
- * Each round contains all games that start at the same time
+ * Processes all games by rounds in chronological order (full rebuild only).
+ *
+ * Each round contains all games that start at the same time.
+ * This function always processes ALL rounds from scratch to ensure
+ * accurate TrueSkill sigma (uncertainty) tracking.
+ *
+ * Note: Incremental updates were deprecated because TrueSkill requires
+ * accurate sigma tracking across all games for proper rating calculations.
  */
 export async function processGamesByRounds(
 	games: GameProcessingData[],
 	playerRatings: Map<string, PlayerRatingState>,
 	calculationId: string,
-	totalSeasons: number,
-	incrementalStartSeasonIndex?: number,
-	onlyNewRounds: boolean = false,
-	_isFullRebuild: boolean = false
+	totalSeasons: number
 ): Promise<void> {
 	// Group games into rounds by start time
 	const allRounds = groupGamesByRounds(games)
 	logger.info(`Grouped ${games.length} games into ${allRounds.length} rounds`)
 
-	// Filter to only uncalculated rounds if requested
-	const roundsToProcess = onlyNewRounds
-		? await filterUncalculatedRounds(allRounds)
-		: allRounds
-
-	logger.info(
-		`Processing ${roundsToProcess.length} rounds (${onlyNewRounds ? 'new only' : 'all'})`
-	)
-
 	let currentSeasonId = ''
 	let processedSeasons = 0
 	let processedGames = 0
 
-	for (let roundIndex = 0; roundIndex < roundsToProcess.length; roundIndex++) {
-		const round = roundsToProcess[roundIndex]
+	for (let roundIndex = 0; roundIndex < allRounds.length; roundIndex++) {
+		const round = allRounds[roundIndex]
 
 		logger.info(
-			`Processing round ${roundIndex + 1}/${roundsToProcess.length}: ${formatRoundInfo(round)}`
+			`Processing round ${roundIndex + 1}/${allRounds.length}: ${formatRoundInfo(round)}`
 		)
-
-		// Skip if this round was already calculated (double-check for safety)
-		if (onlyNewRounds && (await isRoundCalculated(round.roundId))) {
-			logger.info(`Skipping already calculated round: ${round.roundId}`)
-			continue
-		}
 
 		// Update progress if we've moved to a new season
 		if (round.seasonId !== currentSeasonId) {
@@ -122,7 +104,7 @@ export async function processGamesByRounds(
 		// Capture ratings before this round for comparison
 		const preRoundRatings = new Map<string, number>()
 		for (const [playerId, playerState] of playerRatings) {
-			preRoundRatings.set(playerId, playerState.currentRating)
+			preRoundRatings.set(playerId, playerState.mu)
 		}
 
 		// Collect all players participating in this round
@@ -136,23 +118,12 @@ export async function processGamesByRounds(
 		// Process all games in this round simultaneously
 		// This ensures true chronological order since all games in a round start at the same time
 		const roundPromises = round.games.map(async (game) => {
-			// Determine if this game should count toward ELO calculations
-			const shouldCountForRating = shouldCountGame(
-				game,
-				incrementalStartSeasonIndex,
-				totalSeasons
-			)
-
-			// For totalGames counting: Always count games being processed
-			// - Full rebuild: count ALL games (since we're rebuilding from scratch)
-			// - Incremental: count ALL games being processed (they're all new by definition)
-			const shouldCountForTotalGames = true
-
+			// In full rebuild mode, all games count for both rating and totalGames
 			await processGame(
 				game,
 				playerRatings,
-				shouldCountForRating,
-				shouldCountForTotalGames
+				true, // shouldCountForRating
+				true // shouldCountForTotalGames
 			)
 			processedGames++
 		})
@@ -168,9 +139,6 @@ export async function processGamesByRounds(
 			calculationId
 		)
 
-		// Mark this round as calculated
-		await markRoundCalculated(round, calculationId)
-
 		logger.info(
 			`Completed round ${round.roundId}: processed ${round.games.length} games`
 		)
@@ -180,28 +148,6 @@ export async function processGamesByRounds(
 	}
 
 	logger.info(
-		`Round-based processing complete: ${processedGames} games in ${roundsToProcess.length} rounds`
-	)
-}
-
-/**
- * Processes only new rounds that haven't been calculated yet
- * This is ideal for incremental calculations
- */
-export async function processNewRoundsOnly(
-	games: GameProcessingData[],
-	playerRatings: Map<string, PlayerRatingState>,
-	calculationId: string,
-	totalSeasons: number,
-	incrementalStartSeasonIndex?: number
-): Promise<void> {
-	return processGamesByRounds(
-		games,
-		playerRatings,
-		calculationId,
-		totalSeasons,
-		incrementalStartSeasonIndex,
-		true, // Only process new rounds
-		false // This is incremental, not a full rebuild
+		`Round-based processing complete: ${processedGames} games in ${allRounds.length} rounds`
 	)
 }

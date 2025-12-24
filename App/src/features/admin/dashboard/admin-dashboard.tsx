@@ -72,7 +72,7 @@ export const AdminDashboard = () => {
 				<Card>
 					<CardContent className='p-6 text-center'>
 						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
+							<AlertTriangle className='h-6 w-6' aria-hidden='true' />
 							<h2 className='text-xl font-semibold'>Access Denied</h2>
 						</div>
 						<p className='text-muted-foreground'>
@@ -153,8 +153,8 @@ export const AdminDashboard = () => {
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<p className='text-sm text-muted-foreground'>
-							Manage player ranking calculations and monitor the ELO rating
-							system status.
+							Manage player ranking calculations and monitor the TrueSkill
+							rating system status.
 						</p>
 						<Button asChild className='w-full'>
 							<Link to='/admin/rankings-management'>

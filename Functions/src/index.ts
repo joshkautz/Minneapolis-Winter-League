@@ -109,8 +109,9 @@ export { getDownloadUrl } from './functions/user/storage/getDownloadUrl.js'
 export { getFileMetadata } from './functions/user/storage/getFileMetadata.js'
 
 // Player Rankings functions (admin-only)
+// Note: Only full rebuild is supported - incremental updates were deprecated
+// because TrueSkill requires accurate sigma (uncertainty) tracking across all games
 export { rebuildPlayerRankings } from './functions/admin/rankings/rebuildPlayerRankings.js'
-export { updatePlayerRankings } from './functions/admin/rankings/updatePlayerRankings.js'
 
 // Dropbox Sign functions (user-accessible)
 export { dropboxSignSendReminderEmail } from './functions/user/dropboxSign/dropboxSignSendReminderEmail.js'

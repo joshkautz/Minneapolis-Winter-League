@@ -22,6 +22,17 @@ export type DocumentReference<T = DocumentData> = ClientDocumentReference<T>
 export type Timestamp = ClientTimestamp
 
 /////////////////////////////////////////////////////////////////
+////////////////////////// Constants ////////////////////////////
+/////////////////////////////////////////////////////////////////
+
+/**
+ * Precision multiplier for rating comparison
+ * Used to avoid floating point issues when checking for ties in rankings
+ * Note: This value must match RATING_PRECISION_MULTIPLIER in Functions/src/services/playerRankings/constants.ts
+ */
+export const RATING_PRECISION_MULTIPLIER = 1000000
+
+/////////////////////////////////////////////////////////////////
 /////////////////////////// Enums ///////////////////////////////
 /////////////////////////////////////////////////////////////////
 
@@ -34,7 +45,7 @@ export enum Collections {
 	RANKINGS = 'rankings',
 	RANKINGS_HISTORY = 'rankings-history',
 	RANKINGS_CALCULATIONS = 'rankings-calculations',
-	RANKINGS_CALCULATED_ROUNDS = 'rankings-calculated-rounds',
+	// RANKINGS_CALCULATED_ROUNDS removed - incremental updates deprecated in favor of full rebuilds
 	SEASONS = 'seasons',
 	SITE_SETTINGS = 'siteSettings',
 	TEAMS = 'teams',
@@ -325,6 +336,7 @@ export interface SiteSettingsDocument extends DocumentData {
 
 /**
  * Player ranking document structure for Player Rankings
+ * Uses TrueSkill algorithm - skill stored as μ (mu)
  */
 export interface PlayerRankingDocument extends DocumentData {
 	/** Reference to the player */
@@ -333,8 +345,8 @@ export interface PlayerRankingDocument extends DocumentData {
 	playerId: string
 	/** Player's display name (cached for performance) */
 	playerName: string
-	/** Current Elo rating */
-	eloRating: number
+	/** Current skill rating (TrueSkill μ) - higher is better */
+	rating: number
 	/** Total games played across all seasons */
 	totalGames: number
 	/** Total seasons participated in */
@@ -351,6 +363,7 @@ export interface PlayerRankingDocument extends DocumentData {
 
 /**
  * Rankings history snapshot document structure
+ * Stores a snapshot of all player rankings after each round of games
  */
 export interface RankingHistoryDocument extends DocumentData {
 	/** Reference to the season */
@@ -359,19 +372,8 @@ export interface RankingHistoryDocument extends DocumentData {
 	snapshotDate: Timestamp
 	/** Array of player rankings at this point in time */
 	rankings: TimeBasedPlayerRanking[]
-	/** Calculation metadata */
-	calculationMeta: {
-		/** Total games processed up to this point */
-		totalGamesProcessed: number
-		/** Average rating of all active players */
-		avgRating: number
-		/** Number of active players */
-		activePlayerCount: number
-		/** Timestamp when this snapshot was calculated */
-		calculatedAt: Timestamp
-	}
-	/** Optional round-specific metadata for game-by-game tracking */
-	roundMeta?: {
+	/** Round-specific metadata for game-by-game tracking */
+	roundMeta: {
 		/** Unique round identifier */
 		roundId: string
 		/** Timestamp when this round started */
@@ -387,14 +389,15 @@ export interface RankingHistoryDocument extends DocumentData {
 
 /**
  * Individual player ranking within a time-based snapshot
+ * Uses TrueSkill μ (skill estimate) for rating
  */
 export interface TimeBasedPlayerRanking {
 	/** Player ID */
 	playerId: string
 	/** Player name (cached) */
 	playerName: string
-	/** Elo rating at this point */
-	eloRating: number
+	/** Skill rating at this point (TrueSkill μ) */
+	rating: number
 	/** Rank position */
 	rank: number
 	/** Total games played up to this point */
@@ -403,8 +406,6 @@ export interface TimeBasedPlayerRanking {
 	totalSeasons: number
 	/** Rating change since previous rating (for round-based tracking) */
 	change?: number
-	/** Games played in this specific round (for round-based tracking) */
-	gamesPlayedInRound?: number
 	/** Previous rating before this snapshot (for round-based tracking) */
 	previousRating?: number
 }
@@ -413,8 +414,8 @@ export interface TimeBasedPlayerRanking {
  * Rankings calculation state document
  */
 export interface RankingsCalculationDocument extends DocumentData {
-	/** Type of calculation (fresh rebuild or incremental update) */
-	calculationType: 'fresh' | 'incremental'
+	/** Type of calculation (always 'fresh' - incremental was deprecated) */
+	calculationType: 'fresh'
 	/** Current status of the calculation */
 	status: 'pending' | 'running' | 'completed' | 'failed'
 	/** Timestamp when calculation started */
@@ -460,7 +461,5 @@ export interface RankingsCalculationDocument extends DocumentData {
 		seasonDecayFactor: number
 		/** Playoff multiplier */
 		playoffMultiplier: number
-		/** K-factor for Elo calculation */
-		kFactor: number
 	}
 }

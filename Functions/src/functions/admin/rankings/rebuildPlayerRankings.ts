@@ -11,8 +11,6 @@
  * - You need to completely recalculate all rankings from scratch
  * - Recovering from data corruption or algorithm changes
  * - Running periodic full audits of the ranking system
- *
- * For regular updates after adding new games, use updatePlayerRankings instead.
  */
 
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
@@ -154,16 +152,13 @@ async function processFullRebuild(calculationId: string): Promise<void> {
 		const playerRatings = new Map()
 		functions.logger.info('Starting complete rebuild with empty player ratings')
 
-		// Process ALL games by rounds in chronological order (no filtering)
-		// Round-based decay is now applied automatically during round processing
+		// Process ALL games by rounds in chronological order
+		// Round-based decay is applied automatically during round processing
 		await processGamesByRounds(
 			allGames,
 			playerRatings,
 			calculationId,
-			seasons.length,
-			undefined, // No incremental start season
-			false, // Process all rounds, not just new ones
-			true // This is a full rebuild
+			seasons.length
 		)
 
 		functions.logger.info(

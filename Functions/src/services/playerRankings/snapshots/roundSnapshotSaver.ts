@@ -1,10 +1,5 @@
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
-import {
-	Collections,
-	RankingHistoryDocument,
-	SeasonDocument,
-} from '../../../types.js'
-import { ALGORITHM_CONSTANTS } from '../constants.js'
+import { Collections, RankingHistoryDocument, SeasonDocument } from '../../../types.js'
 import { PlayerRatingState } from '../types.js'
 import { createTimeBasedSnapshot } from './snapshotCreator.js'
 import { GameRound } from '../gameProcessing/roundGrouper.js'
@@ -23,20 +18,13 @@ export async function saveRoundSnapshot(
 		.collection(Collections.SEASONS)
 		.doc(round.seasonId)
 
-	// Create rankings snapshot for this round
-	const roundRankings = createTimeBasedSnapshot(playerRatings)
+	// Create rankings snapshot for this round, passing previous ratings for change tracking
+	const roundRankings = createTimeBasedSnapshot(playerRatings, previousRatings)
 
 	const snapshotDoc: Partial<RankingHistoryDocument> = {
 		season: seasonRef as FirebaseFirestore.DocumentReference<SeasonDocument>,
 		snapshotDate: Timestamp.fromDate(round.startTime),
 		rankings: roundRankings,
-		calculationMeta: {
-			totalGamesProcessed: round.games.length,
-			avgRating: calculateAverageRating(playerRatings),
-			activePlayerCount: playerRatings.size,
-			calculatedAt: Timestamp.now(),
-		},
-		// Add round-specific metadata
 		roundMeta: {
 			roundId: round.roundId,
 			roundStartTime: Timestamp.fromDate(round.startTime),
@@ -53,19 +41,4 @@ export async function saveRoundSnapshot(
 		.collection(Collections.RANKINGS_HISTORY)
 		.doc(snapshotId)
 		.set(snapshotDoc)
-}
-
-/**
- * Calculates average rating of all players
- */
-function calculateAverageRating(
-	playerRatings: Map<string, PlayerRatingState>
-): number {
-	const allRatings = Array.from(playerRatings.values()).map(
-		(p) => p.currentRating
-	)
-
-	return allRatings.length > 0
-		? allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length
-		: ALGORITHM_CONSTANTS.STARTING_RATING
 }

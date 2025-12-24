@@ -42,9 +42,11 @@ export const playerRankingsCalculationsQuery =
 
 /**
  * Calls the Firebase Function to completely rebuild Player Rankings from scratch
- * Processes all games grouped by rounds in chronological order
+ * Processes all games grouped by rounds in chronological order using TrueSkill algorithm.
  *
- * Use this for initial setup or complete recalculation of all rankings
+ * Note: Incremental updates were deprecated because TrueSkill requires accurate
+ * sigma (uncertainty) tracking across all games for proper rating calculations.
+ * Full rebuilds ensure correct sigma values are maintained.
  */
 export const rebuildPlayerRankings = httpsCallable<
 	Record<string, never>, // No parameters needed - decay is always applied
@@ -54,18 +56,3 @@ export const rebuildPlayerRankings = httpsCallable<
 		message: string
 	}
 >(functions, 'rebuildPlayerRankings')
-
-/**
- * Calls the Firebase Function to incrementally update Player Rankings
- * Processes only uncalculated rounds for efficient updates
- *
- * Use this for regular production updates when adding new games
- */
-export const updatePlayerRankings = httpsCallable<
-	Record<string, never>, // No parameters needed - decay is always applied
-	{
-		calculationId: string
-		status: string
-		message: string
-	}
->(functions, 'updatePlayerRankings')

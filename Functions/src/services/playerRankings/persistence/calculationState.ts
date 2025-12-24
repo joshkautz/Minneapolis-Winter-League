@@ -1,12 +1,12 @@
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { Collections, RankingsCalculationDocument } from '../../../types.js'
-import { ALGORITHM_CONSTANTS } from '../constants.js'
+import { TRUESKILL_CONSTANTS } from '../constants.js'
 
 /**
  * Creates a new calculation state document
  */
 export async function createCalculationState(
-	calculationType: 'fresh' | 'incremental',
+	calculationType: 'fresh',
 	userId: string
 ): Promise<string> {
 	const firestore = getFirestore()
@@ -25,9 +25,8 @@ export async function createCalculationState(
 		},
 		parameters: {
 			applyDecay: true,
-			seasonDecayFactor: ALGORITHM_CONSTANTS.SEASON_DECAY_FACTOR,
-			playoffMultiplier: ALGORITHM_CONSTANTS.PLAYOFF_MULTIPLIER,
-			kFactor: ALGORITHM_CONSTANTS.K_FACTOR,
+			seasonDecayFactor: TRUESKILL_CONSTANTS.SEASON_DECAY_FACTOR,
+			playoffMultiplier: TRUESKILL_CONSTANTS.PLAYOFF_MULTIPLIER,
 		},
 	}
 

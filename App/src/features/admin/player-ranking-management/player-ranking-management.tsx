@@ -1,10 +1,11 @@
 /**
  * Admin interface for managing player ranking calculations
  *
- * Allows administrators to trigger calculations and monitor progress
+ * Allows administrators to trigger TrueSkill calculations and monitor progress.
+ * Only full rebuilds are supported to ensure accurate sigma (uncertainty) tracking.
  */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { Link } from 'react-router-dom'
@@ -15,16 +16,8 @@ import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	playerRankingsCalculationsQuery,
 	rebuildPlayerRankings,
-	updatePlayerRankings,
 } from '@/firebase/collections/player-rankings'
-import { calculatedRoundsQuery } from '@/firebase/collections/calculated-rounds'
-import { useSeasonsContext, useGamesContext } from '@/providers'
-import {
-	RankingsCalculationDocument,
-	GameDocument,
-	SeasonDocument,
-	Timestamp,
-} from '@/types'
+import { RankingsCalculationDocument, Timestamp } from '@/types'
 import { logger } from '@/shared/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -48,16 +41,14 @@ import {
 	Play,
 	RefreshCw,
 	RefreshCcw,
-	IterationCcw,
 	Clock,
 	CheckCircle,
 	XCircle,
 	AlertCircle,
 	Settings,
-	ChevronLeft,
-	ChevronRight,
 	ArrowLeft,
 	AlertTriangle,
+	Info,
 } from 'lucide-react'
 
 export const PlayerRankingManagement = () => {
@@ -71,35 +62,11 @@ export const PlayerRankingManagement = () => {
 		null
 	)
 
-	// Pagination state for uncalculated games
-	const [currentPage, setCurrentPage] = useState(1)
-	const gamesPerPage = 20
-
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	const [calculationsSnapshot, loading, error] = useCollection(
 		playerRankingsCalculationsQuery()
 	)
-
-	// Fetch all games from context (will filter for completed games client-side)
-	const {
-		allGamesQuerySnapshot: allGamesSnapshot,
-		allGamesQuerySnapshotLoading: allGamesLoading,
-		allGamesQuerySnapshotError: allGamesError,
-	} = useGamesContext()
-
-	// Fetch calculated rounds
-	const [
-		calculatedRoundsSnapshot,
-		calculatedRoundsLoading,
-		calculatedRoundsError,
-	] = useCollection(calculatedRoundsQuery())
-
-	// Get seasons from context
-	const {
-		seasonsQuerySnapshot: seasonsSnapshot,
-		seasonsQuerySnapshotError: seasonsError,
-	} = useSeasonsContext()
 
 	// Log and notify on query errors
 	useEffect(() => {
@@ -126,146 +93,21 @@ export const PlayerRankingManagement = () => {
 		}
 	}, [error])
 
-	useEffect(() => {
-		if (allGamesError) {
-			logger.error('Failed to load games:', {
-				component: 'PlayerRankingManagement',
-				error: allGamesError.message,
-			})
-			toast.error('Failed to load games', {
-				description: allGamesError.message,
-			})
-		}
-	}, [allGamesError])
-
-	useEffect(() => {
-		if (calculatedRoundsError) {
-			logger.error('Failed to load calculated rounds:', {
-				component: 'PlayerRankingManagement',
-				error: calculatedRoundsError.message,
-			})
-			toast.error('Failed to load calculated rounds', {
-				description: calculatedRoundsError.message,
-			})
-		}
-	}, [calculatedRoundsError])
-
-	useEffect(() => {
-		if (seasonsError) {
-			logger.error('Failed to load seasons:', {
-				component: 'PlayerRankingManagement',
-				error: seasonsError.message,
-			})
-			toast.error('Failed to load seasons', {
-				description: seasonsError.message,
-			})
-		}
-	}, [seasonsError])
-
 	const calculations = calculationsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),
 	})) as (RankingsCalculationDocument & { id: string })[] | undefined
 
-	// Process uncalculated games
-	const uncalculatedGames = useMemo(() => {
-		try {
-			if (!allGamesSnapshot || !calculatedRoundsSnapshot || !seasonsSnapshot) {
-				return []
-			}
-
-			const allGamesUnfiltered = allGamesSnapshot.docs.map((doc) => ({
-				id: doc.id,
-				...doc.data(),
-			})) as (GameDocument & { id: string })[]
-
-			// Filter for completed games (both scores must be non-null) on client-side
-			// This avoids Firestore's limitation of only one != filter per query
-			const allGames = allGamesUnfiltered.filter(
-				(game) =>
-					game.homeScore !== null &&
-					game.homeScore !== undefined &&
-					game.awayScore !== null &&
-					game.awayScore !== undefined
-			)
-
-			const calculatedRounds = calculatedRoundsSnapshot.docs.map((doc) =>
-				doc.data()
-			)
-			const calculatedGameIds = new Set(
-				calculatedRounds.flatMap((round) => round.gameIds || [])
-			)
-
-			const seasons = seasonsSnapshot.docs.reduce(
-				(acc, doc) => {
-					acc[doc.id] = doc.data() as SeasonDocument
-					return acc
-				},
-				{} as Record<string, SeasonDocument>
-			)
-
-			return allGames
-				.filter((game) => !calculatedGameIds.has(game.id))
-				.map((game) => {
-					const seasonId = game.season?.id || 'unknown'
-					return {
-						...game,
-						seasonData: seasons[seasonId] || null,
-					}
-				})
-				.sort((a, b) => {
-					try {
-						const aTime = a.date?.toDate?.()?.getTime() || 0
-						const bTime = b.date?.toDate?.()?.getTime() || 0
-						return bTime - aTime
-					} catch (error) {
-						logger.error('Error sorting games by date', error as Error)
-						return 0
-					}
-				})
-		} catch (error) {
-			logger.error('Error processing uncalculated games', error as Error)
-			return []
-		}
-	}, [allGamesSnapshot, calculatedRoundsSnapshot, seasonsSnapshot])
-
-	// Pagination calculations for uncalculated games
-	const totalGames = uncalculatedGames.length
-	const totalPages = Math.ceil(totalGames / gamesPerPage)
-	const startIndex = (currentPage - 1) * gamesPerPage
-	const endIndex = startIndex + gamesPerPage
-	const paginatedGames = uncalculatedGames.slice(startIndex, endIndex)
-
-	const handlePreviousPage = () => {
-		setCurrentPage((prev) => Math.max(prev - 1, 1))
-	}
-
-	const handleNextPage = () => {
-		setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-	}
-
-	const handlePageClick = (page: number) => {
-		setCurrentPage(page)
-	}
-
-	const handleTriggerCalculation = async (type: 'full' | 'incremental') => {
+	const handleRebuildRankings = async () => {
 		setIsCalculating(true)
 		setCalculationError(null)
 		setCalculationSuccess(null)
 
 		try {
-			const result =
-				type === 'full'
-					? await rebuildPlayerRankings({})
-					: await updatePlayerRankings({})
-
-			const typeDescription =
-				type === 'full'
-					? 'Full round-based recalculation'
-					: 'Incremental new rounds processing'
+			const result = await rebuildPlayerRankings({})
 
 			setCalculationSuccess(
-				`${typeDescription} started successfully! ID: ${result.data.calculationId}`
+				`Full TrueSkill recalculation started successfully! ID: ${result.data.calculationId}`
 			)
 		} catch (err) {
 			setCalculationError(
@@ -279,15 +121,24 @@ export const PlayerRankingManagement = () => {
 	const getStatusIcon = (status: string) => {
 		switch (status) {
 			case 'pending':
-				return <Clock className='h-4 w-4 text-yellow-500' />
+				return <Clock className='h-4 w-4 text-yellow-500' aria-hidden='true' />
 			case 'running':
-				return <RefreshCw className='h-4 w-4 text-blue-500 animate-spin' />
+				return (
+					<RefreshCw
+						className='h-4 w-4 text-blue-500 animate-spin'
+						aria-hidden='true'
+					/>
+				)
 			case 'completed':
-				return <CheckCircle className='h-4 w-4 text-green-500' />
+				return (
+					<CheckCircle className='h-4 w-4 text-green-500' aria-hidden='true' />
+				)
 			case 'failed':
-				return <XCircle className='h-4 w-4 text-red-500' />
+				return <XCircle className='h-4 w-4 text-red-500' aria-hidden='true' />
 			default:
-				return <AlertCircle className='h-4 w-4 text-gray-500' />
+				return (
+					<AlertCircle className='h-4 w-4 text-gray-500' aria-hidden='true' />
+				)
 		}
 	}
 
@@ -325,29 +176,9 @@ export const PlayerRankingManagement = () => {
 		}
 	}
 
-	const formatGameDate = (date: Timestamp | null | undefined) => {
-		try {
-			if (date && typeof date.toDate === 'function') {
-				return date.toDate().toLocaleDateString()
-			}
-			return 'Invalid Date'
-		} catch (error) {
-			logger.error('Error formatting game date', error as Error)
-			return 'Invalid Date'
-		}
-	}
-
-	const formatGameTime = (date: Timestamp | null | undefined) => {
-		try {
-			if (date && typeof date.toDate === 'function') {
-				return date.toDate().toLocaleTimeString()
-			}
-			return 'Invalid Time'
-		} catch (error) {
-			logger.error('Error formatting game time', error as Error)
-			return 'Invalid Time'
-		}
-	}
+	// Time constants for duration formatting
+	const MS_PER_MINUTE = 60000
+	const MS_PER_SECOND = 1000
 
 	const formatDuration = (
 		startTime: Timestamp | null | undefined,
@@ -359,15 +190,15 @@ export const PlayerRankingManagement = () => {
 			const start = startTime.toDate()
 			const end = endTime ? endTime.toDate() : new Date()
 			const diffMs = end.getTime() - start.getTime()
-			const diffMinutes = Math.floor(diffMs / 60000)
-			const diffSeconds = Math.floor((diffMs % 60000) / 1000)
+			const diffMinutes = Math.floor(diffMs / MS_PER_MINUTE)
+			const diffSeconds = Math.floor((diffMs % MS_PER_MINUTE) / MS_PER_SECOND)
 
 			if (diffMinutes > 0) {
 				return `${diffMinutes}m ${diffSeconds}s`
 			}
 			return `${diffSeconds}s`
-		} catch (error) {
-			logger.error('Error calculating duration', error as Error)
+		} catch (err) {
+			logger.error('Error calculating duration', err as Error)
 			return 'N/A'
 		}
 	}
@@ -378,6 +209,10 @@ export const PlayerRankingManagement = () => {
 			<div className='container mx-auto px-4 py-8'>
 				<Card>
 					<CardContent className='p-6 text-center'>
+						<RefreshCw
+							className='h-8 w-8 animate-spin mx-auto mb-4'
+							aria-hidden='true'
+						/>
 						<p>Loading...</p>
 					</CardContent>
 				</Card>
@@ -392,7 +227,7 @@ export const PlayerRankingManagement = () => {
 				<Card>
 					<CardContent className='p-6 text-center'>
 						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
+							<AlertTriangle className='h-6 w-6' aria-hidden='true' />
 							<h2 className='text-xl font-semibold'>Access Denied</h2>
 						</div>
 						<p className='text-muted-foreground'>
@@ -409,11 +244,11 @@ export const PlayerRankingManagement = () => {
 			{/* Header */}
 			<div className='text-center space-y-4'>
 				<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
-					<Settings className='h-8 w-8' />
+					<Settings className='h-8 w-8' aria-hidden='true' />
 					Rankings Management
 				</h1>
 				<p className='text-muted-foreground'>
-					Manage player ranking calculations and monitor system status
+					Manage TrueSkill player ranking calculations and monitor system status
 				</p>
 			</div>
 
@@ -421,7 +256,7 @@ export const PlayerRankingManagement = () => {
 			<div>
 				<Button variant='outline' asChild>
 					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
+						<ArrowLeft className='h-4 w-4 mr-2' aria-hidden='true' />
 						Back to Admin Dashboard
 					</Link>
 				</Button>
@@ -429,119 +264,148 @@ export const PlayerRankingManagement = () => {
 
 			{/* Status Alerts */}
 			{calculationError && (
-				<Alert variant='destructive'>
-					<XCircle className='h-4 w-4' />
+				<Alert variant='destructive' role='alert'>
+					<XCircle className='h-4 w-4' aria-hidden='true' />
 					<AlertDescription>{calculationError}</AlertDescription>
 				</Alert>
 			)}
 
 			{calculationSuccess && (
-				<Alert>
-					<CheckCircle className='h-4 w-4' />
+				<Alert role='status'>
+					<CheckCircle className='h-4 w-4' aria-hidden='true' />
 					<AlertDescription>{calculationSuccess}</AlertDescription>
 				</Alert>
 			)}
+
+			{/* TrueSkill Info Card */}
+			<Card className='border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/20'>
+				<CardContent className='p-4'>
+					<div className='flex gap-3'>
+						<Info
+							className='h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5'
+							aria-hidden='true'
+						/>
+						<div className='space-y-1'>
+							<p className='font-medium text-blue-900 dark:text-blue-100'>
+								TrueSkill Rating System
+							</p>
+							<p className='text-sm text-blue-700 dark:text-blue-300'>
+								Player rankings use the TrueSkill algorithm which tracks both
+								skill (μ) and uncertainty (σ). Full rebuilds process all games
+								chronologically to ensure accurate sigma values are maintained.
+								This produces the most reliable rankings.
+							</p>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
 
 			{/* Calculation Controls */}
 			<Card>
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
-						<Play className='h-5 w-5' />
-						Trigger Rankings Calculation
+						<Play className='h-5 w-5' aria-hidden='true' />
+						Rebuild Player Rankings
 					</CardTitle>
 				</CardHeader>
 				<CardContent className='space-y-4'>
-					<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant={'outline'}
-									onClick={() => handleTriggerCalculation('full')}
-									disabled={isCalculating}
-									className='flex items-center justify-center gap-2 w-full'
-									size='lg'
-								>
-									{isCalculating ? (
-										<RefreshCw className='h-4 w-4 animate-spin' />
-									) : (
-										<RefreshCcw className='h-4 w-4' />
-									)}
-									Rebuild Rankings (Full)
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent side='bottom' align='center'>
-								<p className='max-w-xs'>
-									Full rebuild from scratch. Processes all games
-									chronologically. Use for first-time setup or when algorithm
-									changes.
-								</p>
-							</TooltipContent>
-						</Tooltip>
-
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant='outline'
-									onClick={() => handleTriggerCalculation('incremental')}
-									disabled={isCalculating}
-									className='flex items-center justify-center gap-2 w-full'
-									size='lg'
-								>
-									{isCalculating ? (
-										<RefreshCw className='h-4 w-4 animate-spin' />
-									) : (
-										<IterationCcw className='h-4 w-4' />
-									)}
-									Update Rankings (Incremental)
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent side='bottom' align='center'>
-								<p className='max-w-xs'>
-									Incremental update processing only new rounds. Use for regular
-									updates after adding new games.
-								</p>
-							</TooltipContent>
-						</Tooltip>
-					</div>
+					<p className='text-sm text-muted-foreground'>
+						Recalculates all player rankings from scratch using the TrueSkill
+						algorithm. This processes all historical games in chronological
+						order.
+					</p>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								onClick={handleRebuildRankings}
+								disabled={isCalculating}
+								className='flex items-center justify-center gap-2'
+								size='lg'
+								aria-busy={isCalculating}
+							>
+								{isCalculating ? (
+									<RefreshCw
+										className='h-4 w-4 animate-spin'
+										aria-hidden='true'
+									/>
+								) : (
+									<RefreshCcw className='h-4 w-4' aria-hidden='true' />
+								)}
+								{isCalculating ? 'Starting...' : 'Rebuild All Rankings'}
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent side='bottom' align='start'>
+							<p className='max-w-xs'>
+								Full rebuild from scratch. Processes all games chronologically
+								to calculate accurate TrueSkill ratings.
+							</p>
+						</TooltipContent>
+					</Tooltip>
 				</CardContent>
 			</Card>
 
 			{/* Calculation History */}
 			<Card>
 				<CardHeader>
-					<CardTitle>Calculation History</CardTitle>
+					<CardTitle className='flex items-center gap-2'>
+						<Clock className='h-5 w-5' aria-hidden='true' />
+						Calculation History
+					</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{loading ? (
-						<div className='text-center py-8'>
-							<RefreshCw className='h-8 w-8 animate-spin mx-auto mb-4' />
-							<p>Loading calculation history...</p>
+						<div
+							className='space-y-4'
+							role='status'
+							aria-label='Loading calculation history'
+						>
+							{/* Skeleton loading for table rows */}
+							{Array.from({ length: 3 }, (_, i) => (
+								<div
+									key={i}
+									className='flex items-center gap-4 p-3 border rounded-lg animate-pulse'
+								>
+									<div className='h-6 w-24 bg-muted rounded' />
+									<div className='h-6 w-20 bg-muted rounded' />
+									<div className='flex-1 space-y-2'>
+										<div className='h-4 w-full bg-muted rounded' />
+										<div className='h-2 w-3/4 bg-muted rounded' />
+									</div>
+									<div className='h-4 w-32 bg-muted rounded' />
+									<div className='h-4 w-16 bg-muted rounded' />
+								</div>
+							))}
+							<p className='sr-only'>Loading calculation history...</p>
 						</div>
 					) : error ? (
-						<Alert variant='destructive'>
-							<XCircle className='h-4 w-4' />
+						<Alert variant='destructive' role='alert'>
+							<XCircle className='h-4 w-4' aria-hidden='true' />
 							<AlertDescription>
 								Error loading calculations: {error.message}
 							</AlertDescription>
 						</Alert>
 					) : calculations && calculations.length > 0 ? (
 						<div className='overflow-x-auto'>
-							<Table>
+							<Table aria-label='Ranking calculation history'>
 								<TableHeader>
 									<TableRow>
-										<TableHead>Type</TableHead>
-										<TableHead>Status</TableHead>
-										<TableHead>Progress</TableHead>
-										<TableHead>Started</TableHead>
-										<TableHead>Duration</TableHead>
-										<TableHead>Triggered By</TableHead>
+										<TableHead scope='col'>Type</TableHead>
+										<TableHead scope='col'>Status</TableHead>
+										<TableHead scope='col'>Progress</TableHead>
+										<TableHead scope='col'>Started</TableHead>
+										<TableHead scope='col'>Duration</TableHead>
+										<TableHead scope='col'>Triggered By</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
 									{calculations.map((calc) => (
 										<TableRow key={calc.id}>
 											<TableCell>
-												<Badge variant='outline'>{calc.calculationType}</Badge>
+												<Badge variant='outline'>
+													{calc.calculationType === 'fresh'
+														? 'Full Rebuild'
+														: calc.calculationType}
+												</Badge>
 											</TableCell>
 											<TableCell>
 												<div className='flex items-center gap-2'>
@@ -558,6 +422,7 @@ export const PlayerRankingManagement = () => {
 													<Progress
 														value={calc.progress.percentComplete}
 														className='h-2'
+														aria-label={`${calc.progress.percentComplete}% complete`}
 													/>
 													{calc.progress.currentSeason && (
 														<div className='text-xs text-muted-foreground'>
@@ -582,186 +447,34 @@ export const PlayerRankingManagement = () => {
 							</Table>
 						</div>
 					) : (
-						<div className='text-center py-8'>
-							<AlertCircle className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
-							<p className='text-muted-foreground'>No calculations found.</p>
-							<p className='text-sm text-muted-foreground mt-2'>
-								Start your first calculation using the controls above.
+						<div className='text-center py-8' role='status' aria-live='polite'>
+							<AlertCircle
+								className='h-12 w-12 text-muted-foreground mx-auto mb-4'
+								aria-hidden='true'
+							/>
+							<p className='text-lg font-medium text-muted-foreground'>
+								No calculations found
 							</p>
-						</div>
-					)}
-				</CardContent>
-			</Card>
-
-			{/* Uncalculated Games */}
-			<Card>
-				<CardHeader>
-					<CardTitle className='flex items-center gap-2'>
-						<Clock className='h-5 w-5' />
-						Games Pending Calculation
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					{allGamesLoading || calculatedRoundsLoading ? (
-						<div className='text-center py-8'>
-							<RefreshCw className='h-8 w-8 animate-spin mx-auto mb-4' />
-							<p>Loading uncalculated games...</p>
-						</div>
-					) : allGamesError ? (
-						<Alert variant='destructive'>
-							<XCircle className='h-4 w-4' />
-							<AlertDescription>
-								Error loading games: {allGamesError.message}
-							</AlertDescription>
-						</Alert>
-					) : uncalculatedGames && uncalculatedGames.length > 0 ? (
-						<div className='space-y-4'>
-							<div className='flex items-center justify-between'>
-								<div className='flex items-center gap-2 text-sm text-muted-foreground'>
-									<AlertCircle className='h-4 w-4' />
-									<span>
-										{totalGames} game{totalGames !== 1 ? 's' : ''} haven't been
-										processed yet
-									</span>
-								</div>
-								{totalPages > 1 && (
-									<div className='text-sm text-muted-foreground'>
-										Page {currentPage} of {totalPages}
-									</div>
+							<p className='text-sm text-muted-foreground mt-2 mb-4'>
+								Player rankings haven't been calculated yet. Run your first
+								TrueSkill calculation to generate the leaderboard.
+							</p>
+							<Button
+								onClick={handleRebuildRankings}
+								disabled={isCalculating}
+								size='sm'
+								aria-busy={isCalculating}
+							>
+								{isCalculating ? (
+									<RefreshCw
+										className='h-4 w-4 animate-spin mr-2'
+										aria-hidden='true'
+									/>
+								) : (
+									<Play className='h-4 w-4 mr-2' aria-hidden='true' />
 								)}
-							</div>
-							<div className='overflow-x-auto'>
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Timestamp</TableHead>
-											<TableHead>Season</TableHead>
-											<TableHead>Teams</TableHead>
-											<TableHead>Score</TableHead>
-											<TableHead>Field</TableHead>
-											<TableHead>Type</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{paginatedGames.map((game) => (
-											<TableRow key={game.id}>
-												<TableCell className='text-sm'>
-													<div className='space-y-1'>
-														<div className='font-medium'>
-															{formatGameDate(game.date)}
-														</div>
-														<div className='text-xs text-muted-foreground'>
-															{formatGameTime(game.date)}
-														</div>
-													</div>
-												</TableCell>
-												<TableCell>
-													<Badge variant='outline' className='text-xs'>
-														{game.seasonData?.name || 'Unknown Season'}
-													</Badge>
-												</TableCell>
-												<TableCell className='text-sm'>
-													<div className='space-y-1'>
-														<div className='font-medium text-xs'>
-															Home: {game.home?.id || 'TBD'}
-														</div>
-														<div className='font-medium text-xs'>
-															Away: {game.away?.id || 'TBD'}
-														</div>
-													</div>
-												</TableCell>
-												<TableCell className='text-sm font-medium'>
-													{game.homeScore ?? 'N/A'} - {game.awayScore ?? 'N/A'}
-												</TableCell>
-												<TableCell className='text-sm'>
-													<Badge variant='outline' className='text-xs'>
-														Field {game.field || 'N/A'}
-													</Badge>
-												</TableCell>
-												<TableCell>
-													<Badge
-														variant={
-															game.type === 'playoff' ? 'default' : 'secondary'
-														}
-														className='text-xs'
-													>
-														{game.type === 'playoff' ? 'Playoff' : 'Regular'}
-													</Badge>
-												</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</div>
-							{totalPages > 1 && (
-								<div className='flex items-center justify-between pt-4'>
-									<div className='text-sm text-muted-foreground'>
-										Showing {startIndex + 1}-{Math.min(endIndex, totalGames)} of{' '}
-										{totalGames} games
-									</div>
-									<div className='flex items-center gap-2'>
-										<Button
-											variant='outline'
-											size='sm'
-											onClick={handlePreviousPage}
-											disabled={currentPage === 1}
-											className='flex items-center gap-1'
-										>
-											<ChevronLeft className='h-4 w-4' />
-											Previous
-										</Button>
-
-										<div className='flex items-center gap-1'>
-											{Array.from(
-												{ length: Math.min(totalPages, 5) },
-												(_, i) => {
-													const pageNum =
-														Math.max(
-															1,
-															Math.min(totalPages - 4, currentPage - 2)
-														) + i
-													if (pageNum > totalPages) return null
-
-													return (
-														<Button
-															key={pageNum}
-															variant={
-																pageNum === currentPage ? 'default' : 'outline'
-															}
-															size='sm'
-															onClick={() => handlePageClick(pageNum)}
-															className='min-w-8'
-														>
-															{pageNum}
-														</Button>
-													)
-												}
-											)}
-										</div>
-
-										<Button
-											variant='outline'
-											size='sm'
-											onClick={handleNextPage}
-											disabled={currentPage === totalPages}
-											className='flex items-center gap-1'
-										>
-											Next
-											<ChevronRight className='h-4 w-4' />
-										</Button>
-									</div>
-								</div>
-							)}
-						</div>
-					) : (
-						<div className='text-center py-8'>
-							<CheckCircle className='h-12 w-12 text-green-500 mx-auto mb-4' />
-							<p className='text-muted-foreground'>
-								All games have been calculated!
-							</p>
-							<p className='text-sm text-muted-foreground mt-2'>
-								No games are pending calculation.
-							</p>
+								{isCalculating ? 'Starting...' : 'Run First Calculation'}
+							</Button>
 						</div>
 					)}
 				</CardContent>

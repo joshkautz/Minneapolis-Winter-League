@@ -2,63 +2,55 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerRankingDocument } from '../../../types.js'
 import { PlayerRatingState } from '../types.js'
+import { calculateRanksWithTieHandling } from '../utils/rankCalculator.js'
+
+/**
+ * Loads previous rankings to calculate rating changes
+ */
+async function loadPreviousRankings(): Promise<Map<string, number>> {
+	const firestore = getFirestore()
+	const previousRatings = new Map<string, number>()
+
+	const rankingsSnapshot = await firestore
+		.collection(Collections.RANKINGS)
+		.get()
+
+	for (const doc of rankingsSnapshot.docs) {
+		const data = doc.data() as PlayerRankingDocument
+		previousRatings.set(doc.id, data.rating)
+	}
+
+	return previousRatings
+}
 
 /**
  * Converts player ratings map to ranked array with proper tie handling
+ * Uses TrueSkill mu (skill estimate) for ranking
  */
 export function calculatePlayerRankings(
-	playerRatings: Map<string, PlayerRatingState>
+	playerRatings: Map<string, PlayerRatingState>,
+	previousRatings: Map<string, number>
 ): PlayerRankingDocument[] {
-	const sortedPlayers = Array.from(playerRatings.values()).sort(
-		(a, b) => b.currentRating - a.currentRating
-	)
+	const rankedPlayers = calculateRanksWithTieHandling(playerRatings)
 
-	const rankings: PlayerRankingDocument[] = []
-	let currentRank = 1
+	return rankedPlayers.map(({ player, rank }) => {
+		// Calculate rating change from previous rankings
+		const previousRating = previousRatings.get(player.playerId)
+		const lastRatingChange = previousRating ? player.mu - previousRating : 0
 
-	for (let i = 0; i < sortedPlayers.length; i++) {
-		const player = sortedPlayers[i]
-
-		// Check if this player is tied with the previous player
-		if (i > 0) {
-			const previousPlayer = sortedPlayers[i - 1]
-			// Round to 6 decimal places for comparison (matching frontend precision)
-			const currentRating = Math.round(player.currentRating * 1000000) / 1000000
-			const previousRating =
-				Math.round(previousPlayer.currentRating * 1000000) / 1000000
-
-			// If ratings are different, advance the rank by the number of players at the previous rating level
-			if (currentRating !== previousRating) {
-				// Count how many players had the previous rating
-				let playersAtPreviousRank = 1
-				for (let j = i - 2; j >= 0; j--) {
-					const comparisonRating =
-						Math.round(sortedPlayers[j].currentRating * 1000000) / 1000000
-					if (comparisonRating === previousRating) {
-						playersAtPreviousRank++
-					} else {
-						break
-					}
-				}
-				currentRank += playersAtPreviousRank
-			}
-		}
-
-		rankings.push({
-			player: null as unknown as FirebaseFirestore.DocumentReference, // Will be set when saving to Firestore
+		// Note: player reference is set in saveFinalRankings when creating the batch
+		return {
 			playerId: player.playerId,
 			playerName: player.playerName,
-			eloRating: player.currentRating,
+			rating: player.mu, // TrueSkill μ (skill estimate)
 			totalGames: player.totalGames,
 			totalSeasons: player.totalSeasons,
-			rank: currentRank,
+			rank,
 			lastUpdated: Timestamp.now(),
 			lastSeasonId: player.lastSeasonId,
-			lastRatingChange: 0, // Will be calculated during updates
-		} as PlayerRankingDocument)
-	}
-
-	return rankings
+			lastRatingChange,
+		} as Omit<PlayerRankingDocument, 'player'> as PlayerRankingDocument
+	})
 }
 
 /**
@@ -68,7 +60,11 @@ export async function saveFinalRankings(
 	playerRatings: Map<string, PlayerRatingState>
 ): Promise<void> {
 	const firestore = getFirestore()
-	const rankings = calculatePlayerRankings(playerRatings)
+
+	// Load previous rankings for calculating rating changes
+	const previousRatings = await loadPreviousRankings()
+
+	const rankings = calculatePlayerRankings(playerRatings, previousRatings)
 
 	// Use batch writes to update all rankings efficiently
 	const batch = firestore.batch()

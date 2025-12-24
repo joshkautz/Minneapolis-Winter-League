@@ -1,7 +1,8 @@
 /**
  * Players page component
  *
- * Displays players in a ranked leaderboard format based on ELO ratings
+ * Displays players in a ranked leaderboard format based on skill ratings.
+ * Currently uses TrueSkill (v5.0), a Bayesian rating algorithm.
  */
 
 import { useState, useEffect } from 'react'
@@ -12,7 +13,7 @@ import { InlineMath, BlockMath } from 'react-katex'
 import 'katex/dist/katex.min.css'
 
 import { currentPlayerRankingsQuery } from '@/firebase/collections/player-rankings'
-import { PlayerRankingDocument } from '@/types'
+import { PlayerRankingDocument, RATING_PRECISION_MULTIPLIER } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -52,7 +53,6 @@ import {
 	Search,
 } from 'lucide-react'
 import { cn, logger } from '@/shared/utils'
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { Input } from '@/components/ui/input'
 
@@ -82,9 +82,15 @@ const ALGORITHM_VERSIONS = {
 		description: 'Universal gravity well with asymmetric participation rewards',
 		date: 'November 2025',
 	},
+	'v5.0': {
+		name: 'TrueSkill',
+		description:
+			'Bayesian skill rating with team-based inference and uncertainty tracking',
+		date: 'December 2025',
+	},
 } as const
 
-const CURRENT_VERSION = 'v4.0'
+const CURRENT_VERSION = 'v5.0'
 
 // Helper component to render version-specific algorithm details
 const AlgorithmVersionContent = ({ version }: { version: string }) => {
@@ -97,8 +103,10 @@ const AlgorithmVersionContent = ({ version }: { version: string }) => {
 			return <AlgorithmV3Content />
 		case 'v4.0':
 			return <AlgorithmV4Content />
+		case 'v5.0':
+			return <AlgorithmV5Content />
 		default:
-			return <AlgorithmV4Content />
+			return <AlgorithmV5Content />
 	}
 }
 
@@ -659,6 +667,251 @@ const AlgorithmV4Content = () => (
 	</>
 )
 
+// v5.0 - TrueSkill (Current Version)
+const AlgorithmV5Content = () => (
+	<>
+		{/* What is TrueSkill */}
+		<div>
+			<h4 className='font-semibold mb-3 text-base'>
+				TrueSkill Bayesian Rating System
+			</h4>
+			<div className='bg-muted/30 p-3 rounded-lg border text-center mb-3'>
+				<BlockMath math='\text{Skill} \sim \mathcal{N}(\mu, \sigma^2)' />
+			</div>
+			<p className='text-muted-foreground'>
+				TrueSkill represents each player's skill as a probability distribution
+				(bell curve) with two parameters: <strong>μ (mu)</strong> = estimated
+				skill level, and <strong>σ (sigma)</strong> = uncertainty. This approach
+				was developed by Microsoft Research for Xbox Live matchmaking.
+			</p>
+		</div>
+
+		{/* Key Innovation */}
+		<div>
+			<h4 className='font-semibold mb-2'>
+				Key Innovation: Team-Based Inference
+			</h4>
+			<p className='text-muted-foreground mb-2'>
+				Unlike ELO which treats each player independently, TrueSkill infers
+				individual skill from <strong>team outcomes</strong>. When your team
+				wins, the algorithm determines how much credit each player deserves
+				based on their uncertainty level.
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='\mu_{\text{team}} = \sum_{i=1}^{n} \mu_i' />
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>• Team skill = sum of all player skills</li>
+				<li>• Players with high uncertainty (new players) learn faster</li>
+				<li>• Experienced players have stable, confident ratings</li>
+			</ul>
+		</div>
+
+		{/* How Ratings Update */}
+		<div>
+			<h4 className='font-semibold mb-2'>How Ratings Update</h4>
+			<p className='text-muted-foreground mb-2'>
+				After each game, TrueSkill updates both μ and σ using Bayesian
+				inference:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='\mu_{\text{new}} = \mu_{\text{old}} + \frac{\sigma^2}{c} \cdot v \cdot m' />
+			</div>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='\sigma_{\text{new}}^2 = \sigma_{\text{old}}^2 \cdot (1 - \frac{\sigma^2}{c^2} \cdot w)' />
+			</div>
+			<p className='text-xs text-muted-foreground text-center mb-2'>
+				where <InlineMath math='v' /> and <InlineMath math='w' /> are Gaussian
+				correction factors, <InlineMath math='c' /> is total match uncertainty,
+				and <InlineMath math='m' /> is an optional multiplier
+			</p>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>
+					• <strong>Win against stronger team:</strong> Large μ increase, σ
+					decreases
+				</li>
+				<li>
+					• <strong>Win against weaker team:</strong> Small μ increase (expected
+					result)
+				</li>
+				<li>
+					• <strong>Upset loss:</strong> Large μ decrease, σ may increase
+				</li>
+			</ul>
+		</div>
+
+		{/* Pure Win/Loss */}
+		<div>
+			<h4 className='font-semibold mb-2'>Pure Win/Loss Outcomes</h4>
+			<p className='text-muted-foreground mb-2'>
+				<strong>KEY CHANGE:</strong> Unlike previous versions that used point
+				differentials, TrueSkill focuses purely on who wins:
+			</p>
+			<div className='grid grid-cols-2 gap-2 mb-2'>
+				<div className='bg-green-500/10 p-2 rounded border border-green-500/30'>
+					<p className='text-xs font-medium mb-1 text-center text-green-700 dark:text-green-400'>
+						Win
+					</p>
+					<p className='text-xs text-muted-foreground text-center'>
+						Rating increases based on opponent strength
+					</p>
+				</div>
+				<div className='bg-red-500/10 p-2 rounded border border-red-500/30'>
+					<p className='text-xs font-medium mb-1 text-center text-red-700 dark:text-red-400'>
+						Loss
+					</p>
+					<p className='text-xs text-muted-foreground text-center'>
+						Rating decreases based on opponent strength
+					</p>
+				</div>
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>• A 15-14 win counts the same as 15-5</li>
+				<li>• Reduces influence of running up the score</li>
+				<li>• Better reflects competitive Ultimate Frisbee outcomes</li>
+			</ul>
+		</div>
+
+		{/* Decay System */}
+		<div>
+			<h4 className='font-semibold mb-2'>Gravity Well & Inactivity Decay</h4>
+			<p className='text-muted-foreground mb-2'>
+				Similar to v4.0, ratings drift toward the baseline (μ = 25) with
+				asymmetric rates:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='\mu_{\text{new}} = 25 + (\mu_{\text{old}} - 25) \times d' />
+			</div>
+			<div className='grid grid-cols-2 gap-2 mb-2'>
+				<div className='bg-muted/30 p-2 rounded border'>
+					<p className='text-xs font-medium mb-1 text-center'>Above μ = 25</p>
+					<ul className='text-xs text-muted-foreground space-y-0.5'>
+						<li>Active: d = 0.998 (slow decay)</li>
+						<li>Inactive: d = 0.992 (fast decay)</li>
+					</ul>
+				</div>
+				<div className='bg-muted/30 p-2 rounded border'>
+					<p className='text-xs font-medium mb-1 text-center'>Below μ = 25</p>
+					<ul className='text-xs text-muted-foreground space-y-0.5'>
+						<li>Active: d = 0.992 (fast recovery)</li>
+						<li>Inactive: d = 0.998 (slow recovery)</li>
+					</ul>
+				</div>
+			</div>
+			<p className='text-xs text-muted-foreground'>
+				Additionally, inactive players' uncertainty (σ) grows slightly each
+				round, reflecting decreased confidence in their current skill level.
+			</p>
+		</div>
+
+		{/* Algorithm Constants */}
+		<div>
+			<h4 className='font-semibold mb-3'>Key Algorithm Constants</h4>
+			<div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						INITIAL μ (MU)
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>25.0</span>
+					<p className='text-xs text-muted-foreground'>
+						Starting skill estimate for new players
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						INITIAL σ (SIGMA)
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>8.33</span>
+					<p className='text-xs text-muted-foreground'>
+						Starting uncertainty (μ/3)
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						PLAYOFF MULTIPLIER
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>2.0</span>
+					<p className='text-xs text-muted-foreground'>
+						Postseason games have 2× impact
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						SEASON DECAY
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.80</span>
+					<p className='text-xs text-muted-foreground'>
+						Historical season weighting
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						GRAVITY WELL (ACTIVE)
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.998</span>
+					<p className='text-xs text-muted-foreground'>
+						Per-round drift when playing
+					</p>
+				</div>
+
+				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
+					<span className='text-xs font-medium text-muted-foreground mb-1'>
+						DECAY (INACTIVE)
+					</span>
+					<span className='text-lg font-mono font-bold mb-1'>0.992</span>
+					<p className='text-xs text-muted-foreground'>
+						Per-round drift when not playing
+					</p>
+				</div>
+			</div>
+		</div>
+
+		{/* Why TrueSkill */}
+		<div>
+			<h4 className='font-semibold mb-2'>Why TrueSkill?</h4>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>
+					• <strong>Better for team sports:</strong> Infers individual skill
+					from team outcomes
+				</li>
+				<li>
+					• <strong>Handles uncertainty:</strong> New players converge quickly,
+					veterans stay stable
+				</li>
+				<li>
+					• <strong>Mathematically principled:</strong> Based on Bayesian
+					probability theory
+				</li>
+				<li>
+					• <strong>Industry standard:</strong> Used by Xbox Live, Halo, and
+					other competitive platforms
+				</li>
+				<li>
+					• <strong>Pure outcomes:</strong> Focuses on wins/losses, not point
+					margins
+				</li>
+			</ul>
+		</div>
+
+		{/* Summary */}
+		<div className='border-t pt-4'>
+			<h4 className='font-semibold mb-2 text-xs'>Version Summary</h4>
+			<p className='text-xs text-muted-foreground'>
+				TrueSkill represents the biggest algorithm change since Genesis,
+				replacing ELO with a Bayesian system that models skill as a probability
+				distribution. Key benefits: team-based skill inference, uncertainty
+				tracking for faster learning, pure win/loss outcomes, and mathematically
+				principled updates. The gravity well and decay mechanics from v4.0 are
+				preserved to reward participation.
+			</p>
+		</div>
+	</>
+)
+
 export const PlayerRankings = ({
 	showAdminControls = false,
 }: PlayerRankingsProps) => {
@@ -706,9 +959,11 @@ export const PlayerRankings = ({
 			playerLookup.set(player.id, player)
 		})
 
-		// Group players by their rounded ELO rating
+		// Group players by their rounded rating
 		rankings.forEach((player) => {
-			const roundedRating = Math.round(player.eloRating * 1000000) / 1000000
+			const roundedRating =
+				Math.round(player.rating * RATING_PRECISION_MULTIPLIER) /
+				RATING_PRECISION_MULTIPLIER
 
 			const existing = tiedGroups.get(roundedRating)
 			if (existing) {
@@ -797,16 +1052,16 @@ export const PlayerRankings = ({
 				{/* Header */}
 				<div className='text-center space-y-4'>
 					<h1 className='text-3xl font-bold flex items-center justify-center gap-3'>
-						<User className='h-8 w-8' />
+						<User className='h-8 w-8' aria-hidden='true' />
 						Players
 					</h1>
 					<p className='text-muted-foreground'>
-						Players ranked by performance and ELO rating system
+						Players ranked by performance using the TrueSkill rating system
 					</p>
 				</div>
 				<Card>
 					<CardContent className='p-6'>
-						<p className='text-red-600'>
+						<p className='text-red-600' role='alert'>
 							Error loading players: {error.message}
 						</p>
 					</CardContent>
@@ -819,39 +1074,48 @@ export const PlayerRankings = ({
 		<PageContainer withSpacing withGap>
 			<PageHeader
 				title='Players'
-				description='Players ranked by performance and ELO rating system'
+				description='Players ranked by performance using the TrueSkill rating system'
 				icon={User}
 			/>
 
 			{/* Informational Alert */}
 			<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
 				<DialogTrigger asChild>
-					<Alert className='cursor-pointer hover:bg-muted/50 transition-colors mb-6'>
-						<Info className='h-4 w-4' />
+					<Alert
+						className='cursor-pointer hover:bg-muted/50 transition-colors mb-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
+						role='button'
+						tabIndex={0}
+						aria-label='Learn more about the ranking algorithm'
+						onKeyDown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault()
+								setIsDialogOpen(true)
+							}
+						}}
+					>
+						<Info className='h-4 w-4' aria-hidden='true' />
 						<AlertTitle>Ranking Algorithm ({CURRENT_VERSION})</AlertTitle>
 						<AlertDescription>
-							Rankings are calculated using an advanced ELO-based algorithm.
-							Click to learn more about how players are ranked.
+							Rankings are calculated using the TrueSkill Bayesian rating
+							system. Click to learn more about how players are ranked.
 						</AlertDescription>
 					</Alert>
 				</DialogTrigger>
 				<DialogContent className='max-w-4xl'>
-					<VisuallyHidden>
-						<DialogHeader>
-							<DialogTitle className='flex items-center gap-2'>
-								Ranking Algorithm
-							</DialogTitle>
-							<DialogDescription>
-								Understanding how the player rankings are calculated
-							</DialogDescription>
-						</DialogHeader>
-					</VisuallyHidden>
+					<DialogHeader>
+						<DialogTitle className='flex items-center gap-2'>
+							Ranking Algorithm
+						</DialogTitle>
+						<DialogDescription className='sr-only'>
+							Understanding how the player rankings are calculated
+						</DialogDescription>
+					</DialogHeader>
 
 					{/* Version Selector */}
 					<div className='border-b pb-4 mb-4'>
 						<div className='flex items-center justify-between gap-4 pr-8'>
 							<div>
-								<h3 className='font-semibold text-lg'>Algorithm Version</h3>
+								<h3 className='font-semibold text-lg' aria-hidden='true'>Algorithm Version</h3>
 								<p className='text-sm text-muted-foreground'>
 									<span className='font-medium'>
 										{
@@ -872,7 +1136,10 @@ export const PlayerRankings = ({
 								value={selectedVersion}
 								onValueChange={setSelectedVersion}
 							>
-								<SelectTrigger className='w-[200px]'>
+								<SelectTrigger
+									className='w-[200px]'
+									aria-label='Select algorithm version'
+								>
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
@@ -897,11 +1164,14 @@ export const PlayerRankings = ({
 				<CardHeader>
 					<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
 						<CardTitle className='flex items-center gap-2'>
-							<User className='h-5 w-5' />
+							<User className='h-5 w-5' aria-hidden='true' />
 							Players
 						</CardTitle>
 						<div className='relative w-full sm:w-64'>
-							<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+							<Search
+								className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground'
+								aria-hidden='true'
+							/>
 							<Input
 								type='search'
 								placeholder='Search players...'
@@ -915,20 +1185,20 @@ export const PlayerRankings = ({
 				</CardHeader>
 				<CardContent>
 					{loading ? (
-						<div className='overflow-x-auto'>
-							<Table>
+						<div className='overflow-x-auto' aria-busy='true'>
+							<Table aria-label='Player rankings loading'>
 								<TableHeader>
 									<TableRow>
-										<TableHead className='w-16'>Rank</TableHead>
-										<TableHead className='w-32'>Player</TableHead>
-										<TableHead className='w-32 text-center'>Rating</TableHead>
-										<TableHead className='w-32 text-center'>Change</TableHead>
-										<TableHead className='w-32 text-center'>Games</TableHead>
-										<TableHead className='w-32 text-center'>Seasons</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-16'>Rank</TableHead>
+										<TableHead scope='col' className='min-w-[120px] sm:w-32'>Player</TableHead>
+										<TableHead scope='col' className='w-16 sm:w-24 text-center'>Skill</TableHead>
+										<TableHead scope='col' className='w-16 sm:w-24 text-center'>Change</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-20 text-center'>Games</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-20 text-center'>Seasons</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{[...Array(8)].map((_, i) => (
+									{Array.from({ length: 8 }, (_, i) => (
 										<TableRow key={i}>
 											<TableCell>
 												<div className='flex items-center gap-2'>
@@ -960,15 +1230,15 @@ export const PlayerRankings = ({
 						</div>
 					) : rankings && rankings.length > 0 && sortedRankings.length > 0 ? (
 						<div className='overflow-x-auto'>
-							<Table>
+							<Table aria-label='Player rankings'>
 								<TableHeader>
 									<TableRow>
-										<TableHead className='w-16'>Rank</TableHead>
-										<TableHead className='w-32'>Player</TableHead>
-										<TableHead className='w-32 text-center'>Rating</TableHead>
-										<TableHead className='w-32 text-center'>Change</TableHead>
-										<TableHead className='w-32 text-center'>Games</TableHead>
-										<TableHead className='w-32 text-center'>Seasons</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-16'>Rank</TableHead>
+										<TableHead scope='col' className='min-w-[120px] sm:w-32'>Player</TableHead>
+										<TableHead scope='col' className='w-16 sm:w-24 text-center'>Skill</TableHead>
+										<TableHead scope='col' className='w-16 sm:w-24 text-center'>Change</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-20 text-center'>Games</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-20 text-center'>Seasons</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -977,6 +1247,8 @@ export const PlayerRankings = ({
 											<TableCell
 												colSpan={6}
 												className='text-center py-8 text-muted-foreground'
+												role='status'
+												aria-live='polite'
 											>
 												No players found matching "{searchQuery}"
 											</TableCell>
@@ -991,8 +1263,16 @@ export const PlayerRankings = ({
 												<TableRow
 													key={player.id}
 													onClick={() => handlePlayerClick(player.id)}
+													onKeyDown={(e) => {
+														if (e.key === 'Enter' || e.key === ' ') {
+															e.preventDefault()
+															handlePlayerClick(player.id)
+														}
+													}}
+													tabIndex={0}
+													aria-label={`View ${player.playerName}'s ranking history, rank ${trueRank}, rating ${player.rating.toFixed(2)}`}
 													className={cn(
-														'hover:bg-muted/50 cursor-pointer transition-colors',
+														'hover:bg-muted/50 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
 														isMedalEligible &&
 															'bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-900/20'
 													)}
@@ -1000,17 +1280,24 @@ export const PlayerRankings = ({
 													<TableCell className='font-medium'>
 														<div className='flex items-center gap-2'>
 															{trueRank === 1 && (
-																<Crown className='h-4 w-4 text-yellow-500' />
+																<Crown
+																	className='h-4 w-4 text-yellow-500'
+																	aria-hidden='true'
+																/>
 															)}
 															{trueRank === 2 && (
-																<Award className='h-4 w-4 text-gray-400' />
+																<Award
+																	className='h-4 w-4 text-gray-400'
+																	aria-hidden='true'
+																/>
 															)}
 															{trueRank === 3 && (
-																<Medal className='h-4 w-4 text-amber-600' />
+																<Medal
+																	className='h-4 w-4 text-amber-600'
+																	aria-hidden='true'
+																/>
 															)}
-															<div className='flex items-center gap-1'>
-																#{trueRank}
-															</div>
+															<span>#{trueRank}</span>
 														</div>
 													</TableCell>
 													<TableCell>
@@ -1018,15 +1305,15 @@ export const PlayerRankings = ({
 															<div
 																className={cn(
 																	'font-medium',
-																	player.rank <= 3 && 'dark:text-foreground'
+																	trueRank <= 3 && 'dark:text-foreground'
 																)}
 															>
 																{player.playerName}
 															</div>
 														</div>
 													</TableCell>
-													<TableCell className='text-center'>
-														{player.eloRating.toFixed(6)}
+													<TableCell className='text-center font-mono'>
+														{player.rating.toFixed(2)}
 													</TableCell>
 													<TableCell className='text-center'>
 														{player.lastRatingChange !== 0 && (
@@ -1039,11 +1326,22 @@ export const PlayerRankings = ({
 																)}
 															>
 																{player.lastRatingChange > 0 ? (
-																	<TrendingUp className='h-3 w-3' />
+																	<TrendingUp
+																		className='h-3 w-3'
+																		aria-hidden='true'
+																	/>
 																) : (
-																	<TrendingDown className='h-3 w-3' />
+																	<TrendingDown
+																		className='h-3 w-3'
+																		aria-hidden='true'
+																	/>
 																)}
-																{Math.abs(player.lastRatingChange)}
+																<span className='sr-only'>
+																	{player.lastRatingChange > 0
+																		? 'increased by'
+																		: 'decreased by'}
+																</span>
+																{Math.abs(player.lastRatingChange).toFixed(2)}
 															</div>
 														)}
 													</TableCell>
@@ -1062,7 +1360,10 @@ export const PlayerRankings = ({
 						</div>
 					) : (
 						<div className='text-center py-8'>
-							<Trophy className='h-12 w-12 text-muted-foreground mx-auto mb-4' />
+							<Trophy
+								className='h-12 w-12 text-muted-foreground mx-auto mb-4'
+								aria-hidden='true'
+							/>
 							<p className='text-muted-foreground'>No players available yet.</p>
 							<p className='text-sm text-muted-foreground mt-2'>
 								Rankings will appear after the first calculation is completed.
@@ -1079,11 +1380,12 @@ export const PlayerRankings = ({
 						<CardTitle>Admin Controls</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className='flex gap-4'>
-							<Button variant='outline'>Recalculate Rankings (Full)</Button>
-							<Button variant='outline'>Update Rankings (Incremental)</Button>
-							<Button variant='outline'>View Calculation History</Button>
-						</div>
+						<Button
+							variant='outline'
+							onClick={() => navigate('/admin/rankings-management')}
+						>
+							Manage Rankings
+						</Button>
 					</CardContent>
 				</Card>
 			)}

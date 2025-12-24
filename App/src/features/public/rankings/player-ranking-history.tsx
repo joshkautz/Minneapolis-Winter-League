@@ -50,8 +50,8 @@ interface ChartDataPoint {
 	date: string
 	/** Player's rank position (inverted for display) */
 	ranking: number
-	/** Player's Elo rating */
-	eloRating: number
+	/** Player's skill rating (TrueSkill μ) */
+	rating: number
 	/** Player's actual rank position */
 	rank: number
 	/** Season identifier */
@@ -65,8 +65,8 @@ const chartConfig = {
 		label: 'Rank Position',
 		color: 'var(--chart-1)',
 	},
-	eloRating: {
-		label: 'Elo Rating',
+	rating: {
+		label: 'Skill Rating',
 		color: 'var(--chart-2)',
 	},
 } satisfies ChartConfig
@@ -120,7 +120,7 @@ export const PlayerRankingHistory = ({
 
 	// Fetch all rankings history data from rankings-history collection
 	const [rankingHistorySnapshot, historyLoading, error] = useCollection(
-		collection(firestore, 'rankings-history') as Query<RankingHistoryDocument>
+		collection(firestore, Collections.RANKINGS_HISTORY) as Query<RankingHistoryDocument>
 	)
 
 	// Log and notify on query errors
@@ -210,7 +210,7 @@ export const PlayerRankingHistory = ({
 			if (!Array.isArray(rankings)) return
 
 			const playerData = rankings.find(
-				(player: { playerId?: string; rank?: number; eloRating?: number }) =>
+				(player: { playerId?: string; rank?: number; rating?: number }) =>
 					player.playerId === playerId
 			)
 
@@ -245,7 +245,7 @@ export const PlayerRankingHistory = ({
 				date: roundDate.toISOString(),
 				rank: playerRank,
 				ranking: playerRank,
-				eloRating: parseFloat((playerData.eloRating || 0).toFixed(5)),
+				rating: parseFloat((playerData.rating || 0).toFixed(5)),
 				season: seasonId,
 				timestamp: roundDate.getTime(),
 			})
@@ -309,8 +309,26 @@ export const PlayerRankingHistory = ({
 
 		if (!Array.isArray(seasons) || seasons.length === 0) return []
 
+		// Create a map of season timestamps for sorting
+		const seasonTimestamps = new Map<string, number>()
+		seasonsQuerySnapshot?.docs.forEach((doc) => {
+			const data = doc.data()
+			if (data.dateStart) {
+				// Handle Firestore Timestamp or Date object
+				const timestamp =
+					typeof data.dateStart.toDate === 'function'
+						? data.dateStart.toDate().getTime()
+						: data.dateStart instanceof Date
+							? data.dateStart.getTime()
+							: data.dateStart.seconds
+								? data.dateStart.seconds * 1000
+								: 0
+				seasonTimestamps.set(doc.id, timestamp)
+			}
+		})
+
 		// Process each season entry
-		const history: TeamHistoryEntry[] = seasons
+		const history: (TeamHistoryEntry & { sortTimestamp: number })[] = seasons
 			.map((seasonEntry) => {
 				// Get season name from context
 				const seasonRef = seasonEntry.season
@@ -350,13 +368,16 @@ export const PlayerRankingHistory = ({
 					losses: record?.losses || 0,
 					placement,
 					isCaptain: seasonEntry.captain || false,
+					sortTimestamp: seasonTimestamps.get(seasonId) || 0,
 				}
 			})
 			// Filter out entries without a team (free agents)
 			.filter((entry) => entry.teamId !== null)
 
-		// Sort by season name (most recent first - assuming format like "Winter 2024")
-		return history.sort((a, b) => b.seasonName.localeCompare(a.seasonName))
+		// Sort by season dateStart timestamp (most recent first)
+		return history
+			.sort((a, b) => b.sortTimestamp - a.sortTimestamp)
+			.map(({ sortTimestamp, ...entry }) => entry) // Remove the sortTimestamp from final output
 	}, [
 		allPlayersSnapshot,
 		playerId,
@@ -571,7 +592,7 @@ export const PlayerRankingHistory = ({
 						</div>
 					</CardHeader>
 					<CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-						<Alert>
+						<Alert role='status' aria-live='polite'>
 							<AlertDescription>
 								No rankings history data available for this player.
 							</AlertDescription>
@@ -631,8 +652,10 @@ export const PlayerRankingHistory = ({
 					<ChartContainer
 						config={chartConfig}
 						className='aspect-auto h-[250px] w-full'
+						role='img'
+						aria-label={`Player ranking history chart showing ${allPlayers.find((p) => p.id === playerId)?.name ?? 'Unknown Player'}'s ranking and rating progression over time. Current rank: ${chartData.length > 0 ? chartData[chartData.length - 1]?.ranking : 'N/A'}, Current rating: ${chartData.length > 0 ? chartData[chartData.length - 1]?.rating?.toFixed(2) : 'N/A'}`}
 					>
-						<AreaChart data={chartData}>
+						<AreaChart data={chartData} aria-hidden='true'>
 							<defs>
 								<linearGradient id='fillRanking' x1='0' y1='0' x2='0' y2='1'>
 									<stop
@@ -646,15 +669,15 @@ export const PlayerRankingHistory = ({
 										stopOpacity={0.1}
 									/>
 								</linearGradient>
-								<linearGradient id='fillEloRating' x1='0' y1='0' x2='0' y2='1'>
+								<linearGradient id='fillRating' x1='0' y1='0' x2='0' y2='1'>
 									<stop
 										offset='5%'
-										stopColor='var(--color-eloRating)'
+										stopColor='var(--color-rating)'
 										stopOpacity={0.8}
 									/>
 									<stop
 										offset='95%'
-										stopColor='var(--color-eloRating)'
+										stopColor='var(--color-rating)'
 										stopOpacity={0.1}
 									/>
 								</linearGradient>
@@ -683,7 +706,7 @@ export const PlayerRankingHistory = ({
 								domain={[0, 'dataMax + 5']}
 							/>
 							<YAxis
-								yAxisId='eloRating'
+								yAxisId='rating'
 								orientation='right'
 								tickLine={true}
 								axisLine={true}
@@ -732,7 +755,7 @@ export const PlayerRankingHistory = ({
 												</div>
 												<div className='flex items-center gap-2'>
 													<span className='text-muted-foreground'>Rating</span>
-													<span className='font-medium'>{data.eloRating}</span>
+													<span className='font-medium'>{data.rating}</span>
 												</div>
 											</div>
 										</div>
@@ -740,11 +763,11 @@ export const PlayerRankingHistory = ({
 								}}
 							/>
 							<Area
-								dataKey='eloRating'
+								dataKey='rating'
 								type='natural'
-								fill='url(#fillEloRating)'
-								stroke='var(--color-eloRating)'
-								yAxisId='eloRating'
+								fill='url(#fillRating)'
+								stroke='var(--color-rating)'
+								yAxisId='rating'
 							/>
 							<Area
 								dataKey='ranking'
@@ -769,15 +792,14 @@ export const PlayerRankingHistory = ({
 				</CardHeader>
 				<CardContent className='p-0'>
 					{teamHistory.length > 0 ? (
-						<div role='list' aria-label='Team history'>
+						<ul aria-label='Team history' className='list-none m-0 p-0'>
 							{teamHistory.map((entry, index) => (
-								<Link
-									key={`${entry.seasonId}-${entry.teamId}-${index}`}
-									to={entry.teamId ? `/teams/${entry.teamId}` : '#'}
-									className='flex items-center gap-4 px-6 py-3 border-b last:border-b-0 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
-									role='listitem'
-									aria-label={`${entry.teamName}, ${entry.seasonName}, ${entry.wins} wins ${entry.losses} losses, finished ${formatPlacement(entry.placement)}${entry.isCaptain ? ', Team Captain' : ''}`}
-								>
+								<li key={`${entry.seasonId}-${entry.teamId}-${index}`}>
+									<Link
+										to={entry.teamId ? `/teams/${entry.teamId}` : '#'}
+										className='flex items-center gap-4 px-6 py-3 border-b last:border-b-0 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
+										aria-label={`${entry.teamName}, ${entry.seasonName}, ${entry.wins} wins ${entry.losses} losses, finished ${formatPlacement(entry.placement)}${entry.isCaptain ? ', Team Captain' : ''}`}
+									>
 									{/* Team Logo */}
 									<div className='flex-shrink-0'>
 										{entry.teamLogo ? (
@@ -833,9 +855,10 @@ export const PlayerRankingHistory = ({
 										</div>
 										<div className='text-xs text-muted-foreground'>Finish</div>
 									</div>
-								</Link>
+									</Link>
+								</li>
 							))}
-						</div>
+						</ul>
 					) : (
 						<p className='text-sm text-muted-foreground text-center py-6 px-6'>
 							No team history available for this player.

@@ -39,19 +39,6 @@ export async function loadGamesForCalculation(
 			} as GameProcessingData
 		})
 
-		// Debug: Log a sample game to see the structure
-		if (gamesSnapshot.docs.length > 0) {
-			const sampleGameData = gamesSnapshot.docs[0].data()
-			logger.info(`Sample game data for season ${season.id}:`, {
-				gameId: gamesSnapshot.docs[0].id,
-				homeScore: sampleGameData.homeScore,
-				awayScore: sampleGameData.awayScore,
-				home: sampleGameData.home ? 'has home team' : 'no home team',
-				away: sampleGameData.away ? 'has away team' : 'no away team',
-				allFields: Object.keys(sampleGameData),
-			})
-		}
-
 		const completedGames = seasonGames.filter(
 			(game) => game.homeScore !== null && game.awayScore !== null
 		)

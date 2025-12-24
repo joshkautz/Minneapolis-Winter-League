@@ -118,13 +118,6 @@ service cloud.firestore {
       allow delete: if false; // Functions only
     }
 
-    match /rankings-calculated-rounds/{roundId} {
-      allow read: if true;
-      allow create: if false; // Functions only
-      allow update: if false; // Functions only
-      allow delete: if false; // Functions only
-    }
-
     match /badges/{badgeId} {
       allow read: if true;
       allow create: if false; // Use createBadgeViaFunction

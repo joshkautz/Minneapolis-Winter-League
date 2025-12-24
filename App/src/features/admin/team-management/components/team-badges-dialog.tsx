@@ -154,7 +154,7 @@ export const TeamBadgesDialog = ({
 							awardedByName,
 						} as ProcessedTeamBadge
 					} catch (error) {
-						console.error(`Error processing team badge ${badgeId}:`, error)
+						logger.error(`Error processing team badge ${badgeId}:`, error as Error)
 						return null
 					}
 				})
@@ -211,7 +211,7 @@ export const TeamBadgesDialog = ({
 			})
 			toast.success(result.message)
 		} catch (error) {
-			console.error('Error awarding badge:', error)
+			logger.error('Error awarding badge:', error as Error)
 			let errorMessage = 'Failed to award badge'
 			if (error && typeof error === 'object' && 'message' in error) {
 				errorMessage = String(error.message)
@@ -240,7 +240,7 @@ export const TeamBadgesDialog = ({
 			toast.success(result.message)
 			setBadgeToRemove(null)
 		} catch (error) {
-			console.error('Error revoking badge:', error)
+			logger.error('Error revoking badge:', error as Error)
 			let errorMessage = 'Failed to remove badge'
 			if (error && typeof error === 'object' && 'message' in error) {
 				errorMessage = String(error.message)

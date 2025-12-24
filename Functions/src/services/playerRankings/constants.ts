@@ -1,40 +1,62 @@
 /**
- * Player Rankings Rating Algorithm Constants
- * Optimized for 40-minute Ultimate Frisbee games (~20 total points per game)
+ * TrueSkill Rating Algorithm Constants
+ *
+ * Based on Microsoft's TrueSkill Bayesian skill rating system.
+ * Reference: https://trueskill.org/
  */
-export const ALGORITHM_CONSTANTS = {
-	// Starting Elo rating for new players
-	STARTING_RATING: 1200,
 
-	// K-factor for Elo calculation (moderate increase - 20-point games have good signal but not overwhelming)
-	K_FACTOR: 36, // Reduced from 48 - lower scoring means more variance per point
+/**
+ * Precision multiplier for rating comparison
+ * Used to avoid floating point comparison issues when checking for ties
+ */
+export const RATING_PRECISION_MULTIPLIER = 1000000
 
-	// Playoff game multiplier
-	PLAYOFF_MULTIPLIER: 1.8, // Increased from 1.5 - low scoring = higher variance in elimination games
+export const TRUESKILL_CONSTANTS = {
+	// Initial skill estimate for new players (μ)
+	INITIAL_MU: 25.0,
 
-	// Exponential decay factor per season (each season back is multiplied by this)
-	SEASON_DECAY_FACTOR: 0.82, // Reduced from 0.85 - lower scoring means less clear skill signal
+	// Initial uncertainty for new players (σ)
+	// Standard TrueSkill uses μ/3 = 8.333
+	INITIAL_SIGMA: 25.0 / 3.0,
 
-	// Universal gravity well - all players drift toward 1200 baseline (active players)
-	// This represents regression to mean and requires continuous performance to maintain high ratings
-	GRAVITY_WELL_PER_ROUND: 0.998, // Gentle drift toward 1200 for all players (active or not)
+	// Performance variance (β)
+	// Represents the variance in a player's performance from game to game
+	// Standard TrueSkill uses σ/2 = 4.167
+	BETA: 25.0 / 6.0,
+
+	// Dynamics factor (τ)
+	// Small amount of uncertainty added each game to allow for skill changes over time
+	// Standard TrueSkill uses σ/100 = 0.0833
+	TAU: 25.0 / 3.0 / 100.0, // INITIAL_SIGMA / 100
+
+	// Draw probability epsilon
+	// Controls the probability of a draw (set low since draws are rare in Ultimate)
+	DRAW_PROBABILITY_EPSILON: 0.001,
+
+	// Minimum sigma (prevents sigma from going to zero)
+	MIN_SIGMA: 0.01,
+
+	// Playoff game multiplier (2x impact for playoff games)
+	PLAYOFF_MULTIPLIER: 2.0,
+
+	// Exponential decay factor per season
+	// Each older season's games are weighted by this factor
+	// 0.8 means: current season = 100%, previous = 80%, before that = 64%, etc.
+	SEASON_DECAY_FACTOR: 0.8,
+
+	// Gravity well - all ratings drift toward INITIAL_MU over time
+	// Applied per round to both μ and σ
+	// 0.998 means ratings lose 0.2% of their distance from INITIAL_MU each round
+	GRAVITY_WELL_PER_ROUND: 0.998,
 
 	// Additional decay for inactive players (stacks with gravity well)
-	// This represents skill rust and uncertainty about current ability
-	INACTIVITY_DECAY_PER_ROUND: 0.992, // Stronger penalty for not playing (0.992 = 0.998 gravity * 0.994 inactivity)
+	// Inactive players drift faster toward the baseline
+	INACTIVITY_DECAY_PER_ROUND: 0.992,
 
-	// Maximum rounds of inactivity before applying full seasonal decay
-	MAX_ROUNDS_FOR_SEASONAL_DECAY: 20, // Typical season has ~12-16 rounds
+	// Sigma increase for inactive players (uncertainty grows when not playing)
+	// Applied per round of inactivity
+	SIGMA_INCREASE_PER_INACTIVE_ROUND: 1.002,
 
-	// Equivalent seasonal decay rate (what a full season of inactivity should achieve)
-	EQUIVALENT_SEASONAL_DECAY: 0.95, // Same as old INACTIVITY_DECAY_PER_SEASON
-
-	// Maximum point differential that gets full weight (adjusted for 20-point games)
-	MAX_FULL_WEIGHT_DIFFERENTIAL: 5, // Reduced from 8 - in 20-point games, 5+ margin is significant
-
-	// Minimum team confidence to use team-based strength calculation
-	MIN_TEAM_CONFIDENCE: 0.5,
-
-	// Default team strength when confidence is too low
-	DEFAULT_TEAM_STRENGTH: 1200,
+	// Maximum sigma (caps uncertainty growth)
+	MAX_SIGMA: 25.0 / 3.0, // Can't exceed initial uncertainty
 }

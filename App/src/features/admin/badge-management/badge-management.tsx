@@ -182,7 +182,7 @@ export const BadgeManagement = () => {
 							createdAt: badgeData.createdAt.toDate(),
 						} as ProcessedBadge
 					} catch (error) {
-						console.error(`Error processing badge ${badgeId}:`, error)
+						logger.error(`Error processing badge ${badgeId}:`, error as Error)
 						return {
 							id: badgeId,
 							name: badgeData.name,
@@ -356,7 +356,7 @@ export const BadgeManagement = () => {
 
 			resetForm()
 		} catch (error) {
-			console.error('Error saving badge:', error)
+			logger.error('Error saving badge:', error as Error)
 
 			// Extract Firebase Functions error message
 			let errorMessage = 'Failed to save badge'
@@ -402,7 +402,7 @@ export const BadgeManagement = () => {
 			setDeleteDialogOpen(false)
 			setBadgeToDelete(null)
 		} catch (error) {
-			console.error('Error deleting badge:', error)
+			logger.error('Error deleting badge:', error as Error)
 
 			// Extract Firebase Functions error message
 			let errorMessage = 'Failed to delete badge'
@@ -451,7 +451,7 @@ export const BadgeManagement = () => {
 				<Card>
 					<CardContent className='p-6 text-center'>
 						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
+							<AlertTriangle className='h-6 w-6' aria-hidden='true' />
 							<h2 className='text-xl font-semibold'>Access Denied</h2>
 						</div>
 						<p className='text-muted-foreground'>
