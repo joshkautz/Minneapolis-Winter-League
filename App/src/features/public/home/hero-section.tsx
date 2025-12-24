@@ -16,7 +16,7 @@ export const HeroSection = () => {
 	return (
 		<section
 			className={
-				'h-[80vh] max-h-[620px] relative bg-foreground text-background dark:bg-background dark:text-foreground z-10'
+				'h-[80vh] max-h-[620px] relative bg-hero text-background dark:text-foreground z-10'
 			}
 		>
 			<div className='container relative z-10'>

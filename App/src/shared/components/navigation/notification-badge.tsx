@@ -27,7 +27,7 @@ export const NotificationBadge = ({
 	if (!count || count <= 0) return null
 
 	const baseClasses =
-		'text-xs leading-none min-w-[1rem] h-4 px-1 !bg-red-500 !text-white dark:!bg-red-500 dark:!text-white'
+		'text-xs leading-none min-w-[1rem] h-4 px-1 bg-destructive text-destructive-foreground'
 
 	const positionClasses = {
 		'button-overlay': 'absolute -top-1 -right-1 z-10',
