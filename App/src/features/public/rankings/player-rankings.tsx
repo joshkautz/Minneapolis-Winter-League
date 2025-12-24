@@ -1115,7 +1115,9 @@ export const PlayerRankings = ({
 					<div className='border-b pb-4 mb-4'>
 						<div className='flex items-center justify-between gap-4 pr-8'>
 							<div>
-								<h3 className='font-semibold text-lg' aria-hidden='true'>Algorithm Version</h3>
+								<h3 className='font-semibold text-lg' aria-hidden='true'>
+									Algorithm Version
+								</h3>
 								<p className='text-sm text-muted-foreground'>
 									<span className='font-medium'>
 										{
@@ -1189,12 +1191,24 @@ export const PlayerRankings = ({
 							<Table aria-label='Player rankings loading'>
 								<TableHeader>
 									<TableRow>
-										<TableHead scope='col' className='w-12 sm:w-16'>Rank</TableHead>
-										<TableHead scope='col' className='min-w-[120px] sm:w-32'>Player</TableHead>
-										<TableHead scope='col' className='w-16 sm:w-24 text-center'>Skill</TableHead>
-										<TableHead scope='col' className='w-16 sm:w-24 text-center'>Change</TableHead>
-										<TableHead scope='col' className='w-12 sm:w-20 text-center'>Games</TableHead>
-										<TableHead scope='col' className='w-12 sm:w-20 text-center'>Seasons</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-16'>
+											Rank
+										</TableHead>
+										<TableHead scope='col' className='min-w-[120px] sm:w-32'>
+											Player
+										</TableHead>
+										<TableHead scope='col' className='w-16 sm:w-24 text-center'>
+											Skill
+										</TableHead>
+										<TableHead scope='col' className='w-16 sm:w-24 text-center'>
+											Change
+										</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-20 text-center'>
+											Games
+										</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-20 text-center'>
+											Seasons
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -1233,12 +1247,24 @@ export const PlayerRankings = ({
 							<Table aria-label='Player rankings'>
 								<TableHeader>
 									<TableRow>
-										<TableHead scope='col' className='w-12 sm:w-16'>Rank</TableHead>
-										<TableHead scope='col' className='min-w-[120px] sm:w-32'>Player</TableHead>
-										<TableHead scope='col' className='w-16 sm:w-24 text-center'>Skill</TableHead>
-										<TableHead scope='col' className='w-16 sm:w-24 text-center'>Change</TableHead>
-										<TableHead scope='col' className='w-12 sm:w-20 text-center'>Games</TableHead>
-										<TableHead scope='col' className='w-12 sm:w-20 text-center'>Seasons</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-16'>
+											Rank
+										</TableHead>
+										<TableHead scope='col' className='min-w-[120px] sm:w-32'>
+											Player
+										</TableHead>
+										<TableHead scope='col' className='w-16 sm:w-24 text-center'>
+											Skill
+										</TableHead>
+										<TableHead scope='col' className='w-16 sm:w-24 text-center'>
+											Change
+										</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-20 text-center'>
+											Games
+										</TableHead>
+										<TableHead scope='col' className='w-12 sm:w-20 text-center'>
+											Seasons
+										</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>

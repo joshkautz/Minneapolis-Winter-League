@@ -120,7 +120,10 @@ export const PlayerRankingHistory = ({
 
 	// Fetch all rankings history data from rankings-history collection
 	const [rankingHistorySnapshot, historyLoading, error] = useCollection(
-		collection(firestore, Collections.RANKINGS_HISTORY) as Query<RankingHistoryDocument>
+		collection(
+			firestore,
+			Collections.RANKINGS_HISTORY
+		) as Query<RankingHistoryDocument>
 	)
 
 	// Log and notify on query errors
@@ -800,61 +803,65 @@ export const PlayerRankingHistory = ({
 										className='flex items-center gap-4 px-6 py-3 border-b last:border-b-0 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
 										aria-label={`${entry.teamName}, ${entry.seasonName}, ${entry.wins} wins ${entry.losses} losses, finished ${formatPlacement(entry.placement)}${entry.isCaptain ? ', Team Captain' : ''}`}
 									>
-									{/* Team Logo */}
-									<div className='flex-shrink-0'>
-										{entry.teamLogo ? (
-											<img
-												src={entry.teamLogo}
-												alt=''
-												className='w-10 h-10 rounded-full object-cover bg-muted'
-											/>
-										) : (
-											<div className='w-10 h-10 rounded-full bg-gradient-to-br from-primary to-sky-300 flex items-center justify-center'>
-												<span className='text-sm font-bold text-primary-foreground'>
-													{entry.teamName?.charAt(0)?.toUpperCase() || 'T'}
-												</span>
-											</div>
-										)}
-									</div>
-
-									{/* Team Info */}
-									<div className='flex-1 min-w-0'>
-										<div className='flex items-center gap-2'>
-											<span className='font-medium text-foreground truncate'>
-												{entry.teamName}
-											</span>
-											{entry.isCaptain && (
-												<Badge
-													variant='secondary'
-													className='flex items-center gap-1 shrink-0'
-												>
-													<Shield className='h-3 w-3' />
-													<span className='sr-only sm:not-sr-only'>
-														Captain
+										{/* Team Logo */}
+										<div className='flex-shrink-0'>
+											{entry.teamLogo ? (
+												<img
+													src={entry.teamLogo}
+													alt=''
+													className='w-10 h-10 rounded-full object-cover bg-muted'
+												/>
+											) : (
+												<div className='w-10 h-10 rounded-full bg-gradient-to-br from-primary to-sky-300 flex items-center justify-center'>
+													<span className='text-sm font-bold text-primary-foreground'>
+														{entry.teamName?.charAt(0)?.toUpperCase() || 'T'}
 													</span>
-												</Badge>
+												</div>
 											)}
 										</div>
-										<span className='text-sm text-muted-foreground'>
-											{entry.seasonName}
-										</span>
-									</div>
 
-									{/* Win-Loss Record */}
-									<div className='flex-shrink-0 text-center'>
-										<div className='text-sm font-medium'>
-											{entry.wins}-{entry.losses}
+										{/* Team Info */}
+										<div className='flex-1 min-w-0'>
+											<div className='flex items-center gap-2'>
+												<span className='font-medium text-foreground truncate'>
+													{entry.teamName}
+												</span>
+												{entry.isCaptain && (
+													<Badge
+														variant='secondary'
+														className='flex items-center gap-1 shrink-0'
+													>
+														<Shield className='h-3 w-3' />
+														<span className='sr-only sm:not-sr-only'>
+															Captain
+														</span>
+													</Badge>
+												)}
+											</div>
+											<span className='text-sm text-muted-foreground'>
+												{entry.seasonName}
+											</span>
 										</div>
-										<div className='text-xs text-muted-foreground'>Record</div>
-									</div>
 
-									{/* Placement */}
-									<div className='flex-shrink-0 text-right min-w-[60px]'>
-										<div className='text-sm font-medium'>
-											{formatPlacement(entry.placement)}
+										{/* Win-Loss Record */}
+										<div className='flex-shrink-0 text-center'>
+											<div className='text-sm font-medium'>
+												{entry.wins}-{entry.losses}
+											</div>
+											<div className='text-xs text-muted-foreground'>
+												Record
+											</div>
 										</div>
-										<div className='text-xs text-muted-foreground'>Finish</div>
-									</div>
+
+										{/* Placement */}
+										<div className='flex-shrink-0 text-right min-w-[60px]'>
+											<div className='text-sm font-medium'>
+												{formatPlacement(entry.placement)}
+											</div>
+											<div className='text-xs text-muted-foreground'>
+												Finish
+											</div>
+										</div>
 									</Link>
 								</li>
 							))}

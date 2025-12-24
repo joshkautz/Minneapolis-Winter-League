@@ -154,7 +154,10 @@ export const TeamBadgesDialog = ({
 							awardedByName,
 						} as ProcessedTeamBadge
 					} catch (error) {
-						logger.error(`Error processing team badge ${badgeId}:`, error as Error)
+						logger.error(
+							`Error processing team badge ${badgeId}:`,
+							error as Error
+						)
 						return null
 					}
 				})
