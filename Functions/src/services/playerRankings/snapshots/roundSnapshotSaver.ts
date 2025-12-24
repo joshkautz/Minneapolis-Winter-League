@@ -1,5 +1,9 @@
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
-import { Collections, RankingHistoryDocument, SeasonDocument } from '../../../types.js'
+import {
+	Collections,
+	RankingHistoryDocument,
+	SeasonDocument,
+} from '../../../types.js'
 import { PlayerRatingState } from '../types.js'
 import { createTimeBasedSnapshot } from './snapshotCreator.js'
 import { GameRound } from '../gameProcessing/roundGrouper.js'
