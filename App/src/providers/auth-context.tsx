@@ -133,16 +133,23 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
 		}
 	}, [authStateUser])
 
-	// Periodically refresh user data and ID token from Firebase Auth
-	// This ensures updated claims (like emailVerified) are picked up
+	// Periodically refresh user data from Firebase Auth
+	// Force token refresh only when email is not yet verified (to pick up verification)
+	// Once verified, only reload user data (lightweight operation)
 	useEffect(() => {
 		if (!authStateUser) return
 
 		const interval = setInterval(async () => {
 			try {
+				const wasUnverified = !authStateUser.emailVerified
 				await authStateUser.reload()
-				// Refresh the ID token to get updated claims (e.g., emailVerified)
-				await authStateUser.getIdToken(true)
+
+				// Only force token refresh if email was unverified (to pick up new claim)
+				// This avoids unnecessary network requests for already-verified users
+				if (wasUnverified && authStateUser.emailVerified) {
+					await authStateUser.getIdToken(true)
+				}
+
 				// Increment counter to trigger re-renders in consuming components
 				setUserRefreshCount((prev) => prev + 1)
 			} catch {
