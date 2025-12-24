@@ -17,7 +17,13 @@ import { updateSiteSettingsViaFunction } from '@/firebase/collections/functions'
 import { ThemeVariant } from '@/types'
 import { logger } from '@/shared/utils'
 import { PageContainer, PageHeader } from '@/shared/components'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'

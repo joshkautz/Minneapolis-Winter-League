@@ -45,8 +45,7 @@ export const RegistrationCountdown = () => {
 	}, [currentSeasonQueryDocumentSnapshot])
 
 	const targetDate = useMemo(() => {
-		if (!currentSeasonQueryDocumentSnapshot || seasonState === null)
-			return null
+		if (!currentSeasonQueryDocumentSnapshot || seasonState === null) return null
 
 		const data = currentSeasonQueryDocumentSnapshot.data()
 

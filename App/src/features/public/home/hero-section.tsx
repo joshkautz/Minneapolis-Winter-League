@@ -31,11 +31,7 @@ export const HeroSection = () => {
 								winter ultimate like never before.
 							</p>
 						</div>
-						<div
-							className={
-								'w-[220px] h-1 rounded bg-accent'
-							}
-						/>
+						<div className={'w-[220px] h-1 rounded bg-accent'} />
 						<div className='flex mt-4 sm:mt-12'>
 							<RegistrationCountdown />
 						</div>

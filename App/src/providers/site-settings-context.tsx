@@ -5,7 +5,14 @@
  * Listens to Firestore for real-time updates to site settings.
  */
 
-import { FC, ReactNode, createContext, useContext, useEffect, useRef } from 'react'
+import {
+	FC,
+	ReactNode,
+	createContext,
+	useContext,
+	useEffect,
+	useRef,
+} from 'react'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { getSiteSettingsRef } from '@/firebase/collections/site-settings'
 import { ThemeVariant, THEME_VARIANTS } from '@/types'
@@ -29,8 +36,7 @@ export const SiteSettingsContextProvider: FC<{ children: ReactNode }> = ({
 	const [snapshot, loading] = useDocument(getSiteSettingsRef())
 	const previousVariantRef = useRef<ThemeVariant | null>(null)
 
-	const themeVariant: ThemeVariant =
-		snapshot?.data()?.themeVariant ?? 'default'
+	const themeVariant: ThemeVariant = snapshot?.data()?.themeVariant ?? 'default'
 	const isValentine = themeVariant === 'valentine'
 
 	// Apply theme class on the document element (supports any theme variant)
@@ -38,7 +44,10 @@ export const SiteSettingsContextProvider: FC<{ children: ReactNode }> = ({
 		const root = document.documentElement
 
 		// Remove previous theme class if it exists
-		if (previousVariantRef.current && previousVariantRef.current !== 'default') {
+		if (
+			previousVariantRef.current &&
+			previousVariantRef.current !== 'default'
+		) {
 			root.classList.remove(previousVariantRef.current)
 		}
 
@@ -60,7 +69,9 @@ export const SiteSettingsContextProvider: FC<{ children: ReactNode }> = ({
 	}, [themeVariant])
 
 	return (
-		<SiteSettingsContext.Provider value={{ themeVariant, isValentine, loading }}>
+		<SiteSettingsContext.Provider
+			value={{ themeVariant, isValentine, loading }}
+		>
 			{children}
 		</SiteSettingsContext.Provider>
 	)
