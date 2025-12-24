@@ -200,19 +200,69 @@
 
 	/* Valentine's Day theme variant */
 	.valentine {
-		--accent: 340 80 84%;
-		--accent-foreground: 340 10% 15%;
+		--background: 340 40% 98%;
+		--foreground: 352 100% 28%;
+
+		--card: 0 0% 100%;
+		--card-foreground: 352 100% 28%;
+
+		--popover: 0 0% 100%;
+		--popover-foreground: 352 100% 28%;
+
 		--primary: 352 100% 28%;
-		--primary-foreground: 0 0% 100%;
+		--primary-foreground: 340 40% 98%;
+
+		--secondary: 340 40% 96.1%;
+		--secondary-foreground: 352 50% 15%;
+
+		--muted: 340 40% 96.1%;
+		--muted-foreground: 340 20% 47%;
+
+		--accent: 340 80% 84%;
+		--accent-foreground: 352 50% 15%;
+
+		--destructive: 0 84.2% 60.2%;
+		--destructive-foreground: 340 40% 98%;
+
+		--warning: 38 92% 50%;
+		--warning-foreground: 48 96% 89%;
+
+		--border: 340 30% 91.4%;
+		--input: 340 30% 91.4%;
 		--ring: 340 82% 55%;
 	}
 
 	.valentine.dark {
-		--accent: 340 75% 55%;
-		--accent-foreground: 340 10% 95%;
-		--primary: 340 82% 65%;
-		--primary-foreground: 340 10% 10%;
-		--ring: 340 75% 50%;
+		--background: 352 75% 12%;
+		--foreground: 340 35% 95%;
+
+		--card: 352 75% 13%;
+		--card-foreground: 340 35% 95%;
+
+		--popover: 352 75% 13%;
+		--popover-foreground: 340 35% 95%;
+
+		--primary: 340 65% 60%;
+		--primary-foreground: 352 45% 18%;
+
+		--secondary: 340 42% 16%;
+		--secondary-foreground: 340 35% 95%;
+
+		--muted: 340 42% 16%;
+		--muted-foreground: 340 22% 62%;
+
+		--accent: 340 58% 52%;
+		--accent-foreground: 352 75% 12%;
+
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 340 35% 95%;
+
+		--warning: 48 96% 89%;
+		--warning-foreground: 38 92% 50%;
+
+		--border: 340 28% 18%;
+		--input: 340 28% 18%;
+		--ring: 340 60% 48%;
 	}
 }
 
@@ -286,6 +336,11 @@
 	.gradient-animated {
 		background-size: 300% 300%;
 		animation: gradient-shift 8s ease-in-out infinite;
+	}
+
+	/* Hero section background - always dark blue regardless of theme */
+	.bg-hero {
+		background-color: hsl(216 100% 11%);
 	}
 }
 
