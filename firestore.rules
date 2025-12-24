@@ -139,6 +139,13 @@ service cloud.firestore {
       allow delete: if false; // Use revokeBadgeViaFunction
     }
 
+    match /siteSettings/{settingId} {
+      allow read: if true; // Public read for theme settings
+      allow create: if false; // Use updateSiteSettingsViaFunction
+      allow update: if false; // Use updateSiteSettingsViaFunction
+      allow delete: if false; // Manual process only
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

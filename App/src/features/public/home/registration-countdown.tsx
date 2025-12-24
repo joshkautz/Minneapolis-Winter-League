@@ -6,10 +6,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 const HOURS = 1000 * 60 * 60
 const MINUTES = 1000 * 60
 
-enum RegistrationState {
-	BEFORE_START = 'BEFORE_START',
-	OPEN = 'OPEN',
-	CLOSED = 'CLOSED',
+enum SeasonState {
+	BEFORE_REGISTRATION = 'BEFORE_REGISTRATION',
+	REGISTRATION_OPEN = 'REGISTRATION_OPEN',
+	BEFORE_SEASON = 'BEFORE_SEASON',
+	SEASON_ACTIVE = 'SEASON_ACTIVE',
+	SEASON_ENDED = 'SEASON_ENDED',
 }
 
 export const RegistrationCountdown = () => {
@@ -19,40 +21,48 @@ export const RegistrationCountdown = () => {
 	} = useSeasonsContext()
 	const [remaining, setRemaining] = useState<number>()
 
-	const registrationState = useMemo(() => {
+	const seasonState = useMemo(() => {
 		if (!currentSeasonQueryDocumentSnapshot) return null
 
 		const now = Timestamp.now()
-		const registrationStart =
-			currentSeasonQueryDocumentSnapshot.data().registrationStart
-		const registrationEnd =
-			currentSeasonQueryDocumentSnapshot.data().registrationEnd
+		const data = currentSeasonQueryDocumentSnapshot.data()
+		const registrationStart = data.registrationStart
+		const registrationEnd = data.registrationEnd
+		const seasonStart = data.dateStart
+		const seasonEnd = data.dateEnd
 
 		if (now.seconds < registrationStart.seconds) {
-			return RegistrationState.BEFORE_START
-		} else if (
-			now.seconds >= registrationStart.seconds &&
-			now.seconds < registrationEnd.seconds
-		) {
-			return RegistrationState.OPEN
+			return SeasonState.BEFORE_REGISTRATION
+		} else if (now.seconds < registrationEnd.seconds) {
+			return SeasonState.REGISTRATION_OPEN
+		} else if (now.seconds < seasonStart.seconds) {
+			return SeasonState.BEFORE_SEASON
+		} else if (now.seconds < seasonEnd.seconds) {
+			return SeasonState.SEASON_ACTIVE
 		} else {
-			return RegistrationState.CLOSED
+			return SeasonState.SEASON_ENDED
 		}
 	}, [currentSeasonQueryDocumentSnapshot])
 
 	const targetDate = useMemo(() => {
-		if (!currentSeasonQueryDocumentSnapshot || registrationState === null)
+		if (!currentSeasonQueryDocumentSnapshot || seasonState === null)
 			return null
 
-		if (registrationState === RegistrationState.BEFORE_START) {
-			return currentSeasonQueryDocumentSnapshot
-				.data()
-				.registrationStart.toDate()
-		} else if (registrationState === RegistrationState.OPEN) {
-			return currentSeasonQueryDocumentSnapshot.data().registrationEnd.toDate()
+		const data = currentSeasonQueryDocumentSnapshot.data()
+
+		switch (seasonState) {
+			case SeasonState.BEFORE_REGISTRATION:
+				return data.registrationStart.toDate()
+			case SeasonState.REGISTRATION_OPEN:
+				return data.registrationEnd.toDate()
+			case SeasonState.BEFORE_SEASON:
+				return data.dateStart.toDate()
+			case SeasonState.SEASON_ACTIVE:
+				return data.dateEnd.toDate()
+			case SeasonState.SEASON_ENDED:
+				return null
 		}
-		return null
-	}, [currentSeasonQueryDocumentSnapshot, registrationState])
+	}, [currentSeasonQueryDocumentSnapshot, seasonState])
 
 	useEffect(() => {
 		if (!targetDate) {
@@ -108,23 +118,21 @@ export const RegistrationCountdown = () => {
 
 	const seasonName = currentSeasonQueryDocumentSnapshot?.data()?.name
 
-	const getHeaderText = () => {
-		if (registrationState === RegistrationState.BEFORE_START) {
-			return 'Registration opens soon!'
-		} else if (registrationState === RegistrationState.OPEN) {
-			return 'Registration is open!'
-		} else {
-			return 'Registration is closed!'
+	const getSubtitleText = () => {
+		switch (seasonState) {
+			case SeasonState.BEFORE_REGISTRATION:
+				return 'Registration opens in:'
+			case SeasonState.REGISTRATION_OPEN:
+				return 'Registration closes in:'
+			case SeasonState.BEFORE_SEASON:
+				return 'Season begins in:'
+			case SeasonState.SEASON_ACTIVE:
+				return 'Season ends in:'
+			case SeasonState.SEASON_ENDED:
+				return 'Season has ended'
+			default:
+				return ''
 		}
-	}
-
-	const getSubHeaderText = () => {
-		if (registrationState === RegistrationState.BEFORE_START) {
-			return 'Time until registration opens:'
-		} else if (registrationState === RegistrationState.OPEN) {
-			return 'Time until registration closes:'
-		}
-		return null
 	}
 
 	// Loading state
@@ -134,9 +142,8 @@ export const RegistrationCountdown = () => {
 	) {
 		return (
 			<div className='flex flex-col items-start'>
-				<Skeleton className='h-9 w-64 mb-1' />
-				<Skeleton className='h-7 w-32 mb-1' />
-				<Skeleton className='h-5 w-48 mb-4' />
+				<Skeleton className='h-10 w-56 mb-1' />
+				<Skeleton className='h-5 w-44 mb-2' />
 				<div className='flex mt-2 space-x-2'>
 					{[...Array(4)].map((_, index) => (
 						<div key={index} className='flex flex-col items-center min-w-16'>
@@ -150,23 +157,19 @@ export const RegistrationCountdown = () => {
 	}
 
 	const showCountdown =
-		registrationState !== RegistrationState.CLOSED &&
+		seasonState !== SeasonState.SEASON_ENDED &&
 		remaining !== undefined &&
 		remaining > 0
 
 	return (
-		<div className='flex flex-col items-start'>
-			<div className='text-3xl font-bold'>{getHeaderText()}</div>
-			{seasonName && (
-				<div className='text-xl font-semibold text-primary mt-1'>
-					{seasonName}
-				</div>
-			)}
-			{getSubHeaderText() && (
-				<div className='text-lg text-muted-foreground mt-1 mb-2'>
-					{getSubHeaderText()}
-				</div>
-			)}
+		<section
+			className='flex flex-col items-start'
+			aria-label='Season countdown'
+		>
+			<h2 className='text-4xl font-bold tracking-tight'>{seasonName}</h2>
+			<p className='text-lg text-muted-foreground mt-1 mb-2'>
+				{getSubtitleText()}
+			</p>
 			{showCountdown && (
 				<div className='flex mt-2 space-x-2'>
 					<div className='flex flex-col items-center min-w-16'>
@@ -195,6 +198,6 @@ export const RegistrationCountdown = () => {
 					</div>
 				</div>
 			)}
-		</div>
+		</section>
 	)
 }

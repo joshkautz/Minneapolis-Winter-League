@@ -126,3 +126,6 @@ export { updateBadge } from './functions/admin/badges/update.js'
 export { deleteBadge } from './functions/admin/badges/delete.js'
 export { awardBadge } from './functions/admin/badges/awardBadge.js'
 export { revokeBadge } from './functions/admin/badges/revokeBadge.js'
+
+// Site settings functions (admin-only)
+export { updateSiteSettings } from './functions/admin/site-settings/updateSiteSettings.js'

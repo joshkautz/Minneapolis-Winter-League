@@ -41,7 +41,12 @@ export enum Collections {
 	WAIVERS = 'waivers',
 }
 
-export type ThemeVariant = 'default' | 'valentine'
+/**
+ * Available theme variants for the site
+ * Add new themes here - they will automatically appear in the admin settings
+ */
+export const THEME_VARIANTS = ['default', 'valentine'] as const
+export type ThemeVariant = (typeof THEME_VARIANTS)[number]
 
 export enum OfferStatus {
 	ACCEPTED = 'accepted',

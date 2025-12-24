@@ -1,24 +1,17 @@
 import { useAnchorScroll } from '@/shared/hooks'
-import { useMemo } from 'react'
+import { useSiteSettings } from '@/providers'
 import { CitySvg } from './city-svg'
 import { SparklesCore } from './particles'
 import { RegistrationCountdown } from './registration-countdown'
 
 export const HeroSection = () => {
 	useAnchorScroll()
+	const { isValentine } = useSiteSettings()
 
-	const sparklesCore = useMemo(() => {
-		return (
-			<SparklesCore
-				background='transparent'
-				minSize={3}
-				maxSize={6}
-				particleDensity={50}
-				className='w-full h-full'
-				variant='hearts'
-			/>
-		)
-	}, [])
+	// Theme-based particle configuration
+	const particleConfig = isValentine
+		? { variant: 'hearts' as const, minSize: 3, maxSize: 6, density: 50 }
+		: { variant: 'snow' as const, minSize: 0.6, maxSize: 1.4, density: 100 }
 
 	return (
 		<section
@@ -26,7 +19,7 @@ export const HeroSection = () => {
 				'h-[80vh] max-h-[620px] relative bg-foreground text-background dark:bg-background dark:text-foreground z-10'
 			}
 		>
-			<div className='container'>
+			<div className='container relative z-10'>
 				<div className='flex flex-col items-stretch h-full md:flex-row justify-stretch'>
 					<div className='flex-1 mt-8'>
 						<div
@@ -40,7 +33,7 @@ export const HeroSection = () => {
 						</div>
 						<div
 							className={
-								'w-[220px] h-1 rounded bg-linear-to-r from-primary to-sky-300'
+								'w-[220px] h-1 rounded bg-accent'
 							}
 						/>
 						<div className='flex mt-4 sm:mt-12'>
@@ -49,11 +42,15 @@ export const HeroSection = () => {
 					</div>
 				</div>
 			</div>
-			<div
-				className='absolute inset-0 w-full pointer-events-none z-20'
-				style={{ bottom: '0px' }}
-			>
-				{sparklesCore}
+			<div className='absolute inset-0 w-full pointer-events-none z-0'>
+				<SparklesCore
+					background='transparent'
+					minSize={particleConfig.minSize}
+					maxSize={particleConfig.maxSize}
+					particleDensity={particleConfig.density}
+					className='w-full h-full'
+					variant={particleConfig.variant}
+				/>
 			</div>
 			<div
 				className='absolute inset-x-0 bottom-0 w-full -z-10'

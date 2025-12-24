@@ -1,7 +1,8 @@
-import { ReactNode, useMemo } from 'react'
+import { ReactNode } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { cn } from '@/shared/utils'
 import { SparklesCore } from '@/features/public/home/particles'
+import { useSiteSettings } from '@/providers'
 
 export const ComingSoon = ({
 	children,
@@ -10,20 +11,12 @@ export const ComingSoon = ({
 	children: ReactNode
 	className?: string
 }) => {
-	const sparklesCore = useMemo(() => {
-		return (
-			<SparklesCore
-				background='transparent'
-				minSize={2}
-				maxSize={4}
-				particleDensity={40}
-				className='w-full h-full'
-				particleColor='#ff6b9d'
-				speed={2}
-				variant='hearts'
-			/>
-		)
-	}, [])
+	const { isValentine } = useSiteSettings()
+
+	// Theme-based particle configuration
+	const particleConfig = isValentine
+		? { variant: 'hearts' as const, minSize: 2, maxSize: 4, density: 40 }
+		: { variant: 'snow' as const, minSize: 0.4, maxSize: 1.2, density: 60 }
 
 	return (
 		<Card className={cn('w-full py-0 gap-0 overflow-hidden', className)}>
@@ -34,7 +27,15 @@ export const ComingSoon = ({
 				)}
 			>
 				<div className='absolute inset-0 w-full h-full pointer-events-none opacity-60 dark:opacity-40'>
-					{sparklesCore}
+					<SparklesCore
+						background='transparent'
+						minSize={particleConfig.minSize}
+						maxSize={particleConfig.maxSize}
+						particleDensity={particleConfig.density}
+						className='w-full h-full'
+						speed={2}
+						variant={particleConfig.variant}
+					/>
 				</div>
 				<span className='relative z-10'>Coming Soon</span>
 			</CardHeader>

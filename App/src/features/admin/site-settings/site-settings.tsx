@@ -4,25 +4,53 @@
  * Allows administrators to configure site-wide settings like theme variants.
  */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument } from 'react-firebase-hooks/firestore'
-import { doc, setDoc } from 'firebase/firestore'
 import { toast } from 'sonner'
-import { Heart, Palette, Shield, Snowflake } from 'lucide-react'
+import { Heart, Palette, Shield, Snowflake, LucideIcon } from 'lucide-react'
 
 import { auth } from '@/firebase/auth'
-import { firestore } from '@/firebase/app'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { getSiteSettingsRef } from '@/firebase/collections/site-settings'
-import { Collections, ThemeVariant } from '@/types'
+import { updateSiteSettingsViaFunction } from '@/firebase/collections/functions'
+import { ThemeVariant } from '@/types'
 import { logger } from '@/shared/utils'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Switch } from '@/components/ui/switch'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
+
+/**
+ * Theme configuration - add new themes here
+ * Each theme needs: id, label, description, icon, and iconColor
+ */
+interface ThemeOption {
+	id: ThemeVariant
+	label: string
+	description: string
+	icon: LucideIcon
+	iconColor: string
+}
+
+const THEME_OPTIONS: ThemeOption[] = [
+	{
+		id: 'default',
+		label: 'Default (Winter)',
+		description: 'Blue and sky colors with falling snow particles',
+		icon: Snowflake,
+		iconColor: 'text-sky-500',
+	},
+	{
+		id: 'valentine',
+		label: "Valentine's Day",
+		description: 'Pink and rose colors with floating heart particles',
+		icon: Heart,
+		iconColor: 'text-pink-500',
+	},
+]
 
 export const SiteSettings = () => {
 	const [user] = useAuthState(auth)
@@ -33,23 +61,18 @@ export const SiteSettings = () => {
 	const [isUpdating, setIsUpdating] = useState(false)
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
-	const currentVariant: ThemeVariant = settingsSnapshot?.data()?.themeVariant ?? 'default'
-	const isValentine = currentVariant === 'valentine'
+	const currentVariant: ThemeVariant =
+		settingsSnapshot?.data()?.themeVariant ?? 'default'
 
-	const handleToggleValentine = async (checked: boolean) => {
+	const handleThemeChange = async (value: string) => {
+		const newVariant = value as ThemeVariant
+		if (newVariant === currentVariant) return
+
 		setIsUpdating(true)
 		try {
-			const newVariant: ThemeVariant = checked ? 'valentine' : 'default'
-			await setDoc(
-				doc(firestore, Collections.SITE_SETTINGS, 'theme'),
-				{ themeVariant: newVariant },
-				{ merge: true }
-			)
-			toast.success(
-				checked
-					? 'Valentine theme activated!'
-					: 'Default theme restored'
-			)
+			await updateSiteSettingsViaFunction({ themeVariant: newVariant })
+			const selectedTheme = THEME_OPTIONS.find((t) => t.id === newVariant)
+			toast.success(`${selectedTheme?.label ?? 'Theme'} activated!`)
 		} catch (error) {
 			logger.error('Failed to update theme variant:', error)
 			toast.error('Failed to update theme', {
@@ -59,11 +82,6 @@ export const SiteSettings = () => {
 			setIsUpdating(false)
 		}
 	}
-
-	// Log errors
-	useEffect(() => {
-		// Placeholder for future error handling
-	}, [])
 
 	// Handle loading state
 	if (playerLoading || settingsLoading) {
@@ -129,44 +147,57 @@ export const SiteSettings = () => {
 			<Card>
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
-						<Heart className='h-5 w-5 text-pink-500' />
+						<Palette className='h-5 w-5' />
 						Theme Variant
 					</CardTitle>
 					<CardDescription>
-						Enable seasonal theme variants to change the site's color scheme for all users.
+						Select a theme to change the site's color scheme and particle
+						effects for all users.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className='space-y-6'>
-					<div className='flex items-center justify-between rounded-lg border p-4'>
-						<div className='space-y-1'>
-							<Label
-								htmlFor='valentine-toggle'
-								className='text-base font-medium flex items-center gap-2'
-							>
-								{isValentine ? (
-									<Heart className='h-4 w-4 text-pink-500' />
-								) : (
-									<Snowflake className='h-4 w-4 text-sky-500' />
-								)}
-								Valentine's Day Theme
-							</Label>
-							<p className='text-sm text-muted-foreground'>
-								{isValentine
-									? 'Pink and rose colors are active across the site.'
-									: 'Enable to switch from blue to pink/rose colors.'}
-							</p>
-						</div>
-						<Switch
-							id='valentine-toggle'
-							checked={isValentine}
-							onCheckedChange={handleToggleValentine}
-							disabled={isUpdating}
-							aria-label='Toggle Valentine theme'
-						/>
-					</div>
+					<RadioGroup
+						value={currentVariant}
+						onValueChange={handleThemeChange}
+						disabled={isUpdating}
+						className='space-y-3'
+						aria-label='Select theme variant'
+					>
+						{THEME_OPTIONS.map((theme) => {
+							const Icon = theme.icon
+							const isSelected = currentVariant === theme.id
+							return (
+								<label
+									key={theme.id}
+									htmlFor={`theme-${theme.id}`}
+									className={`flex items-center gap-4 rounded-lg border p-4 cursor-pointer transition-colors hover:bg-muted/50 ${
+										isSelected ? 'border-primary bg-muted/50' : ''
+									} ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
+								>
+									<RadioGroupItem
+										value={theme.id}
+										id={`theme-${theme.id}`}
+										disabled={isUpdating}
+									/>
+									<Icon className={`h-5 w-5 ${theme.iconColor}`} />
+									<div className='flex-1 space-y-1'>
+										<Label
+											htmlFor={`theme-${theme.id}`}
+											className='text-base font-medium cursor-pointer'
+										>
+											{theme.label}
+										</Label>
+										<p className='text-sm text-muted-foreground'>
+											{theme.description}
+										</p>
+									</div>
+								</label>
+							)
+						})}
+					</RadioGroup>
 
 					<div className='rounded-lg border p-4 bg-muted/50'>
-						<h4 className='text-sm font-medium mb-2'>Preview</h4>
+						<h4 className='text-sm font-medium mb-3'>Current Theme Preview</h4>
 						<div className='flex gap-4'>
 							<div className='flex flex-col items-center gap-1'>
 								<div className='w-12 h-12 rounded-lg bg-accent' />

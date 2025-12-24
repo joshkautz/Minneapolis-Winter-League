@@ -988,3 +988,38 @@ export const removeFromTeam = async (
 		action: 'remove',
 	})
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// SITE SETTINGS FUNCTIONS (ADMIN ONLY)
+//////////////////////////////////////////////////////////////////////////////
+
+import type { ThemeVariant } from '@/types'
+
+interface UpdateSiteSettingsRequest {
+	themeVariant: ThemeVariant
+}
+
+interface UpdateSiteSettingsResponse {
+	success: true
+	themeVariant: ThemeVariant
+	message: string
+}
+
+/**
+ * Updates site-wide settings via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can update site settings
+ * - Theme variant is validated server-side
+ * - Changes affect all users immediately
+ */
+export const updateSiteSettingsViaFunction = async (
+	data: UpdateSiteSettingsRequest
+): Promise<UpdateSiteSettingsResponse> => {
+	const updateSiteSettings = httpsCallable<
+		UpdateSiteSettingsRequest,
+		UpdateSiteSettingsResponse
+	>(functions, 'updateSiteSettings')
+	const result = await updateSiteSettings(data)
+	return result.data
+}

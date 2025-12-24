@@ -39,8 +39,24 @@ export enum Collections {
 	RANKINGS_CALCULATIONS = 'rankings-calculations',
 	RANKINGS_CALCULATED_ROUNDS = 'rankings-calculated-rounds',
 	SEASONS = 'seasons',
+	SITE_SETTINGS = 'siteSettings',
 	TEAMS = 'teams',
 	WAIVERS = 'waivers',
+}
+
+/**
+ * Available theme variants for the site
+ * Add new themes here - update validation in updateSiteSettings function
+ */
+export const THEME_VARIANTS = ['default', 'valentine'] as const
+export type ThemeVariant = (typeof THEME_VARIANTS)[number]
+
+/**
+ * Site settings document structure for global site configuration
+ */
+export interface SiteSettingsDocument extends DocumentData {
+	/** Current theme variant for the site */
+	themeVariant: ThemeVariant
 }
 
 export enum OfferStatus {

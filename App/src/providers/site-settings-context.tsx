@@ -5,15 +5,15 @@
  * Listens to Firestore for real-time updates to site settings.
  */
 
-import { FC, ReactNode, createContext, useContext, useEffect } from 'react'
+import { FC, ReactNode, createContext, useContext, useEffect, useRef } from 'react'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { getSiteSettingsRef } from '@/firebase/collections/site-settings'
-import { ThemeVariant } from '@/types'
+import { ThemeVariant, THEME_VARIANTS } from '@/types'
 
 interface SiteSettingsContextValue {
 	/** Current theme variant */
 	themeVariant: ThemeVariant
-	/** Whether the Valentine theme is active */
+	/** Whether the Valentine theme is active (convenience helper) */
 	isValentine: boolean
 	/** Whether settings are still loading */
 	loading: boolean
@@ -27,24 +27,37 @@ export const SiteSettingsContextProvider: FC<{ children: ReactNode }> = ({
 	children,
 }) => {
 	const [snapshot, loading] = useDocument(getSiteSettingsRef())
+	const previousVariantRef = useRef<ThemeVariant | null>(null)
 
-	const themeVariant: ThemeVariant = snapshot?.data()?.themeVariant ?? 'default'
+	const themeVariant: ThemeVariant =
+		snapshot?.data()?.themeVariant ?? 'default'
 	const isValentine = themeVariant === 'valentine'
 
-	// Apply or remove the valentine class on the document element
+	// Apply theme class on the document element (supports any theme variant)
 	useEffect(() => {
 		const root = document.documentElement
-		if (isValentine) {
-			root.classList.add('valentine')
-		} else {
-			root.classList.remove('valentine')
+
+		// Remove previous theme class if it exists
+		if (previousVariantRef.current && previousVariantRef.current !== 'default') {
+			root.classList.remove(previousVariantRef.current)
 		}
 
-		// Cleanup on unmount
-		return () => {
-			root.classList.remove('valentine')
+		// Add new theme class (skip for default theme)
+		if (themeVariant !== 'default') {
+			root.classList.add(themeVariant)
 		}
-	}, [isValentine])
+
+		previousVariantRef.current = themeVariant
+
+		// Cleanup on unmount - remove all theme classes
+		return () => {
+			THEME_VARIANTS.forEach((variant) => {
+				if (variant !== 'default') {
+					root.classList.remove(variant)
+				}
+			})
+		}
+	}, [themeVariant])
 
 	return (
 		<SiteSettingsContext.Provider value={{ themeVariant, isValentine, loading }}>
