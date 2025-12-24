@@ -18,17 +18,24 @@ export function createTimeBasedSnapshot(
 	return rankedPlayers.map(({ player, rank }) => {
 		// Calculate change from previous rating if available
 		const prevRating = previousRatings?.get(player.playerId)
-		const change = prevRating !== undefined ? player.mu - prevRating : undefined
 
-		return {
+		// Build base ranking object
+		const ranking: TimeBasedPlayerRanking = {
 			playerId: player.playerId,
 			playerName: player.playerName,
 			rating: player.mu, // TrueSkill μ (skill estimate)
 			rank,
 			totalGames: player.totalGames,
 			totalSeasons: player.totalSeasons,
-			change,
-			previousRating: prevRating,
 		}
+
+		// Only add change/previousRating if we have previous data
+		// (Firestore doesn't accept undefined values)
+		if (prevRating !== undefined) {
+			ranking.change = player.mu - prevRating
+			ranking.previousRating = prevRating
+		}
+
+		return ranking
 	})
 }
