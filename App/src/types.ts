@@ -36,9 +36,12 @@ export enum Collections {
 	RANKINGS_CALCULATIONS = 'rankings-calculations',
 	RANKINGS_CALCULATED_ROUNDS = 'rankings-calculated-rounds',
 	SEASONS = 'seasons',
+	SITE_SETTINGS = 'siteSettings',
 	TEAMS = 'teams',
 	WAIVERS = 'waivers',
 }
+
+export type ThemeVariant = 'default' | 'valentine'
 
 export enum OfferStatus {
 	ACCEPTED = 'accepted',
@@ -300,6 +303,15 @@ export interface TeamBadgeDocument extends DocumentData {
 	awardedAt: Timestamp
 	/** Reference to the admin player who awarded the badge */
 	awardedBy: DocumentReference<PlayerDocument>
+}
+
+/**
+ * Site settings document structure for global site configuration
+ * Stored at siteSettings/theme
+ */
+export interface SiteSettingsDocument extends DocumentData {
+	/** Current theme variant for the site */
+	themeVariant: ThemeVariant
 }
 
 /////////////////////////////////////////////////////////////////

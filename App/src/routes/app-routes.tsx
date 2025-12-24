@@ -21,6 +21,7 @@ import {
 	GameManagement,
 	RegistrationManagement,
 	BadgeManagement,
+	SiteSettings,
 	Profile,
 	ManageTeam,
 	NotFound,
@@ -243,6 +244,16 @@ export const AppRoutes = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<BadgeManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/site-settings'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<SiteSettings />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

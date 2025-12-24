@@ -106,6 +106,8 @@ export const RegistrationCountdown = () => {
 			? Math.floor((remaining % MINUTES) / 1000)
 			: 0
 
+	const seasonName = currentSeasonQueryDocumentSnapshot?.data()?.name
+
 	const getHeaderText = () => {
 		if (registrationState === RegistrationState.BEFORE_START) {
 			return 'Registration opens soon!'
@@ -132,7 +134,8 @@ export const RegistrationCountdown = () => {
 	) {
 		return (
 			<div className='flex flex-col items-start'>
-				<Skeleton className='h-9 w-64 mb-2' />
+				<Skeleton className='h-9 w-64 mb-1' />
+				<Skeleton className='h-7 w-32 mb-1' />
 				<Skeleton className='h-5 w-48 mb-4' />
 				<div className='flex mt-2 space-x-2'>
 					{[...Array(4)].map((_, index) => (
@@ -154,6 +157,11 @@ export const RegistrationCountdown = () => {
 	return (
 		<div className='flex flex-col items-start'>
 			<div className='text-3xl font-bold'>{getHeaderText()}</div>
+			{seasonName && (
+				<div className='text-xl font-semibold text-primary mt-1'>
+					{seasonName}
+				</div>
+			)}
 			{getSubHeaderText() && (
 				<div className='text-lg text-muted-foreground mt-1 mb-2'>
 					{getSubHeaderText()}

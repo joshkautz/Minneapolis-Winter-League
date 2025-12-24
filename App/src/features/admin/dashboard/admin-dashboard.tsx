@@ -28,6 +28,7 @@ import {
 	Newspaper,
 	Users,
 	Award,
+	Palette,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 
@@ -285,6 +286,27 @@ export const AdminDashboard = () => {
 							<Link to='/admin/badge-management'>
 								<Award className='h-4 w-4 mr-2' />
 								Manage Badges
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* Site Settings */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Palette className='h-5 w-5 text-pink-600' />
+							Site Settings
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Configure site-wide settings including seasonal theme variants
+							like Valentine's Day.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/site-settings'>
+								<Palette className='h-4 w-4 mr-2' />
+								Site Settings
 							</Link>
 						</Button>
 					</CardContent>

@@ -99,6 +99,10 @@ export const TeamManagement = lazyImport(
 	() => import('@/features/admin/team-management'),
 	'TeamManagement'
 )
+export const SiteSettings = lazyImport(
+	() => import('@/features/admin/site-settings'),
+	'SiteSettings'
+)
 
 // ==================== ERROR PAGES ====================
 

@@ -197,6 +197,23 @@
 		--chart-4: oklch(0.627 0.265 303.9);
 		--chart-5: oklch(0.645 0.246 16.439);
 	}
+
+	/* Valentine's Day theme variant */
+	.valentine {
+		--accent: 340 82% 65%;
+		--accent-foreground: 340 10% 15%;
+		--primary: 350 80% 50%;
+		--primary-foreground: 0 0% 100%;
+		--ring: 340 82% 55%;
+	}
+
+	.valentine.dark {
+		--accent: 340 75% 55%;
+		--accent-foreground: 340 10% 95%;
+		--primary: 340 82% 65%;
+		--primary-foreground: 340 10% 10%;
+		--ring: 340 75% 50%;
+	}
 }
 
 /*

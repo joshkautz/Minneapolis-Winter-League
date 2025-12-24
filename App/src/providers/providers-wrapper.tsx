@@ -7,6 +7,7 @@ import {
 	GamesContextProvider,
 	OffersContextProvider,
 	BadgesContextProvider,
+	SiteSettingsContextProvider,
 } from '@/providers'
 
 interface ProvidersWrapperProps {
@@ -22,17 +23,19 @@ interface ProvidersWrapperProps {
 export const ProvidersWrapper = ({ children }: ProvidersWrapperProps) => {
 	return (
 		<ThemeProvider>
-			<AuthContextProvider>
-				<SeasonsContextProvider>
-					<TeamsContextProvider>
-						<GamesContextProvider>
-							<OffersContextProvider>
-								<BadgesContextProvider>{children}</BadgesContextProvider>
-							</OffersContextProvider>
-						</GamesContextProvider>
-					</TeamsContextProvider>
-				</SeasonsContextProvider>
-			</AuthContextProvider>
+			<SiteSettingsContextProvider>
+				<AuthContextProvider>
+					<SeasonsContextProvider>
+						<TeamsContextProvider>
+							<GamesContextProvider>
+								<OffersContextProvider>
+									<BadgesContextProvider>{children}</BadgesContextProvider>
+								</OffersContextProvider>
+							</GamesContextProvider>
+						</TeamsContextProvider>
+					</SeasonsContextProvider>
+				</AuthContextProvider>
+			</SiteSettingsContextProvider>
 		</ThemeProvider>
 	)
 }
