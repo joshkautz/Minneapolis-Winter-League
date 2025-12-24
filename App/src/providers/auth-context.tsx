@@ -133,13 +133,16 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
 		}
 	}, [authStateUser])
 
-	// Periodically refresh user data from Firebase Auth
+	// Periodically refresh user data and ID token from Firebase Auth
+	// This ensures updated claims (like emailVerified) are picked up
 	useEffect(() => {
 		if (!authStateUser) return
 
 		const interval = setInterval(async () => {
 			try {
 				await authStateUser.reload()
+				// Refresh the ID token to get updated claims (e.g., emailVerified)
+				await authStateUser.getIdToken(true)
 				// Increment counter to trigger re-renders in consuming components
 				setUserRefreshCount((prev) => prev + 1)
 			} catch {
