@@ -711,7 +711,9 @@ export const SeasonManagement = () => {
 
 						{/* Stripe Configuration */}
 						<div className='space-y-4 border-t pt-4 mt-4'>
-							<h4 className='font-medium text-sm'>Stripe Payment Configuration</h4>
+							<h4 className='font-medium text-sm'>
+								Stripe Payment Configuration
+							</h4>
 							<p className='text-xs text-muted-foreground'>
 								Configure Stripe price and coupon IDs for this season. Players
 								cannot pay until this is configured.
@@ -734,7 +736,9 @@ export const SeasonManagement = () => {
 									</p>
 								</div>
 								<div className='space-y-2'>
-									<Label htmlFor='stripePriceIdDev'>Price ID (Development)</Label>
+									<Label htmlFor='stripePriceIdDev'>
+										Price ID (Development)
+									</Label>
 									<Input
 										id='stripePriceIdDev'
 										placeholder='price_...'

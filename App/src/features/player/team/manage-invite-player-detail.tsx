@@ -2,10 +2,7 @@ import { useMemo, useEffect } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Mail } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-	QueryDocumentSnapshot,
-	offersForPlayerByTeamQuery,
-} from '@/firebase'
+import { QueryDocumentSnapshot, offersForPlayerByTeamQuery } from '@/firebase'
 import {
 	cn,
 	PlayerDocument,

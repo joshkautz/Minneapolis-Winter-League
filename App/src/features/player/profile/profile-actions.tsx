@@ -9,7 +9,11 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { User } from 'firebase/auth'
-import { QueryDocumentSnapshot, QuerySnapshot, DocumentSnapshot } from '@/firebase'
+import {
+	QueryDocumentSnapshot,
+	QuerySnapshot,
+	DocumentSnapshot,
+} from '@/firebase'
 import { SeasonDocument } from '@/shared/utils'
 import { Settings } from 'lucide-react'
 import type { PlayerDocument } from '@/types'

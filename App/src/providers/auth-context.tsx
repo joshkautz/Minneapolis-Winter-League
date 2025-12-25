@@ -29,11 +29,7 @@ import {
 	AuthError,
 	ActionCodeSettings,
 } from '@/firebase/auth'
-import {
-	getPlayerRef,
-	FirestoreError,
-	DocumentSnapshot,
-} from '@/firebase'
+import { getPlayerRef, FirestoreError, DocumentSnapshot } from '@/firebase'
 import { PlayerDocument } from '@/shared/utils'
 
 /** How often to refresh user data from Firebase Auth (in milliseconds) */
