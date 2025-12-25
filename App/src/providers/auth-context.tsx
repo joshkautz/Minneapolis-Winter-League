@@ -33,7 +33,7 @@ import {
 	getPlayerRef,
 	FirestoreError,
 	DocumentSnapshot,
-} from '@/firebase/firestore'
+} from '@/firebase'
 import { PlayerDocument } from '@/shared/utils'
 
 /** How often to refresh user data from Firebase Auth (in milliseconds) */

@@ -3,7 +3,7 @@ import {
 	QueryDocumentSnapshot,
 	DocumentSnapshot,
 	offersForPlayerByTeamQuery,
-} from '@/firebase/firestore'
+} from '@/firebase'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'

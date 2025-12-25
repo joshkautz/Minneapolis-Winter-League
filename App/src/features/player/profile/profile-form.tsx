@@ -21,7 +21,7 @@ import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useEffect, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { updatePlayerViaFunction } from '@/firebase'
-import { DocumentSnapshot } from '@/firebase/firestore'
+import { DocumentSnapshot } from '@/firebase'
 import { PlayerDocument } from '@/shared/utils'
 import {
 	profileFormSchema,

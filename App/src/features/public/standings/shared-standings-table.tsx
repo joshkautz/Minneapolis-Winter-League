@@ -13,7 +13,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { QuerySnapshot } from '@/firebase/firestore'
+import { QuerySnapshot } from '@/firebase'
 import { TeamDocument, cn } from '@/shared/utils'
 import { TeamStanding } from '@/shared/hooks'
 

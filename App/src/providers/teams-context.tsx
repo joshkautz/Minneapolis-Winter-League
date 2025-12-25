@@ -17,7 +17,7 @@ import {
 	FirestoreError,
 	QuerySnapshot,
 	teamsQuery,
-} from '@/firebase/firestore'
+} from '@/firebase'
 import { allTeamsQuery } from '@/firebase/collections/teams'
 import { TeamDocument, logger } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'

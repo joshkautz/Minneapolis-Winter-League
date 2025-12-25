@@ -1,4 +1,4 @@
-import { getPlayerSnapshot } from '@/firebase/firestore'
+import { getPlayerSnapshot } from '@/firebase'
 import { QuerySnapshot, QueryDocumentSnapshot } from '@firebase/firestore'
 import { useEffect, useState } from 'react'
 import { OfferDocument, TeamDocument } from '@/shared/utils'

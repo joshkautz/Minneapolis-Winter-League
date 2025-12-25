@@ -62,7 +62,7 @@ import {
 import { TeamDocument, SeasonDocument } from '@/types'
 import { useSeasonsContext } from '@/providers'
 import { TeamBadgesDialog } from './components/team-badges-dialog'
-import { DocumentReference } from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase'
 
 export const TeamManagement = () => {
 	const [user] = useAuthState(auth)

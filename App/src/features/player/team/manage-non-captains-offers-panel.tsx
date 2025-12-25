@@ -14,7 +14,7 @@ import {
 } from '@/shared/components'
 import { useOffersContext, useTeamsContext } from '@/providers'
 import { useOffer, OfferDocumentWithUI } from '@/shared/hooks'
-import { DocumentReference } from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase'
 import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
 
 export const ManageNonCaptainsOffersPanel = () => {

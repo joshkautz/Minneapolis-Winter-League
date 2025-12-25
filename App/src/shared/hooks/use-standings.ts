@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { QuerySnapshot } from '@/firebase/firestore'
+import { QuerySnapshot } from '@/firebase'
 import { GameDocument, hasAssignedTeams } from '@/shared/utils'
 
 export type TeamStanding = {

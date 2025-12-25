@@ -1,4 +1,4 @@
-import { DocumentReference } from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase'
 import { manageTeamPlayerViaFunction } from '@/firebase/collections/functions'
 import {
 	DropdownMenu,

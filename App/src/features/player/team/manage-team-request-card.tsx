@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { toast } from 'sonner'
-import { DocumentSnapshot, QueryDocumentSnapshot } from '@/firebase/firestore'
+import { DocumentSnapshot, QueryDocumentSnapshot } from '@/firebase'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { useTeamsContext, useAuthContext } from '@/providers'
 import { NotificationCard, LoadingSpinner } from '@/shared/components'

@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import {
 	QueryDocumentSnapshot,
 	offersForPlayerByTeamQuery,
-} from '@/firebase/firestore'
+} from '@/firebase'
 import {
 	cn,
 	PlayerDocument,

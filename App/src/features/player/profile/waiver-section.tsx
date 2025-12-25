@@ -19,7 +19,7 @@ import {
 import { toast } from 'sonner'
 import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
 import { formatTimestamp, SeasonDocument, logger } from '@/shared/utils'
-import { QueryDocumentSnapshot } from '@/firebase/firestore'
+import { QueryDocumentSnapshot } from '@/firebase'
 import { Timestamp } from '@firebase/firestore'
 import { sendDropboxEmail } from '@/firebase/functions'
 

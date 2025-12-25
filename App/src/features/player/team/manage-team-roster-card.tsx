@@ -1,6 +1,6 @@
 import { ReactNode, useMemo, useState } from 'react'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { DocumentReference } from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
 import { NotificationCard } from '@/shared/components'
 import { ManageTeamRosterPlayer } from './manage-team-roster-player'

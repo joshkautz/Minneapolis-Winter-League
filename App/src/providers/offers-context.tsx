@@ -11,7 +11,7 @@ import {
 	incomingOffersQuery,
 	FirestoreError,
 	QuerySnapshot,
-} from '@/firebase/firestore'
+} from '@/firebase'
 import { useAuthContext } from './auth-context'
 import { OfferDocument, logger } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'

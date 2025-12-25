@@ -13,7 +13,7 @@ import {
 	getTeamById,
 	DocumentSnapshot,
 	teamsBySeasonQuery,
-} from '@/firebase/firestore'
+} from '@/firebase'
 import { teamBadgesQuery } from '@/firebase/collections/badges'
 import {
 	GameDocument,

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
-import { QueryDocumentSnapshot } from '@/firebase/firestore'
+import { QueryDocumentSnapshot } from '@/firebase'
 import { TeamDocument, logger } from '@/shared/utils'
 import {
 	RolloverTeamFormData,

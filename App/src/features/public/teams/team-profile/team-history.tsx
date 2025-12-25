@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 
 import { NotificationCard } from '@/shared/components'
-import { DocumentSnapshot, QuerySnapshot } from '@/firebase/firestore'
+import { DocumentSnapshot, QuerySnapshot } from '@/firebase'
 import { useSeasonsContext, useGamesContext } from '@/providers'
 import { TeamDocument, hasAssignedTeams } from '@/shared/utils'
 

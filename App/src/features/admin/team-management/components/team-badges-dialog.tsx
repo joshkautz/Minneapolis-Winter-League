@@ -37,7 +37,7 @@ import {
 	PlayerDocument,
 	TeamDocument,
 } from '@/types'
-import { DocumentReference } from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase'
 
 interface ProcessedTeamBadge {
 	id: string

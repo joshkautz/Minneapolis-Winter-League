@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { getPlayersQuery, QueryDocumentSnapshot } from '@/firebase/firestore'
+import { getPlayersQuery, QueryDocumentSnapshot } from '@/firebase'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { NotificationCard } from '@/shared/components'
 import { PlayerDocument, TeamDocument } from '@/shared/utils'

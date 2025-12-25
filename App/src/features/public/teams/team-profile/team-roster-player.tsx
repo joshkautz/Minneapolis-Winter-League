@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { StarFilledIcon } from '@radix-ui/react-icons'
 import { Sparkles } from 'lucide-react'
 
-import { DocumentReference } from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
 	PlayerDocument,

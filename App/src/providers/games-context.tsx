@@ -13,7 +13,7 @@ import {
 	allGamesQuery,
 	FirestoreError,
 	QuerySnapshot,
-} from '@/firebase/firestore'
+} from '@/firebase'
 import { GameDocument, logger } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 

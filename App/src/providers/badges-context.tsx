@@ -6,7 +6,7 @@ import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 
 // Winter League
-import { FirestoreError, QuerySnapshot } from '@/firebase/firestore'
+import { FirestoreError, QuerySnapshot } from '@/firebase'
 import { allBadgesQuery } from '@/firebase/collections/badges'
 import { BadgeDocument } from '@/types'
 import { logger } from '@/shared/utils'

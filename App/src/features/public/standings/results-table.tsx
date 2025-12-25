@@ -1,4 +1,4 @@
-import { QuerySnapshot } from '@/firebase/firestore'
+import { QuerySnapshot } from '@/firebase'
 import { TeamDocument } from '@/shared/utils'
 import { TeamStanding } from '@/shared/hooks'
 import { SharedStandingsTable } from './shared-standings-table'

@@ -13,7 +13,7 @@ import {
 	seasonsQuery,
 	FirestoreError,
 	QueryDocumentSnapshot,
-} from '@/firebase/firestore'
+} from '@/firebase'
 import { SeasonDocument, logger } from '@/shared/utils'
 
 interface SeasonsContextValue {

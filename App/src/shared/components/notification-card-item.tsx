@@ -1,6 +1,6 @@
 import { cn, OfferDocument, OfferDirection } from '@/shared/utils'
 import { Button } from '@/components/ui/button'
-import { DocumentReference } from '@/firebase/firestore'
+import { DocumentReference } from '@/firebase'
 import { OfferDocumentWithUI } from '@/shared/hooks'
 import { LoadingSpinner } from '@/shared/components'
 

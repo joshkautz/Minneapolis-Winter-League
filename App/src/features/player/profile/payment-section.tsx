@@ -14,7 +14,7 @@ import {
 	Calendar,
 	Tag,
 } from 'lucide-react'
-import { stripeRegistration, QueryDocumentSnapshot } from '@/firebase/firestore'
+import { stripeRegistration, QueryDocumentSnapshot } from '@/firebase'
 import {
 	formatTimestamp,
 	SeasonDocument,
