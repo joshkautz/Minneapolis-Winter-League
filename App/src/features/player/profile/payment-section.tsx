@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
 import { User } from 'firebase/auth'
-import { Timestamp } from '@firebase/firestore'
+import { Timestamp, QuerySnapshot, DocumentSnapshot } from '@firebase/firestore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -12,9 +12,16 @@ import {
 	CreditCard,
 	AlertCircle,
 	Calendar,
+	Tag,
 } from 'lucide-react'
 import { stripeRegistration, QueryDocumentSnapshot } from '@/firebase/firestore'
-import { formatTimestamp, SeasonDocument } from '@/shared/utils'
+import {
+	formatTimestamp,
+	SeasonDocument,
+	didPlayerPayPreviousSeason,
+} from '@/shared/utils'
+import { getSeasonPriceId, getSeasonCouponId } from '@/firebase/stripe'
+import type { PlayerDocument } from '@/types'
 
 interface PaymentSectionProps {
 	authStateUser: User | null | undefined
@@ -25,6 +32,10 @@ interface PaymentSectionProps {
 	currentSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
+	/** Player document snapshot for checking previous season payment */
+	authenticatedUserSnapshot: DocumentSnapshot<PlayerDocument> | undefined
+	/** All seasons snapshot for determining previous season */
+	seasonsQuerySnapshot: QuerySnapshot<SeasonDocument> | undefined
 }
 
 /**
@@ -40,6 +51,8 @@ export const PaymentSection = ({
 	isAuthenticatedUserBanned,
 	isAuthenticatedUserPaid,
 	currentSeasonQueryDocumentSnapshot,
+	authenticatedUserSnapshot,
+	seasonsQuerySnapshot,
 }: PaymentSectionProps) => {
 	const [stripeLoading, setStripeLoading] = useState<boolean>(false)
 	const [stripeError, setStripeError] = useState<string>()
@@ -56,9 +69,44 @@ export const PaymentSection = ({
 		return undefined
 	}, [stripeError])
 
+	// Check if player is returning (paid for previous season)
+	const isReturningPlayer = useMemo(() => {
+		if (!authenticatedUserSnapshot || !seasonsQuerySnapshot) return false
+		return didPlayerPayPreviousSeason(
+			authenticatedUserSnapshot.data(),
+			seasonsQuerySnapshot
+		)
+	}, [authenticatedUserSnapshot, seasonsQuerySnapshot])
+
+	// Get Stripe price and coupon IDs from season document
+	const { priceId, couponId } = useMemo(() => {
+		const seasonData = currentSeasonQueryDocumentSnapshot?.data()
+		const price = getSeasonPriceId(seasonData)
+		// Only get coupon if player is returning
+		const coupon = isReturningPlayer ? getSeasonCouponId(seasonData) : null
+
+		return {
+			priceId: price,
+			couponId: coupon,
+		}
+	}, [currentSeasonQueryDocumentSnapshot, isReturningPlayer])
+
+	// Check if season has Stripe configuration
+	const isSeasonConfigured = Boolean(priceId)
+
 	const registrationButtonOnClickHandler = useCallback(() => {
-		stripeRegistration(authStateUser, setStripeLoading, setStripeError)
-	}, [authStateUser])
+		if (!priceId) {
+			setStripeError(
+				'Season payment not configured. Please contact an administrator.'
+			)
+			return
+		}
+
+		stripeRegistration(authStateUser, setStripeLoading, setStripeError, {
+			priceId,
+			couponId: couponId ?? undefined,
+		})
+	}, [authStateUser, priceId, couponId])
 
 	const getStatusBadge = () => {
 		if (isLoading || isAuthenticatedUserPaid === undefined) {
@@ -159,6 +207,14 @@ export const PaymentSection = ({
 								)}
 							</AlertDescription>
 						</Alert>
+					) : !isSeasonConfigured ? (
+						<Alert className='border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'>
+							<AlertCircle className='h-4 w-4 !text-amber-800 dark:!text-amber-200' />
+							<AlertDescription className='!text-amber-800 dark:!text-amber-200'>
+								Season payment is not yet configured. Please contact an
+								administrator.
+							</AlertDescription>
+						</Alert>
 					) : (
 						<Alert className='border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'>
 							<CreditCard className='h-4 w-4 !text-red-800 dark:!text-red-200' />
@@ -168,9 +224,25 @@ export const PaymentSection = ({
 						</Alert>
 					)}
 
+					{/* Returning player discount badge */}
+					{isReturningPlayer && couponId && isSeasonConfigured && (
+						<Badge
+							variant='outline'
+							className='gap-1 w-fit border-green-300 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-950 dark:text-green-200'
+						>
+							<Tag className='h-3 w-3' />
+							Returning player discount will be applied
+						</Badge>
+					)}
+
 					<Button
 						onClick={registrationButtonOnClickHandler}
-						disabled={isPaymentDisabled || stripeLoading || isUserBanned}
+						disabled={
+							isPaymentDisabled ||
+							stripeLoading ||
+							isUserBanned ||
+							!isSeasonConfigured
+						}
 						className='w-full'
 					>
 						{stripeLoading ? (

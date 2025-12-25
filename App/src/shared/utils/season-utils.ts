@@ -1,4 +1,4 @@
-import { DocumentReference } from 'firebase/firestore'
+import { DocumentReference, QuerySnapshot } from 'firebase/firestore'
 import { PlayerDocument, PlayerSeason, SeasonDocument } from '@/types'
 
 /**
@@ -70,4 +70,40 @@ export const isPlayerRosteredForSeason = (
 ): boolean => {
 	const seasonData = getPlayerSeasonData(playerData, seasonRef)
 	return Boolean(seasonData?.team)
+}
+
+/**
+ * Checks if a player paid for the previous season (making them eligible for returning player discount)
+ *
+ * @param playerData - The player document data
+ * @param seasonsSnapshot - Snapshot of all seasons (expected to be ordered by dateStart descending)
+ * @returns true if player paid for the immediately previous season
+ */
+export const didPlayerPayPreviousSeason = (
+	playerData: PlayerDocument | undefined,
+	seasonsSnapshot: QuerySnapshot<SeasonDocument> | undefined
+): boolean => {
+	// Need player data and at least 2 seasons (current + previous)
+	if (
+		!playerData?.seasons ||
+		!seasonsSnapshot ||
+		seasonsSnapshot.docs.length < 2
+	) {
+		return false
+	}
+
+	// Seasons are ordered by dateStart descending
+	// Index 0 = current season, Index 1 = previous season
+	const previousSeasonDoc = seasonsSnapshot.docs[1]
+
+	if (!previousSeasonDoc) {
+		return false
+	}
+
+	// Check if the player has a season entry for the previous season with paid: true
+	const previousSeasonData = playerData.seasons.find(
+		(season: PlayerSeason) => season.season.id === previousSeasonDoc.id
+	)
+
+	return Boolean(previousSeasonData?.paid)
 }

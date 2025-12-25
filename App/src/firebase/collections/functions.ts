@@ -686,6 +686,12 @@ interface CreateSeasonRequest {
 	registrationStart: Date
 	registrationEnd: Date
 	teamIds?: string[]
+	stripe?: {
+		priceId: string
+		priceIdDev?: string
+		returningPlayerCouponId?: string
+		returningPlayerCouponIdDev?: string
+	}
 }
 
 interface CreateSeasonResponse {
@@ -722,6 +728,12 @@ interface UpdateSeasonRequest {
 	registrationStart: Date
 	registrationEnd: Date
 	teamIds?: string[]
+	stripe?: {
+		priceId: string
+		priceIdDev?: string
+		returningPlayerCouponId?: string
+		returningPlayerCouponIdDev?: string
+	}
 }
 
 interface UpdateSeasonResponse {

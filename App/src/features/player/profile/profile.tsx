@@ -18,7 +18,8 @@ export const Profile = () => {
 		isEmailVerified: isVerified,
 		isBanned: isAuthenticatedUserBanned,
 	} = useUserStatus()
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const { currentSeasonQueryDocumentSnapshot, seasonsQuerySnapshot } =
+		useSeasonsContext()
 
 	const isLoading = useMemo(
 		() =>
@@ -58,6 +59,8 @@ export const Profile = () => {
 					currentSeasonQueryDocumentSnapshot={
 						currentSeasonQueryDocumentSnapshot
 					}
+					authenticatedUserSnapshot={authenticatedUserSnapshot}
+					seasonsQuerySnapshot={seasonsQuerySnapshot}
 				/>
 			</div>
 		</PageContainer>

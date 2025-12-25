@@ -181,6 +181,20 @@ export interface KarmaTransaction extends DocumentData {
 }
 
 /**
+ * Stripe payment configuration for a season
+ */
+export interface SeasonStripeConfig {
+	/** Stripe Price ID for production environment */
+	priceId: string
+	/** Stripe Price ID for development/test environment */
+	priceIdDev?: string
+	/** Coupon ID for returning player discount (production) */
+	returningPlayerCouponId?: string
+	/** Coupon ID for returning player discount (development) */
+	returningPlayerCouponIdDev?: string
+}
+
+/**
  * Season document structure representing a season in the system
  */
 export interface SeasonDocument extends DocumentData {
@@ -196,6 +210,8 @@ export interface SeasonDocument extends DocumentData {
 	registrationStart: Timestamp
 	/** Array of team references participating in this season */
 	teams: DocumentReference<TeamDocument>[]
+	/** Stripe payment configuration for this season */
+	stripe?: SeasonStripeConfig
 }
 
 /**

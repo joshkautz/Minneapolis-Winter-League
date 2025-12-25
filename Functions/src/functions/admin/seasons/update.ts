@@ -17,6 +17,12 @@ interface UpdateSeasonRequest {
 	registrationStart: Date
 	registrationEnd: Date
 	teamIds?: string[] // Optional array of team IDs to set for the season
+	stripe?: {
+		priceId: string
+		priceIdDev?: string
+		returningPlayerCouponId?: string
+		returningPlayerCouponIdDev?: string
+	}
 }
 
 interface UpdateSeasonResponse {
@@ -47,6 +53,7 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 			registrationStart,
 			registrationEnd,
 			teamIds,
+			stripe,
 		} = data
 
 		// Validate inputs
@@ -110,7 +117,23 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 										teamId
 									) as FirebaseFirestore.DocumentReference<TeamDocument>
 						)
-					: [] // Update the season document
+					: []
+
+			// Build stripe config (only include if at least priceId is provided)
+			const stripeConfig = stripe?.priceId
+				? {
+						priceId: stripe.priceId,
+						...(stripe.priceIdDev && { priceIdDev: stripe.priceIdDev }),
+						...(stripe.returningPlayerCouponId && {
+							returningPlayerCouponId: stripe.returningPlayerCouponId,
+						}),
+						...(stripe.returningPlayerCouponIdDev && {
+							returningPlayerCouponIdDev: stripe.returningPlayerCouponIdDev,
+						}),
+					}
+				: undefined
+
+			// Update the season document
 			const updateData: Partial<SeasonDocument> = {
 				name: name.trim(),
 				dateStart: dateStartTimestamp,
@@ -118,6 +141,7 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 				registrationStart: registrationStartTimestamp,
 				registrationEnd: registrationEndTimestamp,
 				teams: teamReferences,
+				...(stripeConfig && { stripe: stripeConfig }),
 			}
 
 			await seasonRef.update(updateData)

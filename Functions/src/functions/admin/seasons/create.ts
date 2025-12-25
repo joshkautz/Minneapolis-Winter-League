@@ -21,6 +21,12 @@ interface CreateSeasonRequest {
 	registrationStart: Date
 	registrationEnd: Date
 	teamIds?: string[] // Optional array of team IDs to add to the season
+	stripe?: {
+		priceId: string
+		priceIdDev?: string
+		returningPlayerCouponId?: string
+		returningPlayerCouponIdDev?: string
+	}
 }
 
 interface CreateSeasonResponse {
@@ -51,6 +57,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			registrationStart,
 			registrationEnd,
 			teamIds,
+			stripe,
 		} = data
 
 		// Validate inputs
@@ -102,7 +109,23 @@ export const createSeason = onCall<CreateSeasonRequest>(
 										teamId
 									) as FirebaseFirestore.DocumentReference<TeamDocument>
 						)
-					: [] // Create the season document
+					: []
+
+			// Build stripe config (only include if at least priceId is provided)
+			const stripeConfig = stripe?.priceId
+				? {
+						priceId: stripe.priceId,
+						...(stripe.priceIdDev && { priceIdDev: stripe.priceIdDev }),
+						...(stripe.returningPlayerCouponId && {
+							returningPlayerCouponId: stripe.returningPlayerCouponId,
+						}),
+						...(stripe.returningPlayerCouponIdDev && {
+							returningPlayerCouponIdDev: stripe.returningPlayerCouponIdDev,
+						}),
+					}
+				: undefined
+
+			// Create the season document
 			const seasonData: SeasonDocument = {
 				name: name.trim(),
 				dateStart: dateStartTimestamp,
@@ -110,6 +133,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				registrationStart: registrationStartTimestamp,
 				registrationEnd: registrationEndTimestamp,
 				teams: teamReferences,
+				...(stripeConfig && { stripe: stripeConfig }),
 			}
 
 			const seasonRef = await firestore

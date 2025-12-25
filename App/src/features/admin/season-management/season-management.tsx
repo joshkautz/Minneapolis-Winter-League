@@ -66,6 +66,12 @@ interface ProcessedSeason {
 	registrationEnd: Date
 	teamIds: string[]
 	teamCount: number
+	stripe?: {
+		priceId: string
+		priceIdDev?: string
+		returningPlayerCouponId?: string
+		returningPlayerCouponIdDev?: string
+	}
 }
 
 type DialogMode = 'create' | 'edit' | null
@@ -121,6 +127,12 @@ export const SeasonManagement = () => {
 	const [formRegistrationEnd, setFormRegistrationEnd] = useState('')
 	const [formTeamIds, setFormTeamIds] = useState<string[]>([])
 
+	// Stripe configuration form state
+	const [formStripePriceId, setFormStripePriceId] = useState('')
+	const [formStripePriceIdDev, setFormStripePriceIdDev] = useState('')
+	const [formStripeCouponId, setFormStripeCouponId] = useState('')
+	const [formStripeCouponIdDev, setFormStripeCouponIdDev] = useState('')
+
 	// Team selection state
 	const [availableTeams, setAvailableTeams] = useState<
 		{ id: string; name: string }[]
@@ -164,6 +176,7 @@ export const SeasonManagement = () => {
 							registrationEnd: seasonData.registrationEnd.toDate(),
 							teamIds,
 							teamCount: teamIds.length,
+							stripe: seasonData.stripe,
 						} as ProcessedSeason
 					} catch (error) {
 						logger.error('Error processing season', error, { seasonId })
@@ -237,6 +250,11 @@ export const SeasonManagement = () => {
 		setFormRegistrationEnd('')
 		setFormTeamIds([])
 		setAvailableTeams([])
+		// Reset Stripe fields
+		setFormStripePriceId('')
+		setFormStripePriceIdDev('')
+		setFormStripeCouponId('')
+		setFormStripeCouponIdDev('')
 	}
 
 	const openEditDialog = (season: ProcessedSeason) => {
@@ -248,6 +266,11 @@ export const SeasonManagement = () => {
 		setFormRegistrationStart(formatDateForInput(season.registrationStart))
 		setFormRegistrationEnd(formatDateForInput(season.registrationEnd))
 		setFormTeamIds(season.teamIds)
+		// Populate Stripe fields from existing data
+		setFormStripePriceId(season.stripe?.priceId || '')
+		setFormStripePriceIdDev(season.stripe?.priceIdDev || '')
+		setFormStripeCouponId(season.stripe?.returningPlayerCouponId || '')
+		setFormStripeCouponIdDev(season.stripe?.returningPlayerCouponIdDev || '')
 	}
 
 	const closeDialog = () => {
@@ -261,6 +284,11 @@ export const SeasonManagement = () => {
 		setFormTeamIds([])
 		setAvailableTeams([])
 		setSelectedTeamId('')
+		// Reset Stripe fields
+		setFormStripePriceId('')
+		setFormStripePriceIdDev('')
+		setFormStripeCouponId('')
+		setFormStripeCouponIdDev('')
 	}
 
 	const handleAddTeam = () => {
@@ -299,6 +327,20 @@ export const SeasonManagement = () => {
 		setIsSubmitting(true)
 
 		try {
+			// Build stripe config only if at least the production price ID is provided
+			const stripeConfig = formStripePriceId
+				? {
+						priceId: formStripePriceId,
+						...(formStripePriceIdDev && { priceIdDev: formStripePriceIdDev }),
+						...(formStripeCouponId && {
+							returningPlayerCouponId: formStripeCouponId,
+						}),
+						...(formStripeCouponIdDev && {
+							returningPlayerCouponIdDev: formStripeCouponIdDev,
+						}),
+					}
+				: undefined
+
 			const data = {
 				name: formName.trim(),
 				dateStart: new Date(formDateStart),
@@ -306,6 +348,7 @@ export const SeasonManagement = () => {
 				registrationStart: new Date(formRegistrationStart),
 				registrationEnd: new Date(formRegistrationEnd),
 				teamIds: formTeamIds,
+				stripe: stripeConfig,
 			}
 
 			if (dialogMode === 'create') {
@@ -665,6 +708,76 @@ export const SeasonManagement = () => {
 								</p>
 							</div>
 						)}
+
+						{/* Stripe Configuration */}
+						<div className='space-y-4 border-t pt-4 mt-4'>
+							<h4 className='font-medium text-sm'>Stripe Payment Configuration</h4>
+							<p className='text-xs text-muted-foreground'>
+								Configure Stripe price and coupon IDs for this season. Players
+								cannot pay until this is configured.
+							</p>
+
+							<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+								<div className='space-y-2'>
+									<Label htmlFor='stripePriceId'>
+										Price ID (Production){' '}
+										<span className='text-red-500'>*</span>
+									</Label>
+									<Input
+										id='stripePriceId'
+										placeholder='price_...'
+										value={formStripePriceId}
+										onChange={(e) => setFormStripePriceId(e.target.value)}
+									/>
+									<p className='text-xs text-muted-foreground'>
+										From Stripe Dashboard → Products
+									</p>
+								</div>
+								<div className='space-y-2'>
+									<Label htmlFor='stripePriceIdDev'>Price ID (Development)</Label>
+									<Input
+										id='stripePriceIdDev'
+										placeholder='price_...'
+										value={formStripePriceIdDev}
+										onChange={(e) => setFormStripePriceIdDev(e.target.value)}
+									/>
+									<p className='text-xs text-muted-foreground'>
+										Used when running locally
+									</p>
+								</div>
+							</div>
+
+							<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+								<div className='space-y-2'>
+									<Label htmlFor='stripeCouponId'>
+										Returning Player Coupon ID (Production)
+									</Label>
+									<Input
+										id='stripeCouponId'
+										placeholder='e.g., returning_player_2025'
+										value={formStripeCouponId}
+										onChange={(e) => setFormStripeCouponId(e.target.value)}
+									/>
+									<p className='text-xs text-muted-foreground'>
+										Auto-applied for players who paid last season
+									</p>
+								</div>
+								<div className='space-y-2'>
+									<Label htmlFor='stripeCouponIdDev'>
+										Returning Player Coupon ID (Development)
+									</Label>
+									<Input
+										id='stripeCouponIdDev'
+										placeholder='e.g., returning_player_dev'
+										value={formStripeCouponIdDev}
+										onChange={(e) => setFormStripeCouponIdDev(e.target.value)}
+									/>
+									<p className='text-xs text-muted-foreground'>
+										Used when running locally
+									</p>
+								</div>
+							</div>
+						</div>
 					</div>
 
 					<DialogFooter>
