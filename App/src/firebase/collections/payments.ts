@@ -42,15 +42,18 @@ export const stripeRegistration = async (
 	// Build the checkout session document
 	const checkoutSessionData: Record<string, unknown> = {
 		mode: 'payment',
-		allow_promotion_codes: true,
 		price: options.priceId,
 		success_url: window.location.href,
 		cancel_url: window.location.href,
 	}
 
 	// Auto-apply coupon if provided (e.g., returning player discount)
+	// Note: Stripe doesn't allow both discounts AND allow_promotion_codes
 	if (options.couponId) {
 		checkoutSessionData.discounts = [{ coupon: options.couponId }]
+	} else {
+		// Only allow manual promo codes if no coupon is auto-applied
+		checkoutSessionData.allow_promotion_codes = true
 	}
 
 	// Create new Checkout Session for the player
