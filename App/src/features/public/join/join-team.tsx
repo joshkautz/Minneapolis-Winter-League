@@ -7,14 +7,14 @@ import { ManageNonCaptainsOffersPanel } from '@/features/player/team/manage-non-
  */
 export const JoinTeam = () => {
 	return (
-		<div className='flex flex-col lg:flex-row justify-center items-center lg:items-start gap-4 max-w-6xl mx-auto'>
+		<div className='flex flex-col lg:flex-row items-stretch gap-4 w-full'>
 			{/* Main request card - appears first on mobile, left side on desktop */}
-			<div className='w-full max-w-2xl lg:flex-1 lg:max-w-none space-y-4'>
+			<div className='w-full lg:flex-1 space-y-4'>
 				<ManageTeamRequestCard />
 			</div>
 
 			{/* Offers panel - appears second on mobile, right side on desktop */}
-			<div className='w-full max-w-2xl lg:flex-1 lg:max-w-none'>
+			<div className='w-full lg:flex-1'>
 				<ManageNonCaptainsOffersPanel />
 			</div>
 		</div>

@@ -31,41 +31,40 @@ export const CreateTeam = () => {
 
 	if (isRostered) {
 		return (
-			<div className='flex justify-center'>
+			<div className='w-full'>
 				<TeamCreationStatusCard isRostered={isRostered} />
 			</div>
 		)
 	}
 
 	return (
-		<div className='flex justify-center'>
-			<div className='w-full max-w-2xl'>
-				<NotificationCard
-					title='Create Team'
-					description='Create a new team or rollover an existing team for the upcoming season'
-				>
-					<TeamCreationFormWrapper
-						rolloverMode={rolloverMode}
-						onToggleMode={toggleRolloverMode}
-						createNewForm={
-							<CreateTeamForm
-								setNewTeamDocument={setNewTeamDocument}
-								handleResult={handleResult}
-								seasonId={currentSeasonQueryDocumentSnapshot?.id || ''}
-								isTeamRegistrationFull={isTeamRegistrationFull}
-							/>
-						}
-						rolloverForm={
-							<RolloverTeamForm
-								setNewTeamDocument={setNewTeamDocument}
-								handleResult={handleResult}
-								seasonId={currentSeasonQueryDocumentSnapshot?.id || ''}
-								isTeamRegistrationFull={isTeamRegistrationFull}
-							/>
-						}
-					/>
-				</NotificationCard>
-			</div>
+		<div className='w-full'>
+			<NotificationCard
+				title='Create Team'
+				description='Create a new team or rollover an existing team for the upcoming season'
+				className='max-w-none'
+			>
+				<TeamCreationFormWrapper
+					rolloverMode={rolloverMode}
+					onToggleMode={toggleRolloverMode}
+					createNewForm={
+						<CreateTeamForm
+							setNewTeamDocument={setNewTeamDocument}
+							handleResult={handleResult}
+							seasonId={currentSeasonQueryDocumentSnapshot?.id || ''}
+							isTeamRegistrationFull={isTeamRegistrationFull}
+						/>
+					}
+					rolloverForm={
+						<RolloverTeamForm
+							setNewTeamDocument={setNewTeamDocument}
+							handleResult={handleResult}
+							seasonId={currentSeasonQueryDocumentSnapshot?.id || ''}
+							isTeamRegistrationFull={isTeamRegistrationFull}
+						/>
+					}
+				/>
+			</NotificationCard>
 		</div>
 	)
 }

@@ -57,6 +57,36 @@ export const PaymentSection = ({
 	const [stripeLoading, setStripeLoading] = useState<boolean>(false)
 	const [stripeError, setStripeError] = useState<string>()
 
+	// Check for payment status in URL and show toast
+	useEffect(() => {
+		const urlParams = new URLSearchParams(window.location.search)
+		const paymentStatus = urlParams.get('payment')
+
+		if (paymentStatus === 'success') {
+			toast.success('Payment Successful', {
+				description:
+					'Your registration payment has been processed. Please check your email for the waiver.',
+			})
+			// Clean up URL
+			urlParams.delete('payment')
+			const newUrl =
+				window.location.pathname +
+				(urlParams.toString() ? `?${urlParams.toString()}` : '')
+			window.history.replaceState({}, '', newUrl)
+		} else if (paymentStatus === 'cancel') {
+			toast.info('Payment Cancelled', {
+				description:
+					'Your payment was cancelled. You can try again when ready.',
+			})
+			// Clean up URL
+			urlParams.delete('payment')
+			const newUrl =
+				window.location.pathname +
+				(urlParams.toString() ? `?${urlParams.toString()}` : '')
+			window.history.replaceState({}, '', newUrl)
+		}
+	}, [])
+
 	useEffect(() => {
 		if (stripeError) {
 			toast.error('Failure', {

@@ -21,15 +21,30 @@ export const useOffer = (
 	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
 ) => {
 	const [offers, setOffers] = useState<OfferDocumentWithUI[] | undefined>()
-	const [offersLoading, setOffersLoading] = useState<boolean>(true)
+	const [offersLoading, setOffersLoading] = useState<boolean>(false)
+	const [isProcessing, setIsProcessing] = useState<boolean>(false)
 
 	useEffect(() => {
+		// If we don't have both snapshots, we can't process offers
+		// This is NOT a loading state - we just don't have data yet
 		if (!offersQuerySnapshot || !teamsQuerySnapshot) {
-			const timer = setTimeout(() => setOffersLoading(false), 0)
-			return () => clearTimeout(timer)
+			setOffers(undefined)
+			setOffersLoading(false)
+			return
 		}
 
-		const loadingTimer = setTimeout(() => setOffersLoading(true), 0)
+		// If there are no offers, no need to process
+		if (offersQuerySnapshot.docs.length === 0) {
+			setOffers([])
+			setOffersLoading(false)
+			return
+		}
+
+		// We have offers to process - show loading
+		setOffersLoading(true)
+		setIsProcessing(true)
+
+		let isCancelled = false
 
 		Promise.all(
 			offersQuerySnapshot.docs.map(
@@ -60,12 +75,17 @@ export const useOffer = (
 				}
 			)
 		).then((updatedOffers: OfferDocumentWithUI[]) => {
-			setOffersLoading(false)
-			setOffers(updatedOffers)
+			if (!isCancelled) {
+				setOffers(updatedOffers)
+				setOffersLoading(false)
+				setIsProcessing(false)
+			}
 		})
 
-		return () => clearTimeout(loadingTimer)
+		return () => {
+			isCancelled = true
+		}
 	}, [offersQuerySnapshot, teamsQuerySnapshot])
 
-	return { offers, offersLoading }
+	return { offers, offersLoading: offersLoading || isProcessing }
 }

@@ -35,14 +35,38 @@ service cloud.firestore {
       }
     }
     
-    // PRODUCTS: Public read access for pricing display
+    // STRIPE: New custom Stripe integration (replaces customers collection)
+    match /stripe/{uid} {
+      allow read: if isAuthenticated() && request.auth.uid == uid;
+
+      // Checkout sessions: User can read and write their own
+      match /checkouts/{id} {
+        allow read, write: if isAuthenticated() && request.auth.uid == uid;
+      }
+
+      // Payments: Read-only for users (created by webhook)
+      match /payments/{id} {
+        allow read: if isAuthenticated() && request.auth.uid == uid;
+      }
+    }
+
+    // Synced Stripe products/prices: Public read for pricing display
+    match /stripe/products/items/{id} {
+      allow read: if true;
+    }
+
+    match /stripe/prices/items/{id} {
+      allow read: if true;
+    }
+
+    // PRODUCTS: Public read access for pricing display (legacy - Firebase Stripe Extension)
     match /products/{id} {
       allow read: if true;
-      
+
       match /prices/{id} {
         allow read: if true;
       }
-      
+
       match /tax_rates/{id} {
         allow read: if true;
       }

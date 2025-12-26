@@ -55,8 +55,9 @@ export const ManageTeamRequestCard = () => {
 
 	return (
 		<NotificationCard
-			title={'Team list'}
-			description={'request to join a team below'}
+			title={'Team List'}
+			description={'Teams available to join this season'}
+			className='max-w-none'
 		>
 			{currentSeasonTeamsQuerySnapshotLoading ? (
 				<div className={'inset-0 flex items-center justify-center'}>

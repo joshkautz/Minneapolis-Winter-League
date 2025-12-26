@@ -66,10 +66,10 @@ export const ManageInvitePlayerList = () => {
 
 	return (
 		<NotificationCard
-			title={'Invite players'}
-			description={'players eligible for team roster invitations.'}
+			title={'Invite Players'}
+			description={'Players eligible for team roster invitations'}
 			scrollArea
-			className='w-full max-w-full overflow-hidden'
+			className='max-w-none'
 			searchBar={
 				<ManageInvitePlayerSearchBar
 					value={search}

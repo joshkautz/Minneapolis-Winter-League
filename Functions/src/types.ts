@@ -40,6 +40,7 @@ export enum Collections {
 	// RANKINGS_CALCULATED_ROUNDS removed - incremental updates deprecated in favor of full rebuilds
 	SEASONS = 'seasons',
 	SITE_SETTINGS = 'siteSettings',
+	STRIPE = 'stripe',
 	TEAMS = 'teams',
 	WAIVERS = 'waivers',
 }

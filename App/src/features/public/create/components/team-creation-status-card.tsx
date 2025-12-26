@@ -21,7 +21,7 @@ export const TeamCreationStatusCard = ({
 }: TeamCreationStatusCardProps) => {
 	if (isRostered) {
 		return (
-			<Card className={cn('max-w-2xl w-full')}>
+			<Card className={cn('w-full')}>
 				<CardHeader className='text-center'>
 					<div className='flex justify-center mb-2'>
 						<Users className='h-12 w-12 text-muted-foreground' />

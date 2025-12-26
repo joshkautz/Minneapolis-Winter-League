@@ -90,6 +90,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 			footerContent={
 				isAuthenticatedUserCaptain ? registrationStatus : undefined
 			}
+			className='max-w-none'
 		>
 			<div className='space-y-0 -mx-1'>
 				{team?.data().roster.map(

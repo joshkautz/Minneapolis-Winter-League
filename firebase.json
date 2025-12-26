@@ -31,6 +31,13 @@
 				}
 			},
 			{
+				"source": "/stripeWebhook",
+				"function": {
+					"functionId": "stripeWebhook",
+					"region": "us-central1"
+				}
+			},
+			{
 				"source": "**",
 				"destination": "/index.html"
 			}

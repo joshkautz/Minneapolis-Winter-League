@@ -23,18 +23,19 @@ export const TeamManagementView = ({
 	return (
 		<PageContainer withSpacing withGap>
 			<PageHeader
-				title={isLoading ? 'Loading...' : 'Team Management'}
+				title={isLoading ? 'Loading...' : 'My Team'}
 				description={
 					isLoading
-						? 'Loading team management...'
-						: 'Manage team roster, invitations, and settings'
+						? 'Loading team details...'
+						: 'Manage your team roster, invitations, and settings'
 				}
 				icon={Users}
+				showSeasonIndicator
 			/>
 
-			<div className='flex flex-col lg:flex-row justify-center items-center lg:items-start gap-4 max-w-6xl mx-auto'>
+			<div className='flex flex-col lg:flex-row items-stretch gap-4 w-full'>
 				{/* Main content - appears first on mobile, left side on desktop */}
-				<div className='w-full max-w-2xl lg:w-1/2 lg:max-w-none'>
+				<div className='w-full lg:flex-1'>
 					<ManageTeamRosterCard
 						actions={
 							isCaptain ? <ManageCaptainActions /> : <ManageNonCaptainActions />
@@ -43,7 +44,7 @@ export const TeamManagementView = ({
 				</div>
 
 				{/* Offers panel - appears second on mobile, right side on desktop */}
-				<div className='w-full max-w-2xl lg:w-1/2 lg:max-w-none space-y-4 min-w-0 overflow-hidden'>
+				<div className='w-full lg:flex-1 space-y-4 min-w-0'>
 					{isCaptain ? (
 						<ManageCaptainsOffersPanel />
 					) : (

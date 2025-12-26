@@ -7,11 +7,27 @@ import {
 	collection,
 	onSnapshot,
 	type DocumentReference,
+	type Unsubscribe,
 } from 'firebase/firestore'
 
 import { firestore } from '../app'
 import { User } from '../auth'
 import { CheckoutSessionDocument } from '@/shared/utils'
+
+/** Timeout for waiting for checkout URL (30 seconds) */
+const CHECKOUT_TIMEOUT_MS = 30000
+
+/**
+ * Builds a URL with payment status query parameter
+ */
+function buildPaymentReturnUrl(status: 'success' | 'cancel'): string {
+	const url = new URL(window.location.href)
+	// Remove any existing payment params
+	url.searchParams.delete('payment')
+	// Add the new status
+	url.searchParams.set('payment', status)
+	return url.toString()
+}
 
 /**
  * Options for creating a Stripe checkout session
@@ -36,49 +52,99 @@ export const stripeRegistration = async (
 	setStripeLoading: React.Dispatch<React.SetStateAction<boolean>>,
 	setStripeError: React.Dispatch<React.SetStateAction<string | undefined>>,
 	options: StripeRegistrationOptions
-) => {
+): Promise<void> => {
+	if (!authValue?.uid) {
+		setStripeError('You must be logged in to register')
+		return
+	}
+
 	setStripeLoading(true)
+	setStripeError(undefined)
 
-	// Build the checkout session document
-	const checkoutSessionData: Record<string, unknown> = {
-		mode: 'payment',
-		price: options.priceId,
-		success_url: window.location.href,
-		cancel_url: window.location.href,
+	let unsubscribe: Unsubscribe | undefined
+	let timeoutId: ReturnType<typeof setTimeout> | undefined
+
+	// Cleanup function to prevent memory leaks
+	const cleanup = () => {
+		if (unsubscribe) {
+			unsubscribe()
+			unsubscribe = undefined
+		}
+		if (timeoutId) {
+			clearTimeout(timeoutId)
+			timeoutId = undefined
+		}
 	}
 
-	// Auto-apply coupon if provided (e.g., returning player discount)
-	// Note: Stripe doesn't allow both discounts AND allow_promotion_codes
-	if (options.couponId) {
-		checkoutSessionData.discounts = [{ coupon: options.couponId }]
-	} else {
-		// Only allow manual promo codes if no coupon is auto-applied
-		checkoutSessionData.allow_promotion_codes = true
-	}
+	try {
+		// Build the checkout session document
+		const checkoutSessionData: Record<string, unknown> = {
+			mode: 'payment',
+			price: options.priceId,
+			success_url: buildPaymentReturnUrl('success'),
+			cancel_url: buildPaymentReturnUrl('cancel'),
+		}
 
-	// Create new Checkout Session for the player
-	return (
-		addDoc(
-			collection(firestore, `customers/${authValue?.uid}/checkout_sessions`),
+		// Auto-apply coupon if provided (e.g., returning player discount)
+		// Note: Stripe doesn't allow both discounts AND allow_promotion_codes
+		if (options.couponId) {
+			checkoutSessionData.discounts = [{ coupon: options.couponId }]
+		} else {
+			// Only allow manual promo codes if no coupon is auto-applied
+			checkoutSessionData.allow_promotion_codes = true
+		}
+
+		// Create new Checkout Session for the player
+		const checkoutSessionDocRef = (await addDoc(
+			collection(firestore, `stripe/${authValue.uid}/checkouts`),
 			checkoutSessionData
-		) as Promise<DocumentReference<CheckoutSessionDocument>>
-	).then((checkoutSessionDocumentReference) => {
+		)) as DocumentReference<CheckoutSessionDocument>
+
+		// Set up timeout for checkout URL
+		timeoutId = setTimeout(() => {
+			cleanup()
+			setStripeLoading(false)
+			setStripeError(
+				'Checkout is taking longer than expected. Please try again.'
+			)
+		}, CHECKOUT_TIMEOUT_MS)
+
 		// Listen for the URL of the Checkout Session
-		onSnapshot(
-			checkoutSessionDocumentReference,
+		unsubscribe = onSnapshot(
+			checkoutSessionDocRef,
 			(checkoutSessionDocumentSnapshot) => {
 				const data = checkoutSessionDocumentSnapshot.data()
 				if (data) {
 					if (data.url) {
-						// We have a Stripe Checkout URL, let's redirect.
+						// We have a Stripe Checkout URL, clean up and redirect
+						cleanup()
 						window.location.assign(data.url)
 					}
 					if (data.error) {
+						// Error occurred, clean up and show error
+						cleanup()
 						setStripeLoading(false)
-						setStripeError(data.error.message)
+						setStripeError(
+							data.error.message || 'An error occurred during checkout'
+						)
 					}
 				}
+			},
+			(error) => {
+				// Snapshot listener error
+				cleanup()
+				setStripeLoading(false)
+				setStripeError(error.message || 'Failed to connect to payment service')
 			}
 		)
-	})
+	} catch (error) {
+		// Error creating the checkout session document
+		cleanup()
+		setStripeLoading(false)
+		setStripeError(
+			error instanceof Error
+				? error.message
+				: 'Failed to create checkout session'
+		)
+	}
 }

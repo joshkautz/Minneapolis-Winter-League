@@ -7,6 +7,7 @@ import { logger } from 'firebase-functions/v2'
 interface EnvironmentConfig {
 	dropboxSignApiKey: string
 	stripeSecretKey: string
+	stripeWebhookSecret: string
 	nodeEnv: string
 	isProduction: boolean
 	isDevelopment: boolean
@@ -20,6 +21,7 @@ export function getEnvironmentConfig(): EnvironmentConfig {
 	const nodeEnv = process.env.NODE_ENV || 'development'
 	const dropboxSignApiKey = process.env.DROPBOX_SIGN_API_KEY
 	const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+	const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
 	// In production, secrets are injected as environment variables by Firebase
 	// In development, they come from .secret.local file (loaded by emulator)
@@ -35,13 +37,19 @@ export function getEnvironmentConfig(): EnvironmentConfig {
 		const error =
 			'STRIPE_SECRET_KEY is required (set via Firebase secret or .secret.local)'
 		logger.warn(error)
-		// Don't throw to allow functions to load even without secrets
-		// Functions that need the secret will fail at runtime instead
+	}
+
+	if (!stripeWebhookSecret) {
+		const error =
+			'STRIPE_WEBHOOK_SECRET is required (set via Firebase secret or .secret.local)'
+		logger.warn(error)
 	}
 
 	return {
 		dropboxSignApiKey: dropboxSignApiKey || 'DEVELOPMENT_PLACEHOLDER_DROPBOX',
 		stripeSecretKey: stripeSecretKey || 'DEVELOPMENT_PLACEHOLDER_STRIPE',
+		stripeWebhookSecret:
+			stripeWebhookSecret || 'DEVELOPMENT_PLACEHOLDER_STRIPE_WEBHOOK',
 		nodeEnv,
 		isProduction: nodeEnv === 'production',
 		isDevelopment: nodeEnv === 'development',

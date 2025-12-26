@@ -35,12 +35,14 @@ export function getDropboxSignConfig(): {
 // Stripe Configuration (lazy-loaded)
 export function getStripeConfig(): {
 	readonly SECRET_KEY: string
-	readonly API_VERSION: '2025-08-27.basil'
+	readonly WEBHOOK_SECRET: string
+	readonly API_VERSION: '2025-12-15.clover'
 } {
 	const env = getENV()
 	return {
 		SECRET_KEY: env.stripeSecretKey,
-		API_VERSION: '2025-08-27.basil' as const,
+		WEBHOOK_SECRET: env.stripeWebhookSecret,
+		API_VERSION: '2025-12-15.clover' as const,
 	} as const
 }
 

@@ -33,7 +33,7 @@ export const TeamOptionsView = ({ isLoading }: TeamOptionsViewProps) => {
 	return (
 		<PageContainer withSpacing withGap>
 			<PageHeader
-				title={isLoading ? 'Loading...' : 'Team Options'}
+				title={isLoading ? 'Loading...' : 'Find a Team'}
 				description={
 					isLoading
 						? 'Loading team options...'
@@ -44,7 +44,7 @@ export const TeamOptionsView = ({ isLoading }: TeamOptionsViewProps) => {
 
 			<Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
 				<div className='flex justify-center'>
-					<TabsList className='grid w-fit grid-cols-2'>
+					<TabsList className='grid w-full max-w-md grid-cols-2'>
 						<TabsTrigger value='join' className='flex items-center gap-2'>
 							<Users className='h-4 w-4' />
 							Join Team
@@ -56,23 +56,21 @@ export const TeamOptionsView = ({ isLoading }: TeamOptionsViewProps) => {
 					</TabsList>
 				</div>
 
-				<TabsContent value='join' className='mt-6'>
+				<TabsContent value='join' className='mt-6 w-full'>
 					<JoinTeam />
 				</TabsContent>
 
-				<TabsContent value='create' className='mt-6'>
+				<TabsContent value='create' className='mt-6 w-full'>
 					{isTeamRegistrationFull && (
-						<div className='flex justify-center mb-6'>
-							<div className='w-full max-w-2xl'>
-								<Alert>
-									<AlertCircle className='h-4 w-4' />
-									<AlertTitle>Team Registration Full</AlertTitle>
-									<AlertDescription>
-										The league has reached the maximum of 12 fully registered
-										teams for this season. Team creation is currently disabled.
-									</AlertDescription>
-								</Alert>
-							</div>
+						<div className='mb-6'>
+							<Alert>
+								<AlertCircle className='h-4 w-4' />
+								<AlertTitle>Team Registration Full</AlertTitle>
+								<AlertDescription>
+									The league has reached the maximum of 12 fully registered
+									teams for this season. Team creation is currently disabled.
+								</AlertDescription>
+							</Alert>
 						</div>
 					)}
 					<CreateTeam />

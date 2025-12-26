@@ -117,20 +117,6 @@
 			"queryScope": "COLLECTION",
 			"fields": [
 				{
-					"fieldPath": "registered",
-					"order": "ASCENDING"
-				},
-				{
-					"fieldPath": "team",
-					"order": "ASCENDING"
-				}
-			]
-		},
-		{
-			"collectionGroup": "players",
-			"queryScope": "COLLECTION",
-			"fields": [
-				{
 					"fieldPath": "lastname",
 					"order": "ASCENDING"
 				},
@@ -172,6 +158,116 @@
 				},
 				{
 					"fieldPath": "amount",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "waivers",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "player",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "season",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "offers",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "player",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "season",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "status",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "offers",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "player",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "type",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "status",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "offers",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "team",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "type",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "status",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "teams",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "season",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "registered",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "teams",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "teamId",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "season",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "games",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "date",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "field",
 					"order": "ASCENDING"
 				}
 			]

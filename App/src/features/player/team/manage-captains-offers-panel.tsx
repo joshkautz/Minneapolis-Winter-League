@@ -1,12 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import {
-	OfferDocument,
-	OfferDirection,
-	getInviteMessage,
-	getRequestMessage,
-	logger,
-} from '@/shared/utils'
+import { OfferDocument, OfferDirection, logger } from '@/shared/utils'
 import {
 	NotificationCard,
 	LoadingSpinner,
@@ -121,7 +115,8 @@ export const ManageCaptainsOffersPanel = () => {
 		<div className='w-full space-y-4'>
 			<NotificationCard
 				title={'Incoming Requests'}
-				description={getRequestMessage(incomingRequests?.length)}
+				description={'Players that want to join your team'}
+				className='max-w-none'
 			>
 				{incomingOffersQuerySnapshotLoading || incomingRequestsLoading ? (
 					<div className={'inset-0 flex items-center justify-center'}>
@@ -168,7 +163,8 @@ export const ManageCaptainsOffersPanel = () => {
 			</NotificationCard>
 			<NotificationCard
 				title={'Outgoing Invitations'}
-				description={getInviteMessage(outgoingInvites?.length)}
+				description={'Players you have invited to join'}
+				className='max-w-none'
 			>
 				{outgoingOffersQuerySnapshotLoading || outgoingInvitesLoading ? (
 					<div className={'inset-0 flex items-center justify-center'}>

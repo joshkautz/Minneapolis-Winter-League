@@ -23,16 +23,16 @@ import { SignatureRequestApi, SubSigningOptions } from '@dropbox/sign'
  */
 export const onPaymentCreated = onDocumentCreated(
 	{
-		document: 'customers/{uid}/payments/{sid}',
+		document: 'stripe/{uid}/payments/{paymentId}',
 		region: FIREBASE_CONFIG.REGION,
 		secrets: ['DROPBOX_SIGN_API_KEY'],
 	},
 	async (event) => {
-		const { uid, sid } = event.params
+		const { uid, paymentId } = event.params
 
 		try {
 			logger.info(
-				`Processing payment creation for user: ${uid}, payment: ${sid}`
+				`Processing payment creation for user: ${uid}, payment: ${paymentId}`
 			)
 
 			const firestore = getFirestore()
@@ -42,15 +42,15 @@ export const onPaymentCreated = onDocumentCreated(
 
 			// Get payment document
 			const paymentDoc = await firestore
-				.collection('customers')
+				.collection('stripe')
 				.doc(uid)
 				.collection('payments')
-				.doc(sid)
+				.doc(paymentId)
 				.get()
 
 			const paymentData = paymentDoc.data()
-			if (!paymentData || paymentData.status !== 'succeeded') {
-				logger.info(`Payment not succeeded for user: ${uid}`)
+			if (!paymentData || paymentData.status !== 'paid') {
+				logger.info(`Payment not paid for user: ${uid}`)
 				return
 			}
 
@@ -70,6 +70,18 @@ export const onPaymentCreated = onDocumentCreated(
 
 			const playerDocument = playerDoc.data() as PlayerDocument
 
+			// Check if player is already paid for this season (idempotency check)
+			const currentSeasonData = playerDocument.seasons?.find(
+				(season) => season.season.id === currentSeason.id
+			)
+
+			if (currentSeasonData?.paid) {
+				logger.info(
+					`Player ${uid} already paid for season ${currentSeason.id}, skipping`
+				)
+				return
+			}
+
 			// Update player's paid status for current season
 			const updatedSeasons =
 				playerDocument.seasons?.map((season) =>
@@ -79,6 +91,21 @@ export const onPaymentCreated = onDocumentCreated(
 				) || []
 
 			await playerDoc.ref.update({ seasons: updatedSeasons })
+
+			// Check if waiver already exists for this player/season (idempotency check)
+			const existingWaiver = await firestore
+				.collection(Collections.WAIVERS)
+				.where('player', '==', playerDoc.ref)
+				.where('season', '==', currentSeason.id)
+				.limit(1)
+				.get()
+
+			if (!existingWaiver.empty) {
+				logger.info(
+					`Waiver already exists for player ${uid} in season ${currentSeason.id}, skipping`
+				)
+				return
+			}
 
 			// Send Dropbox signature request
 			const signatureResponse = await dropbox.signatureRequestSendWithTemplate({
@@ -118,7 +145,7 @@ export const onPaymentCreated = onDocumentCreated(
 				`Successfully processed payment and created waiver for user: ${uid}`
 			)
 		} catch (error) {
-			throw handleFunctionError(error, 'onPaymentCreated', { uid, sid })
+			throw handleFunctionError(error, 'onPaymentCreated', { uid, paymentId })
 		}
 	}
 )

@@ -38,30 +38,34 @@ export const Profile = () => {
 	}
 
 	return (
-		<PageContainer>
+		<PageContainer withSpacing withGap>
 			<PageHeader
 				title='Profile'
 				description='Manage your player profile and account settings'
 				icon={User}
 			/>
 
-			<div className='grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto'>
-				<ProfileForm authenticatedUserSnapshot={authenticatedUserSnapshot} />
+			<div className='flex flex-col lg:flex-row items-stretch gap-6 w-full'>
+				<div className='w-full lg:flex-1'>
+					<ProfileForm authenticatedUserSnapshot={authenticatedUserSnapshot} />
+				</div>
 
-				<ProfileActions
-					authStateUser={authStateUser}
-					isVerified={isVerified}
-					isLoading={isLoading}
-					isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
-					isAuthenticatedUserBanned={isAuthenticatedUserBanned}
-					isAuthenticatedUserPaid={isAuthenticatedUserPaid}
-					isAuthenticatedUserSigned={isAuthenticatedUserSigned}
-					currentSeasonQueryDocumentSnapshot={
-						currentSeasonQueryDocumentSnapshot
-					}
-					authenticatedUserSnapshot={authenticatedUserSnapshot}
-					seasonsQuerySnapshot={seasonsQuerySnapshot}
-				/>
+				<div className='w-full lg:flex-1'>
+					<ProfileActions
+						authStateUser={authStateUser}
+						isVerified={isVerified}
+						isLoading={isLoading}
+						isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
+						isAuthenticatedUserBanned={isAuthenticatedUserBanned}
+						isAuthenticatedUserPaid={isAuthenticatedUserPaid}
+						isAuthenticatedUserSigned={isAuthenticatedUserSigned}
+						currentSeasonQueryDocumentSnapshot={
+							currentSeasonQueryDocumentSnapshot
+						}
+						authenticatedUserSnapshot={authenticatedUserSnapshot}
+						seasonsQuerySnapshot={seasonsQuerySnapshot}
+					/>
+				</div>
 			</div>
 		</PageContainer>
 	)

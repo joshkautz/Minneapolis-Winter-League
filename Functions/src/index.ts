@@ -54,7 +54,7 @@ export { updateTeamRegistrationOnRosterChange } from './triggers/documents/teamU
 export { onTeamRegistrationChange } from './triggers/documents/teamRegistrationLock.js'
 
 // Payment triggers
-// export { onCheckoutSessionCreated } from './triggers/payments/checkoutSessionCreated.js'
+export { onCheckoutSessionCreated } from './triggers/payments/checkoutSessionCreated.js'
 export { onPaymentCreated } from './triggers/payments/paymentCreated.js'
 
 //////////////////////////////////////////////////////////////////////////////
@@ -63,6 +63,7 @@ export { onPaymentCreated } from './triggers/payments/paymentCreated.js'
 
 // Webhooks
 export { dropboxSignWebhook } from './api/webhooks/dropboxSign.js'
+export { stripeWebhook } from './api/webhooks/stripe.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // CALLABLE FUNCTIONS
