@@ -84,3 +84,7 @@ What other changes and optimizations should we do to our data structure models i
 Firestore and Firebase best practices and industry standards? Please analyze and audit all of our collections and document structures.
 
 How would you go about migrating the data to the new structure?
+
+Update the package.json run script commands to only have one single set of test data, which is a copy of up-to-date production data.
+
+Add e2e tests that can ideally run with firebae emulator suite.

@@ -134,7 +134,6 @@ See `docs/setup/ENVIRONMENT_VARIABLES.md` for complete configuration.
 Key app-specific variables:
 
 - `VITE_FIREBASE_CONFIG` - Firebase project configuration
-- `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe payment integration
 - `VITE_APP_ENV` - Application environment
 
 ### Build Configuration
