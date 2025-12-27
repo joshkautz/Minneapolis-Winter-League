@@ -255,15 +255,24 @@ export const RegistrationManagement = () => {
 	}
 
 	// Handle query errors
-	if (seasonsError || playersError) {
-		const error = seasonsError || playersError
+	if (seasonsError) {
 		return (
 			<PageContainer>
 				<QueryError
-					error={error!}
-					title={
-						seasonsError ? 'Error Loading Seasons' : 'Error Loading Players'
-					}
+					error={seasonsError}
+					title='Error Loading Seasons'
+					onRetry={() => window.location.reload()}
+				/>
+			</PageContainer>
+		)
+	}
+
+	if (playersError) {
+		return (
+			<PageContainer>
+				<QueryError
+					error={playersError}
+					title='Error Loading Players'
 					onRetry={() => window.location.reload()}
 				/>
 			</PageContainer>

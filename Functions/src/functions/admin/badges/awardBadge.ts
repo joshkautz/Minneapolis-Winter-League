@@ -54,11 +54,11 @@ export const awardBadge = onCall<AwardBadgeRequest>(
 		try {
 			const firestore = getFirestore()
 
-			// Validate admin authentication
-			await validateAdminUser(auth, firestore)
+			// Validate admin authentication and get validated user ID
+			const userId = await validateAdminUser(auth, firestore)
 
 			// Get user reference
-			const userRef = firestore.collection(Collections.PLAYERS).doc(auth!.uid)
+			const userRef = firestore.collection(Collections.PLAYERS).doc(userId)
 
 			// Verify badge exists
 			const badgeRef = firestore.collection(Collections.BADGES).doc(badgeId)
@@ -155,7 +155,7 @@ export const awardBadge = onCall<AwardBadgeRequest>(
 				badgeName: badge.name,
 				teamId,
 				teamName: team.name,
-				awardedBy: auth!.uid,
+				awardedBy: userId,
 				incrementedStats: shouldIncrementStats,
 			})
 
@@ -176,7 +176,7 @@ export const awardBadge = onCall<AwardBadgeRequest>(
 				error instanceof Error ? error.message : 'Unknown error'
 
 			logger.error('Error awarding badge to team:', {
-				userId: auth!.uid,
+				userId: auth?.uid,
 				badgeId: data.badgeId,
 				teamId: data.teamId,
 				error: errorMessage,

@@ -53,7 +53,9 @@ export const SparklesCore = ({
 			await loadHeartShape(engine)
 		})
 			.then(() => setInit(true))
-			.catch(console.error)
+			.catch(() => {
+				// Silently ignore initialization errors - particles are decorative
+			})
 	}, [])
 
 	// Memoize callback to prevent unnecessary re-renders

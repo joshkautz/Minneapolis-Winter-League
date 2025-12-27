@@ -259,13 +259,24 @@ export const TeamManagement = () => {
 	}
 
 	// Handle query errors
-	if (seasonsError || teamsError) {
-		const error = seasonsError || teamsError
+	if (seasonsError) {
 		return (
 			<div className='container mx-auto px-4 py-8'>
 				<QueryError
-					error={error!}
-					title={seasonsError ? 'Error Loading Seasons' : 'Error Loading Teams'}
+					error={seasonsError}
+					title='Error Loading Seasons'
+					onRetry={() => window.location.reload()}
+				/>
+			</div>
+		)
+	}
+
+	if (teamsError) {
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<QueryError
+					error={teamsError}
+					title='Error Loading Teams'
 					onRetry={() => window.location.reload()}
 				/>
 			</div>

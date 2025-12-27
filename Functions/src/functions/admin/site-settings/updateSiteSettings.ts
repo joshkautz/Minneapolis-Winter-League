@@ -51,8 +51,8 @@ export const updateSiteSettings = onCall<UpdateSiteSettingsRequest>(
 		try {
 			const firestore = getFirestore()
 
-			// Validate admin authentication
-			await validateAdminUser(auth, firestore)
+			// Validate admin authentication and get validated user ID
+			const userId = await validateAdminUser(auth, firestore)
 
 			// Update site settings document
 			const settingsRef = firestore
@@ -63,7 +63,7 @@ export const updateSiteSettings = onCall<UpdateSiteSettingsRequest>(
 
 			logger.info('Site settings updated successfully', {
 				themeVariant,
-				updatedBy: auth!.uid,
+				updatedBy: userId,
 			})
 
 			return {

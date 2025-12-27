@@ -49,8 +49,8 @@ export const revokeBadge = onCall<RevokeBadgeRequest>(
 		try {
 			const firestore = getFirestore()
 
-			// Validate admin authentication
-			await validateAdminUser(auth, firestore)
+			// Validate admin authentication and get validated user ID
+			const userId = await validateAdminUser(auth, firestore)
 
 			// Verify badge exists
 			const badgeRef = firestore.collection(Collections.BADGES).doc(badgeId)
@@ -128,7 +128,7 @@ export const revokeBadge = onCall<RevokeBadgeRequest>(
 				badgeName: badge.name,
 				teamId,
 				teamName: team.name,
-				revokedBy: auth!.uid,
+				revokedBy: userId,
 				decrementedStats: shouldDecrementStats,
 			})
 
@@ -149,7 +149,7 @@ export const revokeBadge = onCall<RevokeBadgeRequest>(
 				error instanceof Error ? error.message : 'Unknown error'
 
 			logger.error('Error revoking badge from team:', {
-				userId: auth!.uid,
+				userId: auth?.uid,
 				badgeId: data.badgeId,
 				teamId: data.teamId,
 				error: errorMessage,

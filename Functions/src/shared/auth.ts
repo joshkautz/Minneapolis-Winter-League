@@ -38,11 +38,12 @@ export function validateBasicAuthentication(
 
 /**
  * Validates that a user is an admin
+ * @returns The validated user ID (never null after this returns)
  */
 export async function validateAdminUser(
 	auth: CallableRequest['auth'],
 	firestore: Firestore
-): Promise<void> {
+): Promise<string> {
 	validateAuthentication(auth)
 
 	if (!auth?.uid) {
@@ -57,4 +58,6 @@ export async function validateAdminUser(
 	) {
 		throw new Error('Admin privileges required')
 	}
+
+	return auth.uid
 }

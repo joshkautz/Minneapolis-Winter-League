@@ -393,13 +393,24 @@ export const NewsManagement = () => {
 	}
 
 	// Handle query errors
-	if (seasonsError || newsError) {
-		const error = seasonsError || newsError
+	if (seasonsError) {
 		return (
 			<div className='container mx-auto px-4 py-8'>
 				<QueryError
-					error={error!}
-					title={seasonsError ? 'Error Loading Seasons' : 'Error Loading News'}
+					error={seasonsError}
+					title='Error Loading Seasons'
+					onRetry={() => window.location.reload()}
+				/>
+			</div>
+		)
+	}
+
+	if (newsError) {
+		return (
+			<div className='container mx-auto px-4 py-8'>
+				<QueryError
+					error={newsError}
+					title='Error Loading News'
 					onRetry={() => window.location.reload()}
 				/>
 			</div>

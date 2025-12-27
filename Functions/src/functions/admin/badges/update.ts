@@ -130,8 +130,8 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 		try {
 			const firestore = getFirestore()
 
-			// Validate admin authentication
-			await validateAdminUser(auth, firestore)
+			// Validate admin authentication and get validated user ID
+			const userId = await validateAdminUser(auth, firestore)
 
 			// Verify badge exists
 			const badgeRef = firestore.collection(Collections.BADGES).doc(badgeId)
@@ -238,7 +238,7 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 
 			logger.info('Badge updated successfully', {
 				badgeId,
-				updatedBy: auth!.uid,
+				updatedBy: userId,
 				fieldsUpdated: Object.keys(updates).filter(
 					(key) => key !== 'updatedAt'
 				),
@@ -260,7 +260,7 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 				error instanceof Error ? error.message : 'Unknown error'
 
 			logger.error('Error updating badge:', {
-				userId: auth!.uid,
+				userId: auth?.uid,
 				badgeId: data.badgeId,
 				error: errorMessage,
 			})

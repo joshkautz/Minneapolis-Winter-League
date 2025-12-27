@@ -380,7 +380,7 @@ export const PlayerRankingHistory = ({
 		// Sort by season dateStart timestamp (most recent first)
 		return history
 			.sort((a, b) => b.sortTimestamp - a.sortTimestamp)
-			.map(({ sortTimestamp, ...entry }) => entry) // Remove the sortTimestamp from final output
+			.map(({ sortTimestamp: _sortTimestamp, ...entry }) => entry) // Remove the sortTimestamp from final output
 	}, [
 		allPlayersSnapshot,
 		playerId,

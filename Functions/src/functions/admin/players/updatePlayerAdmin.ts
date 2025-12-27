@@ -632,7 +632,8 @@ export const updatePlayerAdmin = functions
 
 						if (isDemotingCaptain || isRemovingCaptainFromTeam) {
 							// Check the team the captain is leaving/being demoted on
-							const teamIdToCheck = oldTeamId!
+							// oldTeamId is guaranteed to be truthy when isDemotingCaptain or isRemovingCaptainFromTeam is true
+							const teamIdToCheck = oldTeamId as string
 							const teamRef = firestore
 								.collection(Collections.TEAMS)
 								.doc(teamIdToCheck)

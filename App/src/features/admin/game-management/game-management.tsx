@@ -584,13 +584,24 @@ export const GameManagement = () => {
 	}
 
 	// Handle query errors
-	if (gamesError || seasonsError) {
-		const error = gamesError || seasonsError
+	if (gamesError) {
 		return (
 			<PageContainer>
 				<QueryError
-					error={error!}
-					title={gamesError ? 'Error Loading Games' : 'Error Loading Seasons'}
+					error={gamesError}
+					title='Error Loading Games'
+					onRetry={() => window.location.reload()}
+				/>
+			</PageContainer>
+		)
+	}
+
+	if (seasonsError) {
+		return (
+			<PageContainer>
+				<QueryError
+					error={seasonsError}
+					title='Error Loading Seasons'
 					onRetry={() => window.location.reload()}
 				/>
 			</PageContainer>
