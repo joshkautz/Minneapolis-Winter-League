@@ -1,6 +1,6 @@
 import { getPlayerSnapshot } from '@/firebase'
 import { QuerySnapshot, QueryDocumentSnapshot } from '@firebase/firestore'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { OfferDocument, TeamDocument } from '@/shared/utils'
 import { DocumentReference } from 'firebase/firestore'
 
@@ -20,31 +20,44 @@ export const useOffer = (
 	offersQuerySnapshot: QuerySnapshot<OfferDocument> | undefined,
 	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
 ) => {
-	const [offers, setOffers] = useState<OfferDocumentWithUI[] | undefined>()
-	const [offersLoading, setOffersLoading] = useState<boolean>(false)
-	const [isProcessing, setIsProcessing] = useState<boolean>(false)
+	// Store enriched offers keyed by snapshot key for proper cache invalidation
+	const [enrichedOffersMap, setEnrichedOffersMap] = useState<
+		Map<string, OfferDocumentWithUI[]>
+	>(new Map())
+
+	// Derive whether we have the required data
+	const hasRequiredData = Boolean(offersQuerySnapshot && teamsQuerySnapshot)
+	const hasOffers = Boolean(
+		offersQuerySnapshot && offersQuerySnapshot.docs.length > 0
+	)
+
+	// Create a stable key for the current snapshot to detect changes
+	const snapshotKey = useMemo(() => {
+		if (!offersQuerySnapshot) return null
+		return offersQuerySnapshot.docs.map((d) => d.id).join(',')
+	}, [offersQuerySnapshot])
+
+	// Check if we already have enriched data for this snapshot
+	const cachedOffers = snapshotKey ? enrichedOffersMap.get(snapshotKey) : null
 
 	useEffect(() => {
-		// If we don't have both snapshots, we can't process offers
-		// This is NOT a loading state - we just don't have data yet
-		if (!offersQuerySnapshot || !teamsQuerySnapshot) {
-			setOffers(undefined)
-			setOffersLoading(false)
+		// If we don't have both snapshots or no offers, nothing to process
+		if (!offersQuerySnapshot || !teamsQuerySnapshot || !snapshotKey) {
 			return
 		}
 
-		// If there are no offers, no need to process
 		if (offersQuerySnapshot.docs.length === 0) {
-			setOffers([])
-			setOffersLoading(false)
+			// Empty offers - no async work needed
 			return
 		}
 
-		// We have offers to process - show loading
-		setOffersLoading(true)
-		setIsProcessing(true)
+		// If we already have cached data for this key, skip processing
+		if (enrichedOffersMap.has(snapshotKey)) {
+			return
+		}
 
-		let isCancelled = false
+		// Capture current key in closure for async callback
+		const currentKey = snapshotKey
 
 		Promise.all(
 			offersQuerySnapshot.docs.map(
@@ -75,17 +88,27 @@ export const useOffer = (
 				}
 			)
 		).then((updatedOffers: OfferDocumentWithUI[]) => {
-			if (!isCancelled) {
-				setOffers(updatedOffers)
-				setOffersLoading(false)
-				setIsProcessing(false)
-			}
+			setEnrichedOffersMap((prev) => {
+				const next = new Map(prev)
+				next.set(currentKey, updatedOffers)
+				return next
+			})
 		})
+	}, [offersQuerySnapshot, teamsQuerySnapshot, snapshotKey, enrichedOffersMap])
 
-		return () => {
-			isCancelled = true
-		}
-	}, [offersQuerySnapshot, teamsQuerySnapshot])
+	// Derive the final offers value
+	const offers = useMemo(() => {
+		// No required data yet - return undefined
+		if (!hasRequiredData) return undefined
+		// Has data but no offers - return empty array
+		if (!hasOffers) return []
+		// Return cached enriched offers (may be undefined while processing)
+		return cachedOffers ?? undefined
+	}, [hasRequiredData, hasOffers, cachedOffers])
 
-	return { offers, offersLoading: offersLoading || isProcessing }
+	// Loading when we have offers to process but haven't finished yet
+	const offersLoading =
+		hasOffers && snapshotKey !== null && !enrichedOffersMap.has(snapshotKey)
+
+	return { offers, offersLoading }
 }
