@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { User } from 'firebase/auth'
 import { Timestamp, QuerySnapshot, DocumentSnapshot } from '@firebase/firestore'
@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoadingSpinner } from '@/shared/components'
 import {
 	CheckCircle,
-	Clock,
 	CreditCard,
 	AlertCircle,
 	Calendar,
@@ -56,6 +55,7 @@ export const PaymentSection = ({
 }: PaymentSectionProps) => {
 	const [stripeLoading, setStripeLoading] = useState<boolean>(false)
 	const [stripeError, setStripeError] = useState<string>()
+	const loadingToastId = useRef<string | number | undefined>(undefined)
 
 	// Check for payment status in URL and show toast
 	useEffect(() => {
@@ -89,7 +89,7 @@ export const PaymentSection = ({
 
 	useEffect(() => {
 		if (stripeError) {
-			toast.error('Failure', {
+			toast.error('Payment Error', {
 				description: stripeError,
 			})
 			// Schedule clearing for next tick
@@ -98,6 +98,18 @@ export const PaymentSection = ({
 		}
 		return undefined
 	}, [stripeError])
+
+	// Show/hide loading toast based on stripeLoading state
+	useEffect(() => {
+		if (stripeLoading) {
+			loadingToastId.current = toast.loading('Creating checkout session...', {
+				description: 'Please wait while we connect to Stripe.',
+			})
+		} else if (loadingToastId.current !== undefined) {
+			toast.dismiss(loadingToastId.current)
+			loadingToastId.current = undefined
+		}
+	}, [stripeLoading])
 
 	// Check if player is returning (paid for previous season)
 	const isReturningPlayer = useMemo(() => {
@@ -138,33 +150,6 @@ export const PaymentSection = ({
 		})
 	}, [authStateUser, priceId, couponId])
 
-	const getStatusBadge = () => {
-		if (isLoading || isAuthenticatedUserPaid === undefined) {
-			return (
-				<Badge variant='outline' className='gap-1'>
-					<Clock className='h-3 w-3' />
-					Loading...
-				</Badge>
-			)
-		}
-
-		if (isAuthenticatedUserPaid) {
-			return (
-				<Badge variant='successful' className='gap-1'>
-					<CheckCircle className='h-3 w-3' />
-					Paid
-				</Badge>
-			)
-		}
-
-		return (
-			<Badge variant='destructive' className='gap-1'>
-				<CreditCard className='h-3 w-3' />
-				Payment Required
-			</Badge>
-		)
-	}
-
 	// Check if registration hasn't started yet (different from registration ended)
 	const isRegistrationNotStarted = useMemo(() => {
 		if (!currentSeasonQueryDocumentSnapshot) return false
@@ -192,10 +177,7 @@ export const PaymentSection = ({
 
 	return (
 		<div className='space-y-3'>
-			<div className='flex items-center justify-between'>
-				<h3 className='font-medium text-sm'>Registration Payment</h3>
-				{getStatusBadge()}
-			</div>
+			<h3 className='font-medium text-sm'>Registration Payment</h3>
 
 			{isLoading || isAuthenticatedUserPaid === undefined ? (
 				<div className='text-sm text-muted-foreground'>
@@ -203,7 +185,7 @@ export const PaymentSection = ({
 				</div>
 			) : isAuthenticatedUserPaid ? (
 				<Alert className='border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'>
-					<CheckCircle className='h-4 w-4 !text-green-800 dark:!text-green-200' />
+					<CheckCircle className='h-4 w-4 !text-green-600 dark:!text-green-400' />
 					<AlertDescription className='!text-green-800 dark:!text-green-200'>
 						Registration payment completed successfully.
 					</AlertDescription>
@@ -212,14 +194,14 @@ export const PaymentSection = ({
 				<div className='space-y-3'>
 					{isUserBanned ? (
 						<Alert className='border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'>
-							<AlertCircle className='h-4 w-4 !text-red-800 dark:!text-red-200' />
+							<AlertCircle className='h-4 w-4 !text-red-600 dark:!text-red-400' />
 							<AlertDescription className='!text-red-800 dark:!text-red-200'>
 								Account has been banned from Minneapolis Winter League.
 							</AlertDescription>
 						</Alert>
 					) : isRegistrationNotStarted && !isAuthenticatedUserAdmin ? (
 						<Alert className='border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'>
-							<Calendar className='h-4 w-4 !text-blue-800 dark:!text-blue-200' />
+							<Calendar className='h-4 w-4 !text-blue-600 dark:!text-blue-400' />
 							<AlertDescription className='!text-blue-800 dark:!text-blue-200'>
 								Registration opens on{' '}
 								{formatTimestamp(
@@ -229,7 +211,7 @@ export const PaymentSection = ({
 						</Alert>
 					) : isRegistrationEnded && !isAuthenticatedUserAdmin ? (
 						<Alert className='border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'>
-							<Calendar className='h-4 w-4 !text-blue-800 dark:!text-blue-200' />
+							<Calendar className='h-4 w-4 !text-blue-600 dark:!text-blue-400' />
 							<AlertDescription className='!text-blue-800 dark:!text-blue-200'>
 								Registration ended on{' '}
 								{formatTimestamp(
@@ -239,16 +221,16 @@ export const PaymentSection = ({
 						</Alert>
 					) : !isSeasonConfigured ? (
 						<Alert className='border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'>
-							<AlertCircle className='h-4 w-4 !text-amber-800 dark:!text-amber-200' />
+							<AlertCircle className='h-4 w-4 !text-amber-600 dark:!text-amber-400' />
 							<AlertDescription className='!text-amber-800 dark:!text-amber-200'>
 								Season payment is not yet configured. Please contact an
 								administrator.
 							</AlertDescription>
 						</Alert>
 					) : (
-						<Alert className='border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'>
-							<CreditCard className='h-4 w-4 !text-red-800 dark:!text-red-200' />
-							<AlertDescription className='!text-red-800 dark:!text-red-200'>
+						<Alert className='border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'>
+							<CreditCard className='h-4 w-4 !text-slate-600 dark:!text-slate-400' />
+							<AlertDescription className='!text-slate-700 dark:!text-slate-300'>
 								Complete registration by paying via Stripe.
 							</AlertDescription>
 						</Alert>
@@ -282,12 +264,6 @@ export const PaymentSection = ({
 						)}
 						{stripeLoading ? 'Processing...' : 'Pay via Stripe'}
 					</Button>
-
-					{!isPaymentDisabled && !isUserBanned && (
-						<p className='text-xs text-muted-foreground text-center'>
-							Payment processing may take a few seconds to complete.
-						</p>
-					)}
 				</div>
 			)}
 		</div>

@@ -1,15 +1,8 @@
 import { useState, useCallback, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoadingSpinner } from '@/shared/components'
-import {
-	CheckCircle,
-	Clock,
-	FileText,
-	AlertCircle,
-	Calendar,
-} from 'lucide-react'
+import { CheckCircle, FileText, AlertCircle, Calendar } from 'lucide-react'
 import {
 	Tooltip,
 	TooltipContent,
@@ -119,33 +112,6 @@ export const WaiverSection = ({
 		}
 	}, [])
 
-	const getStatusBadge = () => {
-		if (isLoading || isAuthenticatedUserSigned === undefined) {
-			return (
-				<Badge variant='outline' className='gap-1'>
-					<Clock className='h-3 w-3' />
-					Loading...
-				</Badge>
-			)
-		}
-
-		if (isAuthenticatedUserSigned) {
-			return (
-				<Badge variant='successful' className='gap-1'>
-					<CheckCircle className='h-3 w-3' />
-					Signed
-				</Badge>
-			)
-		}
-
-		return (
-			<Badge variant='destructive' className='gap-1'>
-				<FileText className='h-3 w-3' />
-				Signature Required
-			</Badge>
-		)
-	}
-
 	// Check if registration hasn't started yet (different from registration ended)
 	const isRegistrationNotStarted = useMemo(() => {
 		if (!currentSeasonQueryDocumentSnapshot) return false
@@ -174,10 +140,7 @@ export const WaiverSection = ({
 
 	return (
 		<div className='space-y-3'>
-			<div className='flex items-center justify-between'>
-				<h3 className='font-medium text-sm'>Waiver Signature</h3>
-				{getStatusBadge()}
-			</div>
+			<h3 className='font-medium text-sm'>Waiver Signature</h3>
 
 			{isLoading || isAuthenticatedUserSigned === undefined ? (
 				<div className='text-sm text-muted-foreground'>
@@ -185,7 +148,7 @@ export const WaiverSection = ({
 				</div>
 			) : isAuthenticatedUserSigned ? (
 				<Alert className='border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'>
-					<CheckCircle className='h-4 w-4 !text-green-800 dark:!text-green-200' />
+					<CheckCircle className='h-4 w-4 !text-green-600 dark:!text-green-400' />
 					<AlertDescription className='!text-green-800 dark:!text-green-200'>
 						Liability waiver has been signed successfully.
 					</AlertDescription>
@@ -194,14 +157,14 @@ export const WaiverSection = ({
 				<div className='space-y-3'>
 					{isUserBanned ? (
 						<Alert className='border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'>
-							<AlertCircle className='h-4 w-4 !text-red-800 dark:!text-red-200' />
+							<AlertCircle className='h-4 w-4 !text-red-600 dark:!text-red-400' />
 							<AlertDescription className='!text-red-800 dark:!text-red-200'>
 								Account has been banned from Minneapolis Winter League.
 							</AlertDescription>
 						</Alert>
 					) : isRegistrationNotStarted && !isAuthenticatedUserAdmin ? (
 						<Alert className='border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'>
-							<Calendar className='h-4 w-4 !text-blue-800 dark:!text-blue-200' />
+							<Calendar className='h-4 w-4 !text-blue-600 dark:!text-blue-400' />
 							<AlertDescription className='!text-blue-800 dark:!text-blue-200'>
 								Registration opens on{' '}
 								{formatTimestamp(
@@ -211,7 +174,7 @@ export const WaiverSection = ({
 						</Alert>
 					) : isRegistrationEnded && !isAuthenticatedUserAdmin ? (
 						<Alert className='border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'>
-							<Calendar className='h-4 w-4 !text-blue-800 dark:!text-blue-200' />
+							<Calendar className='h-4 w-4 !text-blue-600 dark:!text-blue-400' />
 							<AlertDescription className='!text-blue-800 dark:!text-blue-200'>
 								Registration ended on{' '}
 								{formatTimestamp(
@@ -220,15 +183,15 @@ export const WaiverSection = ({
 							</AlertDescription>
 						</Alert>
 					) : needsPayment ? (
-						<Alert className='border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'>
-							<AlertCircle className='h-4 w-4 !text-red-800 dark:!text-red-200' />
-							<AlertDescription className='!text-red-800 dark:!text-red-200'>
+						<Alert className='border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'>
+							<AlertCircle className='h-4 w-4 !text-slate-600 dark:!text-slate-400' />
+							<AlertDescription className='!text-slate-700 dark:!text-slate-300'>
 								Complete payment first to receive the waiver signing link.
 							</AlertDescription>
 						</Alert>
 					) : (
 						<Alert className='border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'>
-							<FileText className='h-4 w-4 !text-amber-800 dark:!text-amber-200' />
+							<FileText className='h-4 w-4 !text-amber-600 dark:!text-amber-400' />
 							<AlertDescription className='!text-amber-800 dark:!text-amber-200'>
 								Sign the liability waiver to complete registration.
 							</AlertDescription>

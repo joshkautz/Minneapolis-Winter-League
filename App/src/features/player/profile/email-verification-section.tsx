@@ -1,8 +1,7 @@
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoadingSpinner } from '@/shared/components'
-import { CheckCircle, Clock, Mail } from 'lucide-react'
+import { CheckCircle, Mail } from 'lucide-react'
 import { useEmailVerification } from './use-email-verification'
 
 interface EmailVerificationSectionProps {
@@ -28,39 +27,9 @@ export const EmailVerificationSection = ({
 		verificationEmailSent,
 	} = useEmailVerification({ isAuthenticatedUserBanned })
 
-	const getStatusBadge = () => {
-		if (isLoading || isVerified === undefined) {
-			return (
-				<Badge variant='outline' className='gap-1'>
-					<Clock className='h-3 w-3' />
-					Loading...
-				</Badge>
-			)
-		}
-
-		if (isVerified) {
-			return (
-				<Badge variant='successful' className='gap-1'>
-					<CheckCircle className='h-3 w-3' />
-					Verified
-				</Badge>
-			)
-		}
-
-		return (
-			<Badge variant='destructive' className='gap-1'>
-				<Mail className='h-3 w-3' />
-				Verification Required
-			</Badge>
-		)
-	}
-
 	return (
 		<div className='space-y-3'>
-			<div className='flex items-center justify-between'>
-				<h3 className='font-medium text-sm'>Email Verification</h3>
-				{getStatusBadge()}
-			</div>
+			<h3 className='font-medium text-sm'>Email Verification</h3>
 
 			{isLoading || isVerified === undefined ? (
 				<div className='text-sm text-muted-foreground'>
@@ -68,16 +37,16 @@ export const EmailVerificationSection = ({
 				</div>
 			) : isVerified ? (
 				<Alert className='border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'>
-					<CheckCircle className='h-4 w-4 !text-green-800 dark:!text-green-200' />
+					<CheckCircle className='h-4 w-4 !text-green-600 dark:!text-green-400' />
 					<AlertDescription className='!text-green-800 dark:!text-green-200'>
 						Your email address has been verified successfully.
 					</AlertDescription>
 				</Alert>
 			) : (
 				<div className='space-y-3'>
-					<Alert className='border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'>
-						<Mail className='h-4 w-4 !text-red-800 dark:!text-red-200' />
-						<AlertDescription className='!text-red-800 dark:!text-red-200'>
+					<Alert className='border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'>
+						<Mail className='h-4 w-4 !text-slate-600 dark:!text-slate-400' />
+						<AlertDescription className='!text-slate-700 dark:!text-slate-300'>
 							Please verify your email address to access all features.
 						</AlertDescription>
 					</Alert>
