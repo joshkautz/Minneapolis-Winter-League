@@ -103,7 +103,7 @@ export const ThemeSelect = ({ mobile = false }: { mobile?: boolean }) => {
 							<SelectItem
 								key={option.value}
 								value={option.value}
-								className='hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground transition-colors duration-200 focus:outline-none'
+								className='transition-colors duration-200'
 							>
 								<div className='flex items-center gap-2'>
 									<IconComponent className='w-4 h-4 transition-transform duration-150 hover:scale-105' />
