@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
 	Table,
@@ -36,6 +37,15 @@ export const SharedStandingsTable = ({
 	useTeamPlacement = false,
 	'aria-label': ariaLabel,
 }: SharedStandingsTableProps) => {
+	// Create a Map for O(1) team lookups instead of O(n) find() calls
+	const teamMap = useMemo(() => {
+		const map = new Map<string, { id: string; data: TeamDocument }>()
+		teamsQuerySnapshot?.docs.forEach((doc) => {
+			map.set(doc.id, { id: doc.id, data: doc.data() })
+		})
+		return map
+	}, [teamsQuerySnapshot])
+
 	const getColor = (gamesPlayed: number, pointDiff: number) => {
 		if (pointDiff > gamesPlayed * 5) {
 			return 'text-green-600'
@@ -52,9 +62,7 @@ export const SharedStandingsTable = ({
 		useTeamPlacement: boolean
 	) => {
 		if (useTeamPlacement) {
-			const placement = teamsQuerySnapshot?.docs
-				.find((team) => team.id === key)
-				?.data()?.placement
+			const placement = teamMap.get(key)?.data?.placement
 			return placement || index + 1
 		}
 		return index + 1
@@ -131,12 +139,8 @@ export const SharedStandingsTable = ({
 					{Object.entries(data)
 						.sort(sortFunction)
 						.map(([key, { wins, losses, pointsFor, pointsAgainst }], index) => {
-							const team = teamsQuerySnapshot?.docs.find(
-								(team) => team.id === key
-							)
-							const teamDocument = teamsQuerySnapshot?.docs
-								.find((team) => team.id === key)
-								?.data()
+							const teamEntry = teamMap.get(key)
+							const teamDocument = teamEntry?.data
 							const url = teamDocument?.logo
 							const differential = pointsFor - pointsAgainst
 							const gamesPlayed = wins + losses
@@ -188,12 +192,13 @@ export const SharedStandingsTable = ({
 									>
 										{differential > 0 ? '+' : ''}
 										{differential}
+										{/* Link overlay for entire row - must be inside a cell for valid HTML */}
+										<Link
+											to={`/teams/${teamEntry?.id}`}
+											className='absolute inset-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset rounded-sm cursor-pointer'
+											aria-label={`View ${teamDocument?.name} team details`}
+										/>
 									</TableCell>
-									<Link
-										to={`/teams/${team?.id}`}
-										className='absolute inset-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset rounded-sm cursor-pointer'
-										aria-label={`View ${teamDocument?.name} team details`}
-									/>
 								</TableRow>
 							)
 						})}

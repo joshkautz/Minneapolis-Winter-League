@@ -8,7 +8,7 @@ import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
 import { Collections, BadgeDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
-import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { FIREBASE_CONFIG, BADGE_CONFIG } from '../../../config/constants.js'
 
 interface UpdateBadgeRequest {
 	badgeId: string
@@ -68,34 +68,34 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 
 		// Validate name if provided
 		if (name !== undefined && name !== null) {
-			if (name.trim().length < 3) {
+			if (name.trim().length < BADGE_CONFIG.NAME_MIN_LENGTH) {
 				throw new HttpsError(
 					'invalid-argument',
-					'Name must be at least 3 characters long'
+					`Name must be at least ${BADGE_CONFIG.NAME_MIN_LENGTH} characters long`
 				)
 			}
 
-			if (name.length > 100) {
+			if (name.length > BADGE_CONFIG.NAME_MAX_LENGTH) {
 				throw new HttpsError(
 					'invalid-argument',
-					'Name must not exceed 100 characters'
+					`Name must not exceed ${BADGE_CONFIG.NAME_MAX_LENGTH} characters`
 				)
 			}
 		}
 
 		// Validate description if provided
 		if (description !== undefined && description !== null) {
-			if (description.trim().length < 10) {
+			if (description.trim().length < BADGE_CONFIG.DESCRIPTION_MIN_LENGTH) {
 				throw new HttpsError(
 					'invalid-argument',
-					'Description must be at least 10 characters long'
+					`Description must be at least ${BADGE_CONFIG.DESCRIPTION_MIN_LENGTH} characters long`
 				)
 			}
 
-			if (description.length > 500) {
+			if (description.length > BADGE_CONFIG.DESCRIPTION_MAX_LENGTH) {
 				throw new HttpsError(
 					'invalid-argument',
-					'Description must not exceed 500 characters'
+					`Description must not exceed ${BADGE_CONFIG.DESCRIPTION_MAX_LENGTH} characters`
 				)
 			}
 		}
@@ -118,8 +118,7 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 		// Validate image size (5MB max)
 		if (imageBlob) {
 			const bufferSize = Buffer.from(imageBlob, 'base64').length
-			const maxSize = 5 * 1024 * 1024 // 5MB
-			if (bufferSize > maxSize) {
+			if (bufferSize > BADGE_CONFIG.MAX_IMAGE_SIZE_BYTES) {
 				throw new HttpsError(
 					'invalid-argument',
 					'Image size must not exceed 5MB'
@@ -213,11 +212,9 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 						},
 					})
 
-					// Make file publicly readable
-					await file.makePublic()
-
-					// Get public URL
-					updates.imageUrl = file.publicUrl()
+					// Generate Firebase Storage URL (respects storage.rules)
+					const encodedPath = encodeURIComponent(fileName)
+					updates.imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`
 					updates.storagePath = fileName
 
 					logger.info(`Successfully uploaded new badge image: ${badgeId}`, {

@@ -30,6 +30,8 @@ interface RevokeBadgeResponse {
  * - Badge must exist
  * - Team must exist
  * - Team must have the badge to revoke it
+ *
+ * Uses a transaction to ensure atomicity and prevent race conditions
  */
 export const revokeBadge = onCall<RevokeBadgeRequest>(
 	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
@@ -52,91 +54,95 @@ export const revokeBadge = onCall<RevokeBadgeRequest>(
 			// Validate admin authentication and get validated user ID
 			const userId = await validateAdminUser(auth, firestore)
 
-			// Verify badge exists
+			// Document references
 			const badgeRef = firestore.collection(Collections.BADGES).doc(badgeId)
-			const badgeDoc = await badgeRef.get()
-
-			if (!badgeDoc.exists) {
-				throw new HttpsError('not-found', 'Badge not found')
-			}
-
-			const badge = badgeDoc.data() as BadgeDocument
-
-			// Verify team exists
 			const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
-			const teamDoc = await teamRef.get()
-
-			if (!teamDoc.exists) {
-				throw new HttpsError('not-found', 'Team not found')
-			}
-
-			const team = teamDoc.data() as TeamDocument
-
-			// Check if team has this badge
 			const teamBadgeRef = teamRef.collection(Collections.BADGES).doc(badgeId)
-			const teamBadgeDoc = await teamBadgeRef.get()
 
-			if (!teamBadgeDoc.exists) {
-				throw new HttpsError(
-					'not-found',
-					'This badge has not been awarded to the team'
-				)
-			}
+			// Execute all operations atomically in a transaction
+			const result = await firestore.runTransaction(async (transaction) => {
+				// Read all documents first (Firestore transaction requirement)
+				const [badgeDoc, teamDoc, teamBadgeDoc] = await Promise.all([
+					transaction.get(badgeRef),
+					transaction.get(teamRef),
+					transaction.get(teamBadgeRef),
+				])
 
-			// Delete team badge document
-			await teamBadgeRef.delete()
+				// Validate badge exists
+				if (!badgeDoc.exists) {
+					throw new HttpsError('not-found', 'Badge not found')
+				}
+				const badge = badgeDoc.data() as BadgeDocument
 
-			// Check if any other teams with the same teamId still have this badge
-			// Query all teams with this teamId
-			const teamsWithSameTeamId = await firestore
-				.collection(Collections.TEAMS)
-				.where('teamId', '==', team.teamId)
-				.get()
+				// Validate team exists
+				if (!teamDoc.exists) {
+					throw new HttpsError('not-found', 'Team not found')
+				}
+				const team = teamDoc.data() as TeamDocument
 
-			let shouldDecrementStats = true
-
-			// Check if any other team instance with same teamId still has this badge
-			for (const otherTeam of teamsWithSameTeamId.docs) {
-				// Skip the current team we just revoked from
-				if (otherTeam.id === teamId) {
-					continue
+				// Check if team has this badge
+				if (!teamBadgeDoc.exists) {
+					throw new HttpsError(
+						'not-found',
+						'This badge has not been awarded to the team'
+					)
 				}
 
-				// Check if this other team still has the badge
-				const otherTeamBadgeDoc = await otherTeam.ref
-					.collection(Collections.BADGES)
-					.doc(badgeId)
+				// Query all teams with same teamId to check if any still have badge
+				// Note: Queries in transactions are read-only and provide snapshot isolation
+				const teamsWithSameTeamId = await firestore
+					.collection(Collections.TEAMS)
+					.where('teamId', '==', team.teamId)
 					.get()
 
-				if (otherTeamBadgeDoc.exists) {
-					// Another team with same teamId still has this badge
-					shouldDecrementStats = false
-					break
-				}
-			}
+				let shouldDecrementStats = true
 
-			// Decrement the badge stats if no other teams with this teamId have the badge
-			if (shouldDecrementStats) {
-				await badgeRef.update({
-					'stats.totalTeamsAwarded': FieldValue.increment(-1),
-					'stats.lastUpdated': FieldValue.serverTimestamp(),
-				})
-			}
+				// Check if any other team instance with same teamId still has this badge
+				for (const otherTeam of teamsWithSameTeamId.docs) {
+					if (otherTeam.id === teamId) continue
+
+					const otherTeamBadgeDoc = await transaction.get(
+						otherTeam.ref.collection(Collections.BADGES).doc(badgeId)
+					)
+
+					if (otherTeamBadgeDoc.exists) {
+						shouldDecrementStats = false
+						break
+					}
+				}
+
+				// Delete team badge document
+				transaction.delete(teamBadgeRef)
+
+				// Decrement badge stats if no other teams with this teamId have the badge
+				if (shouldDecrementStats && badge.stats) {
+					transaction.update(badgeRef, {
+						'stats.totalTeamsAwarded': FieldValue.increment(-1),
+						'stats.lastUpdated': FieldValue.serverTimestamp(),
+					})
+				}
+
+				return {
+					badgeName: badge.name,
+					teamName: team.name,
+					decrementedStats: shouldDecrementStats,
+				}
+			})
 
 			logger.info('Badge revoked from team successfully', {
 				badgeId,
-				badgeName: badge.name,
+				badgeName: result.badgeName,
 				teamId,
-				teamName: team.name,
+				teamName: result.teamName,
 				revokedBy: userId,
-				decrementedStats: shouldDecrementStats,
+				decrementedStats: result.decrementedStats,
 			})
 
 			return {
 				success: true,
 				badgeId,
 				teamId,
-				message: `Badge "${badge.name}" revoked from team "${team.name}" successfully`,
+				message: `Badge "${result.badgeName}" revoked from team "${result.teamName}" successfully`,
 			}
 		} catch (error) {
 			// If it's already an HttpsError, just re-throw it

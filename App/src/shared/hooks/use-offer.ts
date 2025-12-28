@@ -1,8 +1,9 @@
 import { getPlayerSnapshot } from '@/firebase'
 import { QuerySnapshot, QueryDocumentSnapshot } from '@firebase/firestore'
-import { useEffect, useMemo, useState } from 'react'
-import { OfferDocument, TeamDocument } from '@/shared/utils'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { OfferDocument, TeamDocument, logger } from '@/shared/utils'
 import { DocumentReference } from 'firebase/firestore'
+import { toast } from 'sonner'
 
 // Extended OfferDocument with UI-specific fields for display
 export interface OfferDocumentWithUI extends OfferDocument {
@@ -24,6 +25,9 @@ export const useOffer = (
 	const [enrichedOffersMap, setEnrichedOffersMap] = useState<
 		Map<string, OfferDocumentWithUI[]>
 	>(new Map())
+
+	// Track keys currently being processed to prevent duplicate requests
+	const processingKeysRef = useRef<Set<string>>(new Set())
 
 	// Derive whether we have the required data
 	const hasRequiredData = Boolean(offersQuerySnapshot && teamsQuerySnapshot)
@@ -51,28 +55,55 @@ export const useOffer = (
 			return
 		}
 
-		// If we already have cached data for this key, skip processing
-		if (enrichedOffersMap.has(snapshotKey)) {
+		// Skip if already cached or currently processing
+		if (
+			enrichedOffersMap.has(snapshotKey) ||
+			processingKeysRef.current.has(snapshotKey)
+		) {
 			return
 		}
 
-		// Capture current key in closure for async callback
+		// Mark as processing to prevent duplicate requests
 		const currentKey = snapshotKey
+		processingKeysRef.current.add(currentKey)
 
 		Promise.all(
 			offersQuerySnapshot.docs.map(
 				async (offer: QueryDocumentSnapshot<OfferDocument>, index: number) => {
 					const offerData = offer.data()
 
-					// Get both player and creator data
-					const [playerSnapshot, creatorSnapshot] = await Promise.all([
-						getPlayerSnapshot(offerData.player),
-						offerData.createdBy ? getPlayerSnapshot(offerData.createdBy) : null,
-					])
+					// Get both player and creator data with graceful error handling
+					// If a player lookup fails, we still show the offer with fallback name
+					let playerName = 'Unknown Player'
+					let creatorName = 'Unknown'
+
+					try {
+						const [playerSnapshot, creatorSnapshot] = await Promise.all([
+							getPlayerSnapshot(offerData.player),
+							offerData.createdBy
+								? getPlayerSnapshot(offerData.createdBy)
+								: Promise.resolve(null),
+						])
+
+						const playerData = playerSnapshot.data()
+						if (playerData) {
+							playerName = `${playerData.firstname} ${playerData.lastname}`
+						}
+
+						if (creatorSnapshot) {
+							const creatorData = creatorSnapshot.data()
+							if (creatorData) {
+								creatorName = `${creatorData.firstname} ${creatorData.lastname}`
+							}
+						}
+					} catch (error) {
+						// Log error but continue with fallback names
+						logger.error('Failed to fetch player data for offer:', { error })
+					}
 
 					return {
 						...offerData,
-						playerName: `${playerSnapshot.data()?.firstname} ${playerSnapshot.data()?.lastname}`,
+						playerName,
 						teamName:
 							teamsQuerySnapshot?.docs
 								.find(
@@ -80,21 +111,40 @@ export const useOffer = (
 										team.id === offerData.team.id
 								)
 								?.data().name || '',
-						creatorName: creatorSnapshot
-							? `${creatorSnapshot.data()?.firstname} ${creatorSnapshot.data()?.lastname}`
-							: 'Unknown',
+						creatorName,
 						ref: offersQuerySnapshot.docs[index].ref,
 					} as OfferDocumentWithUI
 				}
 			)
-		).then((updatedOffers: OfferDocumentWithUI[]) => {
-			setEnrichedOffersMap((prev) => {
-				const next = new Map(prev)
-				next.set(currentKey, updatedOffers)
-				return next
+		)
+			.then((updatedOffers: OfferDocumentWithUI[]) => {
+				setEnrichedOffersMap((prev) => {
+					const next = new Map(prev)
+					next.set(currentKey, updatedOffers)
+					return next
+				})
 			})
-		})
-	}, [offersQuerySnapshot, teamsQuerySnapshot, snapshotKey, enrichedOffersMap])
+			.catch((error) => {
+				// Handle any unexpected errors in the mapping process
+				logger.error('Failed to enrich offers:', { error })
+				toast.error('Failed to load offer details', {
+					description:
+						'Some offer information may be incomplete. Please refresh to try again.',
+				})
+				// Set empty array to prevent infinite loading
+				setEnrichedOffersMap((prev) => {
+					const next = new Map(prev)
+					next.set(currentKey, [])
+					return next
+				})
+			})
+			.finally(() => {
+				// Clean up processing tracker
+				processingKeysRef.current.delete(currentKey)
+			})
+		// Note: enrichedOffersMap is not in deps - we use processingKeysRef to prevent duplicates
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [offersQuerySnapshot, teamsQuerySnapshot, snapshotKey])
 
 	// Derive the final offers value
 	const offers = useMemo(() => {

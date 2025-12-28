@@ -10,9 +10,10 @@ import {
 	Timestamp,
 	type DocumentReference,
 } from 'firebase-admin/firestore'
-import * as functions from 'firebase-functions/v1'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
+import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
-import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { FIREBASE_CONFIG, GAME_CONFIG } from '../../../config/constants.js'
 import { Collections, GameType } from '../../../types.js'
 
 /**
@@ -66,96 +67,209 @@ interface UpdateGameResponse {
  * - Games are only allowed at 6:00pm, 6:45pm, 7:30pm, or 8:15pm CT
  * - Each field can only have one game per time slot
  */
-export const updateGame = functions
-	.region(FIREBASE_CONFIG.REGION)
-	.https.onCall(
-		async (
-			data: UpdateGameRequest,
-			context: functions.https.CallableContext
-		): Promise<UpdateGameResponse> => {
-			const { auth } = context
+export const updateGame = onCall<
+	UpdateGameRequest,
+	Promise<UpdateGameResponse>
+>(
+	{ region: FIREBASE_CONFIG.REGION },
+	async (request): Promise<UpdateGameResponse> => {
+		const { auth, data } = request
 
-			functions.logger.info('updateGame called', {
-				adminUserId: auth?.uid,
-				gameId: data.gameId,
-			})
+		logger.info('updateGame called', {
+			adminUserId: auth?.uid,
+			gameId: data.gameId,
+		})
 
-			// Validate admin authentication
-			const firestore = getFirestore()
-			await validateAdminUser(auth, firestore)
+		// Validate admin authentication
+		const firestore = getFirestore()
+		await validateAdminUser(auth, firestore)
 
-			const {
-				gameId,
-				homeTeamId,
-				awayTeamId,
-				homeScore,
-				awayScore,
-				field,
-				type,
-				timestamp,
-				seasonId,
-			} = data
+		const {
+			gameId,
+			homeTeamId,
+			awayTeamId,
+			homeScore,
+			awayScore,
+			field,
+			type,
+			timestamp,
+			seasonId,
+		} = data
 
-			// Validate required fields
-			if (!gameId || typeof gameId !== 'string') {
-				functions.logger.warn('Invalid gameId provided', { gameId })
-				throw new functions.https.HttpsError(
-					'invalid-argument',
-					'Game ID is required and must be a valid string'
-				)
+		// Validate required fields
+		if (!gameId || typeof gameId !== 'string') {
+			logger.warn('Invalid gameId provided', { gameId })
+			throw new HttpsError(
+				'invalid-argument',
+				'Game ID is required and must be a valid string'
+			)
+		}
+
+		// Validate optional fields if provided
+		if (
+			homeScore !== undefined &&
+			homeScore !== null &&
+			(typeof homeScore !== 'number' || homeScore < 0)
+		) {
+			logger.warn('Invalid homeScore provided', { homeScore })
+			throw new HttpsError(
+				'invalid-argument',
+				'Home score must be null or a non-negative number'
+			)
+		}
+
+		if (
+			awayScore !== undefined &&
+			awayScore !== null &&
+			(typeof awayScore !== 'number' || awayScore < 0)
+		) {
+			logger.warn('Invalid awayScore provided', { awayScore })
+			throw new HttpsError(
+				'invalid-argument',
+				'Away score must be null or a non-negative number'
+			)
+		}
+
+		if (field !== undefined && !(GAME_CONFIG.ALLOWED_FIELDS as readonly number[]).includes(field)) {
+			logger.warn('Invalid field provided', { field })
+			throw new HttpsError('invalid-argument', 'Field must be 1, 2, or 3')
+		}
+
+		if (
+			type !== undefined &&
+			![GameType.REGULAR, GameType.PLAYOFF].includes(type)
+		) {
+			logger.warn('Invalid game type provided', { type })
+			throw new HttpsError(
+				'invalid-argument',
+				'Game type must be "regular" or "playoff"'
+			)
+		}
+
+		try {
+			const gameRef = firestore.collection(Collections.GAMES).doc(gameId)
+
+			// Build update data object
+			const updateData: Record<
+				string,
+				Timestamp | number | null | GameType | DocumentReference
+			> = {}
+
+			// Handle timestamp update
+			let gameDate: Date | undefined
+			if (timestamp) {
+				if (typeof timestamp !== 'string') {
+					throw new HttpsError(
+						'invalid-argument',
+						'Timestamp must be a valid ISO 8601 string'
+					)
+				}
+
+				gameDate = new Date(timestamp)
+				if (isNaN(gameDate.getTime())) {
+					throw new HttpsError(
+						'invalid-argument',
+						'Invalid timestamp format. Must be a valid ISO 8601 string'
+					)
+				}
+
+				// Extract date components from ISO string to avoid timezone issues
+				// ISO format: YYYY-MM-DDTHH:MM:SS.sss±HH:MM
+				const dateMatch = timestamp.match(/^(\d{4})-(\d{2})-(\d{2})T/)
+				if (!dateMatch) {
+					throw new HttpsError(
+						'invalid-argument',
+						'Invalid timestamp format: could not extract date'
+					)
+				}
+				const year = parseInt(dateMatch[1], 10)
+				const month = parseInt(dateMatch[2], 10) // 1-indexed in ISO string
+				const dayOfMonth = parseInt(dateMatch[3], 10)
+
+				// Validate business logic: Saturday only
+				// Calculate day of week from the date components (in the intended timezone)
+				// Using Zeller's congruence algorithm
+				const adjustedMonth = month < 3 ? month + 12 : month
+				const adjustedYear = month < 3 ? year - 1 : year
+				const dayOfWeek =
+					(dayOfMonth +
+						Math.floor((13 * (adjustedMonth + 1)) / 5) +
+						adjustedYear +
+						Math.floor(adjustedYear / 4) -
+						Math.floor(adjustedYear / 100) +
+						Math.floor(adjustedYear / 400)) %
+					7
+				// Zeller's returns 0=Saturday, 1=Sunday, ..., 6=Friday
+				if (dayOfWeek !== 0) {
+					throw new HttpsError(
+						'invalid-argument',
+						`Games can only be scheduled on Saturdays (received day: ${dayOfWeek})`
+					)
+				}
+
+				// Validate business logic: November or December only
+				if (month !== 11 && month !== 12) {
+					throw new HttpsError(
+						'invalid-argument',
+						`Games can only be scheduled in November or December (received month: ${month})`
+					)
+				} // Validate business logic: allowed time slots
+				// Extract the local time directly from the ISO string to avoid timezone conversion issues
+				// ISO format: YYYY-MM-DDTHH:MM:SS.sss±HH:MM
+				const timeMatch = timestamp.match(/T(\d{2}):(\d{2})/)
+				if (!timeMatch) {
+					throw new HttpsError(
+						'invalid-argument',
+						'Invalid timestamp format: could not extract time'
+					)
+				}
+				const hours = parseInt(timeMatch[1], 10)
+				const minutes = parseInt(timeMatch[2], 10)
+				const timeString = `${hours}:${minutes.toString().padStart(2, '0')}`
+
+				if (!(GAME_CONFIG.ALLOWED_TIME_SLOTS as readonly string[]).includes(timeString)) {
+					throw new HttpsError(
+						'invalid-argument',
+						`Games can only be scheduled at 6:00pm, 6:45pm, 7:30pm, or 8:15pm CT (received: ${timeString})`
+					)
+				}
+
+				// Log for debugging DST transitions
+				logger.info('Game time validation passed', {
+					gameId,
+					timestamp,
+					localHours: hours,
+					localMinutes: minutes,
+					timeString,
+					dayOfWeek,
+					month,
+					year,
+					dayOfMonth,
+					utcOffset: gameDate.getTimezoneOffset(),
+				})
+
+				updateData.date = Timestamp.fromDate(gameDate)
+			} // Add other fields to update
+			if (homeScore !== undefined) {
+				updateData.homeScore = homeScore
+			}
+			if (awayScore !== undefined) {
+				updateData.awayScore = awayScore
+			}
+			if (field !== undefined) {
+				updateData.field = field
+			}
+			if (type !== undefined) {
+				updateData.type = type
 			}
 
-			// Validate optional fields if provided
-			if (
-				homeScore !== undefined &&
-				homeScore !== null &&
-				(typeof homeScore !== 'number' || homeScore < 0)
-			) {
-				functions.logger.warn('Invalid homeScore provided', { homeScore })
-				throw new functions.https.HttpsError(
-					'invalid-argument',
-					'Home score must be null or a non-negative number'
-				)
-			}
-
-			if (
-				awayScore !== undefined &&
-				awayScore !== null &&
-				(typeof awayScore !== 'number' || awayScore < 0)
-			) {
-				functions.logger.warn('Invalid awayScore provided', { awayScore })
-				throw new functions.https.HttpsError(
-					'invalid-argument',
-					'Away score must be null or a non-negative number'
-				)
-			}
-
-			if (field !== undefined && ![1, 2, 3].includes(field)) {
-				functions.logger.warn('Invalid field provided', { field })
-				throw new functions.https.HttpsError(
-					'invalid-argument',
-					'Field must be 1, 2, or 3'
-				)
-			}
-
-			if (
-				type !== undefined &&
-				![GameType.REGULAR, GameType.PLAYOFF].includes(type)
-			) {
-				functions.logger.warn('Invalid game type provided', { type })
-				throw new functions.https.HttpsError(
-					'invalid-argument',
-					'Game type must be "regular" or "playoff"'
-				)
-			}
-
-			try {
+			// Use transaction for all database operations to ensure atomicity
+			await firestore.runTransaction(async (transaction) => {
 				// Verify game exists
-				const gameRef = firestore.collection(Collections.GAMES).doc(gameId)
-				const gameDoc = await gameRef.get()
+				const gameDoc = await transaction.get(gameRef)
 				if (!gameDoc.exists) {
-					functions.logger.warn('Game not found', { gameId })
-					throw new functions.https.HttpsError(
+					logger.warn('Game not found', { gameId })
+					throw new HttpsError(
 						'not-found',
 						'Game not found. Please verify the game ID is correct.'
 					)
@@ -163,131 +277,13 @@ export const updateGame = functions
 
 				const existingGameData = gameDoc.data()
 				if (!existingGameData) {
-					throw new functions.https.HttpsError(
-						'not-found',
-						'Game data not found.'
-					)
-				}
-
-				// Build update data object
-				const updateData: Record<
-					string,
-					Timestamp | number | null | GameType | DocumentReference
-				> = {}
-
-				// Handle timestamp update
-				let gameDate: Date | undefined
-				if (timestamp) {
-					if (typeof timestamp !== 'string') {
-						throw new functions.https.HttpsError(
-							'invalid-argument',
-							'Timestamp must be a valid ISO 8601 string'
-						)
-					}
-
-					gameDate = new Date(timestamp)
-					if (isNaN(gameDate.getTime())) {
-						throw new functions.https.HttpsError(
-							'invalid-argument',
-							'Invalid timestamp format. Must be a valid ISO 8601 string'
-						)
-					}
-
-					// Extract date components from ISO string to avoid timezone issues
-					// ISO format: YYYY-MM-DDTHH:MM:SS.sss±HH:MM
-					const dateMatch = timestamp.match(/^(\d{4})-(\d{2})-(\d{2})T/)
-					if (!dateMatch) {
-						throw new functions.https.HttpsError(
-							'invalid-argument',
-							'Invalid timestamp format: could not extract date'
-						)
-					}
-					const year = parseInt(dateMatch[1], 10)
-					const month = parseInt(dateMatch[2], 10) // 1-indexed in ISO string
-					const dayOfMonth = parseInt(dateMatch[3], 10)
-
-					// Validate business logic: Saturday only
-					// Calculate day of week from the date components (in the intended timezone)
-					// Using Zeller's congruence algorithm
-					const adjustedMonth = month < 3 ? month + 12 : month
-					const adjustedYear = month < 3 ? year - 1 : year
-					const dayOfWeek =
-						(dayOfMonth +
-							Math.floor((13 * (adjustedMonth + 1)) / 5) +
-							adjustedYear +
-							Math.floor(adjustedYear / 4) -
-							Math.floor(adjustedYear / 100) +
-							Math.floor(adjustedYear / 400)) %
-						7
-					// Zeller's returns 0=Saturday, 1=Sunday, ..., 6=Friday
-					if (dayOfWeek !== 0) {
-						throw new functions.https.HttpsError(
-							'invalid-argument',
-							`Games can only be scheduled on Saturdays (received day: ${dayOfWeek})`
-						)
-					}
-
-					// Validate business logic: November or December only
-					if (month !== 11 && month !== 12) {
-						throw new functions.https.HttpsError(
-							'invalid-argument',
-							`Games can only be scheduled in November or December (received month: ${month})`
-						)
-					} // Validate business logic: allowed time slots
-					// Extract the local time directly from the ISO string to avoid timezone conversion issues
-					// ISO format: YYYY-MM-DDTHH:MM:SS.sss±HH:MM
-					const timeMatch = timestamp.match(/T(\d{2}):(\d{2})/)
-					if (!timeMatch) {
-						throw new functions.https.HttpsError(
-							'invalid-argument',
-							'Invalid timestamp format: could not extract time'
-						)
-					}
-					const hours = parseInt(timeMatch[1], 10)
-					const minutes = parseInt(timeMatch[2], 10)
-					const timeString = `${hours}:${minutes.toString().padStart(2, '0')}`
-
-					const allowedTimes = ['18:00', '18:45', '19:30', '20:15']
-					if (!allowedTimes.includes(timeString)) {
-						throw new functions.https.HttpsError(
-							'invalid-argument',
-							`Games can only be scheduled at 6:00pm, 6:45pm, 7:30pm, or 8:15pm CT (received: ${timeString})`
-						)
-					}
-
-					// Log for debugging DST transitions
-					functions.logger.info('Game time validation passed', {
-						gameId,
-						timestamp,
-						localHours: hours,
-						localMinutes: minutes,
-						timeString,
-						dayOfWeek,
-						month,
-						year,
-						dayOfMonth,
-						utcOffset: gameDate.getTimezoneOffset(),
-					})
-
-					updateData.date = Timestamp.fromDate(gameDate)
-				} // Add other fields to update
-				if (homeScore !== undefined) {
-					updateData.homeScore = homeScore
-				}
-				if (awayScore !== undefined) {
-					updateData.awayScore = awayScore
-				}
-				if (field !== undefined) {
-					updateData.field = field
-				}
-				if (type !== undefined) {
-					updateData.type = type
+					throw new HttpsError('not-found', 'Game data not found.')
 				}
 
 				// Handle season update
 				if (seasonId !== undefined) {
 					if (typeof seasonId !== 'string') {
-						throw new functions.https.HttpsError(
+						throw new HttpsError(
 							'invalid-argument',
 							'Season ID must be a valid string'
 						)
@@ -296,10 +292,10 @@ export const updateGame = functions
 					const seasonRef = firestore
 						.collection(Collections.SEASONS)
 						.doc(seasonId)
-					const seasonDoc = await seasonRef.get()
+					const seasonDoc = await transaction.get(seasonRef)
 					if (!seasonDoc.exists) {
-						functions.logger.warn('Season not found', { seasonId })
-						throw new functions.https.HttpsError(
+						logger.warn('Season not found', { seasonId })
+						throw new HttpsError(
 							'not-found',
 							'Season not found. Please verify the season ID is correct.'
 						)
@@ -315,10 +311,10 @@ export const updateGame = functions
 						const homeTeamRef = firestore
 							.collection(Collections.TEAMS)
 							.doc(homeTeamId)
-						const homeTeamDoc = await homeTeamRef.get()
+						const homeTeamDoc = await transaction.get(homeTeamRef)
 						if (!homeTeamDoc.exists) {
-							functions.logger.warn('Home team not found', { homeTeamId })
-							throw new functions.https.HttpsError(
+							logger.warn('Home team not found', { homeTeamId })
+							throw new HttpsError(
 								'not-found',
 								'Home team not found. Please verify the team ID is correct.'
 							)
@@ -334,10 +330,10 @@ export const updateGame = functions
 						const awayTeamRef = firestore
 							.collection(Collections.TEAMS)
 							.doc(awayTeamId)
-						const awayTeamDoc = await awayTeamRef.get()
+						const awayTeamDoc = await transaction.get(awayTeamRef)
 						if (!awayTeamDoc.exists) {
-							functions.logger.warn('Away team not found', { awayTeamId })
-							throw new functions.https.HttpsError(
+							logger.warn('Away team not found', { awayTeamId })
+							throw new HttpsError(
 								'not-found',
 								'Away team not found. Please verify the team ID is correct.'
 							)
@@ -353,11 +349,12 @@ export const updateGame = functions
 					: existingGameData.date
 
 				if (field !== undefined || timestamp !== undefined) {
+					// Query for potential duplicates
 					const gamesRef = firestore.collection(Collections.GAMES)
 					const duplicateQuery = await gamesRef
 						.where('date', '==', updatedDate)
 						.where('field', '==', updatedField)
-						.limit(2) // Get up to 2 to check if there's another besides current
+						.limit(2)
 						.get()
 
 					// Check if there's a duplicate that's not the current game
@@ -366,52 +363,56 @@ export const updateGame = functions
 					)
 
 					if (hasDuplicate) {
-						functions.logger.warn('Duplicate game detected', {
+						logger.warn('Duplicate game detected', {
 							gameId,
 							field: updatedField,
 							timestamp: updatedDate,
 						})
-						throw new functions.https.HttpsError(
+						throw new HttpsError(
 							'already-exists',
 							`A game already exists at this time slot on Field ${updatedField}. Please choose a different time or field.`
 						)
 					}
 				}
 
-				// Perform the update
-				functions.logger.info('Updating game document', { gameId, updateData })
-				await gameRef.update(updateData)
-
-				functions.logger.info('Game updated successfully', {
+				// Perform the update atomically
+				logger.info('Updating game document', {
 					gameId,
-					updatedBy: auth?.uid,
+					updateData,
 				})
+				transaction.update(gameRef, updateData)
+			})
 
-				return {
-					success: true,
-					gameId,
-					message: 'Game updated successfully',
-				}
-			} catch (error) {
-				functions.logger.error('Error updating game', {
-					gameId,
-					adminUserId: auth?.uid,
-					error: error instanceof Error ? error.message : 'Unknown error',
-					stack: error instanceof Error ? error.stack : undefined,
-				})
+			logger.info('Game updated successfully', {
+				gameId,
+				updatedBy: auth?.uid,
+			})
 
-				// Re-throw HttpsError as-is
-				if (error instanceof functions.https.HttpsError) {
-					throw error
-				}
-
-				// Wrap other errors
-				throw new functions.https.HttpsError(
-					'internal',
-					error instanceof Error
-						? error.message
-						: 'Failed to update game. Please try again.'
-				)
+			return {
+				success: true,
+				gameId,
+				message: 'Game updated successfully',
 			}
+		} catch (error) {
+			logger.error('Error updating game', {
+				gameId,
+				adminUserId: auth?.uid,
+				error: error instanceof Error ? error.message : 'Unknown error',
+				stack: error instanceof Error ? error.stack : undefined,
+			})
+
+			// Re-throw HttpsError as-is
+			if (error instanceof HttpsError) {
+				throw error
+			}
+
+			// Wrap other errors
+			throw new HttpsError(
+				'internal',
+				error instanceof Error
+					? error.message
+					: 'Failed to update game. Please try again.'
+			)
 		}
-	)
+	}
+)

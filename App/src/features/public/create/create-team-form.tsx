@@ -87,7 +87,14 @@ export const CreateTeamForm = ({
 							onChange={handleFileChange}
 							className='h-11'
 							disabled={isSubmitting || isTeamRegistrationFull}
+							aria-describedby='team-logo-description'
 						/>
+						<p
+							id='team-logo-description'
+							className='text-xs text-muted-foreground'
+						>
+							PNG, JPG, GIF, or WebP image
+						</p>
 					</div>
 
 					<div className='pt-2'>

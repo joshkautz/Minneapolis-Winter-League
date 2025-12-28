@@ -17,6 +17,7 @@ import {
 	getCurrentSeasonRef,
 } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { formatDateForUser } from '../../../shared/format.js'
 
 interface CreateOfferRequest {
 	playerId: string
@@ -67,22 +68,28 @@ export const createOffer = onCall<CreateOfferRequest>(
 			const playerRef = firestore.collection(Collections.PLAYERS).doc(playerId)
 			const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
 
-			// Check for existing pending offers BEFORE transaction to avoid lock timeout
-			const existingOffersSnapshot = await firestore
+			// Use deterministic document ID to prevent race conditions
+			// This allows atomic check-and-create using transaction.get()
+			const pendingOfferId = `${playerId}_${teamId}_${seasonRef.id}_pending`
+			const pendingOfferRef = firestore
 				.collection(Collections.OFFERS)
-				.where('player', '==', playerRef)
-				.where('team', '==', teamRef)
-				.where('status', '==', 'pending')
-				.get()
-
-			if (!existingOffersSnapshot.empty) {
-				throw new HttpsError(
-					'already-exists',
-					'A pending offer already exists between this player and team'
-				)
-			}
+				.doc(pendingOfferId)
 
 			return await firestore.runTransaction(async (transaction) => {
+				// Atomically check if pending offer already exists
+				// This prevents race conditions where two concurrent requests
+				// could both pass the check before either creates the offer
+				const existingOfferDoc = await transaction.get(pendingOfferRef)
+
+				if (existingOfferDoc.exists) {
+					const existingData = existingOfferDoc.data()
+					if (existingData?.status === 'pending') {
+						throw new HttpsError(
+							'already-exists',
+							'A pending offer already exists between this player and team'
+						)
+					}
+				}
 				// Get player, team, and season documents
 				const [playerDoc, teamDoc, seasonDoc] = await Promise.all([
 					transaction.get(playerRef),
@@ -122,20 +129,9 @@ export const createOffer = onCall<CreateOfferRequest>(
 					const seasonStart = seasonData.dateStart.toDate()
 
 					if (now >= seasonStart) {
-						const formatDate = (date: Date): string => {
-							const options: Intl.DateTimeFormatOptions = {
-								year: 'numeric',
-								month: 'long',
-								day: 'numeric',
-								hour: 'numeric',
-								minute: '2-digit',
-								timeZoneName: 'short',
-							}
-							return date.toLocaleDateString('en-US', options)
-						}
 						throw new HttpsError(
 							'failed-precondition',
-							`Team roster changes are not allowed after the season has started. The season started on ${formatDate(seasonStart)}.`
+							`Team roster changes are not allowed after the season has started. The season started on ${formatDateForUser(seasonStart)}.`
 						)
 					}
 				}
@@ -174,7 +170,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 					)
 				}
 
-				// Create offer document
+				// Create offer document using deterministic ID for atomic operation
 				const offerData = {
 					player: playerRef,
 					team: teamRef,
@@ -185,11 +181,11 @@ export const createOffer = onCall<CreateOfferRequest>(
 					createdAt: new Date(),
 				}
 
-				const offerRef = await firestore
-					.collection(Collections.OFFERS)
-					.add(offerData)
+				// Use transaction.set() with the deterministic document ID
+				// This ensures the check and create are atomic
+				transaction.set(pendingOfferRef, offerData)
 
-				logger.info(`Successfully created offer: ${offerRef.id}`, {
+				logger.info(`Successfully created offer: ${pendingOfferId}`, {
 					type,
 					playerId,
 					teamId,
@@ -198,7 +194,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 
 				return {
 					success: true,
-					offerId: offerRef.id,
+					offerId: pendingOfferId,
 					message: `${type === 'invitation' ? 'Invitation' : 'Request'} created successfully`,
 				}
 			})

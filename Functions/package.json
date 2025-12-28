@@ -14,7 +14,14 @@
 		"lint:fix": "eslint . --fix",
 		"build": "tsc",
 		"build:watch": "tsc --watch",
-		"dev": "tsc --watch"
+		"dev": "tsc --watch",
+		"script:backup": "tsx scripts/backup-firestore.ts",
+		"script:restore": "tsx scripts/restore-firestore.ts",
+		"script:migrate-waivers": "tsx scripts/migrate-waivers.ts",
+		"script:cleanup-migration": "tsx scripts/cleanup-migration-fields.ts",
+		"script:migrate-stripe": "tsx scripts/migrate-stripe.ts",
+		"script:migrate-storage-urls": "tsx scripts/migrate-storage-urls.ts",
+		"script:reset-paid": "tsx scripts/reset-paid-status.ts"
 	},
 	"dependencies": {
 		"@dropbox/sign": "^1.10.0",
@@ -27,6 +34,7 @@
 		"@eslint/js": "^9.38.0",
 		"eslint": "^9.39.2",
 		"prettier": "^3.6.2",
+		"tsx": "^4.19.2",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.50.1"
 	}

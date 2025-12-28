@@ -54,49 +54,64 @@ export const onPaymentCreated = onDocumentCreated(
 				return
 			}
 
-			// Get current season and player data
-			const [currentSeason, playerDoc] = await Promise.all([
-				getCurrentSeason(),
-				firestore.collection(Collections.PLAYERS).doc(uid).get(),
-			])
-
+			// Get current season
+			const currentSeason = await getCurrentSeason()
 			if (!currentSeason) {
 				throw new Error('No current season found')
 			}
 
-			if (!playerDoc.exists) {
-				throw new Error(`Player document not found for UID: ${uid}`)
-			}
+			// Use transaction to atomically check and update paid status
+			// This prevents race conditions where multiple payment triggers
+			// could both pass the idempotency check
+			const playerRef = firestore.collection(Collections.PLAYERS).doc(uid)
 
-			const playerDocument = playerDoc.data() as PlayerDocument
+			const { alreadyPaid, playerDocument } = await firestore.runTransaction(
+				async (transaction) => {
+					const playerDoc = await transaction.get(playerRef)
 
-			// Check if player is already paid for this season (idempotency check)
-			const currentSeasonData = playerDocument.seasons?.find(
-				(season) => season.season.id === currentSeason.id
+					if (!playerDoc.exists) {
+						throw new Error(`Player document not found for UID: ${uid}`)
+					}
+
+					const playerData = playerDoc.data() as PlayerDocument
+
+					// Check if player is already paid for this season (idempotency check)
+					const currentSeasonData = playerData.seasons?.find(
+						(season) => season.season.id === currentSeason.id
+					)
+
+					if (currentSeasonData?.paid) {
+						// Already paid - return early from transaction
+						return { alreadyPaid: true, playerDocument: playerData }
+					}
+
+					// Update player's paid status for current season atomically
+					const updatedSeasons =
+						playerData.seasons?.map((season) =>
+							season.season.id === currentSeason.id
+								? { ...season, paid: true }
+								: season
+						) || []
+
+					transaction.update(playerRef, { seasons: updatedSeasons })
+
+					return { alreadyPaid: false, playerDocument: playerData }
+				}
 			)
 
-			if (currentSeasonData?.paid) {
+			if (alreadyPaid) {
 				logger.info(
 					`Player ${uid} already paid for season ${currentSeason.id}, skipping`
 				)
 				return
 			}
 
-			// Update player's paid status for current season
-			const updatedSeasons =
-				playerDocument.seasons?.map((season) =>
-					season.season.id === currentSeason.id
-						? { ...season, paid: true }
-						: season
-				) || []
-
-			await playerDoc.ref.update({ seasons: updatedSeasons })
-
 			// Check if waiver already exists for this player/season (idempotency check)
 			const existingWaiver = await firestore
-				.collection(Collections.WAIVERS)
-				.where('player', '==', playerDoc.ref)
-				.where('season', '==', currentSeason.id)
+				.collection(Collections.DROPBOX)
+				.doc(uid)
+				.collection('waivers')
+				.where('seasonId', '==', currentSeason.id)
 				.limit(1)
 				.get()
 
@@ -107,7 +122,7 @@ export const onPaymentCreated = onDocumentCreated(
 				return
 			}
 
-			// Send Dropbox signature request
+			// Send Dropbox signature request with metadata for webhook lookup
 			const signatureResponse = await dropbox.signatureRequestSendWithTemplate({
 				templateIds: [dropboxConfig.TEMPLATE_ID],
 				subject: EMAIL_CONFIG.WAIVER_SUBJECT,
@@ -126,19 +141,26 @@ export const onPaymentCreated = onDocumentCreated(
 					phone: false,
 					defaultType: SubSigningOptions.DefaultTypeEnum.Type,
 				},
+				metadata: {
+					firebaseUID: uid,
+					seasonId: currentSeason.id,
+				},
 				testMode: dropboxConfig.TEST_MODE,
 			})
 
-			// Create waiver document
+			// Create waiver document in dropbox/{uid}/waivers subcollection
 			if (signatureResponse.body.signatureRequest?.signatureRequestId) {
-				await firestore.collection(Collections.WAIVERS).add({
-					player: playerDoc.ref,
-					season: currentSeason.id,
-					signatureRequestId:
-						signatureResponse.body.signatureRequest.signatureRequestId,
-					status: 'pending',
-					createdAt: new Date(),
-				})
+				await firestore
+					.collection(Collections.DROPBOX)
+					.doc(uid)
+					.collection('waivers')
+					.add({
+						seasonId: currentSeason.id,
+						signatureRequestId:
+							signatureResponse.body.signatureRequest.signatureRequestId,
+						status: 'pending',
+						createdAt: new Date(),
+					})
 			}
 
 			logger.info(

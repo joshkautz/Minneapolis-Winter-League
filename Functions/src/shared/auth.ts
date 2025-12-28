@@ -2,7 +2,7 @@
  * Authentication utilities for Firebase Functions
  */
 
-import { CallableRequest } from 'firebase-functions/v2/https'
+import { CallableRequest, HttpsError } from 'firebase-functions/v2/https'
 import { Firestore } from 'firebase-admin/firestore'
 import { PlayerDocument } from '../types.js'
 
@@ -12,11 +12,14 @@ import { PlayerDocument } from '../types.js'
  */
 export function validateAuthentication(auth: CallableRequest['auth']): void {
 	if (!auth?.uid) {
-		throw new Error('Authentication required')
+		throw new HttpsError('unauthenticated', 'Authentication required')
 	}
 
 	if (!auth.token?.email_verified) {
-		throw new Error('Email verification required')
+		throw new HttpsError(
+			'permission-denied',
+			'Email verification required. Please verify your email address to continue.'
+		)
 	}
 }
 
@@ -29,7 +32,7 @@ export function validateBasicAuthentication(
 	auth: CallableRequest['auth']
 ): void {
 	if (!auth?.uid) {
-		throw new Error('Authentication required')
+		throw new HttpsError('unauthenticated', 'Authentication required')
 	}
 
 	// Note: We don't check email_verified here to allow newly created users
@@ -47,7 +50,7 @@ export async function validateAdminUser(
 	validateAuthentication(auth)
 
 	if (!auth?.uid) {
-		throw new Error('Authentication required')
+		throw new HttpsError('unauthenticated', 'Authentication required')
 	}
 
 	const userDoc = await firestore.collection('players').doc(auth.uid).get()
@@ -56,7 +59,10 @@ export async function validateAdminUser(
 		!userDoc.exists ||
 		!(userDoc.data() as PlayerDocument | undefined)?.admin
 	) {
-		throw new Error('Admin privileges required')
+		throw new HttpsError(
+			'permission-denied',
+			'Admin privileges required to perform this action'
+		)
 	}
 
 	return auth.uid

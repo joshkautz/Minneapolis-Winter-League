@@ -1,8 +1,13 @@
+import { lazy, Suspense } from 'react'
 import { useAnchorScroll } from '@/shared/hooks'
 import { useSiteSettings } from '@/providers'
 import { CitySvg } from './city-svg'
-import { SparklesCore } from './particles'
 import { RegistrationCountdown } from './registration-countdown'
+
+// Lazy-load the particles library to reduce initial bundle size
+const SparklesCore = lazy(() =>
+	import('./particles').then((module) => ({ default: module.SparklesCore }))
+)
 
 export const HeroSection = () => {
 	useAnchorScroll()
@@ -39,14 +44,16 @@ export const HeroSection = () => {
 				</div>
 			</div>
 			<div className='absolute inset-0 w-full pointer-events-none z-0'>
-				<SparklesCore
-					background='transparent'
-					minSize={particleConfig.minSize}
-					maxSize={particleConfig.maxSize}
-					particleDensity={particleConfig.density}
-					className='w-full h-full'
-					variant={particleConfig.variant}
-				/>
+				<Suspense fallback={null}>
+					<SparklesCore
+						background='transparent'
+						minSize={particleConfig.minSize}
+						maxSize={particleConfig.maxSize}
+						particleDensity={particleConfig.density}
+						className='w-full h-full'
+						variant={particleConfig.variant}
+					/>
+				</Suspense>
 			</div>
 			<div
 				className='absolute inset-x-0 bottom-0 w-full -z-10'
@@ -69,6 +76,8 @@ export const HeroSection = () => {
 				className='w-full h-auto absolute bottom-[-10px] inset-x-0 pointer-events-none fill-background dark:fill-foreground'
 				viewBox='0 0 1200 120'
 				preserveAspectRatio='none'
+				aria-hidden='true'
+				role='presentation'
 			>
 				<path d='M0,80 C150,20 300,100 450,60 C600,20 750,80 900,40 C1050,0 1200,60 1200,60 L1200,120 L0,120 Z' />
 				<path d='M0,100 C150,40 300,120 450,80 C600,40 750,100 900,60 C1050,20 1200,80 1200,80 L1200,120 L0,120 Z' />

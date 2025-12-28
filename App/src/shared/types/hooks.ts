@@ -5,20 +5,19 @@
  * consistent return types and improved type safety.
  */
 
-// File upload hook types
-export interface FileUploadHookState {
+/**
+ * Return type for the useFileUpload hook
+ */
+export interface FileUploadHookReturn {
+	// State
 	files: File[]
 	uploading: boolean
 	progress: number
 	error: Error | null
 	uploadedUrls: string[]
-}
-
-export interface FileUploadHookActions {
+	// Actions
 	uploadFiles: (files: File[]) => Promise<void>
 	removeFile: (index: number) => void
 	clearFiles: () => void
 	reset: () => void
 }
-
-export type FileUploadHookReturn = FileUploadHookState & FileUploadHookActions

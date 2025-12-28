@@ -24,7 +24,12 @@
 		"deploy": "firebase deploy",
 		"deploy:hosting": "firebase deploy --only hosting",
 		"deploy:functions": "firebase deploy --only functions",
-		"deploy:firestore": "firebase deploy --only firestore"
+		"deploy:firestore": "firebase deploy --only firestore",
+		"script:backup": "cd Functions && npm run script:backup --",
+		"script:restore": "cd Functions && npm run script:restore --",
+		"script:migrate-waivers": "cd Functions && npm run script:migrate-waivers --",
+		"script:cleanup-migration": "cd Functions && npm run script:cleanup-migration --",
+		"script:migrate-stripe": "cd Functions && npm run script:migrate-stripe --"
 	},
 	"devDependencies": {
 		"concurrently": "^9.2.1",

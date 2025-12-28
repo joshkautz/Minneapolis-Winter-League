@@ -23,8 +23,8 @@ export const updateTeamRegistrationOnRosterChange = onDocumentUpdated(
 		const teamId = event.params.teamId
 
 		try {
-			const beforeData = event.data?.before.data() as TeamDocument
-			const afterData = event.data?.after.data() as TeamDocument
+			const beforeData = event.data?.before.data() as TeamDocument | undefined
+			const afterData = event.data?.after.data() as TeamDocument | undefined
 			const teamRef = event.data?.after.ref
 
 			if (!beforeData || !afterData || !teamRef) {

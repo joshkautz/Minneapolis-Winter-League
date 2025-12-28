@@ -18,6 +18,22 @@ export const TEAM_CONFIG = {
 	MIN_PLAYERS_FOR_REGISTRATION: 10,
 } as const
 
+// Game Configuration
+export const GAME_CONFIG = {
+	ALLOWED_TIME_SLOTS: ['18:00', '18:45', '19:30', '20:15'],
+	ALLOWED_FIELDS: [1, 2, 3],
+	ALLOWED_MONTHS: [11, 12], // November and December
+} as const
+
+// Badge Configuration
+export const BADGE_CONFIG = {
+	NAME_MIN_LENGTH: 3,
+	NAME_MAX_LENGTH: 100,
+	DESCRIPTION_MIN_LENGTH: 10,
+	DESCRIPTION_MAX_LENGTH: 500,
+	MAX_IMAGE_SIZE_BYTES: 5 * 1024 * 1024, // 5MB
+} as const
+
 // Dropbox Sign Configuration (lazy-loaded)
 export function getDropboxSignConfig(): {
 	readonly API_KEY: string

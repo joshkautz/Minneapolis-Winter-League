@@ -2,7 +2,7 @@
  * Delete player callable function
  */
 
-import { onCall } from 'firebase-functions/v2/https'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerSeason, PlayerDocument } from '../../../types.js'
@@ -48,7 +48,10 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 		if (targetPlayerId !== userId) {
 			// Only admins can delete other players
 			if (!adminOverride) {
-				throw new Error('Admin override required to delete other players')
+				throw new HttpsError(
+					'permission-denied',
+					'Admin override required to delete other players'
+				)
 			}
 
 			const firestore = getFirestore()
@@ -61,33 +64,41 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 				.collection(Collections.PLAYERS)
 				.doc(targetPlayerId)
 
-			// Check if player exists
-			const playerDoc = await playerRef.get()
-			if (!playerDoc.exists) {
-				throw new Error('Player not found')
-			}
+			// Use transaction to atomically verify and delete
+			const playerDocument = await firestore.runTransaction(
+				async (transaction) => {
+					const playerDoc = await transaction.get(playerRef)
 
-			const playerDocument = playerDoc.data() as PlayerDocument | undefined
+					if (!playerDoc.exists) {
+						throw new HttpsError('not-found', 'Player not found')
+					}
 
-			if (!playerDocument) {
-				throw new Error('Unable to retrieve player data')
-			}
+					const playerData = playerDoc.data() as PlayerDocument | undefined
 
-			// Check for team associations
-			const hasTeamAssociations = playerDocument.seasons?.some(
-				(season: PlayerSeason) => season.team
+					if (!playerData) {
+						throw new HttpsError('not-found', 'Unable to retrieve player data')
+					}
+
+					// Check for team associations
+					const hasTeamAssociations = playerData.seasons?.some(
+						(season: PlayerSeason) => season.team
+					)
+
+					if (hasTeamAssociations && !adminOverride) {
+						throw new HttpsError(
+							'failed-precondition',
+							'Player has team associations. Admin override required for deletion. ' +
+								'Note: This will remove the player from all teams and delete all offers.'
+						)
+					}
+
+					// Delete the player document
+					// Note: The userDeleted trigger will handle cleanup of team rosters and offers
+					transaction.delete(playerRef)
+
+					return playerData
+				}
 			)
-
-			if (hasTeamAssociations && !adminOverride) {
-				throw new Error(
-					'Player has team associations. Admin override required for deletion. ' +
-						'Note: This will remove the player from all teams and delete all offers.'
-				)
-			}
-
-			// Delete the player document
-			// Note: The userDeleted trigger will handle cleanup of team rosters and offers
-			await playerRef.delete()
 
 			logger.info(`Successfully deleted player: ${targetPlayerId}`, {
 				deletedBy: userId,
@@ -110,7 +121,14 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
 
-			throw new Error(
+			// Re-throw HttpsError as-is
+			if (error instanceof HttpsError) {
+				throw error
+			}
+
+			// Wrap other errors
+			throw new HttpsError(
+				'internal',
 				error instanceof Error ? error.message : 'Failed to delete player'
 			)
 		}

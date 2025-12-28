@@ -14,28 +14,8 @@ service cloud.firestore {
     //////////////////////////////////////////////////////////////////////////////
     // STRIPE INTEGRATION - Secure payment data access
     //////////////////////////////////////////////////////////////////////////////
-    
-    // CUSTOMERS: Users can only access their own payment data
-    match /customers/{uid} {
-      allow read: if isAuthenticated() && request.auth.uid == uid;
-      
-      // Checkout sessions: User-specific
-      match /checkout_sessions/{id} {
-        allow read, write: if isAuthenticated() && request.auth.uid == uid;
-      }
-      
-      // Subscriptions: Read-only for users
-      match /subscriptions/{id} {
-        allow read: if isAuthenticated() && request.auth.uid == uid;
-      }
-      
-      // Payments: Read-only for users  
-      match /payments/{id} {
-        allow read: if isAuthenticated() && request.auth.uid == uid;
-      }
-    }
-    
-    // STRIPE: New custom Stripe integration (replaces customers collection)
+
+    // STRIPE: Custom Stripe integration for payments
     match /stripe/{uid} {
       allow read: if isAuthenticated() && request.auth.uid == uid;
 
@@ -59,7 +39,24 @@ service cloud.firestore {
       allow read: if true;
     }
 
-    // PRODUCTS: Public read access for pricing display (legacy - Firebase Stripe Extension)
+    //////////////////////////////////////////////////////////////////////////////
+    // DROPBOX SIGN - Waiver signature tracking
+    //////////////////////////////////////////////////////////////////////////////
+
+    // DROPBOX: Per-user waiver documents
+    match /dropbox/{uid} {
+      allow read: if isAuthenticated() && request.auth.uid == uid;
+
+      // Waivers: Read-only for users (created by onPaymentCreated, updated by webhook)
+      match /waivers/{id} {
+        allow read: if isAuthenticated() && request.auth.uid == uid;
+        allow write: if false; // Functions only (onPaymentCreated, dropboxSignWebhook)
+      }
+    }
+
+    // DEPRECATED: Legacy Firebase Stripe Extension products collection
+    // TODO: Remove after confirming no production usage
+    // New Stripe integration uses /stripe/products/items/{id} and /stripe/prices/items/{id}
     match /products/{id} {
       allow read: if true;
 
@@ -103,14 +100,7 @@ service cloud.firestore {
     match /offers/{offerId} {
       allow read: if true;
       allow create: if false; // Use createOfferViaFunction
-      allow update: if false; // Use updateOfferStatusViaFunction 
-      allow delete: if false; // Manual process
-    }
-
-    match /waivers/{waiverId} {
-      allow read: if true;
-      allow create: if false; // Use onPaymentCreated
-      allow update: if false; // Use dropboxSignWebhook 
+      allow update: if false; // Use updateOfferStatusViaFunction
       allow delete: if false; // Manual process
     }
 

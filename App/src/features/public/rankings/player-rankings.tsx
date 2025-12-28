@@ -936,10 +936,26 @@ export const PlayerRankings = ({
 		}
 	}, [error])
 
-	const rankings = rankingsSnapshot?.docs.map((doc) => ({
-		id: doc.id,
-		...doc.data(),
-	})) as (PlayerRankingDocument & { id: string })[] | undefined
+	// Type guard to validate ranking document has required properties
+	const isValidRankingDoc = (
+		data: unknown
+	): data is PlayerRankingDocument & { id: string } => {
+		if (!data || typeof data !== 'object') return false
+		const doc = data as Record<string, unknown>
+		return (
+			typeof doc.id === 'string' &&
+			typeof doc.playerName === 'string' &&
+			typeof doc.rating === 'number' &&
+			typeof doc.rank === 'number'
+		)
+	}
+
+	const rankings = rankingsSnapshot?.docs
+		.map((doc) => ({
+			id: doc.id,
+			...doc.data(),
+		}))
+		.filter(isValidRankingDoc)
 
 	// Helper function to process rankings with proper tie handling
 	const processRankingsWithTies = (
@@ -1213,7 +1229,7 @@ export const PlayerRankings = ({
 								</TableHeader>
 								<TableBody>
 									{Array.from({ length: 8 }, (_, i) => (
-										<TableRow key={i}>
+										<TableRow key={`skeleton-${i}`}>
 											<TableCell>
 												<div className='flex items-center gap-2'>
 													<Skeleton className='h-4 w-4 opacity-20' />

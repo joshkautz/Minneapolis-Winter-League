@@ -29,7 +29,7 @@ import {
 	UserCog,
 	Loader2,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
 import { firestore } from '@/firebase/app'
@@ -65,6 +65,7 @@ import {
 	type TeamDocument,
 	logger,
 } from '@/shared/utils'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 interface SeasonFormData {
 	seasonId: string
@@ -86,6 +87,7 @@ interface PlayerFormData {
 }
 
 export const PlayerManagement = () => {
+	const navigate = useNavigate()
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
@@ -171,41 +173,21 @@ export const PlayerManagement = () => {
 	} = useSeasonsContext()
 
 	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'PlayerManagement',
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', {
-				description: playerError.message,
-			})
-		}
-	}, [playerError])
-
-	useEffect(() => {
-		if (playersError) {
-			logger.error('Failed to search players:', {
-				component: 'PlayerManagement',
-				error: playersError.message,
-			})
-			toast.error('Failed to search players', {
-				description: playersError.message,
-			})
-		}
-	}, [playersError])
-
-	useEffect(() => {
-		if (seasonsError) {
-			logger.error('Failed to load seasons:', {
-				component: 'PlayerManagement',
-				error: seasonsError.message,
-			})
-			toast.error('Failed to load seasons', {
-				description: seasonsError.message,
-			})
-		}
-	}, [seasonsError])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'PlayerManagement',
+		errorLabel: 'player',
+	})
+	useQueryErrorHandler({
+		error: playersError,
+		component: 'PlayerManagement',
+		errorLabel: 'players',
+	})
+	useQueryErrorHandler({
+		error: seasonsError,
+		component: 'PlayerManagement',
+		errorLabel: 'seasons',
+	})
 
 	// Fetch selected player - create document reference directly since we have a raw UID
 	const [selectedPlayerSnapshot, , selectedPlayerError] = useDocument(
@@ -218,18 +200,12 @@ export const PlayerManagement = () => {
 			: undefined
 	)
 
-	useEffect(() => {
-		if (selectedPlayerError) {
-			logger.error('Failed to load selected player:', {
-				component: 'PlayerManagement',
-				playerId: selectedPlayerId,
-				error: selectedPlayerError.message,
-			})
-			toast.error('Failed to load selected player', {
-				description: selectedPlayerError.message,
-			})
-		}
-	}, [selectedPlayerError, selectedPlayerId])
+	useQueryErrorHandler({
+		error: selectedPlayerError,
+		component: 'PlayerManagement',
+		errorLabel: 'selected player',
+		context: { playerId: selectedPlayerId },
+	})
 
 	// Fetch teams for all seasons (for dropdowns)
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
@@ -440,7 +416,7 @@ export const PlayerManagement = () => {
 				<QueryError
 					error={seasonsError}
 					title='Error Loading Seasons'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</div>
 		)

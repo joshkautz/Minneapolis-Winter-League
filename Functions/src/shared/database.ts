@@ -3,13 +3,7 @@
  */
 
 import { getFirestore } from 'firebase-admin/firestore'
-import {
-	Collections,
-	SeasonDocument,
-	PlayerDocument,
-	PlayerSeason,
-	TeamRosterPlayer,
-} from '../types.js'
+import { Collections, SeasonDocument } from '../types.js'
 import { logger } from 'firebase-functions/v2'
 
 /**
@@ -54,36 +48,4 @@ export async function getCurrentSeasonRef(): Promise<FirebaseFirestore.DocumentR
 	}
 
 	return seasonsSnapshot.docs[0].ref
-}
-
-/**
- * Checks if a player is registered (paid and signed) for the current season
- */
-export function isPlayerRegisteredForSeason(
-	playerDocument: PlayerDocument,
-	seasonId: string
-): boolean {
-	const seasonData = playerDocument.seasons?.find(
-		(season: PlayerSeason) => season.season.id === seasonId
-	)
-
-	return Boolean(seasonData?.paid && seasonData?.signed)
-}
-
-/**
- * Counts registered players on a team for the current season
- */
-export async function countRegisteredPlayersOnTeam(
-	teamRoster: TeamRosterPlayer[],
-	seasonId: string
-): Promise<number> {
-	// Get all player documents
-	const playerPromises = teamRoster.map((member) => member.player.get())
-	const playerDocs = await Promise.all(playerPromises)
-
-	// Count registered players
-	return playerDocs.filter((playerDoc: FirebaseFirestore.DocumentSnapshot) => {
-		const playerDocument = playerDoc.data() as PlayerDocument
-		return isPlayerRegisteredForSeason(playerDocument, seasonId)
-	}).length
 }

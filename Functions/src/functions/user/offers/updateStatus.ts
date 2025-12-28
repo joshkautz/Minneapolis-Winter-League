@@ -13,6 +13,7 @@ import {
 } from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { formatDateForUser } from '../../../shared/format.js'
 
 interface UpdateOfferStatusRequest {
 	offerId: string
@@ -106,20 +107,9 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 					const seasonStart = seasonData.dateStart.toDate()
 
 					if (now >= seasonStart) {
-						const formatDate = (date: Date): string => {
-							const options: Intl.DateTimeFormatOptions = {
-								year: 'numeric',
-								month: 'long',
-								day: 'numeric',
-								hour: 'numeric',
-								minute: '2-digit',
-								timeZoneName: 'short',
-							}
-							return date.toLocaleDateString('en-US', options)
-						}
 						throw new HttpsError(
 							'failed-precondition',
-							`Team roster changes are not allowed after the season has started. The season started on ${formatDate(seasonStart)}.`
+							`Team roster changes are not allowed after the season has started. The season started on ${formatDateForUser(seasonStart)}.`
 						)
 					}
 				}
@@ -173,7 +163,8 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 							// Allow creator to cancel their own request
 						} else {
 							// Check if user is a team captain for accepting/rejecting
-							const teamDoc = await offerData.team.get()
+							// Use transaction.get() for consistency within the transaction
+							const teamDoc = await transaction.get(offerData.team)
 							if (!teamDoc.exists) {
 								throw new HttpsError('not-found', 'Team not found')
 							}

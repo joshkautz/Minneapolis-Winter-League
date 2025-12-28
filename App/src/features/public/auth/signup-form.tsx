@@ -108,18 +108,35 @@ export const SignupForm = ({ onSuccess, onNameAppeal }: SignupFormProps) => {
 								<FormItem>
 									<FormLabel>Password</FormLabel>
 									<FormControl>
-										<Input type='password' {...field} data-1p-ignore />
+										<Input
+											type='password'
+											{...field}
+											data-1p-ignore
+											aria-describedby='password-requirements'
+										/>
 									</FormControl>
+									<p
+										id='password-requirements'
+										className='text-xs text-muted-foreground'
+									>
+										Must be at least 6 characters
+									</p>
 								</FormItem>
 							)}
 						/>
 						{/* Centralized validation errors */}
 						{validationErrors.length > 0 && (
-							<div className='bg-red-50 border border-red-200 rounded-md p-3'>
+							<div
+								className='bg-red-50 border border-red-200 rounded-md p-3'
+								role='alert'
+								aria-live='polite'
+							>
 								<ul className='text-sm text-red-600 space-y-1'>
-									{validationErrors.map((error, index) => (
-										<li key={index} className='flex items-start'>
-											<span className='mr-2'>•</span>
+									{validationErrors.map((error) => (
+										<li key={error} className='flex items-start'>
+											<span className='mr-2' aria-hidden='true'>
+												•
+											</span>
 											<span>{error}</span>
 										</li>
 									))}

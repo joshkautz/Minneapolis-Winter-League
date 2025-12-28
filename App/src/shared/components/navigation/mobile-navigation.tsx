@@ -63,9 +63,9 @@ export const MobileNavigation = ({
 				<Button
 					variant='ghost'
 					className='px-0 mr-2 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden relative'
+					aria-label='Toggle navigation menu'
 				>
-					<HamburgerMenuIcon className='w-5 h-5' />
-					<span className='sr-only'>Toggle Menu</span>
+					<HamburgerMenuIcon className='w-5 h-5' aria-hidden='true' />
 					<NotificationBadge
 						count={totalNotifications}
 						position='button-overlay'

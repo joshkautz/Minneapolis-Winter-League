@@ -60,31 +60,9 @@ export const updateTeam = onCall<EditTeamRequest>(
 
 		try {
 			const firestore = getFirestore()
-
-			// Get team document
 			const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
-			const teamDoc = await teamRef.get()
 
-			if (!teamDoc.exists) {
-				throw new Error('Team not found')
-			}
-
-			const teamDocument = teamDoc.data() as TeamDocument | undefined
-
-			if (!teamDocument) {
-				throw new Error('Unable to retrieve team data')
-			}
-
-			// Check if user is a captain of this team
-			const userIsCaptain = teamDocument.roster?.some(
-				(member) => member.player.id === userId && member.captain
-			)
-
-			if (!userIsCaptain) {
-				throw new Error('Only team captains can edit team information')
-			}
-
-			// Handle logo upload if provided
+			// Handle logo upload if provided (must happen outside transaction)
 			let logoUrl = logo
 			let logoStoragePath = storagePath
 
@@ -106,11 +84,9 @@ export const updateTeam = onCall<EditTeamRequest>(
 						},
 					})
 
-					// Make file publicly readable
-					await file.makePublic()
-
-					// Get proper public URL using the publicUrl() method
-					logoUrl = file.publicUrl()
+					// Generate Firebase Storage URL (respects storage.rules)
+					const encodedPath = encodeURIComponent(fileName)
+					logoUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`
 					logoStoragePath = fileName
 
 					logger.info(`Successfully uploaded logo for team: ${teamId}`, {
@@ -123,40 +99,68 @@ export const updateTeam = onCall<EditTeamRequest>(
 				}
 			}
 
-			// Build update data - only include fields that actually changed
-			const updateData: Record<string, unknown> = {}
-			const changedFields: string[] = []
+			// Use transaction to atomically verify captain status and update
+			const changedFields = await firestore.runTransaction(
+				async (transaction) => {
+					const teamDoc = await transaction.get(teamRef)
 
-			if (name !== undefined) {
-				if (typeof name !== 'string' || name.trim() === '') {
-					throw new Error('Team name must be a non-empty string')
+					if (!teamDoc.exists) {
+						throw new Error('Team not found')
+					}
+
+					const teamDocument = teamDoc.data() as TeamDocument | undefined
+
+					if (!teamDocument) {
+						throw new Error('Unable to retrieve team data')
+					}
+
+					// Check if user is a captain of this team
+					const userIsCaptain = teamDocument.roster?.some(
+						(member) => member.player.id === userId && member.captain
+					)
+
+					if (!userIsCaptain) {
+						throw new Error('Only team captains can edit team information')
+					}
+
+					// Build update data - only include fields that actually changed
+					const updateData: Record<string, unknown> = {}
+					const changes: string[] = []
+
+					if (name !== undefined) {
+						if (typeof name !== 'string' || name.trim() === '') {
+							throw new Error('Team name must be a non-empty string')
+						}
+						const trimmedName = name.trim()
+						// Only update name if it's different from current
+						if (trimmedName !== teamDocument.name) {
+							updateData.name = trimmedName
+							changes.push('name')
+						}
+					}
+					if (logoUrl !== undefined) {
+						// Always update logo when provided (new upload)
+						updateData.logo = logoUrl
+						changes.push('logo')
+					}
+					if (logoStoragePath !== undefined) {
+						updateData.storagePath = logoStoragePath
+					}
+
+					// Only perform update if there are actual changes
+					if (Object.keys(updateData).length > 0) {
+						transaction.update(teamRef, updateData)
+
+						logger.info(`Successfully updated team: ${teamId}`, {
+							updatedFields: Object.keys(updateData),
+							changedFields: changes,
+							updatedBy: userId,
+						})
+					}
+
+					return changes
 				}
-				const trimmedName = name.trim()
-				// Only update name if it's different from current
-				if (trimmedName !== teamDocument.name) {
-					updateData.name = trimmedName
-					changedFields.push('name')
-				}
-			}
-			if (logoUrl !== undefined) {
-				// Always update logo when provided (new upload)
-				updateData.logo = logoUrl
-				changedFields.push('logo')
-			}
-			if (logoStoragePath !== undefined) {
-				updateData.storagePath = logoStoragePath
-			}
-
-			// Only perform update if there are actual changes
-			if (Object.keys(updateData).length > 0) {
-				await teamRef.update(updateData)
-
-				logger.info(`Successfully updated team: ${teamId}`, {
-					updatedFields: Object.keys(updateData),
-					changedFields,
-					updatedBy: userId,
-				})
-			}
+			)
 
 			// Build descriptive message based on what actually changed
 			let message: string

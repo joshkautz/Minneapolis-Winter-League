@@ -16,7 +16,84 @@ export enum ErrorType {
 	VALIDATION = 'validation',
 	NETWORK = 'network',
 	FIREBASE = 'firebase',
+	DROPBOX = 'dropbox',
 	UNEXPECTED = 'unexpected',
+}
+
+/**
+ * Firebase Functions error structure (wrapped HttpsError)
+ */
+export interface FirebaseFunctionsError {
+	code: string
+	details?: {
+		body?: { error?: { errorMsg?: string } }
+	}
+	message?: string
+}
+
+/**
+ * Dropbox Sign HTTP error structure
+ */
+export interface DropboxHttpError {
+	body?: { error?: { errorMsg?: string } }
+}
+
+/**
+ * Type guard to check if error is a Firebase Functions error
+ */
+export function isFirebaseFunctionsError(
+	err: unknown
+): err is FirebaseFunctionsError {
+	return (
+		typeof err === 'object' &&
+		err !== null &&
+		'code' in err &&
+		typeof (err as FirebaseFunctionsError).code === 'string'
+	)
+}
+
+/**
+ * Type guard to check if error is a Dropbox HTTP error
+ */
+export function isDropboxHttpError(err: unknown): err is DropboxHttpError {
+	return (
+		typeof err === 'object' &&
+		err !== null &&
+		'body' in err &&
+		typeof (err as DropboxHttpError).body === 'object'
+	)
+}
+
+/**
+ * Extract a user-friendly error message from various error types
+ */
+export function extractErrorMessage(
+	error: unknown,
+	fallback = 'An unexpected error occurred'
+): string {
+	if (isFirebaseFunctionsError(error)) {
+		// Try to get message from Dropbox error wrapped in Firebase
+		const dropboxMsg = error.details?.body?.error?.errorMsg
+		if (dropboxMsg) return dropboxMsg
+
+		// Fall back to Firebase error message
+		if (error.message) return error.message
+	}
+
+	if (isDropboxHttpError(error)) {
+		const dropboxMsg = error.body?.error?.errorMsg
+		if (dropboxMsg) return dropboxMsg
+	}
+
+	if (error instanceof Error) {
+		return error.message
+	}
+
+	if (typeof error === 'string') {
+		return error
+	}
+
+	return fallback
 }
 
 export interface ErrorHandlerOptions {
@@ -225,20 +302,3 @@ class ErrorHandler {
 }
 
 export const errorHandler = new ErrorHandler()
-
-/**
- * Utility function for handling async operations with consistent error handling
- */
-export async function withErrorHandling<T>(
-	operation: () => Promise<T>,
-	errorType: ErrorType,
-	component: string,
-	options?: ErrorHandlerOptions
-): Promise<T | null> {
-	try {
-		return await operation()
-	} catch (error) {
-		errorHandler.handle(error, errorType, component, options)
-		return null
-	}
-}

@@ -120,7 +120,6 @@ const Collections = {
 	PLAYERS: 'players',
 	SEASONS: 'seasons',
 	TEAMS: 'teams',
-	WAIVERS: 'waivers',
 	RANKINGS: 'rankings',
 	RANKINGS_HISTORY: 'rankings-history',
 	RANKINGS_CALCULATIONS: 'rankings-calculations',

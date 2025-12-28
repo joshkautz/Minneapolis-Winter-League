@@ -59,9 +59,13 @@ export const AccountSection = ({
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
-				<Button variant='ghost' size='sm' className='px-0 w-9 relative'>
-					<User className='h-4 w-4' />
-					<span className='sr-only'>User account</span>
+				<Button
+					variant='ghost'
+					size='sm'
+					className='px-0 w-9 relative'
+					aria-label='Open account menu'
+				>
+					<User className='h-4 w-4' aria-hidden='true' />
 					<NotificationBadge
 						count={totalNotifications}
 						position='button-overlay'

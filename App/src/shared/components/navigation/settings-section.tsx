@@ -28,9 +28,13 @@ export const SettingsSection = ({
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
-				<Button variant='ghost' size='sm' className='px-0 w-9'>
-					<Settings className='h-4 w-4' />
-					<span className='sr-only'>Settings</span>
+				<Button
+					variant='ghost'
+					size='sm'
+					className='px-0 w-9'
+					aria-label='Open settings'
+				>
+					<Settings className='h-4 w-4' aria-hidden='true' />
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent

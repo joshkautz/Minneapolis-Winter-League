@@ -34,8 +34,13 @@ export async function processGame(
 		return
 	}
 
-	const homeTeamData = homeTeamDoc.data() as TeamDocument
-	const awayTeamData = awayTeamDoc.data() as TeamDocument
+	const homeTeamData = homeTeamDoc.data() as TeamDocument | undefined
+	const awayTeamData = awayTeamDoc.data() as TeamDocument | undefined
+
+	if (!homeTeamData || !awayTeamData) {
+		logger.warn(`Invalid team data for game ${game.id}`)
+		return
+	}
 
 	const homeRoster = homeTeamData.roster || []
 	const awayRoster = awayTeamData.roster || []
@@ -71,7 +76,12 @@ export async function processGame(
 		if (!playerState) {
 			// Create new player state
 			const playerDoc = await rosterEntry.player.get()
-			const playerData = playerDoc.data() as PlayerDocument
+			const playerData = playerDoc.data() as PlayerDocument | undefined
+
+			if (!playerData) {
+				logger.warn(`Missing player data for ${playerId} in game ${game.id}`)
+				continue // Skip this player
+			}
 
 			playerState = {
 				playerId,
@@ -102,7 +112,12 @@ export async function processGame(
 		if (!playerState) {
 			// Create new player state
 			const playerDoc = await rosterEntry.player.get()
-			const playerData = playerDoc.data() as PlayerDocument
+			const playerData = playerDoc.data() as PlayerDocument | undefined
+
+			if (!playerData) {
+				logger.warn(`Missing player data for ${playerId} in game ${game.id}`)
+				continue // Skip this player
+			}
 
 			playerState = {
 				playerId,

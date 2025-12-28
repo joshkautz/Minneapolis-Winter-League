@@ -18,11 +18,4 @@ export { useUserStatus } from './use-user-status'
 export { useTopNavigation } from './use-top-navigation'
 export { useAccountSection } from './use-account-section'
 export { useAnimatedSelect } from './use-animated-select'
-export {
-	useFirestoreCollection,
-	useFirestoreCollectionErrors,
-	type UseFirestoreCollectionOptions,
-	type UseFirestoreCollectionReturn,
-	type CollectionErrorEntry,
-	type UseFirestoreCollectionErrorsReturn,
-} from './use-firestore-collection'
+export { useQueryErrorHandler } from './use-query-error-handler'

@@ -2,12 +2,18 @@
  * Delete team callable function
  */
 
-import { onCall } from 'firebase-functions/v2/https'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, TeamDocument, PlayerDocument } from '../../../types.js'
+import {
+	Collections,
+	TeamDocument,
+	PlayerDocument,
+	SeasonDocument,
+} from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { formatDateForUser } from '../../../shared/format.js'
 
 interface DeleteTeamRequest {
 	teamId: string
@@ -22,7 +28,7 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 		const userId = request.auth?.uid ?? ''
 
 		if (!teamId) {
-			throw new Error('Team ID is required')
+			throw new HttpsError('invalid-argument', 'Team ID is required')
 		}
 
 		try {
@@ -33,13 +39,13 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 			const teamDoc = await teamRef.get()
 
 			if (!teamDoc.exists) {
-				throw new Error('Team not found')
+				throw new HttpsError('not-found', 'Team not found')
 			}
 
 			const teamDocument = teamDoc.data() as TeamDocument | undefined
 
 			if (!teamDocument) {
-				throw new Error('Unable to retrieve team data')
+				throw new HttpsError('internal', 'Unable to retrieve team data')
 			}
 
 			// Check if user is a captain of this team
@@ -48,7 +54,27 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 			)
 
 			if (!userIsCaptain) {
-				throw new Error('Only team captains can delete the team')
+				throw new HttpsError(
+					'permission-denied',
+					'Only team captains can delete the team'
+				)
+			}
+
+			// Check if season has started
+			if (teamDocument.season) {
+				const seasonDoc = await teamDocument.season.get()
+				if (seasonDoc.exists) {
+					const seasonData = seasonDoc.data() as SeasonDocument
+					const now = new Date()
+					const seasonStart = seasonData.dateStart.toDate()
+
+					if (now >= seasonStart) {
+						throw new HttpsError(
+							'failed-precondition',
+							`Teams cannot be deleted after the season has started. The season started on ${formatDateForUser(seasonStart)}.`
+						)
+					}
+				}
 			}
 
 			// Use transaction to ensure data consistency
@@ -99,6 +125,11 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 				message: 'Team deleted successfully',
 			}
 		} catch (error) {
+			// Re-throw HttpsError as-is
+			if (error instanceof HttpsError) {
+				throw error
+			}
+
 			const errorMessage =
 				error instanceof Error ? error.message : 'Unknown error'
 
@@ -108,8 +139,7 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 				error: errorMessage,
 			})
 
-			// Re-throw the original error message for better user experience
-			throw new Error(errorMessage)
+			throw new HttpsError('internal', `Failed to delete team: ${errorMessage}`)
 		}
 	}
 )

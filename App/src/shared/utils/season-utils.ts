@@ -15,7 +15,7 @@ import { PlayerDocument, PlayerSeason, SeasonDocument } from '@/types'
  * @param seasonRef - Reference to the season to find
  * @returns The PlayerSeason object for the specified season, or undefined if not found
  */
-export const getPlayerSeasonData = (
+const getPlayerSeasonData = (
 	playerData: PlayerDocument | undefined,
 	seasonRef: DocumentReference<SeasonDocument> | undefined
 ): PlayerSeason | undefined => {
@@ -59,17 +59,6 @@ export const isPlayerSignedForSeason = (
 ): boolean => {
 	const seasonData = getPlayerSeasonData(playerData, seasonRef)
 	return Boolean(seasonData?.signed)
-}
-
-/**
- * Checks if a player is rostered (has a team) for the specified season
- */
-export const isPlayerRosteredForSeason = (
-	playerData: PlayerDocument | undefined,
-	seasonRef: DocumentReference<SeasonDocument> | undefined
-): boolean => {
-	const seasonData = getPlayerSeasonData(playerData, seasonRef)
-	return Boolean(seasonData?.team)
 }
 
 /**

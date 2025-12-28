@@ -16,12 +16,11 @@ import {
 	Loader2,
 	ArrowUpDown,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
 import { firestore } from '@/firebase/app'
-import { logger } from '@/shared/utils'
+import { useQueryErrorHandler } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import {
@@ -81,6 +80,7 @@ const SortIcon = ({
 }
 
 export const RegistrationManagement = () => {
+	const navigate = useNavigate()
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
@@ -104,41 +104,21 @@ export const RegistrationManagement = () => {
 		useCollection(allPlayersQuery)
 
 	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'RegistrationManagement',
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', {
-				description: playerError.message,
-			})
-		}
-	}, [playerError])
-
-	useEffect(() => {
-		if (seasonsError) {
-			logger.error('Failed to load seasons:', {
-				component: 'RegistrationManagement',
-				error: seasonsError.message,
-			})
-			toast.error('Failed to load seasons', {
-				description: seasonsError.message,
-			})
-		}
-	}, [seasonsError])
-
-	useEffect(() => {
-		if (playersError) {
-			logger.error('Failed to load players:', {
-				component: 'RegistrationManagement',
-				error: playersError.message,
-			})
-			toast.error('Failed to load players', {
-				description: playersError.message,
-			})
-		}
-	}, [playersError])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'RegistrationManagement',
+		errorLabel: 'player',
+	})
+	useQueryErrorHandler({
+		error: seasonsError,
+		component: 'RegistrationManagement',
+		errorLabel: 'seasons',
+	})
+	useQueryErrorHandler({
+		error: playersError,
+		component: 'RegistrationManagement',
+		errorLabel: 'players',
+	})
 
 	useEffect(() => {
 		if (currentSeasonQueryDocumentSnapshot?.id && !filterSeasonId) {
@@ -261,7 +241,7 @@ export const RegistrationManagement = () => {
 				<QueryError
 					error={seasonsError}
 					title='Error Loading Seasons'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</PageContainer>
 		)
@@ -273,7 +253,7 @@ export const RegistrationManagement = () => {
 				<QueryError
 					error={playersError}
 					title='Error Loading Players'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</PageContainer>
 		)

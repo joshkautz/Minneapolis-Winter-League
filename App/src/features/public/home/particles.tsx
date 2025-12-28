@@ -1,10 +1,9 @@
-import { useId, useEffect, useState, useMemo, useCallback } from 'react'
+import { useId, useEffect, useState, useMemo } from 'react'
 import Particles, { initParticlesEngine } from '@tsparticles/react'
-import type { Container, ISourceOptions } from '@tsparticles/engine'
+import type { ISourceOptions } from '@tsparticles/engine'
 import { loadSlim } from '@tsparticles/slim'
 import { loadHeartShape } from '@tsparticles/shape-heart'
-import { cn } from '@/shared/utils'
-import { motion, useAnimation } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 type ParticlesProps = {
 	id?: string
@@ -37,7 +36,7 @@ export const SparklesCore = ({
 	variant = 'snow',
 }: ParticlesProps) => {
 	const [init, setInit] = useState(false)
-	const controls = useAnimation()
+	const [particlesReady, setParticlesReady] = useState(false)
 	const generatedId = useId()
 
 	// Configuration based on variant
@@ -58,18 +57,10 @@ export const SparklesCore = ({
 			})
 	}, [])
 
-	// Memoize callback to prevent unnecessary re-renders
-	const particlesLoaded = useCallback(
-		async (container?: Container) => {
-			if (container) {
-				controls.start({
-					opacity: 1,
-					transition: { duration: 1 },
-				})
-			}
-		},
-		[controls]
-	)
+	// Callback when particles finish loading - triggers fade-in animation
+	const particlesLoaded = async () => {
+		setParticlesReady(true)
+	}
 
 	// Memoize options to prevent recreation on each render
 	const options: ISourceOptions = useMemo(
@@ -162,7 +153,14 @@ export const SparklesCore = ({
 	)
 
 	return (
-		<motion.div animate={controls} className={cn('opacity-0', className)}>
+		<motion.div
+			initial={{ opacity: 0 }}
+			animate={{ opacity: particlesReady ? 1 : 0 }}
+			transition={{ duration: 1 }}
+			className={className}
+			aria-hidden='true'
+			role='presentation'
+		>
 			{init && (
 				<Particles
 					id={id || generatedId}

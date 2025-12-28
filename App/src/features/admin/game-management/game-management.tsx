@@ -18,7 +18,7 @@ import {
 	Plus,
 	Loader2,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
@@ -68,6 +68,7 @@ import {
 } from '@/components/ui/table'
 import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import { logger } from '@/shared/utils'
+import { useQueryErrorHandler } from '@/shared/hooks'
 import { GameDocument, SeasonDocument, TeamDocument } from '@/types'
 import { Timestamp } from '@firebase/firestore'
 
@@ -96,6 +97,7 @@ const INITIAL_FORM_DATA: GameFormData = {
 }
 
 export const GameManagement = () => {
+	const navigate = useNavigate()
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
@@ -112,70 +114,21 @@ export const GameManagement = () => {
 	} = useGamesContext()
 
 	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'GameManagement',
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', { description: playerError.message })
-		}
-	}, [playerError])
-
-	useEffect(() => {
-		if (gamesError) {
-			logger.error('Failed to load games:', {
-				component: 'GameManagement',
-				error: gamesError.message,
-			})
-			toast.error('Failed to load games', { description: gamesError.message })
-		}
-	}, [gamesError])
-
-	useEffect(() => {
-		if (seasonsError) {
-			logger.error('Failed to load seasons:', {
-				component: 'GameManagement',
-				error: seasonsError.message,
-			})
-			toast.error('Failed to load seasons', {
-				description: seasonsError.message,
-			})
-		}
-	}, [seasonsError])
-
-	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'GameManagement',
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', { description: playerError.message })
-		}
-	}, [playerError])
-
-	useEffect(() => {
-		if (gamesError) {
-			logger.error('Failed to load games:', {
-				component: 'GameManagement',
-				error: gamesError.message,
-			})
-			toast.error('Failed to load games', { description: gamesError.message })
-		}
-	}, [gamesError])
-
-	useEffect(() => {
-		if (seasonsError) {
-			logger.error('Failed to load seasons:', {
-				component: 'GameManagement',
-				error: seasonsError.message,
-			})
-			toast.error('Failed to load seasons', {
-				description: seasonsError.message,
-			})
-		}
-	}, [seasonsError])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'GameManagement',
+		errorLabel: 'player',
+	})
+	useQueryErrorHandler({
+		error: gamesError,
+		component: 'GameManagement',
+		errorLabel: 'games',
+	})
+	useQueryErrorHandler({
+		error: seasonsError,
+		component: 'GameManagement',
+		errorLabel: 'seasons',
+	})
 
 	const [formData, setFormData] = useState<GameFormData>(INITIAL_FORM_DATA)
 	const [editingGameId, setEditingGameId] = useState<string | null>(null)
@@ -590,7 +543,7 @@ export const GameManagement = () => {
 				<QueryError
 					error={gamesError}
 					title='Error Loading Games'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</PageContainer>
 		)
@@ -602,7 +555,7 @@ export const GameManagement = () => {
 				<QueryError
 					error={seasonsError}
 					title='Error Loading Seasons'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</PageContainer>
 		)

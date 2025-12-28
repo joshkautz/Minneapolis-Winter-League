@@ -3,7 +3,8 @@
  */
 
 import { getFirestore, DocumentReference } from 'firebase-admin/firestore'
-import * as functions from 'firebase-functions/v1'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
+import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerDocument, SeasonDocument } from '../../../types.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { validateBasicAuthentication } from '../../../shared/auth.js'
@@ -36,91 +37,88 @@ interface CreatePlayerRequest {
  * Note: Email verification is NOT required to allow newly registered users
  * to create their player profiles immediately after account creation.
  */
-export const createPlayer = functions
-	.region(FIREBASE_CONFIG.REGION)
-	.https.onCall(
-		async (
-			data: CreatePlayerRequest,
-			context: functions.https.CallableContext
-		) => {
-			// Validate authentication
-			validateBasicAuthentication(context.auth)
+export const createPlayer = onCall<CreatePlayerRequest>(
+	{ region: FIREBASE_CONFIG.REGION },
+	async (request) => {
+		const { auth, data } = request
 
-			const { firstname, lastname, email, seasonId } = data
-			const userId = context.auth?.uid ?? ''
+		// Validate authentication
+		validateBasicAuthentication(auth)
 
-			// Validate required fields
-			if (
-				!firstname ||
-				typeof firstname !== 'string' ||
-				firstname.trim() === ''
-			) {
-				throw new functions.https.HttpsError(
-					'invalid-argument',
-					'First name is required and must be a non-empty string'
-				)
-			}
+		const { firstname, lastname, email, seasonId } = data
+		const userId = auth?.uid ?? ''
 
-			if (!lastname || typeof lastname !== 'string' || lastname.trim() === '') {
-				throw new functions.https.HttpsError(
-					'invalid-argument',
-					'Last name is required and must be a non-empty string'
-				)
-			}
+		// Validate required fields
+		if (
+			!firstname ||
+			typeof firstname !== 'string' ||
+			firstname.trim() === ''
+		) {
+			throw new HttpsError(
+				'invalid-argument',
+				'First name is required and must be a non-empty string'
+			)
+		}
 
-			if (!email || typeof email !== 'string') {
-				throw new functions.https.HttpsError(
-					'invalid-argument',
-					'Email is required and must be a string'
-				)
-			}
+		if (!lastname || typeof lastname !== 'string' || lastname.trim() === '') {
+			throw new HttpsError(
+				'invalid-argument',
+				'Last name is required and must be a non-empty string'
+			)
+		}
 
-			if (!seasonId || typeof seasonId !== 'string') {
-				throw new functions.https.HttpsError(
-					'invalid-argument',
-					'Season ID is required and must be a string'
-				)
-			}
+		if (!email || typeof email !== 'string') {
+			throw new HttpsError(
+				'invalid-argument',
+				'Email is required and must be a string'
+			)
+		}
 
-			// Validate email matches authenticated user
-			if (context.auth?.token.email !== email) {
-				throw new functions.https.HttpsError(
-					'permission-denied',
-					'Email must match authenticated user email'
-				)
-			}
+		if (!seasonId || typeof seasonId !== 'string') {
+			throw new HttpsError(
+				'invalid-argument',
+				'Season ID is required and must be a string'
+			)
+		}
 
-			// Trim whitespace from names
-			const trimmedFirstname = firstname.trim()
-			const trimmedLastname = lastname.trim()
+		// Validate email matches authenticated user
+		if (auth?.token.email !== email) {
+			throw new HttpsError(
+				'permission-denied',
+				'Email must match authenticated user email'
+			)
+		}
 
-			try {
-				const firestore = getFirestore()
+		// Trim whitespace from names
+		const trimmedFirstname = firstname.trim()
+		const trimmedLastname = lastname.trim()
+
+		try {
+			const firestore = getFirestore()
+			const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
+			const seasonRef = firestore
+				.collection(Collections.SEASONS)
+				.doc(seasonId) as DocumentReference<SeasonDocument>
+
+			// Use transaction to atomically check existence and create
+			await firestore.runTransaction(async (transaction) => {
+				// Read all documents first (Firestore transaction requirement)
+				const [playerDoc, seasonDoc] = await Promise.all([
+					transaction.get(playerRef),
+					transaction.get(seasonRef),
+				])
 
 				// Check if player already exists
-				const existingPlayer = await firestore
-					.collection(Collections.PLAYERS)
-					.doc(userId)
-					.get()
-
-				if (existingPlayer.exists) {
-					throw new functions.https.HttpsError(
-						'already-exists',
-						'Player already exists'
-					)
+				if (playerDoc.exists) {
+					throw new HttpsError('already-exists', 'Player already exists')
 				}
 
 				// Validate season exists
-				const seasonRef = firestore
-					.collection(Collections.SEASONS)
-					.doc(seasonId) as DocumentReference<SeasonDocument>
-				const seasonDoc = await seasonRef.get()
-
 				if (!seasonDoc.exists) {
-					throw new functions.https.HttpsError('not-found', 'Invalid season ID')
+					throw new HttpsError('not-found', 'Invalid season ID')
 				}
 
-				// Create player document
+				// Create player document atomically
 				const player: PlayerDocument = {
 					admin: false,
 					email: email,
@@ -139,34 +137,35 @@ export const createPlayer = functions
 					],
 				}
 
-				await firestore.collection(Collections.PLAYERS).doc(userId).set(player)
+				transaction.set(playerRef, player)
+			})
 
-				functions.logger.info(`Successfully created player: ${userId}`, {
-					email,
-					name: `${trimmedFirstname} ${trimmedLastname}`,
-				})
+			logger.info(`Successfully created player: ${userId}`, {
+				email,
+				name: `${trimmedFirstname} ${trimmedLastname}`,
+			})
 
-				return {
-					success: true,
-					playerId: userId,
-					message: 'Player created successfully',
-				}
-			} catch (error) {
-				functions.logger.error('Error creating player:', {
-					userId,
-					email,
-					error: error instanceof Error ? error.message : 'Unknown error',
-				})
-
-				// Re-throw HttpsError as-is, wrap other errors
-				if (error instanceof functions.https.HttpsError) {
-					throw error
-				}
-
-				throw new functions.https.HttpsError(
-					'internal',
-					error instanceof Error ? error.message : 'Failed to create player'
-				)
+			return {
+				success: true,
+				playerId: userId,
+				message: 'Player created successfully',
 			}
+		} catch (error) {
+			logger.error('Error creating player:', {
+				userId,
+				email,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			})
+
+			// Re-throw HttpsError as-is, wrap other errors
+			if (error instanceof HttpsError) {
+				throw error
+			}
+
+			throw new HttpsError(
+				'internal',
+				error instanceof Error ? error.message : 'Failed to create player'
+			)
 		}
-	)
+	}
+)

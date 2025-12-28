@@ -19,7 +19,7 @@ import {
 	Shield,
 	Award,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
 import { logger } from '@/shared/utils'
@@ -61,10 +61,12 @@ import {
 } from '@/components/ui/alert-dialog'
 import { TeamDocument, SeasonDocument } from '@/types'
 import { useSeasonsContext } from '@/providers'
+import { useQueryErrorHandler } from '@/shared/hooks'
 import { TeamBadgesDialog } from './components/team-badges-dialog'
 import { DocumentReference } from '@/firebase'
 
 export const TeamManagement = () => {
+	const navigate = useNavigate()
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
@@ -105,37 +107,21 @@ export const TeamManagement = () => {
 	)
 
 	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'TeamManagement',
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', { description: playerError.message })
-		}
-	}, [playerError])
-
-	useEffect(() => {
-		if (seasonsError) {
-			logger.error('Failed to load seasons:', {
-				component: 'TeamManagement',
-				error: seasonsError.message,
-			})
-			toast.error('Failed to load seasons', {
-				description: seasonsError.message,
-			})
-		}
-	}, [seasonsError])
-
-	useEffect(() => {
-		if (teamsError) {
-			logger.error('Failed to load teams:', {
-				component: 'TeamManagement',
-				error: teamsError.message,
-			})
-			toast.error('Failed to load teams', { description: teamsError.message })
-		}
-	}, [teamsError])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'TeamManagement',
+		errorLabel: 'player',
+	})
+	useQueryErrorHandler({
+		error: seasonsError,
+		component: 'TeamManagement',
+		errorLabel: 'seasons',
+	})
+	useQueryErrorHandler({
+		error: teamsError,
+		component: 'TeamManagement',
+		errorLabel: 'teams',
+	})
 
 	// State for delete confirmation dialog
 	const [teamToDelete, setTeamToDelete] = useState<{
@@ -265,7 +251,7 @@ export const TeamManagement = () => {
 				<QueryError
 					error={seasonsError}
 					title='Error Loading Seasons'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</div>
 		)
@@ -277,7 +263,7 @@ export const TeamManagement = () => {
 				<QueryError
 					error={teamsError}
 					title='Error Loading Teams'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</div>
 		)

@@ -5,12 +5,7 @@
  */
 
 import type { SeasonDocument } from '@/types'
-
-/**
- * Check if the current environment is development
- */
-const isDevelopment = (): boolean =>
-	import.meta.env.DEV || import.meta.env.VITE_USE_EMULATORS === 'true'
+import { isDevelopment } from '@/shared/utils'
 
 /**
  * Get the Stripe price ID from a season document based on environment

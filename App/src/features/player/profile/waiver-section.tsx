@@ -1,20 +1,21 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoadingSpinner } from '@/shared/components'
 import { CheckCircle, FileText, AlertCircle, Calendar } from 'lucide-react'
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '@/components/ui/tooltip'
 import { toast } from 'sonner'
-import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
-import { formatTimestamp, SeasonDocument, logger } from '@/shared/utils'
+import {
+	formatTimestamp,
+	SeasonDocument,
+	logger,
+	extractErrorMessage,
+} from '@/shared/utils'
 import { QueryDocumentSnapshot } from '@/firebase'
 import { Timestamp } from '@firebase/firestore'
 import { sendDropboxEmail } from '@/firebase/functions'
+
+/** Rate limit cooldown in milliseconds (5 minutes) */
+const RESEND_COOLDOWN_MS = 5 * 60 * 1000
 
 interface WaiverSectionProps {
 	isAuthenticatedUserSigned: boolean | undefined
@@ -43,19 +44,31 @@ export const WaiverSection = ({
 }: WaiverSectionProps) => {
 	const [dropboxEmailSent, setDropboxEmailSent] = useState(false)
 	const [dropboxEmailLoading, setDropboxEmailLoading] = useState(false)
+	const [cooldownRemaining, setCooldownRemaining] = useState(0)
+
+	// Countdown timer for rate limiting
+	useEffect(() => {
+		if (cooldownRemaining <= 0) return
+
+		const timer = setInterval(() => {
+			setCooldownRemaining((prev) => Math.max(0, prev - 1000))
+		}, 1000)
+
+		return () => clearInterval(timer)
+	}, [cooldownRemaining])
 
 	const sendDropboxEmailButtonOnClickHandler = useCallback(async () => {
 		setDropboxEmailLoading(true)
 
 		try {
 			// The backend function will automatically look up the user's waiver
-			const result = await sendDropboxEmail()
-			const data: returnTypeT<SignatureRequestGetResponse> = result.data
+			await sendDropboxEmail()
 
 			setDropboxEmailSent(true)
 			setDropboxEmailLoading(false)
-			toast.success('Success', {
-				description: `Email sent to ${data.body.signatureRequest?.requesterEmailAddress}`,
+			setCooldownRemaining(RESEND_COOLDOWN_MS)
+			toast.success('Waiver Email Sent', {
+				description: 'Check your inbox for the waiver signing link.',
 			})
 		} catch (error) {
 			logger.error('Dropbox waiver email error', error, {
@@ -65,49 +78,8 @@ export const WaiverSection = ({
 			setDropboxEmailSent(false)
 			setDropboxEmailLoading(false)
 
-			// Handle both HttpError from Dropbox SDK and other errors
-			let errorMessage = 'An unknown error occurred'
-
-			// Type guard for Firebase Functions error with details
-			interface FirebaseFunctionsError {
-				code: string
-				details?: {
-					body?: { error?: { errorMsg?: string } }
-				}
-				message?: string
-			}
-
-			// Type guard for Dropbox HttpError
-			interface DropboxHttpError {
-				body?: { error?: { errorMsg?: string } }
-			}
-
-			const isFirebaseFunctionsError = (
-				err: unknown
-			): err is FirebaseFunctionsError =>
-				typeof err === 'object' &&
-				err !== null &&
-				'code' in err &&
-				(err as FirebaseFunctionsError).code === 'functions/unknown'
-
-			const isDropboxHttpError = (err: unknown): err is DropboxHttpError =>
-				typeof err === 'object' &&
-				err !== null &&
-				'body' in err &&
-				typeof (err as DropboxHttpError).body === 'object'
-
-			if (isFirebaseFunctionsError(error)) {
-				// Firebase Functions wrapped the HttpError
-				errorMessage = `Dropbox Error: ${error.details?.body?.error?.errorMsg || error.message}`
-			} else if (isDropboxHttpError(error)) {
-				// Direct HttpError from Dropbox
-				errorMessage = `Dropbox Error: ${error.body?.error?.errorMsg}`
-			} else if (error instanceof Error) {
-				errorMessage = error.message
-			}
-
-			toast.error('Failure', {
-				description: errorMessage,
+			toast.error('Failed to Send Email', {
+				description: extractErrorMessage(error),
 			})
 		}
 	}, [])
@@ -130,13 +102,26 @@ export const WaiverSection = ({
 		return now > registrationEnd
 	}, [currentSeasonQueryDocumentSnapshot])
 
-	// For non-admin users, disable waiver actions if registration hasn't started yet or has ended
-	// For admin users, always allow waiver actions regardless of registration dates
-	// const isWaiverDisabled =
-	// 	!isAuthenticatedUserAdmin &&
-	// 	(isRegistrationNotStarted || isRegistrationEnded)
 	const isUserBanned = isAuthenticatedUserBanned
 	const needsPayment = !isAuthenticatedUserPaid
+	const isOnCooldown = cooldownRemaining > 0
+
+	// Compute whether the resend button should be disabled
+	const isResendDisabled =
+		isUserBanned ||
+		needsPayment ||
+		dropboxEmailLoading ||
+		isOnCooldown ||
+		(!isAuthenticatedUserAdmin &&
+			(isRegistrationNotStarted || isRegistrationEnded))
+
+	// Format cooldown remaining as M:SS
+	const formatCooldown = (ms: number): string => {
+		const totalSeconds = Math.ceil(ms / 1000)
+		const minutes = Math.floor(totalSeconds / 60)
+		const seconds = totalSeconds % 60
+		return `${minutes}:${seconds.toString().padStart(2, '0')}`
+	}
 
 	return (
 		<div className='space-y-3'>
@@ -198,37 +183,22 @@ export const WaiverSection = ({
 						</Alert>
 					)}
 
-					<TooltipProvider>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<span className='w-full'>
-									<Button
-										onClick={sendDropboxEmailButtonOnClickHandler}
-										disabled={true}
-										className='w-full'
-									>
-										{dropboxEmailLoading ? (
-											<LoadingSpinner size='sm' className='mr-2' />
-										) : (
-											<FileText className='mr-2 h-4 w-4' />
-										)}
-										{dropboxEmailSent
-											? 'Waiver Email Resent!'
-											: 'Resend Waiver Email'}
-									</Button>
-								</span>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>
-									Dropbox Sign is currently experiencing instability. Upon
-									payment, you will automatically be sent a waiver email. Please
-									patiently check your inbox or spam.
-								</p>
-							</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
+					<Button
+						onClick={sendDropboxEmailButtonOnClickHandler}
+						disabled={isResendDisabled}
+						className='w-full'
+					>
+						{dropboxEmailLoading ? (
+							<LoadingSpinner size='sm' className='mr-2' />
+						) : (
+							<FileText className='mr-2 h-4 w-4' />
+						)}
+						{isOnCooldown
+							? `Resend in ${formatCooldown(cooldownRemaining)}`
+							: 'Resend Waiver Email'}
+					</Button>
 
-					{dropboxEmailSent && (
+					{dropboxEmailSent && !isOnCooldown && (
 						<p className='text-xs text-muted-foreground text-center'>
 							Check your email for the Dropbox Sign waiver link.
 						</p>

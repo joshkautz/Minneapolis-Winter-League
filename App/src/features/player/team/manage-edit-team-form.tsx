@@ -109,7 +109,14 @@ export const ManageEditTeamForm = ({
 							accept='image/*'
 							onChange={handleFileChange}
 							disabled={isSubmitting}
+							aria-describedby='team-logo-description'
 						/>
+						<p
+							id='team-logo-description'
+							className='text-xs text-muted-foreground'
+						>
+							PNG, JPG, GIF, or WebP image
+						</p>
 					</div>
 
 					{/* Logo preview */}

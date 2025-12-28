@@ -62,72 +62,60 @@ export const onCheckoutSessionCreated = onDocumentCreated(
 				)
 			}
 
-			// Get or create Stripe customer
-			let customer: string | undefined
+			// Get or create Stripe customer atomically
+			// Uses transaction to prevent race conditions with concurrent triggers
 			const customerDocRef = firestore.collection('stripe').doc(uid)
-			const customerDoc = await customerDocRef.get()
-			const customerData = customerDoc.data()
 
 			// Get Firebase Auth user info for customer creation
 			const userRecord = await import('firebase-admin/auth').then((auth) =>
 				auth.getAuth().getUser(uid)
 			)
 
-			if (customerData?.stripeId) {
-				// Verify the customer exists in Stripe, create new one if not
-				try {
-					await stripe.customers.retrieve(customerData.stripeId)
-					customer = customerData.stripeId
-					logger.info(
-						`Using existing Stripe customer: ${customerData.stripeId}`
-					)
-				} catch (stripeError: unknown) {
-					const error = stripeError as { type?: string; code?: string }
-					if (
-						error?.type === 'StripeInvalidRequestError' &&
-						error?.code === 'resource_missing'
-					) {
-						// Customer doesn't exist in Stripe (common in test environment)
+			// Atomically get or create customer using transaction
+			const customer = await firestore.runTransaction(async (transaction) => {
+				const customerDoc = await transaction.get(customerDocRef)
+				const customerData = customerDoc.data()
+
+				if (customerData?.stripeId) {
+					// Verify the customer exists in Stripe
+					try {
+						await stripe.customers.retrieve(customerData.stripeId)
 						logger.info(
-							`Stripe customer ${customerData.stripeId} not found, creating new one for ${uid}`
+							`Using existing Stripe customer: ${customerData.stripeId}`
 						)
-
-						const newCustomer = await stripe.customers.create({
-							email: userRecord.email,
-							metadata: {
-								firebaseUID: uid,
-							},
-						})
-
-						// Update the customer document with the new Stripe ID
-						await customerDocRef.set(
-							{
-								stripeId: newCustomer.id,
-								email: userRecord.email,
-							},
-							{ merge: true }
-						)
-
-						customer = newCustomer.id
-						logger.info(`Created new Stripe customer: ${newCustomer.id}`)
-					} else {
-						// Other Stripe error, re-throw
-						throw stripeError
+						return customerData.stripeId
+					} catch (stripeError: unknown) {
+						const error = stripeError as { type?: string; code?: string }
+						if (
+							error?.type === 'StripeInvalidRequestError' &&
+							error?.code === 'resource_missing'
+						) {
+							// Customer doesn't exist in Stripe - will create below
+							logger.info(
+								`Stripe customer ${customerData.stripeId} not found, creating new one for ${uid}`
+							)
+						} else {
+							throw stripeError
+						}
 					}
 				}
-			} else {
-				// No Stripe ID in Firestore, create a new customer
-				logger.info(`No Stripe customer found for ${uid}, creating new one`)
 
-				const newCustomer = await stripe.customers.create({
-					email: userRecord.email,
-					metadata: {
-						firebaseUID: uid,
+				// No valid Stripe customer - create one
+				// Use uid as idempotency key to handle retries
+				logger.info(`Creating new Stripe customer for ${uid}`)
+				const newCustomer = await stripe.customers.create(
+					{
+						email: userRecord.email,
+						metadata: {
+							firebaseUID: uid,
+						},
 					},
-				})
+					{ idempotencyKey: `customer_${uid}` }
+				)
 
 				// Update the customer document with the Stripe ID
-				await customerDocRef.set(
+				transaction.set(
+					customerDocRef,
 					{
 						stripeId: newCustomer.id,
 						email: userRecord.email,
@@ -135,9 +123,9 @@ export const onCheckoutSessionCreated = onDocumentCreated(
 					{ merge: true }
 				)
 
-				customer = newCustomer.id
 				logger.info(`Created new Stripe customer: ${newCustomer.id}`)
-			}
+				return newCustomer.id
+			})
 
 			// Create Stripe checkout session
 			const sessionParams: Stripe.Checkout.SessionCreateParams = {

@@ -107,7 +107,7 @@ export const teamNameSchema = z
 	)
 
 // Compound schemas for common form patterns
-export const authFormBaseSchema = z.object({
+const authFormBaseSchema = z.object({
 	email: emailSchema,
 })
 

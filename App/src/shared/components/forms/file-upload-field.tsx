@@ -8,6 +8,8 @@ interface FileUploadFieldProps {
 	onFileSelect: (file: File) => void
 	disabled?: boolean
 	className?: string
+	/** Optional description of accepted file types (e.g., "PNG, JPG up to 5MB") */
+	acceptDescription?: string
 }
 
 /**
@@ -20,6 +22,7 @@ export const FileUploadField = ({
 	onFileSelect,
 	disabled = false,
 	className,
+	acceptDescription,
 }: FileUploadFieldProps) => {
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -41,7 +44,13 @@ export const FileUploadField = ({
 				onChange={handleFileChange}
 				disabled={disabled}
 				className='cursor-pointer'
+				aria-describedby={acceptDescription ? 'file-upload-description' : undefined}
 			/>
+			{acceptDescription && (
+				<p id='file-upload-description' className='text-xs text-muted-foreground mt-1'>
+					{acceptDescription}
+				</p>
+			)}
 		</div>
 	)
 }

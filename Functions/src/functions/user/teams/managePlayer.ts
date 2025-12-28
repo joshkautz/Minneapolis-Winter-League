@@ -17,7 +17,8 @@ import {
 } from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { getCurrentSeason } from '../../../shared/database.js'
-import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { formatDateForUser } from '../../../shared/format.js'
+import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../../config/constants.js'
 import {
 	findKarmaTransactionForPlayerJoin,
 	createKarmaTransaction,
@@ -76,8 +77,12 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 					throw new HttpsError('not-found', 'Team or player not found')
 				}
 
-				const teamDocument = teamDoc.data() as TeamDocument
-				const playerDocument = playerDoc.data() as PlayerDocument
+				const teamDocument = teamDoc.data() as TeamDocument | undefined
+				const playerDocument = playerDoc.data() as PlayerDocument | undefined
+
+				if (!teamDocument || !playerDocument) {
+					throw new HttpsError('internal', 'Invalid team or player data')
+				}
 
 				// Get season document to check dates
 				const seasonRef = firestore
@@ -89,7 +94,11 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 					throw new HttpsError('not-found', 'Season not found')
 				}
 
-				const seasonData = seasonDoc.data() as SeasonDocument
+				const seasonData = seasonDoc.data() as SeasonDocument | undefined
+
+				if (!seasonData) {
+					throw new HttpsError('internal', 'Invalid season data')
+				}
 
 				// Check if user is an admin
 				const currentUserRef = firestore
@@ -104,20 +113,9 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 					const seasonStart = seasonData.dateStart.toDate()
 
 					if (now >= seasonStart) {
-						const formatDate = (date: Date): string => {
-							const options: Intl.DateTimeFormatOptions = {
-								year: 'numeric',
-								month: 'long',
-								day: 'numeric',
-								hour: 'numeric',
-								minute: '2-digit',
-								timeZoneName: 'short',
-							}
-							return date.toLocaleDateString('en-US', options)
-						}
 						throw new HttpsError(
 							'failed-precondition',
-							`Team roster changes are not allowed after the season has started. The season started on ${formatDate(seasonStart)}.`
+							`Team roster changes are not allowed after the season has started. The season started on ${formatDateForUser(seasonStart)}.`
 						)
 					}
 				}
@@ -332,7 +330,7 @@ function handleRemoveFromTeam(
 
 	// Check if removing this player would cause team to lose registered status
 	if (teamDocument.registered) {
-		const minPlayersRequired = 10 // MIN_PLAYERS_FOR_REGISTRATION constant
+		const minPlayersRequired = TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
 
 		// Count how many players on the team are actually registered (paid + signed)
 		// excluding the player who is leaving
@@ -345,7 +343,10 @@ function handleRemoveFromTeam(
 			}
 
 			// Check if this player is registered for the current season
-			const playerData = doc.data() as PlayerDocument
+			const playerData = doc.data() as PlayerDocument | undefined
+			if (!playerData) {
+				return false // Skip players with invalid data
+			}
 			const seasonData = playerData.seasons?.find(
 				(s: PlayerSeason) => s.season.id === seasonId
 			)

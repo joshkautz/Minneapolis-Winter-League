@@ -19,7 +19,7 @@ import {
 	User,
 	Loader2,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -68,6 +68,7 @@ import {
 } from '@/components/ui/select'
 import { NewsDocument, PlayerDocument, SeasonDocument } from '@/types'
 import { logger } from '@/shared/utils'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 interface ProcessedNews {
 	id: string
@@ -83,6 +84,7 @@ interface ProcessedNews {
 type DialogMode = 'create' | 'edit' | 'closed'
 
 export const NewsManagement = () => {
+	const navigate = useNavigate()
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
@@ -129,41 +131,21 @@ export const NewsManagement = () => {
 	)
 
 	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'NewsManagement',
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', {
-				description: playerError.message,
-			})
-		}
-	}, [playerError])
-
-	useEffect(() => {
-		if (seasonsError) {
-			logger.error('Failed to load seasons:', {
-				component: 'NewsManagement',
-				error: seasonsError.message,
-			})
-			toast.error('Failed to load seasons', {
-				description: seasonsError.message,
-			})
-		}
-	}, [seasonsError])
-
-	useEffect(() => {
-		if (newsError) {
-			logger.error('Failed to load news:', {
-				component: 'NewsManagement',
-				error: newsError.message,
-			})
-			toast.error('Failed to load news', {
-				description: newsError.message,
-			})
-		}
-	}, [newsError])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'NewsManagement',
+		errorLabel: 'player',
+	})
+	useQueryErrorHandler({
+		error: seasonsError,
+		component: 'NewsManagement',
+		errorLabel: 'seasons',
+	})
+	useQueryErrorHandler({
+		error: newsError,
+		component: 'NewsManagement',
+		errorLabel: 'news',
+	})
 
 	// Process news to resolve references
 	const [newsList, setNewsList] = useState<ProcessedNews[]>([])
@@ -399,7 +381,7 @@ export const NewsManagement = () => {
 				<QueryError
 					error={seasonsError}
 					title='Error Loading Seasons'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</div>
 		)
@@ -411,7 +393,7 @@ export const NewsManagement = () => {
 				<QueryError
 					error={newsError}
 					title='Error Loading News'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</div>
 		)

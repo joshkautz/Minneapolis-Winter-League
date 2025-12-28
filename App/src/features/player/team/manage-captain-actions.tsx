@@ -32,8 +32,8 @@ export const ManageCaptainActions = () => {
 		<div className='absolute right-6'>
 			<DropdownMenu open={open} onOpenChange={setOpen}>
 				<DropdownMenuTrigger asChild>
-					<Button size={'sm'} variant={'ghost'}>
-						<DotsVerticalIcon />
+					<Button size='sm' variant='ghost' aria-label='Team options'>
+						<DotsVerticalIcon aria-hidden='true' />
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className={'w-56'}>

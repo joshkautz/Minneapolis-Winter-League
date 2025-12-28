@@ -18,12 +18,13 @@ import {
 	Loader2,
 	X,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
 import { auth } from '@/firebase/auth'
 import { logger } from '@/shared/utils'
+import { useQueryErrorHandler } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import { teamsBySeasonQuery } from '@/firebase/collections/teams'
@@ -77,6 +78,7 @@ interface ProcessedSeason {
 type DialogMode = 'create' | 'edit' | null
 
 export const SeasonManagement = () => {
+	const navigate = useNavigate()
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
@@ -91,29 +93,16 @@ export const SeasonManagement = () => {
 	} = useSeasonsContext()
 
 	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'SeasonManagement',
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', {
-				description: playerError.message,
-			})
-		}
-	}, [playerError])
-
-	useEffect(() => {
-		if (seasonsError) {
-			logger.error('Failed to load seasons:', {
-				component: 'SeasonManagement',
-				error: seasonsError.message,
-			})
-			toast.error('Failed to load seasons', {
-				description: seasonsError.message,
-			})
-		}
-	}, [seasonsError])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'SeasonManagement',
+		errorLabel: 'player',
+	})
+	useQueryErrorHandler({
+		error: seasonsError,
+		component: 'SeasonManagement',
+		errorLabel: 'seasons',
+	})
 
 	// Dialog state
 	const [dialogMode, setDialogMode] = useState<DialogMode>(null)
@@ -416,7 +405,7 @@ export const SeasonManagement = () => {
 				<QueryError
 					error={seasonsError}
 					title='Error Loading Seasons'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</div>
 		)

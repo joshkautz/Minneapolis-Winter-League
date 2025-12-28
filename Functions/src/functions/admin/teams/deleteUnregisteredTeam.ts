@@ -77,93 +77,98 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 				throw new Error('No current season found')
 			}
 
-			// Get team document
 			const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
-			const teamDoc = await teamRef.get()
 
-			if (!teamDoc.exists) {
-				throw new Error('Team not found')
-			}
+			// Use transaction to ensure all checks and operations are atomic
+			const { teamName, rosterSize } = await firestore.runTransaction(
+				async (transaction) => {
+					// Get team document inside transaction
+					const teamDoc = await transaction.get(teamRef)
 
-			const teamDocument = teamDoc.data() as TeamDocument | undefined
+					if (!teamDoc.exists) {
+						throw new Error('Team not found')
+					}
 
-			if (!teamDocument) {
-				throw new Error('Unable to retrieve team data')
-			}
+					const teamDocument = teamDoc.data() as TeamDocument | undefined
 
-			// Verify team belongs to current season
-			if (teamDocument.season.id !== currentSeason.id) {
-				throw new Error(
-					'Team does not belong to the current season and cannot be deleted'
-				)
-			}
+					if (!teamDocument) {
+						throw new Error('Unable to retrieve team data')
+					}
 
-			// Verify team is NOT registered
-			if (teamDocument.registered) {
-				throw new Error(
-					'Cannot delete a registered team. Only unregistered teams can be deleted.'
-				)
-			}
+					// Verify team belongs to current season
+					if (teamDocument.season.id !== currentSeason.id) {
+						throw new Error(
+							'Team does not belong to the current season and cannot be deleted'
+						)
+					}
 
-			const teamName = teamDocument.name
-			const rosterSize = teamDocument.roster?.length || 0
+					// Verify team is NOT registered (checked atomically)
+					if (teamDocument.registered) {
+						throw new Error(
+							'Cannot delete a registered team. Only unregistered teams can be deleted.'
+						)
+					}
 
-			logger.info('Admin deleting unregistered team', {
-				teamId,
-				teamName,
-				seasonId: currentSeason.id,
-				seasonName: currentSeason.name,
-				rosterSize,
-				adminUserId: authContext?.uid,
-			})
+					const name = teamDocument.name
+					const roster = teamDocument.roster?.length || 0
 
-			// Use transaction to ensure data consistency
-			await firestore.runTransaction(async (transaction) => {
-				// Remove team from all players' season data
-				if (teamDocument.roster) {
-					for (const member of teamDocument.roster) {
-						const playerDoc = await member.player.get()
-						if (playerDoc.exists) {
-							const playerDocument = playerDoc.data() as
-								| PlayerDocument
-								| undefined
+					logger.info('Admin deleting unregistered team', {
+						teamId,
+						teamName: name,
+						seasonId: currentSeason.id,
+						seasonName: currentSeason.name,
+						rosterSize: roster,
+						adminUserId: authContext?.uid,
+					})
 
-							const updatedSeasons =
-								playerDocument?.seasons?.map((season) =>
-									season.team?.id === teamId
-										? { ...season, team: null, captain: false }
-										: season
-								) || []
+					// Remove team from all players' season data
+					if (teamDocument.roster) {
+						for (const member of teamDocument.roster) {
+							const playerDoc = await transaction.get(member.player)
+							if (playerDoc.exists) {
+								const playerDocument = playerDoc.data() as
+									| PlayerDocument
+									| undefined
 
-							transaction.update(member.player, { seasons: updatedSeasons })
+								const updatedSeasons =
+									playerDocument?.seasons?.map((season) =>
+										season.team?.id === teamId
+											? { ...season, team: null, captain: false }
+											: season
+									) || []
 
-							logger.info('Removed player from team', {
-								playerId: member.player.id,
-								teamId,
-								teamName,
-							})
+								transaction.update(member.player, { seasons: updatedSeasons })
+
+								logger.info('Removed player from team', {
+									playerId: member.player.id,
+									teamId,
+									teamName: name,
+								})
+							}
 						}
 					}
+
+					// Delete all offers related to this team
+					const offersQuery = await firestore
+						.collection(Collections.OFFERS)
+						.where('team', '==', teamRef)
+						.get()
+
+					offersQuery.docs.forEach((doc) => {
+						transaction.delete(doc.ref)
+					})
+
+					logger.info('Deleted offers for team', {
+						teamId,
+						offersDeleted: offersQuery.size,
+					})
+
+					// Delete the team document
+					transaction.delete(teamRef)
+
+					return { teamName: name, rosterSize: roster }
 				}
-
-				// Delete all offers related to this team
-				const offersQuery = await firestore
-					.collection(Collections.OFFERS)
-					.where('team', '==', teamRef)
-					.get()
-
-				offersQuery.docs.forEach((doc) => {
-					transaction.delete(doc.ref)
-				})
-
-				logger.info('Deleted offers for team', {
-					teamId,
-					offersDeleted: offersQuery.size,
-				})
-
-				// Delete the team document
-				transaction.delete(teamRef)
-			})
+			)
 
 			logger.info('Successfully deleted unregistered team', {
 				teamId,

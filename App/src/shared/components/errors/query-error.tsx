@@ -165,9 +165,9 @@ export const QueryError = ({
 						size='sm'
 						onClick={onRetry}
 						className='h-auto p-1'
+						aria-label='Retry'
 					>
-						<RefreshCw className='h-3 w-3' />
-						<span className='sr-only'>Retry</span>
+						<RefreshCw className='h-3 w-3' aria-hidden='true' />
 					</Button>
 				)}
 			</div>

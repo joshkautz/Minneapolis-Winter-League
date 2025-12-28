@@ -20,7 +20,7 @@ import {
 	Loader2,
 	Trophy,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -75,6 +75,7 @@ import {
 } from '@/components/ui/select'
 import { BadgeDocument, PlayerDocument, SeasonDocument } from '@/types'
 import { logger } from '@/shared/utils'
+import { useQueryErrorHandler } from '@/shared/hooks'
 import { Badge } from '@/components/ui/badge'
 
 interface ProcessedBadge {
@@ -89,6 +90,7 @@ interface ProcessedBadge {
 type DialogMode = 'create' | 'edit' | 'closed'
 
 export const BadgeManagement = () => {
+	const navigate = useNavigate()
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
@@ -122,29 +124,16 @@ export const BadgeManagement = () => {
 	}, [currentSeasonQueryDocumentSnapshot?.id, selectedSeasonId])
 
 	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'BadgeManagement',
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', {
-				description: playerError.message,
-			})
-		}
-	}, [playerError])
-
-	useEffect(() => {
-		if (seasonsError) {
-			logger.error('Failed to load seasons:', {
-				component: 'BadgeManagement',
-				error: seasonsError.message,
-			})
-			toast.error('Failed to load seasons', {
-				description: seasonsError.message,
-			})
-		}
-	}, [seasonsError])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'BadgeManagement',
+		errorLabel: 'player',
+	})
+	useQueryErrorHandler({
+		error: seasonsError,
+		component: 'BadgeManagement',
+		errorLabel: 'seasons',
+	})
 
 	// Process badges to resolve references
 	const [badgesList, setBadgesList] = useState<ProcessedBadge[]>([])
@@ -438,7 +427,7 @@ export const BadgeManagement = () => {
 				<QueryError
 					error={badgesError}
 					title='Error Loading Badges'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</div>
 		)
@@ -650,7 +639,14 @@ export const BadgeManagement = () => {
 									type='file'
 									accept='image/*'
 									onChange={handleFileChange}
+									aria-describedby='badge-image-description'
 								/>
+								<p
+									id='badge-image-description'
+									className='text-xs text-muted-foreground'
+								>
+									PNG, JPG, GIF, or WebP image
+								</p>
 
 								{/* Image Preview */}
 								{imagePreview ? (

@@ -30,6 +30,7 @@ export type Timestamp = AdminTimestamp
 
 export enum Collections {
 	BADGES = 'badges',
+	DROPBOX = 'dropbox',
 	GAMES = 'games',
 	NEWS = 'news',
 	OFFERS = 'offers',
@@ -42,7 +43,6 @@ export enum Collections {
 	SITE_SETTINGS = 'siteSettings',
 	STRIPE = 'stripe',
 	TEAMS = 'teams',
-	WAIVERS = 'waivers',
 }
 
 /**
@@ -239,6 +239,12 @@ export interface OfferDocument extends DocumentData {
 	type: OfferType
 	/** Reason why an offer was automatically canceled (e.g., player joined another team) */
 	canceledReason?: string
+	/** Whether the offer has been processed by the trigger */
+	processed?: boolean
+	/** Error message if processing failed */
+	processingError?: string
+	/** Timestamp when processing failed */
+	processingFailedAt?: Timestamp
 }
 
 /**
@@ -264,13 +270,30 @@ export interface GameDocument extends DocumentData {
 }
 
 /**
+ * Waiver status enum
+ * - pending: Waiver has been sent, awaiting signature
+ * - signed: Waiver has been signed
+ * - declined: Signer declined to sign
+ * - canceled: Signature request was canceled
+ */
+export type WaiverStatus = 'pending' | 'signed' | 'declined' | 'canceled'
+
+/**
  * Waiver document structure
+ * Stored at: dropbox/{uid}/waivers/{waiverId}
+ * The player ID is implicit from the parent document path
  */
 export interface WaiverDocument extends DocumentData {
-	/** Reference to the player who signed the waiver */
-	player: DocumentReference<PlayerDocument>
-	/** Dropbox Sign signature request ID (optional) */
+	/** Season ID this waiver belongs to */
+	seasonId: string
+	/** Dropbox Sign signature request ID */
 	signatureRequestId: string
+	/** Current status of the waiver */
+	status: WaiverStatus
+	/** Timestamp when the waiver was created/sent */
+	createdAt: Timestamp
+	/** Timestamp when the waiver was signed (only set when status is 'signed') */
+	signedAt?: Timestamp
 }
 
 /**

@@ -23,7 +23,7 @@ import {
 	ArrowUp,
 	ArrowDown,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { auth } from '@/firebase/auth'
@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { OfferDocument, OfferType, logger } from '@/shared/utils'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 interface ProcessedOffer {
 	id: string
@@ -124,6 +125,7 @@ const SortableColumnHeader = ({
 }
 
 export const OfferManagement = () => {
+	const navigate = useNavigate()
 	const [user] = useAuthState(auth)
 	const playerRef = getPlayerRef(user)
 	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
@@ -136,29 +138,16 @@ export const OfferManagement = () => {
 	)
 
 	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'OfferManagement',
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', {
-				description: playerError.message,
-			})
-		}
-	}, [playerError])
-
-	useEffect(() => {
-		if (offersError) {
-			logger.error('Failed to load offers:', {
-				component: 'OfferManagement',
-				error: offersError.message,
-			})
-			toast.error('Failed to load offers', {
-				description: offersError.message,
-			})
-		}
-	}, [offersError])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'OfferManagement',
+		errorLabel: 'player',
+	})
+	useQueryErrorHandler({
+		error: offersError,
+		component: 'OfferManagement',
+		errorLabel: 'offers',
+	})
 
 	// Use state to hold the resolved offers
 	const [offers, setOffers] = useState<ProcessedOffer[]>([])
@@ -372,7 +361,7 @@ export const OfferManagement = () => {
 				<QueryError
 					error={offersError}
 					title='Error Loading Offers'
-					onRetry={() => window.location.reload()}
+					onRetry={() => navigate(0)}
 				/>
 			</div>
 		)

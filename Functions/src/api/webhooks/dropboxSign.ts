@@ -1,11 +1,22 @@
 /**
  * Dropbox Sign webhook handler
+ *
+ * Handles webhook events from Dropbox Sign for waiver signature tracking.
+ * Supported events:
+ * - SignatureRequestSigned: Updates waiver and player status to signed
+ * - SignatureRequestDeclined: Marks waiver as declined
+ * - SignatureRequestCanceled: Marks waiver as canceled
  */
 
 import { onRequest } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, WaiverDocument, PlayerDocument } from '../../types.js'
+import {
+	Collections,
+	WaiverDocument,
+	WaiverStatus,
+	PlayerDocument,
+} from '../../types.js'
 import {
 	FIREBASE_CONFIG,
 	getDropboxSignConfig,
@@ -17,11 +28,10 @@ import {
 	EventCallbackHelper,
 } from '@dropbox/sign'
 
+const { EventTypeEnum } = EventCallbackRequestEvent
+
 /**
  * Webhook handler for Dropbox Sign events
- * Updates player's signed status when waiver is signed
- *
- * @see https://firebase.google.com/docs/functions/http-events#trigger_a_function_with_an_http_request
  */
 export const dropboxSignWebhook = onRequest(
 	{
@@ -31,8 +41,7 @@ export const dropboxSignWebhook = onRequest(
 	},
 	async (req, resp) => {
 		try {
-			logger.info('Received Dropbox Sign webhook')
-
+			// Parse webhook payload - Dropbox sends multipart form data
 			const data = req.body.toString().match(/\{.*\}/s)?.[0]
 			if (!data) {
 				logger.error('Invalid webhook data received')
@@ -43,7 +52,7 @@ export const dropboxSignWebhook = onRequest(
 			const callbackData = JSON.parse(data)
 			const callbackEvent = EventCallbackRequest.init(callbackData)
 
-			// Verify that the callback came from Dropbox Sign
+			// Verify webhook signature
 			const dropboxConfig = getDropboxSignConfig()
 			if (!EventCallbackHelper.isValid(dropboxConfig.API_KEY, callbackEvent)) {
 				logger.error('Invalid webhook signature')
@@ -51,17 +60,70 @@ export const dropboxSignWebhook = onRequest(
 				return
 			}
 
-			// Handle signature request signed event
-			if (
-				callbackEvent.event.eventType ===
-				EventCallbackRequestEvent.EventTypeEnum.SignatureRequestSigned
-			) {
-				const signatureRequestId =
-					callbackEvent.signatureRequest?.signatureRequestId
+			const eventType = callbackEvent.event.eventType
+			const signatureRequest = callbackEvent.signatureRequest
+			const signatureRequestId = signatureRequest?.signatureRequestId
 
-				if (signatureRequestId) {
-					await handleWaiverSigned(signatureRequestId)
-				}
+			if (!signatureRequestId) {
+				logger.warn('Webhook received without signatureRequestId', {
+					eventType,
+				})
+				resp.status(200).send('Hello API Event Received')
+				return
+			}
+
+			// Extract metadata passed when creating the signature request
+			const metadata = signatureRequest?.metadata as
+				| { firebaseUID?: string; seasonId?: string }
+				| undefined
+			const firebaseUID = metadata?.firebaseUID
+			const seasonId = metadata?.seasonId
+
+			if (!firebaseUID || !seasonId) {
+				logger.warn('Webhook missing required metadata', {
+					signatureRequestId,
+					eventType,
+					hasFirebaseUID: !!firebaseUID,
+					hasSeasonId: !!seasonId,
+				})
+				resp.status(200).send('Hello API Event Received')
+				return
+			}
+
+			// Handle different event types
+			switch (eventType) {
+				case EventTypeEnum.SignatureRequestSigned:
+					await handleWaiverStatusChange(
+						firebaseUID,
+						seasonId,
+						signatureRequestId,
+						'signed',
+						true
+					)
+					break
+
+				case EventTypeEnum.SignatureRequestDeclined:
+					await handleWaiverStatusChange(
+						firebaseUID,
+						seasonId,
+						signatureRequestId,
+						'declined',
+						false
+					)
+					break
+
+				case EventTypeEnum.SignatureRequestCanceled:
+					await handleWaiverStatusChange(
+						firebaseUID,
+						seasonId,
+						signatureRequestId,
+						'canceled',
+						false
+					)
+					break
+
+				default:
+					logger.info('Unhandled Dropbox Sign event type', { eventType })
 			}
 
 			resp.status(200).send('Hello API Event Received')
@@ -73,15 +135,33 @@ export const dropboxSignWebhook = onRequest(
 )
 
 /**
- * Handles the waiver signed event
+ * Handles waiver status changes from Dropbox Sign events
+ *
+ * Uses a transaction to atomically check and update both waiver and player
+ * documents, preventing race conditions from duplicate webhook deliveries.
+ *
+ * @param firebaseUID - The Firebase user ID from metadata
+ * @param seasonId - The season ID from metadata
+ * @param signatureRequestId - The Dropbox Sign signature request ID
+ * @param newStatus - The new waiver status to set
+ * @param updatePlayerSigned - Whether to update the player's signed status
  */
-async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
+async function handleWaiverStatusChange(
+	firebaseUID: string,
+	seasonId: string,
+	signatureRequestId: string,
+	newStatus: WaiverStatus,
+	updatePlayerSigned: boolean
+): Promise<void> {
 	const firestore = getFirestore()
 
 	try {
-		// Find the waiver document
+		// Find the waiver document in the user's subcollection
+		// Query must be done outside transaction, but we'll re-read inside
 		const waiverQuery = await firestore
-			.collection(Collections.WAIVERS)
+			.collection(Collections.DROPBOX)
+			.doc(firebaseUID)
+			.collection('waivers')
 			.where('signatureRequestId', '==', signatureRequestId)
 			.limit(1)
 			.get()
@@ -93,42 +173,78 @@ async function handleWaiverSigned(signatureRequestId: string): Promise<void> {
 			return
 		}
 
-		const waiverDoc = waiverQuery.docs[0]
-		const waiverData = waiverDoc.data() as WaiverDocument | undefined
+		const waiverRef = waiverQuery.docs[0].ref
+		const playerRef = firestore.collection(Collections.PLAYERS).doc(firebaseUID)
 
-		if (!waiverData) {
-			logger.error('Invalid waiver data')
+		// Use transaction to atomically check status and update both documents
+		// This prevents race conditions when duplicate webhooks arrive
+		const result = await firestore.runTransaction(async (transaction) => {
+			// Re-read waiver inside transaction to get fresh data
+			const waiverDoc = await transaction.get(waiverRef)
+			const waiverData = waiverDoc.data() as WaiverDocument | undefined
+
+			if (!waiverData) {
+				return { skipped: true, reason: 'invalid_waiver_data' }
+			}
+
+			// Idempotency check: skip if already in target status
+			if (waiverData.status === newStatus) {
+				return { skipped: true, reason: 'already_in_status' }
+			}
+
+			// Update waiver status
+			const updateData: Record<string, unknown> = {
+				status: newStatus,
+			}
+
+			// Add signedAt timestamp only for signed status
+			if (newStatus === 'signed') {
+				updateData.signedAt = FieldValue.serverTimestamp()
+			}
+
+			transaction.update(waiverRef, updateData)
+
+			// Update player's signed status if needed (only for signed events)
+			if (updatePlayerSigned && newStatus === 'signed') {
+				const playerDoc = await transaction.get(playerRef)
+
+				if (playerDoc.exists) {
+					const playerDocument = playerDoc.data() as PlayerDocument | undefined
+					if (playerDocument) {
+						const updatedSeasons =
+							playerDocument.seasons?.map((season) =>
+								season.season.id === seasonId
+									? { ...season, signed: true }
+									: season
+							) || []
+
+						transaction.update(playerRef, { seasons: updatedSeasons })
+					}
+				}
+			}
+
+			return { skipped: false }
+		})
+
+		if (result.skipped) {
+			if (result.reason === 'already_in_status') {
+				logger.info(`Waiver already ${newStatus}: ${signatureRequestId}`)
+			} else {
+				logger.error('Invalid waiver data')
+			}
 			return
 		}
 
-		// Update waiver status
-		await waiverDoc.ref.update({
-			status: 'signed',
-			signedAt: new Date(),
+		logger.info(`Waiver ${newStatus} for: ${signatureRequestId}`, {
+			playerId: firebaseUID,
+			seasonId,
 		})
-
-		// Update player's signed status
-		const playerDoc = await waiverData.player.get()
-		if (playerDoc.exists) {
-			const playerDocument = playerDoc.data() as PlayerDocument | undefined
-			if (playerDocument) {
-				const updatedSeasons =
-					playerDocument.seasons?.map((season) =>
-						season.season.id === waiverData.season
-							? { ...season, signed: true }
-							: season
-					) || []
-
-				await playerDoc.ref.update({ seasons: updatedSeasons })
-			}
-		}
-
-		logger.info(
-			`Successfully processed waiver signing for: ${signatureRequestId}`
-		)
 	} catch (error) {
-		throw handleFunctionError(error, 'handleWaiverSigned', {
+		throw handleFunctionError(error, 'handleWaiverStatusChange', {
+			firebaseUID,
+			seasonId,
 			signatureRequestId,
+			newStatus,
 		})
 	}
 }

@@ -167,11 +167,17 @@
 			"queryScope": "COLLECTION",
 			"fields": [
 				{
-					"fieldPath": "player",
+					"fieldPath": "seasonId",
 					"order": "ASCENDING"
-				},
+				}
+			]
+		},
+		{
+			"collectionGroup": "waivers",
+			"queryScope": "COLLECTION",
+			"fields": [
 				{
-					"fieldPath": "season",
+					"fieldPath": "signatureRequestId",
 					"order": "ASCENDING"
 				}
 			]
