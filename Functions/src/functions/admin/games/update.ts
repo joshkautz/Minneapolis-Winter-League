@@ -130,7 +130,10 @@ export const updateGame = onCall<
 			)
 		}
 
-		if (field !== undefined && !(GAME_CONFIG.ALLOWED_FIELDS as readonly number[]).includes(field)) {
+		if (
+			field !== undefined &&
+			!(GAME_CONFIG.ALLOWED_FIELDS as readonly number[]).includes(field)
+		) {
 			logger.warn('Invalid field provided', { field })
 			throw new HttpsError('invalid-argument', 'Field must be 1, 2, or 3')
 		}
@@ -227,7 +230,11 @@ export const updateGame = onCall<
 				const minutes = parseInt(timeMatch[2], 10)
 				const timeString = `${hours}:${minutes.toString().padStart(2, '0')}`
 
-				if (!(GAME_CONFIG.ALLOWED_TIME_SLOTS as readonly string[]).includes(timeString)) {
+				if (
+					!(GAME_CONFIG.ALLOWED_TIME_SLOTS as readonly string[]).includes(
+						timeString
+					)
+				) {
 					throw new HttpsError(
 						'invalid-argument',
 						`Games can only be scheduled at 6:00pm, 6:45pm, 7:30pm, or 8:15pm CT (received: ${timeString})`

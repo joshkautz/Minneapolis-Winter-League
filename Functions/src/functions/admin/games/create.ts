@@ -205,7 +205,11 @@ export const createGame = onCall<
 			const minutes = parseInt(timeMatch[2], 10)
 			const timeString = `${hours}:${minutes.toString().padStart(2, '0')}`
 
-			if (!(GAME_CONFIG.ALLOWED_TIME_SLOTS as readonly string[]).includes(timeString)) {
+			if (
+				!(GAME_CONFIG.ALLOWED_TIME_SLOTS as readonly string[]).includes(
+					timeString
+				)
+			) {
 				throw new HttpsError(
 					'invalid-argument',
 					`Games can only be scheduled at 6:00pm, 6:45pm, 7:30pm, or 8:15pm CT (received: ${timeString})`

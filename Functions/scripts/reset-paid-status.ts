@@ -189,10 +189,14 @@ async function resetPaidStatus(): Promise<void> {
 	} else if (stats.playersUpdated === 0) {
 		console.log('✅ No players needed updating - all already have paid=false')
 	} else if (isDryRun) {
-		console.log(`✅ Dry run complete - ${stats.playersUpdated} players would be updated`)
+		console.log(
+			`✅ Dry run complete - ${stats.playersUpdated} players would be updated`
+		)
 		console.log('\nRun without --dry-run to apply changes')
 	} else {
-		console.log(`✅ Successfully updated ${stats.playersUpdated} players to paid=false`)
+		console.log(
+			`✅ Successfully updated ${stats.playersUpdated} players to paid=false`
+		)
 	}
 }
 

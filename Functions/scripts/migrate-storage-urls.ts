@@ -114,7 +114,8 @@ function hasDoubleEncodedPath(url: string): boolean {
  */
 function fixDoubleEncodedUrl(url: string): string {
 	// Match Firebase Storage URL pattern
-	const pattern = /^(https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/)(.+)(\?alt=media)$/
+	const pattern =
+		/^(https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/)(.+)(\?alt=media)$/
 	const match = url.match(pattern)
 
 	if (!match) {
@@ -200,7 +201,9 @@ async function migrateStorageUrls(): Promise<void> {
 
 		// Check if it's a GCS URL that needs migration
 		if (!isGcsPublicUrl(logoUrl)) {
-			console.log(`   ⚠️  ${teamName}: Unknown URL format, skipping: ${logoUrl}`)
+			console.log(
+				`   ⚠️  ${teamName}: Unknown URL format, skipping: ${logoUrl}`
+			)
 			stats.teams.skipped++
 			continue
 		}
@@ -285,7 +288,9 @@ async function migrateStorageUrls(): Promise<void> {
 
 		// Check if it's a GCS URL that needs migration
 		if (!isGcsPublicUrl(imageUrl)) {
-			console.log(`   ⚠️  ${badgeName}: Unknown URL format, skipping: ${imageUrl}`)
+			console.log(
+				`   ⚠️  ${badgeName}: Unknown URL format, skipping: ${imageUrl}`
+			)
 			stats.badges.skipped++
 			continue
 		}

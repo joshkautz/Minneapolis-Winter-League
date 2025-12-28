@@ -44,10 +44,15 @@ export const FileUploadField = ({
 				onChange={handleFileChange}
 				disabled={disabled}
 				className='cursor-pointer'
-				aria-describedby={acceptDescription ? 'file-upload-description' : undefined}
+				aria-describedby={
+					acceptDescription ? 'file-upload-description' : undefined
+				}
 			/>
 			{acceptDescription && (
-				<p id='file-upload-description' className='text-xs text-muted-foreground mt-1'>
+				<p
+					id='file-upload-description'
+					className='text-xs text-muted-foreground mt-1'
+				>
 					{acceptDescription}
 				</p>
 			)}
