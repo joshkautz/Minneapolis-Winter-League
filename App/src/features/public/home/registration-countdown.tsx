@@ -166,9 +166,7 @@ export const RegistrationCountdown = () => {
 			aria-label='Season countdown'
 		>
 			<h2 className='text-4xl font-bold tracking-tight'>{seasonName}</h2>
-			<p className='text-lg text-off-white/70 mt-1 mb-2'>
-				{getSubtitleText()}
-			</p>
+			<p className='text-lg text-off-white/70 mt-1 mb-2'>{getSubtitleText()}</p>
 			{showCountdown && (
 				<div className='flex mt-2 space-x-2'>
 					<div className='flex flex-col items-center min-w-16'>
