@@ -36,7 +36,7 @@ export const LeagueDetailsSection = () => {
 				<div className={'flex flex-wrap items-center gap-20 mt-32 w-full'}>
 					<Card
 						className={
-							'flex flex-col flex-1 basis-[320px] shrink-0 rounded-2xl bg-foreground text-background dark:bg-background dark:text-foreground'
+							'flex flex-col flex-1 basis-[320px] shrink-0 rounded-2xl bg-section-invert text-section-invert-foreground border-off-white/20'
 						}
 					>
 						<CardHeader>

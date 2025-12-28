@@ -1,10 +1,18 @@
+import { useSiteSettings } from '@/providers/site-settings-context'
+
 export const Footer = () => {
+	const { isValentine } = useSiteSettings()
+
 	return (
 		<footer className='bg-muted/30 border-t border-border mt-20'>
 			<div className='container mx-auto px-6 py-16'>
 				<div className='flex items-center justify-center mb-12 mx-auto'>
 					<img
-						src={'/mpls-logo.png'}
+						src={
+							isValentine
+								? '/mpls-logo-valentines.png'
+								: '/mpls-logo-default.png'
+						}
 						alt='Minneapolis Winter League Logo'
 						className='w-full h-auto max-w-[573px]'
 					/>

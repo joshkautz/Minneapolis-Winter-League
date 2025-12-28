@@ -9,7 +9,7 @@ import { Snowflake } from './snowflake'
  */
 export const WhyJoinSection = () => {
 	return (
-		<div className='border border-transparent bg-foreground dark:bg-background'>
+		<div className='border border-transparent bg-section-invert'>
 			<section
 				id='why-join'
 				className={

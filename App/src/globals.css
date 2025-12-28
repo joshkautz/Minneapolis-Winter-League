@@ -29,6 +29,11 @@
 	--color-accent: hsl(var(--accent));
 	--color-accent-foreground: hsl(var(--accent-foreground));
 
+	--color-section-invert: hsl(var(--section-invert));
+	--color-section-invert-foreground: hsl(var(--section-invert-foreground));
+
+	--color-off-white: hsl(210 40% 98%);
+
 	--color-popover: hsl(var(--popover));
 	--color-popover-foreground: hsl(var(--popover-foreground));
 
@@ -105,6 +110,10 @@
 		--background: 210 40% 98%;
 		--foreground: 216 100% 11%;
 
+		/* Inverted section colors - consistent across light/dark modes */
+		--section-invert: 216 100% 11%;
+		--section-invert-foreground: 210 40% 98%;
+
 		--card: 0 0% 100%;
 		--card-foreground: 216 100% 11%;
 
@@ -139,6 +148,10 @@
 	.dark {
 		--background: 216 100% 11%;
 		--foreground: 210 40% 98%;
+
+		/* Inverted section colors - consistent across light/dark modes */
+		--section-invert: 216 100% 11%;
+		--section-invert-foreground: 210 40% 98%;
 
 		--card: 216 100% 12%;
 		--card-foreground: 210 40% 98%;
@@ -203,6 +216,10 @@
 		--background: 340 40% 98%;
 		--foreground: 352 100% 28%;
 
+		/* Inverted section colors - consistent across light/dark modes */
+		--section-invert: 1 100% 11%;
+		--section-invert-foreground: 340 40% 98%;
+
 		--card: 0 0% 100%;
 		--card-foreground: 352 100% 28%;
 
@@ -235,6 +252,10 @@
 	.valentine.dark {
 		--background: 352 75% 12%;
 		--foreground: 340 35% 95%;
+
+		/* Inverted section colors - consistent across light/dark modes */
+		--section-invert: 1 100% 11%;
+		--section-invert-foreground: 340 40% 98%;
 
 		--card: 352 75% 13%;
 		--card-foreground: 340 35% 95%;
@@ -341,6 +362,11 @@
 	/* Hero section background - always dark blue regardless of theme */
 	.bg-hero {
 		background-color: hsl(216 100% 11%);
+	}
+
+	/* Valentine's Day hero background */
+	.valentine .bg-hero {
+		background-color: #380100;
 	}
 }
 

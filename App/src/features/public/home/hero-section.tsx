@@ -57,7 +57,7 @@ export const HeroSection = () => {
 			</div>
 			<div
 				className='absolute inset-x-0 bottom-0 w-full -z-10'
-				style={{ color: '#11274c' }}
+				style={{ color: isValentine ? '#4c1411' : '#11274c' }}
 			>
 				<CitySvg className='w-full h-auto max-h-[400px]' />
 			</div>
@@ -73,7 +73,7 @@ export const HeroSection = () => {
 				}
 			/>
 			<svg
-				className='w-full h-auto absolute bottom-[-10px] inset-x-0 pointer-events-none fill-background dark:fill-foreground'
+				className='w-full h-auto absolute bottom-[-10px] inset-x-0 pointer-events-none fill-off-white'
 				viewBox='0 0 1200 120'
 				preserveAspectRatio='none'
 				aria-hidden='true'
