@@ -12,7 +12,7 @@ import {
 } from '@/shared/utils'
 import { QueryDocumentSnapshot } from '@/firebase'
 import { Timestamp } from '@firebase/firestore'
-import { sendDropboxEmail } from '@/firebase/functions'
+import { sendWaiverReminderEmail } from '@/firebase/functions'
 
 /** Rate limit cooldown in milliseconds (5 minutes) */
 const RESEND_COOLDOWN_MS = 5 * 60 * 1000
@@ -57,12 +57,12 @@ export const WaiverSection = ({
 		return () => clearInterval(timer)
 	}, [cooldownRemaining])
 
-	const sendDropboxEmailButtonOnClickHandler = useCallback(async () => {
+	const sendWaiverReminderHandler = useCallback(async () => {
 		setDropboxEmailLoading(true)
 
 		try {
 			// The backend function will automatically look up the user's waiver
-			await sendDropboxEmail()
+			await sendWaiverReminderEmail()
 
 			setDropboxEmailSent(true)
 			setDropboxEmailLoading(false)
@@ -184,7 +184,7 @@ export const WaiverSection = ({
 					)}
 
 					<Button
-						onClick={sendDropboxEmailButtonOnClickHandler}
+						onClick={sendWaiverReminderHandler}
 						disabled={isResendDisabled}
 						className='w-full'
 					>

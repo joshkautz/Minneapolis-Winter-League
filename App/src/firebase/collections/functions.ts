@@ -251,35 +251,6 @@ export const getPlayerAuthInfoViaFunction = async (
 	return result.data
 }
 
-interface AddNewSeasonToPlayersRequest {
-	/** Season ID to add to all players */
-	seasonId: string
-}
-
-interface AddNewSeasonToPlayersResponse {
-	success: boolean
-	message: string
-	/** Number of players updated */
-	playersUpdated: number
-	/** Number of players skipped (already had the season) */
-	playersSkipped: number
-}
-
-/**
- * Adds a new PlayerSeason to all PlayerDocuments for a specified season
- * Only callable by admin users via the Admin Dashboard
- */
-export const addNewSeasonToAllPlayersViaFunction = async (
-	data: AddNewSeasonToPlayersRequest
-): Promise<AddNewSeasonToPlayersResponse> => {
-	const addNewSeasonToAllPlayers = httpsCallable<
-		AddNewSeasonToPlayersRequest,
-		AddNewSeasonToPlayersResponse
-	>(functions, 'addNewSeasonToAllPlayers')
-	const result = await addNewSeasonToAllPlayers(data)
-	return result.data
-}
-
 //////////////////////////////////////////////////////////////////////////////
 // DELETE UNREGISTERED TEAM (Admin)
 //////////////////////////////////////////////////////////////////////////////
@@ -411,7 +382,7 @@ interface ManageTeamPlayerRequest {
 	action: 'promote' | 'demote' | 'remove'
 }
 
-interface ManageTeamPlayerResponse {
+interface UpdateTeamRosterResponse {
 	success: boolean
 	message: string
 	teamId: string
@@ -419,17 +390,17 @@ interface ManageTeamPlayerResponse {
 }
 
 /**
- * Manages team players (promote/demote/remove) via Firebase Function
+ * Updates team roster (promote/demote/remove) via Firebase Function
  * Replaces promoteToCaptain, demoteFromCaptain, removeFromTeam functions
  */
-export const manageTeamPlayerViaFunction = async (
+export const updateTeamRosterViaFunction = async (
 	data: ManageTeamPlayerRequest
-): Promise<ManageTeamPlayerResponse> => {
-	const manageTeamPlayer = httpsCallable<
+): Promise<UpdateTeamRosterResponse> => {
+	const updateTeamRoster = httpsCallable<
 		ManageTeamPlayerRequest,
-		ManageTeamPlayerResponse
-	>(functions, 'manageTeamPlayer')
-	const result = await manageTeamPlayer(data)
+		UpdateTeamRosterResponse
+	>(functions, 'updateTeamRoster')
+	const result = await updateTeamRoster(data)
 	return result.data
 }
 
@@ -493,29 +464,29 @@ export const createOfferViaFunction = async (
 	return result.data
 }
 
-interface UpdateOfferStatusRequest {
+interface UpdateOfferRequest {
 	offerId: string
 	status: 'accepted' | 'rejected' | 'canceled'
 }
 
-interface UpdateOfferStatusResponse {
+interface UpdateOfferResponse {
 	success: boolean
 	message: string
 	offerId: string
 }
 
 /**
- * Updates offer status (accept/reject) via Firebase Function
+ * Updates an offer (accept/reject/cancel) via Firebase Function
  * Replaces acceptOffer and rejectOffer functions
  */
-export const updateOfferStatusViaFunction = async (
-	data: UpdateOfferStatusRequest
-): Promise<UpdateOfferStatusResponse> => {
-	const updateOfferStatus = httpsCallable<
-		UpdateOfferStatusRequest,
-		UpdateOfferStatusResponse
-	>(functions, 'updateOfferStatus')
-	const result = await updateOfferStatus(data)
+export const updateOfferViaFunction = async (
+	data: UpdateOfferRequest
+): Promise<UpdateOfferResponse> => {
+	const updateOffer = httpsCallable<UpdateOfferRequest, UpdateOfferResponse>(
+		functions,
+		'updateOffer'
+	)
+	const result = await updateOffer(data)
 	return result.data
 }
 
@@ -972,7 +943,7 @@ export const promoteToCaptain = async (
 	playerRef: { id: string },
 	teamRef: { id: string }
 ) => {
-	return manageTeamPlayerViaFunction({
+	return updateTeamRosterViaFunction({
 		teamId: teamRef.id,
 		playerId: playerRef.id,
 		action: 'promote',
@@ -983,7 +954,7 @@ export const demoteFromCaptain = async (
 	playerRef: { id: string },
 	teamRef: { id: string }
 ) => {
-	return manageTeamPlayerViaFunction({
+	return updateTeamRosterViaFunction({
 		teamId: teamRef.id,
 		playerId: playerRef.id,
 		action: 'demote',
@@ -994,7 +965,7 @@ export const removeFromTeam = async (
 	playerRef: { id: string },
 	teamRef: { id: string }
 ) => {
-	return manageTeamPlayerViaFunction({
+	return updateTeamRosterViaFunction({
 		teamId: teamRef.id,
 		playerId: playerRef.id,
 		action: 'remove',

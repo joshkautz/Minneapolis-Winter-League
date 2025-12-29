@@ -1,5 +1,5 @@
 import { DocumentReference } from '@/firebase'
-import { manageTeamPlayerViaFunction } from '@/firebase/collections/functions'
+import { updateTeamRosterViaFunction } from '@/firebase/collections/functions'
 import {
 	DropdownMenu,
 	DropdownMenuTrigger,
@@ -96,7 +96,7 @@ export const ManageTeamRosterPlayer = ({
 		}
 
 		try {
-			await manageTeamPlayerViaFunction({
+			await updateTeamRosterViaFunction({
 				teamId: team.id,
 				playerId: playerSnapshot.id,
 				action: 'demote',
@@ -144,7 +144,7 @@ export const ManageTeamRosterPlayer = ({
 		}
 
 		try {
-			await manageTeamPlayerViaFunction({
+			await updateTeamRosterViaFunction({
 				teamId: team.id,
 				playerId: playerSnapshot.id,
 				action: 'promote',
@@ -189,7 +189,7 @@ export const ManageTeamRosterPlayer = ({
 		}
 
 		try {
-			await manageTeamPlayerViaFunction({
+			await updateTeamRosterViaFunction({
 				teamId: team.id,
 				playerId: playerSnapshot.id,
 				action: 'remove',

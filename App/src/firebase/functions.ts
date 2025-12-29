@@ -9,14 +9,41 @@ import { app } from './app'
 
 const functions = getFunctions(app)
 
-const sendDropboxEmail = async (): Promise<
+const sendWaiverReminderEmail = async (): Promise<
 	HttpsCallableResult<returnTypeT<SignatureRequestGetResponse>>
 > => {
-	const dropboxSignSendReminderEmail = httpsCallable<
+	const sendWaiverReminder = httpsCallable<
 		unknown,
 		returnTypeT<SignatureRequestGetResponse>
-	>(functions, 'dropboxSignSendReminderEmail')
-	return dropboxSignSendReminderEmail()
+	>(functions, 'sendWaiverReminder')
+	return sendWaiverReminder()
 }
 
-export { sendDropboxEmail }
+interface CreateStripeCheckoutRequest {
+	priceId: string
+	couponId?: string
+	successUrl: string
+	cancelUrl: string
+}
+
+interface CreateStripeCheckoutResponse {
+	success: true
+	url: string
+	sessionId: string
+}
+
+/**
+ * Creates a Stripe checkout session and returns the checkout URL
+ */
+const createStripeCheckoutSession = async (
+	request: CreateStripeCheckoutRequest
+): Promise<HttpsCallableResult<CreateStripeCheckoutResponse>> => {
+	const createStripeCheckout = httpsCallable<
+		CreateStripeCheckoutRequest,
+		CreateStripeCheckoutResponse
+	>(functions, 'createStripeCheckout')
+	return createStripeCheckout(request)
+}
+
+export { sendWaiverReminderEmail, createStripeCheckoutSession }
+export type { CreateStripeCheckoutRequest, CreateStripeCheckoutResponse }

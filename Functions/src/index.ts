@@ -26,7 +26,7 @@
  * - Team management (CRUD operations)
  * - Offer management (invitation/request system)
  * - Storage management (file upload/download)
- * - Dropbox Sign (waiver reminders)
+ * - Waiver management (reminder emails)
  *
  * This organization provides:
  * - Clear separation between admin and user functions
@@ -54,7 +54,6 @@ export { updateTeamRegistrationOnRosterChange } from './triggers/documents/teamU
 export { onTeamRegistrationChange } from './triggers/documents/teamRegistrationLock.js'
 
 // Payment triggers
-export { onCheckoutSessionCreated } from './triggers/payments/checkoutSessionCreated.js'
 export { onPaymentCreated } from './triggers/payments/paymentCreated.js'
 
 //////////////////////////////////////////////////////////////////////////////
@@ -73,7 +72,6 @@ export { stripeWebhook } from './api/webhooks/stripe.js'
 export { createPlayer } from './functions/user/players/create.js'
 export { updatePlayer } from './functions/user/players/update.js'
 export { deletePlayer } from './functions/user/players/delete.js'
-export { addNewSeasonToAllPlayers } from './functions/user/players/addNewSeason.js'
 
 // Player management functions (admin-only)
 export { updatePlayerEmail } from './functions/admin/players/updateEmail.js'
@@ -85,14 +83,14 @@ export { createTeam } from './functions/user/teams/create.js'
 export { rolloverTeam } from './functions/user/teams/rollover.js'
 export { updateTeam } from './functions/user/teams/update.js'
 export { deleteTeam } from './functions/user/teams/delete.js'
-export { manageTeamPlayer } from './functions/user/teams/managePlayer.js'
+export { updateTeamRoster } from './functions/user/teams/updateRoster.js'
 
 // Team management functions (admin-only)
 export { deleteUnregisteredTeam } from './functions/admin/teams/deleteUnregisteredTeam.js'
 
 // Offer management functions (user-accessible)
 export { createOffer } from './functions/user/offers/create.js'
-export { updateOfferStatus } from './functions/user/offers/updateStatus.js'
+export { updateOffer } from './functions/user/offers/update.js'
 
 // News management functions (admin-only)
 export { createNews } from './functions/admin/news/create.js'
@@ -114,8 +112,11 @@ export { getFileMetadata } from './functions/user/storage/getFileMetadata.js'
 // because TrueSkill requires accurate sigma (uncertainty) tracking across all games
 export { rebuildPlayerRankings } from './functions/admin/rankings/rebuildPlayerRankings.js'
 
-// Dropbox Sign functions (user-accessible)
-export { dropboxSignSendReminderEmail } from './functions/user/dropboxSign/dropboxSignSendReminderEmail.js'
+// Waiver functions (user-accessible)
+export { sendWaiverReminder } from './functions/user/waivers/sendReminder.js'
+
+// Payment functions (user-accessible)
+export { createStripeCheckout } from './functions/user/payments/createStripeCheckout.js'
 
 // Game management functions (admin-only)
 export { createGame } from './functions/admin/games/create.js'

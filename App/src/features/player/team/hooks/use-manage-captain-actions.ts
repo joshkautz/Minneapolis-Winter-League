@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import {
 	deleteTeamViaFunction,
-	manageTeamPlayerViaFunction,
+	updateTeamRosterViaFunction,
 } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
 import { logger } from '@/shared/utils'
@@ -41,7 +41,7 @@ export const useManageCaptainActions = () => {
 		}
 
 		try {
-			await manageTeamPlayerViaFunction({
+			await updateTeamRosterViaFunction({
 				teamId: teamQueryDocumentSnapshot.id,
 				playerId: authenticatedUserSnapshot.id,
 				action: 'remove',

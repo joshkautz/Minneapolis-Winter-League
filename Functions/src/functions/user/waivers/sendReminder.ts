@@ -1,5 +1,5 @@
 /**
- * Send Dropbox Sign reminder email callable function
+ * Send waiver reminder callable function
  *
  * Sends a reminder email for an existing signature request using the Dropbox Sign API.
  * This is the correct and performant way to remind users about pending signatures,
@@ -11,6 +11,7 @@
  * - User can only send reminders for their own signature requests
  * - Signature request ID must exist in the waivers collection
  * - Waiver must belong to the authenticated user
+ * - Registration must be open (between registrationStart and registrationEnd)
  *
  * @see https://developers.hellosign.com/api/reference/operation/signatureRequestRemind/
  */
@@ -23,6 +24,7 @@ import {
 	WaiverDocument,
 	PlayerDocument,
 	PlayerSeason,
+	SeasonDocument,
 } from '../../../types.js'
 import {
 	FIREBASE_CONFIG,
@@ -30,6 +32,7 @@ import {
 } from '../../../config/constants.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { getCurrentSeason } from '../../../shared/database.js'
+import { formatDateForUser } from '../../../shared/format.js'
 import {
 	SignatureRequestApi,
 	SignatureRequestRemindRequest,
@@ -38,7 +41,7 @@ import {
 /**
  * Sends a reminder email for an existing Dropbox Sign signature request
  */
-export const dropboxSignSendReminderEmail = onCall(
+export const sendWaiverReminder = onCall(
 	{
 		region: FIREBASE_CONFIG.REGION,
 		secrets: ['DROPBOX_SIGN_API_KEY'],
@@ -54,11 +57,13 @@ export const dropboxSignSendReminderEmail = onCall(
 			const firestore = getFirestore()
 
 			// Get the current season
-			const currentSeason = await getCurrentSeason()
+			const currentSeason = (await getCurrentSeason()) as
+				| (SeasonDocument & { id: string })
+				| null
 			if (!currentSeason) {
 				throw new HttpsError('failed-precondition', 'No current season found')
 			}
-			const seasonId = (currentSeason as unknown as { id: string }).id
+			const seasonId = currentSeason.id
 
 			// Get player document and waiver in parallel
 			const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
@@ -92,6 +97,28 @@ export const dropboxSignSendReminderEmail = onCall(
 					'permission-denied',
 					'Account is banned from this season'
 				)
+			}
+
+			// Validate registration is open (skip for admins)
+			const isAdmin = playerData.admin === true
+			if (!isAdmin) {
+				const now = new Date()
+				const registrationStart = currentSeason.registrationStart.toDate()
+				const registrationEnd = currentSeason.registrationEnd.toDate()
+
+				if (now < registrationStart) {
+					throw new HttpsError(
+						'failed-precondition',
+						`Registration has not opened yet. Registration opens ${formatDateForUser(registrationStart)}.`
+					)
+				}
+
+				if (now > registrationEnd) {
+					throw new HttpsError(
+						'failed-precondition',
+						`Registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
+					)
+				}
 			}
 
 			// Validate waiver exists
@@ -165,7 +192,7 @@ export const dropboxSignSendReminderEmail = onCall(
 		} catch (error) {
 			// Only log if not already an HttpsError (those are expected user errors)
 			if (!(error instanceof HttpsError)) {
-				logger.error('Unexpected error sending reminder email', {
+				logger.error('Unexpected error sending waiver reminder', {
 					userId,
 					error: error instanceof Error ? error.message : 'Unknown error',
 				})

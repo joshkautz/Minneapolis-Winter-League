@@ -1,5 +1,5 @@
 /**
- * Update offer status callable function
+ * Update offer callable function
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -15,14 +15,13 @@ import { validateAuthentication } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { formatDateForUser } from '../../../shared/format.js'
 
-interface UpdateOfferStatusRequest {
+interface UpdateOfferRequest {
 	offerId: string
 	status: 'accepted' | 'rejected' | 'canceled'
 }
 
 /**
- * Updates offer status (accept/reject) with proper authorization
- * Replaces client-side acceptOffer and rejectOffer functions
+ * Updates offer status (accept/reject/cancel) with proper authorization
  *
  * Security validations:
  * - User must be authenticated and email verified
@@ -30,7 +29,7 @@ interface UpdateOfferStatusRequest {
  * - Offer must exist and be in pending status
  * - Atomic transaction with proper cleanup
  */
-export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
+export const updateOffer = onCall<UpdateOfferRequest>(
 	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
@@ -101,15 +100,15 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 				)
 				const isAdmin = userDoc.exists && userDoc.data()?.admin === true
 
-				// Validate that season has not started yet (skip for admins)
+				// Validate that registration has not ended (skip for admins)
 				if (!isAdmin) {
 					const now = new Date()
-					const seasonStart = seasonData.dateStart.toDate()
+					const registrationEnd = seasonData.registrationEnd.toDate()
 
-					if (now >= seasonStart) {
+					if (now > registrationEnd) {
 						throw new HttpsError(
 							'failed-precondition',
-							`Team roster changes are not allowed after the season has started. The season started on ${formatDateForUser(seasonStart)}.`
+							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
 						)
 					}
 				}
@@ -120,7 +119,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 
 				// If user is admin, allow them to update any offer
 				if (isAdmin) {
-					logger.info(`Admin user updating offer status`, {
+					logger.info(`Admin user updating offer`, {
 						offerId,
 						adminUserId: userId,
 						status,
@@ -239,7 +238,7 @@ export const updateOfferStatus = onCall<UpdateOfferStatusRequest>(
 			const errorMessage =
 				error instanceof Error ? error.message : 'Unknown error'
 
-			logger.error('Error updating offer status:', {
+			logger.error('Error updating offer:', {
 				offerId,
 				status,
 				userId: auth?.uid,

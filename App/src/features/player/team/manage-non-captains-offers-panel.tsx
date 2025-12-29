@@ -9,7 +9,7 @@ import {
 import { useOffersContext, useTeamsContext } from '@/providers'
 import { useOffer, OfferDocumentWithUI } from '@/shared/hooks'
 import { DocumentReference } from '@/firebase'
-import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
+import { updateOfferViaFunction } from '@/firebase/collections/functions'
 
 export const ManageNonCaptainsOffersPanel = () => {
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
@@ -32,7 +32,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 	) => {
 		setLoadingOfferId(offerDocumentReference.id)
 		try {
-			await updateOfferStatusViaFunction({
+			await updateOfferViaFunction({
 				offerId: offerDocumentReference.id,
 				status: 'rejected',
 			})
@@ -57,7 +57,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 	) => {
 		setLoadingOfferId(offerDocumentReference.id)
 		try {
-			await updateOfferStatusViaFunction({
+			await updateOfferViaFunction({
 				offerId: offerDocumentReference.id,
 				status: 'accepted',
 			})
@@ -82,7 +82,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 	) => {
 		setLoadingOfferId(offerDocumentReference.id)
 		try {
-			await updateOfferStatusViaFunction({
+			await updateOfferViaFunction({
 				offerId: offerDocumentReference.id,
 				status: 'canceled',
 			})

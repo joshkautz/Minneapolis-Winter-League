@@ -1,5 +1,7 @@
 /**
- * Manage team player callable function
+ * Update team roster callable function
+ *
+ * Handles player management actions on a team: promote, demote, or remove.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -25,13 +27,13 @@ import {
 	KARMA_AMOUNT,
 } from '../../../shared/karma.js'
 
-interface ManagePlayerRequest {
+interface UpdateTeamRosterRequest {
 	teamId: string
 	playerId: string
 	action: 'promote' | 'demote' | 'remove'
 }
 
-export const manageTeamPlayer = onCall<ManagePlayerRequest>(
+export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		validateAuthentication(request.auth)
@@ -107,15 +109,15 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 				const currentUserDoc = await transaction.get(currentUserRef)
 				const isAdmin = currentUserDoc.data()?.admin === true
 
-				// Validate that season has not started yet (skip for admins)
+				// Validate that registration has not ended (skip for admins)
 				if (!isAdmin) {
 					const now = new Date()
-					const seasonStart = seasonData.dateStart.toDate()
+					const registrationEnd = seasonData.registrationEnd.toDate()
 
-					if (now >= seasonStart) {
+					if (now > registrationEnd) {
 						throw new HttpsError(
 							'failed-precondition',
-							`Team roster changes are not allowed after the season has started. The season started on ${formatDateForUser(seasonStart)}.`
+							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
 						)
 					}
 				}
@@ -204,7 +206,7 @@ export const manageTeamPlayer = onCall<ManagePlayerRequest>(
 			const errorMessage =
 				error instanceof Error ? error.message : 'Unknown error'
 
-			logger.error('Error managing team player:', {
+			logger.error('Error updating team roster:', {
 				teamId,
 				playerId,
 				action,

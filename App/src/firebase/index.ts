@@ -10,7 +10,6 @@ export {
 	getPlayerSnapshot,
 	getPlayerRef,
 	getPlayersQuery,
-	updatePlayer,
 } from './collections/players'
 
 // Player functions (Firebase Callable Functions)

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { manageTeamPlayerViaFunction } from '@/firebase/collections/functions'
+import { updateTeamRosterViaFunction } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { DotsVerticalIcon } from '@radix-ui/react-icons'
@@ -37,7 +37,7 @@ export const ManageNonCaptainActions = () => {
 		}
 
 		try {
-			await manageTeamPlayerViaFunction({
+			await updateTeamRosterViaFunction({
 				teamId: teamQueryDocumentSnapshot.id,
 				playerId: authenticatedUserSnapshot.id,
 				action: 'remove',

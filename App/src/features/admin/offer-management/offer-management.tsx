@@ -29,7 +29,7 @@ import { toast } from 'sonner'
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { allPendingOffersQuery } from '@/firebase/collections/offers'
-import { updateOfferStatusViaFunction } from '@/firebase/collections/functions'
+import { updateOfferViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PageContainer, PageHeader, QueryError } from '@/shared/components'
@@ -317,7 +317,7 @@ export const OfferManagement = () => {
 		try {
 			setUpdatingOfferId(offerId)
 
-			await updateOfferStatusViaFunction({
+			await updateOfferViaFunction({
 				offerId,
 				status,
 			})
@@ -329,9 +329,9 @@ export const OfferManagement = () => {
 			// The useCollection hook will automatically update with the new data
 		} catch (error) {
 			logger.error(
-				'Error updating offer status',
+				'Error updating offer',
 				error instanceof Error ? error : undefined,
-				{ component: 'ManageOffers', action: 'updateOfferStatus', offerId }
+				{ component: 'ManageOffers', action: 'updateOffer', offerId }
 			)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to update offer status'
