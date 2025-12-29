@@ -60,18 +60,18 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 				)
 			}
 
-			// Check if season has started
+			// Check if registration has ended
 			if (teamDocument.season) {
 				const seasonDoc = await teamDocument.season.get()
 				if (seasonDoc.exists) {
 					const seasonData = seasonDoc.data() as SeasonDocument
 					const now = new Date()
-					const seasonStart = seasonData.dateStart.toDate()
+					const registrationEnd = seasonData.registrationEnd.toDate()
 
-					if (now >= seasonStart) {
+					if (now > registrationEnd) {
 						throw new HttpsError(
 							'failed-precondition',
-							`Teams cannot be deleted after the season has started. The season started on ${formatDateForUser(seasonStart)}.`
+							`Teams cannot be deleted after registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
 						)
 					}
 				}

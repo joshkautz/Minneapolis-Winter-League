@@ -123,15 +123,15 @@ export const createOffer = onCall<CreateOfferRequest>(
 				const currentUserDoc = await transaction.get(currentUserRef)
 				const isAdmin = currentUserDoc.data()?.admin === true
 
-				// Validate that season has not started yet (skip for admins)
+				// Validate that registration has not ended (skip for admins)
 				if (!isAdmin) {
 					const now = new Date()
-					const seasonStart = seasonData.dateStart.toDate()
+					const registrationEnd = seasonData.registrationEnd.toDate()
 
-					if (now >= seasonStart) {
+					if (now > registrationEnd) {
 						throw new HttpsError(
 							'failed-precondition',
-							`Team roster changes are not allowed after the season has started. The season started on ${formatDateForUser(seasonStart)}.`
+							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
 						)
 					}
 				}

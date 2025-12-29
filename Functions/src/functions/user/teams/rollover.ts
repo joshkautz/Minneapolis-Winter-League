@@ -79,16 +79,16 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 			// Check if user is an admin
 			const isAdmin = playerDocument.admin === true
 
-			// Validate registration is open (skip for admins)
+			// Validate season is still accepting teams (allow pre-registration before registration opens)
+			// Skip check for admins
 			if (!isAdmin) {
-				const registrationStart = seasonData.registrationStart.toDate()
 				const registrationEnd = seasonData.registrationEnd.toDate()
 				const currentTime = now.toDate()
 
-				if (currentTime < registrationStart || currentTime > registrationEnd) {
+				if (currentTime > registrationEnd) {
 					throw new HttpsError(
 						'failed-precondition',
-						`Team registration is not currently open. Registration opens ${formatDateForUser(registrationStart, timezone)} and closes ${formatDateForUser(registrationEnd, timezone)}.`
+						`Team registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
 					)
 				}
 			} // Get original team to validate ownership and get team data
