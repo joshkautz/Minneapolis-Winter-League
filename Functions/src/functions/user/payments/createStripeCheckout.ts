@@ -75,10 +75,7 @@ export const createStripeCheckout = onCall<
 			// Validate registration is open (skip for admins)
 			if (!isAdmin) {
 				if (!currentSeason) {
-					throw new HttpsError(
-						'failed-precondition',
-						'No current season found'
-					)
+					throw new HttpsError('failed-precondition', 'No current season found')
 				}
 
 				const now = new Date()

@@ -211,7 +211,9 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				// Commit batch when it reaches the limit and start a new one
 				if (operationsInBatch >= BATCH_SIZE) {
 					await batch.commit()
-					logger.info(`Committed batch with ${operationsInBatch} player updates`)
+					logger.info(
+						`Committed batch with ${operationsInBatch} player updates`
+					)
 					batch = firestore.batch()
 					operationsInBatch = 0
 				}
@@ -220,7 +222,9 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			// Commit any remaining operations
 			if (operationsInBatch > 0) {
 				await batch.commit()
-				logger.info(`Committed final batch with ${operationsInBatch} player updates`)
+				logger.info(
+					`Committed final batch with ${operationsInBatch} player updates`
+				)
 			}
 
 			logger.info(`Season added to players`, {

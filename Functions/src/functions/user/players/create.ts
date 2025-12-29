@@ -113,8 +113,7 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 
 			// Build seasons array for the new player
 			const playerSeasons: PlayerSeason[] = seasonsSnapshot.docs.map((doc) => ({
-				season:
-					doc.ref as FirebaseFirestore.DocumentReference<SeasonDocument>,
+				season: doc.ref as FirebaseFirestore.DocumentReference<SeasonDocument>,
 				team: null,
 				captain: false,
 				paid: false,
