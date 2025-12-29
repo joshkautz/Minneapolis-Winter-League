@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { User } from 'lucide-react'
 import { useAccountSection } from '@/shared/hooks'
 import { LoginButton } from './login-button'
-import { LoadingSpinner } from './loading-spinner'
+import { LoadingSpinner } from '@/shared/components'
 import { NotificationBadge } from './notification-badge'
 import { Button } from '@/components/ui/button'
 import {

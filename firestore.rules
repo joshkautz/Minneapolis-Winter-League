@@ -19,24 +19,18 @@ service cloud.firestore {
     match /stripe/{uid} {
       allow read: if isAuthenticated() && request.auth.uid == uid;
 
-      // Checkout sessions: User can read and write their own
+      // Checkout sessions: Read-only (created by createStripeCheckout function)
+      // No frontend write access needed - all checkout creation goes through callable function
       match /checkouts/{id} {
-        allow read, write: if isAuthenticated() && request.auth.uid == uid;
+        allow read: if isAuthenticated() && request.auth.uid == uid;
+        allow write: if false; // Functions only
       }
 
-      // Payments: Read-only for users (created by webhook)
+      // Payments: Read-only for users (created by Stripe webhook)
       match /payments/{id} {
         allow read: if isAuthenticated() && request.auth.uid == uid;
+        allow write: if false; // Webhook only
       }
-    }
-
-    // Synced Stripe products/prices: Public read for pricing display
-    match /stripe/products/items/{id} {
-      allow read: if true;
-    }
-
-    match /stripe/prices/items/{id} {
-      allow read: if true;
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -51,21 +45,6 @@ service cloud.firestore {
       match /waivers/{id} {
         allow read: if isAuthenticated() && request.auth.uid == uid;
         allow write: if false; // Functions only (onPaymentCreated, dropboxSignWebhook)
-      }
-    }
-
-    // DEPRECATED: Legacy Firebase Stripe Extension products collection
-    // TODO: Remove after confirming no production usage
-    // New Stripe integration uses /stripe/products/items/{id} and /stripe/prices/items/{id}
-    match /products/{id} {
-      allow read: if true;
-
-      match /prices/{id} {
-        allow read: if true;
-      }
-
-      match /tax_rates/{id} {
-        allow read: if true;
       }
     }
 

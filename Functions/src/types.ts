@@ -315,30 +315,6 @@ export interface NewsDocument extends DocumentData {
 }
 
 /**
- * Stripe checkout session document structure
- */
-export interface CheckoutSessionDocument extends DocumentData {
-	/** URL to redirect to on cancellation */
-	cancel_url: string
-	/** Client identifier */
-	client: string
-	/** Session creation timestamp */
-	created: Timestamp
-	/** Error information if session creation failed */
-	error: { message: string }
-	/** Checkout session mode */
-	mode: string
-	/** Price identifier */
-	price: string
-	/** Stripe session ID */
-	sessionId: string
-	/** URL to redirect to on success */
-	success_url: string
-	/** Checkout session URL */
-	url: string
-}
-
-/**
  * Badge document structure representing a badge that can be awarded to teams
  */
 export interface BadgeDocument extends DocumentData {

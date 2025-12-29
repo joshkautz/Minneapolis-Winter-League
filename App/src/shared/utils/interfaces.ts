@@ -4,7 +4,6 @@ export type {
 	TeamDocument,
 	SeasonDocument,
 	OfferDocument,
-	CheckoutSessionDocument,
 	GameDocument,
 	WaiverDocument,
 	DocumentData,
