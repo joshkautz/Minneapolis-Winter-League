@@ -3,11 +3,12 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore'
+import { getFirestore, Timestamp, WriteBatch } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
 	PlayerDocument,
+	PlayerSeason,
 	SeasonDocument,
 	TeamDocument,
 } from '../../../types.js'
@@ -136,9 +137,9 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				...(stripeConfig && { stripe: stripeConfig }),
 			}
 
-			const seasonRef = await firestore
+			const seasonRef = (await firestore
 				.collection(Collections.SEASONS)
-				.add(seasonData)
+				.add(seasonData)) as FirebaseFirestore.DocumentReference<SeasonDocument>
 
 			logger.info(`Season created: ${seasonRef.id}`, {
 				seasonId: seasonRef.id,
@@ -146,45 +147,87 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				createdBy: auth?.uid,
 			})
 
-			// Add this season to all existing players
+			// Add this season to all existing players using chunked batches
 			const playersSnapshot = await firestore
 				.collection(Collections.PLAYERS)
 				.get()
 
-			const batch = firestore.batch()
+			if (playersSnapshot.empty) {
+				logger.info('No players found to add season to', {
+					seasonId: seasonRef.id,
+				})
+
+				return {
+					success: true,
+					message: `Season "${name}" created successfully (no existing players to update)`,
+					seasonId: seasonRef.id,
+				} as CreateSeasonResponse
+			}
+
+			const BATCH_SIZE = 500 // Firestore batch limit
+			let batch: WriteBatch = firestore.batch()
+			let operationsInBatch = 0
 			let playersUpdated = 0
+			let playersSkipped = 0
 
 			for (const playerDoc of playersSnapshot.docs) {
 				const playerData = playerDoc.data() as PlayerDocument
 
-				// Check if player already has this season (shouldn't happen, but just in case)
+				// Check if player already has this season (shouldn't happen, but defensive)
 				const hasSeasonAlready = playerData.seasons?.some(
 					(ps) => ps.season.id === seasonRef.id
 				)
 
-				if (!hasSeasonAlready) {
-					// Add the season to the player's seasons array
-					batch.update(playerDoc.ref, {
-						seasons: FieldValue.arrayUnion({
-							banned: false,
-							captain: false,
-							paid: false,
-							season: seasonRef,
-							signed: false,
-							team: null,
-							lookingForTeam: false,
-						}),
-					})
-					playersUpdated++
+				if (hasSeasonAlready) {
+					playersSkipped++
+					continue
+				}
+
+				// Preserve banned status from the most recent previous season
+				let bannedStatus = false
+				if (playerData.seasons && playerData.seasons.length > 0) {
+					const mostRecentSeason =
+						playerData.seasons[playerData.seasons.length - 1]
+					bannedStatus = mostRecentSeason.banned || false
+				}
+
+				// Create new season data
+				const newSeasonData: PlayerSeason = {
+					season: seasonRef,
+					team: null,
+					captain: false,
+					paid: false,
+					signed: false,
+					banned: bannedStatus,
+					lookingForTeam: false,
+				}
+
+				// Add new season to existing seasons array
+				const updatedSeasons = [...(playerData.seasons || []), newSeasonData]
+				batch.update(playerDoc.ref, { seasons: updatedSeasons })
+				operationsInBatch++
+				playersUpdated++
+
+				// Commit batch when it reaches the limit and start a new one
+				if (operationsInBatch >= BATCH_SIZE) {
+					await batch.commit()
+					logger.info(`Committed batch with ${operationsInBatch} player updates`)
+					batch = firestore.batch()
+					operationsInBatch = 0
 				}
 			}
 
-			// Commit the batch update
-			await batch.commit()
+			// Commit any remaining operations
+			if (operationsInBatch > 0) {
+				await batch.commit()
+				logger.info(`Committed final batch with ${operationsInBatch} player updates`)
+			}
 
-			logger.info(`Season added to ${playersUpdated} players`, {
+			logger.info(`Season added to players`, {
 				seasonId: seasonRef.id,
 				playersUpdated,
+				playersSkipped,
+				totalPlayers: playersSnapshot.size,
 			})
 
 			return {
