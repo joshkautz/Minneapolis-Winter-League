@@ -34,7 +34,7 @@
 	"devDependencies": {
 		"concurrently": "^9.2.1",
 		"firebase-tools": "^15.1.0",
-		"jsdom": "^27.3.0",
+		"jsdom": "^27.4.0",
 		"typescript": "^5.9.2"
 	}
 }
