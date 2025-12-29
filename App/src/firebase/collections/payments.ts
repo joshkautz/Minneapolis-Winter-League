@@ -1,21 +1,13 @@
 /**
- * Payment-related Firestore operations (Stripe integration)
+ * Payment-related operations (Stripe integration)
+ *
+ * Uses a callable Firebase function to create Stripe checkout sessions.
+ * This provides better security, simpler error handling, and aligns with
+ * the established patterns in the codebase.
  */
 
-import {
-	addDoc,
-	collection,
-	onSnapshot,
-	type DocumentReference,
-	type Unsubscribe,
-} from 'firebase/firestore'
-
-import { firestore } from '../app'
 import { User } from '../auth'
-import { CheckoutSessionDocument } from '@/shared/utils'
-
-/** Timeout for waiting for checkout URL (30 seconds) */
-const CHECKOUT_TIMEOUT_MS = 30000
+import { createStripeCheckoutSession } from '../functions'
 
 /**
  * Builds a URL with payment status query parameter
@@ -41,6 +33,7 @@ export interface StripeRegistrationOptions {
 
 /**
  * Creates a Stripe checkout session for winter league registration
+ * and redirects the user to the Stripe checkout page.
  *
  * @param authValue - The authenticated user
  * @param setStripeLoading - State setter for loading state
@@ -61,90 +54,26 @@ export const stripeRegistration = async (
 	setStripeLoading(true)
 	setStripeError(undefined)
 
-	let unsubscribe: Unsubscribe | undefined
-	let timeoutId: ReturnType<typeof setTimeout> | undefined
-
-	// Cleanup function to prevent memory leaks
-	const cleanup = () => {
-		if (unsubscribe) {
-			unsubscribe()
-			unsubscribe = undefined
-		}
-		if (timeoutId) {
-			clearTimeout(timeoutId)
-			timeoutId = undefined
-		}
-	}
-
 	try {
-		// Build the checkout session document
-		const checkoutSessionData: Record<string, unknown> = {
-			mode: 'payment',
-			price: options.priceId,
-			success_url: buildPaymentReturnUrl('success'),
-			cancel_url: buildPaymentReturnUrl('cancel'),
-		}
+		const result = await createStripeCheckoutSession({
+			priceId: options.priceId,
+			couponId: options.couponId,
+			successUrl: buildPaymentReturnUrl('success'),
+			cancelUrl: buildPaymentReturnUrl('cancel'),
+		})
 
-		// Auto-apply coupon if provided (e.g., returning player discount)
-		// Note: Stripe doesn't allow both discounts AND allow_promotion_codes
-		if (options.couponId) {
-			checkoutSessionData.discounts = [{ coupon: options.couponId }]
-		} else {
-			// Only allow manual promo codes if no coupon is auto-applied
-			checkoutSessionData.allow_promotion_codes = true
-		}
-
-		// Create new Checkout Session for the player
-		const checkoutSessionDocRef = (await addDoc(
-			collection(firestore, `stripe/${authValue.uid}/checkouts`),
-			checkoutSessionData
-		)) as DocumentReference<CheckoutSessionDocument>
-
-		// Set up timeout for checkout URL
-		timeoutId = setTimeout(() => {
-			cleanup()
-			setStripeLoading(false)
-			setStripeError(
-				'Checkout is taking longer than expected. Please try again.'
-			)
-		}, CHECKOUT_TIMEOUT_MS)
-
-		// Listen for the URL of the Checkout Session
-		unsubscribe = onSnapshot(
-			checkoutSessionDocRef,
-			(checkoutSessionDocumentSnapshot) => {
-				const data = checkoutSessionDocumentSnapshot.data()
-				if (data) {
-					if (data.url) {
-						// We have a Stripe Checkout URL, clean up and redirect
-						cleanup()
-						window.location.assign(data.url)
-					}
-					if (data.error) {
-						// Error occurred, clean up and show error
-						cleanup()
-						setStripeLoading(false)
-						setStripeError(
-							data.error.message || 'An error occurred during checkout'
-						)
-					}
-				}
-			},
-			(error) => {
-				// Snapshot listener error
-				cleanup()
-				setStripeLoading(false)
-				setStripeError(error.message || 'Failed to connect to payment service')
-			}
-		)
+		// Redirect to Stripe checkout
+		window.location.assign(result.data.url)
 	} catch (error) {
-		// Error creating the checkout session document
-		cleanup()
 		setStripeLoading(false)
-		setStripeError(
-			error instanceof Error
-				? error.message
-				: 'Failed to create checkout session'
-		)
+
+		// Extract error message from Firebase Functions error
+		let errorMessage = 'Failed to create checkout session'
+		if (error instanceof Error) {
+			// Firebase Functions errors have a 'message' property
+			errorMessage = error.message
+		}
+
+		setStripeError(errorMessage)
 	}
 }

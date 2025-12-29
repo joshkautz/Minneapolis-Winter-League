@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Timestamp } from '@firebase/firestore'
 import { StorageReference } from '@/firebase/storage'
 import { useAuthContext, useSeasonsContext, useTeamsContext } from '@/providers'
 import type { PlayerSeason } from '@/types'
@@ -22,9 +21,7 @@ interface TeamCreationResult {
 interface UseTeamCreationReturn {
 	rolloverMode: boolean
 	isLoading: boolean
-	isAdmin: boolean
 	isRostered: boolean
-	isRegistrationOpen: boolean
 	isTeamRegistrationFull: boolean
 	currentSeasonQueryDocumentSnapshot: ReturnType<
 		typeof useSeasonsContext
@@ -57,11 +54,6 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 	void newTeamDocument // Suppress unused variable warning
 	const [rolloverMode, setRolloverMode] = useState(false)
 
-	const isAdmin = useMemo(
-		() => authenticatedUserSnapshot?.data()?.admin ?? false,
-		[authenticatedUserSnapshot]
-	)
-
 	const isRostered = useMemo(
 		() =>
 			authenticatedUserSnapshot
@@ -72,17 +64,6 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 						item.team
 				) || false,
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
-	)
-
-	const isRegistrationOpen = useMemo(
-		() =>
-			(currentSeasonQueryDocumentSnapshot &&
-				Timestamp.now() >
-					currentSeasonQueryDocumentSnapshot?.data().registrationStart &&
-				Timestamp.now() <
-					currentSeasonQueryDocumentSnapshot?.data().registrationEnd) ||
-			false,
-		[currentSeasonQueryDocumentSnapshot]
 	)
 
 	const isTeamRegistrationFull = useMemo(() => {
@@ -139,9 +120,7 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		// State
 		rolloverMode,
 		isLoading,
-		isAdmin,
 		isRostered,
-		isRegistrationOpen,
 		isTeamRegistrationFull,
 		currentSeasonQueryDocumentSnapshot,
 
