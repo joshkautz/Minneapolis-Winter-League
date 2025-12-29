@@ -6,13 +6,15 @@
 
 /**
  * Request interface for creating a player
- * Must match Functions/src/functions/players/create.ts CreatePlayerRequest exactly
+ * Must match Functions/src/functions/user/players/create.ts CreatePlayerRequest exactly
+ *
+ * Note: seasonId is no longer required - the backend automatically adds all
+ * seasons where registration is still open (registrationEnd > now)
  */
 export interface CreatePlayerRequest {
 	firstname: string
 	lastname: string
 	email: string
-	seasonId: string
 }
 
 /**

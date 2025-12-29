@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
-import { useAuthContext, useSeasonsContext } from '@/providers'
+import { useAuthContext } from '@/providers'
 import { createPlayerViaFunction } from '@/firebase/collections/functions'
 import { logger } from '@/shared/utils'
 import {
@@ -32,7 +32,6 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 		sendEmailVerificationSending,
 		sendEmailVerificationError,
 	} = useAuthContext()
-	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	const form = useForm<SignupFormData>({
 		resolver: standardSchemaResolver(signupFormSchema),
@@ -98,7 +97,6 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 						firstname: data.firstName,
 						lastname: data.lastName,
 						email: data.email,
-						seasonId: currentSeasonQueryDocumentSnapshot?.id || '',
 					})
 
 					logger.firebase('create', 'players', undefined, {

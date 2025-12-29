@@ -2,10 +2,15 @@
  * Create player callable function
  */
 
-import { getFirestore, DocumentReference } from 'firebase-admin/firestore'
+import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument, SeasonDocument } from '../../../types.js'
+import {
+	Collections,
+	PlayerDocument,
+	PlayerSeason,
+	SeasonDocument,
+} from '../../../types.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { validateBasicAuthentication } from '../../../shared/auth.js'
 
@@ -16,7 +21,6 @@ interface CreatePlayerRequest {
 	firstname: string
 	lastname: string
 	email: string
-	seasonId: string
 }
 
 /**
@@ -26,13 +30,17 @@ interface CreatePlayerRequest {
  * - User must be authenticated (but email verification is NOT required)
  * - Email must match authenticated user's email (explicitly validated)
  * - All required PlayerDocument fields must be provided (validated)
- * - Season must exist and be valid (validated)
  * - Player document must not already exist (validated)
  *
  * Security features provided:
  * - Document ID is automatically set to authenticated user's UID (prevents impersonation)
  * - Admin field is automatically set to false (prevents privilege escalation)
  * - All input is sanitized and validated server-side (prevents malicious data)
+ *
+ * Season handling:
+ * - Automatically adds all seasons where registration is still open (registrationEnd > now)
+ * - If no seasons have open registration, player is created with empty seasons array
+ * - Player will receive future seasons when they are created by admins
  *
  * Note: Email verification is NOT required to allow newly registered users
  * to create their player profiles immediately after account creation.
@@ -45,7 +53,7 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 		// Validate authentication
 		validateBasicAuthentication(auth)
 
-		const { firstname, lastname, email, seasonId } = data
+		const { firstname, lastname, email } = data
 		const userId = auth?.uid ?? ''
 
 		// Validate required fields
@@ -74,13 +82,6 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 			)
 		}
 
-		if (!seasonId || typeof seasonId !== 'string') {
-			throw new HttpsError(
-				'invalid-argument',
-				'Season ID is required and must be a string'
-			)
-		}
-
 		// Validate email matches authenticated user
 		if (auth?.token.email !== email) {
 			throw new HttpsError(
@@ -96,59 +97,57 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 		try {
 			const firestore = getFirestore()
 			const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
-			const seasonRef = firestore
+
+			// Check if player already exists
+			const playerDoc = await playerRef.get()
+			if (playerDoc.exists) {
+				throw new HttpsError('already-exists', 'Player already exists')
+			}
+
+			// Find all seasons where registration is still open (registrationEnd > now)
+			const now = Timestamp.now()
+			const seasonsSnapshot = await firestore
 				.collection(Collections.SEASONS)
-				.doc(seasonId) as DocumentReference<SeasonDocument>
+				.where('registrationEnd', '>', now)
+				.get()
 
-			// Use transaction to atomically check existence and create
-			await firestore.runTransaction(async (transaction) => {
-				// Read all documents first (Firestore transaction requirement)
-				const [playerDoc, seasonDoc] = await Promise.all([
-					transaction.get(playerRef),
-					transaction.get(seasonRef),
-				])
+			// Build seasons array for the new player
+			const playerSeasons: PlayerSeason[] = seasonsSnapshot.docs.map((doc) => ({
+				season:
+					doc.ref as FirebaseFirestore.DocumentReference<SeasonDocument>,
+				team: null,
+				captain: false,
+				paid: false,
+				signed: false,
+				banned: false,
+				lookingForTeam: false,
+			}))
 
-				// Check if player already exists
-				if (playerDoc.exists) {
-					throw new HttpsError('already-exists', 'Player already exists')
-				}
+			// Create player document
+			const player: PlayerDocument = {
+				admin: false,
+				email: email,
+				firstname: trimmedFirstname,
+				lastname: trimmedLastname,
+				seasons: playerSeasons,
+			}
 
-				// Validate season exists
-				if (!seasonDoc.exists) {
-					throw new HttpsError('not-found', 'Invalid season ID')
-				}
-
-				// Create player document atomically
-				const player: PlayerDocument = {
-					admin: false,
-					email: email,
-					firstname: trimmedFirstname,
-					lastname: trimmedLastname,
-					seasons: [
-						{
-							banned: false,
-							captain: false,
-							paid: false,
-							season: seasonRef,
-							signed: false,
-							team: null,
-							lookingForTeam: false,
-						},
-					],
-				}
-
-				transaction.set(playerRef, player)
-			})
+			await playerRef.set(player)
 
 			logger.info(`Successfully created player: ${userId}`, {
 				email,
 				name: `${trimmedFirstname} ${trimmedLastname}`,
+				seasonsAdded: playerSeasons.length,
+				seasonIds: seasonsSnapshot.docs.map((d) => d.id),
 			})
 
 			return {
 				success: true,
 				playerId: userId,
-				message: 'Player created successfully',
+				message:
+					playerSeasons.length > 0
+						? `Player created successfully with ${playerSeasons.length} active season(s)`
+						: 'Player created successfully (no active seasons currently)',
 			}
 		} catch (error) {
 			logger.error('Error creating player:', {
