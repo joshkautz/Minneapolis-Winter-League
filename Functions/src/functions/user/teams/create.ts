@@ -1,5 +1,15 @@
 /**
  * Create team callable function
+ *
+ * Security validations:
+ * - User must be authenticated and email verified
+ * - User must not be banned for the target season
+ * - Registration must not have ended
+ * - User must not already be on a team for this season
+ * - Admins bypass banned and registration date restrictions
+ *
+ * Note: When creating a new season entry, banned status is preserved from
+ * the most recent previous season to maintain ban continuity.
  */
 
 import { getFirestore } from 'firebase-admin/firestore'
@@ -13,7 +23,10 @@ import {
 	PlayerSeason,
 	SeasonDocument,
 } from '../../../types.js'
-import { validateAuthentication } from '../../../shared/auth.js'
+import {
+	validateAuthentication,
+	validateNotBanned,
+} from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { formatDateForUser } from '../../../shared/format.js'
 
@@ -93,6 +106,11 @@ export const createTeam = onCall<CreateTeamRequest>(
 
 			// Check if user is an admin
 			const isAdmin = playerDocument.admin === true
+
+			// Validate player is not banned for this season (skip for admins)
+			if (!isAdmin) {
+				validateNotBanned(playerDocument, seasonId)
+			}
 
 			// Validate season is still accepting teams (allow pre-registration before registration opens)
 			// Skip check for admins
@@ -192,14 +210,22 @@ export const createTeam = onCall<CreateTeamRequest>(
 				) || []
 
 			// If no season entry exists, create one
+			// Preserve banned status from most recent previous season if available
 			if (!existingSeasonData) {
+				// Find most recent previous season to get banned status
+				const previousSeasons = playerDocument?.seasons?.filter(
+					(s: PlayerSeason) => s.season.id !== seasonId
+				)
+				const mostRecentPreviousSeason = previousSeasons?.[0]
+				const bannedStatus = mostRecentPreviousSeason?.banned || false
+
 				updatedSeasons.push({
 					season: seasonRef, // Firebase admin SDK DocumentReference
 					team: teamRef, // Firebase admin SDK DocumentReference
 					captain: true,
 					paid: false,
 					signed: false,
-					banned: false,
+					banned: bannedStatus,
 					lookingForTeam: false, // Not looking for team since they're creating one
 				})
 			}

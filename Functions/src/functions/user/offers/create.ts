@@ -1,5 +1,14 @@
 /**
  * Create offer callable function
+ *
+ * Security validations:
+ * - User must be authenticated and email verified
+ * - Target player must not be banned for the current season
+ * - Registration must not have ended
+ * - For invitations: user must be a team captain
+ * - For requests: user must be the player making the request
+ * - Player must not already be on a team for this season
+ * - Admins bypass banned and registration date restrictions
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -11,7 +20,10 @@ import {
 	TeamDocument,
 	SeasonDocument,
 } from '../../../types.js'
-import { validateAuthentication } from '../../../shared/auth.js'
+import {
+	validateAuthentication,
+	validateNotBanned,
+} from '../../../shared/auth.js'
 import {
 	getCurrentSeason,
 	getCurrentSeasonRef,
@@ -122,6 +134,14 @@ export const createOffer = onCall<CreateOfferRequest>(
 					.doc(userId)
 				const currentUserDoc = await transaction.get(currentUserRef)
 				const isAdmin = currentUserDoc.data()?.admin === true
+
+				// Validate target player is not banned for this season (skip for admins)
+				// This prevents:
+				// - Captains from inviting banned players
+				// - Banned players from requesting to join teams
+				if (!isAdmin) {
+					validateNotBanned(playerDocument, seasonRef.id)
+				}
 
 				// Validate that registration has not ended (skip for admins)
 				if (!isAdmin) {

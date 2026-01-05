@@ -22,6 +22,7 @@ interface UseTeamCreationReturn {
 	rolloverMode: boolean
 	isLoading: boolean
 	isRostered: boolean
+	isBanned: boolean
 	isTeamRegistrationFull: boolean
 	currentSeasonQueryDocumentSnapshot: ReturnType<
 		typeof useSeasonsContext
@@ -54,16 +55,25 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 	void newTeamDocument // Suppress unused variable warning
 	const [rolloverMode, setRolloverMode] = useState(false)
 
-	const isRostered = useMemo(
+	const currentSeasonData = useMemo(
 		() =>
 			authenticatedUserSnapshot
 				?.data()
-				?.seasons.some(
+				?.seasons.find(
 					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
-						item.team
-				) || false,
+						item.season.id === currentSeasonQueryDocumentSnapshot?.id
+				),
 		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
+	)
+
+	const isRostered = useMemo(
+		() => Boolean(currentSeasonData?.team),
+		[currentSeasonData]
+	)
+
+	const isBanned = useMemo(
+		() => Boolean(currentSeasonData?.banned),
+		[currentSeasonData]
 	)
 
 	const isTeamRegistrationFull = useMemo(() => {
@@ -121,6 +131,7 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		rolloverMode,
 		isLoading,
 		isRostered,
+		isBanned,
 		isTeamRegistrationFull,
 		currentSeasonQueryDocumentSnapshot,
 

@@ -10,8 +10,12 @@ import {
 	OfferDocument,
 	TeamDocument,
 	SeasonDocument,
+	PlayerDocument,
 } from '../../../types.js'
-import { validateAuthentication } from '../../../shared/auth.js'
+import {
+	validateAuthentication,
+	validateNotBanned,
+} from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { formatDateForUser } from '../../../shared/format.js'
 
@@ -26,8 +30,11 @@ interface UpdateOfferRequest {
  * Security validations:
  * - User must be authenticated and email verified
  * - User must be authorized for this offer (player for invitation, captain for request)
+ * - When accepting: target player must not be banned for the season
+ * - Registration must not have ended
  * - Offer must exist and be in pending status
  * - Atomic transaction with proper cleanup
+ * - Admins bypass banned and registration date restrictions
  */
 export const updateOffer = onCall<UpdateOfferRequest>(
 	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
@@ -111,6 +118,14 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
 						)
 					}
+				}
+
+				// When accepting an offer, validate the player is not banned (skip for admins)
+				// This prevents banned players from joining teams
+				if (status === 'accepted' && !isAdmin) {
+					const playerDoc = await transaction.get(offerData.player)
+					const playerData = playerDoc.data() as PlayerDocument | undefined
+					validateNotBanned(playerData, offerData.season.id)
 				}
 
 				// Check if user is the creator of the offer (for cancellation)

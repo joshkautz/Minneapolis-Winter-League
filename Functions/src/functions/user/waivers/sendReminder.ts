@@ -23,14 +23,16 @@ import {
 	Collections,
 	WaiverDocument,
 	PlayerDocument,
-	PlayerSeason,
 	SeasonDocument,
 } from '../../../types.js'
 import {
 	FIREBASE_CONFIG,
 	getDropboxSignConfig,
 } from '../../../config/constants.js'
-import { validateAuthentication } from '../../../shared/auth.js'
+import {
+	validateAuthentication,
+	validateNotBanned,
+} from '../../../shared/auth.js'
 import { getCurrentSeason } from '../../../shared/database.js'
 import { formatDateForUser } from '../../../shared/format.js'
 import {
@@ -89,15 +91,7 @@ export const sendWaiverReminder = onCall(
 			}
 
 			// Check if player is banned for current season
-			const currentSeasonData = playerData.seasons?.find(
-				(s: PlayerSeason) => s.season.id === seasonId
-			)
-			if (currentSeasonData?.banned) {
-				throw new HttpsError(
-					'permission-denied',
-					'Account is banned from this season'
-				)
-			}
+			validateNotBanned(playerData, seasonId)
 
 			// Validate registration is open (skip for admins)
 			const isAdmin = playerData.admin === true

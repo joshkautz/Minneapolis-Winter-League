@@ -9,6 +9,7 @@ export const CreateTeam = () => {
 		rolloverMode,
 		isLoading,
 		isRostered,
+		isBanned,
 		isTeamRegistrationFull,
 		currentSeasonQueryDocumentSnapshot,
 		setNewTeamDocument,
@@ -25,6 +26,14 @@ export const CreateTeam = () => {
 				aria-label='Loading team creation form...'
 			>
 				<LoadingSpinner size='lg' label='Loading...' />
+			</div>
+		)
+	}
+
+	if (isBanned) {
+		return (
+			<div className='w-full'>
+				<TeamCreationStatusCard isBanned={isBanned} />
 			</div>
 		)
 	}

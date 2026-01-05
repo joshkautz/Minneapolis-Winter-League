@@ -6,8 +6,9 @@
  *
  * Security validations:
  * - User must be authenticated and email verified
+ * - User must not be banned for the current season
  * - Registration must be open (between registrationStart and registrationEnd)
- * - Admins bypass registration date restrictions
+ * - Admins bypass registration date and banned restrictions
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -15,7 +16,10 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG, getStripeConfig } from '../../../config/constants.js'
-import { validateAuthentication } from '../../../shared/auth.js'
+import {
+	validateAuthentication,
+	validateNotBanned,
+} from '../../../shared/auth.js'
 import { getCurrentSeason } from '../../../shared/database.js'
 import { Collections, PlayerDocument, SeasonDocument } from '../../../types.js'
 import { formatDateForUser } from '../../../shared/format.js'
@@ -71,6 +75,11 @@ export const createStripeCheckout = onCall<
 
 			const playerData = playerDoc.data() as PlayerDocument | undefined
 			const isAdmin = playerData?.admin === true
+
+			// Validate player is not banned for current season (skip for admins)
+			if (!isAdmin && currentSeason) {
+				validateNotBanned(playerData, currentSeason.id)
+			}
 
 			// Validate registration is open (skip for admins)
 			if (!isAdmin) {
