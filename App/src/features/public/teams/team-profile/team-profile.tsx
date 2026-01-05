@@ -388,15 +388,15 @@ export const TeamProfile = () => {
 							)}
 
 							{/* Karma Display */}
-							{teamKarma !== undefined && teamKarma > 0 && (
-								<div
-									className='inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400'
-									aria-label={`${teamKarma} karma points`}
-								>
-									<Sparkles className='h-4 w-4' aria-hidden='true' />
-									<span className='text-sm font-medium'>{teamKarma} Karma</span>
-								</div>
-							)}
+							<div
+								className='inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400'
+								aria-label={`${teamKarma ?? 0} karma points`}
+							>
+								<Sparkles className='h-4 w-4' aria-hidden='true' />
+								<span className='text-sm font-medium'>
+									{teamKarma ?? 0} Karma
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>
