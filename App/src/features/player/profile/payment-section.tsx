@@ -111,13 +111,24 @@ export const PaymentSection = ({
 		}
 	}, [stripeLoading])
 
-	// Check if player is returning (paid for previous season)
-	const isReturningPlayer = useMemo(() => {
-		if (!authenticatedUserSnapshot || !seasonsQuerySnapshot) return false
-		return didPlayerPayPreviousSeason(
+	// Check if player is returning (paid for previous season) and get previous season name
+	const { isReturningPlayer, previousSeasonName } = useMemo(() => {
+		if (!authenticatedUserSnapshot || !seasonsQuerySnapshot) {
+			return { isReturningPlayer: false, previousSeasonName: null }
+		}
+		const isReturning = didPlayerPayPreviousSeason(
 			authenticatedUserSnapshot.data(),
 			seasonsQuerySnapshot
 		)
+		// Get previous season name (index 1 since seasons are ordered by dateStart descending)
+		const prevSeasonName =
+			seasonsQuerySnapshot.docs.length >= 2
+				? (seasonsQuerySnapshot.docs[1]?.data()?.name ?? null)
+				: null
+		return {
+			isReturningPlayer: isReturning,
+			previousSeasonName: prevSeasonName,
+		}
 	}, [authenticatedUserSnapshot, seasonsQuerySnapshot])
 
 	// Get Stripe price and coupon IDs from season document
@@ -236,17 +247,6 @@ export const PaymentSection = ({
 						</Alert>
 					)}
 
-					{/* Returning player discount badge */}
-					{isReturningPlayer && couponId && isSeasonConfigured && (
-						<Badge
-							variant='outline'
-							className='gap-1 w-fit border-green-300 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-950 dark:text-green-200'
-						>
-							<Tag className='h-3 w-3' />
-							Returning player discount will be applied
-						</Badge>
-					)}
-
 					<Button
 						onClick={registrationButtonOnClickHandler}
 						disabled={
@@ -264,6 +264,20 @@ export const PaymentSection = ({
 						)}
 						{stripeLoading ? 'Processing...' : 'Pay via Stripe'}
 					</Button>
+
+					{/* Returning player discount badge */}
+					{isReturningPlayer && couponId && isSeasonConfigured && (
+						<div className='flex justify-center'>
+							<Badge
+								variant='outline'
+								className='gap-1 border-green-300 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-950 dark:text-green-200'
+							>
+								<Tag className='h-3 w-3' />
+								You played in "{previousSeasonName}" - Returning player discount
+								applied!
+							</Badge>
+						</div>
+					)}
 				</div>
 			)}
 		</div>
