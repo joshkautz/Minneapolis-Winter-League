@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { getDoc } from 'firebase/firestore'
 import { Timestamp } from '@firebase/firestore'
-import { Users, Sparkles } from 'lucide-react'
+import { Users } from 'lucide-react'
 import { formatTimestamp } from '@/shared/utils'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
 import {
@@ -12,7 +12,6 @@ import {
 } from '@/shared/components'
 import { TeamCard } from './team-card'
 import { PlayerDocument } from '@/types'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 // Types for better TypeScript support
 enum SeasonStatus {
@@ -175,17 +174,7 @@ export const Teams = () => {
 				</ComingSoon>
 			) : (
 				<>
-					<Alert className='mt-6'>
-						<Sparkles className='h-5 w-5' />
-						<AlertTitle>Experimental Features Now Live!</AlertTitle>
-						<AlertDescription>
-							The Karma system is now live in an experimental state. Help your
-							fellow players find teams to earn karma points, and unlock future
-							badges from now through the end of the season! Badges will be
-							visible on individual team pages.
-						</AlertDescription>
-					</Alert>
-					<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
+					<div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6'>
 						{teamsWithPlacements.map((team) => {
 							const registeredCount = registeredPlayerCounts.get(team.id) || 0
 							return (
