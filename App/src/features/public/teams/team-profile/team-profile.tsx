@@ -299,7 +299,11 @@ export const TeamProfile = () => {
 			) : (
 				<p className={'text-sm text-muted-foreground'}>
 					You need 10 registered players in order to meet the minimum
-					requirement. Registration ends{' '}
+					requirement. Registration begins{' '}
+					{formatTimestamp(
+						currentSeasonQueryDocumentSnapshot?.data().registrationStart
+					)}
+					. Registration ends{' '}
 					{formatTimestamp(
 						currentSeasonQueryDocumentSnapshot?.data().registrationEnd
 					)}
@@ -605,79 +609,99 @@ export const TeamProfile = () => {
 						title={'Record'}
 						className={'flex-1 basis-[360px] shrink-0 min-w-[360px]'}
 					>
-						<div className='flex flex-col gap-3 py-2 overflow-x-auto'>
-							{gamesQuerySnapshot?.docs.map((game, index) => {
-								const gameData = game.data()
+						{!gamesQuerySnapshot?.docs.length ||
+						gamesQuerySnapshot.docs.every(
+							(game) => !hasAssignedTeams(game.data())
+						) ? (
+							<div className='flex flex-col items-center justify-center py-12 px-6 text-center'>
+								<div className='space-y-3'>
+									<p className='text-muted-foreground font-medium text-lg'>
+										No games yet
+									</p>
+									<p className='text-muted-foreground/70 text-sm max-w-md'>
+										No games have been played yet. When games are scheduled and
+										played, they will appear here for you to review.
+									</p>
+								</div>
+							</div>
+						) : (
+							<div className='flex flex-col gap-3 py-2 overflow-x-auto'>
+								{gamesQuerySnapshot?.docs.map((game, index) => {
+									const gameData = game.data()
 
-								// Skip games with null team references (placeholder games)
-								if (!hasAssignedTeams(gameData)) {
-									return null
-								}
+									// Skip games with null team references (placeholder games)
+									if (!hasAssignedTeams(gameData)) {
+										return null
+									}
 
-								const teamRole = teamDocumentSnapshot?.id
-									? getTeamRole(gameData, teamDocumentSnapshot.id)
-									: null
-								const opponentTeamRef = teamDocumentSnapshot?.id
-									? teamRole === 'home'
-										? gameData.away
-										: gameData.home
-									: null
-								const result = formatGameResult(teamDocumentSnapshot, gameData)
+									const teamRole = teamDocumentSnapshot?.id
+										? getTeamRole(gameData, teamDocumentSnapshot.id)
+										: null
+									const opponentTeamRef = teamDocumentSnapshot?.id
+										? teamRole === 'home'
+											? gameData.away
+											: gameData.home
+										: null
+									const result = formatGameResult(
+										teamDocumentSnapshot,
+										gameData
+									)
 
-								if (!opponentTeamRef) {
-									return null
-								}
+									if (!opponentTeamRef) {
+										return null
+									}
 
-								const gameDate = gameData.date.toDate()
-								const opponentName =
-									teamsQuerySnapshot?.docs
-										.find((team) => team.id === opponentTeamRef.id)
-										?.data().name || 'TBD'
+									const gameDate = gameData.date.toDate()
+									const opponentName =
+										teamsQuerySnapshot?.docs
+											.find((team) => team.id === opponentTeamRef.id)
+											?.data().name || 'TBD'
 
-								return (
-									<div
-										key={index}
-										className='flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0 min-w-max'
-									>
-										{/* Date, Time, Field */}
-										<div className='flex items-center gap-2 text-xs text-muted-foreground shrink-0'>
-											<time
-												dateTime={gameDate.toISOString()}
-												className='shrink-0'
-											>
-												{gameDate.toLocaleDateString('en-US', {
-													month: 'short',
-													day: 'numeric',
-												})}
-											</time>
-											<span className='shrink-0'>•</span>
-											<span className='shrink-0'>
-												{gameDate.toLocaleTimeString('en-US', {
-													hour: 'numeric',
-													minute: '2-digit',
-												})}
-											</span>
-											<span className='shrink-0'>•</span>
-											<span className='shrink-0'>Field {gameData.field}</span>
+									return (
+										<div
+											key={index}
+											className='flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0 min-w-max'
+										>
+											{/* Date, Time, Field */}
+											<div className='flex items-center gap-2 text-xs text-muted-foreground shrink-0'>
+												<time
+													dateTime={gameDate.toISOString()}
+													className='shrink-0'
+												>
+													{gameDate.toLocaleDateString('en-US', {
+														month: 'short',
+														day: 'numeric',
+													})}
+												</time>
+												<span className='shrink-0'>•</span>
+												<span className='shrink-0'>
+													{gameDate.toLocaleTimeString('en-US', {
+														hour: 'numeric',
+														minute: '2-digit',
+													})}
+												</span>
+												<span className='shrink-0'>•</span>
+												<span className='shrink-0'>Field {gameData.field}</span>
+											</div>
+
+											{/* Score and Opponent */}
+											<div className='flex items-center gap-3 min-w-0 flex-1'>
+												<p className='text-sm font-medium shrink-0 w-16 text-center'>
+													{result}
+												</p>
+												<Link
+													className='flex-1 min-w-0 text-sm transition-colors hover:text-primary truncate'
+													to={`/teams/${opponentTeamRef.id}`}
+													title={opponentName}
+												>
+													{opponentName}
+												</Link>
+											</div>
 										</div>
-
-										{/* Score and Opponent */}
-										<div className='flex items-center gap-3 min-w-0 flex-1'>
-											<p className='text-sm font-medium shrink-0 w-16 text-center'>
-												{result}
-											</p>
-											<Link
-												className='flex-1 min-w-0 text-sm transition-colors hover:text-primary truncate'
-												to={`/teams/${opponentTeamRef.id}`}
-												title={opponentName}
-											>
-												{opponentName}
-											</Link>
-										</div>
-									</div>
-								)
-							})}
-						</div>
+									)
+								})}
+							</div>
+						)}
 					</NotificationCard>
 					{historyQuerySnapshot && (
 						<TeamHistory
