@@ -173,7 +173,8 @@ export const TeamEditDialog = ({
 				const playerData = playerDoc.data()
 				return {
 					playerId: playerDoc.id,
-					playerName: `${playerData.firstname || ''} ${playerData.lastname || ''}`.trim(),
+					playerName:
+						`${playerData.firstname || ''} ${playerData.lastname || ''}`.trim(),
 					captain: rosterPlayer.captain,
 				}
 			})
@@ -248,9 +249,7 @@ export const TeamEditDialog = ({
 				if (!fullName.includes(searchLower)) return false
 
 				// Check if player is on another team this season
-				const seasonData = data.seasons?.find(
-					(s) => s.season.id === seasonId
-				)
+				const seasonData = data.seasons?.find((s) => s.season.id === seasonId)
 				if (seasonData?.team) return false // Already on a team
 
 				return true
@@ -279,8 +278,7 @@ export const TeamEditDialog = ({
 		} catch (error) {
 			logger.error('Failed to update team name:', error)
 			toast.error('Failed to update team name', {
-				description:
-					error instanceof Error ? error.message : 'Unknown error',
+				description: error instanceof Error ? error.message : 'Unknown error',
 			})
 		} finally {
 			setIsSavingName(false)
@@ -305,8 +303,7 @@ export const TeamEditDialog = ({
 		} catch (error) {
 			logger.error('Failed to link team:', error)
 			toast.error('Failed to link team', {
-				description:
-					error instanceof Error ? error.message : 'Unknown error',
+				description: error instanceof Error ? error.message : 'Unknown error',
 			})
 		} finally {
 			setIsLinking(false)
@@ -329,8 +326,7 @@ export const TeamEditDialog = ({
 			} catch (error) {
 				logger.error('Failed to add player:', error)
 				toast.error('Failed to add player', {
-					description:
-						error instanceof Error ? error.message : 'Unknown error',
+					description: error instanceof Error ? error.message : 'Unknown error',
 				})
 			} finally {
 				setIsAddingPlayer(false)
@@ -356,8 +352,7 @@ export const TeamEditDialog = ({
 		} catch (error) {
 			logger.error('Failed to remove player:', error)
 			toast.error('Failed to remove player', {
-				description:
-					error instanceof Error ? error.message : 'Unknown error',
+				description: error instanceof Error ? error.message : 'Unknown error',
 			})
 		} finally {
 			setIsRemovingPlayer(false)
@@ -384,13 +379,14 @@ export const TeamEditDialog = ({
 					},
 				})
 				toast.success(
-					currentCaptain ? 'Captain status removed' : 'Player promoted to captain'
+					currentCaptain
+						? 'Captain status removed'
+						: 'Player promoted to captain'
 				)
 			} catch (error) {
 				logger.error('Failed to update captain status:', error)
 				toast.error('Failed to update captain status', {
-					description:
-						error instanceof Error ? error.message : 'Unknown error',
+					description: error instanceof Error ? error.message : 'Unknown error',
 				})
 			} finally {
 				setCaptainChangeInProgress(null)
@@ -650,7 +646,8 @@ export const TeamEditDialog = ({
 									{playerSearchQuery.trim() &&
 										playerSearchResults.length === 0 && (
 											<p className='text-sm text-muted-foreground text-center py-4'>
-												No available players found matching "{playerSearchQuery}"
+												No available players found matching "{playerSearchQuery}
+												"
 											</p>
 										)}
 								</div>
@@ -670,7 +667,8 @@ export const TeamEditDialog = ({
 						</AlertDialogTitle>
 						<AlertDialogDescription>
 							This will link <strong>{initialTeamName}</strong> to the history
-							of <strong>{teamToLink?.teamName}</strong> ({teamToLink?.seasonName}
+							of <strong>{teamToLink?.teamName}</strong> (
+							{teamToLink?.seasonName}
 							).
 							<br />
 							<br />
