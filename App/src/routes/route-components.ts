@@ -43,6 +43,10 @@ export const PlayerRankingHistory = lazyImport(
 	'PlayerRankingHistory'
 )
 export const News = lazyImport(() => import('@/features/public/news'), 'News')
+export const Posts = lazyImport(
+	() => import('@/features/public/posts'),
+	'Posts'
+)
 
 // ==================== PLAYER ROUTES ====================
 // Require authentication
@@ -102,6 +106,10 @@ export const TeamManagement = lazyImport(
 export const SiteSettings = lazyImport(
 	() => import('@/features/admin/site-settings'),
 	'SiteSettings'
+)
+export const PostsManagement = lazyImport(
+	() => import('@/features/admin/posts-management'),
+	'PostsManagement'
 )
 
 // ==================== ERROR PAGES ====================

@@ -12,11 +12,13 @@ import {
 	PlayerRankingHistory,
 	PlayerRankingManagement,
 	News,
+	Posts,
 	AdminDashboard,
 	PlayerManagement,
 	OfferManagement,
 	TeamManagement,
 	NewsManagement,
+	PostsManagement,
 	SeasonManagement,
 	GameManagement,
 	RegistrationManagement,
@@ -127,6 +129,16 @@ export const AppRoutes = () => {
 						</PublicRoute>
 					}
 				/>
+				<Route
+					path='/posts'
+					element={
+						<PublicRoute>
+							<ErrorBoundary>
+								<Posts />
+							</ErrorBoundary>
+						</PublicRoute>
+					}
+				/>
 				{/* Protected routes */}
 				<Route
 					path='/profile'
@@ -194,6 +206,16 @@ export const AppRoutes = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<NewsManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/posts-management'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<PostsManagement />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

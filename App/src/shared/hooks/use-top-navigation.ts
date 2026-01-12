@@ -109,6 +109,7 @@ export const useTopNavigation = () => {
 			path: '/players',
 			alt: 'player list and rankings',
 		},
+		{ label: 'Posts', path: '/posts', alt: 'message board' },
 	]
 
 	const adminContent = [

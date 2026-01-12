@@ -20,6 +20,7 @@
  * - Season management (CRUD operations with auto player integration)
  * - Player rankings (rebuild and update)
  * - Badge management (CRUD operations, award/revoke badges)
+ * - Posts management (delete posts and replies)
  *
  * CALLABLE FUNCTIONS (USER-ACCESSIBLE):
  * - Player management (CRUD operations)
@@ -27,6 +28,7 @@
  * - Offer management (invitation/request system)
  * - Storage management (file upload/download)
  * - Waiver management (reminder emails)
+ * - Posts management (create/update posts and replies)
  *
  * This organization provides:
  * - Clear separation between admin and user functions
@@ -133,3 +135,13 @@ export { revokeBadge } from './functions/admin/badges/revokeBadge.js'
 
 // Site settings functions (admin-only)
 export { updateSiteSettings } from './functions/admin/site-settings/updateSiteSettings.js'
+
+// Posts functions (user-accessible)
+export { createPost } from './functions/user/posts/createPost.js'
+export { updatePost } from './functions/user/posts/updatePost.js'
+export { createReply } from './functions/user/posts/createReply.js'
+export { updateReply } from './functions/user/posts/updateReply.js'
+
+// Posts management functions (admin-only)
+export { deletePost } from './functions/admin/posts/deletePost.js'
+export { deleteReply } from './functions/admin/posts/deleteReply.js'
