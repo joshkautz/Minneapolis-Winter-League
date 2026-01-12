@@ -206,7 +206,7 @@ export const updateTeamAdmin = onCall<
 
 			// Handle roster changes
 			if (rosterChanges) {
-				let currentRoster = [...(teamDocument.roster || [])]
+				const currentRoster = [...(teamDocument.roster || [])]
 
 				// Handle adding players
 				if (rosterChanges.addPlayers && rosterChanges.addPlayers.length > 0) {
