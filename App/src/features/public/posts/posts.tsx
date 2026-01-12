@@ -189,8 +189,8 @@ export const Posts = () => {
 				showSeasonIndicator
 			/>
 
-			{/* Create post button for authenticated users */}
-			{selectedSeasonQueryDocumentSnapshot && (
+			{/* Create post button for authenticated users (only when posts exist) */}
+			{selectedSeasonQueryDocumentSnapshot && allPosts.length > 0 && (
 				<div className='mt-6'>
 					<CreatePostDialog
 						seasonId={selectedSeasonQueryDocumentSnapshot.id}
@@ -200,7 +200,10 @@ export const Posts = () => {
 			)}
 
 			{allPosts.length === 0 ? (
-				<PostsEmptyState />
+				<PostsEmptyState
+					seasonId={selectedSeasonQueryDocumentSnapshot?.id ?? ''}
+					canPost={canPost}
+				/>
 			) : (
 				<div className='space-y-6 mt-8'>
 					{allPosts.map((post) => (
