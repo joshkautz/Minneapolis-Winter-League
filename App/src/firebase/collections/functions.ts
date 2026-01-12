@@ -294,6 +294,87 @@ export const deleteUnregisteredTeamViaFunction = async (
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// UPDATE TEAM (Admin)
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Player to add to roster
+ */
+interface AddPlayerToRosterRequest {
+	/** Player's Firebase Auth UID */
+	playerId: string
+	/** Whether the player should be a captain */
+	captain: boolean
+}
+
+/**
+ * Captain status update request
+ */
+interface CaptainStatusUpdateRequest {
+	/** Player's Firebase Auth UID */
+	playerId: string
+	/** New captain status */
+	captain: boolean
+}
+
+/**
+ * Roster changes request
+ */
+interface RosterChangesRequest {
+	/** Players to add to roster */
+	addPlayers?: AddPlayerToRosterRequest[]
+	/** Player IDs to remove from roster */
+	removePlayers?: string[]
+	/** Players to update captain status */
+	updateCaptainStatus?: CaptainStatusUpdateRequest[]
+}
+
+/**
+ * Request interface for updating a team (admin)
+ */
+interface UpdateTeamAdminRequest {
+	/** Team's Firestore document ID */
+	teamDocId: string
+	/** New team name (optional) */
+	name?: string
+	/** New teamId to link this team with another team's history (optional) */
+	linkToTeamId?: string
+	/** Roster changes (optional) */
+	rosterChanges?: RosterChangesRequest
+}
+
+/**
+ * Response interface for updating a team (admin)
+ */
+interface UpdateTeamAdminResponse {
+	success: true
+	teamDocId: string
+	message: string
+	changes: {
+		name?: { from: string; to: string }
+		teamId?: { from: string; to: string }
+		rosterAdded?: string[]
+		rosterRemoved?: string[]
+		captainChanges?: { playerId: string; from: boolean; to: boolean }[]
+	}
+}
+
+/**
+ * Updates a team via Firebase Function (Admin only)
+ * Supports: name changes, team linking (teamId), roster management
+ */
+export const updateTeamAdminViaFunction = async (
+	data: UpdateTeamAdminRequest
+): Promise<UpdateTeamAdminResponse> => {
+	const updateTeamAdmin = httpsCallable<
+		UpdateTeamAdminRequest,
+		UpdateTeamAdminResponse
+	>(functions, 'updateTeamAdmin')
+	const result = await updateTeamAdmin(data)
+	return result.data
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // TEAM FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////
 

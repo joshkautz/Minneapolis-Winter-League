@@ -87,6 +87,7 @@ export { updateTeamRoster } from './functions/user/teams/updateRoster.js'
 
 // Team management functions (admin-only)
 export { deleteUnregisteredTeam } from './functions/admin/teams/deleteUnregisteredTeam.js'
+export { updateTeamAdmin } from './functions/admin/teams/updateTeamAdmin.js'
 
 // Offer management functions (user-accessible)
 export { createOffer } from './functions/user/offers/create.js'

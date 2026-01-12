@@ -18,6 +18,7 @@ import {
 	CheckCircle,
 	Shield,
 	Award,
+	Pencil,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -63,6 +64,7 @@ import { TeamDocument, SeasonDocument } from '@/types'
 import { useSeasonsContext } from '@/providers'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { TeamBadgesDialog } from './components/team-badges-dialog'
+import { TeamEditDialog } from './components/team-edit-dialog'
 import { DocumentReference } from '@/firebase'
 
 export const TeamManagement = () => {
@@ -139,6 +141,15 @@ export const TeamManagement = () => {
 		ref: DocumentReference<TeamDocument>
 	} | null>(null)
 
+	// State for edit dialog
+	const [teamToEdit, setTeamToEdit] = useState<{
+		id: string
+		name: string
+		teamId: string
+		ref: DocumentReference<TeamDocument>
+		seasonId: string
+	} | null>(null)
+
 	// Filter for unregistered teams
 	const unregisteredTeams = useMemo(() => {
 		if (!teamsSnapshot) return []
@@ -188,6 +199,18 @@ export const TeamManagement = () => {
 			id: teamId,
 			name: teamName,
 			ref: teamRef,
+		})
+	}
+
+	const handleEditClick = (
+		team: TeamDocument & { id: string; ref: DocumentReference<TeamDocument> }
+	) => {
+		setTeamToEdit({
+			id: team.id,
+			name: team.name,
+			teamId: team.teamId,
+			ref: team.ref,
+			seasonId: selectedSeasonId,
 		})
 	}
 
@@ -407,6 +430,14 @@ export const TeamManagement = () => {
 													<Button
 														variant='outline'
 														size='sm'
+														onClick={() => handleEditClick(team)}
+													>
+														<Pencil className='h-4 w-4 mr-2' />
+														Edit
+													</Button>
+													<Button
+														variant='outline'
+														size='sm'
 														onClick={() =>
 															handleManageBadgesClick(
 																team.id,
@@ -506,6 +537,14 @@ export const TeamManagement = () => {
 													<Button
 														variant='outline'
 														size='sm'
+														onClick={() => handleEditClick(team)}
+													>
+														<Pencil className='h-4 w-4 mr-2' />
+														Edit
+													</Button>
+													<Button
+														variant='outline'
+														size='sm'
 														onClick={() =>
 															handleManageBadgesClick(
 																team.id,
@@ -589,6 +628,19 @@ export const TeamManagement = () => {
 					teamId={teamForBadges.id}
 					teamName={teamForBadges.name}
 					teamRef={teamForBadges.ref}
+				/>
+			)}
+
+			{/* Team Edit Dialog */}
+			{teamToEdit && (
+				<TeamEditDialog
+					open={!!teamToEdit}
+					onOpenChange={(open) => !open && setTeamToEdit(null)}
+					teamDocId={teamToEdit.id}
+					teamName={teamToEdit.name}
+					teamIdValue={teamToEdit.teamId}
+					teamRef={teamToEdit.ref}
+					seasonId={teamToEdit.seasonId}
 				/>
 			)}
 		</PageContainer>
