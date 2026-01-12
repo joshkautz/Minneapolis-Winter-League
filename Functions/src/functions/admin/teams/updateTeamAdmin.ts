@@ -222,10 +222,7 @@ export const updateTeamAdmin = onCall<
 						const playerDoc = await transaction.get(playerRef)
 
 						if (!playerDoc.exists) {
-							throw new HttpsError(
-								'not-found',
-								`Player not found: ${playerId}`
-							)
+							throw new HttpsError('not-found', `Player not found: ${playerId}`)
 						}
 
 						const playerDocument = playerDoc.data()
@@ -251,7 +248,10 @@ export const updateTeamAdmin = onCall<
 						const playerSeasonData = playerDocument.seasons?.find(
 							(s: PlayerSeason) => s.season.id === seasonId
 						)
-						if (playerSeasonData?.team && playerSeasonData.team.id !== teamDocId) {
+						if (
+							playerSeasonData?.team &&
+							playerSeasonData.team.id !== teamDocId
+						) {
 							throw new HttpsError(
 								'failed-precondition',
 								`Player ${playerId} is already on another team for this season`
