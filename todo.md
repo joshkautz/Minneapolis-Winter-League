@@ -47,6 +47,8 @@ Addicted - Team exists for 3 seasons in a row.
 Dinosaurs - Team has competed in 10 different seasons.
 Forefathers - Team played in the inaugural season.
 20XX - Play in the 20XX Season.
+Improvement - Place higher than you did last season.
+Growing Pains - Place lower than you did last season.
 
 ---
 

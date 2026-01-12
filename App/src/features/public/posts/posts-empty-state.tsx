@@ -8,7 +8,10 @@ interface PostsEmptyStateProps {
 /**
  * Empty state component for when there are no posts
  */
-export const PostsEmptyState = ({ seasonId, canPost }: PostsEmptyStateProps) => {
+export const PostsEmptyState = ({
+	seasonId,
+	canPost,
+}: PostsEmptyStateProps) => {
 	return (
 		<div className='flex flex-col items-center justify-center py-12 px-6 text-center'>
 			<div className='space-y-3'>
