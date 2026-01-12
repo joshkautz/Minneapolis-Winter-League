@@ -163,26 +163,6 @@
 			]
 		},
 		{
-			"collectionGroup": "waivers",
-			"queryScope": "COLLECTION",
-			"fields": [
-				{
-					"fieldPath": "seasonId",
-					"order": "ASCENDING"
-				}
-			]
-		},
-		{
-			"collectionGroup": "waivers",
-			"queryScope": "COLLECTION",
-			"fields": [
-				{
-					"fieldPath": "signatureRequestId",
-					"order": "ASCENDING"
-				}
-			]
-		},
-		{
 			"collectionGroup": "offers",
 			"queryScope": "COLLECTION",
 			"fields": [
