@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { StarFilledIcon } from '@radix-ui/react-icons'
@@ -76,10 +77,13 @@ export const TeamRosterPlayer = ({
 			{playerSnapshot ? (
 				<div className='flex items-end gap-2 py-2'>
 					<div className='flex flex-row items-center gap-2'>
-						<p className='select-none'>
+						<Link
+							to={`/players/${playerRef.id}`}
+							className='hover:underline focus-visible:underline focus-visible:outline-none'
+						>
 							{playerSnapshot.data()?.firstname}{' '}
-							{playerSnapshot.data()?.lastname}{' '}
-						</p>
+							{playerSnapshot.data()?.lastname}
+						</Link>
 						{isPlayerCaptain && <StarFilledIcon className='text-primary' />}
 						{isLookingForTeam && (
 							<Badge

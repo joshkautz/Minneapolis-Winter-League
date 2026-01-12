@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { DocumentReference } from '@/firebase'
 import { updateTeamRosterViaFunction } from '@/firebase/collections/functions'
 import {
@@ -224,10 +225,13 @@ export const ManageTeamRosterPlayer = ({
 				<div className='flex items-center justify-between py-3 pl-1 pr-3 gap-3'>
 					<div className='flex items-center gap-2 flex-1 min-w-0'>
 						<div className='flex items-center gap-2 min-w-0'>
-							<p className='select-none font-medium truncate'>
+							<Link
+								to={`/players/${playerRef.id}`}
+								className='font-medium truncate hover:underline focus-visible:underline focus-visible:outline-none'
+							>
 								{playerSnapshot.data()?.firstname}{' '}
 								{playerSnapshot.data()?.lastname}
-							</p>
+							</Link>
 							{isPlayerCaptain && (
 								<StarFilledIcon
 									className='text-primary flex-shrink-0'
