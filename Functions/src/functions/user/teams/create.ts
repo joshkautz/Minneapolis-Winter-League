@@ -22,7 +22,9 @@ import {
 	PlayerDocument,
 	PlayerSeason,
 	SeasonDocument,
+	DocumentReference,
 } from '../../../types.js'
+import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import {
 	validateAuthentication,
 	validateNotBanned,
@@ -231,10 +233,20 @@ export const createTeam = onCall<CreateTeamRequest>(
 			}
 			await playerRef.update({ seasons: updatedSeasons })
 
+			// Cancel any pending offers for this player in this season
+			// since they are now on a team
+			const canceledOffersCount = await cancelPendingOffersForPlayer(
+				firestore,
+				playerRef as DocumentReference<PlayerDocument>,
+				seasonRef as DocumentReference<SeasonDocument>,
+				'Player created a new team'
+			)
+
 			logger.info(`Successfully created team: ${teamRef.id}`, {
 				teamName: name,
 				captainId: userId,
 				seasonId,
+				canceledPendingOffers: canceledOffersCount,
 			})
 
 			return {

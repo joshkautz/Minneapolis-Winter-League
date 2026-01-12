@@ -13,12 +13,14 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
+import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	Collections,
 	type DocumentReference,
 	type PlayerDocument,
 	type PlayerSeason,
+	type SeasonDocument,
 	type TeamDocument,
 	type TeamRosterPlayer,
 } from '../../../types.js'
@@ -791,11 +793,31 @@ export const updatePlayerAdmin = onCall<
 										roster: [...newTeamData.roster, newRosterEntry],
 									})
 
+									// Cancel any pending offers for this player in this season
+									// since they are now on a team
+									const playerRefForOffers = firestore
+										.collection(Collections.PLAYERS)
+										.doc(playerId) as DocumentReference<PlayerDocument>
+									const seasonRefForOffers = firestore
+										.collection(Collections.SEASONS)
+										.doc(
+											seasonUpdate.seasonId
+										) as DocumentReference<SeasonDocument>
+
+									const canceledOffersCount =
+										await cancelPendingOffersForPlayer(
+											firestore,
+											playerRefForOffers,
+											seasonRefForOffers,
+											'Player was added to a team by an administrator'
+										)
+
 									logger.info('Added player to new team roster', {
 										playerId,
 										newTeamId,
 										seasonId: seasonUpdate.seasonId,
 										captain: seasonUpdate.captain,
+										canceledPendingOffers: canceledOffersCount,
 									})
 								} else {
 									// Player exists, update captain status if needed
