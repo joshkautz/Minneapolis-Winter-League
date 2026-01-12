@@ -1087,3 +1087,186 @@ export const updateSiteSettingsViaFunction = async (
 	const result = await updateSiteSettings(data)
 	return result.data
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// POSTS (LOOKING FOR TEAM) FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////
+
+export interface CreatePostRequest {
+	content: string
+	seasonId: string
+}
+
+export interface CreatePostResponse {
+	success: true
+	postId: string
+	message: string
+}
+
+/**
+ * Creates a post via Firebase Function
+ *
+ * Security features:
+ * - User must be authenticated with verified email
+ * - User must not be banned for the season
+ * - Content is validated (10-2000 characters)
+ */
+export const createPostViaFunction = async (
+	data: CreatePostRequest
+): Promise<CreatePostResponse> => {
+	const createPost = httpsCallable<CreatePostRequest, CreatePostResponse>(
+		functions,
+		'createPost'
+	)
+	const result = await createPost(data)
+	return result.data
+}
+
+export interface UpdatePostRequest {
+	postId: string
+	content: string
+}
+
+export interface UpdatePostResponse {
+	success: true
+	postId: string
+	message: string
+}
+
+/**
+ * Updates a post via Firebase Function
+ *
+ * Security features:
+ * - User must be authenticated with verified email
+ * - User must be the author of the post
+ * - Content is validated (10-2000 characters)
+ */
+export const updatePostViaFunction = async (
+	data: UpdatePostRequest
+): Promise<UpdatePostResponse> => {
+	const updatePostFn = httpsCallable<UpdatePostRequest, UpdatePostResponse>(
+		functions,
+		'updatePost'
+	)
+	const result = await updatePostFn(data)
+	return result.data
+}
+
+export interface CreateReplyRequest {
+	postId: string
+	content: string
+}
+
+export interface CreateReplyResponse {
+	success: true
+	replyId: string
+	message: string
+}
+
+/**
+ * Creates a reply to a post via Firebase Function
+ *
+ * Security features:
+ * - User must be authenticated with verified email
+ * - User must not be banned for the season
+ * - Content is validated (10-1000 characters)
+ */
+export const createReplyViaFunction = async (
+	data: CreateReplyRequest
+): Promise<CreateReplyResponse> => {
+	const createReply = httpsCallable<CreateReplyRequest, CreateReplyResponse>(
+		functions,
+		'createReply'
+	)
+	const result = await createReply(data)
+	return result.data
+}
+
+export interface UpdateReplyRequest {
+	postId: string
+	replyId: string
+	content: string
+}
+
+export interface UpdateReplyResponse {
+	success: true
+	replyId: string
+	message: string
+}
+
+/**
+ * Updates a reply via Firebase Function
+ *
+ * Security features:
+ * - User must be authenticated with verified email
+ * - User must be the author of the reply
+ * - Content is validated (10-1000 characters)
+ */
+export const updateReplyViaFunction = async (
+	data: UpdateReplyRequest
+): Promise<UpdateReplyResponse> => {
+	const updateReplyFn = httpsCallable<UpdateReplyRequest, UpdateReplyResponse>(
+		functions,
+		'updateReply'
+	)
+	const result = await updateReplyFn(data)
+	return result.data
+}
+
+export interface DeletePostRequest {
+	postId: string
+}
+
+export interface DeletePostResponse {
+	success: true
+	postId: string
+	message: string
+	repliesDeleted: number
+}
+
+/**
+ * Deletes a post and all its replies via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can delete posts
+ * - All replies are deleted with the post
+ */
+export const deletePostViaFunction = async (
+	data: DeletePostRequest
+): Promise<DeletePostResponse> => {
+	const deletePostFn = httpsCallable<DeletePostRequest, DeletePostResponse>(
+		functions,
+		'deletePost'
+	)
+	const result = await deletePostFn(data)
+	return result.data
+}
+
+export interface DeleteReplyRequest {
+	postId: string
+	replyId: string
+}
+
+export interface DeleteReplyResponse {
+	success: true
+	replyId: string
+	message: string
+}
+
+/**
+ * Deletes a reply via Firebase Function (admin only)
+ *
+ * Security features:
+ * - Only admins can delete replies
+ * - Reply count on parent post is decremented
+ */
+export const deleteReplyViaFunction = async (
+	data: DeleteReplyRequest
+): Promise<DeleteReplyResponse> => {
+	const deleteReplyFn = httpsCallable<DeleteReplyRequest, DeleteReplyResponse>(
+		functions,
+		'deleteReply'
+	)
+	const result = await deleteReplyFn(data)
+	return result.data
+}

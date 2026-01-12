@@ -132,6 +132,20 @@ service cloud.firestore {
       allow delete: if false; // Manual process only
     }
 
+    match /posts/{postId} {
+      allow read: if true; // Public read access
+      allow create: if false; // Use createPostViaFunction
+      allow update: if false; // Use updatePostViaFunction
+      allow delete: if false; // Use deletePostViaFunction (admin only)
+
+      match /replies/{replyId} {
+        allow read: if true; // Public read access
+        allow create: if false; // Use createReplyViaFunction
+        allow update: if false; // Use updateReplyViaFunction
+        allow delete: if false; // Use deleteReplyViaFunction (admin only)
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

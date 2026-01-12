@@ -32,6 +32,7 @@ export enum Collections {
 	BADGES = 'badges',
 	DROPBOX = 'dropbox',
 	GAMES = 'games',
+	POSTS = 'posts',
 	NEWS = 'news',
 	OFFERS = 'offers',
 	PLAYERS = 'players',
@@ -311,6 +312,40 @@ export interface NewsDocument extends DocumentData {
 	/** Timestamp when the post was created */
 	createdAt: Timestamp
 	/** Timestamp when the post was last updated */
+	updatedAt: Timestamp
+}
+
+/**
+ * Post document structure for the message board
+ * Collection: posts
+ */
+export interface PostDocument extends DocumentData {
+	/** Reference to the player who created the post */
+	author: DocumentReference<PlayerDocument>
+	/** Reference to the season this post belongs to */
+	season: DocumentReference<SeasonDocument>
+	/** Post content/message (10-2000 characters) */
+	content: string
+	/** Timestamp when the post was created */
+	createdAt: Timestamp
+	/** Timestamp when the post was last updated */
+	updatedAt: Timestamp
+	/** Count of replies (denormalized for display efficiency) */
+	replyCount: number
+}
+
+/**
+ * Reply document structure for post replies
+ * Subcollection: posts/{postId}/replies
+ */
+export interface ReplyDocument extends DocumentData {
+	/** Reference to the player who created the reply */
+	author: DocumentReference<PlayerDocument>
+	/** Reply content/message (10-1000 characters) */
+	content: string
+	/** Timestamp when the reply was created */
+	createdAt: Timestamp
+	/** Timestamp when the reply was last updated */
 	updatedAt: Timestamp
 }
 

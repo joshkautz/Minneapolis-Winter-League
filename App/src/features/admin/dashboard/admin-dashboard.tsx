@@ -248,6 +248,27 @@ export const AdminDashboard = () => {
 						</Button>
 					</CardContent>
 				</Card>
+				{/* Posts Management */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Users className='h-5 w-5 text-emerald-600' />
+							Posts Management
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Moderate message board posts and replies. Delete inappropriate
+							content as needed.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/posts-management'>
+								<Users className='h-4 w-4 mr-2' />
+								Manage Posts
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
 				{/* Registration Management */}
 				<Card className='hover:shadow-lg transition-shadow'>
 					<CardHeader>
