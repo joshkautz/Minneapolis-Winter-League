@@ -498,11 +498,11 @@ export const PlayerRankingHistory = ({
 					<Button
 						variant='outline'
 						size='sm'
-						onClick={() => navigate('/players')}
+						onClick={() => navigate(-1)}
 						className='flex items-center gap-2'
 					>
 						<ArrowLeft className='h-4 w-4' />
-						Back to Players
+						Back
 					</Button>
 				</div>
 
@@ -556,11 +556,11 @@ export const PlayerRankingHistory = ({
 					<Button
 						variant='outline'
 						size='sm'
-						onClick={() => navigate('/players')}
+						onClick={() => navigate(-1)}
 						className='flex items-center gap-2'
 					>
 						<ArrowLeft className='h-4 w-4' />
-						Back to Players
+						Back
 					</Button>
 				</div>
 
@@ -613,11 +613,11 @@ export const PlayerRankingHistory = ({
 				<Button
 					variant='outline'
 					size='sm'
-					onClick={() => navigate('/players')}
+					onClick={() => navigate(-1)}
 					className='flex items-center gap-2'
 				>
 					<ArrowLeft className='h-4 w-4' />
-					Back to Players
+					Back
 				</Button>
 			</div>
 
