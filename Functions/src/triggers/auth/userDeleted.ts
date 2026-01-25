@@ -109,23 +109,6 @@ async function cleanupLocalStripeData(
 		// Delete the stripe/{uid} document itself
 		await stripeDocRef.delete()
 
-		// Also clean up legacy customers/{uid} collection if it exists
-		const legacyDocRef = firestore.collection('customers').doc(uid)
-		const legacyDoc = await legacyDocRef.get()
-		if (legacyDoc.exists) {
-			// Delete legacy subcollections
-			const legacyCheckouts = await legacyDocRef
-				.collection('checkout_sessions')
-				.get()
-			await Promise.all(legacyCheckouts.docs.map((doc) => doc.ref.delete()))
-
-			const legacyPayments = await legacyDocRef.collection('payments').get()
-			await Promise.all(legacyPayments.docs.map((doc) => doc.ref.delete()))
-
-			await legacyDocRef.delete()
-			logger.info(`Deleted legacy customers/${uid} data`)
-		}
-
 		logger.info(`Cleaned up local Stripe data for user: ${uid}`)
 	} catch (error) {
 		// Log but don't throw - cleanup failure shouldn't block user deletion
