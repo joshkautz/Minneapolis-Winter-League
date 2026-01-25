@@ -230,16 +230,18 @@ async function handleWaiverStatusChange(
 			if (playerNeedsUpdate && playerDocument) {
 				const updatedSeasons =
 					playerDocument.seasons?.map((season) =>
-						season.season.id === seasonId
-							? { ...season, signed: true }
-							: season
+						season.season.id === seasonId ? { ...season, signed: true } : season
 					) || []
 
 				transaction.update(playerRef, { seasons: updatedSeasons })
 				logger.info(`Updated player signed status for season: ${seasonId}`)
 			}
 
-			return { skipped: false, waiverUpdated: !waiverAlreadyInStatus, playerUpdated: playerNeedsUpdate }
+			return {
+				skipped: false,
+				waiverUpdated: !waiverAlreadyInStatus,
+				playerUpdated: playerNeedsUpdate,
+			}
 		})
 
 		if (result.skipped) {
