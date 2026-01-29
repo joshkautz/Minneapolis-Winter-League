@@ -52,13 +52,13 @@ export function getDropboxSignConfig(): {
 export function getStripeConfig(): {
 	readonly SECRET_KEY: string
 	readonly WEBHOOK_SECRET: string
-	readonly API_VERSION: '2025-12-15.clover'
+	readonly API_VERSION: '2026-01-28.clover'
 } {
 	const env = getENV()
 	return {
 		SECRET_KEY: env.stripeSecretKey,
 		WEBHOOK_SECRET: env.stripeWebhookSecret,
-		API_VERSION: '2025-12-15.clover' as const,
+		API_VERSION: '2026-01-28.clover' as const,
 	} as const
 }
 
