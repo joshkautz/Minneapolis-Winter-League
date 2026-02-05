@@ -18,7 +18,7 @@
 	},
 	"dependencies": {
 		"@dropbox/sign": "^1.10.0",
-		"firebase-admin": "^13.6.0",
+		"firebase-admin": "^13.6.1",
 		"firebase-functions": "^7.0.5",
 		"stripe": "^20.3.0",
 		"zod": "^4.3.5"
