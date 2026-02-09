@@ -156,7 +156,10 @@ export const updateTeamAdmin = onCall<
 		// Pre-fetch karma transactions for players being removed (needed for karma reversal)
 		// This must be done before the transaction since it's a separate query
 		const karmaTransactionsToReverse: Map<string, boolean> = new Map()
-		if (rosterChanges?.removePlayers && rosterChanges.removePlayers.length > 0) {
+		if (
+			rosterChanges?.removePlayers &&
+			rosterChanges.removePlayers.length > 0
+		) {
 			// We need to get the season first to query karma transactions
 			const teamDoc = await teamRef.get()
 			const seasonRef = teamDoc.data()?.season as
