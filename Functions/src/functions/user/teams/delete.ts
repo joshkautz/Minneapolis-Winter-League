@@ -5,15 +5,11 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import {
-	Collections,
-	TeamDocument,
-	PlayerDocument,
-	SeasonDocument,
-} from '../../../types.js'
+import { Collections, TeamDocument, SeasonDocument } from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { formatDateForUser } from '../../../shared/format.js'
+import { deleteTeamWithCleanup } from '../../../services/teamDeletionService.js'
 
 interface DeleteTeamRequest {
 	teamId: string
@@ -60,11 +56,21 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 				)
 			}
 
+			// Prevent deletion of registered teams
+			if (teamDocument.registered) {
+				throw new HttpsError(
+					'failed-precondition',
+					'Cannot delete a registered team. Teams can only be deleted before they are fully registered.'
+				)
+			}
+
 			// Check if registration has ended
+			let seasonId: string | undefined
 			if (teamDocument.season) {
 				const seasonDoc = await teamDocument.season.get()
 				if (seasonDoc.exists) {
 					const seasonData = seasonDoc.data() as SeasonDocument
+					seasonId = seasonDoc.id
 					const now = new Date()
 					const registrationEnd = seasonData.registrationEnd.toDate()
 
@@ -77,46 +83,31 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 				}
 			}
 
-			// Use transaction to ensure data consistency
-			await firestore.runTransaction(async (transaction) => {
-				// Remove team from all players' season data
-				if (teamDocument.roster) {
-					for (const member of teamDocument.roster) {
-						const playerDoc = await member.player.get()
-						if (playerDoc.exists) {
-							const playerDocument = playerDoc.data() as
-								| PlayerDocument
-								| undefined
-							const updatedSeasons =
-								playerDocument?.seasons?.map((season) =>
-									season.team?.id === teamId
-										? { ...season, team: null, captain: false }
-										: season
-								) || []
+			if (!seasonId) {
+				throw new HttpsError('internal', 'Unable to determine season')
+			}
 
-							transaction.update(member.player, { seasons: updatedSeasons })
-						}
-					}
-				}
+			// Use shared deletion service
+			const result = await deleteTeamWithCleanup(
+				firestore,
+				teamRef as FirebaseFirestore.DocumentReference<TeamDocument>,
+				seasonId
+			)
 
-				// Delete all offers related to this team
-				const offersQuery = await firestore
-					.collection(Collections.OFFERS)
-					.where('team', '==', teamRef)
-					.get()
-
-				offersQuery.docs.forEach((doc) => {
-					transaction.delete(doc.ref)
-				})
-
-				// Delete the team document
-				transaction.delete(teamRef)
-			})
+			if (!result.success) {
+				throw new HttpsError(
+					'internal',
+					result.error || 'Failed to delete team'
+				)
+			}
 
 			logger.info(`Successfully deleted team: ${teamId}`, {
-				teamName: teamDocument?.name,
+				teamName: result.teamName,
 				deletedBy: userId,
-				rosterSize: teamDocument?.roster?.length || 0,
+				playersUpdated: result.playersUpdated,
+				offersDeleted: result.offersDeleted,
+				karmaTransactionsDeleted: result.karmaTransactionsDeleted,
+				logoDeleted: result.logoDeleted,
 			})
 
 			return {
