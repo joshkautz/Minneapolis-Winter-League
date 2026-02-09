@@ -67,11 +67,17 @@ export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 						}
 					} catch (karmaError) {
 						// Log but don't fail the entire deletion
-						logger.warn('Failed to reverse karma for team during player deletion', {
-							uid,
-							teamId: season.team.id,
-							error: karmaError instanceof Error ? karmaError.message : 'Unknown error',
-						})
+						logger.warn(
+							'Failed to reverse karma for team during player deletion',
+							{
+								uid,
+								teamId: season.team.id,
+								error:
+									karmaError instanceof Error
+										? karmaError.message
+										: 'Unknown error',
+							}
+						)
 					}
 				}
 			}

@@ -39,7 +39,9 @@ export interface KarmaOperationResult {
 /**
  * Checks if a player is fully registered for a season
  */
-export function isPlayerFullyRegistered(playerSeasonData: PlayerSeason): boolean {
+export function isPlayerFullyRegistered(
+	playerSeasonData: PlayerSeason
+): boolean {
 	return Boolean(playerSeasonData?.paid && playerSeasonData?.signed)
 }
 
@@ -47,7 +49,9 @@ export function isPlayerFullyRegistered(playerSeasonData: PlayerSeason): boolean
  * Checks if a player qualifies for karma bonus
  * Requirements: lookingForTeam=true and fully registered (paid + signed)
  */
-export function qualifiesForKarmaBonus(playerSeasonData: PlayerSeason): boolean {
+export function qualifiesForKarmaBonus(
+	playerSeasonData: PlayerSeason
+): boolean {
 	const isLookingForTeam = playerSeasonData?.lookingForTeam || false
 	const isFullyRegistered = isPlayerFullyRegistered(playerSeasonData)
 	return isLookingForTeam && isFullyRegistered
@@ -235,12 +239,20 @@ export async function findAllKarmaTransactionsForPlayer(
 	firestore: FirebaseFirestore.Firestore,
 	playerRef: DocumentReference<PlayerDocument>,
 	seasonRef: DocumentReference<SeasonDocument>
-): Promise<Array<{ teamRef: DocumentReference<TeamDocument>; transaction: KarmaTransaction }>> {
+): Promise<
+	Array<{
+		teamRef: DocumentReference<TeamDocument>
+		transaction: KarmaTransaction
+	}>
+> {
 	// Query all teams to find karma transactions for this player
 	// This is necessary because karma_transactions is a subcollection of each team
 	const teamsSnapshot = await firestore.collection(Collections.TEAMS).get()
 
-	const results: Array<{ teamRef: DocumentReference<TeamDocument>; transaction: KarmaTransaction }> = []
+	const results: Array<{
+		teamRef: DocumentReference<TeamDocument>
+		transaction: KarmaTransaction
+	}> = []
 
 	for (const teamDoc of teamsSnapshot.docs) {
 		const teamRef = teamDoc.ref as DocumentReference<TeamDocument>
