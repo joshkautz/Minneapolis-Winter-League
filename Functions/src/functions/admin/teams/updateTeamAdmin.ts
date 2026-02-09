@@ -14,6 +14,12 @@ import { validateAdminUser } from '../../../shared/auth.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
+	qualifiesForKarmaBonus,
+	findKarmaTransactionForPlayerJoin,
+	createKarmaTransaction,
+	KARMA_AMOUNT,
+} from '../../../shared/karma.js'
+import {
 	Collections,
 	type DocumentReference,
 	type PlayerDocument,
@@ -147,6 +153,30 @@ export const updateTeamAdmin = onCall<
 		// Track changes for response
 		const changes: UpdateTeamAdminResponse['changes'] = {}
 
+		// Pre-fetch karma transactions for players being removed (needed for karma reversal)
+		// This must be done before the transaction since it's a separate query
+		const karmaTransactionsToReverse: Map<string, boolean> = new Map()
+		if (rosterChanges?.removePlayers && rosterChanges.removePlayers.length > 0) {
+			// We need to get the season first to query karma transactions
+			const teamDoc = await teamRef.get()
+			const seasonRef = teamDoc.data()?.season as
+				| DocumentReference<SeasonDocument>
+				| undefined
+			if (seasonRef) {
+				for (const playerId of rosterChanges.removePlayers) {
+					const playerRef = firestore
+						.collection(Collections.PLAYERS)
+						.doc(playerId) as DocumentReference<PlayerDocument>
+					const karmaTransaction = await findKarmaTransactionForPlayerJoin(
+						teamRef,
+						playerRef,
+						seasonRef
+					)
+					karmaTransactionsToReverse.set(playerId, karmaTransaction !== null)
+				}
+			}
+		}
+
 		// Execute all updates in a transaction
 		await firestore.runTransaction(async (transaction) => {
 			// Get team document
@@ -207,6 +237,13 @@ export const updateTeamAdmin = onCall<
 			// Handle roster changes
 			if (rosterChanges) {
 				const currentRoster = [...(teamDocument.roster || [])]
+				const currentKarma = teamDocument.karma || 0
+				let karmaAdjustment = 0
+				const karmaTransactionsToCreate: Array<{
+					playerRef: DocumentReference<PlayerDocument>
+					amount: number
+					reason: 'player_joined' | 'player_left'
+				}> = []
 
 				// Handle adding players
 				if (rosterChanges.addPlayers && rosterChanges.addPlayers.length > 0) {
@@ -295,6 +332,22 @@ export const updateTeamAdmin = onCall<
 
 						transaction.update(playerRef, { seasons: updatedSeasons })
 
+						// Check if player qualifies for karma bonus
+						// Player must have lookingForTeam=true, paid=true, and signed=true
+						if (playerSeasonData && qualifiesForKarmaBonus(playerSeasonData)) {
+							karmaAdjustment += KARMA_AMOUNT
+							karmaTransactionsToCreate.push({
+								playerRef,
+								amount: KARMA_AMOUNT,
+								reason: 'player_joined',
+							})
+							logger.info('Player qualifies for karma bonus', {
+								teamDocId,
+								playerId,
+								seasonId,
+							})
+						}
+
 						// Cancel pending offers for this player
 						// Note: We need to do this outside the transaction since it's a separate query
 						changes.rosterAdded.push(playerId)
@@ -363,6 +416,21 @@ export const updateTeamAdmin = onCall<
 									) || []
 								transaction.update(playerRef, { seasons: updatedSeasons })
 							}
+						}
+
+						// Check if karma should be reversed for this player
+						if (karmaTransactionsToReverse.get(playerId)) {
+							karmaAdjustment -= KARMA_AMOUNT
+							karmaTransactionsToCreate.push({
+								playerRef,
+								amount: -KARMA_AMOUNT,
+								reason: 'player_left',
+							})
+							logger.info('Reversing karma for removed player', {
+								teamDocId,
+								playerId,
+								seasonId,
+							})
 						}
 
 						changes.rosterRemoved.push(playerId)
@@ -459,6 +527,29 @@ export const updateTeamAdmin = onCall<
 
 				// Update team roster
 				teamUpdates.roster = currentRoster
+
+				// Apply karma adjustments if any
+				if (karmaAdjustment !== 0) {
+					teamUpdates.karma = Math.max(0, currentKarma + karmaAdjustment)
+					logger.info('Updating team karma', {
+						teamDocId,
+						from: currentKarma,
+						to: teamUpdates.karma,
+						adjustment: karmaAdjustment,
+					})
+				}
+
+				// Create karma transaction records
+				for (const karmaRecord of karmaTransactionsToCreate) {
+					createKarmaTransaction(
+						transaction,
+						teamRef,
+						karmaRecord.playerRef,
+						seasonRef as DocumentReference<SeasonDocument>,
+						karmaRecord.amount,
+						karmaRecord.reason
+					)
+				}
 			}
 
 			// Apply team updates
