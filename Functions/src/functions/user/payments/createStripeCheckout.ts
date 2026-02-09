@@ -30,6 +30,7 @@ interface CreateStripeCheckoutRequest {
 	couponId?: string
 	successUrl: string
 	cancelUrl: string
+	timezone?: string
 }
 
 interface CreateStripeCheckoutResponse {
@@ -53,7 +54,7 @@ export const createStripeCheckout = onCall<
 		// Validate authentication
 		validateAuthentication(auth)
 
-		const { priceId, couponId, successUrl, cancelUrl } = data
+		const { priceId, couponId, successUrl, cancelUrl, timezone } = data
 
 		// Validate required fields
 		if (!priceId || !successUrl || !cancelUrl) {
@@ -94,14 +95,14 @@ export const createStripeCheckout = onCall<
 				if (now < registrationStart) {
 					throw new HttpsError(
 						'failed-precondition',
-						`Registration has not opened yet. Registration opens ${formatDateForUser(registrationStart)}.`
+						`Registration has not opened yet. Registration opens ${formatDateForUser(registrationStart, timezone)}.`
 					)
 				}
 
 				if (now > registrationEnd) {
 					throw new HttpsError(
 						'failed-precondition',
-						`Registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
+						`Registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
 					)
 				}
 			}

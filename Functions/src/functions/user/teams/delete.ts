@@ -13,6 +13,7 @@ import { deleteTeamWithCleanup } from '../../../services/teamDeletionService.js'
 
 interface DeleteTeamRequest {
 	teamId: string
+	timezone?: string
 }
 
 export const deleteTeam = onCall<DeleteTeamRequest>(
@@ -20,7 +21,7 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 	async (request) => {
 		validateAuthentication(request.auth)
 
-		const { teamId } = request.data
+		const { teamId, timezone } = request.data
 		const userId = request.auth?.uid ?? ''
 
 		if (!teamId) {
@@ -77,7 +78,7 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 					if (now > registrationEnd) {
 						throw new HttpsError(
 							'failed-precondition',
-							`Teams cannot be deleted after registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
+							`Teams cannot be deleted after registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
 						)
 					}
 				}

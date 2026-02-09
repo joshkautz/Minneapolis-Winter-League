@@ -31,6 +31,7 @@ interface UpdateTeamRosterRequest {
 	teamId: string
 	playerId: string
 	action: 'promote' | 'demote' | 'remove'
+	timezone?: string
 }
 
 export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
@@ -38,7 +39,7 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 	async (request) => {
 		validateAuthentication(request.auth)
 
-		const { teamId, playerId, action } = request.data
+		const { teamId, playerId, action, timezone } = request.data
 		const userId = request.auth?.uid ?? ''
 
 		if (!teamId || !playerId || !action) {
@@ -117,7 +118,7 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 					if (now > registrationEnd) {
 						throw new HttpsError(
 							'failed-precondition',
-							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
+							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
 						)
 					}
 				}
