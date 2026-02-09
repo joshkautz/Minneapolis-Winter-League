@@ -18,8 +18,9 @@ import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	qualifiesForKarmaBonus,
 	findKarmaTransactionForPlayerJoin,
+	createKarmaTransaction,
 	KARMA_AMOUNT,
-} from '../../../shared/karma.js'
+} from '../../../services/karmaService.js'
 import {
 	Collections,
 	type DocumentReference,
@@ -745,187 +746,181 @@ export const updatePlayerAdmin = onCall<
 
 					// Team changed - need to update rosters
 					if (oldTeamId !== newTeamId) {
-						// Remove from old team roster
+						const playerRefForKarma = firestore
+							.collection(Collections.PLAYERS)
+							.doc(playerId) as DocumentReference<PlayerDocument>
+						const seasonRefForKarma = firestore
+							.collection(Collections.SEASONS)
+							.doc(seasonUpdate.seasonId) as DocumentReference<SeasonDocument>
+
+						// Pre-fetch karma transaction info (must be done outside transaction)
+						let oldTeamKarmaTransaction = null
 						if (oldTeamId) {
 							const oldTeamRef = firestore
 								.collection(Collections.TEAMS)
 								.doc(oldTeamId) as DocumentReference<TeamDocument>
-							const oldTeamDoc = await oldTeamRef.get()
-
-							if (oldTeamDoc.exists) {
-								const oldTeamData = oldTeamDoc.data() as TeamDocument
-								const updatedRoster = oldTeamData.roster.filter(
-									(rp: TeamRosterPlayer) => rp.player.id !== playerId
-								)
-
-								// Check if karma should be reversed
-								const playerRefForKarma = firestore
-									.collection(Collections.PLAYERS)
-									.doc(playerId) as DocumentReference<PlayerDocument>
-								const seasonRefForKarma = firestore
-									.collection(Collections.SEASONS)
-									.doc(
-										seasonUpdate.seasonId
-									) as DocumentReference<SeasonDocument>
-
-								const karmaTransaction =
-									await findKarmaTransactionForPlayerJoin(
-										oldTeamRef,
-										playerRefForKarma,
-										seasonRefForKarma
-									)
-
-								const teamUpdates: Partial<TeamDocument> = {
-									roster: updatedRoster,
-								}
-
-								// Reverse karma if team was awarded karma for this player
-								let karmaReversed = 0
-								if (karmaTransaction) {
-									const currentKarma = oldTeamData.karma || 0
-									teamUpdates.karma = Math.max(0, currentKarma - KARMA_AMOUNT)
-									karmaReversed = KARMA_AMOUNT
-								}
-
-								await oldTeamRef.update(teamUpdates)
-
-								logger.info('Removed player from old team roster', {
-									playerId,
-									oldTeamId,
-									seasonId: seasonUpdate.seasonId,
-									karmaReversed,
-								})
-							}
+							oldTeamKarmaTransaction = await findKarmaTransactionForPlayerJoin(
+								oldTeamRef,
+								playerRefForKarma,
+								seasonRefForKarma
+							)
 						}
 
-						// Add to new team roster
-						if (newTeamId) {
-							const newTeamRef = firestore
-								.collection(Collections.TEAMS)
-								.doc(newTeamId) as DocumentReference<TeamDocument>
-							const newTeamDoc = await newTeamRef.get()
+						// Check if player qualifies for karma bonus on new team
+						const playerSeasonForKarma: PlayerSeason = {
+							...currentSeason,
+							paid: seasonUpdate.paid,
+							signed: seasonUpdate.signed,
+							lookingForTeam:
+								seasonUpdate.lookingForTeam ??
+								currentSeason.lookingForTeam ??
+								false,
+						}
+						const qualifiesForNewTeamKarma =
+							qualifiesForKarmaBonus(playerSeasonForKarma)
 
-							if (newTeamDoc.exists) {
-								const newTeamData = newTeamDoc.data() as TeamDocument
+						// Use a transaction to ensure atomicity of team roster changes
+						const teamChangeResult = await firestore.runTransaction(
+							async (teamTransaction) => {
+								let karmaReversed = 0
+								let karmaAwarded = 0
 
-								// Check if player already exists in roster
-								const existsInRoster = newTeamData.roster.some(
-									(rp: TeamRosterPlayer) => rp.player.id === playerId
-								)
+								// Remove from old team roster
+								if (oldTeamId) {
+									const oldTeamRef = firestore
+										.collection(Collections.TEAMS)
+										.doc(oldTeamId) as DocumentReference<TeamDocument>
+									const oldTeamDoc = await teamTransaction.get(oldTeamRef)
 
-								if (!existsInRoster) {
-									const newRosterEntry: TeamRosterPlayer = {
-										captain: seasonUpdate.captain,
-										player: firestore
-											.collection(Collections.PLAYERS)
-											.doc(playerId) as DocumentReference<PlayerDocument>,
-										dateJoined: Timestamp.now(),
-									}
-
-									// Check if player qualifies for karma bonus
-									// Get the player's current season data (use values being set by admin)
-									const playerSeasonForKarma: PlayerSeason = {
-										...currentSeason,
-										paid: seasonUpdate.paid,
-										signed: seasonUpdate.signed,
-										lookingForTeam:
-											seasonUpdate.lookingForTeam ??
-											currentSeason.lookingForTeam ??
-											false,
-									}
-									const earnedKarma =
-										qualifiesForKarmaBonus(playerSeasonForKarma)
-
-									const teamUpdates: Partial<TeamDocument> = {
-										roster: [...newTeamData.roster, newRosterEntry],
-									}
-
-									// Award karma if player qualifies
-									let karmaAwarded = 0
-									if (earnedKarma) {
-										const currentKarma = newTeamData.karma || 0
-										teamUpdates.karma = currentKarma + KARMA_AMOUNT
-										karmaAwarded = KARMA_AMOUNT
-
-										// Create karma transaction record
-										const playerRefForKarma = firestore
-											.collection(Collections.PLAYERS)
-											.doc(playerId) as DocumentReference<PlayerDocument>
-										const seasonRefForKarma = firestore
-											.collection(Collections.SEASONS)
-											.doc(
-												seasonUpdate.seasonId
-											) as DocumentReference<SeasonDocument>
-
-										const karmaTransactionRef = newTeamRef
-											.collection('karma_transactions')
-											.doc()
-
-										await karmaTransactionRef.set({
-											player: playerRefForKarma,
-											team: newTeamRef,
-											amount: KARMA_AMOUNT,
-											reason: 'player_joined',
-											timestamp: Timestamp.now(),
-											season: seasonRefForKarma,
-										})
-									}
-
-									await newTeamRef.update(teamUpdates)
-
-									// Cancel any pending offers for this player in this season
-									// since they are now on a team
-									const playerRefForOffers = firestore
-										.collection(Collections.PLAYERS)
-										.doc(playerId) as DocumentReference<PlayerDocument>
-									const seasonRefForOffers = firestore
-										.collection(Collections.SEASONS)
-										.doc(
-											seasonUpdate.seasonId
-										) as DocumentReference<SeasonDocument>
-
-									const canceledOffersCount =
-										await cancelPendingOffersForPlayer(
-											firestore,
-											playerRefForOffers,
-											seasonRefForOffers,
-											'Player was added to a team by an administrator'
+									if (oldTeamDoc.exists) {
+										const oldTeamData = oldTeamDoc.data() as TeamDocument
+										const updatedRoster = oldTeamData.roster.filter(
+											(rp: TeamRosterPlayer) => rp.player.id !== playerId
 										)
 
-									logger.info('Added player to new team roster', {
-										playerId,
-										newTeamId,
-										karmaAwarded,
-										seasonId: seasonUpdate.seasonId,
-										captain: seasonUpdate.captain,
-										canceledPendingOffers: canceledOffersCount,
-									})
-								} else {
-									// Player exists, update captain status if needed
-									const updatedRoster = newTeamData.roster.map(
-										(rp: TeamRosterPlayer) => {
-											if (rp.player.id === playerId) {
-												return {
-													...rp,
-													captain: seasonUpdate.captain,
-												}
-											}
-											return rp
+										const oldTeamUpdates: Partial<TeamDocument> = {
+											roster: updatedRoster,
 										}
-									)
 
-									await newTeamRef.update({
-										roster: updatedRoster,
-									})
+										// Reverse karma if team was awarded karma for this player
+										if (oldTeamKarmaTransaction) {
+											const currentKarma = oldTeamData.karma || 0
+											oldTeamUpdates.karma = Math.max(
+												0,
+												currentKarma - KARMA_AMOUNT
+											)
+											karmaReversed = KARMA_AMOUNT
 
-									logger.info('Updated player captain status in team roster', {
-										playerId,
-										newTeamId,
-										seasonId: seasonUpdate.seasonId,
-										captain: seasonUpdate.captain,
-									})
+											// Create karma reversal transaction record
+											createKarmaTransaction(
+												teamTransaction,
+												oldTeamRef,
+												playerRefForKarma,
+												seasonRefForKarma,
+												-KARMA_AMOUNT,
+												'player_left'
+											)
+										}
+
+										teamTransaction.update(oldTeamRef, oldTeamUpdates)
+									}
 								}
+
+								// Add to new team roster
+								if (newTeamId) {
+									const newTeamRef = firestore
+										.collection(Collections.TEAMS)
+										.doc(newTeamId) as DocumentReference<TeamDocument>
+									const newTeamDoc = await teamTransaction.get(newTeamRef)
+
+									if (newTeamDoc.exists) {
+										const newTeamData = newTeamDoc.data() as TeamDocument
+
+										// Check if player already exists in roster
+										const existsInRoster = newTeamData.roster.some(
+											(rp: TeamRosterPlayer) => rp.player.id === playerId
+										)
+
+										if (!existsInRoster) {
+											const newRosterEntry: TeamRosterPlayer = {
+												captain: seasonUpdate.captain,
+												player: playerRefForKarma,
+												dateJoined: Timestamp.now(),
+											}
+
+											const newTeamUpdates: Partial<TeamDocument> = {
+												roster: [...newTeamData.roster, newRosterEntry],
+											}
+
+											// Award karma if player qualifies
+											if (qualifiesForNewTeamKarma) {
+												const currentKarma = newTeamData.karma || 0
+												newTeamUpdates.karma = currentKarma + KARMA_AMOUNT
+												karmaAwarded = KARMA_AMOUNT
+
+												// Create karma transaction record
+												createKarmaTransaction(
+													teamTransaction,
+													newTeamRef,
+													playerRefForKarma,
+													seasonRefForKarma,
+													KARMA_AMOUNT,
+													'player_joined'
+												)
+											}
+
+											teamTransaction.update(newTeamRef, newTeamUpdates)
+										} else {
+											// Player exists, update captain status if needed
+											const updatedRoster = newTeamData.roster.map(
+												(rp: TeamRosterPlayer) => {
+													if (rp.player.id === playerId) {
+														return {
+															...rp,
+															captain: seasonUpdate.captain,
+														}
+													}
+													return rp
+												}
+											)
+
+											teamTransaction.update(newTeamRef, {
+												roster: updatedRoster,
+											})
+										}
+									}
+								}
+
+								return { karmaReversed, karmaAwarded }
 							}
+						)
+
+						// Cancel any pending offers for this player (outside transaction)
+						if (newTeamId) {
+							const canceledOffersCount = await cancelPendingOffersForPlayer(
+								firestore,
+								playerRefForKarma,
+								seasonRefForKarma,
+								'Player was added to a team by an administrator'
+							)
+
+							logger.info('Team change completed', {
+								playerId,
+								oldTeamId,
+								newTeamId,
+								seasonId: seasonUpdate.seasonId,
+								captain: seasonUpdate.captain,
+								karmaReversed: teamChangeResult.karmaReversed,
+								karmaAwarded: teamChangeResult.karmaAwarded,
+								canceledPendingOffers: canceledOffersCount,
+							})
+						} else {
+							logger.info('Removed player from team', {
+								playerId,
+								oldTeamId,
+								seasonId: seasonUpdate.seasonId,
+								karmaReversed: teamChangeResult.karmaReversed,
+							})
 						}
 					} else if (
 						newTeamId &&

@@ -20,7 +20,7 @@ import {
 	qualifiesForKarmaBonus,
 	createKarmaTransaction,
 	KARMA_AMOUNT,
-} from '../../shared/karma.js'
+} from '../../services/karmaService.js'
 
 /**
  * Triggered when an offer document is updated

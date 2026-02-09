@@ -18,7 +18,7 @@ import {
 	findKarmaTransactionForPlayerJoin,
 	createKarmaTransaction,
 	KARMA_AMOUNT,
-} from '../../../shared/karma.js'
+} from '../../../services/karmaService.js'
 import {
 	Collections,
 	type DocumentReference,
