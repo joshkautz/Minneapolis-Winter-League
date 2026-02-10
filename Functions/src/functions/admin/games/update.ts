@@ -63,7 +63,7 @@ interface UpdateGameResponse {
  * - No duplicate game at same time and field (if time/field changed)
  *
  * Business logic:
- * - Games are only allowed on Saturdays in November and December
+ * - Games are only allowed on Saturdays
  * - Games are only allowed at 6:00pm, 6:45pm, 7:30pm, or 8:15pm CT
  * - Each field can only have one game per time slot
  */
@@ -210,13 +210,7 @@ export const updateGame = onCall<
 					)
 				}
 
-				// Validate business logic: November or December only
-				if (month !== 11 && month !== 12) {
-					throw new HttpsError(
-						'invalid-argument',
-						`Games can only be scheduled in November or December (received month: ${month})`
-					)
-				} // Validate business logic: allowed time slots
+				// Validate business logic: allowed time slots
 				// Extract the local time directly from the ISO string to avoid timezone conversion issues
 				// ISO format: YYYY-MM-DDTHH:MM:SS.sss±HH:MM
 				const timeMatch = timestamp.match(/T(\d{2}):(\d{2})/)
