@@ -28,6 +28,7 @@ import {
 	Shield,
 	UserCog,
 	Loader2,
+	Send,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -39,6 +40,7 @@ import { teamsBySeasonQuery } from '@/firebase/collections/teams'
 import {
 	updatePlayerAdminViaFunction,
 	getPlayerAuthInfoViaFunction,
+	sendWaiverAdminViaFunction,
 } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -64,6 +66,7 @@ import {
 	type SeasonDocument,
 	type TeamDocument,
 	logger,
+	extractErrorMessage,
 } from '@/shared/utils'
 import { useQueryErrorHandler } from '@/shared/hooks'
 
@@ -95,6 +98,7 @@ export const PlayerManagement = () => {
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
 	const [isSaving, setIsSaving] = useState(false)
+	const [isLoadingPlayerDetails, setIsLoadingPlayerDetails] = useState(false)
 	const [formData, setFormData] = useState<PlayerFormData | null>(null)
 	const [originalFormData, setOriginalFormData] =
 		useState<PlayerFormData | null>(null)
@@ -190,15 +194,16 @@ export const PlayerManagement = () => {
 	})
 
 	// Fetch selected player - create document reference directly since we have a raw UID
-	const [selectedPlayerSnapshot, , selectedPlayerError] = useDocument(
-		selectedPlayerId
-			? (doc(
-					firestore,
-					Collections.PLAYERS,
-					selectedPlayerId
-				) as DocumentReference<PlayerDocument>)
-			: undefined
-	)
+	const [selectedPlayerSnapshot, selectedPlayerLoading, selectedPlayerError] =
+		useDocument(
+			selectedPlayerId
+				? (doc(
+						firestore,
+						Collections.PLAYERS,
+						selectedPlayerId
+					) as DocumentReference<PlayerDocument>)
+				: undefined
+		)
 
 	useQueryErrorHandler({
 		error: selectedPlayerError,
@@ -214,9 +219,21 @@ export const PlayerManagement = () => {
 	})) as (SeasonDocument & { id: string })[] | undefined
 
 	// Initialize form data when a player is selected
+	// Handles clearing old data and loading new data with race condition protection
 	useEffect(() => {
+		let isCancelled = false
+
 		const initializeFormData = async () => {
-			if (selectedPlayerSnapshot?.exists() && selectedPlayerId) {
+			if (!selectedPlayerSnapshot?.exists() || !selectedPlayerId) {
+				return
+			}
+
+			// Clear old form data and start loading
+			setFormData(null)
+			setOriginalFormData(null)
+			setIsLoadingPlayerDetails(true)
+
+			try {
 				const playerData = selectedPlayerSnapshot.data() as PlayerDocument
 
 				// Fetch email verification status from Firebase Auth
@@ -225,8 +242,11 @@ export const PlayerManagement = () => {
 					const authInfo = await getPlayerAuthInfoViaFunction({
 						playerId: selectedPlayerId,
 					})
+					// Check if component/selection changed during async operation
+					if (isCancelled) return
 					emailVerified = authInfo.emailVerified
 				} catch (error) {
+					if (isCancelled) return
 					logger.error('Failed to fetch player auth info:', {
 						component: 'PlayerManagement',
 						playerId: selectedPlayerId,
@@ -234,6 +254,9 @@ export const PlayerManagement = () => {
 					})
 					// Default to false if we can't fetch the status
 				}
+
+				// Final check before setting state
+				if (isCancelled) return
 
 				const newFormData = {
 					firstname: playerData.firstname,
@@ -253,10 +276,19 @@ export const PlayerManagement = () => {
 				}
 				setFormData(newFormData)
 				setOriginalFormData(newFormData)
+			} finally {
+				if (!isCancelled) {
+					setIsLoadingPlayerDetails(false)
+				}
 			}
 		}
 
 		initializeFormData()
+
+		// Cleanup function to prevent stale updates
+		return () => {
+			isCancelled = true
+		}
 	}, [selectedPlayerSnapshot, selectedPlayerId])
 
 	const searchResults = useMemo(() => {
@@ -369,13 +401,9 @@ export const PlayerManagement = () => {
 				error instanceof Error ? error : undefined,
 				{ component: 'PlayerManagement', action: 'updatePlayer' }
 			)
-
-			let errorMessage = 'Failed to update player. Please try again.'
-			if (error && typeof error === 'object' && 'message' in error) {
-				errorMessage = (error as { message: string }).message
-			}
-
-			toast.error(errorMessage)
+			toast.error(
+				extractErrorMessage(error, 'Failed to update player. Please try again.')
+			)
 		} finally {
 			setIsSaving(false)
 		}
@@ -561,7 +589,19 @@ export const PlayerManagement = () => {
 							</div>
 						)}
 
-						{selectedPlayerId && formData && (
+						{selectedPlayerId &&
+							(selectedPlayerLoading ||
+								isLoadingPlayerDetails ||
+								!formData) && (
+								<div className='text-center py-12'>
+									<Loader2 className='h-12 w-12 text-muted-foreground mx-auto mb-4 animate-spin' />
+									<p className='text-muted-foreground'>
+										Loading player details...
+									</p>
+								</div>
+							)}
+
+						{selectedPlayerId && formData && !isLoadingPlayerDetails && (
 							<div className='space-y-6'>
 								{/* Basic Information */}
 								<div className='space-y-4'>
@@ -723,6 +763,7 @@ export const PlayerManagement = () => {
 											key={seasonData.seasonId}
 											seasonData={seasonData}
 											seasons={seasons}
+											playerId={selectedPlayerId}
 											onFieldChange={handleSeasonFieldChange}
 										/>
 									))}
@@ -759,6 +800,7 @@ export const PlayerManagement = () => {
 interface SeasonCardProps {
 	seasonData: SeasonFormData
 	seasons: (SeasonDocument & { id: string })[] | undefined
+	playerId: string
 	onFieldChange: (
 		seasonId: string,
 		field: keyof SeasonFormData,
@@ -769,53 +811,63 @@ interface SeasonCardProps {
 const SeasonCard = ({
 	seasonData,
 	seasons,
+	playerId,
 	onFieldChange,
 }: SeasonCardProps) => {
+	const [isSendingWaiver, setIsSendingWaiver] = useState(false)
+
 	const season = seasons?.find((s) => s.id === seasonData.seasonId)
 	const seasonName = season?.name || 'Unknown Season'
 
+	// Show Send Waiver button when player is paid but hasn't signed
+	const showSendWaiverButton = seasonData.paid && !seasonData.signed
+
+	const handleSendWaiver = async () => {
+		setIsSendingWaiver(true)
+		try {
+			const result = await sendWaiverAdminViaFunction({
+				playerId,
+				seasonId: seasonData.seasonId,
+			})
+			toast.success('Waiver sent successfully', {
+				description: result.message,
+			})
+		} catch (error) {
+			logger.error('Failed to send waiver:', {
+				component: 'SeasonCard',
+				playerId,
+				seasonId: seasonData.seasonId,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			})
+			toast.error(
+				extractErrorMessage(error, 'Failed to send waiver. Please try again.')
+			)
+		} finally {
+			setIsSendingWaiver(false)
+		}
+	}
+
+	// Create season ref directly - no need to fetch the document just for the ref
+	const seasonRef = season
+		? (doc(
+				firestore,
+				Collections.SEASONS,
+				season.id
+			) as DocumentReference<SeasonDocument>)
+		: undefined
+
 	// Fetch teams for this season
-	// We need to get the season snapshot to create the proper query
-	const [seasonSnapshot, , seasonError] = useDocument(
-		season
-			? (doc(
-					firestore,
-					Collections.SEASONS,
-					season.id
-				) as DocumentReference<SeasonDocument>)
-			: undefined
-	)
-
 	const [teamsSnapshot, , teamsError] = useCollection(
-		seasonSnapshot ? teamsBySeasonQuery(seasonSnapshot.ref) : undefined
+		seasonRef ? teamsBySeasonQuery(seasonRef) : undefined
 	)
 
-	// Log and notify on query errors
-	useEffect(() => {
-		if (seasonError) {
-			logger.error('Failed to load season:', {
-				component: 'SeasonCard',
-				seasonId: season?.id,
-				error: seasonError.message,
-			})
-			toast.error('Failed to load season', {
-				description: seasonError.message,
-			})
-		}
-	}, [seasonError, season?.id])
-
-	useEffect(() => {
-		if (teamsError) {
-			logger.error('Failed to load teams:', {
-				component: 'SeasonCard',
-				seasonId: season?.id,
-				error: teamsError.message,
-			})
-			toast.error('Failed to load teams', {
-				description: teamsError.message,
-			})
-		}
-	}, [teamsError, season?.id])
+	// Use consistent error handling pattern
+	useQueryErrorHandler({
+		error: teamsError,
+		component: 'SeasonCard',
+		errorLabel: 'teams',
+		context: { seasonId: season?.id },
+	})
 
 	const teams = useMemo(() => {
 		if (!teamsSnapshot) return []
@@ -925,6 +977,29 @@ const SeasonCard = ({
 						</Label>
 					</div>
 				</div>
+
+				{/* Send Waiver button - only shows when paid but not signed */}
+				{showSendWaiverButton && (
+					<Button
+						variant='outline'
+						size='sm'
+						onClick={handleSendWaiver}
+						disabled={isSendingWaiver}
+						className='w-full'
+					>
+						{isSendingWaiver ? (
+							<>
+								<Loader2 className='h-4 w-4 mr-2 animate-spin' />
+								Sending Waiver...
+							</>
+						) : (
+							<>
+								<Send className='h-4 w-4 mr-2' />
+								Send Waiver Email
+							</>
+						)}
+					</Button>
+				)}
 
 				<div className='space-y-2'>
 					<Label htmlFor={`team-${seasonData.seasonId}`}>Team</Label>
