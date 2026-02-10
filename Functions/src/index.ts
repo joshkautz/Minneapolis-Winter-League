@@ -118,6 +118,9 @@ export { rebuildPlayerRankings } from './functions/admin/rankings/rebuildPlayerR
 // Waiver functions (user-accessible)
 export { sendWaiverReminder } from './functions/user/waivers/sendReminder.js'
 
+// Waiver management functions (admin-only)
+export { sendWaiverAdmin } from './functions/admin/waivers/sendWaiverAdmin.js'
+
 // Payment functions (user-accessible)
 export { createStripeCheckout } from './functions/user/payments/createStripeCheckout.js'
 
