@@ -22,6 +22,7 @@ import { formatDateForUser } from '../../../shared/format.js'
 interface UpdateOfferRequest {
 	offerId: string
 	status: 'accepted' | 'rejected' | 'canceled'
+	timezone?: string
 }
 
 /**
@@ -50,7 +51,7 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 			throw new HttpsError('unauthenticated', errorMessage)
 		}
 
-		const { offerId, status } = data
+		const { offerId, status, timezone } = data
 
 		// Validate inputs
 		if (!offerId || !status) {
@@ -115,7 +116,7 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 					if (now > registrationEnd) {
 						throw new HttpsError(
 							'failed-precondition',
-							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
+							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
 						)
 					}
 				}

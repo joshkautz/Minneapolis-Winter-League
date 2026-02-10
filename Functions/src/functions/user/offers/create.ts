@@ -35,6 +35,7 @@ interface CreateOfferRequest {
 	playerId: string
 	teamId: string
 	type: 'invitation' | 'request'
+	timezone?: string
 }
 
 export const createOffer = onCall<CreateOfferRequest>(
@@ -49,7 +50,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 			throw new HttpsError('unauthenticated', errorMessage)
 		}
 
-		const { playerId, teamId, type } = request.data
+		const { playerId, teamId, type, timezone } = request.data
 		const userId = request.auth?.uid ?? ''
 
 		if (!playerId || !teamId || !type) {
@@ -151,7 +152,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 					if (now > registrationEnd) {
 						throw new HttpsError(
 							'failed-precondition',
-							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
+							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
 						)
 					}
 				}

@@ -16,6 +16,7 @@ export const FIREBASE_CONFIG = {
 // Business Logic Constants (static)
 export const TEAM_CONFIG = {
 	MIN_PLAYERS_FOR_REGISTRATION: 10,
+	REGISTERED_TEAMS_FOR_LOCK: 12,
 } as const
 
 // Game Configuration

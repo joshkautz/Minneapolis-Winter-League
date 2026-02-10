@@ -11,7 +11,7 @@ import {
 	PlayerSeason,
 	SeasonDocument,
 } from '../../../types.js'
-import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../../config/constants.js'
 import { validateBasicAuthentication } from '../../../shared/auth.js'
 
 /**
@@ -112,15 +112,35 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 				.get()
 
 			// Build seasons array for the new player
-			const playerSeasons: PlayerSeason[] = seasonsSnapshot.docs.map((doc) => ({
-				season: doc.ref as FirebaseFirestore.DocumentReference<SeasonDocument>,
-				team: null,
-				captain: false,
-				paid: false,
-				signed: false,
-				banned: false,
-				lookingForTeam: false,
-			}))
+			// For each season, check if 12 teams are already registered (lock has occurred)
+			// If so, new players should be marked as lookingForTeam: true
+			const playerSeasons: PlayerSeason[] = await Promise.all(
+				seasonsSnapshot.docs.map(async (doc) => {
+					const seasonRef =
+						doc.ref as FirebaseFirestore.DocumentReference<SeasonDocument>
+
+					// Count registered teams for this season
+					const registeredTeamsSnapshot = await firestore
+						.collection(Collections.TEAMS)
+						.where('season', '==', seasonRef)
+						.where('registered', '==', true)
+						.get()
+
+					const isLocked =
+						registeredTeamsSnapshot.size >=
+						TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
+
+					return {
+						season: seasonRef,
+						team: null,
+						captain: false,
+						paid: false,
+						signed: false,
+						banned: false,
+						lookingForTeam: isLocked,
+					}
+				})
+			)
 
 			// Create player document
 			const player: PlayerDocument = {

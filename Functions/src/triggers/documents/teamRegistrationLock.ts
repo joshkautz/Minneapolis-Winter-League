@@ -14,10 +14,11 @@ import {
 	PlayerDocument,
 	PlayerSeason,
 } from '../../types.js'
-import { FIREBASE_CONFIG } from '../../config/constants.js'
+import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../config/constants.js'
 import { getCurrentSeason } from '../../shared/database.js'
+import { deleteUnregisteredTeamsForSeasonLock } from '../../services/teamDeletionService.js'
 
-const LOCK_THRESHOLD = 12 // Number of registered teams required to trigger lock
+const LOCK_THRESHOLD = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
 
 /**
  * Triggered when a team document is updated and registration status changes
@@ -64,11 +65,57 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 
 			logger.info(`Current registered team count: ${registeredTeamCount}`)
 
-			// If we've reached the threshold, mark players as looking for team
+			// If we've reached the threshold, delete unregistered teams then mark players
 			if (registeredTeamCount === LOCK_THRESHOLD) {
 				logger.info(
-					`${LOCK_THRESHOLD} teams registered! Marking players as looking for team...`
+					`${LOCK_THRESHOLD} teams registered! Locking registration...`
 				)
+
+				// First: Delete all unregistered teams for this season
+				// This clears team references from players on those teams
+				const unregisteredTeamsSnapshot = await firestore
+					.collection(Collections.TEAMS)
+					.where(
+						'season',
+						'==',
+						firestore.collection(Collections.SEASONS).doc(currentSeason.id)
+					)
+					.where('registered', '==', false)
+					.get()
+
+				if (unregisteredTeamsSnapshot.size > 0) {
+					logger.info(
+						`Deleting ${unregisteredTeamsSnapshot.size} unregistered teams...`
+					)
+
+					const teamRefs = unregisteredTeamsSnapshot.docs.map(
+						(doc) =>
+							doc.ref as FirebaseFirestore.DocumentReference<TeamDocument>
+					)
+					const results = await deleteUnregisteredTeamsForSeasonLock(
+						firestore,
+						teamRefs,
+						currentSeason.id
+					)
+
+					const successCount = results.filter((r) => r.success).length
+					const failCount = results.filter((r) => !r.success).length
+
+					logger.info('Completed unregistered team deletion', {
+						successCount,
+						failCount,
+						deletedTeams: results
+							.filter((r) => r.success)
+							.map((r) => ({ id: r.teamId, name: r.teamName })),
+						failedTeams: results
+							.filter((r) => !r.success)
+							.map((r) => ({ id: r.teamId, name: r.teamName, error: r.error })),
+					})
+				}
+
+				// Second: Mark all players not on registered teams as lookingForTeam
+				// Players from deleted teams now have team: null and will be marked
+				logger.info('Marking players not on registered teams as looking...')
 				await lockPlayersForSeason(firestore, currentSeason.id, teamsSnapshot)
 			}
 		} catch (error) {

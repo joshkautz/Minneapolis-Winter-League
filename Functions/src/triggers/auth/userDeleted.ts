@@ -6,13 +6,21 @@ import { auth } from 'firebase-functions/v1'
 import { UserRecord } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '../../types.js'
+import {
+	Collections,
+	DocumentReference,
+	PlayerDocument,
+	SeasonDocument,
+	TeamDocument,
+} from '../../types.js'
 import { handleFunctionError } from '../../shared/errors.js'
+import { reverseKarmaForPlayerDeletion } from '../../services/karmaService.js'
 
 /**
  * When a user is deleted via Firebase Authentication, clean up all related data
  * - Delete the player document
  * - Remove player from all team rosters
+ * - Reverse karma on teams where the player earned karma
  * - Delete all related offers
  * - Delete local Stripe Firestore data (but preserve Stripe customer for records)
  *
@@ -25,7 +33,9 @@ export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 		logger.info(`Processing user deletion for UID: ${uid}`)
 
 		const firestore = getFirestore()
-		const playerRef = firestore.collection(Collections.PLAYERS).doc(uid)
+		const playerRef = firestore
+			.collection(Collections.PLAYERS)
+			.doc(uid) as DocumentReference<PlayerDocument>
 
 		// Get player data to find associated teams (outside transaction first)
 		const playerDoc = await playerRef.get()
@@ -37,7 +47,43 @@ export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 
 		const playerDocument = playerDoc.data()
 
-		// Use a transaction to ensure data consistency
+		// Track karma reversals for logging
+		let totalKarmaReversed = 0
+
+		// Reverse karma for each team the player was on (must be done before removing from roster)
+		// This is done outside the main transaction because karma queries can't be part of the transaction
+		if (playerDocument?.seasons) {
+			for (const season of playerDocument.seasons) {
+				if (season.team && season.season) {
+					try {
+						const result = await reverseKarmaForPlayerDeletion(
+							firestore,
+							season.team as DocumentReference<TeamDocument>,
+							playerRef,
+							season.season as DocumentReference<SeasonDocument>
+						)
+						if (result.karmaChange !== 0) {
+							totalKarmaReversed += Math.abs(result.karmaChange)
+						}
+					} catch (karmaError) {
+						// Log but don't fail the entire deletion
+						logger.warn(
+							'Failed to reverse karma for team during player deletion',
+							{
+								uid,
+								teamId: season.team.id,
+								error:
+									karmaError instanceof Error
+										? karmaError.message
+										: 'Unknown error',
+							}
+						)
+					}
+				}
+			}
+		}
+
+		// Use a transaction to ensure data consistency for roster and player deletion
 		await firestore.runTransaction(async (transaction) => {
 			// Remove player from all teams they've been on
 			if (playerDocument?.seasons) {
@@ -76,6 +122,7 @@ export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 
 		logger.info(`Successfully cleaned up data for deleted user: ${uid}`, {
 			deletedOffers: deletePromises.length,
+			karmaReversed: totalKarmaReversed,
 		})
 	} catch (error) {
 		throw handleFunctionError(error, 'userDeleted', { uid })

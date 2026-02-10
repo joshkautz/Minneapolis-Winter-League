@@ -40,17 +40,22 @@ import {
 	SignatureRequestRemindRequest,
 } from '@dropbox/sign'
 
+interface SendWaiverReminderRequest {
+	timezone?: string
+}
+
 /**
  * Sends a reminder email for an existing Dropbox Sign signature request
  */
-export const sendWaiverReminder = onCall(
+export const sendWaiverReminder = onCall<SendWaiverReminderRequest>(
 	{
 		region: FIREBASE_CONFIG.REGION,
 		secrets: ['DROPBOX_SIGN_API_KEY'],
 	},
 	async (request) => {
-		const { auth } = request
+		const { auth, data } = request
 		const userId = auth?.uid ?? ''
+		const timezone = data?.timezone
 
 		try {
 			// Validate authentication
@@ -103,14 +108,14 @@ export const sendWaiverReminder = onCall(
 				if (now < registrationStart) {
 					throw new HttpsError(
 						'failed-precondition',
-						`Registration has not opened yet. Registration opens ${formatDateForUser(registrationStart)}.`
+						`Registration has not opened yet. Registration opens ${formatDateForUser(registrationStart, timezone)}.`
 					)
 				}
 
 				if (now > registrationEnd) {
 					throw new HttpsError(
 						'failed-precondition',
-						`Registration has closed. Registration ended ${formatDateForUser(registrationEnd)}.`
+						`Registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
 					)
 				}
 			}

@@ -1009,6 +1009,47 @@ export const revokeBadgeViaFunction = async (
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// WAIVER MANAGEMENT FUNCTIONS (ADMIN ONLY)
+//////////////////////////////////////////////////////////////////////////////
+
+interface SendWaiverAdminRequest {
+	/** Player's Firebase Auth UID */
+	playerId: string
+	/** Season document ID (optional - defaults to current season) */
+	seasonId?: string
+}
+
+interface SendWaiverAdminResponse {
+	success: true
+	playerId: string
+	seasonId: string
+	signatureRequestId: string
+	message: string
+}
+
+/**
+ * Sends a waiver signature request to a player via Firebase Function (admin only)
+ *
+ * This is used for cash payment scenarios where the player needs a waiver
+ * but didn't go through the Stripe payment flow.
+ *
+ * Security features:
+ * - Only admins can send waivers
+ * - Player must exist and be marked as paid for the season
+ * - Prevents duplicate waivers (use sendWaiverReminder instead)
+ */
+export const sendWaiverAdminViaFunction = async (
+	data: SendWaiverAdminRequest
+): Promise<SendWaiverAdminResponse> => {
+	const sendWaiverAdmin = httpsCallable<
+		SendWaiverAdminRequest,
+		SendWaiverAdminResponse
+	>(functions, 'sendWaiverAdmin')
+	const result = await sendWaiverAdmin(data)
+	return result.data
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // MIGRATION HELPERS
 //////////////////////////////////////////////////////////////////////////////
 
