@@ -105,6 +105,10 @@ export { createSeason } from './functions/admin/seasons/create.js'
 export { updateSeason } from './functions/admin/seasons/update.js'
 export { deleteSeason } from './functions/admin/seasons/delete.js'
 
+// Swiss season management functions (admin-only)
+export { setSwissSeeding } from './functions/admin/swiss/setSeeding.js'
+export { getSwissRankings } from './functions/admin/swiss/getRankings.js'
+
 // Storage functions (user-accessible)
 export { getUploadUrl } from './functions/user/storage/getUploadUrl.js'
 export { getDownloadUrl } from './functions/user/storage/getDownloadUrl.js'

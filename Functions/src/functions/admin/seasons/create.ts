@@ -10,6 +10,7 @@ import {
 	PlayerDocument,
 	PlayerSeason,
 	SeasonDocument,
+	SeasonFormat,
 	TeamDocument,
 } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
@@ -28,6 +29,8 @@ interface CreateSeasonRequest {
 		returningPlayerCouponId?: string
 		returningPlayerCouponIdDev?: string
 	}
+	/** Season format - 'traditional' or 'swiss'. Defaults to 'traditional' */
+	format?: SeasonFormat
 }
 
 interface CreateSeasonResponse {
@@ -59,6 +62,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			registrationEnd,
 			teamIds,
 			stripe,
+			format,
 		} = data
 
 		// Validate inputs
@@ -135,6 +139,8 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				registrationEnd: registrationEndTimestamp,
 				teams: teamReferences,
 				...(stripeConfig && { stripe: stripeConfig }),
+				// Only include format if it's swiss (traditional is the default)
+				...(format === SeasonFormat.SWISS && { format: SeasonFormat.SWISS }),
 			}
 
 			const seasonRef = (await firestore

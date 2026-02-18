@@ -5,7 +5,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, SeasonDocument, TeamDocument } from '../../../types.js'
+import {
+	Collections,
+	SeasonDocument,
+	SeasonFormat,
+	TeamDocument,
+} from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
@@ -23,6 +28,8 @@ interface UpdateSeasonRequest {
 		returningPlayerCouponId?: string
 		returningPlayerCouponIdDev?: string
 	}
+	/** Season format - 'traditional' or 'swiss'. Defaults to 'traditional' */
+	format?: SeasonFormat
 }
 
 interface UpdateSeasonResponse {
@@ -54,6 +61,7 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 			registrationEnd,
 			teamIds,
 			stripe,
+			format,
 		} = data
 
 		// Validate inputs
@@ -142,6 +150,8 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 				registrationEnd: registrationEndTimestamp,
 				teams: teamReferences,
 				...(stripeConfig && { stripe: stripeConfig }),
+				// Store format (undefined means traditional for backward compatibility)
+				format: format === SeasonFormat.SWISS ? SeasonFormat.SWISS : undefined,
 			}
 
 			await seasonRef.update(updateData)
