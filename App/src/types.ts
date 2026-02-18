@@ -85,6 +85,16 @@ export enum GameType {
 	PLAYOFF = 'playoff',
 }
 
+/**
+ * Season format type
+ * - traditional: Standard win/loss standings sorted by wins, then point differential
+ * - swiss: Swiss-style tournament with rankings based on Wins × 2 + Buchholz score
+ */
+export enum SeasonFormat {
+	TRADITIONAL = 'traditional',
+	SWISS = 'swiss',
+}
+
 /////////////////////////////////////////////////////////////////
 //////////////////////// Firestore Document Types ///////////////
 /////////////////////////////////////////////////////////////////
@@ -195,6 +205,10 @@ export interface SeasonDocument extends DocumentData {
 	teams: DocumentReference<TeamDocument>[]
 	/** Stripe payment configuration for this season */
 	stripe?: SeasonStripeConfig
+	/** Season format type - defaults to 'traditional' for backward compatibility */
+	format?: SeasonFormat
+	/** Initial team seeding for Swiss seasons (array of team IDs, index 0 = seed 1) */
+	swissInitialSeeding?: string[]
 }
 
 /**
