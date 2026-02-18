@@ -744,6 +744,8 @@ interface CreateSeasonRequest {
 		returningPlayerCouponId?: string
 		returningPlayerCouponIdDev?: string
 	}
+	/** Season format - 'traditional' or 'swiss'. Defaults to 'traditional' */
+	format?: SeasonFormat
 }
 
 interface CreateSeasonResponse {
@@ -786,6 +788,8 @@ interface UpdateSeasonRequest {
 		returningPlayerCouponId?: string
 		returningPlayerCouponIdDev?: string
 	}
+	/** Season format - 'traditional' or 'swiss'. Defaults to 'traditional' */
+	format?: SeasonFormat
 }
 
 interface UpdateSeasonResponse {
@@ -1098,7 +1102,7 @@ export const removeFromTeam = async (
 // SITE SETTINGS FUNCTIONS (ADMIN ONLY)
 //////////////////////////////////////////////////////////////////////////////
 
-import type { ThemeVariant } from '@/types'
+import type { ThemeVariant, SeasonFormat } from '@/types'
 
 interface UpdateSiteSettingsRequest {
 	themeVariant: ThemeVariant
@@ -1309,5 +1313,94 @@ export const deleteReplyViaFunction = async (
 		'deleteReply'
 	)
 	const result = await deleteReplyFn(data)
+	return result.data
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// SWISS SEASON MANAGEMENT FUNCTIONS (ADMIN ONLY)
+//////////////////////////////////////////////////////////////////////////////
+
+interface SetSwissSeedingRequest {
+	/** Season document ID */
+	seasonId: string
+	/** Team IDs in seeding order (index 0 = seed 1) */
+	teamSeeding: string[]
+}
+
+interface SetSwissSeedingResponse {
+	success: boolean
+	message: string
+	seasonId: string
+	teamsSeeded: number
+}
+
+/**
+ * Set or update initial seeding for a Swiss season (admin only)
+ *
+ * Security features:
+ * - Only admins can set seeding
+ * - Season must be in Swiss format
+ * - All team IDs must belong to the season
+ */
+export const setSwissSeedingViaFunction = async (
+	data: SetSwissSeedingRequest
+): Promise<SetSwissSeedingResponse> => {
+	const setSwissSeeding = httpsCallable<
+		SetSwissSeedingRequest,
+		SetSwissSeedingResponse
+	>(functions, 'setSwissSeeding')
+	const result = await setSwissSeeding(data)
+	return result.data
+}
+
+/**
+ * Swiss ranking for a team (returned from getSwissRankings)
+ */
+export interface SwissRanking {
+	teamId: string
+	rank: number
+	wins: number
+	losses: number
+	buchholzScore: number
+	swissScore: number
+	pointDifferential: number
+	pointsFor: number
+	pointsAgainst: number
+	opponentIds: string[]
+}
+
+interface GetSwissRankingsRequest {
+	/** Season document ID */
+	seasonId: string
+}
+
+interface GetSwissRankingsResponse {
+	success: boolean
+	seasonId: string
+	seasonName: string
+	format: SeasonFormat
+	rankings: SwissRanking[]
+	swissInitialSeeding: string[] | null
+	gamesPlayed: number
+	totalTeams: number
+}
+
+/**
+ * Get current Swiss rankings for a season (admin only)
+ *
+ * Returns full ranking data including Buchholz breakdown
+ *
+ * Security features:
+ * - Only admins can access this function
+ * - Season must exist
+ */
+export const getSwissRankingsViaFunction = async (
+	data: GetSwissRankingsRequest
+): Promise<GetSwissRankingsResponse> => {
+	const getSwissRankings = httpsCallable<
+		GetSwissRankingsRequest,
+		GetSwissRankingsResponse
+	>(functions, 'getSwissRankings')
+	const result = await getSwissRankings(data)
 	return result.data
 }
