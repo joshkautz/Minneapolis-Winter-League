@@ -10,11 +10,13 @@ import {
 	useGamesContext,
 	useSeasonsContext,
 } from '@/providers'
-import { useStandings } from '@/shared/hooks'
+import { useStandings, useSwissStandings } from '@/shared/hooks'
 import { StandingsTable } from './standings-table'
+import { SwissStandingsTable } from './swiss-standings-table'
 import { ResultsTable } from './results-table'
-import { formatTimestamp } from '@/shared/utils'
+import { formatTimestamp, SeasonFormat } from '@/shared/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 export const Standings = () => {
 	const { selectedSeasonTeamsQuerySnapshot } = useTeamsContext()
@@ -22,8 +24,19 @@ export const Standings = () => {
 		useGamesContext()
 	const { selectedSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
-	const standings = useStandings(regularSeasonGamesQuerySnapshot)
+	// Check if this is a Swiss-format season
+	const seasonData = selectedSeasonQueryDocumentSnapshot?.data()
+	const isSwissFormat = seasonData?.format === SeasonFormat.SWISS
+
+	// Use appropriate standings hook based on format
+	const traditionalStandings = useStandings(regularSeasonGamesQuerySnapshot)
+	const swissStandings = useSwissStandings(regularSeasonGamesQuerySnapshot)
 	const results = useStandings(playoffGamesQuerySnapshot)
+
+	// Choose which standings to display
+	const hasStandings = isSwissFormat
+		? Object.keys(swissStandings).length > 0
+		: Object.keys(traditionalStandings).length > 0
 
 	return (
 		<PageContainer withSpacing withGap>
@@ -38,8 +51,7 @@ export const Standings = () => {
 				<div className='flex items-center justify-center min-h-[400px]'>
 					<LoadingSpinner size='lg' />
 				</div>
-			) : Object.keys(standings).length === 0 &&
-			  Object.keys(results).length === 0 ? (
+			) : !hasStandings && Object.keys(results).length === 0 ? (
 				<ComingSoon>
 					<p>
 						{`No standings yet exists for the season. Check back after games start on ${formatTimestamp(selectedSeasonQueryDocumentSnapshot?.data()?.dateStart)}.`}
@@ -48,19 +60,31 @@ export const Standings = () => {
 			) : (
 				<>
 					{/* Regular Season Section */}
-					{Object.keys(standings).length > 0 && (
+					{hasStandings && (
 						<Card>
 							<CardHeader>
 								<CardTitle className='flex items-center gap-2'>
 									<Trophy className='h-5 w-5' />
 									Weeks 1-5 (Regular Season)
+									{isSwissFormat && (
+										<Badge variant='outline' className='ml-2'>
+											Swiss Format
+										</Badge>
+									)}
 								</CardTitle>
 							</CardHeader>
 							<CardContent>
-								<StandingsTable
-									standings={standings}
-									teamsQuerySnapshot={selectedSeasonTeamsQuerySnapshot}
-								/>
+								{isSwissFormat ? (
+									<SwissStandingsTable
+										standings={swissStandings}
+										teamsQuerySnapshot={selectedSeasonTeamsQuerySnapshot}
+									/>
+								) : (
+									<StandingsTable
+										standings={traditionalStandings}
+										teamsQuerySnapshot={selectedSeasonTeamsQuerySnapshot}
+									/>
+								)}
 							</CardContent>
 						</Card>
 					)}
