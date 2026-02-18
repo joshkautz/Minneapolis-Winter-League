@@ -55,8 +55,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { DestructiveConfirmationDialog } from '@/shared/components/destructive-confirmation-dialog'
-import { SeasonDocument, TeamDocument } from '@/types'
+import { SeasonDocument, SeasonFormat, TeamDocument } from '@/types'
 
 interface ProcessedSeason {
 	id: string
@@ -73,6 +74,7 @@ interface ProcessedSeason {
 		returningPlayerCouponId?: string
 		returningPlayerCouponIdDev?: string
 	}
+	format?: SeasonFormat
 }
 
 type DialogMode = 'create' | 'edit' | null
@@ -122,6 +124,11 @@ export const SeasonManagement = () => {
 	const [formStripeCouponId, setFormStripeCouponId] = useState('')
 	const [formStripeCouponIdDev, setFormStripeCouponIdDev] = useState('')
 
+	// Season format state
+	const [formFormat, setFormFormat] = useState<SeasonFormat>(
+		SeasonFormat.TRADITIONAL
+	)
+
 	// Team selection state
 	const [availableTeams, setAvailableTeams] = useState<
 		{ id: string; name: string }[]
@@ -166,6 +173,7 @@ export const SeasonManagement = () => {
 							teamIds,
 							teamCount: teamIds.length,
 							stripe: seasonData.stripe,
+							format: seasonData.format,
 						} as ProcessedSeason
 					} catch (error) {
 						logger.error('Error processing season', error, { seasonId })
@@ -244,6 +252,8 @@ export const SeasonManagement = () => {
 		setFormStripePriceIdDev('')
 		setFormStripeCouponId('')
 		setFormStripeCouponIdDev('')
+		// Reset format to default
+		setFormFormat(SeasonFormat.TRADITIONAL)
 	}
 
 	const openEditDialog = (season: ProcessedSeason) => {
@@ -260,6 +270,8 @@ export const SeasonManagement = () => {
 		setFormStripePriceIdDev(season.stripe?.priceIdDev || '')
 		setFormStripeCouponId(season.stripe?.returningPlayerCouponId || '')
 		setFormStripeCouponIdDev(season.stripe?.returningPlayerCouponIdDev || '')
+		// Populate format
+		setFormFormat(season.format || SeasonFormat.TRADITIONAL)
 	}
 
 	const closeDialog = () => {
@@ -278,6 +290,8 @@ export const SeasonManagement = () => {
 		setFormStripePriceIdDev('')
 		setFormStripeCouponId('')
 		setFormStripeCouponIdDev('')
+		// Reset format
+		setFormFormat(SeasonFormat.TRADITIONAL)
 	}
 
 	const handleAddTeam = () => {
@@ -338,6 +352,7 @@ export const SeasonManagement = () => {
 				registrationEnd: new Date(formRegistrationEnd),
 				teamIds: formTeamIds,
 				stripe: stripeConfig,
+				format: formFormat,
 			}
 
 			if (dialogMode === 'create') {
@@ -492,7 +507,14 @@ export const SeasonManagement = () => {
 									{seasons.map((season) => (
 										<TableRow key={season.id}>
 											<TableCell>
-												<div className='font-medium'>{season.name}</div>
+												<div className='flex items-center gap-2'>
+													<span className='font-medium'>{season.name}</span>
+													{season.format === SeasonFormat.SWISS && (
+														<Badge variant='outline' className='text-xs'>
+															Swiss
+														</Badge>
+													)}
+												</div>
 											</TableCell>
 											<TableCell>
 												<div className='text-sm space-y-1'>
@@ -588,6 +610,46 @@ export const SeasonManagement = () => {
 							/>
 							<p className='text-xs text-muted-foreground'>
 								{formName.length}/100 characters
+							</p>
+						</div>
+
+						{/* Season Format */}
+						<div className='space-y-2'>
+							<Label>Season Format</Label>
+							<RadioGroup
+								value={formFormat}
+								onValueChange={(value) => setFormFormat(value as SeasonFormat)}
+								className='flex gap-6'
+							>
+								<div className='flex items-center space-x-2'>
+									<RadioGroupItem
+										value={SeasonFormat.TRADITIONAL}
+										id='format-traditional'
+									/>
+									<Label
+										htmlFor='format-traditional'
+										className='font-normal cursor-pointer'
+									>
+										Traditional
+									</Label>
+								</div>
+								<div className='flex items-center space-x-2'>
+									<RadioGroupItem
+										value={SeasonFormat.SWISS}
+										id='format-swiss'
+									/>
+									<Label
+										htmlFor='format-swiss'
+										className='font-normal cursor-pointer'
+									>
+										Swiss
+									</Label>
+								</div>
+							</RadioGroup>
+							<p className='text-xs text-muted-foreground'>
+								{formFormat === SeasonFormat.SWISS
+									? 'Swiss format uses Wins × 2 + Buchholz for rankings'
+									: 'Traditional format ranks by wins, then point differential'}
 							</p>
 						</div>
 
