@@ -29,6 +29,7 @@ import {
 	Users,
 	Award,
 	Palette,
+	RefreshCw,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 
@@ -202,6 +203,27 @@ export const AdminDashboard = () => {
 							<Link to='/admin/season-management'>
 								<Calendar className='h-4 w-4 mr-2' />
 								Manage Seasons
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* Swiss Rankings */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<RefreshCw className='h-5 w-5 text-amber-600' />
+							Swiss Rankings
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							View Swiss-format season rankings with Buchholz scores. Set
+							initial seeding and view matchup patterns.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/swiss-rankings'>
+								<RefreshCw className='h-4 w-4 mr-2' />
+								Swiss Rankings
 							</Link>
 						</Button>
 					</CardContent>

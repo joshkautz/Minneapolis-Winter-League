@@ -99,6 +99,10 @@ export const SeasonManagement = lazyImport(
 	() => import('@/features/admin/season-management'),
 	'SeasonManagement'
 )
+export const SwissRankings = lazyImport(
+	() => import('@/features/admin/swiss-rankings'),
+	'SwissRankings'
+)
 export const TeamManagement = lazyImport(
 	() => import('@/features/admin/team-management'),
 	'TeamManagement'

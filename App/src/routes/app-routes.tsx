@@ -20,6 +20,7 @@ import {
 	NewsManagement,
 	PostsManagement,
 	SeasonManagement,
+	SwissRankings,
 	GameManagement,
 	RegistrationManagement,
 	BadgeManagement,
@@ -226,6 +227,16 @@ export const AppRoutes = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<SeasonManagement />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/admin/swiss-rankings'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<SwissRankings />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}
