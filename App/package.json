@@ -99,7 +99,7 @@
 		]
 	},
 	"devDependencies": {
-		"@tailwindcss/postcss": "^4.1.18",
+		"@tailwindcss/postcss": "^4.2.0",
 		"@types/bad-words": "^3.0.3",
 		"@types/node": "^25.2.3",
 		"@types/react": "^19.2.14",
