@@ -1,12 +1,12 @@
 /**
- * Swiss Pairing Guide component
+ * Swiss Pairing Guide component (Monrad System)
  *
  * Displays suggested matchups based on current Swiss standings
- * to help admins create games for the upcoming week
+ * using the Monrad system to avoid repeat matchups.
  */
 
 import { useMemo } from 'react'
-import { Info } from 'lucide-react'
+import { Info, AlertTriangle, CheckCircle2, RefreshCw } from 'lucide-react'
 import {
 	Card,
 	CardContent,
@@ -27,7 +27,12 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useSwissStandings, sortBySwissScore } from '@/shared/hooks'
+import { Badge } from '@/components/ui/badge'
+import { useSwissStandings } from '@/shared/hooks'
+import {
+	useMonradPairings,
+	getMatchupCount,
+} from '@/shared/hooks/use-monrad-pairings'
 import { QuerySnapshot } from '@/firebase'
 import { GameDocument, TeamDocument } from '@/types'
 
@@ -36,52 +41,16 @@ interface SwissPairingGuideProps {
 	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
 }
 
-/**
- * Swiss pairing template
- * Teams are grouped into brackets by rank for competitive matchups
- */
-const PAIRING_TEMPLATE = [
-	{
-		round: 1,
-		fieldA: [1, 2],
-		fieldB: [6, 5],
-		fieldC: [7, 8],
-	},
-	{
-		round: 2,
-		fieldA: [1, 3],
-		fieldB: [6, 10],
-		fieldC: [7, 11],
-	},
-	{
-		round: 3,
-		fieldA: [2, 4],
-		fieldB: [5, 9],
-		fieldC: [8, 12],
-	},
-	{
-		round: 4,
-		fieldA: [3, 4],
-		fieldB: [10, 9],
-		fieldC: [11, 12],
-	},
-]
-
 export const SwissPairingGuide = ({
 	gamesQuerySnapshot,
 	teamsQuerySnapshot,
 }: SwissPairingGuideProps) => {
 	const standings = useSwissStandings(gamesQuerySnapshot)
-
-	// Get sorted team list by Swiss score
-	const rankedTeams = useMemo(() => {
-		const entries = Object.entries(standings)
-		entries.sort(sortBySwissScore)
-		return entries.map(([teamId], index) => ({
-			teamId,
-			rank: index + 1,
-		}))
-	}, [standings])
+	const { pairings, bye } = useMonradPairings(
+		standings,
+		gamesQuerySnapshot,
+		teamsQuerySnapshot
+	)
 
 	// Create a map of teamId to team name
 	const teamNameMap = useMemo(() => {
@@ -92,34 +61,48 @@ export const SwissPairingGuide = ({
 		return map
 	}, [teamsQuerySnapshot])
 
-	// Get team name by rank (1-indexed)
-	const getTeamByRank = (rank: number): string => {
-		const team = rankedTeams[rank - 1]
-		if (!team) return `Rank ${rank}`
-		return teamNameMap.get(team.teamId) || `Rank ${rank}`
+	// Get team name by ID
+	const getTeamName = (teamId: string): string => {
+		return teamNameMap.get(teamId) || teamId
 	}
 
-	// Format a matchup cell
-	const formatMatchup = (ranks: number[]): string => {
-		const team1 = getTeamByRank(ranks[0])
-		const team2 = getTeamByRank(ranks[1])
-		return `${team1} vs ${team2}`
+	// Count total past games for context
+	const totalGamesPlayed =
+		gamesQuerySnapshot?.docs.filter((doc) => {
+			const game = doc.data()
+			return game.homeScore !== null && game.awayScore !== null
+		}).length || 0
+
+	// Count repeat matchups in suggestions
+	const repeatCount = pairings.filter((p) => p.isRepeat).length
+
+	// Assign field labels based on ranking brackets
+	// Field A: Top teams, Field B: Middle teams, Field C: Developing teams
+	const getFieldLabel = (index: number): string => {
+		const labels = ['A', 'B', 'C', 'A', 'B', 'C']
+		return `Field ${labels[index] || String.fromCharCode(65 + (index % 3))}`
 	}
 
-	// Check if we have enough teams for the guide
-	const hasEnoughTeams = rankedTeams.length >= 12
+	// Get bracket label based on average rank
+	const getBracketLabel = (rank1: number, rank2: number): string => {
+		const avgRank = (rank1 + rank2) / 2
+		if (avgRank <= 4) return 'Top'
+		if (avgRank <= 8) return 'Middle'
+		return 'Developing'
+	}
 
-	if (!hasEnoughTeams && rankedTeams.length === 0) {
+	if (pairings.length === 0) {
 		return (
 			<Card>
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2 text-base'>
 						<Info className='h-4 w-4 text-blue-600' />
-						Swiss Pairing Guide
+						Swiss Pairing Guide (Monrad)
 					</CardTitle>
 					<CardDescription>
-						No standings data available yet. Play some games first to see
-						suggested pairings.
+						{teamsQuerySnapshot && teamsQuerySnapshot.docs.length > 0
+							? 'No standings data available yet. Pairings will be generated after games are played.'
+							: 'No teams found for this season.'}
 					</CardDescription>
 				</CardHeader>
 			</Card>
@@ -131,33 +114,40 @@ export const SwissPairingGuide = ({
 			<CardHeader>
 				<CardTitle className='flex items-center gap-2 text-base'>
 					<Info className='h-4 w-4 text-blue-600' />
-					Swiss Pairing Guide
+					Swiss Pairing Guide (Monrad)
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<button
 								type='button'
 								className='cursor-help'
-								aria-label='About Swiss Pairing'
+								aria-label='About Monrad Pairing'
 							>
 								<Info className='h-4 w-4 text-muted-foreground' />
 							</button>
 						</TooltipTrigger>
 						<TooltipContent className='max-w-xs'>
 							<p>
-								Swiss pairings match teams with similar rankings. Top teams play
-								on Field A, middle teams on Field B, and developing teams on
-								Field C for competitive games.
+								Monrad pairings match teams by similar rankings while avoiding
+								repeat matchups. Teams play opponents they haven&apos;t faced
+								yet whenever possible.
 							</p>
 						</TooltipContent>
 					</Tooltip>
 				</CardTitle>
-				<CardDescription>
-					Suggested matchups based on current standings
-					{!hasEnoughTeams && rankedTeams.length > 0 && (
-						<span className='text-amber-600 ml-2'>
-							(Only {rankedTeams.length} teams have played - need 12 for full
-							pairings)
-						</span>
+				<CardDescription className='flex items-center gap-4'>
+					<span>
+						Suggested matchups for next week based on current standings
+					</span>
+					{totalGamesPlayed > 0 && (
+						<Badge variant='outline' className='text-xs'>
+							{totalGamesPlayed} games played
+						</Badge>
+					)}
+					{repeatCount > 0 && (
+						<Badge variant='secondary' className='text-xs text-amber-600'>
+							<RefreshCw className='h-3 w-3 mr-1' />
+							{repeatCount} repeat{repeatCount > 1 ? 's' : ''} unavoidable
+						</Badge>
 					)}
 				</CardDescription>
 			</CardHeader>
@@ -166,29 +156,96 @@ export const SwissPairingGuide = ({
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead className='w-20'>Round</TableHead>
-								<TableHead>Field A (Top)</TableHead>
-								<TableHead>Field B (Middle)</TableHead>
-								<TableHead>Field C (Developing)</TableHead>
+								<TableHead className='w-24'>Field</TableHead>
+								<TableHead>Matchup</TableHead>
+								<TableHead className='w-24 text-center'>Ranks</TableHead>
+								<TableHead className='w-28 text-center'>Bracket</TableHead>
+								<TableHead className='w-24 text-center'>Status</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{PAIRING_TEMPLATE.map((row) => (
-								<TableRow key={row.round}>
-									<TableCell className='font-medium'>{row.round}</TableCell>
-									<TableCell className='text-sm'>
-										{formatMatchup(row.fieldA)}
-									</TableCell>
-									<TableCell className='text-sm'>
-										{formatMatchup(row.fieldB)}
-									</TableCell>
-									<TableCell className='text-sm'>
-										{formatMatchup(row.fieldC)}
-									</TableCell>
-								</TableRow>
-							))}
+							{pairings.map((pairing, index) => {
+								const matchupCount = getMatchupCount(
+									pairing.team1Id,
+									pairing.team2Id,
+									gamesQuerySnapshot
+								)
+
+								return (
+									<TableRow key={`${pairing.team1Id}-${pairing.team2Id}`}>
+										<TableCell className='font-medium'>
+											{getFieldLabel(index)}
+										</TableCell>
+										<TableCell>
+											<span className='font-medium'>
+												{getTeamName(pairing.team1Id)}
+											</span>
+											<span className='text-muted-foreground mx-2'>vs</span>
+											<span className='font-medium'>
+												{getTeamName(pairing.team2Id)}
+											</span>
+										</TableCell>
+										<TableCell className='text-center text-muted-foreground'>
+											#{pairing.team1Rank} vs #{pairing.team2Rank}
+										</TableCell>
+										<TableCell className='text-center'>
+											<Badge variant='outline' className='text-xs'>
+												{getBracketLabel(pairing.team1Rank, pairing.team2Rank)}
+											</Badge>
+										</TableCell>
+										<TableCell className='text-center'>
+											{pairing.isRepeat ? (
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<span className='inline-flex items-center text-amber-600'>
+															<RefreshCw className='h-4 w-4' />
+														</span>
+													</TooltipTrigger>
+													<TooltipContent>
+														<p>
+															Repeat matchup ({matchupCount} previous game
+															{matchupCount > 1 ? 's' : ''}) - no other
+															opponents available
+														</p>
+													</TooltipContent>
+												</Tooltip>
+											) : (
+												<Tooltip>
+													<TooltipTrigger asChild>
+														<span className='inline-flex items-center text-green-600'>
+															<CheckCircle2 className='h-4 w-4' />
+														</span>
+													</TooltipTrigger>
+													<TooltipContent>
+														<p>First time matchup</p>
+													</TooltipContent>
+												</Tooltip>
+											)}
+										</TableCell>
+									</TableRow>
+								)
+							})}
 						</TableBody>
 					</Table>
+				</div>
+
+				{bye && (
+					<div className='mt-4 p-3 bg-amber-50 dark:bg-amber-950 rounded-md flex items-center gap-2'>
+						<AlertTriangle className='h-4 w-4 text-amber-600' />
+						<span className='text-sm text-amber-800 dark:text-amber-200'>
+							<strong>{getTeamName(bye)}</strong> has a bye this week (odd
+							number of teams)
+						</span>
+					</div>
+				)}
+
+				<div className='mt-4 text-xs text-muted-foreground'>
+					<p>
+						<strong>How it works:</strong> Teams are paired by Swiss ranking,
+						with higher-ranked teams playing each other. The algorithm avoids
+						repeat matchups whenever possible, finding the next-closest ranked
+						opponent if needed.
+					</p>
 				</div>
 			</CardContent>
 		</Card>
