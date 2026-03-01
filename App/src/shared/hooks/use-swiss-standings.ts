@@ -2,8 +2,12 @@
  * Swiss Standings Hook
  *
  * Calculates Swiss-style tournament standings from games
- * Swiss Score = Wins × 2 + Buchholz (sum of opponents' wins)
+ * Swiss Score = Wins × 10 + Buchholz (sum of opponents' wins)
  * Tiebreaker = point differential
+ *
+ * The win multiplier (10) ensures wins are the primary factor in rankings,
+ * while Buchholz (strength of schedule) serves as a meaningful tiebreaker
+ * for teams with identical records.
  */
 
 import { useMemo } from 'react'
@@ -133,8 +137,8 @@ export const useSwissStandings = (
 				return sum + (teamWins[opponentId] || 0)
 			}, 0)
 
-			// Swiss Score = Wins × 2 + Buchholz
-			const swissScore = stats.wins * 2 + buchholzScore
+			// Swiss Score = Wins × 10 + Buchholz
+			const swissScore = stats.wins * 10 + buchholzScore
 
 			result[teamId] = {
 				wins: stats.wins,

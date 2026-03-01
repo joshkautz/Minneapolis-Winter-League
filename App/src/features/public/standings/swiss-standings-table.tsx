@@ -133,6 +133,26 @@ export const SwissStandingsTable = ({
 								</TooltipContent>
 							</Tooltip>
 						</TableHead>
+						<TableHead className='w-20 text-center' scope='col'>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<button
+										type='button'
+										className='cursor-help font-medium'
+										aria-label='Swiss Score'
+									>
+										Score
+									</button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>
+										Swiss Score: (Wins × 10) + Buchholz. Buchholz is the sum of
+										your opponents' wins, rewarding teams with tougher
+										schedules.
+									</p>
+								</TooltipContent>
+							</Tooltip>
+						</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody>
@@ -188,6 +208,9 @@ export const SwissStandingsTable = ({
 								>
 									{standing.differential > 0 ? '+' : ''}
 									{standing.differential}
+								</TableCell>
+								<TableCell className='text-center font-medium' role='cell'>
+									{standing.swissScore}
 									{/* Link overlay for entire row */}
 									<Link
 										to={`/teams/${teamEntry?.id}`}

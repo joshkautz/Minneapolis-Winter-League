@@ -69,8 +69,14 @@ import {
 import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import { logger } from '@/shared/utils'
 import { useQueryErrorHandler } from '@/shared/hooks'
-import { GameDocument, SeasonDocument, TeamDocument } from '@/types'
+import {
+	GameDocument,
+	SeasonDocument,
+	SeasonFormat,
+	TeamDocument,
+} from '@/types'
 import { Timestamp } from '@firebase/firestore'
+import { SwissPairingGuide } from './swiss-pairing-guide'
 
 interface GameFormData {
 	date: string
@@ -518,6 +524,38 @@ export const GameManagement = () => {
 			)
 		: []
 
+	// Check if the filtered season is Swiss format
+	const filteredSeason = seasons?.find((s) => s.id === filterSeasonId)
+	const isSwissFormat = filteredSeason?.format === SeasonFormat.SWISS
+
+	// Get games snapshot filtered by season for Swiss standings calculation
+	const filteredGamesForStandings = gamesSnapshot?.docs.filter(
+		(doc) =>
+			doc.data().season.id === filterSeasonId && doc.data().type === 'regular'
+	)
+	const filteredGamesQuerySnapshot = filteredGamesForStandings
+		? {
+				docs: filteredGamesForStandings,
+				size: filteredGamesForStandings.length,
+				empty: filteredGamesForStandings.length === 0,
+			}
+		: undefined
+
+	// Get teams for the filtered season
+	const filteredSeasonTeamsSnapshot = allTeamsQuerySnapshot?.docs.filter(
+		(doc) => {
+			const teamData = doc.data()
+			return teamData.season?.id === filterSeasonId
+		}
+	)
+	const filteredTeamsQuerySnapshot = filteredSeasonTeamsSnapshot
+		? {
+				docs: filteredSeasonTeamsSnapshot,
+				size: filteredSeasonTeamsSnapshot.length,
+				empty: filteredSeasonTeamsSnapshot.length === 0,
+			}
+		: undefined
+
 	const sortedGames = filteredGames.length
 		? [...filteredGames].sort((a, b) => {
 				const dateCompare = a.date.toMillis() - b.date.toMillis()
@@ -610,6 +648,22 @@ export const GameManagement = () => {
 					Create Game
 				</Button>
 			</div>
+
+			{/* Swiss Pairing Guide - only shown for Swiss format seasons */}
+			{isSwissFormat && filterSeasonId && (
+				<SwissPairingGuide
+					gamesQuerySnapshot={
+						filteredGamesQuerySnapshot as Parameters<
+							typeof SwissPairingGuide
+						>[0]['gamesQuerySnapshot']
+					}
+					teamsQuerySnapshot={
+						filteredTeamsQuerySnapshot as Parameters<
+							typeof SwissPairingGuide
+						>[0]['teamsQuerySnapshot']
+					}
+				/>
+			)}
 
 			{/* Games Table */}
 			<Card>
