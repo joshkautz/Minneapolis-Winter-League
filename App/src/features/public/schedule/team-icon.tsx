@@ -9,7 +9,7 @@ export const TeamIcon = ({
 }) => {
 	if (!team) {
 		return (
-			<div className={'flex flex-col items-center gap-1'}>
+			<div className={'shrink-0 flex flex-col items-center gap-1'}>
 				<div
 					className={
 						'w-8 h-8 bg-muted border-2 border-dashed border-muted-foreground mx-auto rounded-full flex items-center justify-center'
@@ -26,7 +26,7 @@ export const TeamIcon = ({
 	const firstLetter = teamName?.charAt(0).toUpperCase() || '?'
 
 	return (
-		<Link to={`/teams/${team.id}`}>
+		<Link to={`/teams/${team.id}`} className='shrink-0 inline-flex'>
 			{url ? (
 				<img
 					className={cn(
