@@ -15,7 +15,7 @@ export const ScheduleGrid = () => {
 	// If there are no upcoming games, render all games in ascending order (original behavior)
 	if (upcomingRounds.length === 0) {
 		return (
-			<div className={'flex flex-wrap gap-8'}>
+			<div className='grid gap-6 md:grid-cols-2 xl:grid-cols-3'>
 				{rounds.map((games, index) => (
 					<ScheduleCard
 						key={`schedule-card-${index}`}
@@ -33,7 +33,7 @@ export const ScheduleGrid = () => {
 			{/* Upcoming Games Section */}
 			<div className={'flex flex-col gap-4'}>
 				<h2 className={'text-2xl font-semibold'}>Upcoming Games</h2>
-				<div className={'flex flex-wrap gap-8'}>
+				<div className='grid gap-6 md:grid-cols-2 xl:grid-cols-3'>
 					{upcomingRounds.map(({ round, originalIndex }) => (
 						<ScheduleCard
 							key={`upcoming-schedule-card-${originalIndex}`}
@@ -47,7 +47,7 @@ export const ScheduleGrid = () => {
 			{/* Completed Games Section */}
 			<div className={'flex flex-col gap-4'}>
 				<h2 className={'text-2xl font-semibold'}>Completed Games</h2>
-				<div className={'flex flex-wrap gap-8'}>
+				<div className='grid gap-6 md:grid-cols-2 xl:grid-cols-3'>
 					{completedRounds.map(({ round, originalIndex }) => (
 						<ScheduleCard
 							key={`completed-schedule-card-${originalIndex}`}

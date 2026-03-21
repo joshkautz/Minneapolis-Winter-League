@@ -27,7 +27,7 @@ export const ScheduleCard = ({
 	const isMobile = useIsMobile()
 
 	return (
-		<Card className={'flex-1 shrink-0 basis-80'}>
+		<Card className='w-full'>
 			<CardHeader>
 				<CardTitle>{title}</CardTitle>
 				<CardDescription>
@@ -72,7 +72,7 @@ export const ScheduleCard = ({
 											<TooltipTrigger asChild>
 												<div className='flex min-w-0 items-center justify-start gap-1'>
 													{!isMobile && <TeamIcon team={homeTeam} />}
-													<span className='text-muted-foreground truncate text-xs'>
+													<span className='text-foreground truncate text-xs font-medium'>
 														{homeTeam?.data().name || 'To Be Determined'}
 													</span>
 												</div>
@@ -92,9 +92,9 @@ export const ScheduleCard = ({
 									<TooltipProvider>
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<div className='flex min-w-0 items-center justify-end gap-1'>
+												<div className='flex min-w-0 items-center justify-start gap-1'>
 													{!isMobile && <TeamIcon team={awayTeam} />}
-													<span className='text-muted-foreground truncate text-right text-xs'>
+													<span className='text-foreground truncate text-xs font-medium'>
 														{awayTeam?.data().name || 'To Be Determined'}
 													</span>
 												</div>
