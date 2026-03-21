@@ -44,7 +44,7 @@ export const ScheduleCard = ({
 						})}
 				</CardDescription>
 			</CardHeader>
-			<CardContent className='flex flex-col gap-2'>
+			<CardContent className='flex flex-col gap-3'>
 				{games
 					.sort((a, b) => a.field - b.field)
 					.map((game, index) => {
@@ -63,20 +63,16 @@ export const ScheduleCard = ({
 						return (
 							<div
 								key={`schedule-row-${index}`}
-								className={'flex items-center justify-start max-h-10'}
+								className='flex min-h-10 items-center gap-3'
 							>
-								<div className={'flex-1'}>Field {index + 1}</div>
-								<div
-									className={'flex-4 flex justify-center gap-2 items-center'}
-								>
+								<div className='w-16 shrink-0 text-sm'>Field {index + 1}</div>
+								<div className='grid flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3'>
 									<TooltipProvider>
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<div className={'flex-1 inline-flex gap-1 '}>
+												<div className='flex min-w-0 items-center justify-start gap-1'>
 													{!isMobile && <TeamIcon team={homeTeam} />}
-													<span
-														className={'text-xs text-muted-foreground truncate'}
-													>
+													<span className='text-muted-foreground truncate text-xs'>
 														{homeTeam?.data().name || 'To Be Determined'}
 													</span>
 												</div>
@@ -86,7 +82,7 @@ export const ScheduleCard = ({
 											</TooltipContent>
 										</Tooltip>
 									</TooltipProvider>
-									<p className={'flex-1 select-none text-center'}>
+									<p className='w-14 shrink-0 select-none text-center text-sm'>
 										{game.date.toDate() > new Date()
 											? 'vs'
 											: game.homeScore === null || game.awayScore === null
@@ -96,14 +92,11 @@ export const ScheduleCard = ({
 									<TooltipProvider>
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<div className={'flex-1 inline-flex gap-1'}>
+												<div className='flex min-w-0 items-center justify-end gap-1'>
 													{!isMobile && <TeamIcon team={awayTeam} />}
-													<span
-														className={'text-xs text-muted-foreground truncate'}
-													>
+													<span className='text-muted-foreground truncate text-right text-xs'>
 														{awayTeam?.data().name || 'To Be Determined'}
 													</span>
-													<TeamIcon team={awayTeam} />
 												</div>
 											</TooltipTrigger>
 											<TooltipContent>
