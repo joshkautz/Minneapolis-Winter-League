@@ -14,6 +14,7 @@ import {
 	TooltipContent,
 } from '@/components/ui/tooltip'
 import { TeamIcon } from './team-icon'
+import { useIsMobile } from '@/shared/hooks/use-mobile'
 
 export const ScheduleCard = ({
 	games,
@@ -23,6 +24,7 @@ export const ScheduleCard = ({
 	title: string
 }) => {
 	const { selectedSeasonTeamsQuerySnapshot } = useTeamsContext()
+	const isMobile = useIsMobile()
 
 	return (
 		<Card className={'flex-1 shrink-0 basis-80'}>
@@ -57,6 +59,7 @@ export const ScheduleCard = ({
 							)
 						}
 
+						// on mobile, show the team name only, not the logo
 						return (
 							<div
 								key={`schedule-row-${index}`}
@@ -64,13 +67,18 @@ export const ScheduleCard = ({
 							>
 								<div className={'flex-1'}>Field {index + 1}</div>
 								<div
-									className={'flex-4 flex justify-center gap-4 items-center'}
+									className={'flex-4 flex justify-center gap-2 items-center'}
 								>
 									<TooltipProvider>
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<div className={'flex-1'}>
-													<TeamIcon team={homeTeam} />
+												<div className={'flex-1 inline-flex gap-1 '}>
+													{!isMobile && <TeamIcon team={homeTeam} />}
+													<span
+														className={'text-xs text-muted-foreground truncate'}
+													>
+														{homeTeam?.data().name || 'To Be Determined'}
+													</span>
 												</div>
 											</TooltipTrigger>
 											<TooltipContent>
@@ -88,7 +96,13 @@ export const ScheduleCard = ({
 									<TooltipProvider>
 										<Tooltip>
 											<TooltipTrigger asChild>
-												<div className={'flex-1'}>
+												<div className={'flex-1 inline-flex gap-1'}>
+													{!isMobile && <TeamIcon team={awayTeam} />}
+													<span
+														className={'text-xs text-muted-foreground truncate'}
+													>
+														{awayTeam?.data().name || 'To Be Determined'}
+													</span>
 													<TeamIcon team={awayTeam} />
 												</div>
 											</TooltipTrigger>
