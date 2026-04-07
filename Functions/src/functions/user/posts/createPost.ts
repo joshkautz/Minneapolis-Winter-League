@@ -89,8 +89,8 @@ export const createPost = onCall<
 				throw new HttpsError('not-found', 'Player profile not found')
 			}
 
-			const playerData = playerDoc.data()
-			validateNotBanned(playerData, seasonId)
+			void playerDoc.data()
+			await validateNotBanned(firestore, auth.uid, seasonId)
 
 			// Verify season exists
 			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)

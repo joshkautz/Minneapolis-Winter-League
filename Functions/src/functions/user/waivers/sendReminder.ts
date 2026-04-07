@@ -96,7 +96,7 @@ export const sendWaiverReminder = onCall<SendWaiverReminderRequest>(
 			}
 
 			// Check if player is banned for current season
-			validateNotBanned(playerData, seasonId)
+			await validateNotBanned(firestore, userId, seasonId)
 
 			// Validate registration is open (skip for admins)
 			const isAdmin = playerData.admin === true

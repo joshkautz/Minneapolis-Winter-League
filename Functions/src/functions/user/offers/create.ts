@@ -141,7 +141,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 				// - Captains from inviting banned players
 				// - Banned players from requesting to join teams
 				if (!isAdmin) {
-					validateNotBanned(playerDocument, seasonRef.id)
+					await validateNotBanned(firestore, playerId, seasonRef.id)
 				}
 
 				// Validate that registration has not ended (skip for admins)

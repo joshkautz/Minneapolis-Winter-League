@@ -104,9 +104,9 @@ export const createReply = onCall<
 				throw new HttpsError('not-found', 'Player profile not found')
 			}
 
-			const playerData = playerDoc.data()
+			void playerDoc.data()
 			const seasonId = postData.season.id
-			validateNotBanned(playerData, seasonId)
+			await validateNotBanned(firestore, auth.uid, seasonId)
 
 			// Create reply and increment reply count in a transaction
 			let replyId: string = ''

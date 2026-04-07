@@ -79,7 +79,7 @@ export const createStripeCheckout = onCall<
 
 			// Validate player is not banned for current season (skip for admins)
 			if (!isAdmin && currentSeason) {
-				validateNotBanned(playerData, currentSeason.id)
+				await validateNotBanned(firestore, userId, currentSeason.id)
 			}
 
 			// Validate registration is open (skip for admins)
