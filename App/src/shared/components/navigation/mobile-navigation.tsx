@@ -24,7 +24,7 @@ interface MobileNavigationProps {
 	isAuthenticated: boolean
 	isAuthenticatedUserAdmin: boolean
 	pendingOffersCount: number | undefined
-	requiredTasksCount: number
+	requiredTasksCount: number | undefined
 	isMobileNavOpen: boolean
 	setIsMobileNavOpen: (open: boolean) => void
 	onItemClick: () => void
@@ -53,9 +53,13 @@ export const MobileNavigation = ({
 	signOutLoading,
 	authStateLoading,
 }: MobileNavigationProps) => {
-	const totalNotifications = isAuthenticated
-		? (pendingOffersCount || 0) + requiredTasksCount
-		: 0
+	// Wait for both counts to load before showing the badge so it doesn't flash.
+	const totalNotifications =
+		isAuthenticated &&
+		pendingOffersCount !== undefined &&
+		requiredTasksCount !== undefined
+			? pendingOffersCount + requiredTasksCount
+			: 0
 
 	return (
 		<Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
@@ -110,7 +114,7 @@ interface MobileNavigationContentProps {
 	isAuthenticated: boolean
 	isAuthenticatedUserAdmin: boolean
 	pendingOffersCount: number | undefined
-	requiredTasksCount: number
+	requiredTasksCount: number | undefined
 	onItemClick: () => void
 	onSignOut: () => void
 	onLogin: () => void
@@ -203,12 +207,14 @@ const MobileNavigationContent = ({
 										position='inline'
 									/>
 								)}
-								{path === '/profile' && requiredTasksCount > 0 && (
-									<NotificationBadge
-										count={requiredTasksCount}
-										position='inline'
-									/>
-								)}
+								{path === '/profile' &&
+									requiredTasksCount !== undefined &&
+									requiredTasksCount > 0 && (
+										<NotificationBadge
+											count={requiredTasksCount}
+											position='inline'
+										/>
+									)}
 							</Link>
 						))}
 					</>

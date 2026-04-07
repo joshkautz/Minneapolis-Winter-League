@@ -15,7 +15,7 @@ interface DesktopNavigationProps {
 	setAccountPopoverOpen: Dispatch<SetStateAction<boolean>>
 	forceClosePopover: boolean
 	pendingOffersCount: number | undefined
-	requiredTasksCount: number
+	requiredTasksCount: number | undefined
 }
 
 /**

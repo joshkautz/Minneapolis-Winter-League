@@ -68,8 +68,16 @@ export const useTopNavigation = () => {
 
 	// Count of required tasks for profile completion
 	// Note: userRefreshCount is included to re-evaluate when user data is refreshed
+	// Returns undefined until all dependent data has loaded, so the notification
+	// badge does not flash a stale count while the user document is still loading.
 	const requiredTasksCount = useMemo(() => {
 		if (!authStateUser) return 0
+
+		// Wait for the player document and current season to load before counting,
+		// otherwise paid/signed default to false and the badge flashes incorrectly.
+		if (!authenticatedUserSnapshot || !currentSeasonQueryDocumentSnapshot) {
+			return undefined
+		}
 
 		let count = 0
 
@@ -92,6 +100,8 @@ export const useTopNavigation = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
 		authStateUser,
+		authenticatedUserSnapshot,
+		currentSeasonQueryDocumentSnapshot,
 		isAuthenticatedUserPaid,
 		isAuthenticatedUserSigned,
 		userRefreshCount,

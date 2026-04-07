@@ -23,7 +23,7 @@ interface AccountSectionProps {
 	setIsOpen: Dispatch<SetStateAction<boolean>>
 	forceClose: boolean
 	pendingOffersCount: number | undefined
-	requiredTasksCount: number
+	requiredTasksCount: number | undefined
 }
 
 /**
@@ -53,8 +53,12 @@ export const AccountSection = ({
 		return <LoginButton onLoginClick={onLoginClick} />
 	}
 
-	// Authenticated - show user popover
-	const totalNotifications = (pendingOffersCount || 0) + requiredTasksCount
+	// Authenticated - show user popover.
+	// Wait for both counts to load before showing the badge so it doesn't flash.
+	const totalNotifications =
+		pendingOffersCount === undefined || requiredTasksCount === undefined
+			? 0
+			: pendingOffersCount + requiredTasksCount
 
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -96,12 +100,14 @@ export const AccountSection = ({
 										position='inline'
 									/>
 								)}
-								{path === '/profile' && requiredTasksCount > 0 && (
-									<NotificationBadge
-										count={requiredTasksCount}
-										position='inline'
-									/>
-								)}
+								{path === '/profile' &&
+									requiredTasksCount !== undefined &&
+									requiredTasksCount > 0 && (
+										<NotificationBadge
+											count={requiredTasksCount}
+											position='inline'
+										/>
+									)}
 							</span>
 						</Link>
 					))}
