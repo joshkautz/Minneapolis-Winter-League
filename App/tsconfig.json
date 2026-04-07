@@ -33,6 +33,10 @@
 		// "exactOptionalPropertyTypes": true, // Temporarily disabled - enable gradually
 		// "noUncheckedIndexedAccess": true,   // Temporarily disabled - enable gradually
 
+		// `baseUrl` is deprecated in TypeScript 6.0 but still required for our
+		// path-alias resolution; suppress the deprecation warning until we
+		// migrate to bundler-resolved paths.
+		"ignoreDeprecations": "6.0",
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
