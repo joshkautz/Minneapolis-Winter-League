@@ -195,7 +195,6 @@ export const createTeam = onCall<CreateTeamRequest>(
 				] as TeamDocument['roster'],
 				registered: false,
 				placement: null,
-				karma: 0, // Initialize karma to 0
 				// registeredDate will be set when team becomes registered
 			}
 
@@ -228,7 +227,6 @@ export const createTeam = onCall<CreateTeamRequest>(
 					paid: false,
 					signed: false,
 					banned: bannedStatus,
-					lookingForTeam: false, // Not looking for team since they're creating one
 				})
 			}
 			await playerRef.update({ seasons: updatedSeasons })

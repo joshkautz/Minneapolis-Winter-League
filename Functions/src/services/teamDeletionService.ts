@@ -4,7 +4,6 @@
  * Shared service for deleting teams with full cleanup including:
  * - Player roster updates
  * - Offer deletion
- * - Karma transactions subcollection cleanup
  * - Storage logo deletion
  */
 
@@ -26,7 +25,6 @@ export interface TeamDeletionResult {
 	success: boolean
 	playersUpdated: number
 	offersDeleted: number
-	karmaTransactionsDeleted: number
 	logoDeleted: boolean
 	error?: string
 }
@@ -37,9 +35,8 @@ export interface TeamDeletionResult {
  * Performs the following operations:
  * 1. Updates all roster players: team: null, captain: false
  * 2. Deletes all offers referencing the team
- * 3. Deletes karma_transactions subcollection
- * 4. Deletes team logo from Storage (fire-and-forget)
- * 5. Deletes the team document
+ * 3. Deletes team logo from Storage (fire-and-forget)
+ * 4. Deletes the team document
  *
  * @param firestore - Firestore instance
  * @param teamRef - Reference to the team document
@@ -57,7 +54,6 @@ export async function deleteTeamWithCleanup(
 	let teamName = 'Unknown'
 	let playersUpdated = 0
 	let offersDeleted = 0
-	let karmaTransactionsDeleted = 0
 	let logoDeleted = false
 
 	try {
@@ -71,7 +67,6 @@ export async function deleteTeamWithCleanup(
 				success: false,
 				playersUpdated: 0,
 				offersDeleted: 0,
-				karmaTransactionsDeleted: 0,
 				logoDeleted: false,
 				error: 'Team not found',
 			}
@@ -86,7 +81,6 @@ export async function deleteTeamWithCleanup(
 				success: false,
 				playersUpdated: 0,
 				offersDeleted: 0,
-				karmaTransactionsDeleted: 0,
 				logoDeleted: false,
 				error: 'Unable to retrieve team data',
 			}
@@ -102,14 +96,10 @@ export async function deleteTeamWithCleanup(
 				success: false,
 				playersUpdated: 0,
 				offersDeleted: 0,
-				karmaTransactionsDeleted: 0,
 				logoDeleted: false,
 				error: 'Cannot delete a registered team',
 			}
 		}
-
-		// Delete karma_transactions subcollection (must be done outside transaction)
-		karmaTransactionsDeleted = await deleteKarmaTransactions(firestore, teamRef)
 
 		// Delete team logo from Storage (fire-and-forget)
 		if (teamDocument.storagePath) {
@@ -169,7 +159,6 @@ export async function deleteTeamWithCleanup(
 			seasonId,
 			playersUpdated,
 			offersDeleted,
-			karmaTransactionsDeleted,
 			logoDeleted,
 		})
 
@@ -179,7 +168,6 @@ export async function deleteTeamWithCleanup(
 			success: true,
 			playersUpdated,
 			offersDeleted,
-			karmaTransactionsDeleted,
 			logoDeleted,
 		}
 	} catch (error) {
@@ -198,7 +186,6 @@ export async function deleteTeamWithCleanup(
 			success: false,
 			playersUpdated,
 			offersDeleted,
-			karmaTransactionsDeleted,
 			logoDeleted,
 			error: errorMessage,
 		}
@@ -230,63 +217,6 @@ export async function deleteUnregisteredTeamsForSeasonLock(
 	}
 
 	return results
-}
-
-/**
- * Delete karma_transactions subcollection for a team
- *
- * @param firestore - Firestore instance
- * @param teamRef - Reference to the team document
- * @returns Number of transactions deleted
- */
-async function deleteKarmaTransactions(
-	firestore: FirebaseFirestore.Firestore,
-	teamRef: FirebaseFirestore.DocumentReference
-): Promise<number> {
-	try {
-		const karmaTransactionsRef = teamRef.collection('karma_transactions')
-		const snapshot = await karmaTransactionsRef.get()
-
-		if (snapshot.empty) {
-			return 0
-		}
-
-		// Delete in batches of 500 (Firestore limit)
-		const batchSize = 500
-		let deleted = 0
-		let batch = firestore.batch()
-		let operationCount = 0
-
-		for (const doc of snapshot.docs) {
-			batch.delete(doc.ref)
-			operationCount++
-			deleted++
-
-			if (operationCount >= batchSize) {
-				await batch.commit()
-				batch = firestore.batch()
-				operationCount = 0
-			}
-		}
-
-		// Commit remaining operations
-		if (operationCount > 0) {
-			await batch.commit()
-		}
-
-		logger.info('Deleted karma transactions', {
-			teamId: teamRef.id,
-			count: deleted,
-		})
-
-		return deleted
-	} catch (error) {
-		logger.warn('Failed to delete karma transactions (continuing):', {
-			teamId: teamRef.id,
-			error: error instanceof Error ? error.message : 'Unknown error',
-		})
-		return 0
-	}
 }
 
 /**

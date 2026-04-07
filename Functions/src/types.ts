@@ -131,8 +131,6 @@ export interface PlayerSeason {
 	signed: boolean
 	/** Reference to the team document (null if not on a team) */
 	team: DocumentReference<TeamDocument> | null
-	/** Whether the player is looking for a team */
-	lookingForTeam?: boolean
 }
 
 /**
@@ -157,8 +155,6 @@ export interface TeamDocument extends DocumentData {
 	storagePath: string | null
 	/** Unique team identifier */
 	teamId: string
-	/** Karma points for team's assistance to players looking for teams */
-	karma: number
 }
 
 /**
@@ -171,25 +167,6 @@ export interface TeamRosterPlayer {
 	player: DocumentReference<PlayerDocument>
 	/** Timestamp when player joined the team */
 	dateJoined: Timestamp
-}
-
-/**
- * Karma transaction document structure
- * Stored as a subcollection under teams/{teamId}/karma_transactions
- */
-export interface KarmaTransaction extends DocumentData {
-	/** Reference to the player involved in this transaction */
-	player: DocumentReference<PlayerDocument>
-	/** Reference to the team receiving/losing karma */
-	team: DocumentReference<TeamDocument>
-	/** Amount of karma added (positive) or removed (negative) */
-	amount: number
-	/** Reason for the karma transaction */
-	reason: 'player_joined' | 'player_left'
-	/** Timestamp when the transaction occurred */
-	timestamp: Timestamp
-	/** Reference to the season this transaction is associated with */
-	season: DocumentReference<SeasonDocument>
 }
 
 /**

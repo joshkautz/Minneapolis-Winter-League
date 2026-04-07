@@ -131,8 +131,6 @@ export interface PlayerSeason {
 	signed: boolean
 	/** Reference to the team document (null if not on a team) */
 	team: DocumentReference<TeamDocument> | null
-	/** Whether the player is looking for a team */
-	lookingForTeam?: boolean
 }
 
 /**
@@ -157,8 +155,6 @@ export interface TeamDocument extends DocumentData {
 	storagePath: string | null
 	/** Unique team identifier */
 	teamId: string
-	/** Karma points for team's assistance to players looking for teams */
-	karma: number
 }
 
 /**

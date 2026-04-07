@@ -193,7 +193,6 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 				] as TeamDocument['roster'],
 				registered: false, // Always false initially
 				placement: null,
-				karma: 0, // Initialize karma to 0
 			}
 
 			const newTeamRef = (await firestore
@@ -227,7 +226,6 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 					paid: false,
 					signed: false,
 					banned: bannedStatus,
-					lookingForTeam: false, // Not looking for team since they're creating one
 				})
 			}
 			await playerRef.update({ seasons: updatedSeasons })

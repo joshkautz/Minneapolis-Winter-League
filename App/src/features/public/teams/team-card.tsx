@@ -2,8 +2,6 @@ import { Link } from 'react-router-dom'
 import { cn, formatTimestampWithTime } from '@/shared/utils'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import { Sparkles } from 'lucide-react'
 import { Timestamp } from '@firebase/firestore'
 
 // Types for better TypeScript support
@@ -15,7 +13,6 @@ interface TeamCardProps {
 		registered: boolean
 		registeredDate?: Timestamp
 		rosterCount?: number // Number of players on roster
-		karma?: number // Team karma points
 	}
 	placement?: number // Placement number for registered teams
 }
@@ -38,14 +35,7 @@ const getOrdinalSuffix = (num: number): string => {
 
 // Team Card Component
 export const TeamCard = ({ teamId, teamData, placement }: TeamCardProps) => {
-	const {
-		name,
-		logo,
-		registered,
-		registeredDate,
-		rosterCount = 0,
-		karma = 0,
-	} = teamData
+	const { name, logo, registered, registeredDate, rosterCount = 0 } = teamData
 	const MIN_PLAYERS_REQUIRED = 10
 	const progressPercentage = Math.min(
 		(rosterCount / MIN_PLAYERS_REQUIRED) * 100,
@@ -117,15 +107,6 @@ export const TeamCard = ({ teamId, teamData, placement }: TeamCardProps) => {
 									<div className='text-xs text-muted-foreground'>
 										{formatTimestampWithTime(registeredDate)}
 									</div>
-								)}
-								{karma > 0 && (
-									<Badge
-										variant='outline'
-										className='text-xs font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
-									>
-										<Sparkles className='h-3 w-3 mr-1' />
-										{karma} Karma
-									</Badge>
 								)}
 							</div>
 						)}

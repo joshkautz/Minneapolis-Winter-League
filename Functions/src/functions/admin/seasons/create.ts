@@ -205,7 +205,6 @@ export const createSeason = onCall<CreateSeasonRequest>(
 					paid: false,
 					signed: false,
 					banned: bannedStatus,
-					lookingForTeam: false,
 				}
 
 				// Add new season to existing seasons array

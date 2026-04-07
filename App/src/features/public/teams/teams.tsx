@@ -187,7 +187,6 @@ export const Teams = () => {
 										registered: team.data.registered,
 										registeredDate: team.data.registeredDate,
 										rosterCount: registeredCount,
-										karma: team.data.karma || 0,
 									}}
 									placement={team.placement}
 								/>

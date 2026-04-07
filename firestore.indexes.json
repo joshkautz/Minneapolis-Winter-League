@@ -141,28 +141,6 @@
 			]
 		},
 		{
-			"collectionGroup": "karma_transactions",
-			"queryScope": "COLLECTION",
-			"fields": [
-				{
-					"fieldPath": "player",
-					"order": "ASCENDING"
-				},
-				{
-					"fieldPath": "reason",
-					"order": "ASCENDING"
-				},
-				{
-					"fieldPath": "season",
-					"order": "ASCENDING"
-				},
-				{
-					"fieldPath": "amount",
-					"order": "ASCENDING"
-				}
-			]
-		},
-		{
 			"collectionGroup": "waivers",
 			"queryScope": "COLLECTION",
 			"fields": [

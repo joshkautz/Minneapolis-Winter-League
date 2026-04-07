@@ -14,18 +14,11 @@ import {
 	TeamRosterPlayer,
 	PlayerSeason,
 	SeasonDocument,
-	DocumentReference,
-	KarmaTransaction,
 } from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { getCurrentSeason } from '../../../shared/database.js'
 import { formatDateForUser } from '../../../shared/format.js'
 import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../../config/constants.js'
-import {
-	findKarmaTransactionForPlayerJoin,
-	createKarmaTransaction,
-	KARMA_AMOUNT,
-} from '../../../services/karmaService.js'
 
 interface UpdateTeamRosterRequest {
 	teamId: string
@@ -175,17 +168,6 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 							)
 						)
 
-						// Check if team was awarded karma when this player joined
-						const seasonRef = firestore
-							.collection(Collections.SEASONS)
-							.doc(currentSeason.id) as DocumentReference<SeasonDocument>
-
-						const karmaTransaction = await findKarmaTransactionForPlayerJoin(
-							teamRef as DocumentReference<TeamDocument>,
-							playerRef as DocumentReference<PlayerDocument>,
-							seasonRef
-						)
-
 						return handleRemoveFromTeam(
 							transaction,
 							teamRef,
@@ -194,9 +176,7 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 							playerDocument,
 							playerId,
 							currentSeason.id,
-							rosterPlayerDocs,
-							seasonRef,
-							karmaTransaction
+							rosterPlayerDocs
 						)
 					}
 					default:
@@ -311,9 +291,7 @@ function handleRemoveFromTeam(
 	playerDocument: PlayerDocument,
 	playerId: string,
 	seasonId: string,
-	rosterPlayerDocs: FirebaseFirestore.DocumentSnapshot[],
-	seasonRef: FirebaseFirestore.DocumentReference<SeasonDocument>,
-	karmaTransactionFound: KarmaTransaction | null
+	rosterPlayerDocs: FirebaseFirestore.DocumentSnapshot[]
 ): { success: boolean; action: string; message: string } {
 	// Check if this is the last captain
 	const playerIsCaptain = teamDocument.roster?.find(
@@ -365,49 +343,19 @@ function handleRemoveFromTeam(
 		}
 	}
 
-	const currentKarma = teamDocument.karma || 0
-
 	// Remove player from team roster
 	const updatedRoster =
 		teamDocument.roster?.filter(
 			(member: TeamRosterPlayer) => member.player.id !== playerId
 		) || []
 
-	// Update team with new roster and adjusted karma
-	const teamUpdates: Partial<TeamDocument> = {
-		roster: updatedRoster,
-	}
-
-	// Only subtract karma if the team was awarded karma when this player joined
-	let karmaAdjustment = 0
-	if (karmaTransactionFound) {
-		karmaAdjustment = -KARMA_AMOUNT
-		teamUpdates.karma = Math.max(0, currentKarma + karmaAdjustment)
-
-		// Create a transaction record for the karma removal
-		createKarmaTransaction(
-			transaction,
-			teamRef as DocumentReference<TeamDocument>,
-			playerRef as DocumentReference<PlayerDocument>,
-			seasonRef,
-			karmaAdjustment,
-			'player_left'
-		)
-	}
-
-	transaction.update(teamRef, teamUpdates)
+	transaction.update(teamRef, { roster: updatedRoster })
 
 	// Update player seasons
-	// Note: lookingForTeam status is permanent once set, so we preserve it
 	const updatedSeasons =
 		playerDocument.seasons?.map((season: PlayerSeason) =>
 			season.season.id === seasonId
-				? {
-						...season,
-						team: null,
-						captain: false,
-						// Don't modify lookingForTeam - it's permanent once set
-					}
+				? { ...season, team: null, captain: false }
 				: season
 		) || []
 
@@ -416,8 +364,6 @@ function handleRemoveFromTeam(
 	logger.info(`Removed player from team`, {
 		teamId: teamRef.id,
 		playerId: playerRef.id,
-		karmaAdjustment,
-		hadKarmaTransaction: !!karmaTransactionFound,
 	})
 
 	return {

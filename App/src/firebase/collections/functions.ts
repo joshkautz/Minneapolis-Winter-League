@@ -135,8 +135,6 @@ interface SeasonUpdateData {
 	signed: boolean
 	/** Whether the player is banned from the season (optional, defaults to false) */
 	banned?: boolean
-	/** Whether the player is looking for a team (optional, defaults to false) */
-	lookingForTeam?: boolean
 	/** Team document ID (null if not on a team) */
 	teamId: string | null
 }
@@ -170,7 +168,6 @@ interface SeasonChanges {
 		paid?: { from: boolean; to: boolean }
 		signed?: { from: boolean; to: boolean }
 		banned?: { from: boolean; to: boolean }
-		lookingForTeam?: { from: boolean; to: boolean }
 		team?: { from: string | null; to: string | null }
 	}
 }

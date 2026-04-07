@@ -51,7 +51,6 @@ interface DeleteUnregisteredTeamResponse {
  * - Removes team reference from all player documents
  * - Sets player captain status to false
  * - Deletes all offers related to the team
- * - Deletes karma_transactions subcollection
  * - Deletes team logo from Storage
  * - Deletes the team document
  *
@@ -135,7 +134,6 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 				seasonId: currentSeason.id,
 				playersUpdated: result.playersUpdated,
 				offersDeleted: result.offersDeleted,
-				karmaTransactionsDeleted: result.karmaTransactionsDeleted,
 				logoDeleted: result.logoDeleted,
 				adminUserId: authContext?.uid,
 			})

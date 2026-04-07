@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { StarFilledIcon } from '@radix-ui/react-icons'
-import { Sparkles } from 'lucide-react'
 
 import { DocumentReference } from '@/firebase'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -16,8 +15,6 @@ import {
 	logger,
 } from '@/shared/utils'
 import { Badge } from '@/components/ui/badge'
-
-const KARMA_BONUS_FOR_LOOKING_FOR_TEAM = 100
 
 export const TeamRosterPlayer = ({
 	playerRef,
@@ -59,19 +56,6 @@ export const TeamRosterPlayer = ({
 		[playerData, seasonRef]
 	)
 
-	const isLookingForTeam = useMemo(() => {
-		if (!playerData || !seasonRef) return false
-		const seasonData = playerData.seasons?.find(
-			(s) => s.season.id === seasonRef.id
-		)
-		return seasonData?.lookingForTeam || false
-	}, [playerData, seasonRef])
-
-	const isFullyRegistered = useMemo(
-		() => isPlayerPaid && isPlayerSigned,
-		[isPlayerPaid, isPlayerSigned]
-	)
-
 	return (
 		<div>
 			{playerSnapshot ? (
@@ -85,19 +69,6 @@ export const TeamRosterPlayer = ({
 							{playerSnapshot.data()?.lastname}
 						</Link>
 						{isPlayerCaptain && <StarFilledIcon className='text-primary' />}
-						{isLookingForTeam && (
-							<Badge
-								variant='outline'
-								className={
-									isFullyRegistered
-										? 'text-xs font-normal border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20'
-										: 'text-xs font-normal border-muted-foreground/20 text-muted-foreground bg-muted/50'
-								}
-							>
-								<Sparkles className='h-3 w-3 mr-1' />+
-								{KARMA_BONUS_FOR_LOOKING_FOR_TEAM}
-							</Badge>
-						)}
 					</div>
 					<div className='flex justify-end flex-1 gap-2'>
 						<div className='flex items-center'>

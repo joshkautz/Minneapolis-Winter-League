@@ -77,7 +77,6 @@ interface SeasonFormData {
 	paid: boolean
 	signed: boolean
 	banned: boolean
-	lookingForTeam: boolean
 	teamId: string | null
 }
 
@@ -271,7 +270,6 @@ export const PlayerManagement = () => {
 						paid: ps.paid,
 						signed: ps.signed,
 						banned: ps.banned ?? false,
-						lookingForTeam: ps.lookingForTeam ?? false,
 						teamId: ps.team?.id || null,
 					})),
 				}
@@ -663,10 +661,6 @@ export const PlayerManagement = () => {
 														<Skeleton className='h-4 w-4 rounded-sm' />
 														<Skeleton className='h-4 w-14' />
 													</div>
-													<div className='flex items-center space-x-2'>
-														<Skeleton className='h-4 w-4 rounded-sm' />
-														<Skeleton className='h-4 w-28' />
-													</div>
 												</div>
 
 												{/* Team dropdown */}
@@ -1039,25 +1033,6 @@ const SeasonCard = ({
 						</Label>
 					</div>
 
-					<div className='flex items-center space-x-2'>
-						<Checkbox
-							id={`lookingForTeam-${seasonData.seasonId}`}
-							checked={seasonData.lookingForTeam}
-							onCheckedChange={(checked) =>
-								onFieldChange(
-									seasonData.seasonId,
-									'lookingForTeam',
-									checked as boolean
-								)
-							}
-						/>
-						<Label
-							htmlFor={`lookingForTeam-${seasonData.seasonId}`}
-							className='cursor-pointer'
-						>
-							Looking for Team
-						</Label>
-					</div>
 				</div>
 
 				{/* Send Waiver button - only shows when paid but not signed */}

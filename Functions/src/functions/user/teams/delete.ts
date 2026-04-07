@@ -107,7 +107,6 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 				deletedBy: userId,
 				playersUpdated: result.playersUpdated,
 				offersDeleted: result.offersDeleted,
-				karmaTransactionsDeleted: result.karmaTransactionsDeleted,
 				logoDeleted: result.logoDeleted,
 			})
 

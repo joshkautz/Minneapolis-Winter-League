@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from '@firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { Sparkles, Award, Lock, Loader2, Calendar, Trophy } from 'lucide-react'
+import { Award, Lock, Loader2, Calendar, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 import { NotificationCard } from '@/shared/components'
 import {
@@ -314,7 +314,6 @@ export const TeamProfile = () => {
 	)
 
 	const teamName = teamDocumentSnapshot?.data()?.name
-	const teamKarma = teamDocumentSnapshot?.data()?.karma
 	const teamSeasonRef = teamDocumentSnapshot?.data()?.season
 	const teamPlacement = teamDocumentSnapshot?.data()?.placement
 	const formattedPlacement = formatPlacement(teamPlacement)
@@ -359,7 +358,7 @@ export const TeamProfile = () => {
 							{teamName || 'Team'}
 						</h1>
 
-						{/* Season, Placement, and Karma Row */}
+						{/* Season and Placement Row */}
 						<div className='mt-2 flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1'>
 							{/* Season Display */}
 							{teamSeasonName && (
@@ -390,17 +389,6 @@ export const TeamProfile = () => {
 									</span>
 								</div>
 							)}
-
-							{/* Karma Display */}
-							<div
-								className='inline-flex items-center gap-1.5 text-amber-600 dark:text-amber-400'
-								aria-label={`${teamKarma ?? 0} karma points`}
-							>
-								<Sparkles className='h-4 w-4' aria-hidden='true' />
-								<span className='text-sm font-medium'>
-									{teamKarma ?? 0} Karma
-								</span>
-							</div>
 						</div>
 					</div>
 				</div>
