@@ -40,8 +40,12 @@ export const stripeWebhook = onRequest(
 				apiVersion: stripeConfig.API_VERSION,
 			})
 
-			// Get the signature header for verification
-			const sig = req.headers['stripe-signature']
+			// Get the signature header for verification.
+			// Stripe v22 tightened the constructEvent signature to accept
+			// `string | Uint8Array`, so we collapse the possible array form
+			// (which Express types but Stripe never actually sends) here.
+			const sigHeader = req.headers['stripe-signature']
+			const sig = Array.isArray(sigHeader) ? sigHeader[0] : sigHeader
 			if (!sig) {
 				logger.error('Missing Stripe signature header')
 				resp.status(400).send('Missing signature')
