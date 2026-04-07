@@ -1,0 +1,342 @@
+{
+  "generatedAt": "2026-04-07T03:34:16.757Z",
+  "totalTeams": 48,
+  "teams": [
+    {
+      "teamId": "A0mYmv3Nv9FlTcC5vZtE",
+      "name": "Nipull",
+      "karma": 900,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "35HDszXYHWwWYVV1DRUT",
+      "name": "Lemonade",
+      "karma": 700,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "z4e48FOzuLWjdtoJRA7i",
+      "name": "Surly Barrel-Aged",
+      "karma": 500,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "84sV4DhQBXuVhpoVEKIO",
+      "name": "Stars catcher",
+      "karma": 400,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "eVoNLlEBhfa8Y4B3mmFp",
+      "name": "TOUCANS",
+      "karma": 400,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "IkbwhxO0jHiCVjPqVrF5",
+      "name": "Forward Motion",
+      "karma": 300,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "ewC6UUZw0L4YQnYTxN2y",
+      "name": "nOPE",
+      "karma": 300,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "PlxXKwfHGjZkx9drIPWX",
+      "name": "Even Flow",
+      "karma": 200,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "f0mbl7j0JZ8iBKOjCONo",
+      "name": "The Blizzards",
+      "karma": 200,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "So3x9Pq3KHoYfFICUK3S",
+      "name": "Zander Stack$",
+      "karma": 200,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "uMXFPcc3nS9W524Y0KTs",
+      "name": "Dickman Park Edina Santas",
+      "karma": 100,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "tJvoZa4OItIGWTh1p3XR",
+      "name": "Squall",
+      "karma": 100,
+      "seasonId": "Q2RQ8310uNUGfHSDpMB3",
+      "seasonName": "2025 Fall"
+    },
+    {
+      "teamId": "DTzWGB7fMbUVcL3iHT08",
+      "name": "Birdtown Ballers",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "HwnUvCP9dD1t5fkTHlgP",
+      "name": "Birdtown Ballers",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "UaOUQ6B2uBB4E6K5IcGE",
+      "name": "Birdtown Ballers ",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "ifnI8V4AXxq28B0nWjJc",
+      "name": "Centrifugal Force ",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "OS4oMGXE3yAHkbGTKK5W",
+      "name": "Chaska Critters",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "953YGWlHeGAQQvtNQgil",
+      "name": "DuckLove",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "OHeeTcmNUUtICgMBVn4J",
+      "name": "Even Flow",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "hJnBb3ALKZILxo0RNfYY",
+      "name": "FATU",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "bpPhpXXK9jGpqQdiSjF3",
+      "name": "Frying Dump-Ring",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "VCQhDy4lvQY1VfLgmUlT",
+      "name": "Homemade Furby",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "AE9qWaJmhxI300Gbbuye",
+      "name": "J.O.T",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "rpmhoe8o4VDqA1xwqoqK",
+      "name": "Klane Island",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "CsfadYYv1J1KvSj4SYd0",
+      "name": "Lemonade",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "bBH8s663WJGY1C3bPZdO",
+      "name": "Lemonade",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "kocAbvNvtF4J4z5GOl93",
+      "name": "Mauston Mousers ",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "67XqRkRUwClXW8VMbuYQ",
+      "name": "Ni-pull",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "SlSQZZyeRXzYeScoBHM2",
+      "name": "Nipull",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "lwM8crhbwDbKUiEGRxmY",
+      "name": "Nipull",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "HC0eJZQajx35JtlYZ4cE",
+      "name": "nOPE",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "UYtKXok2YrFCnOVaPsMD",
+      "name": "nOPE",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "GrNZCbOFMZ8bxgc1iaIb",
+      "name": "Northeast Neutrons",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "Zl4NPP4kQ0GaZyiqUjbj",
+      "name": "Saint Paul Seacows",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "nw1HrX3dXZMecbbTSGsR",
+      "name": "Saint Paul Seacows",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "b3BM1rI4q2JuzLyPHh2K",
+      "name": "Seatbelt Inspection CO.",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "i8DifVAEJhPJWVguGXeY",
+      "name": "Squall",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "JFIJXG08u9bMEDnzsgFr",
+      "name": "St. Louis Park Sleepy Heads",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "ozExVClE1sf8BNwotdIZ",
+      "name": "St. Louis Park Sleepy Heads",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "gkqzzCqE5gtMXmQJ6IrU",
+      "name": "Stars",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "8Avp1HnlPYqSqdskuBAn",
+      "name": "Sugar Buzz",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    },
+    {
+      "teamId": "nUZOOC7j8TJGCEV6aQIf",
+      "name": "Super Happy Extra Surly Fun-time Team",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "2I7YXDF7RAXs3MCvLM0h",
+      "name": "Surly POG Juice",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "Gv5elo2IVFTc3Ldv9AkO",
+      "name": "THE BODY",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "KNdbONsXNayHPq6uHhWp",
+      "name": "The Dark Knights",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "cK26PQEyfvmmWpegVQzq",
+      "name": "The Dark Knights",
+      "karma": 0,
+      "seasonId": "Vr0ZvjAeahGoVh5p6OTp",
+      "seasonName": "2023 Fall"
+    },
+    {
+      "teamId": "3hp5J5ZJ5NilcAI07y57",
+      "name": "Toucan Tappers",
+      "karma": 0,
+      "seasonId": "PBE6nY7rpCxufItsC7l0",
+      "seasonName": "2024 Fall"
+    },
+    {
+      "teamId": "CjxxukJxley1IlzOsolp",
+      "name": "Washburn",
+      "karma": 0,
+      "seasonId": "3epXJwsXxMViBLeOSozZ",
+      "seasonName": "2026 Spring"
+    }
+  ]
+}

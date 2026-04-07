@@ -1,0 +1,53 @@
+Minneapolis Winter League — Historical Karma Leaderboard
+Generated: 2026-04-07T03:34:16.757Z
+
+Rank  Karma  Team                                  Season
+----  -----  ------------------------------------  ------------------------
+   1    900  Nipull                                2025 Fall
+   2    700  Lemonade                              2025 Fall
+   3    500  Surly Barrel-Aged                     2025 Fall
+   4    400  Stars catcher                         2025 Fall
+   5    400  TOUCANS                               2025 Fall
+   6    300  Forward Motion                        2025 Fall
+   7    300  nOPE                                  2025 Fall
+   8    200  Even Flow                             2025 Fall
+   9    200  The Blizzards                         2025 Fall
+  10    200  Zander Stack$                         2025 Fall
+  11    100  Dickman Park Edina Santas             2025 Fall
+  12    100  Squall                                2025 Fall
+  13      0  Birdtown Ballers                      2023 Fall
+  14      0  Birdtown Ballers                      2026 Spring
+  15      0  Birdtown Ballers                      2024 Fall
+  16      0  Centrifugal Force                     2023 Fall
+  17      0  Chaska Critters                       2023 Fall
+  18      0  DuckLove                              2026 Spring
+  19      0  Even Flow                             2026 Spring
+  20      0  FATU                                  2023 Fall
+  21      0  Frying Dump-Ring                      2026 Spring
+  22      0  Homemade Furby                        2026 Spring
+  23      0  J.O.T                                 2023 Fall
+  24      0  Klane Island                          2024 Fall
+  25      0  Lemonade                              2024 Fall
+  26      0  Lemonade                              2026 Spring
+  27      0  Mauston Mousers                       2024 Fall
+  28      0  Ni-pull                               2023 Fall
+  29      0  Nipull                                2024 Fall
+  30      0  Nipull                                2026 Spring
+  31      0  nOPE                                  2026 Spring
+  32      0  nOPE                                  2024 Fall
+  33      0  Northeast Neutrons                    2024 Fall
+  34      0  Saint Paul Seacows                    2024 Fall
+  35      0  Saint Paul Seacows                    2023 Fall
+  36      0  Seatbelt Inspection CO.               2023 Fall
+  37      0  Squall                                2026 Spring
+  38      0  St. Louis Park Sleepy Heads           2023 Fall
+  39      0  St. Louis Park Sleepy Heads           2024 Fall
+  40      0  Stars                                 2026 Spring
+  41      0  Sugar Buzz                            2026 Spring
+  42      0  Super Happy Extra Surly Fun-time Tea  2024 Fall
+  43      0  Surly POG Juice                       2023 Fall
+  44      0  THE BODY                              2023 Fall
+  45      0  The Dark Knights                      2024 Fall
+  46      0  The Dark Knights                      2023 Fall
+  47      0  Toucan Tappers                        2024 Fall
+  48      0  Washburn                              2026 Spring
