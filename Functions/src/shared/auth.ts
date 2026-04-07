@@ -4,7 +4,8 @@
 
 import { CallableRequest, HttpsError } from 'firebase-functions/v2/https'
 import { Firestore } from 'firebase-admin/firestore'
-import { PlayerDocument, PlayerSeason } from '../types.js'
+import { PlayerDocument } from '../types.js'
+import { getPlayerSeason } from './database.js'
 
 /**
  * Validates that a user is authenticated and has a verified email
@@ -74,31 +75,20 @@ export async function validateAdminUser(
 }
 
 /**
- * Validates that a player is not banned for a specific season
+ * Validates that a player is not banned for a specific season.
  *
- * @param playerData - The player document data
- * @param seasonId - The season ID to check banned status for
- * @throws HttpsError with 'permission-denied' if player is banned
+ * Reads `players/{playerId}/seasons/{seasonId}.banned` directly. Must be
+ * awaited.
  *
- * @example
- * ```ts
- * const playerData = playerDoc.data() as PlayerDocument
- * validateNotBanned(playerData, seasonId)
- * ```
+ * @throws HttpsError with 'permission-denied' if the player is banned
  */
-export function validateNotBanned(
-	playerData: PlayerDocument | undefined,
+export async function validateNotBanned(
+	firestore: Firestore,
+	playerId: string,
 	seasonId: string
-): void {
-	if (!playerData) {
-		throw new HttpsError('not-found', 'Player not found')
-	}
-
-	const seasonData = playerData.seasons?.find(
-		(s: PlayerSeason) => s.season.id === seasonId
-	)
-
-	if (seasonData?.banned) {
+): Promise<void> {
+	const seasonData = await getPlayerSeason(firestore, playerId, seasonId)
+	if (seasonData?.banned === true) {
 		throw new HttpsError(
 			'permission-denied',
 			'Account is banned from this season'
@@ -107,31 +97,13 @@ export function validateNotBanned(
 }
 
 /**
- * Checks if a player is banned for a specific season (non-throwing version)
- *
- * @param playerData - The player document data
- * @param seasonId - The season ID to check banned status for
- * @returns true if the player is banned, false otherwise
- *
- * @example
- * ```ts
- * const playerData = playerDoc.data() as PlayerDocument
- * if (isPlayerBanned(playerData, seasonId)) {
- *   // Handle banned case
- * }
- * ```
+ * Checks if a player is banned for a specific season (non-throwing version).
  */
-export function isPlayerBanned(
-	playerData: PlayerDocument | undefined,
+export async function isPlayerBanned(
+	firestore: Firestore,
+	playerId: string,
 	seasonId: string
-): boolean {
-	if (!playerData) {
-		return false
-	}
-
-	const seasonData = playerData.seasons?.find(
-		(s: PlayerSeason) => s.season.id === seasonId
-	)
-
+): Promise<boolean> {
+	const seasonData = await getPlayerSeason(firestore, playerId, seasonId)
 	return seasonData?.banned === true
 }

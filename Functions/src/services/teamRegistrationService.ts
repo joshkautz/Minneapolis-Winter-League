@@ -1,71 +1,79 @@
 /**
  * Team registration status management service
+ *
+ * Updates the `teams/{teamId}/seasons/{seasonId}.registered` flag based on
+ * how many roster members are paid + signed for the season.
  */
 
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { TeamDocument, PlayerDocument, PlayerSeason } from '../types.js'
 import { TEAM_CONFIG } from '../config/constants.js'
+import {
+	playerSeasonRef,
+	teamSeasonRef,
+} from '../shared/database.js'
 
 /**
- * Helper function to update a team's registration status atomically
- * Uses a transaction to ensure consistent read of team and player data
+ * Recompute the registration status of a team for a specific season.
+ *
+ * Reads the team's roster subcollection and each roster player's matching
+ * season subdoc. Updates `registered` and `registeredDate` on the team's
+ * season subdoc when the status flips.
+ *
+ * Uses individual reads (not a transaction) since the roster subcollection
+ * contents and the player season subdocs are queried independently.
  */
 export async function updateTeamRegistrationStatus(
-	teamRef: FirebaseFirestore.DocumentReference,
+	teamId: string,
 	seasonId: string
 ): Promise<void> {
 	const firestore = getFirestore()
 
 	try {
-		// Use transaction to atomically read team, count players, and update
-		await firestore.runTransaction(async (transaction) => {
-			const teamDoc = await transaction.get(teamRef)
-			if (!teamDoc.exists) {
-				logger.warn(`Team document not found: ${teamRef.id}`)
-				return
-			}
+		const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
+		const teamSeasonSnap = await teamSeasonDocRef.get()
+		if (!teamSeasonSnap.exists) {
+			logger.warn(`Team season not found: teams/${teamId}/seasons/${seasonId}`)
+			return
+		}
 
-			const teamDocument = teamDoc.data() as TeamDocument
+		const teamSeasonData = teamSeasonSnap.data()
 
-			// Count registered players on the team (within transaction)
-			let registeredCount = 0
-			if (teamDocument.roster && teamDocument.roster.length > 0) {
-				const playerDocs = await Promise.all(
-					teamDocument.roster.map((member) => transaction.get(member.player))
+		const rosterSnap = await teamSeasonDocRef.collection('roster').get()
+		let registeredCount = 0
+		if (!rosterSnap.empty) {
+			const playerSeasons = await Promise.all(
+				rosterSnap.docs.map((rosterDoc) =>
+					playerSeasonRef(firestore, rosterDoc.id, seasonId).get()
 				)
+			)
+			registeredCount = playerSeasons.filter((snap) => {
+				if (!snap.exists) return false
+				const data = snap.data()
+				return Boolean(data?.paid && data?.signed)
+			}).length
+		}
 
-				registeredCount = playerDocs.filter((playerDoc) => {
-					if (!playerDoc.exists) return false
-					const playerData = playerDoc.data() as PlayerDocument
-					const seasonData = playerData.seasons?.find(
-						(season: PlayerSeason) => season.season.id === seasonId
-					)
-					return Boolean(seasonData?.paid && seasonData?.signed)
-				}).length
-			}
+		const shouldBeRegistered =
+			registeredCount >= TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
 
-			// Determine if team should be registered
-			const shouldBeRegistered =
-				registeredCount >= TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
+		if (teamSeasonData?.registered !== shouldBeRegistered) {
+			await teamSeasonDocRef.update({
+				registered: shouldBeRegistered,
+				registeredDate: shouldBeRegistered ? Timestamp.now() : null,
+			})
 
-			// Update registration status if it changed
-			if (teamDocument.registered !== shouldBeRegistered) {
-				transaction.update(teamRef, {
-					registered: shouldBeRegistered,
-					registeredDate: Timestamp.now(),
-				})
-
-				logger.info(`Updated team registration status`, {
-					teamId: teamRef.id,
-					registered: shouldBeRegistered,
-					playerCount: registeredCount,
-				})
-			}
-		})
+			logger.info('Updated team registration status', {
+				teamId,
+				seasonId,
+				registered: shouldBeRegistered,
+				registeredCount,
+			})
+		}
 	} catch (error) {
 		logger.error('Error updating team registration status:', {
-			teamId: teamRef.id,
+			teamId,
+			seasonId,
 			error: error instanceof Error ? error.message : 'Unknown error',
 		})
 		throw error

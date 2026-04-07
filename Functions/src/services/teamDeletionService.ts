@@ -1,26 +1,31 @@
 /**
- * Team deletion service
+ * Team season deletion service
  *
- * Shared service for deleting teams with full cleanup including:
- * - Player roster updates
- * - Offer deletion
- * - Storage logo deletion
+ * Deletes a team's participation in a specific season. The canonical team
+ * parent document (`teams/{teamId}`) is left untouched even if this season
+ * was its only participation — pruning a team across all of history is a
+ * separate (and currently unimplemented) admin operation.
+ *
+ * Operations performed:
+ *  1. Delete the team's roster subcollection for this season
+ *  2. Clear `team` and `captain` from each affected player's season subdoc
+ *  3. Delete the team's season subdoc
+ *  4. Delete offers referencing (team, season)
+ *  5. Delete the season-specific logo from Storage (best effort)
  */
 
 import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
+import { Collections } from '../types.js'
 import {
-	Collections,
-	TeamDocument,
-	PlayerDocument,
-	PlayerSeason,
-} from '../types.js'
+	playerSeasonRef,
+	teamRef as canonicalTeamRef,
+	teamSeasonRef,
+} from '../shared/database.js'
 
-/**
- * Result of a team deletion operation
- */
 export interface TeamDeletionResult {
 	teamId: string
+	seasonId: string
 	teamName: string
 	success: boolean
 	playersUpdated: number
@@ -29,69 +34,50 @@ export interface TeamDeletionResult {
 	error?: string
 }
 
+interface DeleteOptions {
+	/** Skip the "team is registered" guard. Used by the registration-lock cleanup. */
+	skipRegisteredCheck?: boolean
+}
+
 /**
- * Delete a single team with full cleanup
- *
- * Performs the following operations:
- * 1. Updates all roster players: team: null, captain: false
- * 2. Deletes all offers referencing the team
- * 3. Deletes team logo from Storage (fire-and-forget)
- * 4. Deletes the team document
- *
- * @param firestore - Firestore instance
- * @param teamRef - Reference to the team document
- * @param seasonId - The season ID for player updates
- * @param options - Optional settings
- * @param options.skipRegisteredCheck - Skip check for registered teams (for admin bulk deletion)
+ * Delete a team's participation in a single season with full cleanup.
  */
-export async function deleteTeamWithCleanup(
+export async function deleteTeamSeasonWithCleanup(
 	firestore: FirebaseFirestore.Firestore,
-	teamRef: FirebaseFirestore.DocumentReference<TeamDocument>,
+	teamId: string,
 	seasonId: string,
-	options?: { skipRegisteredCheck?: boolean }
+	options?: DeleteOptions
 ): Promise<TeamDeletionResult> {
-	const teamId = teamRef.id
+	const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
+	const teamCanonicalRef = canonicalTeamRef(firestore, teamId)
+
 	let teamName = 'Unknown'
 	let playersUpdated = 0
 	let offersDeleted = 0
 	let logoDeleted = false
 
 	try {
-		// Get team document first to retrieve info needed for cleanup
-		const teamDoc = await teamRef.get()
-
-		if (!teamDoc.exists) {
+		const teamSeasonSnap = await teamSeasonDocRef.get()
+		if (!teamSeasonSnap.exists) {
 			return {
 				teamId,
+				seasonId,
 				teamName,
 				success: false,
 				playersUpdated: 0,
 				offersDeleted: 0,
 				logoDeleted: false,
-				error: 'Team not found',
+				error: 'Team season not found',
 			}
 		}
 
-		const teamDocument = teamDoc.data() as TeamDocument | undefined
+		const teamSeasonData = teamSeasonSnap.data()
+		teamName = teamSeasonData?.name ?? 'Unknown'
 
-		if (!teamDocument) {
+		if (!options?.skipRegisteredCheck && teamSeasonData?.registered) {
 			return {
 				teamId,
-				teamName,
-				success: false,
-				playersUpdated: 0,
-				offersDeleted: 0,
-				logoDeleted: false,
-				error: 'Unable to retrieve team data',
-			}
-		}
-
-		teamName = teamDocument.name
-
-		// Check if team is registered (unless skipping this check)
-		if (!options?.skipRegisteredCheck && teamDocument.registered) {
-			return {
-				teamId,
+				seasonId,
 				teamName,
 				success: false,
 				playersUpdated: 0,
@@ -101,62 +87,64 @@ export async function deleteTeamWithCleanup(
 			}
 		}
 
-		// Delete team logo from Storage (fire-and-forget)
-		if (teamDocument.storagePath) {
-			logoDeleted = await deleteTeamLogo(teamDocument.storagePath)
+		// 1. Read the roster (player IDs) before we delete it.
+		const rosterSnap = await teamSeasonDocRef.collection('roster').get()
+		const rosterPlayerIds = rosterSnap.docs.map((d) => d.id)
+
+		// 2. Delete the season-specific logo (best effort, fire-and-forget).
+		if (teamSeasonData?.storagePath) {
+			logoDeleted = await deleteTeamLogo(teamSeasonData.storagePath)
 		}
 
-		// Use transaction for player updates, offer deletion, and team deletion
-		const result = await firestore.runTransaction(async (transaction) => {
-			let playerCount = 0
-			let offerCount = 0
-
-			// Update all roster players: team: null, captain: false
-			if (teamDocument.roster && teamDocument.roster.length > 0) {
-				for (const member of teamDocument.roster) {
-					const playerDoc = await transaction.get(member.player)
-					if (playerDoc.exists) {
-						const playerData = playerDoc.data() as PlayerDocument | undefined
-
-						if (playerData?.seasons) {
-							const updatedSeasons = playerData.seasons.map(
-								(season: PlayerSeason) =>
-									season.team?.id === teamId
-										? { ...season, team: null, captain: false }
-										: season
-							)
-
-							transaction.update(member.player, { seasons: updatedSeasons })
-							playerCount++
-						}
-					}
+		// 3. Apply the cleanup writes in a transaction so the team season,
+		// roster, and player season updates are atomic.
+		await firestore.runTransaction(async (transaction) => {
+			// Roster cleanup: delete each entry, clear the player's season subdoc.
+			for (const playerId of rosterPlayerIds) {
+				const rosterEntryRef = teamSeasonDocRef
+					.collection('roster')
+					.doc(playerId)
+				transaction.delete(rosterEntryRef)
+				const playerSeasonDocRef = playerSeasonRef(
+					firestore,
+					playerId,
+					seasonId
+				)
+				const playerSeasonSnap = await transaction.get(playerSeasonDocRef)
+				if (playerSeasonSnap.exists) {
+					transaction.update(playerSeasonDocRef, {
+						team: null,
+						captain: false,
+					})
+					playersUpdated++
 				}
 			}
 
-			// Delete all offers related to this team
-			const offersQuery = await firestore
-				.collection(Collections.OFFERS)
-				.where('team', '==', teamRef)
-				.get()
-
-			for (const offerDoc of offersQuery.docs) {
-				transaction.delete(offerDoc.ref)
-				offerCount++
-			}
-
-			// Delete the team document
-			transaction.delete(teamRef)
-
-			return { playerCount, offerCount }
+			// Delete the season subdoc itself.
+			transaction.delete(teamSeasonDocRef)
 		})
 
-		playersUpdated = result.playerCount
-		offersDeleted = result.offerCount
+		// 4. Delete offers referencing this team + season. (Outside the
+		// transaction because the query needs to run separately.)
+		const offersQuery = await firestore
+			.collection(Collections.OFFERS)
+			.where('team', '==', teamCanonicalRef)
+			.where('season', '==', teamSeasonData?.season)
+			.get()
 
-		logger.info('Successfully deleted team with cleanup', {
+		if (!offersQuery.empty) {
+			const batch = firestore.batch()
+			for (const offerDoc of offersQuery.docs) {
+				batch.delete(offerDoc.ref)
+				offersDeleted++
+			}
+			await batch.commit()
+		}
+
+		logger.info('Successfully deleted team season with cleanup', {
 			teamId,
-			teamName,
 			seasonId,
+			teamName,
 			playersUpdated,
 			offersDeleted,
 			logoDeleted,
@@ -164,6 +152,7 @@ export async function deleteTeamWithCleanup(
 
 		return {
 			teamId,
+			seasonId,
 			teamName,
 			success: true,
 			playersUpdated,
@@ -174,14 +163,16 @@ export async function deleteTeamWithCleanup(
 		const errorMessage =
 			error instanceof Error ? error.message : 'Unknown error'
 
-		logger.error('Error deleting team:', {
+		logger.error('Error deleting team season:', {
 			teamId,
+			seasonId,
 			teamName,
 			error: errorMessage,
 		})
 
 		return {
 			teamId,
+			seasonId,
 			teamName,
 			success: false,
 			playersUpdated,
@@ -193,37 +184,31 @@ export async function deleteTeamWithCleanup(
 }
 
 /**
- * Bulk delete unregistered teams for season lock
- *
- * Used when the 12th team registers to clean up all incomplete teams.
- * Continues processing even if individual deletions fail.
- *
- * @param firestore - Firestore instance
- * @param teamRefs - Array of team document references to delete
- * @param seasonId - The season ID for player updates
+ * Bulk-delete every unregistered team for a season. Used when the
+ * registration lock threshold is hit.
  */
 export async function deleteUnregisteredTeamsForSeasonLock(
 	firestore: FirebaseFirestore.Firestore,
-	teamRefs: FirebaseFirestore.DocumentReference<TeamDocument>[],
-	seasonId: string
+	teamSeasonPairs: Array<{ teamId: string; seasonId: string }>
 ): Promise<TeamDeletionResult[]> {
 	const results: TeamDeletionResult[] = []
-
-	for (const teamRef of teamRefs) {
-		const result = await deleteTeamWithCleanup(firestore, teamRef, seasonId, {
-			skipRegisteredCheck: true,
-		})
+	for (const { teamId, seasonId } of teamSeasonPairs) {
+		const result = await deleteTeamSeasonWithCleanup(
+			firestore,
+			teamId,
+			seasonId,
+			{
+				skipRegisteredCheck: true,
+			}
+		)
 		results.push(result)
 	}
-
 	return results
 }
 
 /**
- * Delete team logo from Storage
- *
- * @param storagePath - Path to the logo file in Storage
- * @returns Whether the deletion was successful
+ * Delete team logo from Storage. Best-effort — failures are logged and
+ * swallowed because they should not block the rest of the cleanup.
  */
 async function deleteTeamLogo(storagePath: string): Promise<boolean> {
 	try {

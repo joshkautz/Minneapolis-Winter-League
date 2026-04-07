@@ -1,20 +1,17 @@
 /**
  * Rollover team callable function
  *
- * Rolls over an existing team from a previous season to the current season,
- * preserving the teamId but creating a new team document.
+ * Joins an existing canonical team to a new season. Under the new data model
+ * this is a single subdocument creation, not a doc clone.
  *
  * Security validations:
  * - User must be authenticated and email verified
  * - User must not be banned for the target season
  * - Registration must not have ended
- * - User must have been a captain of the original team
+ * - User must have been a captain of the canonical team in any prior season
  * - User must not already be on a team for this season
- * - Team must not have already been rolled over for this season
+ * - The team must not already have a season subdoc for this season
  * - Admins bypass banned and registration date restrictions
- *
- * Note: When creating a new season entry, banned status is preserved from
- * the most recent previous season to maintain ban continuity.
  */
 
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
@@ -22,36 +19,38 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
-	TeamDocument,
-	PlayerDocument,
-	PlayerSeason,
-	SeasonDocument,
 	DocumentReference,
+	PlayerDocument,
+	SeasonDocument,
 } from '../../../types.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import {
 	validateAuthentication,
 	validateNotBanned,
 } from '../../../shared/auth.js'
+import {
+	playerSeasonRef,
+	teamRef as canonicalTeamRef,
+	teamRosterEntryRef,
+	teamSeasonRef,
+} from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { formatDateForUser } from '../../../shared/format.js'
 
 interface RolloverTeamRequest {
 	originalTeamId: string
 	seasonId: string
-	timezone?: string // User's browser timezone (e.g., 'America/New_York')
+	timezone?: string
 }
 
 export const rolloverTeam = onCall<RolloverTeamRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { auth, data } = request
-
-		// Validate authentication
 		validateAuthentication(auth)
 
 		const { originalTeamId, seasonId, timezone } = data
-		const userId = auth?.uid ?? ''
+		const userId = auth.uid
 
 		if (!originalTeamId || !seasonId) {
 			throw new HttpsError(
@@ -63,87 +62,91 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 		try {
 			const firestore = getFirestore()
 
-			// Validate season exists and is current
-			const seasonRef = firestore
+			const seasonDocRef = firestore
 				.collection(Collections.SEASONS)
-				.doc(seasonId) as FirebaseFirestore.DocumentReference<SeasonDocument>
-			const seasonDoc = await seasonRef.get()
-
+				.doc(seasonId) as DocumentReference<SeasonDocument>
+			const seasonDoc = await seasonDocRef.get()
 			if (!seasonDoc.exists) {
 				throw new HttpsError('not-found', 'Invalid season ID')
 			}
-
 			const seasonData = seasonDoc.data()
 			if (!seasonData) {
 				throw new HttpsError('internal', 'Unable to retrieve season data')
 			}
-			const now = Timestamp.now()
 
-			// Get player document (needed for both admin check and later operations)
-			const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
-			const playerDoc = await playerRef.get()
-
+			const playerDocRef = firestore
+				.collection(Collections.PLAYERS)
+				.doc(userId) as DocumentReference<PlayerDocument>
+			const playerDoc = await playerDocRef.get()
 			if (!playerDoc.exists) {
 				throw new HttpsError('not-found', 'Player profile not found')
 			}
-
-			const playerDocument = playerDoc.data() as PlayerDocument | undefined
-
+			const playerDocument = playerDoc.data()
 			if (!playerDocument) {
 				throw new HttpsError('internal', 'Unable to retrieve player data')
 			}
 
-			// Check if user is an admin
 			const isAdmin = playerDocument.admin === true
 
-			// Validate player is not banned for this season (skip for admins)
 			if (!isAdmin) {
-				validateNotBanned(playerDocument, seasonId)
-			}
+				await validateNotBanned(firestore, userId, seasonId)
 
-			// Validate season is still accepting teams (allow pre-registration before registration opens)
-			// Skip check for admins
-			if (!isAdmin) {
 				const registrationEnd = seasonData.registrationEnd.toDate()
-				const currentTime = now.toDate()
-
-				if (currentTime > registrationEnd) {
+				if (Timestamp.now().toDate() > registrationEnd) {
 					throw new HttpsError(
 						'failed-precondition',
 						`Team registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
 					)
 				}
-			} // Get original team to validate ownership and get team data
-			const originalTeamsQuery = await firestore
-				.collection(Collections.TEAMS)
-				.where('teamId', '==', originalTeamId)
+			}
+
+			// Verify the canonical team exists.
+			const teamCanonicalDocRef = canonicalTeamRef(firestore, originalTeamId)
+			const teamCanonicalSnap = await teamCanonicalDocRef.get()
+			if (!teamCanonicalSnap.exists) {
+				throw new HttpsError('not-found', 'Original team not found')
+			}
+
+			// Verify the user has been a captain of this team in any previous season.
+			// Walk the team's `seasons` subcollection and check each roster entry.
+			const previousSeasonsSnap = await teamCanonicalDocRef
+				.collection('seasons')
 				.get()
+			let userWasCaptain = false
+			let mostRecentSeasonName: string | null = null
+			let mostRecentSeasonLogo: string | null = null
+			let mostRecentSeasonStoragePath: string | null = null
+			let mostRecentSeasonStartMs = 0
+			for (const seasonSubdoc of previousSeasonsSnap.docs) {
+				const seasonSubdocData = seasonSubdoc.data()
+				const otherSeasonRef = seasonSubdocData?.season
+				if (otherSeasonRef) {
+					const otherSeasonSnap = await otherSeasonRef.get()
+					const otherSeasonStartMs =
+						otherSeasonSnap.data()?.dateStart?.toMillis?.() ?? 0
+					if (otherSeasonStartMs >= mostRecentSeasonStartMs) {
+						mostRecentSeasonStartMs = otherSeasonStartMs
+						mostRecentSeasonName = seasonSubdocData?.name ?? null
+						mostRecentSeasonLogo = seasonSubdocData?.logo ?? null
+						mostRecentSeasonStoragePath = seasonSubdocData?.storagePath ?? null
+					}
+				}
 
-			if (originalTeamsQuery.empty) {
-				throw new HttpsError('not-found', 'Original team not found')
+				if (!userWasCaptain) {
+					const playerSeasonForOther = await playerSeasonRef(
+						firestore,
+						userId,
+						seasonSubdoc.id
+					).get()
+					if (
+						playerSeasonForOther.exists &&
+						playerSeasonForOther.data()?.captain === true &&
+						playerSeasonForOther.data()?.team?.id === originalTeamId
+					) {
+						userWasCaptain = true
+					}
+				}
 			}
-
-			// Find the most recent version of this team
-			const originalTeams = originalTeamsQuery.docs.map((doc) => ({
-				...doc.data(),
-				id: doc.id,
-			})) as (TeamDocument & { id: string })[]
-
-			// Get the most recent team document for this teamId
-			const originalTeam = originalTeams.sort((a, b) => {
-				// Sort by season dateStart descending to get most recent
-				return b.season.id.localeCompare(a.season.id)
-			})[0]
-
-			if (!originalTeam) {
-				throw new HttpsError('not-found', 'Original team not found')
-			}
-
-			// Validate user was a captain of the original team
-			const userWasCaptain = originalTeam.roster.some(
-				(rosterPlayer) =>
-					rosterPlayer.player.id === userId && rosterPlayer.captain
-			)
 
 			if (!userWasCaptain) {
 				throw new HttpsError(
@@ -152,97 +155,86 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 				)
 			}
 
-			// Check if player is already on a team for this season
-			const existingSeasonData = playerDocument.seasons?.find(
-				(season: PlayerSeason) => season.season.id === seasonId
-			)
-
-			if (existingSeasonData?.team) {
+			// Check if player is already on a team for this season.
+			const playerSeasonDocRef = playerSeasonRef(firestore, userId, seasonId)
+			const existingPlayerSeasonSnap = await playerSeasonDocRef.get()
+			const existingPlayerSeasonData = existingPlayerSeasonSnap.exists
+				? existingPlayerSeasonSnap.data()
+				: undefined
+			if (existingPlayerSeasonData?.team) {
 				throw new HttpsError(
 					'already-exists',
 					'Player is already on a team for this season'
 				)
 			}
 
-			// Check if team has already been rolled over to this season
-			const existingRolloverQuery = await firestore
-				.collection(Collections.TEAMS)
-				.where('teamId', '==', originalTeamId)
-				.where('season', '==', seasonRef)
-				.get()
-
-			if (!existingRolloverQuery.empty) {
+			// Check if the team already has a season subdoc for this season.
+			const teamSeasonDocRef = teamSeasonRef(firestore, originalTeamId, seasonId)
+			const teamSeasonExisting = await teamSeasonDocRef.get()
+			if (teamSeasonExisting.exists) {
 				throw new HttpsError(
 					'already-exists',
 					'Team has already been rolled over for this season'
 				)
 			}
 
-			// Create new team document with rolled over data
-			const newTeamDocument: Partial<TeamDocument> = {
-				name: originalTeam.name,
-				logo: originalTeam.logo,
-				storagePath: originalTeam.storagePath,
-				teamId: originalTeamId, // Preserve original teamId
-				season: seasonRef,
-				roster: [
-					{
-						player: playerRef,
-						captain: true,
-					},
-				] as TeamDocument['roster'],
-				registered: false, // Always false initially
-				placement: null,
-			}
-
-			const newTeamRef = (await firestore
-				.collection(Collections.TEAMS)
-				.add(
-					newTeamDocument
-				)) as FirebaseFirestore.DocumentReference<TeamDocument>
-
-			// Update player's season data to include the new team
-			const updatedSeasons =
-				playerDocument?.seasons?.map((season: PlayerSeason) =>
-					season.season.id === seasonId
-						? { ...season, team: newTeamRef, captain: true }
-						: season
-				) || []
-
-			// If no season entry exists, create one
-			// Preserve banned status from most recent previous season if available
-			if (!existingSeasonData) {
-				// Find most recent previous season to get banned status
-				const previousSeasons = playerDocument?.seasons?.filter(
-					(s: PlayerSeason) => s.season.id !== seasonId
+			// Determine banned status to seed if no player season subdoc exists.
+			let bannedStatus = false
+			if (!existingPlayerSeasonData) {
+				const otherSeasons = await playerDocRef.collection('seasons').get()
+				bannedStatus = otherSeasons.docs.some(
+					(d) => d.id !== seasonId && d.data()?.banned === true
 				)
-				const mostRecentPreviousSeason = previousSeasons?.[0]
-				const bannedStatus = mostRecentPreviousSeason?.banned || false
-
-				updatedSeasons.push({
-					season: seasonRef,
-					team: newTeamRef,
-					captain: true,
-					paid: false,
-					signed: false,
-					banned: bannedStatus,
-				})
 			}
-			await playerRef.update({ seasons: updatedSeasons })
 
-			// Cancel any pending offers for this player in this season
-			// since they are now on a team
+			const rosterEntryDocRef = teamRosterEntryRef(
+				firestore,
+				originalTeamId,
+				seasonId,
+				userId
+			)
+
+			await firestore.runTransaction(async (txn) => {
+				txn.set(teamSeasonDocRef, {
+					season: seasonDocRef,
+					name: mostRecentSeasonName ?? '',
+					logo: mostRecentSeasonLogo,
+					storagePath: mostRecentSeasonStoragePath,
+					registered: false,
+					registeredDate: null,
+					placement: null,
+				})
+				txn.set(rosterEntryDocRef, {
+					player: playerDocRef,
+					dateJoined: Timestamp.now(),
+				})
+				if (existingPlayerSeasonData) {
+					txn.update(playerSeasonDocRef, {
+						team: teamCanonicalDocRef,
+						captain: true,
+					})
+				} else {
+					txn.set(playerSeasonDocRef, {
+						season: seasonDocRef,
+						team: teamCanonicalDocRef,
+						paid: false,
+						signed: false,
+						banned: bannedStatus,
+						captain: true,
+					})
+				}
+			})
+
 			const canceledOffersCount = await cancelPendingOffersForPlayer(
 				firestore,
-				playerRef as DocumentReference<PlayerDocument>,
-				seasonRef as DocumentReference<SeasonDocument>,
+				playerDocRef,
+				seasonDocRef,
 				'Player rolled over a team from a previous season'
 			)
 
-			logger.info(`Successfully rolled over team: ${newTeamRef.id}`, {
+			logger.info(`Successfully rolled over team: ${originalTeamId}`, {
 				originalTeamId,
-				newTeamId: newTeamRef.id,
-				teamName: originalTeam.name,
+				teamName: mostRecentSeasonName,
 				captainId: userId,
 				seasonId,
 				canceledPendingOffers: canceledOffersCount,
@@ -250,7 +242,7 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 
 			return {
 				success: true,
-				teamId: newTeamRef.id,
+				teamId: originalTeamId,
 				message: 'Team rolled over successfully',
 			}
 		} catch (error) {
@@ -260,7 +252,6 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 				seasonId,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
-
 			throw new HttpsError(
 				'internal',
 				error instanceof Error ? error.message : 'Failed to rollover team'

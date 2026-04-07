@@ -8,19 +8,17 @@
  * - User must not already be on a team for this season
  * - Admins bypass banned and registration date restrictions
  *
- * Note: When creating a new season entry, banned status is preserved from
- * the most recent previous season to maintain ban continuity.
+ * Note: When creating a new player season subdoc, banned status is preserved
+ * from the most recent previous season to maintain ban continuity.
  */
 
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
-	TeamDocument,
 	PlayerDocument,
-	PlayerSeason,
 	SeasonDocument,
 	DocumentReference,
 } from '../../../types.js'
@@ -29,6 +27,12 @@ import {
 	validateAuthentication,
 	validateNotBanned,
 } from '../../../shared/auth.js'
+import {
+	playerSeasonRef,
+	teamRef as canonicalTeamRef,
+	teamRosterEntryRef,
+	teamSeasonRef,
+} from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { formatDateForUser } from '../../../shared/format.js'
 
@@ -45,11 +49,10 @@ export const createTeam = onCall<CreateTeamRequest>(
 	async (request) => {
 		const { auth, data } = request
 
-		// Validate authentication
 		validateAuthentication(auth)
 
 		const { name, logoBlob, logoContentType, seasonId, timezone } = data
-		const userId = auth?.uid ?? ''
+		const userId = auth.uid
 
 		if (!name || !seasonId) {
 			throw new HttpsError(
@@ -58,7 +61,6 @@ export const createTeam = onCall<CreateTeamRequest>(
 			)
 		}
 
-		// Validate logo parameters if provided
 		if (logoBlob && !logoContentType) {
 			throw new HttpsError(
 				'invalid-argument',
@@ -76,11 +78,11 @@ export const createTeam = onCall<CreateTeamRequest>(
 		try {
 			const firestore = getFirestore()
 
-			// Validate season exists and registration is open
-			const seasonRef = firestore
+			// Validate season exists and registration is open.
+			const seasonDocRef = firestore
 				.collection(Collections.SEASONS)
-				.doc(seasonId) as FirebaseFirestore.DocumentReference<SeasonDocument>
-			const seasonDoc = await seasonRef.get()
+				.doc(seasonId) as DocumentReference<SeasonDocument>
+			const seasonDoc = await seasonDocRef.get()
 
 			if (!seasonDoc.exists) {
 				throw new HttpsError('not-found', 'Invalid season ID')
@@ -92,33 +94,29 @@ export const createTeam = onCall<CreateTeamRequest>(
 			}
 			const now = new Date()
 
-			// Get player document (needed for both admin check and later operations)
-			const playerRef = firestore.collection(Collections.PLAYERS).doc(userId)
-			const playerDoc = await playerRef.get()
+			// Load player canonical doc.
+			const playerDocRef = firestore
+				.collection(Collections.PLAYERS)
+				.doc(userId) as DocumentReference<PlayerDocument>
+			const playerDoc = await playerDocRef.get()
 
 			if (!playerDoc.exists) {
 				throw new HttpsError('not-found', 'Player profile not found')
 			}
 
-			const playerDocument = playerDoc.data() as PlayerDocument | undefined
-
+			const playerDocument = playerDoc.data()
 			if (!playerDocument) {
 				throw new HttpsError('internal', 'Unable to retrieve player data')
 			}
 
-			// Check if user is an admin
 			const isAdmin = playerDocument.admin === true
 
-			// Validate player is not banned for this season (skip for admins)
 			if (!isAdmin) {
-				validateNotBanned(playerDocument, seasonId)
+				await validateNotBanned(firestore, userId, seasonId)
 			}
 
-			// Validate season is still accepting teams (allow pre-registration before registration opens)
-			// Skip check for admins
 			if (!isAdmin) {
 				const registrationEnd = seasonData.registrationEnd.toDate()
-
 				if (now > registrationEnd) {
 					throw new HttpsError(
 						'failed-precondition',
@@ -127,25 +125,27 @@ export const createTeam = onCall<CreateTeamRequest>(
 				}
 			}
 
-			// Check if player is already on a team for this season
-			const existingSeasonData = playerDocument.seasons?.find(
-				(season: PlayerSeason) => season.season.id === seasonId
-			)
+			// Check whether the player already has a team for this season by
+			// reading their season subdoc.
+			const playerSeasonDocRef = playerSeasonRef(firestore, userId, seasonId)
+			const existingPlayerSeasonSnap = await playerSeasonDocRef.get()
+			const existingPlayerSeasonData = existingPlayerSeasonSnap.exists
+				? existingPlayerSeasonSnap.data()
+				: undefined
 
-			if (existingSeasonData?.team) {
+			if (existingPlayerSeasonData?.team) {
 				throw new HttpsError(
 					'already-exists',
 					'Player is already on a team for this season'
 				)
 			}
 
-			// Generate unique team ID
+			// Generate canonical team id and upload logo (if any).
 			const teamId = crypto.randomUUID()
 			const fileId = crypto.randomUUID()
 			let logoUrl = ''
 			let storagePath = ''
 
-			// Handle logo upload if provided
 			if (logoBlob && logoContentType) {
 				try {
 					const storage = getStorage()
@@ -153,17 +153,9 @@ export const createTeam = onCall<CreateTeamRequest>(
 					const fileName = `teams/${fileId}`
 					const file = bucket.file(fileName)
 
-					// Convert base64 to buffer
 					const buffer = Buffer.from(logoBlob, 'base64')
+					await file.save(buffer, { metadata: { contentType: logoContentType } })
 
-					// Upload file
-					await file.save(buffer, {
-						metadata: {
-							contentType: logoContentType,
-						},
-					})
-
-					// Generate Firebase Storage URL (respects storage.rules)
 					const encodedPath = encodeURIComponent(fileName)
 					logoUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`
 					storagePath = fileName
@@ -174,73 +166,84 @@ export const createTeam = onCall<CreateTeamRequest>(
 					})
 				} catch (uploadError) {
 					logger.error('Logo upload failed:', uploadError)
-					// Don't fail team creation if logo upload fails
 					logoUrl = ''
 					storagePath = ''
 				}
 			}
 
-			// Create team document - Note: roster player refs are Firebase Admin SDK refs
-			const teamDocument: Partial<TeamDocument> = {
-				name: name.trim(),
-				teamId,
-				logo: logoUrl,
-				storagePath,
-				season: seasonRef,
-				roster: [
-					{
-						player: playerRef, // Type assertion needed for Firebase Admin SDK compatibility
-						captain: true,
-					},
-				] as TeamDocument['roster'],
-				registered: false,
-				placement: null,
-				// registeredDate will be set when team becomes registered
-			}
-
-			const teamRef = (await firestore
-				.collection(Collections.TEAMS)
-				.add(teamDocument)) as FirebaseFirestore.DocumentReference<TeamDocument>
-
-			// Update player's season data to include team
-			const updatedSeasons =
-				playerDocument?.seasons?.map((season: PlayerSeason) =>
-					season.season.id === seasonId
-						? { ...season, team: teamRef, captain: true }
-						: season
-				) || []
-
-			// If no season entry exists, create one
-			// Preserve banned status from most recent previous season if available
-			if (!existingSeasonData) {
-				// Find most recent previous season to get banned status
-				const previousSeasons = playerDocument?.seasons?.filter(
-					(s: PlayerSeason) => s.season.id !== seasonId
+			// Determine banned status to seed onto the player's new season subdoc
+			// if it doesn't already exist. Preserves ban continuity by reading the
+			// player's most recently-created season subdoc.
+			let bannedStatus = false
+			if (!existingPlayerSeasonData) {
+				const otherSeasons = await playerDocRef
+					.collection('seasons')
+					.orderBy('season')
+					.get()
+				const lastBanned = otherSeasons.docs.find(
+					(d) => d.id !== seasonId && d.data()?.banned === true
 				)
-				const mostRecentPreviousSeason = previousSeasons?.[0]
-				const bannedStatus = mostRecentPreviousSeason?.banned || false
-
-				updatedSeasons.push({
-					season: seasonRef, // Firebase admin SDK DocumentReference
-					team: teamRef, // Firebase admin SDK DocumentReference
-					captain: true,
-					paid: false,
-					signed: false,
-					banned: bannedStatus,
-				})
+				bannedStatus = !!lastBanned
 			}
-			await playerRef.update({ seasons: updatedSeasons })
 
-			// Cancel any pending offers for this player in this season
-			// since they are now on a team
+			// Atomically: create canonical team parent + season subdoc + roster
+			// entry, and create or update the player's season subdoc.
+			const teamCanonicalRef = canonicalTeamRef(firestore, teamId)
+			const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
+			const rosterEntryDocRef = teamRosterEntryRef(
+				firestore,
+				teamId,
+				seasonId,
+				userId
+			)
+
+			await firestore.runTransaction(async (txn) => {
+				txn.set(teamCanonicalRef, {
+					createdAt: Timestamp.now(),
+					createdBy: playerDocRef,
+				})
+				txn.set(teamSeasonDocRef, {
+					season: seasonDocRef,
+					name: name.trim(),
+					logo: logoUrl || null,
+					storagePath: storagePath || null,
+					registered: false,
+					registeredDate: null,
+					placement: null,
+				})
+				txn.set(rosterEntryDocRef, {
+					player: playerDocRef,
+					dateJoined: Timestamp.now(),
+				})
+
+				if (existingPlayerSeasonData) {
+					txn.update(playerSeasonDocRef, {
+						team: teamCanonicalRef,
+						captain: true,
+					})
+				} else {
+					txn.set(playerSeasonDocRef, {
+						season: seasonDocRef,
+						team: teamCanonicalRef,
+						paid: false,
+						signed: false,
+						banned: bannedStatus,
+						captain: true,
+					})
+				}
+			})
+
+			// Cancel any pending offers for this player in this season since they
+			// are now on a team. Outside the transaction because the query needs
+			// to run separately.
 			const canceledOffersCount = await cancelPendingOffersForPlayer(
 				firestore,
-				playerRef as DocumentReference<PlayerDocument>,
-				seasonRef as DocumentReference<SeasonDocument>,
+				playerDocRef,
+				seasonDocRef,
 				'Player created a new team'
 			)
 
-			logger.info(`Successfully created team: ${teamRef.id}`, {
+			logger.info(`Successfully created team: ${teamId}`, {
 				teamName: name,
 				captainId: userId,
 				seasonId,
@@ -249,7 +252,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 
 			return {
 				success: true,
-				teamId: teamRef.id,
+				teamId,
 				message: 'Team created successfully',
 			}
 		} catch (error) {

@@ -100,7 +100,11 @@ export enum SeasonFormat {
 /////////////////////////////////////////////////////////////////
 
 /**
- * Player document structure representing a user in the system
+ * Player document structure representing a user in the system.
+ *
+ * Player season participation lives in the `players/{uid}/seasons/{seasonId}`
+ * subcollection (see PlayerSeasonDocument). The legacy `seasons[]` array on
+ * the player document was removed in the 2026 data model migration.
  */
 export interface PlayerDocument extends DocumentData {
 	/** Whether the player has admin privileges */
@@ -111,61 +115,87 @@ export interface PlayerDocument extends DocumentData {
 	firstname: string
 	/** Player's last name */
 	lastname: string
-	/** Array of season participation data */
-	seasons: PlayerSeason[]
 }
 
 /**
- * Player's participation data for a specific season
+ * Player's per-season participation document.
+ *
+ * Stored at `players/{uid}/seasons/{seasonId}`. The doc id matches the season
+ * document's id, so there is at most one doc per (player, season) pair.
+ *
+ * Captain status, payment status, waiver status, and ban status all live here
+ * (single source of truth). The team's roster subcollection contains only the
+ * membership join, never status fields.
  */
-export interface PlayerSeason {
-	/** Whether the player is banned from the season */
-	banned?: boolean
-	/** Whether the player is a team captain */
-	captain: boolean
+export interface PlayerSeasonDocument extends DocumentData {
+	/** Reference to the season this entry corresponds to */
+	season: DocumentReference<SeasonDocument>
+	/** Reference to the canonical team this player belongs to (null if not on a team) */
+	team: DocumentReference<TeamDocument> | null
 	/** Whether the player has paid for the season */
 	paid: boolean
-	/** Reference to the season document */
-	season: DocumentReference<SeasonDocument>
 	/** Whether the player has signed the waiver */
 	signed: boolean
-	/** Reference to the team document (null if not on a team) */
-	team: DocumentReference<TeamDocument> | null
+	/** Whether the player is banned from the season */
+	banned: boolean
+	/** Whether the player is a team captain for this season */
+	captain: boolean
 }
 
 /**
- * Team document structure representing a team in the system
+ * Canonical team document structure. One document per real team, persistent
+ * across seasons.
+ *
+ * Per-season state lives in the `teams/{teamId}/seasons/{seasonId}` subcollection
+ * (see TeamSeasonDocument). The roster lives in
+ * `teams/{teamId}/seasons/{seasonId}/roster/{playerId}` (see TeamRosterDocument).
+ * Badges live in `teams/{teamId}/badges/{badgeId}` and span the team's entire
+ * history (see TeamBadgeDocument).
  */
 export interface TeamDocument extends DocumentData {
-	/** URL or path to team logo (nullable) */
-	logo: string | null
-	/** Team name */
-	name: string
-	/** Team's final placement/ranking (nullable if season incomplete) */
-	placement: number | null
-	/** Whether the team meets registration requirements */
-	registered: boolean
-	/** Timestamp when team became registered */
-	registeredDate: Timestamp
-	/** Array of team roster entries */
-	roster: TeamRosterPlayer[]
-	/** Reference to the season document */
-	season: DocumentReference<SeasonDocument>
-	/** Storage path for team-related files (nullable) */
-	storagePath: string | null
-	/** Unique team identifier */
-	teamId: string
+	/** Timestamp when the team was first created */
+	createdAt: Timestamp
+	/** Reference to the player who founded the team (null if unknown) */
+	createdBy: DocumentReference<PlayerDocument> | null
 }
 
 /**
- * Individual entry in a team's roster
+ * Per-season participation document for a team.
+ *
+ * Stored at `teams/{teamId}/seasons/{seasonId}`. Holds all per-season state
+ * (name, logo, registration status, placement). Subdoc id matches the season's
+ * doc id so there is at most one entry per (team, season) pair.
  */
-export interface TeamRosterPlayer {
-	/** Whether this player is a team captain */
-	captain: boolean
+export interface TeamSeasonDocument extends DocumentData {
+	/** Reference to the season this entry corresponds to */
+	season: DocumentReference<SeasonDocument>
+	/** Team display name for this specific season (snapshot, may change between seasons) */
+	name: string
+	/** URL or path to team logo for this season (nullable) */
+	logo: string | null
+	/** Storage path for the season's logo file (nullable) */
+	storagePath: string | null
+	/** Whether the team meets registration requirements for this season */
+	registered: boolean
+	/** Timestamp when the team became registered for this season (null if not yet) */
+	registeredDate: Timestamp | null
+	/** Team's final placement for this season (nullable if incomplete) */
+	placement: number | null
+	/** Initial seed for Swiss-format seasons (nullable) */
+	swissSeed?: number | null
+}
+
+/**
+ * Single roster entry: pure membership join between team-season and player.
+ *
+ * Stored at `teams/{teamId}/seasons/{seasonId}/roster/{playerId}`. The doc id
+ * is the player's UID. Carries no status fields — captain/paid/signed/banned
+ * all live on the player's season subdoc.
+ */
+export interface TeamRosterDocument extends DocumentData {
 	/** Reference to the player document */
 	player: DocumentReference<PlayerDocument>
-	/** Timestamp when player joined the team */
+	/** Timestamp when the player joined this team for this season */
 	dateJoined: Timestamp
 }
 
@@ -184,7 +214,12 @@ export interface SeasonStripeConfig {
 }
 
 /**
- * Season document structure representing a season in the system
+ * Season document structure representing a season in the system.
+ *
+ * The `teams[]` array of team refs was removed in the 2026 data model
+ * migration; the list of participating teams is now derived via a
+ * `collectionGroup('seasons').where('season', '==', seasonRef)` query
+ * against the per-team season subcollections.
  */
 export interface SeasonDocument extends DocumentData {
 	/** Season end date */
@@ -197,14 +232,10 @@ export interface SeasonDocument extends DocumentData {
 	registrationEnd: Timestamp
 	/** Registration start date */
 	registrationStart: Timestamp
-	/** Array of team references participating in this season */
-	teams: DocumentReference<TeamDocument>[]
 	/** Stripe payment configuration for this season */
 	stripe?: SeasonStripeConfig
 	/** Season format type - defaults to 'traditional' for backward compatibility */
 	format?: SeasonFormat
-	/** Initial team seeding for Swiss seasons (array of team IDs, index 0 = seed 1) */
-	swissInitialSeeding?: string[]
 }
 
 /**
@@ -370,8 +401,9 @@ export interface BadgeDocument extends DocumentData {
 }
 
 /**
- * Team badge document structure representing a badge awarded to a specific team
- * Stored as a subcollection under teams/{teamId}/badges
+ * Team badge document representing a badge awarded to a canonical team.
+ * Stored as a subcollection under `teams/{teamId}/badges/{badgeId}`. Tied to
+ * the team's identity, not to a specific season instance.
  */
 export interface TeamBadgeDocument extends DocumentData {
 	/** Reference to the badge definition */
@@ -380,6 +412,8 @@ export interface TeamBadgeDocument extends DocumentData {
 	awardedAt: Timestamp
 	/** Reference to the admin player who awarded the badge */
 	awardedBy: DocumentReference<PlayerDocument>
+	/** Season id during which this badge was earned (denormalized for filtering) */
+	seasonId: string
 }
 
 /////////////////////////////////////////////////////////////////
