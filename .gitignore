@@ -76,3 +76,6 @@ dist
 
 # Production data
 scripts/production/data/**
+
+# Local emulator data snapshot (cloned from production via `npm run data:refresh`)
+emulator-data/
