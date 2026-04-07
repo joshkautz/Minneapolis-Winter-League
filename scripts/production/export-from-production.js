@@ -259,36 +259,44 @@ async function exportCollection(collectionName, outputDir) {
 	console.log(`📁 Exporting collection: ${collectionName}`)
 
 	try {
-		const snapshot = await db.collection(collectionName).get()
+		// Use listDocuments() instead of .get() so we also discover "phantom"
+		// parent documents that have no fields but contain subcollections
+		// (e.g. dropbox/{uid} with only a waivers subcollection). These would
+		// be invisible to .get() and a normal listCollections() walk.
+		const docRefs = await db.collection(collectionName).listDocuments()
 
-		if (snapshot.empty) {
+		if (docRefs.length === 0) {
 			console.log(`   ⚠️  Collection ${collectionName} is empty`)
 			return 0
 		}
 
 		const collectionData = {}
+		let realDocCount = 0
 
-		for (const doc of snapshot.docs) {
-			const docData = doc.data()
-
-			// Convert Firestore timestamps to ISO strings for JSON compatibility
-			const convertedData = convertTimestamps(docData)
-
-			collectionData[doc.id] = convertedData
-
-			// Export subcollections
-			await exportSubcollections(collectionName, doc.id, outputDir)
+		for (const docRef of docRefs) {
+			const snapshot = await docRef.get()
+			if (snapshot.exists) {
+				collectionData[docRef.id] = convertTimestamps(snapshot.data())
+				realDocCount++
+			}
+			// Always recurse — phantom parents still have subcollections worth exporting.
+			await exportSubcollections(collectionName, docRef.id, outputDir)
 		}
 
-		// Write collection data to file
-		const collectionFile = path.join(outputDir, `${collectionName}.json`)
-		fs.writeFileSync(collectionFile, JSON.stringify(collectionData, null, 2))
+		// Only write the collection JSON if there were real (non-phantom) docs.
+		if (realDocCount > 0) {
+			const collectionFile = path.join(outputDir, `${collectionName}.json`)
+			fs.writeFileSync(collectionFile, JSON.stringify(collectionData, null, 2))
+			console.log(
+				`   ✅ Exported ${realDocCount} documents to ${collectionFile}`
+			)
+		} else {
+			console.log(
+				`   ✅ Exported ${docRefs.length} phantom parent(s) (subcollections only)`
+			)
+		}
 
-		console.log(
-			`   ✅ Exported ${snapshot.size} documents to ${collectionFile}`
-		)
-
-		return snapshot.size
+		return realDocCount
 	} catch (error) {
 		console.error(`   ❌ Error exporting collection ${collectionName}:`, error)
 		return 0
@@ -304,32 +312,36 @@ async function exportSubcollections(parentPath, docId, outputDir) {
 			const subPath = `${parentPath}__${docId}__${subcollection.id}`
 			console.log(`   📂 Found subcollection: ${subPath}`)
 
-			const subSnapshot = await subcollection.get()
+			// listDocuments() also surfaces phantom-parent subdocs.
+			const subDocRefs = await subcollection.listDocuments()
 
-			if (!subSnapshot.empty) {
-				const subcollectionData = {}
+			if (subDocRefs.length === 0) continue
 
-				for (const subDoc of subSnapshot.docs) {
-					const subDocData = subDoc.data()
-					const convertedData = convertTimestamps(subDocData)
-					subcollectionData[subDoc.id] = convertedData
+			const subcollectionData = {}
+			let realDocCount = 0
 
-					// Recursively export deeper subcollections
-					await exportSubcollections(
-						`${parentPath}/${docId}/${subcollection.id}`,
-						subDoc.id,
-						outputDir
-					)
+			for (const subDocRef of subDocRefs) {
+				const subSnap = await subDocRef.get()
+				if (subSnap.exists) {
+					subcollectionData[subDocRef.id] = convertTimestamps(subSnap.data())
+					realDocCount++
 				}
+				// Recurse into deeper subcollections.
+				await exportSubcollections(
+					`${parentPath}/${docId}/${subcollection.id}`,
+					subDocRef.id,
+					outputDir
+				)
+			}
 
+			if (realDocCount > 0) {
 				const subcollectionFile = path.join(outputDir, `${subPath}.json`)
 				fs.writeFileSync(
 					subcollectionFile,
 					JSON.stringify(subcollectionData, null, 2)
 				)
-
 				console.log(
-					`      ✅ Exported ${subSnapshot.size} documents to ${subcollectionFile}`
+					`      ✅ Exported ${realDocCount} documents to ${subcollectionFile}`
 				)
 			}
 		}
@@ -396,10 +408,19 @@ function convertTimestamps(obj, visited = new Set()) {
 	return obj
 }
 
+// Top-level collections whose parent docs are entirely phantom (only contain
+// subcollections). db.listCollections() does NOT return these, so we have to
+// know them ahead of time and merge them in.
+const KNOWN_PHANTOM_PARENT_COLLECTIONS = ['dropbox']
+
 async function getAllCollections() {
 	try {
 		const collections = await db.listCollections()
-		return collections.map((col) => col.id)
+		const ids = new Set(collections.map((col) => col.id))
+		for (const id of KNOWN_PHANTOM_PARENT_COLLECTIONS) {
+			ids.add(id)
+		}
+		return Array.from(ids).sort()
 	} catch (error) {
 		console.error('❌ Error listing collections:', error)
 		return []
