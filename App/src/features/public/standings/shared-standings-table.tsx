@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
 	Table,
 	TableBody,
@@ -37,6 +37,8 @@ export const SharedStandingsTable = ({
 	useTeamPlacement = false,
 	'aria-label': ariaLabel,
 }: SharedStandingsTableProps) => {
+	const navigate = useNavigate()
+
 	// Create a Map for O(1) team lookups instead of O(n) find() calls
 	const teamMap = useMemo(() => {
 		const map = new Map<string, { id: string; data: TeamDocument }>()
@@ -146,10 +148,28 @@ export const SharedStandingsTable = ({
 							const gamesPlayed = wins + losses
 							const rankValue = getRankValue(key, index, useTeamPlacement)
 
+							const teamId = teamEntry?.id
+							const teamName = teamDocument?.name
+							const navigateToTeam = () => {
+								if (teamId) navigate(`/teams/${teamId}`)
+							}
+
 							return (
 								<TableRow
 									key={key}
-									className='group hover:bg-muted/70 transition-colors relative'
+									className='group cursor-pointer hover:bg-muted/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset'
+									role='link'
+									tabIndex={teamId ? 0 : -1}
+									aria-label={
+										teamName ? `View ${teamName} team details` : undefined
+									}
+									onClick={navigateToTeam}
+									onKeyDown={(event) => {
+										if (event.key === 'Enter' || event.key === ' ') {
+											event.preventDefault()
+											navigateToTeam()
+										}
+									}}
 								>
 									<TableCell className='font-medium text-center' role='cell'>
 										{rankValue}
@@ -192,12 +212,6 @@ export const SharedStandingsTable = ({
 									>
 										{differential > 0 ? '+' : ''}
 										{differential}
-										{/* Link overlay for entire row - must be inside a cell for valid HTML */}
-										<Link
-											to={`/teams/${teamEntry?.id}`}
-											className='absolute inset-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset rounded-sm cursor-pointer'
-											aria-label={`View ${teamDocument?.name} team details`}
-										/>
 									</TableCell>
 								</TableRow>
 							)

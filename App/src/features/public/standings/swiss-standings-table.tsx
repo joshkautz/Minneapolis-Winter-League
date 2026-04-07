@@ -5,7 +5,7 @@
  */
 
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
 	Table,
 	TableBody,
@@ -33,6 +33,8 @@ export const SwissStandingsTable = ({
 	standings,
 	teamsQuerySnapshot,
 }: SwissStandingsTableProps) => {
+	const navigate = useNavigate()
+
 	// Create a Map for O(1) team lookups
 	const teamMap = useMemo(() => {
 		const map = new Map<string, { id: string; data: TeamDocument }>()
@@ -161,11 +163,27 @@ export const SwissStandingsTable = ({
 						const teamDocument = teamEntry?.data
 						const url = teamDocument?.logo
 						const gamesPlayed = standing.wins + standing.losses
+						const teamName = teamDocument?.name
+						const navigateToTeam = () => {
+							if (teamEntry?.id) navigate(`/teams/${teamEntry.id}`)
+						}
 
 						return (
 							<TableRow
 								key={teamId}
-								className='group hover:bg-muted/70 transition-colors relative'
+								className='group cursor-pointer hover:bg-muted/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset'
+								role='link'
+								tabIndex={teamEntry?.id ? 0 : -1}
+								aria-label={
+									teamName ? `View ${teamName} team details` : undefined
+								}
+								onClick={navigateToTeam}
+								onKeyDown={(event) => {
+									if (event.key === 'Enter' || event.key === ' ') {
+										event.preventDefault()
+										navigateToTeam()
+									}
+								}}
 							>
 								<TableCell className='font-medium text-center' role='cell'>
 									{rank}
@@ -211,12 +229,6 @@ export const SwissStandingsTable = ({
 								</TableCell>
 								<TableCell className='text-center font-medium' role='cell'>
 									{standing.swissScore}
-									{/* Link overlay for entire row */}
-									<Link
-										to={`/teams/${teamEntry?.id}`}
-										className='absolute inset-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset rounded-sm cursor-pointer'
-										aria-label={`View ${teamDocument?.name} team details`}
-									/>
 								</TableCell>
 							</TableRow>
 						)
