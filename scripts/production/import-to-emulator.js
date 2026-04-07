@@ -72,13 +72,18 @@ function convertFirestoreTypes(obj) {
 		return new Date(obj)
 	}
 
-	// Handle DocumentReference paths (strings like "teams/abc123" or "seasons/xyz789")
-	if (typeof obj === 'string' && obj.includes('/')) {
+	// Handle DocumentReference paths (strings like "teams/abc123" or "seasons/xyz789").
+	// Must be a strict 2-segment path of valid Firestore IDs (no spaces, no special
+	// chars, reasonable length) — otherwise plain text content containing a single
+	// "/" (e.g. "Winter/Spring") would be misinterpreted as a document reference.
+	if (typeof obj === 'string' && obj.length <= 200) {
 		const pathParts = obj.split('/')
 		if (pathParts.length === 2) {
-			// This looks like a document path, convert to DocumentReference
 			const [collectionId, documentId] = pathParts
-			return db.collection(collectionId).doc(documentId)
+			const idPattern = /^[A-Za-z0-9_-]+$/
+			if (idPattern.test(collectionId) && idPattern.test(documentId)) {
+				return db.collection(collectionId).doc(documentId)
+			}
 		}
 	}
 
