@@ -97,16 +97,20 @@ const buildSeasonMatchupsMap = (
 		const awayId = game.away.id
 
 		// Add to home team's matchup set
-		if (!matchups.has(homeId)) {
-			matchups.set(homeId, new Set())
+		let homeMatchups = matchups.get(homeId)
+		if (!homeMatchups) {
+			homeMatchups = new Set()
+			matchups.set(homeId, homeMatchups)
 		}
-		matchups.get(homeId)!.add(awayId)
+		homeMatchups.add(awayId)
 
 		// Add to away team's matchup set
-		if (!matchups.has(awayId)) {
-			matchups.set(awayId, new Set())
+		let awayMatchups = matchups.get(awayId)
+		if (!awayMatchups) {
+			awayMatchups = new Set()
+			matchups.set(awayId, awayMatchups)
 		}
-		matchups.get(awayId)!.add(homeId)
+		awayMatchups.add(homeId)
 	})
 
 	return matchups
@@ -210,10 +214,19 @@ export const useMonradPairings = (
 			})
 
 			// Track which rounds each team plays in
-			if (!teamRounds.has(team1Id)) teamRounds.set(team1Id, [])
-			if (!teamRounds.has(team2Id)) teamRounds.set(team2Id, [])
-			teamRounds.get(team1Id)!.push(slot.round)
-			teamRounds.get(team2Id)!.push(slot.round)
+			let team1Rounds = teamRounds.get(team1Id)
+			if (!team1Rounds) {
+				team1Rounds = []
+				teamRounds.set(team1Id, team1Rounds)
+			}
+			team1Rounds.push(slot.round)
+
+			let team2Rounds = teamRounds.get(team2Id)
+			if (!team2Rounds) {
+				team2Rounds = []
+				teamRounds.set(team2Id, team2Rounds)
+			}
+			team2Rounds.push(slot.round)
 		}
 
 		return {

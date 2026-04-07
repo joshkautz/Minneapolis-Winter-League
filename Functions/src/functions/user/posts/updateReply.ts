@@ -94,7 +94,7 @@ export const updateReply = onCall<
 			}
 
 			// Verify user is the author
-			if (replyData.author.id !== auth!.uid) {
+			if (replyData.author.id !== auth.uid) {
 				throw new HttpsError(
 					'permission-denied',
 					'You can only edit your own replies'
@@ -110,7 +110,7 @@ export const updateReply = onCall<
 			logger.info('Reply updated successfully', {
 				postId,
 				replyId,
-				authorId: auth!.uid,
+				authorId: auth.uid,
 				contentLength: trimmedContent.length,
 			})
 

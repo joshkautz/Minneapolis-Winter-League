@@ -97,7 +97,7 @@ export const createReply = onCall<
 			// Get player document and check banned status
 			const playerRef = firestore
 				.collection(Collections.PLAYERS)
-				.doc(auth!.uid) as DocumentReference<PlayerDocument>
+				.doc(auth.uid) as DocumentReference<PlayerDocument>
 			const playerDoc = await playerRef.get()
 
 			if (!playerDoc.exists) {
@@ -138,7 +138,7 @@ export const createReply = onCall<
 			logger.info('Reply created successfully', {
 				postId,
 				replyId,
-				authorId: auth!.uid,
+				authorId: auth.uid,
 				contentLength: trimmedContent.length,
 			})
 

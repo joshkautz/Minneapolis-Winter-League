@@ -82,7 +82,7 @@ export const createPost = onCall<
 			// Get player document and check banned status
 			const playerRef = firestore
 				.collection(Collections.PLAYERS)
-				.doc(auth!.uid) as DocumentReference<PlayerDocument>
+				.doc(auth.uid) as DocumentReference<PlayerDocument>
 			const playerDoc = await playerRef.get()
 
 			if (!playerDoc.exists) {
@@ -115,7 +115,7 @@ export const createPost = onCall<
 
 			logger.info('Post created successfully', {
 				postId: postRef.id,
-				authorId: auth!.uid,
+				authorId: auth.uid,
 				seasonId,
 				contentLength: trimmedContent.length,
 			})

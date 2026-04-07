@@ -9,8 +9,13 @@ import { PlayerDocument, PlayerSeason } from '../types.js'
 /**
  * Validates that a user is authenticated and has a verified email
  * Use this for most functions where email verification is required
+ *
+ * Uses an assertion signature so TypeScript narrows `auth` from
+ * `AuthData | undefined` to `AuthData` for the rest of the calling scope.
  */
-export function validateAuthentication(auth: CallableRequest['auth']): void {
+export function validateAuthentication(
+	auth: CallableRequest['auth']
+): asserts auth is NonNullable<CallableRequest['auth']> {
 	if (!auth?.uid) {
 		throw new HttpsError('unauthenticated', 'Authentication required')
 	}
@@ -30,7 +35,7 @@ export function validateAuthentication(auth: CallableRequest['auth']): void {
  */
 export function validateBasicAuthentication(
 	auth: CallableRequest['auth']
-): void {
+): asserts auth is NonNullable<CallableRequest['auth']> {
 	if (!auth?.uid) {
 		throw new HttpsError('unauthenticated', 'Authentication required')
 	}

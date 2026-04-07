@@ -91,7 +91,7 @@ export const updatePost = onCall<
 			}
 
 			// Verify user is the author
-			if (postData.author.id !== auth!.uid) {
+			if (postData.author.id !== auth.uid) {
 				throw new HttpsError(
 					'permission-denied',
 					'You can only edit your own posts'
@@ -106,7 +106,7 @@ export const updatePost = onCall<
 
 			logger.info('Post updated successfully', {
 				postId,
-				authorId: auth!.uid,
+				authorId: auth.uid,
 				contentLength: trimmedContent.length,
 			})
 
