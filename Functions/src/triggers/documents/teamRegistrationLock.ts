@@ -67,9 +67,7 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 				return
 			}
 
-			logger.info(
-				`${LOCK_THRESHOLD} teams registered! Locking registration...`
-			)
+			logger.info(`${LOCK_THRESHOLD} teams registered! Locking registration...`)
 
 			// Delete all unregistered teams for this season. The deletion service
 			// also clears team references from players on those teams.

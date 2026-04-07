@@ -1032,7 +1032,6 @@ const SeasonCard = ({
 							Banned
 						</Label>
 					</div>
-
 				</div>
 
 				{/* Send Waiver button - only shows when paid but not signed */}
