@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { GameDocument, hasAssignedTeams } from '@/shared/utils'
 import {
 	Card,
@@ -7,14 +8,7 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { useTeamsContext } from '@/providers'
-import {
-	TooltipProvider,
-	Tooltip,
-	TooltipTrigger,
-	TooltipContent,
-} from '@/components/ui/tooltip'
 import { TeamIcon } from './team-icon'
-import { useIsMobile } from '@/shared/hooks/use-mobile'
 
 export const ScheduleCard = ({
 	games,
@@ -24,7 +18,6 @@ export const ScheduleCard = ({
 	title: string
 }) => {
 	const { selectedSeasonTeamsQuerySnapshot } = useTeamsContext()
-	const isMobile = useIsMobile()
 
 	return (
 		<Card className='w-full'>
@@ -67,21 +60,24 @@ export const ScheduleCard = ({
 							>
 								<div className='w-16 shrink-0 text-sm'>Field {index + 1}</div>
 								<div className='grid flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3'>
-									<TooltipProvider>
-										<Tooltip>
-											<TooltipTrigger asChild>
-												<div className='flex min-w-0 items-center justify-start gap-1'>
-													{!isMobile && <TeamIcon team={homeTeam} />}
-													<span className='text-foreground truncate text-xs font-medium'>
-														{homeTeam?.data().name || 'To Be Determined'}
-													</span>
-												</div>
-											</TooltipTrigger>
-											<TooltipContent>
-												<p>{homeTeam?.data().name || 'To Be Determined'}</p>
-											</TooltipContent>
-										</Tooltip>
-									</TooltipProvider>
+									{homeTeam ? (
+										<Link
+											to={`/teams/${homeTeam.id}`}
+											className='inline-flex min-w-0 max-w-full items-center justify-self-end gap-3 hover:underline'
+										>
+											<span className='text-foreground truncate text-xs font-medium'>
+												{homeTeam.data().name}
+											</span>
+											<TeamIcon team={homeTeam} />
+										</Link>
+									) : (
+										<div className='inline-flex min-w-0 max-w-full items-center justify-self-end gap-3'>
+											<span className='text-foreground truncate text-xs font-medium'>
+												To Be Determined
+											</span>
+											<TeamIcon team={homeTeam} />
+										</div>
+									)}
 									<p className='w-14 shrink-0 select-none text-center text-sm'>
 										{game.date.toDate() > new Date()
 											? 'vs'
@@ -89,21 +85,24 @@ export const ScheduleCard = ({
 												? 'vs'
 												: `${game.homeScore} - ${game.awayScore}`}
 									</p>
-									<TooltipProvider>
-										<Tooltip>
-											<TooltipTrigger asChild>
-												<div className='flex min-w-0 items-center justify-start gap-1'>
-													{!isMobile && <TeamIcon team={awayTeam} />}
-													<span className='text-foreground truncate text-xs font-medium'>
-														{awayTeam?.data().name || 'To Be Determined'}
-													</span>
-												</div>
-											</TooltipTrigger>
-											<TooltipContent>
-												<p>{awayTeam?.data().name || 'To Be Determined'}</p>
-											</TooltipContent>
-										</Tooltip>
-									</TooltipProvider>
+									{awayTeam ? (
+										<Link
+											to={`/teams/${awayTeam.id}`}
+											className='inline-flex min-w-0 max-w-full items-center justify-self-start gap-3 hover:underline'
+										>
+											<TeamIcon team={awayTeam} />
+											<span className='text-foreground truncate text-xs font-medium'>
+												{awayTeam.data().name}
+											</span>
+										</Link>
+									) : (
+										<div className='inline-flex min-w-0 max-w-full items-center justify-self-start gap-3'>
+											<TeamIcon team={awayTeam} />
+											<span className='text-foreground truncate text-xs font-medium'>
+												To Be Determined
+											</span>
+										</div>
+									)}
 								</div>
 							</div>
 						)

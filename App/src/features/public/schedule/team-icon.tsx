@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { QueryDocumentSnapshot } from '@/firebase'
 import { TeamDocument, cn } from '@/shared/utils'
 
@@ -9,14 +8,12 @@ export const TeamIcon = ({
 }) => {
 	if (!team) {
 		return (
-			<div className={'shrink-0 flex flex-col items-center gap-1'}>
-				<div
-					className={
-						'w-8 h-8 bg-muted border-2 border-dashed border-muted-foreground mx-auto rounded-full flex items-center justify-center'
-					}
-				>
-					<span className={'text-xs text-muted-foreground font-bold'}>TBD</span>
-				</div>
+			<div
+				className={
+					'shrink-0 w-8 h-8 bg-muted border-2 border-dashed border-muted-foreground rounded-full flex items-center justify-center'
+				}
+			>
+				<span className={'text-xs text-muted-foreground font-bold'}>TBD</span>
 			</div>
 		)
 	}
@@ -25,27 +22,27 @@ export const TeamIcon = ({
 	const teamName = team.data().name
 	const firstLetter = teamName?.charAt(0).toUpperCase() || '?'
 
+	if (url) {
+		return (
+			<img
+				className={cn(
+					'shrink-0 w-8 h-8 rounded-full object-cover bg-muted transition duration-300'
+				)}
+				src={url}
+				alt={teamName}
+			/>
+		)
+	}
+
 	return (
-		<Link to={`/teams/${team.id}`} className='shrink-0 inline-flex'>
-			{url ? (
-				<img
-					className={cn(
-						'mx-auto w-8 h-8 rounded-full object-cover bg-muted hover:scale-105 transition duration-300'
-					)}
-					src={url}
-					alt={teamName}
-				/>
-			) : (
-				<div
-					className={cn(
-						'mx-auto w-8 h-8 rounded-full bg-primary flex items-center justify-center hover:scale-105 transition duration-300'
-					)}
-				>
-					<span className='text-xs text-primary-foreground font-bold'>
-						{firstLetter}
-					</span>
-				</div>
+		<div
+			className={cn(
+				'shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center transition duration-300'
 			)}
-		</Link>
+		>
+			<span className='text-xs text-primary-foreground font-bold'>
+				{firstLetter}
+			</span>
+		</div>
 	)
 }
