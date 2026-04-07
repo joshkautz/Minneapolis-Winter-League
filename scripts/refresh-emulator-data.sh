@@ -3,15 +3,15 @@
 # refresh-emulator-data.sh
 #
 # Pulls the latest production data and saves it locally in the native Firebase
-# Emulator Suite format at ./emulator-data, ready to be loaded with
-# `firebase emulators:start --import ./emulator-data`.
+# Emulator Suite format at ./.emulator, ready to be loaded with
+# `firebase emulators:start --import ./.emulator`.
 #
 # Pipeline:
 #   1. Export production Firestore + Auth + Storage to JSON (Admin SDK).
 #   2. Boot the emulators in a one-shot session.
 #   3. Load the JSON into the running emulators.
 #   4. On graceful shutdown, --export-on-exit writes everything to
-#      ./emulator-data in the native emulator format.
+#      ./.emulator in the native emulator format.
 #
 # Requires: gcloud auth application-default login (for production access).
 
@@ -20,9 +20,12 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO_ROOT"
 
-EMULATOR_DATA_DIR="./emulator-data"
+EMULATOR_DATA_DIR="./.emulator"
+EXPORT_JSON_DIR="./scripts/production/data"
 
 echo "==> Step 1/2: Exporting production data to JSON..."
+# Clear stale exports so collections removed from production no longer linger.
+rm -rf "${EXPORT_JSON_DIR}"
 node scripts/production/export-from-production.js
 
 echo ""

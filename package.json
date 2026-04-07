@@ -17,7 +17,7 @@
 		"lint:check": "npm run lint:check --workspace=App && npm run lint:check --workspace=Functions",
 		"lint:fix": "npm run lint:fix --workspace=App && npm run lint:fix --workspace=Functions",
 		"test": "npm run test --workspace=App && npm run test --workspace=Functions",
-		"emulators:start": "firebase emulators:start --import ./emulator-data --export-on-exit",
+		"emulators:start": "firebase emulators:start --import ./.emulator --export-on-exit",
 		"deploy": "firebase deploy",
 		"deploy:hosting": "firebase deploy --only hosting",
 		"deploy:functions": "firebase deploy --only functions",
