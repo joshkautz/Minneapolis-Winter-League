@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
 import { logger, errorHandler, PlayerDocument } from '@/shared/utils'
 import { playerSeasonRef } from '@/firebase/collections/players'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 export const ManageTeamRosterPlayer = ({
@@ -55,10 +56,18 @@ export const ManageTeamRosterPlayer = ({
 	const team = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) => team.id === currentSeasonData?.team?.id
+				(teamDoc) =>
+					canonicalTeamIdFromTeamSeasonDoc(teamDoc) ===
+					currentSeasonData?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)
+
+	// `team.id` is the seasonId on a teamSeasons subdoc — derive the canonical
+	// team id for backend calls.
+	const canonicalTeamId = team
+		? canonicalTeamIdFromTeamSeasonDoc(team)
+		: undefined
 
 	const isPlayerCaptain = useMemo(
 		() => playerSeasonSnapshot?.data()?.captain === true,
@@ -76,26 +85,26 @@ export const ManageTeamRosterPlayer = ({
 	)
 
 	const demoteFromCaptainOnClickHandler = useCallback(async () => {
-		if (!playerSnapshot?.id || !team?.id) {
+		if (!playerSnapshot?.id || !canonicalTeamId) {
 			toast.error('Missing required data to demote captain')
 			return
 		}
 
 		try {
 			await updateTeamRosterViaFunction({
-				teamId: team.id,
+				teamId: canonicalTeamId,
 				playerId: playerSnapshot.id,
 				action: 'demote',
 			})
 
 			logger.userAction('captain_demoted', 'ManageTeamRosterPlayer', {
 				playerId: playerSnapshot?.id,
-				teamId: team?.id,
+				teamId: canonicalTeamId,
 				playerName: playerSnapshot?.data()?.firstname,
 			})
 			logger.firebase('demoteFromCaptain', 'teams', undefined, {
 				playerId: playerSnapshot?.id,
-				teamId: team?.id,
+				teamId: canonicalTeamId,
 			})
 			toast.success(
 				`${
@@ -114,36 +123,36 @@ export const ManageTeamRosterPlayer = ({
 					component: 'ManageTeamRosterPlayer',
 					action: 'demote_captain',
 					playerId: playerSnapshot?.id,
-					teamId: team?.id,
+					teamId: canonicalTeamId,
 				}
 			)
 			errorHandler.handleFirebase(error, 'demote_captain', 'teams', {
 				fallbackMessage: 'Unable to demote captain. Please try again.',
 			})
 		}
-	}, [team, playerSnapshot])
+	}, [canonicalTeamId, playerSnapshot])
 
 	const promoteToCaptainOnClickHandler = useCallback(async () => {
-		if (!playerSnapshot?.id || !team?.id) {
+		if (!playerSnapshot?.id || !canonicalTeamId) {
 			toast.error('Missing required data to promote captain')
 			return
 		}
 
 		try {
 			await updateTeamRosterViaFunction({
-				teamId: team.id,
+				teamId: canonicalTeamId,
 				playerId: playerSnapshot.id,
 				action: 'promote',
 			})
 
 			logger.userAction('captain_promoted', 'ManageTeamRosterPlayer', {
 				playerId: playerSnapshot?.id,
-				teamId: team?.id,
+				teamId: canonicalTeamId,
 				playerName: playerSnapshot?.data()?.firstname,
 			})
 			logger.firebase('promoteToCaptain', 'teams', undefined, {
 				playerId: playerSnapshot?.id,
-				teamId: team?.id,
+				teamId: canonicalTeamId,
 			})
 			toast.success('Congratulations', {
 				description: `${
@@ -158,7 +167,7 @@ export const ManageTeamRosterPlayer = ({
 					component: 'ManageTeamRosterPlayer',
 					action: 'promote_captain',
 					playerId: playerSnapshot?.id,
-					teamId: team?.id,
+					teamId: canonicalTeamId,
 				}
 			)
 			errorHandler.handleFirebase(error, 'promote_captain', 'teams', {
@@ -166,17 +175,17 @@ export const ManageTeamRosterPlayer = ({
 					'Unable to promote captain. Ensure your email is verified and try again.',
 			})
 		}
-	}, [team, playerSnapshot])
+	}, [canonicalTeamId, playerSnapshot])
 
 	const removeFromTeamOnClickHandler = useCallback(async () => {
-		if (!playerSnapshot?.id || !team?.id) {
+		if (!playerSnapshot?.id || !canonicalTeamId) {
 			toast.error('Missing required data to remove player')
 			return
 		}
 
 		try {
 			await updateTeamRosterViaFunction({
-				teamId: team.id,
+				teamId: canonicalTeamId,
 				playerId: playerSnapshot.id,
 				action: 'remove',
 			})
@@ -195,14 +204,14 @@ export const ManageTeamRosterPlayer = ({
 					component: 'ManageTeamRosterPlayer',
 					action: 'remove_player',
 					playerId: playerSnapshot?.id,
-					teamId: team?.id,
+					teamId: canonicalTeamId,
 				}
 			)
 			errorHandler.handleFirebase(error, 'remove_player', 'teams', {
 				fallbackMessage: 'Unable to remove player. Please try again.',
 			})
 		}
-	}, [team, playerSnapshot])
+	}, [canonicalTeamId, playerSnapshot])
 
 	return (
 		<div className='border-b border-border/50 last:border-b-0 relative'>

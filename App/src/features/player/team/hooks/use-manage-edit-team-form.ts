@@ -4,6 +4,7 @@ import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { TeamFormData, teamFormSchema } from '@/shared/utils/validation'
 import { editTeamViaFunction } from '@/firebase/collections/functions'
 import { logger } from '@/shared/utils'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useTeamManagement } from './use-team-management'
 
 interface UseManageEditTeamFormProps {
@@ -29,6 +30,11 @@ export const useManageEditTeamForm = ({
 	handleResult,
 }: UseManageEditTeamFormProps) => {
 	const { team } = useTeamManagement()
+	// `team.id` is the seasonId on a teamSeasons subdoc; derive the canonical
+	// team id for backend calls.
+	const canonicalTeamId = team
+		? canonicalTeamIdFromTeamSeasonDoc(team)
+		: undefined
 	const [blob, setBlob] = useState<Blob>()
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
@@ -60,7 +66,7 @@ export const useManageEditTeamForm = ({
 				return
 			}
 
-			if (!team?.id) {
+			if (!canonicalTeamId) {
 				handleResult({
 					success: false,
 					title: 'Team not found',
@@ -96,7 +102,7 @@ export const useManageEditTeamForm = ({
 
 				// Call Firebase Function to update team
 				const result = await editTeamViaFunction({
-					teamId: team.id,
+					teamId: canonicalTeamId,
 					name: data.name,
 					logoBlob,
 					logoContentType,
@@ -114,7 +120,7 @@ export const useManageEditTeamForm = ({
 					error instanceof Error ? error : new Error(String(error)),
 					{
 						component: 'useManageEditTeamForm',
-						teamId: team?.id,
+						teamId: canonicalTeamId,
 						teamName: data.name,
 					}
 				)
@@ -148,7 +154,7 @@ export const useManageEditTeamForm = ({
 				setIsSubmitting(false)
 			}
 		},
-		[isSubmitting, setIsSubmitting, blob, team, handleResult]
+		[isSubmitting, setIsSubmitting, blob, canonicalTeamId, handleResult]
 	)
 
 	return {

@@ -6,6 +6,7 @@ import {
 import { toast } from 'sonner'
 import { logger } from '@/shared/utils'
 import { useTeamsContext } from '@/providers'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 /**
@@ -28,31 +29,39 @@ export const useManageCaptainActions = () => {
 	const teamQueryDocumentSnapshot = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) => team.id === currentSeasonData?.team?.id
+				(teamDoc) =>
+					canonicalTeamIdFromTeamSeasonDoc(teamDoc) ===
+					currentSeasonData?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)
 
+	// `teamQueryDocumentSnapshot.id` is the seasonId on a teamSeasons subdoc;
+	// derive the canonical team id for backend calls.
+	const canonicalTeamId = teamQueryDocumentSnapshot
+		? canonicalTeamIdFromTeamSeasonDoc(teamQueryDocumentSnapshot)
+		: undefined
+
 	// Remove user from team handler
 	const removeFromTeamOnClickHandler = useCallback(async () => {
-		if (!authenticatedUserSnapshot?.id || !teamQueryDocumentSnapshot?.id) {
+		if (!authenticatedUserSnapshot?.id || !canonicalTeamId) {
 			toast.error('Missing required data to leave team')
 			return
 		}
 
 		try {
 			await updateTeamRosterViaFunction({
-				teamId: teamQueryDocumentSnapshot.id,
+				teamId: canonicalTeamId,
 				playerId: authenticatedUserSnapshot.id,
 				action: 'remove',
 			})
 
 			logger.userAction('team_left', 'useManageCaptainActions', {
-				teamId: teamQueryDocumentSnapshot?.id,
+				teamId: canonicalTeamId,
 				userId: authenticatedUserSnapshot?.id,
 			})
 			logger.firebase('removeFromTeam', 'teams', undefined, {
-				teamId: teamQueryDocumentSnapshot?.id,
+				teamId: canonicalTeamId,
 			})
 			toast.success('Success', {
 				description: 'You have left the team.',
@@ -69,7 +78,7 @@ export const useManageCaptainActions = () => {
 				{
 					component: 'useManageCaptainActions',
 					action: 'leave_team',
-					teamId: teamQueryDocumentSnapshot?.id,
+					teamId: canonicalTeamId,
 				}
 			)
 
@@ -78,24 +87,24 @@ export const useManageCaptainActions = () => {
 				description: errorMessage,
 			})
 		}
-	}, [authenticatedUserSnapshot, teamQueryDocumentSnapshot])
+	}, [authenticatedUserSnapshot, canonicalTeamId])
 
 	// Delete team handler
 	const deleteTeamOnClickHandler = useCallback(async () => {
-		if (!teamQueryDocumentSnapshot?.id) {
+		if (!canonicalTeamId) {
 			toast.error('Missing team data to delete team')
 			return
 		}
 
 		try {
-			await deleteTeamViaFunction(teamQueryDocumentSnapshot.id)
+			await deleteTeamViaFunction(canonicalTeamId)
 
 			logger.userAction('team_deleted', 'useManageCaptainActions', {
-				teamId: teamQueryDocumentSnapshot?.id,
+				teamId: canonicalTeamId,
 				userId: authenticatedUserSnapshot?.id,
 			})
 			logger.firebase('deleteTeam', 'teams', undefined, {
-				teamId: teamQueryDocumentSnapshot?.id,
+				teamId: canonicalTeamId,
 			})
 			toast.success('Success', {
 				description: 'Team has been deleted.',
@@ -112,7 +121,7 @@ export const useManageCaptainActions = () => {
 				{
 					component: 'useManageCaptainActions',
 					action: 'delete_team',
-					teamId: teamQueryDocumentSnapshot?.id,
+					teamId: canonicalTeamId,
 				}
 			)
 
@@ -121,7 +130,7 @@ export const useManageCaptainActions = () => {
 				description: errorMessage,
 			})
 		}
-	}, [authenticatedUserSnapshot, teamQueryDocumentSnapshot])
+	}, [authenticatedUserSnapshot, canonicalTeamId])
 
 	// Edit team handler
 	const handleEditTeamClick = useCallback(() => {

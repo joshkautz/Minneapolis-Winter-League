@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTeamsContext } from '@/providers'
 import { logger, errorHandler } from '@/shared/utils'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 export const ManageNonCaptainActions = () => {
@@ -25,20 +26,26 @@ export const ManageNonCaptainActions = () => {
 	const teamQueryDocumentSnapshot = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) => team.id === currentSeasonData?.team?.id
+				(teamDoc) =>
+					canonicalTeamIdFromTeamSeasonDoc(teamDoc) ===
+					currentSeasonData?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)
 
+	const canonicalTeamId = teamQueryDocumentSnapshot
+		? canonicalTeamIdFromTeamSeasonDoc(teamQueryDocumentSnapshot)
+		: undefined
+
 	const removeFromTeamOnClickHandler = useCallback(async () => {
-		if (!authenticatedUserSnapshot?.id || !teamQueryDocumentSnapshot?.id) {
+		if (!authenticatedUserSnapshot?.id || !canonicalTeamId) {
 			toast.error('Missing required data to leave team')
 			return
 		}
 
 		try {
 			await updateTeamRosterViaFunction({
-				teamId: teamQueryDocumentSnapshot.id,
+				teamId: canonicalTeamId,
 				playerId: authenticatedUserSnapshot.id,
 				action: 'remove',
 			})
@@ -58,7 +65,7 @@ export const ManageNonCaptainActions = () => {
 				{
 					component: 'ManageNonCaptainActions',
 					action: 'leave_team',
-					teamId: teamQueryDocumentSnapshot?.id,
+					teamId: canonicalTeamId,
 					userId: authenticatedUserSnapshot?.id,
 				}
 			)
@@ -66,7 +73,7 @@ export const ManageNonCaptainActions = () => {
 				fallbackMessage: 'Unable to leave team. Please try again.',
 			})
 		}
-	}, [authenticatedUserSnapshot, teamQueryDocumentSnapshot])
+	}, [authenticatedUserSnapshot, canonicalTeamId])
 
 	return (
 		<div className='absolute right-6'>

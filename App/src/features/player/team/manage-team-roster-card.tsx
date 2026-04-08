@@ -1,11 +1,15 @@
 import { ReactNode, useMemo, useState } from 'react'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { DocumentReference } from '@/firebase'
+import { useCollection } from 'react-firebase-hooks/firestore'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
 import { NotificationCard } from '@/shared/components'
 import { ManageTeamRosterPlayer } from './manage-team-roster-player'
-import { PlayerDocument, formatTimestamp } from '@/shared/utils'
+import { formatTimestamp, TeamRosterDocument } from '@/shared/utils'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
+import {
+	canonicalTeamIdFromTeamSeasonDoc,
+	teamRosterSubcollection,
+} from '@/firebase/collections/teams'
 
 export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
@@ -22,9 +26,22 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 	const team = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) => team.id === currentSeasonData?.team?.id
+				(teamDoc) =>
+					canonicalTeamIdFromTeamSeasonDoc(teamDoc) ===
+					currentSeasonData?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
+	)
+
+	// Roster subcollection for the captain's team in the current season.
+	const canonicalTeamId = team
+		? canonicalTeamIdFromTeamSeasonDoc(team)
+		: undefined
+	const seasonId = currentSeasonQueryDocumentSnapshot?.id
+	const [rosterSnapshot] = useCollection(
+		canonicalTeamId && seasonId
+			? teamRosterSubcollection(canonicalTeamId, seasonId)
+			: undefined
 	)
 
 	const registrationStatus =
@@ -93,20 +110,15 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 			className='max-w-none'
 		>
 			<div className='space-y-0 -mx-1'>
-				{team?.data().roster.map(
-					(
-						item: {
-							captain: boolean
-							player: DocumentReference<PlayerDocument>
-						},
-						index: number
-					) => (
+				{rosterSnapshot?.docs.map((rosterDoc) => {
+					const data = rosterDoc.data() as TeamRosterDocument
+					return (
 						<ManageTeamRosterPlayer
-							key={`team-${index}`}
-							playerRef={item.player}
+							key={rosterDoc.id}
+							playerRef={data.player}
 						/>
 					)
-				)}
+				})}
 			</div>
 		</NotificationCard>
 	)
