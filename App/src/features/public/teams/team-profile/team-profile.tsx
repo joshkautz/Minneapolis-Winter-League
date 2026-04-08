@@ -7,24 +7,25 @@ import { Award, Lock, Loader2, Calendar, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
 import { NotificationCard } from '@/shared/components'
 import {
-	DocumentReference,
 	gamesByTeamQuery,
 	teamSeasonsQuery,
-	getTeamById,
+	getTeamRef,
+	teamSeasonRef,
+	teamRosterSubcollection,
+	teamsInSeasonQuery,
 	DocumentSnapshot,
-	teamsBySeasonQuery,
 } from '@/firebase'
 import { teamBadgesQuery } from '@/firebase/collections/badges'
 import {
 	GameDocument,
-	PlayerDocument,
 	TeamDocument,
+	TeamSeasonDocument,
 	hasAssignedTeams,
 	getTeamRole,
 	formatTimestamp,
 	logger,
 } from '@/shared/utils'
-import { BadgeDocument, TeamBadgeDocument } from '@/types'
+import { BadgeDocument, TeamBadgeDocument, TeamRosterDocument } from '@/types'
 import { TeamRosterPlayer } from './team-roster-player'
 import { TeamHistory } from './team-history'
 import {
@@ -104,17 +105,34 @@ export const TeamProfile = () => {
 	const { allBadgesQuerySnapshot: allBadgesSnapshot } = useBadgesContext()
 	const { allTeamsQuerySnapshot: allTeamsSnapshot } = useTeamsContext()
 
+	const currentSeasonId = currentSeasonQueryDocumentSnapshot?.id
+	const currentSeasonRef = currentSeasonQueryDocumentSnapshot?.ref
+
 	const [teamDocumentSnapshot, teamDocumentSnapshotLoading, teamError] =
-		useDocument(getTeamById(id))
+		useDocument(getTeamRef(id))
+
+	// Per-season data lives on teams/{id}/teamSeasons/{seasonId}. Default to
+	// the current season; the team-history component below shows other seasons.
+	const [teamSeasonSnapshot, teamSeasonLoading, teamSeasonError] = useDocument(
+		id && currentSeasonId ? teamSeasonRef(id, currentSeasonId) : undefined
+	)
 
 	const [historyQuerySnapshot, historyQuerySnapshotLoading, historyError] =
 		useCollection(teamSeasonsQuery(id))
 
+	// Used for opponent-name lookups in the games list.
 	const [teamsQuerySnapshot, teamsQuerySnapshotLoading, teamsError] =
-		useCollection(teamsBySeasonQuery(teamDocumentSnapshot?.data()?.season))
+		useCollection(teamsInSeasonQuery(currentSeasonRef))
 
 	const [gamesQuerySnapshot, gamesQuerySnapshotLoading, gamesError] =
 		useCollection(gamesByTeamQuery(teamDocumentSnapshot?.ref))
+
+	// Roster subcollection for the current season.
+	const [rosterSnapshot, rosterLoading, rosterError] = useCollection(
+		id && currentSeasonId
+			? teamRosterSubcollection(id, currentSeasonId)
+			: undefined
+	)
 
 	// Fetch team badges
 	const [teamBadgesSnapshot, , teamBadgesError] = useCollection(
@@ -183,6 +201,24 @@ export const TeamProfile = () => {
 		}
 	}, [teamBadgesError])
 
+	useEffect(() => {
+		if (teamSeasonError) {
+			logger.error('Failed to load team season:', {
+				component: 'TeamProfile',
+				error: teamSeasonError.message,
+			})
+		}
+	}, [teamSeasonError])
+
+	useEffect(() => {
+		if (rosterError) {
+			logger.error('Failed to load roster:', {
+				component: 'TeamProfile',
+				error: rosterError.message,
+			})
+		}
+	}, [rosterError])
+
 	// Enhanced badge interface with earned status and percentage
 	interface EnhancedBadge {
 		id: string
@@ -201,13 +237,9 @@ export const TeamProfile = () => {
 			return null
 		}
 
-		// Calculate total unique teamIds across all teams
-		const uniqueTeamIds = new Set<string>()
-		allTeamsSnapshot.docs.forEach((teamDoc) => {
-			const teamData = teamDoc.data() as TeamDocument
-			uniqueTeamIds.add(teamData.teamId)
-		})
-		const totalUniqueTeams = uniqueTeamIds.size
+		// allTeamsSnapshot is the canonical teams collection — each doc id is
+		// already the unique canonical team id, so the size is the count.
+		const totalUniqueTeams = allTeamsSnapshot.size
 
 		// Create a set of earned badge IDs for this team
 		const earnedBadgeIds = new Set(teamBadgesSnapshot.docs.map((doc) => doc.id))
@@ -263,11 +295,15 @@ export const TeamProfile = () => {
 	const isLoading = useMemo(
 		() =>
 			teamDocumentSnapshotLoading ||
+			teamSeasonLoading ||
+			rosterLoading ||
 			historyQuerySnapshotLoading ||
 			teamsQuerySnapshotLoading ||
 			gamesQuerySnapshotLoading,
 		[
 			teamDocumentSnapshotLoading,
+			teamSeasonLoading,
+			rosterLoading,
 			historyQuerySnapshotLoading,
 			teamsQuerySnapshotLoading,
 			gamesQuerySnapshotLoading,
@@ -283,17 +319,27 @@ export const TeamProfile = () => {
 
 	const [imageError, setImageError] = useState(false)
 
+	const teamSeasonData = teamSeasonSnapshot?.data() as
+		| TeamSeasonDocument
+		| undefined
+	const teamName = teamSeasonData?.name
+	const teamLogo = teamSeasonData?.logo
+	const teamRegistered = teamSeasonData?.registered === true
+	const teamPlacement = teamSeasonData?.placement
+	const formattedPlacement = formatPlacement(teamPlacement)
+	const teamSeasonRefForGames = teamSeasonData?.season
+
 	const registrationStatus = useMemo(
 		() =>
 			isLoading ? (
 				<p className='text-sm text-muted-foreground'>Loading...</p>
-			) : teamDocumentSnapshot?.data()?.registered ? (
+			) : teamRegistered ? (
 				<p
 					className={
 						'text-sm text-muted-foreground inline-flex gap-2 items-center'
 					}
 				>
-					{teamDocumentSnapshot?.data()?.name} is fully registered
+					{teamName} is fully registered
 					<CheckCircledIcon className='w-4 h-4' />
 				</p>
 			) : (
@@ -310,22 +356,27 @@ export const TeamProfile = () => {
 					.
 				</p>
 			),
-		[isLoading, teamDocumentSnapshot, currentSeasonQueryDocumentSnapshot]
+		[isLoading, teamRegistered, teamName, currentSeasonQueryDocumentSnapshot]
 	)
-
-	const teamName = teamDocumentSnapshot?.data()?.name
-	const teamSeasonRef = teamDocumentSnapshot?.data()?.season
-	const teamPlacement = teamDocumentSnapshot?.data()?.placement
-	const formattedPlacement = formatPlacement(teamPlacement)
 
 	// Get the season name from the seasons query snapshot
 	const teamSeasonName = useMemo(() => {
-		if (!teamSeasonRef || !seasonsQuerySnapshot) return null
+		if (!teamSeasonRefForGames || !seasonsQuerySnapshot) return null
 		const seasonDoc = seasonsQuerySnapshot.docs.find(
-			(doc) => doc.id === teamSeasonRef.id
+			(doc) => doc.id === teamSeasonRefForGames.id
 		)
 		return seasonDoc?.data()?.name || null
-	}, [teamSeasonRef, seasonsQuerySnapshot])
+	}, [teamSeasonRefForGames, seasonsQuerySnapshot])
+
+	// Filter games to the current season only — gamesByTeamQuery returns
+	// every game the canonical team has ever played.
+	const currentSeasonGames = useMemo(() => {
+		if (!gamesQuerySnapshot) return []
+		if (!currentSeasonId) return gamesQuerySnapshot.docs
+		return gamesQuerySnapshot.docs.filter(
+			(g) => g.data().season?.id === currentSeasonId
+		)
+	}, [gamesQuerySnapshot, currentSeasonId])
 
 	return (
 		<div className={'container'}>
@@ -335,9 +386,9 @@ export const TeamProfile = () => {
 					{/* Team Logo */}
 					<div className='w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 group'>
 						<div className='aspect-square w-full overflow-hidden rounded-xl bg-muted shadow-md'>
-							{teamDocumentSnapshot?.data()?.logo && !imageError ? (
+							{teamLogo && !imageError ? (
 								<img
-									src={teamDocumentSnapshot.data()?.logo || undefined}
+									src={teamLogo}
 									alt={`${teamName || 'Team'} logo`}
 									className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-105'
 									onError={() => setImageError(true)}
@@ -566,9 +617,7 @@ export const TeamProfile = () => {
 					<NotificationCard
 						title={'Roster'}
 						description={
-							teamDocumentSnapshot
-								? `${teamDocumentSnapshot?.data()?.name} team players and captains`
-								: ``
+							teamName ? `${teamName} team players and captains` : ``
 						}
 						className={'flex-1 basis-[360px] shrink-0 min-w-[360px]'}
 						footerContent={
@@ -577,28 +626,23 @@ export const TeamProfile = () => {
 							</div>
 						}
 					>
-						{teamDocumentSnapshot?.data()?.roster?.map(
-							(
-								item: {
-									captain: boolean
-									player: DocumentReference<PlayerDocument>
-								},
-								index: number
-							) => (
+						{rosterSnapshot?.docs.map((rosterDoc) => {
+							const data = rosterDoc.data() as TeamRosterDocument
+							return (
 								<TeamRosterPlayer
-									key={`team-${index}`}
-									playerRef={item.player}
-									seasonRef={teamDocumentSnapshot.data()?.season}
+									key={rosterDoc.id}
+									playerRef={data.player}
+									seasonRef={teamSeasonRefForGames}
 								/>
 							)
-						)}
+						})}
 					</NotificationCard>
 					<NotificationCard
 						title={'Record'}
 						className={'flex-1 basis-[360px] shrink-0 min-w-[360px]'}
 					>
-						{!gamesQuerySnapshot?.docs.length ||
-						gamesQuerySnapshot.docs.every(
+						{!currentSeasonGames.length ||
+						currentSeasonGames.every(
 							(game) => !hasAssignedTeams(game.data())
 						) ? (
 							<div className='flex flex-col items-center justify-center py-12 px-6 text-center'>
@@ -614,7 +658,7 @@ export const TeamProfile = () => {
 							</div>
 						) : (
 							<div className='flex flex-col gap-3 py-2 overflow-x-auto'>
-								{gamesQuerySnapshot?.docs.map((game, index) => {
+								{currentSeasonGames.map((game, index) => {
 									const gameData = game.data()
 
 									// Skip games with null team references (placeholder games)
@@ -640,9 +684,15 @@ export const TeamProfile = () => {
 									}
 
 									const gameDate = gameData.date.toDate()
+									// teamsQuerySnapshot is a collectionGroup over teamSeasons —
+									// the canonical team id lives at parent.parent.id, not on
+									// the doc itself.
 									const opponentName =
 										teamsQuerySnapshot?.docs
-											.find((team) => team.id === opponentTeamRef.id)
+											.find(
+												(team) =>
+													team.ref.parent.parent?.id === opponentTeamRef.id
+											)
 											?.data().name || 'TBD'
 
 									return (
