@@ -768,6 +768,7 @@ export const TeamProfile = () => {
 						<TeamHistory
 							teamDocumentSnapshot={teamDocumentSnapshot}
 							historyQuerySnapshot={historyQuerySnapshot}
+							gamesQuerySnapshot={gamesQuerySnapshot}
 						/>
 					)}
 				</div>
