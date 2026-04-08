@@ -1242,27 +1242,37 @@ async function runCutover() {
 	await batchCommit(gameWrites)
 	console.log(`     rewrote ${gamesRewritten}/${gamesSnap.size} games`)
 
-	// ---- 5. Rewrite offers' team refs -------------------------------------
+	// ---- 5. Rewrite offers' team refs + strip dead fields -----------------
+	// Also strips the legacy `expiresAt` field from offers, removed in commit
+	// 9c7123fa when the auto-expiry feature was deleted. Production data has
+	// ~358 stale `expiresAt` fields that no current code reads or writes.
 	console.log(`\n[5/7] Rewriting offers team refs…`)
 	const offersSnap = await db.collection('offers').get()
 	const offerWrites = []
 	let offersRewritten = 0
+	let offersStripped = 0
 	for (const oDoc of offersSnap.docs) {
 		const data = oDoc.data()
+		const updates = {}
 		if (data.team?.id) {
 			const canonicalId = legacyToCanonical.get(data.team.id)
 			if (canonicalId) {
-				offerWrites.push((batch) =>
-					batch.update(oDoc.ref, {
-						team: db.collection('teams').doc(canonicalId),
-					})
-				)
+				updates.team = db.collection('teams').doc(canonicalId)
 				offersRewritten++
 			}
 		}
+		if ('expiresAt' in data) {
+			updates.expiresAt = FieldValue.delete()
+			offersStripped++
+		}
+		if (Object.keys(updates).length > 0) {
+			offerWrites.push((batch) => batch.update(oDoc.ref, updates))
+		}
 	}
 	await batchCommit(offerWrites)
-	console.log(`     rewrote ${offersRewritten}/${offersSnap.size} offers`)
+	console.log(
+		`     rewrote ${offersRewritten}/${offersSnap.size} offers, stripped ${offersStripped} legacy expiresAt fields`
+	)
 
 	// ---- 6. Drop seasons/{id}.teams[] arrays ------------------------------
 	console.log(`\n[6/7] Dropping seasons/{id}.teams[] arrays…`)

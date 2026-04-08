@@ -301,6 +301,12 @@ export interface OfferDocument extends DocumentData {
 	type: OfferType
 	/** Reason why an offer was automatically canceled (e.g., player joined another team) */
 	canceledReason?: string
+	/** Whether the offer has been processed by the offerUpdated trigger */
+	processed?: boolean
+	/** Error message if processing failed */
+	processingError?: string
+	/** Timestamp when processing failed */
+	processingFailedAt?: Timestamp
 }
 
 /**
