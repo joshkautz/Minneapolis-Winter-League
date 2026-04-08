@@ -14,6 +14,7 @@ export const Profile = () => {
 		hasSignedWaiver: isAuthenticatedUserSigned,
 		authStateUser,
 		userSnapshot: authenticatedUserSnapshot,
+		userSeasonsSnapshot: authenticatedUserSeasonsSnapshot,
 		isUserSnapshotLoading: authenticatedUserSnapshotLoading,
 		isEmailVerified: isVerified,
 		isBanned: isAuthenticatedUserBanned,
@@ -62,7 +63,9 @@ export const Profile = () => {
 						currentSeasonQueryDocumentSnapshot={
 							currentSeasonQueryDocumentSnapshot
 						}
-						authenticatedUserSnapshot={authenticatedUserSnapshot}
+						authenticatedUserSeasonsSnapshot={
+							authenticatedUserSeasonsSnapshot
+						}
 						seasonsQuerySnapshot={seasonsQuerySnapshot}
 					/>
 				</div>

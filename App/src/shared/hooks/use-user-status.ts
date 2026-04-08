@@ -1,10 +1,14 @@
 import { useMemo } from 'react'
 import { useAuthContext, useSeasonsContext } from '@/providers'
-import type { PlayerSeason } from '@/types'
 
 /**
  * Comprehensive user status hook that combines authentication state,
- * loading states, and user permissions in one place
+ * loading states, and user permissions in one place.
+ *
+ * After the 2026 data model migration, per-season player data lives in
+ * the `players/{uid}/seasons/{seasonId}` subcollection, exposed by
+ * AuthContext as `authenticatedUserSeasonsSnapshot`. This hook reads
+ * from that snapshot.
  */
 export const useUserStatus = () => {
 	const {
@@ -12,38 +16,37 @@ export const useUserStatus = () => {
 		authStateLoading,
 		authenticatedUserSnapshot,
 		authenticatedUserSnapshotLoading,
+		authenticatedUserSeasonsSnapshot,
+		authenticatedUserSeasonsSnapshotLoading,
 		userRefreshCount,
 	} = useAuthContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
 	// Loading states - we're loading if:
 	// 1. Auth state is still loading (no user yet)
-	// 2. OR we have a user but no snapshot yet (snapshot still loading)
+	// 2. OR we have a user but no parent snapshot yet
+	// 3. OR we have a user but no per-season snapshot yet
 	const isLoading = useMemo(() => {
-		// Still determining auth state
-		if (authStateLoading && !authStateUser) {
-			return true
-		}
-		// Have user but snapshot not yet loaded
-		if (authStateUser && !authenticatedUserSnapshot) {
-			return true
-		}
+		if (authStateLoading && !authStateUser) return true
+		if (authStateUser && !authenticatedUserSnapshot) return true
+		if (authStateUser && !authenticatedUserSeasonsSnapshot) return true
 		return false
-	}, [authStateUser, authStateLoading, authenticatedUserSnapshot])
+	}, [
+		authStateUser,
+		authStateLoading,
+		authenticatedUserSnapshot,
+		authenticatedUserSeasonsSnapshot,
+	])
 
-	// Get current season data for the user
-	const currentSeasonData = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.find(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				),
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
-	)
+	// Look up the current-season subdoc for this player.
+	const currentSeasonData = useMemo(() => {
+		const sid = currentSeasonQueryDocumentSnapshot?.id
+		if (!sid || !authenticatedUserSeasonsSnapshot) return undefined
+		return authenticatedUserSeasonsSnapshot.docs
+			.find((d) => d.id === sid)
+			?.data()
+	}, [authenticatedUserSeasonsSnapshot, currentSeasonQueryDocumentSnapshot])
 
-	// User permissions and status
 	const isAdmin = useMemo(
 		() => authenticatedUserSnapshot?.data()?.admin ?? false,
 		[authenticatedUserSnapshot]
@@ -74,15 +77,12 @@ export const useUserStatus = () => {
 		[currentSeasonData]
 	)
 
-	// Email verification status
-	// Note: userRefreshCount is included to re-evaluate when user data is refreshed
 	const isEmailVerified = useMemo(
 		() => Boolean(authStateUser?.emailVerified),
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[authStateUser, userRefreshCount]
 	)
 
-	// Combined status checks
 	const isAuthenticated = useMemo(
 		() => Boolean(authStateUser && authenticatedUserSnapshot),
 		[authStateUser, authenticatedUserSnapshot]
@@ -107,11 +107,14 @@ export const useUserStatus = () => {
 		// Loading states
 		isLoading,
 		isAuthStateLoading: authStateLoading,
-		isUserSnapshotLoading: authenticatedUserSnapshotLoading,
+		isUserSnapshotLoading:
+			authenticatedUserSnapshotLoading ||
+			authenticatedUserSeasonsSnapshotLoading,
 
 		// Raw data
 		authStateUser,
 		userSnapshot: authenticatedUserSnapshot,
+		userSeasonsSnapshot: authenticatedUserSeasonsSnapshot,
 		currentSeasonData,
 
 		// Permissions

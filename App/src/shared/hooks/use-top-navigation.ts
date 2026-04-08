@@ -7,7 +7,6 @@ import {
 } from '@/providers'
 import { logger } from '@/shared/utils'
 import { useResponsiveDrawer } from '@/shared/hooks'
-import type { PlayerSeason } from '@/types'
 
 /**
  * Custom hook for navigation logic
@@ -18,6 +17,7 @@ export const useTopNavigation = () => {
 		authStateUser,
 		authStateLoading,
 		authenticatedUserSnapshot,
+		authenticatedUserSeasonsSnapshot,
 		signOut,
 		signOutLoading,
 		signOutError,
@@ -39,26 +39,22 @@ export const useTopNavigation = () => {
 		[incomingOffersQuerySnapshot]
 	)
 
+	const currentPlayerSeasonData = useMemo(() => {
+		const sid = currentSeasonQueryDocumentSnapshot?.id
+		if (!sid || !authenticatedUserSeasonsSnapshot) return undefined
+		return authenticatedUserSeasonsSnapshot.docs
+			.find((d) => d.id === sid)
+			?.data()
+	}, [authenticatedUserSeasonsSnapshot, currentSeasonQueryDocumentSnapshot])
+
 	const isAuthenticatedUserPaid = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.find(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.paid ?? false,
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
+		() => currentPlayerSeasonData?.paid ?? false,
+		[currentPlayerSeasonData]
 	)
 
 	const isAuthenticatedUserSigned = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.find(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.signed ?? false,
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
+		() => currentPlayerSeasonData?.signed ?? false,
+		[currentPlayerSeasonData]
 	)
 
 	const isAuthenticatedUserAdmin = useMemo(
@@ -73,9 +69,13 @@ export const useTopNavigation = () => {
 	const requiredTasksCount = useMemo(() => {
 		if (!authStateUser) return 0
 
-		// Wait for the player document and current season to load before counting,
-		// otherwise paid/signed default to false and the badge flashes incorrectly.
-		if (!authenticatedUserSnapshot || !currentSeasonQueryDocumentSnapshot) {
+		// Wait for the player season subdocs and current season to load before
+		// counting, otherwise paid/signed default to false and the badge flashes
+		// incorrectly.
+		if (
+			!authenticatedUserSeasonsSnapshot ||
+			!currentSeasonQueryDocumentSnapshot
+		) {
 			return undefined
 		}
 
@@ -100,7 +100,7 @@ export const useTopNavigation = () => {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
 		authStateUser,
-		authenticatedUserSnapshot,
+		authenticatedUserSeasonsSnapshot,
 		currentSeasonQueryDocumentSnapshot,
 		isAuthenticatedUserPaid,
 		isAuthenticatedUserSigned,

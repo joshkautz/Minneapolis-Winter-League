@@ -9,14 +9,9 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { User } from 'firebase/auth'
-import {
-	QueryDocumentSnapshot,
-	QuerySnapshot,
-	DocumentSnapshot,
-} from '@/firebase'
-import { SeasonDocument } from '@/shared/utils'
+import { QueryDocumentSnapshot, QuerySnapshot } from '@/firebase'
+import { PlayerSeasonDocument, SeasonDocument } from '@/shared/utils'
 import { Settings } from 'lucide-react'
-import type { PlayerDocument } from '@/types'
 
 interface ProfileActionsProps {
 	authStateUser: User | null | undefined
@@ -29,8 +24,10 @@ interface ProfileActionsProps {
 	currentSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
-	/** Player document snapshot for checking previous season payment */
-	authenticatedUserSnapshot: DocumentSnapshot<PlayerDocument> | undefined
+	/** The authenticated user's per-season subdocs (for the returning-discount check). */
+	authenticatedUserSeasonsSnapshot:
+		| QuerySnapshot<PlayerSeasonDocument>
+		| undefined
 	/** All seasons snapshot for determining previous season */
 	seasonsQuerySnapshot: QuerySnapshot<SeasonDocument> | undefined
 }
@@ -50,7 +47,7 @@ export const ProfileActions = ({
 	isAuthenticatedUserPaid,
 	isAuthenticatedUserSigned,
 	currentSeasonQueryDocumentSnapshot,
-	authenticatedUserSnapshot,
+	authenticatedUserSeasonsSnapshot,
 	seasonsQuerySnapshot,
 }: ProfileActionsProps) => {
 	return (
@@ -82,7 +79,9 @@ export const ProfileActions = ({
 							currentSeasonQueryDocumentSnapshot={
 								currentSeasonQueryDocumentSnapshot
 							}
-							authenticatedUserSnapshot={authenticatedUserSnapshot}
+							authenticatedUserSeasonsSnapshot={
+								authenticatedUserSeasonsSnapshot
+							}
 							seasonsQuerySnapshot={seasonsQuerySnapshot}
 						/>
 					</div>

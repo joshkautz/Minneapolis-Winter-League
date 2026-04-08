@@ -5,13 +5,11 @@ import { toast } from 'sonner'
 import { StarFilledIcon } from '@radix-ui/react-icons'
 
 import { DocumentReference } from '@/firebase'
+import { playerSeasonRef } from '@/firebase/collections/players'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
 	PlayerDocument,
 	SeasonDocument,
-	isPlayerCaptainForSeason,
-	isPlayerPaidForSeason,
-	isPlayerSignedForSeason,
 	logger,
 } from '@/shared/utils'
 import { Badge } from '@/components/ui/badge'
@@ -24,6 +22,9 @@ export const TeamRosterPlayer = ({
 	seasonRef: DocumentReference<SeasonDocument> | undefined
 }) => {
 	const [playerSnapshot, , playerError] = useDocument(playerRef)
+	const [playerSeasonSnapshot] = useDocument(
+		playerSeasonRef(playerRef.id, seasonRef?.id)
+	)
 
 	// Log and notify on query errors
 	useEffect(() => {
@@ -39,21 +40,19 @@ export const TeamRosterPlayer = ({
 		}
 	}, [playerError, playerRef.id])
 
-	const playerData = playerSnapshot?.data()
+	const playerSeasonData = playerSeasonSnapshot?.data()
 
 	const isPlayerCaptain = useMemo(
-		() => isPlayerCaptainForSeason(playerData, seasonRef),
-		[playerData, seasonRef]
+		() => playerSeasonData?.captain === true,
+		[playerSeasonData]
 	)
-
 	const isPlayerPaid = useMemo(
-		() => isPlayerPaidForSeason(playerData, seasonRef),
-		[playerData, seasonRef]
+		() => playerSeasonData?.paid === true,
+		[playerSeasonData]
 	)
-
 	const isPlayerSigned = useMemo(
-		() => isPlayerSignedForSeason(playerData, seasonRef),
-		[playerData, seasonRef]
+		() => playerSeasonData?.signed === true,
+		[playerSeasonData]
 	)
 
 	return (

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { User } from 'firebase/auth'
-import { Timestamp, QuerySnapshot, DocumentSnapshot } from '@firebase/firestore'
+import { Timestamp, QuerySnapshot } from '@firebase/firestore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -16,11 +16,11 @@ import {
 import { stripeRegistration, QueryDocumentSnapshot } from '@/firebase'
 import {
 	formatTimestamp,
+	PlayerSeasonDocument,
 	SeasonDocument,
 	didPlayerPayPreviousSeason,
 } from '@/shared/utils'
 import { getSeasonPriceId, getSeasonCouponId } from '@/firebase/stripe'
-import type { PlayerDocument } from '@/types'
 
 interface PaymentSectionProps {
 	authStateUser: User | null | undefined
@@ -31,8 +31,10 @@ interface PaymentSectionProps {
 	currentSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
-	/** Player document snapshot for checking previous season payment */
-	authenticatedUserSnapshot: DocumentSnapshot<PlayerDocument> | undefined
+	/** The authenticated user's per-season subdocs (for the returning-discount check). */
+	authenticatedUserSeasonsSnapshot:
+		| QuerySnapshot<PlayerSeasonDocument>
+		| undefined
 	/** All seasons snapshot for determining previous season */
 	seasonsQuerySnapshot: QuerySnapshot<SeasonDocument> | undefined
 }
@@ -50,7 +52,7 @@ export const PaymentSection = ({
 	isAuthenticatedUserBanned,
 	isAuthenticatedUserPaid,
 	currentSeasonQueryDocumentSnapshot,
-	authenticatedUserSnapshot,
+	authenticatedUserSeasonsSnapshot,
 	seasonsQuerySnapshot,
 }: PaymentSectionProps) => {
 	const [stripeLoading, setStripeLoading] = useState<boolean>(false)
@@ -113,11 +115,11 @@ export const PaymentSection = ({
 
 	// Check if player is returning (paid for previous season) and get previous season name
 	const { isReturningPlayer, previousSeasonName } = useMemo(() => {
-		if (!authenticatedUserSnapshot || !seasonsQuerySnapshot) {
+		if (!authenticatedUserSeasonsSnapshot || !seasonsQuerySnapshot) {
 			return { isReturningPlayer: false, previousSeasonName: null }
 		}
 		const isReturning = didPlayerPayPreviousSeason(
-			authenticatedUserSnapshot.data(),
+			authenticatedUserSeasonsSnapshot,
 			seasonsQuerySnapshot
 		)
 		// Get previous season name (index 1 since seasons are ordered by dateStart descending)
@@ -129,7 +131,7 @@ export const PaymentSection = ({
 			isReturningPlayer: isReturning,
 			previousSeasonName: prevSeasonName,
 		}
-	}, [authenticatedUserSnapshot, seasonsQuerySnapshot])
+	}, [authenticatedUserSeasonsSnapshot, seasonsQuerySnapshot])
 
 	// Get Stripe price and coupon IDs from season document
 	const { priceId, couponId } = useMemo(() => {
