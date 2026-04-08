@@ -169,7 +169,13 @@ export const createStripeCheckout = onCall<
 				return newCustomer.id
 			})
 
-			const sessionParams: Stripe.Checkout.SessionCreateParams = {
+			// Stripe v22's published types stopped re-exporting
+			// `Stripe.Checkout.SessionCreateParams` from the package root, so
+			// derive the parameter type from the runtime client method.
+			type CheckoutSessionCreateParams = Parameters<
+				Stripe['checkout']['sessions']['create']
+			>[0]
+			const sessionParams: CheckoutSessionCreateParams = {
 				customer,
 				mode: 'payment',
 				line_items: [

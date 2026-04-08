@@ -27,7 +27,8 @@ import { logger } from '@/shared/utils'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
-import { teamsBySeasonQuery } from '@/firebase/collections/teams'
+import { teamsInSeasonQuery } from '@/firebase/collections/teams'
+import { Collections } from '@/types'
 import {
 	createSeasonViaFunction,
 	updateSeasonViaFunction,
@@ -160,14 +161,22 @@ export const SeasonManagement = () => {
 					const seasonId = seasonDoc.id
 
 					try {
-						// Get team IDs from the teams array
-						// TODO(2026-teams-v2): seasons no longer carry a teams[] array.
-						const teamIds =
-							(
-								seasonData as unknown as {
-									teams?: Array<{ id: string }>
+						// Teams in this season come from the team-side season
+						// subcollection (collection-group `seasons` filtered by
+						// season ref). The canonical team id is the grandparent
+						// doc id. Filter out player season subdocs which share
+						// the same `seasons` collection name.
+						const teamsQuery = teamsInSeasonQuery(seasonDoc.ref)
+						const teamIds: string[] = []
+						if (teamsQuery) {
+							const snap = await getDocs(teamsQuery)
+							snap.docs.forEach((d) => {
+								if (d.ref.parent.parent?.parent.id === Collections.TEAMS) {
+									const canonicalId = d.ref.parent.parent.id
+									teamIds.push(canonicalId)
 								}
-							).teams?.map((teamRef) => teamRef.id) || []
+							})
+						}
 
 						return {
 							id: seasonId,
@@ -208,14 +217,18 @@ export const SeasonManagement = () => {
 					if (!seasonDoc) return
 
 					const seasonRef = seasonDoc.ref
-					const teamsQuery = teamsBySeasonQuery(seasonRef)
+					const teamsQuery = teamsInSeasonQuery(seasonRef)
 
 					if (teamsQuery) {
 						const teamsSnapshot = await getDocs(teamsQuery)
-						const teams = teamsSnapshot.docs.map((doc) => ({
-							id: doc.ref.parent.parent?.id ?? doc.id,
-							name: doc.data().name,
-						}))
+						const teams = teamsSnapshot.docs
+							.filter(
+								(d) => d.ref.parent.parent?.parent.id === Collections.TEAMS
+							)
+							.map((d) => ({
+								id: d.ref.parent.parent!.id,
+								name: d.data().name,
+							}))
 						setAvailableTeams(teams)
 					}
 				} catch (error) {

@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { collection, query } from 'firebase/firestore'
+import { playerSeasonsInSeasonQuery } from '@/firebase/collections/players'
 import {
 	ArrowLeft,
 	AlertTriangle,
@@ -47,7 +48,12 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import { PageContainer, PageHeader, QueryError } from '@/shared/components'
-import { PlayerDocument, SeasonDocument, Collections } from '@/types'
+import {
+	PlayerDocument,
+	PlayerSeasonDocument,
+	SeasonDocument,
+	Collections,
+} from '@/types'
 
 type SortField = 'name' | 'email' | 'paid' | 'signed' | 'team'
 type SortDirection = 'asc' | 'desc'
@@ -103,6 +109,15 @@ export const RegistrationManagement = () => {
 	const [playersSnapshot, playersLoading, playersError] =
 		useCollection(allPlayersQuery)
 
+	// Resolve the selected season's DocumentReference and query every player
+	// season subdoc for it via a collection-group query.
+	const filterSeasonRef = useMemo(() => {
+		const doc = seasonsSnapshot?.docs.find((d) => d.id === filterSeasonId)
+		return doc?.ref
+	}, [seasonsSnapshot, filterSeasonId])
+	const [playerSeasonsSnapshot, playerSeasonsLoading, playerSeasonsError] =
+		useCollection(playerSeasonsInSeasonQuery(filterSeasonRef))
+
 	// Log and notify on query errors
 	useQueryErrorHandler({
 		error: playerError,
@@ -118,6 +133,11 @@ export const RegistrationManagement = () => {
 		error: playersError,
 		component: 'RegistrationManagement',
 		errorLabel: 'players',
+	})
+	useQueryErrorHandler({
+		error: playerSeasonsError,
+		component: 'RegistrationManagement',
+		errorLabel: 'playerSeasons',
 	})
 
 	useEffect(() => {
@@ -137,35 +157,34 @@ export const RegistrationManagement = () => {
 		...doc.data(),
 	})) as (SeasonDocument & { id: string })[] | undefined
 
-	const isLoading = playerLoading || playersLoading
+	const isLoading = playerLoading || playersLoading || playerSeasonsLoading
 
 	// Process players for the selected season
 	const allPlayers = useMemo(() => {
-		if (!playersSnapshot || !filterSeasonId) {
+		if (!playersSnapshot || !playerSeasonsSnapshot || !filterSeasonId) {
 			return []
 		}
 
+		// Build a player-id → PlayerDocument map for joining.
+		const playersById = new Map<string, PlayerDocument>()
+		playersSnapshot.docs.forEach((d) => {
+			playersById.set(d.id, d.data() as PlayerDocument)
+		})
+
 		const players: ProcessedPlayer[] = []
 
-		playersSnapshot.docs.forEach((doc) => {
-			const playerData = doc.data() as PlayerDocument
-			// TODO(2026-teams-v2): rewrite to use playerSeasonRef subcollection.
-			const seasonData = (
-				playerData as unknown as {
-					seasons?: Array<{
-						season: { id: string }
-						paid?: boolean
-						signed?: boolean
-						team?: { id: string }
-					}>
-				}
-			).seasons?.find((s) => s.season.id === filterSeasonId)
-
-			if (!seasonData) {
-				// Player is not in this season at all
+		playerSeasonsSnapshot.docs.forEach((doc) => {
+			// Collection-group `seasons` also matches teams/*/seasons. The
+			// player season subdoc lives at players/{uid}/seasons/{seasonId},
+			// so its grandparent collection id is `players`.
+			if (doc.ref.parent.parent?.parent.id !== Collections.PLAYERS) {
 				return
 			}
+			const playerId = doc.ref.parent.parent.id
+			const playerData = playersById.get(playerId)
+			if (!playerData) return
 
+			const seasonData = doc.data() as PlayerSeasonDocument
 			const hasPaid = seasonData.paid || false
 			const hasSigned = seasonData.signed || false
 			const hasTeam = !!seasonData.team
@@ -176,7 +195,7 @@ export const RegistrationManagement = () => {
 			}
 
 			players.push({
-				id: doc.id,
+				id: playerId,
 				firstname: playerData.firstname,
 				lastname: playerData.lastname,
 				email: playerData.email,
@@ -187,7 +206,7 @@ export const RegistrationManagement = () => {
 		})
 
 		return players
-	}, [playersSnapshot, filterSeasonId])
+	}, [playersSnapshot, playerSeasonsSnapshot, filterSeasonId])
 
 	// Sorting function
 	const sortedPlayers = useMemo(() => {
