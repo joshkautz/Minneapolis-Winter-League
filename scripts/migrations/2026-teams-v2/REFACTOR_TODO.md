@@ -3,6 +3,38 @@
 **Last updated**: All code gates pass. Ready for emulator smoke testing and
 production cutover.
 
+## Seasons subcollection rename (pre-cutover cleanup)
+
+The per-team and per-player season subcollections were both originally
+named `seasons`, which made `collectionGroup('seasons')` queries ambiguous
+and forced every caller to filter on `doc.ref.parent.parent?.parent.id`.
+They have been renamed to disambiguate:
+
+- `teams/{teamId}/seasons/{seasonId}` → `teams/{teamId}/teamSeasons/{seasonId}`
+- `players/{uid}/seasons/{seasonId}` → `players/{uid}/playerSeasons/{seasonId}`
+
+The roster subcollection (`teams/{id}/teamSeasons/{sid}/roster/{playerId}`)
+keeps its name. Both `collectionGroup('teamSeasons')` and
+`collectionGroup('playerSeasons')` queries are now unambiguous and the
+parent-path disambiguation filters have been removed from callers.
+
+New helpers live next to the collection helpers and should be used in
+place of `doc.ref.parent.parent` at every call site:
+
+- `canonicalTeamIdFromTeamSeasonDoc`,
+  `canonicalTeamRefFromTeamSeasonDoc`
+- `canonicalPlayerIdFromPlayerSeasonDoc`,
+  `canonicalPlayerRefFromPlayerSeasonDoc`
+
+Mirrors exist in both `App/src/firebase/collections/{teams,players}.ts`
+and `Functions/src/shared/database.ts`. Constants
+`PLAYER_SEASONS_SUBCOLLECTION` and `TEAM_SEASONS_SUBCOLLECTION` live in
+both `App/src/types.ts` and `Functions/src/types.ts` for places that need
+the raw string.
+
+The follow-ups below (captain N+1 lookup, teams.tsx player-count walk,
+team-history subtitle) are unchanged by this rename.
+
 ## Quick start for next session
 
 ```bash

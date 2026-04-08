@@ -215,7 +215,7 @@
 			]
 		},
 		{
-			"collectionGroup": "seasons",
+			"collectionGroup": "teamSeasons",
 			"queryScope": "COLLECTION_GROUP",
 			"fields": [
 				{
@@ -229,7 +229,7 @@
 			]
 		},
 		{
-			"collectionGroup": "seasons",
+			"collectionGroup": "playerSeasons",
 			"queryScope": "COLLECTION_GROUP",
 			"fields": [
 				{

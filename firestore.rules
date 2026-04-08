@@ -69,7 +69,7 @@ service cloud.firestore {
       allow delete: if false; // Use deleteTeamViaFunction
 
       // Per-season participation subdocuments
-      match /seasons/{seasonId} {
+      match /teamSeasons/{seasonId} {
         allow read: if true;
         allow write: if false; // Functions only
 
@@ -88,7 +88,7 @@ service cloud.firestore {
       allow delete: if false; // Use deletePlayerViaFunction
 
       // Per-season participation subdocuments (paid, signed, banned, captain, team)
-      match /seasons/{seasonId} {
+      match /playerSeasons/{seasonId} {
         allow read: if true;
         allow write: if false; // Functions only
       }

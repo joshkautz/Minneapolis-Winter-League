@@ -29,8 +29,7 @@ export const ManageInvitePlayerList = () => {
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
 				(team) =>
-					canonicalTeamIdFromTeamSeasonDoc(team) ===
-					currentSeasonData?.team?.id
+					canonicalTeamIdFromTeamSeasonDoc(team) === currentSeasonData?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)

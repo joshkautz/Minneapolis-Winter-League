@@ -109,8 +109,7 @@ export const useOffer = (
 							teamsQuerySnapshot?.docs
 								.find(
 									(team: QueryDocumentSnapshot<TeamSeasonDocument>) =>
-										canonicalTeamIdFromTeamSeasonDoc(team) ===
-										offerData.team.id
+										canonicalTeamIdFromTeamSeasonDoc(team) === offerData.team.id
 								)
 								?.data().name || '',
 						creatorName,

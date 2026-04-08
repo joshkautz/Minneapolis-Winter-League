@@ -35,9 +35,7 @@ export const ManageTeamDetail = ({
 	const [offersForPlayerByTeamQuerySnapshot, , offersError] = useCollection(
 		offersForPlayerByTeamQuery(
 			playerDocumentSnapshot?.ref,
-			canonicalTeamRefFromTeamSeasonDoc(
-				currentSeasonTeamsQueryDocumentSnapshot
-			)
+			canonicalTeamRefFromTeamSeasonDoc(currentSeasonTeamsQueryDocumentSnapshot)
 		)
 	)
 

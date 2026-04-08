@@ -5,15 +5,20 @@
  * Transforms the flat `teams` collection (one doc per team-season instance,
  * linked via a `teamId` field) into a canonical-team + season-subcollection
  * shape, and simultaneously converts `players/{uid}.seasons[]` arrays into
- * a `players/{uid}/seasons/{seasonId}` subcollection. Captain, paid, signed,
- * and banned status all live uniformly on the player's season subdoc; the
- * team roster becomes a pure membership join.
+ * a `players/{uid}/playerSeasons/{seasonId}` subcollection. Captain, paid,
+ * signed, and banned status all live uniformly on the player's season subdoc;
+ * the team roster becomes a pure membership join.
+ *
+ * Note: The subcollections were previously named `seasons` on both the team
+ * and player sides, which made `collectionGroup('seasons')` queries match
+ * both. They were renamed to `teamSeasons` and `playerSeasons` before the
+ * production cutover to disambiguate collection-group queries.
  *
  * Target shape:
  *
  *   teams/{teamId}                                 ← canonical anchor
  *     createdAt, createdBy
- *     /seasons/{seasonId}
+ *     /teamSeasons/{seasonId}
  *       season, name, logo, storagePath,
  *       registered, registeredDate, placement
  *       /roster/{playerId}
@@ -23,7 +28,7 @@
  *
  *   players/{uid}
  *     admin, email, firstname, lastname, createdAt
- *     /seasons/{seasonId}
+ *     /playerSeasons/{seasonId}
  *       season, team, paid, signed, banned, captain
  *
  * Modes:
@@ -598,7 +603,9 @@ async function runMigrate() {
 				)
 				continue
 			}
-			const seasonDocRef = canonicalDocRef.collection('seasons').doc(seasonId)
+			const seasonDocRef = canonicalDocRef
+				.collection('teamSeasons')
+				.doc(seasonId)
 
 			writes.push((batch) =>
 				batch.set(seasonDocRef, {
@@ -687,7 +694,7 @@ async function runMigrate() {
 	// ---- players_new_seasons (staging area) -------------------------------
 	// One doc per (player, season) pair. Doc id is `${uid}__${seasonId}`. The
 	// cutover phase will read these and rewrite them into the canonical
-	// players/{uid}/seasons/{seasonId} subcollection.
+	// players/{uid}/playerSeasons/{seasonId} subcollection.
 	//
 	// Captain status is derived from the team's roster entry, NOT from the
 	// player's seasons array. Real production data contains a small number of
@@ -749,7 +756,9 @@ async function runMigrate() {
 	console.log(`\nPlanned writes:`)
 	console.log(`  teams_new docs (canonical):            ${stats.canonicalTeams}`)
 	console.log(`  teams_new/.../seasons subdocs:         ${stats.teamSeasons}`)
-	console.log(`  teams_new/.../seasons/.../roster docs: ${stats.rosterDocs}`)
+	console.log(
+		`  teams_new/.../teamSeasons/.../roster docs: ${stats.rosterDocs}`
+	)
 	console.log(`  teams_new/.../badges docs:             ${stats.badgeDocs}`)
 	console.log(`  teams_new_idmap docs:                  ${stats.idmapDocs}`)
 	console.log(`  players_new_seasons staged docs:       ${stats.playerSeasons}`)
@@ -801,24 +810,24 @@ async function runValidate() {
 			const subSnap = await db
 				.collection(STAGING.teams)
 				.doc(teamId)
-				.collection('seasons')
+				.collection('teamSeasons')
 				.doc(seasonId)
 				.get()
 			if (!subSnap.exists) {
 				errors.push(
-					`teams_new/${teamId}/seasons/${seasonId} missing (legacy doc ${inst.docId})`
+					`teams_new/${teamId}/teamSeasons/${seasonId} missing (legacy doc ${inst.docId})`
 				)
 				continue
 			}
 			const subData = subSnap.data()
 			if (subData.registered !== (inst.data.registered ?? false)) {
 				errors.push(
-					`teams_new/${teamId}/seasons/${seasonId}.registered drift (was ${inst.data.registered}, is ${subData.registered})`
+					`teams_new/${teamId}/teamSeasons/${seasonId}.registered drift (was ${inst.data.registered}, is ${subData.registered})`
 				)
 			}
 			if ((subData.name ?? null) !== (inst.data.name ?? null)) {
 				errors.push(
-					`teams_new/${teamId}/seasons/${seasonId}.name drift (was ${inst.data.name}, is ${subData.name})`
+					`teams_new/${teamId}/teamSeasons/${seasonId}.name drift (was ${inst.data.name}, is ${subData.name})`
 				)
 			}
 
@@ -829,13 +838,13 @@ async function runValidate() {
 			const rosterSnap = await db
 				.collection(STAGING.teams)
 				.doc(teamId)
-				.collection('seasons')
+				.collection('teamSeasons')
 				.doc(seasonId)
 				.collection('roster')
 				.get()
 			if (rosterSnap.size !== expectedRoster) {
 				errors.push(
-					`teams_new/${teamId}/seasons/${seasonId}/roster has ${rosterSnap.size} docs, expected ${expectedRoster}`
+					`teams_new/${teamId}/teamSeasons/${seasonId}/roster has ${rosterSnap.size} docs, expected ${expectedRoster}`
 				)
 			}
 
@@ -970,7 +979,7 @@ async function runValidate() {
  *   1. Delete every doc + subcollection under teams/* (legacy shape).
  *   2. Copy teams_new/{teamId} → teams/{teamId} (with seasons + roster + badges).
  *   3. For each player, rewrite parent doc to remove `seasons` array, then
- *      write players/{uid}/seasons/{seasonId} subdocs from staging.
+ *      write players/{uid}/playerSeasons/{seasonId} subdocs from staging.
  *   4. Rewrite games/{gameId}.home/.away from legacy doc id refs to canonical
  *      teams/{canonicalId} refs (using teams_new_idmap).
  *   5. Rewrite offers/{offerId}.team similarly.
@@ -1025,7 +1034,7 @@ async function runCutover() {
 	for (const teamDoc of teamsNewSnap.docs) {
 		const teamId = teamDoc.id
 		const data = teamDoc.data()
-		const seasonsSnap = await teamDoc.ref.collection('seasons').get()
+		const seasonsSnap = await teamDoc.ref.collection('teamSeasons').get()
 		const seasonRosters = []
 		for (const seasonDoc of seasonsSnap.docs) {
 			const rosterSnap = await seasonDoc.ref.collection('roster').get()
@@ -1091,7 +1100,7 @@ async function runCutover() {
 			})
 		)
 		for (const sr of tree.seasonRosters) {
-			const seasonRef = teamRef.collection('seasons').doc(sr.seasonId)
+			const seasonRef = teamRef.collection('teamSeasons').doc(sr.seasonId)
 			writes.push((batch) => batch.set(seasonRef, sr.seasonData))
 			for (const rd of sr.rosterDocs) {
 				const rosterEntryRef = seasonRef.collection('roster').doc(rd.id)
@@ -1124,10 +1133,20 @@ async function runCutover() {
 			})
 		)
 
+		// Defensive: remove any pre-rename legacy `players/{uid}/seasons/*`
+		// subdocs left over from emulator runs performed before the
+		// seasons → playerSeasons rename. Safe no-op against production data.
+		const legacySeasonsSnap = await playerRef.collection('seasons').get()
+		for (const legacyDoc of legacySeasonsSnap.docs) {
+			writes.push((batch) => batch.delete(legacyDoc.ref))
+		}
+
 		// Write each subcollection doc, rewriting the staging team ref into a
 		// canonical teams/{teamId} ref.
 		for (const { data } of stagedDocs) {
-			const seasonSubRef = playerRef.collection('seasons').doc(data.seasonId)
+			const seasonSubRef = playerRef
+				.collection('playerSeasons')
+				.doc(data.seasonId)
 			let teamRef = null
 			if (data.team?.id) {
 				teamRef = db.collection('teams').doc(data.team.id)
