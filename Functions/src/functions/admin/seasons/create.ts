@@ -164,10 +164,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 					banned: bannedStatus,
 					captain: false,
 				}
-				batch.set(
-					playerSeasonsSubcollection.doc(seasonRef.id),
-					newPlayerSeason
-				)
+				batch.set(playerSeasonsSubcollection.doc(seasonRef.id), newPlayerSeason)
 				operationsInBatch++
 				playersUpdated++
 
@@ -203,7 +200,10 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				userId: auth?.uid,
 				error: errorMessage,
 			})
-			throw new HttpsError('internal', `Failed to create season: ${errorMessage}`)
+			throw new HttpsError(
+				'internal',
+				`Failed to create season: ${errorMessage}`
+			)
 		}
 	}
 )

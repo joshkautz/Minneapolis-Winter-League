@@ -144,17 +144,35 @@ export const updatePlayerAdmin = onCall<
 				)
 			}
 		}
-		if (firstname !== undefined && (typeof firstname !== 'string' || !firstname.trim())) {
-			throw new HttpsError('invalid-argument', 'First name must be a non-empty string')
+		if (
+			firstname !== undefined &&
+			(typeof firstname !== 'string' || !firstname.trim())
+		) {
+			throw new HttpsError(
+				'invalid-argument',
+				'First name must be a non-empty string'
+			)
 		}
-		if (lastname !== undefined && (typeof lastname !== 'string' || !lastname.trim())) {
-			throw new HttpsError('invalid-argument', 'Last name must be a non-empty string')
+		if (
+			lastname !== undefined &&
+			(typeof lastname !== 'string' || !lastname.trim())
+		) {
+			throw new HttpsError(
+				'invalid-argument',
+				'Last name must be a non-empty string'
+			)
 		}
 		if (admin !== undefined && typeof admin !== 'boolean') {
-			throw new HttpsError('invalid-argument', 'Admin status must be a boolean value')
+			throw new HttpsError(
+				'invalid-argument',
+				'Admin status must be a boolean value'
+			)
 		}
 		if (emailVerified !== undefined && typeof emailVerified !== 'boolean') {
-			throw new HttpsError('invalid-argument', 'Email verified status must be a boolean value')
+			throw new HttpsError(
+				'invalid-argument',
+				'Email verified status must be a boolean value'
+			)
 		}
 		if (seasons !== undefined) {
 			if (!Array.isArray(seasons)) {
@@ -162,25 +180,43 @@ export const updatePlayerAdmin = onCall<
 			}
 			for (const s of seasons) {
 				if (!s.seasonId || typeof s.seasonId !== 'string') {
-					throw new HttpsError('invalid-argument', 'Each season must have a valid seasonId')
+					throw new HttpsError(
+						'invalid-argument',
+						'Each season must have a valid seasonId'
+					)
 				}
 				if (typeof s.captain !== 'boolean') {
-					throw new HttpsError('invalid-argument', 'Captain status must be a boolean value')
+					throw new HttpsError(
+						'invalid-argument',
+						'Captain status must be a boolean value'
+					)
 				}
 				if (typeof s.paid !== 'boolean') {
-					throw new HttpsError('invalid-argument', 'Paid status must be a boolean value')
+					throw new HttpsError(
+						'invalid-argument',
+						'Paid status must be a boolean value'
+					)
 				}
 				if (typeof s.signed !== 'boolean') {
-					throw new HttpsError('invalid-argument', 'Signed status must be a boolean value')
+					throw new HttpsError(
+						'invalid-argument',
+						'Signed status must be a boolean value'
+					)
 				}
 				if (s.banned !== undefined && typeof s.banned !== 'boolean') {
-					throw new HttpsError('invalid-argument', 'Banned status must be a boolean value')
+					throw new HttpsError(
+						'invalid-argument',
+						'Banned status must be a boolean value'
+					)
 				}
 				if (
 					s.teamId !== null &&
 					(typeof s.teamId !== 'string' || !s.teamId.trim())
 				) {
-					throw new HttpsError('invalid-argument', 'Team ID must be a string or null')
+					throw new HttpsError(
+						'invalid-argument',
+						'Team ID must be a string or null'
+					)
 				}
 			}
 		}
@@ -204,13 +240,22 @@ export const updatePlayerAdmin = onCall<
 			const updates: Record<string, unknown> = {}
 			const changes: UpdatePlayerAdminResponse['changes'] = {}
 
-			if (firstname !== undefined && firstname.trim() !== playerData?.firstname) {
+			if (
+				firstname !== undefined &&
+				firstname.trim() !== playerData?.firstname
+			) {
 				updates.firstname = firstname.trim()
-				changes.firstname = { from: playerData?.firstname || '', to: firstname.trim() }
+				changes.firstname = {
+					from: playerData?.firstname || '',
+					to: firstname.trim(),
+				}
 			}
 			if (lastname !== undefined && lastname.trim() !== playerData?.lastname) {
 				updates.lastname = lastname.trim()
-				changes.lastname = { from: playerData?.lastname || '', to: lastname.trim() }
+				changes.lastname = {
+					from: playerData?.lastname || '',
+					to: lastname.trim(),
+				}
 			}
 			if (admin !== undefined && admin !== playerData?.admin) {
 				updates.admin = admin
@@ -316,7 +361,10 @@ export const updatePlayerAdmin = onCall<
 
 					// Last-captain protection.
 					const isDemotingCaptain =
-						wasCaptain && !willBeCaptain && oldTeamId === newTeamId && !!newTeamId
+						wasCaptain &&
+						!willBeCaptain &&
+						oldTeamId === newTeamId &&
+						!!newTeamId
 					const isRemovingCaptainFromTeam =
 						wasCaptain && oldTeamId && oldTeamId !== newTeamId
 
@@ -335,7 +383,9 @@ export const updatePlayerAdmin = onCall<
 							)
 						)
 						const otherCaptainCount = captainSnaps.filter((s, i) => {
-							return rosterSnap.docs[i].id !== playerId && s.data()?.captain === true
+							return (
+								rosterSnap.docs[i].id !== playerId && s.data()?.captain === true
+							)
 						}).length
 						if (otherCaptainCount === 0) {
 							const seasonName =

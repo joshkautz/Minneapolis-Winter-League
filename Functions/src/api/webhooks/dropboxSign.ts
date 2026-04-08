@@ -11,11 +11,7 @@
 import { onRequest } from 'firebase-functions/v2/https'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import {
-	Collections,
-	WaiverDocument,
-	WaiverStatus,
-} from '../../types.js'
+import { Collections, WaiverDocument, WaiverStatus } from '../../types.js'
 import {
 	FIREBASE_CONFIG,
 	getDropboxSignConfig,

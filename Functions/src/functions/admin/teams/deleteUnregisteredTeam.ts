@@ -9,10 +9,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import {
-	getCurrentSeason,
-	teamSeasonRef,
-} from '../../../shared/database.js'
+import { getCurrentSeason, teamSeasonRef } from '../../../shared/database.js'
 import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletionService.js'
 
 interface DeleteUnregisteredTeamRequest {

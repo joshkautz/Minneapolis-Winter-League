@@ -11,10 +11,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { SeasonDocument } from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
-import {
-	playerSeasonRef,
-	teamSeasonRef,
-} from '../../../shared/database.js'
+import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { formatDateForUser } from '../../../shared/format.js'
 import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletionService.js'

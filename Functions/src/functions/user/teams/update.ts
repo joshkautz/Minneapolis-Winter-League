@@ -10,10 +10,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
 import { validateAuthentication } from '../../../shared/auth.js'
-import {
-	playerSeasonRef,
-	teamSeasonRef,
-} from '../../../shared/database.js'
+import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
 interface EditTeamRequest {
@@ -118,7 +115,9 @@ export const updateTeam = onCall<EditTeamRequest>(
 					const fileName = `teams/${fileId}`
 					const file = bucket.file(fileName)
 					const buffer = Buffer.from(logoBlob, 'base64')
-					await file.save(buffer, { metadata: { contentType: logoContentType } })
+					await file.save(buffer, {
+						metadata: { contentType: logoContentType },
+					})
 					const encodedPath = encodeURIComponent(fileName)
 					logoUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`
 					logoStoragePath = fileName
@@ -182,7 +181,12 @@ export const updateTeam = onCall<EditTeamRequest>(
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : 'Unknown error'
-			logger.error('Error updating team:', { teamId, seasonId, userId, error: errorMessage })
+			logger.error('Error updating team:', {
+				teamId,
+				seasonId,
+				userId,
+				error: errorMessage,
+			})
 			if (error instanceof HttpsError) throw error
 			throw new HttpsError('internal', errorMessage)
 		}

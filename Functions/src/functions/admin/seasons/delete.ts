@@ -70,7 +70,9 @@ export const deleteSeason = onCall<DeleteSeasonRequest>(
 			const BATCH_SIZE = 400
 
 			for (const playerDoc of playersSnapshot.docs) {
-				const seasonSubdocRef = playerDoc.ref.collection('seasons').doc(seasonId)
+				const seasonSubdocRef = playerDoc.ref
+					.collection('seasons')
+					.doc(seasonId)
 				const seasonSubdocSnap = await seasonSubdocRef.get()
 				if (seasonSubdocSnap.exists) {
 					batch.delete(seasonSubdocRef)

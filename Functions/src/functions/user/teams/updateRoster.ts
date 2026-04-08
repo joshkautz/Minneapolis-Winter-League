@@ -135,10 +135,7 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 			const targetSeasonRef = playerSeasonRef(firestore, playerId, seasonId)
 			const targetSeasonSnap = await targetSeasonRef.get()
 			if (!targetSeasonSnap.exists) {
-				throw new HttpsError(
-					'not-found',
-					'Target player has no season record'
-				)
+				throw new HttpsError('not-found', 'Target player has no season record')
 			}
 
 			switch (action) {

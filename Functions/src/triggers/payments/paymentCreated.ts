@@ -12,10 +12,7 @@ import {
 	EMAIL_CONFIG,
 } from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
-import {
-	getCurrentSeason,
-	playerSeasonRef,
-} from '../../shared/database.js'
+import { getCurrentSeason, playerSeasonRef } from '../../shared/database.js'
 import { SignatureRequestApi, SubSigningOptions } from '@dropbox/sign'
 
 /**

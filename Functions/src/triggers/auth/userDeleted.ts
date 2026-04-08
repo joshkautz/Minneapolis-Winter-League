@@ -14,11 +14,7 @@ import { auth } from 'firebase-functions/v1'
 import { UserRecord } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import {
-	Collections,
-	DocumentReference,
-	PlayerDocument,
-} from '../../types.js'
+import { Collections, DocumentReference, PlayerDocument } from '../../types.js'
 import { handleFunctionError } from '../../shared/errors.js'
 
 export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
@@ -52,7 +48,10 @@ export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 			const seasonsCol = rosterDoc.ref.parent.parent
 			if (!seasonsCol) continue
 			const teamCanonicalRef = seasonsCol.parent.parent
-			if (!teamCanonicalRef || teamCanonicalRef.parent.id !== Collections.TEAMS) {
+			if (
+				!teamCanonicalRef ||
+				teamCanonicalRef.parent.id !== Collections.TEAMS
+			) {
 				continue
 			}
 			await rosterDoc.ref.delete()

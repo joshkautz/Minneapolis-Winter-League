@@ -169,7 +169,11 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 			}
 
 			// Check if the team already has a season subdoc for this season.
-			const teamSeasonDocRef = teamSeasonRef(firestore, originalTeamId, seasonId)
+			const teamSeasonDocRef = teamSeasonRef(
+				firestore,
+				originalTeamId,
+				seasonId
+			)
 			const teamSeasonExisting = await teamSeasonDocRef.get()
 			if (teamSeasonExisting.exists) {
 				throw new HttpsError(

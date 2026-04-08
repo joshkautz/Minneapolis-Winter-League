@@ -1,68 +1,43 @@
 # 2026 Teams + Players Data Model Refactor — Resumption Roadmap
 
-**Last updated**: App workspace typechecks clean (0 errors). Ready for the
-verification gate (lint, format, build) and the cutover sequence.
+**Last updated**: All code gates pass. Ready for emulator smoke testing and
+production cutover.
 
 ## Quick start for next session
 
 ```bash
 cd /Users/josh/Projects/joshkautz/Minneapolis-Winter-League
 npm install                                       # ensures TS 6.0.2 is hoisted
-npx tsc --noEmit -p Functions/tsconfig.json       # should be CLEAN
-npx tsc --noEmit -p App/tsconfig.json 2>&1 | head -60   # 51 errors remain
+npx tsc --noEmit -p Functions/tsconfig.json       # CLEAN
+npx tsc --noEmit -p App/tsconfig.json             # CLEAN
+npm run lint:check                                # CLEAN (0 warnings)
+npm run format:check                              # CLEAN
+npm run build                                     # CLEAN
 ```
-
-## Error distribution (as of commit `a5696846`)
-
-| File | Errors |
-|---|---|
-| `App/src/features/admin/team-management/team-management.tsx` | **19** |
-| `App/src/features/public/teams/teams.tsx` | 3 |
-| `App/src/features/public/standings/standings.tsx` | 3 |
-| `App/src/features/admin/team-management/components/team-edit-dialog.tsx` | 3 |
-| `App/src/features/public/teams/team-profile/team-profile.tsx` | 2 |
-| `App/src/features/public/schedule/schedule-card.tsx` | 2 |
-| `App/src/features/player/team/manage-non-captains-offers-panel.tsx` | 2 |
-| `App/src/features/player/team/manage-invite-player-detail.tsx` | 2 |
-| `App/src/features/player/team/manage-captains-offers-panel.tsx` | 2 |
-| `App/src/features/player/team/hooks/use-team-management.ts` | 2 |
-| `App/src/features/admin/season-management/season-management.tsx` | 2 |
-| `App/src/features/admin/player-management/player-management.tsx` | 2 |
-| `App/src/features/public/create/hooks/use-team-creation.ts` | 1 |
-| `App/src/features/player/team/manage-team-roster-player.tsx` | 1 |
-| `App/src/features/player/team/manage-team-request-card.tsx` | 1 |
-| `App/src/features/player/team/manage-team-detail.tsx` | 1 |
-| `App/src/features/player/team/manage-invite-player-list.tsx` | 1 |
-| `App/src/features/admin/swiss-rankings/swiss-rankings.tsx` | 1 |
-| `App/src/features/admin/registration-management/registration-management.tsx` | 1 |
-
-**Recommended fix order**: small files first (single-error / 2-error files), then the team-edit-dialog (which has the linkToTeamId code to delete), then the public team-profile (the largest single semantic change), and finally `team-management.tsx` (the 19-error file, largest single file).
-
-
 
 ## Status
 
 - ✅ **Migration script** done and verified on an emulator clone of production
   (commit `2c22f8fb`).
-- ✅ **Functions workspace** completely refactored, types and helpers updated,
-  rules and indexes updated. **`cd Functions && npx tsc --noEmit` passes
-  clean.** (Commits `04f433c4`, `e45c3da5`, `36cdda0f`.)
-- 🚧 **App workspace** partially refactored: types updated, firebase/collections
-  layer rewritten, providers (`teams-context` + `auth-context`) updated, shared
-  utils + hooks (`season-utils`, `use-user-status`, `use-top-navigation`) updated,
-  player profile pages updated, team-profile/team-roster-player updated.
-  **~160 typecheck errors remain in App**, concentrated in:
-  - admin team-management (largest by far — heavy use of legacy team shape)
-  - admin player-management (legacy SeasonFormData + season array)
-  - admin season-management, swiss-rankings, game-management,
-    registration-management
-  - player team management pages (manage-team-detail and siblings)
-  - public schedule, standings, rankings, teams pages still have stale type
-    references in some places
-  - create/rollover-team-form hooks
+- ✅ **Functions workspace** refactored, typechecks and builds clean.
+- ✅ **App workspace** refactored, typechecks, lints, formats, and builds
+  clean.
 
-The migration script can run end-to-end against any data right now. Functions
-will deploy and execute correctly. The block is purely the App not compiling.
+## Known follow-ups (work but suboptimal)
+
+- `team-edit-dialog.tsx` captain lookup is N+1 sequential `getDoc`s in a
+  useEffect — works but should batch via `Promise.all` or a collectionGroup
+  query.
+- `public/teams/teams.tsx` registered-player-count walks the roster
+  subcollection plus per-player season subdocs via `Promise.all` — fine at
+  current scale.
+- `team-history.tsx` header subtitle is hardcoded to "Past seasons" because
+  the canonical team doc no longer carries `name`. Could pull from the most
+  recent team season subdoc.
+
+## Next: cutover sequence
+
+See "Cutover sequence" near the bottom of this file.
 
 ## Target shape (final, locked)
 

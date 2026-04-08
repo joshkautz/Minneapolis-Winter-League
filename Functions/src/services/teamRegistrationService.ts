@@ -8,10 +8,7 @@
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { TEAM_CONFIG } from '../config/constants.js'
-import {
-	playerSeasonRef,
-	teamSeasonRef,
-} from '../shared/database.js'
+import { playerSeasonRef, teamSeasonRef } from '../shared/database.js'
 
 /**
  * Recompute the registration status of a team for a specific season.

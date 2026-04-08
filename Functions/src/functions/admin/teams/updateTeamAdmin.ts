@@ -220,7 +220,10 @@ export const updateTeamAdmin = onCall<
 			}
 
 			// 2b. Remove players.
-			if (rosterChanges.removePlayers && rosterChanges.removePlayers.length > 0) {
+			if (
+				rosterChanges.removePlayers &&
+				rosterChanges.removePlayers.length > 0
+			) {
 				changes.rosterRemoved = []
 
 				// Last-captain check requires reading all roster + player season subdocs once.

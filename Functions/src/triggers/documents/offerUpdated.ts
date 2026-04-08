@@ -65,7 +65,11 @@ export const onOfferUpdated = onDocumentUpdated(
 				}
 
 				// Confirm player isn't already on a team for this season.
-				const playerSeasonDocRef = playerSeasonRef(firestore, playerId, seasonId)
+				const playerSeasonDocRef = playerSeasonRef(
+					firestore,
+					playerId,
+					seasonId
+				)
 				const playerSeasonSnap = await transaction.get(playerSeasonDocRef)
 				const existingPlayerSeason = playerSeasonSnap.data()
 				if (existingPlayerSeason?.team) {
