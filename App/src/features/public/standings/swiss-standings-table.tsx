@@ -21,12 +21,12 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { QuerySnapshot } from '@/firebase'
-import { TeamDocument, cn } from '@/shared/utils'
+import { TeamSeasonDocument, cn } from '@/shared/utils'
 import { SwissTeamStanding, sortBySwissScore } from '@/shared/hooks'
 
 interface SwissStandingsTableProps {
 	standings: Record<string, SwissTeamStanding>
-	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
+	teamsQuerySnapshot: QuerySnapshot<TeamSeasonDocument> | undefined
 }
 
 export const SwissStandingsTable = ({
@@ -37,9 +37,10 @@ export const SwissStandingsTable = ({
 
 	// Create a Map for O(1) team lookups
 	const teamMap = useMemo(() => {
-		const map = new Map<string, { id: string; data: TeamDocument }>()
+		const map = new Map<string, { id: string; data: TeamSeasonDocument }>()
 		teamsQuerySnapshot?.docs.forEach((doc) => {
-			map.set(doc.id, { id: doc.id, data: doc.data() })
+			const teamId = doc.ref.parent.parent?.id
+			if (teamId) map.set(teamId, { id: teamId, data: doc.data() })
 		})
 		return map
 	}, [teamsQuerySnapshot])

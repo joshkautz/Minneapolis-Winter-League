@@ -1,5 +1,5 @@
 import { QuerySnapshot } from '@/firebase'
-import { TeamDocument } from '@/shared/utils'
+import { TeamSeasonDocument } from '@/shared/utils'
 import { TeamStanding } from '@/shared/hooks'
 import { SharedStandingsTable } from './shared-standings-table'
 
@@ -10,7 +10,7 @@ export const StandingsTable = ({
 	standings: {
 		[key: string]: TeamStanding
 	}
-	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
+	teamsQuerySnapshot: QuerySnapshot<TeamSeasonDocument> | undefined
 }) => {
 	const sortByWinsThenDiff = (
 		a: [string, TeamStanding],

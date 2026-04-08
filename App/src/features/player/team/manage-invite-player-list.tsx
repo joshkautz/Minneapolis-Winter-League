@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { getPlayersQuery, QueryDocumentSnapshot } from '@/firebase'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { NotificationCard } from '@/shared/components'
-import { PlayerDocument, TeamDocument } from '@/shared/utils'
+import { PlayerDocument, TeamSeasonDocument } from '@/shared/utils'
 import { ManageInvitePlayerDetail } from './manage-invite-player-detail'
 import { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
 import { usePlayersSearch, useDebounce, useUserStatus } from '@/shared/hooks'
@@ -27,7 +27,7 @@ export const ManageInvitePlayerList = () => {
 	const teamQueryDocumentSnapshot = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) => team.id === currentSeasonData?.team?.id
+				(team) => team.ref.parent.parent?.id === currentSeasonData?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)
@@ -35,16 +35,18 @@ export const ManageInvitePlayerList = () => {
 	const handleInvite = useCallback(
 		(
 			playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
-			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined
+			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument> | undefined
 		) => {
-			if (!playerQueryDocumentSnapshot?.id || !teamQueryDocumentSnapshot?.id) {
+			const canonicalTeamId =
+				teamQueryDocumentSnapshot?.ref.parent.parent?.id
+			if (!playerQueryDocumentSnapshot?.id || !canonicalTeamId) {
 				toast.error('Missing required data to send invite')
 				return
 			}
 
 			createOfferViaFunction({
 				playerId: playerQueryDocumentSnapshot.id,
-				teamId: teamQueryDocumentSnapshot.id,
+				teamId: canonicalTeamId,
 				type: 'invitation',
 			})
 				.then(() => {

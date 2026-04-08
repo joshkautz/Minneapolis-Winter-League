@@ -1,7 +1,7 @@
 import { getPlayerSnapshot } from '@/firebase'
 import { QuerySnapshot, QueryDocumentSnapshot } from '@firebase/firestore'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { OfferDocument, TeamDocument, logger } from '@/shared/utils'
+import { OfferDocument, TeamSeasonDocument, logger } from '@/shared/utils'
 import { DocumentReference } from 'firebase/firestore'
 import { toast } from 'sonner'
 
@@ -19,7 +19,7 @@ export interface OfferDocumentWithUI extends OfferDocument {
 
 export const useOffer = (
 	offersQuerySnapshot: QuerySnapshot<OfferDocument> | undefined,
-	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
+	teamsQuerySnapshot: QuerySnapshot<TeamSeasonDocument> | undefined
 ) => {
 	// Store enriched offers keyed by snapshot key for proper cache invalidation
 	const [enrichedOffersMap, setEnrichedOffersMap] = useState<
@@ -107,8 +107,8 @@ export const useOffer = (
 						teamName:
 							teamsQuerySnapshot?.docs
 								.find(
-									(team: QueryDocumentSnapshot<TeamDocument>) =>
-										team.id === offerData.team.id
+									(team: QueryDocumentSnapshot<TeamSeasonDocument>) =>
+										team.ref.parent.parent?.id === offerData.team.id
 								)
 								?.data().name || '',
 						creatorName,

@@ -1,12 +1,15 @@
 import { useMemo, useEffect } from 'react'
-import { useCollection } from 'react-firebase-hooks/firestore'
+import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
+import { playerSeasonRef } from '@/firebase/collections/players'
+import type { DocumentReference } from '@/firebase'
+import type { TeamDocument } from '@/shared/utils'
 import { Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import { QueryDocumentSnapshot, offersForPlayerByTeamQuery } from '@/firebase'
 import {
 	cn,
 	PlayerDocument,
-	TeamDocument,
+	TeamSeasonDocument,
 	OfferDocument,
 	OfferStatus,
 	logger,
@@ -22,19 +25,21 @@ export const ManageInvitePlayerDetail = ({
 	statusColor,
 	handleInvite,
 }: {
-	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined
+	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument> | undefined
 	playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>
 	statusColor?: string
 	message?: string
 	handleInvite: (
 		playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
-		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined
+		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument> | undefined
 	) => void
 }) => {
 	const [offersForPlayerByTeamQuerySnapshot, , offersError] = useCollection(
 		offersForPlayerByTeamQuery(
-			playerQueryDocumentSnapshot,
-			teamQueryDocumentSnapshot
+			playerQueryDocumentSnapshot.ref,
+			teamQueryDocumentSnapshot?.ref.parent.parent as
+				| DocumentReference<TeamDocument>
+				| undefined
 		)
 	)
 
@@ -60,23 +65,21 @@ export const ManageInvitePlayerDetail = ({
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 
+	const [playerSeasonSnapshot] = useDocument(
+		playerSeasonRef(
+			playerQueryDocumentSnapshot.id,
+			currentSeasonQueryDocumentSnapshot?.id
+		)
+	)
+
 	const currentTeamQueryDocumentSnapshot = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
 				(team) =>
-					team.id ===
-					playerQueryDocumentSnapshot
-						?.data()
-						?.seasons.find(
-							(item) =>
-								item.season.id === currentSeasonQueryDocumentSnapshot?.id
-						)?.team?.id
+					team.ref.parent.parent?.id ===
+					playerSeasonSnapshot?.data()?.team?.id
 			),
-		[
-			currentSeasonTeamsQuerySnapshot,
-			currentSeasonQueryDocumentSnapshot,
-			playerQueryDocumentSnapshot,
-		]
+		[currentSeasonTeamsQuerySnapshot, playerSeasonSnapshot]
 	)
 
 	const playerData = playerQueryDocumentSnapshot.data()

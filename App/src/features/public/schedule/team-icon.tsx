@@ -1,10 +1,10 @@
 import { QueryDocumentSnapshot } from '@/firebase'
-import { TeamDocument, cn } from '@/shared/utils'
+import { TeamSeasonDocument, cn } from '@/shared/utils'
 
 export const TeamIcon = ({
 	team,
 }: {
-	team: QueryDocumentSnapshot<TeamDocument> | undefined
+	team: QueryDocumentSnapshot<TeamSeasonDocument> | undefined
 }) => {
 	if (!team) {
 		return (

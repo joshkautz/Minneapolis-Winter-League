@@ -133,15 +133,15 @@ export const incomingOffersQuery = (
  */
 export const offersForPlayerByTeamQuery = (
 	playerRef: DocumentReference<PlayerDocument> | undefined,
-	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined
+	teamRef: DocumentReference<TeamDocument> | undefined
 ) => {
-	if (!playerRef || !teamQueryDocumentSnapshot) {
+	if (!playerRef || !teamRef) {
 		return
 	}
 	return query(
 		collection(firestore, Collections.OFFERS),
 		where('player', '==', playerRef),
-		where('team', '==', teamQueryDocumentSnapshot.ref)
+		where('team', '==', teamRef)
 	) as Query<OfferDocument>
 }
 

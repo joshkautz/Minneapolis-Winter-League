@@ -15,14 +15,14 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { QuerySnapshot } from '@/firebase'
-import { TeamDocument, cn } from '@/shared/utils'
+import { TeamSeasonDocument, cn } from '@/shared/utils'
 import { TeamStanding } from '@/shared/hooks'
 
 interface SharedStandingsTableProps {
 	data: {
 		[key: string]: TeamStanding
 	}
-	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
+	teamsQuerySnapshot: QuerySnapshot<TeamSeasonDocument> | undefined
 	sortFunction: (a: [string, TeamStanding], b: [string, TeamStanding]) => number
 	rankColumnHeader: string
 	useTeamPlacement?: boolean
@@ -41,9 +41,10 @@ export const SharedStandingsTable = ({
 
 	// Create a Map for O(1) team lookups instead of O(n) find() calls
 	const teamMap = useMemo(() => {
-		const map = new Map<string, { id: string; data: TeamDocument }>()
+		const map = new Map<string, { id: string; data: TeamSeasonDocument }>()
 		teamsQuerySnapshot?.docs.forEach((doc) => {
-			map.set(doc.id, { id: doc.id, data: doc.data() })
+			const teamId = doc.ref.parent.parent?.id
+			if (teamId) map.set(teamId, { id: teamId, data: doc.data() })
 		})
 		return map
 	}, [teamsQuerySnapshot])

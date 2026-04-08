@@ -11,10 +11,12 @@ import { Button } from '@/components/ui/button'
 import {
 	PlayerDocument,
 	TeamDocument,
+	TeamSeasonDocument,
 	OfferDocument,
 	OfferStatus,
 	logger,
 } from '@/shared/utils'
+import type { DocumentReference } from '@/firebase'
 import { Link } from 'react-router-dom'
 
 export const ManageTeamDetail = ({
@@ -26,15 +28,17 @@ export const ManageTeamDetail = ({
 		authenticatedUserDocumentSnapshot:
 			| DocumentSnapshot<PlayerDocument>
 			| undefined,
-		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument>
+		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument>
 	) => Promise<void> | undefined
-	currentSeasonTeamsQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument>
+	currentSeasonTeamsQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument>
 	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument> | undefined
 }) => {
 	const [offersForPlayerByTeamQuerySnapshot, , offersError] = useCollection(
 		offersForPlayerByTeamQuery(
-			playerDocumentSnapshot,
-			currentSeasonTeamsQueryDocumentSnapshot
+			playerDocumentSnapshot?.ref,
+			currentSeasonTeamsQueryDocumentSnapshot.ref.parent.parent as
+				| DocumentReference<TeamDocument>
+				| undefined
 		)
 	)
 
