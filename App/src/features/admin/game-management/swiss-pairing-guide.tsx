@@ -32,11 +32,12 @@ import { Badge } from '@/components/ui/badge'
 import { useSwissStandings } from '@/shared/hooks'
 import { useMonradPairings } from '@/shared/hooks/use-monrad-pairings'
 import { QuerySnapshot } from '@/firebase'
-import { GameDocument, TeamDocument } from '@/types'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
+import { GameDocument, TeamSeasonDocument } from '@/types'
 
 interface SwissPairingGuideProps {
 	gamesQuerySnapshot: QuerySnapshot<GameDocument> | undefined
-	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
+	teamsQuerySnapshot: QuerySnapshot<TeamSeasonDocument> | undefined
 }
 
 export const SwissPairingGuide = ({
@@ -50,11 +51,13 @@ export const SwissPairingGuide = ({
 		teamsQuerySnapshot
 	)
 
-	// Create a map of teamId to team name
+	// Map canonical teamId → team-season name. The canonical id is what the
+	// pairing hook produces (it's derived from games, which store canonical
+	// refs), so the lookup key must be canonical too.
 	const teamNameMap = useMemo(() => {
 		const map = new Map<string, string>()
 		teamsQuerySnapshot?.docs.forEach((doc) => {
-			map.set(doc.id, doc.data().name)
+			map.set(canonicalTeamIdFromTeamSeasonDoc(doc), doc.data().name)
 		})
 		return map
 	}, [teamsQuerySnapshot])

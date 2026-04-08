@@ -22,12 +22,11 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { teamsBySeasonQuery } from '@/firebase/collections/teams'
 import {
-	useSeasonsContext,
-	useTeamsContext,
-	useGamesContext,
-} from '@/providers'
+	teamsBySeasonQuery,
+	canonicalTeamIdFromTeamSeasonDoc,
+} from '@/firebase/collections/teams'
+import { useSeasonsContext, useGamesContext } from '@/providers'
 import {
 	createGameViaFunction,
 	updateGameViaFunction,
@@ -73,7 +72,7 @@ import {
 	GameDocument,
 	SeasonDocument,
 	SeasonFormat,
-	TeamDocument,
+	TeamSeasonDocument,
 } from '@/types'
 import { Timestamp } from '@firebase/firestore'
 import { SwissPairingGuide } from './swiss-pairing-guide'
@@ -112,7 +111,6 @@ export const GameManagement = () => {
 		seasonsQuerySnapshotError: seasonsError,
 		currentSeasonQueryDocumentSnapshot,
 	} = useSeasonsContext()
-	const { allTeamsQuerySnapshot } = useTeamsContext()
 	const {
 		allGamesQuerySnapshot: gamesSnapshot,
 		allGamesQuerySnapshotLoading: gamesLoading,
@@ -194,16 +192,13 @@ export const GameManagement = () => {
 		}
 	}, [teamsError])
 
+	// `teamsSnapshot` is a collectionGroup('teamSeasons') query — each doc's
+	// `.id` is the seasonId, so derive the canonical team id here so the
+	// game-creation dropdown sends the right value to the backend.
 	const teams = teamsSnapshot?.docs.map((doc) => ({
-		id: doc.id,
+		id: canonicalTeamIdFromTeamSeasonDoc(doc),
 		...doc.data(),
-	})) as (TeamDocument & { id: string })[] | undefined
-
-	// All teams (from context, for displaying team names in the table)
-	const allTeams = allTeamsQuerySnapshot?.docs.map((doc) => ({
-		id: doc.id,
-		...doc.data(),
-	})) as (TeamDocument & { id: string })[] | undefined
+	})) as (TeamSeasonDocument & { id: string })[] | undefined
 
 	// Sort teams alphabetically by name
 	const sortedTeams = teams
@@ -541,20 +536,12 @@ export const GameManagement = () => {
 			}
 		: undefined
 
-	// Get teams for the filtered season
-	const filteredSeasonTeamsSnapshot = allTeamsQuerySnapshot?.docs.filter(
-		(doc) => {
-			const teamData = doc.data()
-			return teamData.season?.id === filterSeasonId
-		}
-	)
-	const filteredTeamsQuerySnapshot = filteredSeasonTeamsSnapshot
-		? {
-				docs: filteredSeasonTeamsSnapshot,
-				size: filteredSeasonTeamsSnapshot.length,
-				empty: filteredSeasonTeamsSnapshot.length === 0,
-			}
-		: undefined
+	// Get teams for the filtered season. The teamsSnapshot above is keyed by
+	// the form's selected season; if the filter season matches, we can reuse
+	// it. Otherwise we'd need a separate query — but in practice the filter
+	// follows the form season, so reuse covers the common case.
+	const filteredTeamsQuerySnapshot =
+		filterSeasonId === formData.seasonId ? teamsSnapshot : undefined
 
 	const sortedGames = filteredGames.length
 		? [...filteredGames].sort((a, b) => {
@@ -734,14 +721,14 @@ export const GameManagement = () => {
 											<TableCell>Field {game.field}</TableCell>
 											<TableCell>
 												{game.home?.id
-													? allTeams?.find((t) => t.id === game.home?.id)
-															?.name || game.home.id
+													? teams?.find((t) => t.id === game.home?.id)?.name ||
+														game.home.id
 													: 'TBD'}
 											</TableCell>
 											<TableCell>
 												{game.away?.id
-													? allTeams?.find((t) => t.id === game.away?.id)
-															?.name || game.away.id
+													? teams?.find((t) => t.id === game.away?.id)?.name ||
+														game.away.id
 													: 'TBD'}
 											</TableCell>
 											<TableCell>

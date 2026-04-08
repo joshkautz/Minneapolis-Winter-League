@@ -5,16 +5,24 @@
  * Accessible at /players/{playerId}
  */
 
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { collection, Query } from 'firebase/firestore'
+import { collection, getDoc, Query } from 'firebase/firestore'
 
 import { firestore } from '@/firebase/app'
 import { logger, hasAssignedTeams } from '@/shared/utils'
-import { PlayerDocument, Collections, RankingHistoryDocument } from '@/types'
+import {
+	PlayerDocument,
+	PlayerSeasonDocument,
+	TeamSeasonDocument,
+	Collections,
+	RankingHistoryDocument,
+} from '@/types'
+import { playerSeasonsSubcollection } from '@/firebase/collections/players'
+import { teamSeasonRef } from '@/firebase/collections/teams'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -34,11 +42,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Trophy, ArrowLeft, Users, Shield } from 'lucide-react'
-import {
-	useSeasonsContext,
-	useTeamsContext,
-	useGamesContext,
-} from '@/providers'
+import { useSeasonsContext, useGamesContext } from '@/providers'
 
 interface PlayerRankingHistoryProps {
 	/** Optional class name for styling */
@@ -107,10 +111,25 @@ export const PlayerRankingHistory = ({
 	const { playerId } = useParams<{ playerId: string }>()
 	const navigate = useNavigate()
 
-	// Get seasons, teams, and games data from contexts
+	// Get seasons and games data from contexts
 	const { seasonsQuerySnapshot } = useSeasonsContext()
-	const { allTeamsQuerySnapshot } = useTeamsContext()
 	const { allGamesQuerySnapshot: allGamesSnapshot } = useGamesContext()
+
+	// Subscribe to the player's per-season subcollection. Replaces the dead
+	// `playerData.seasons` array.
+	const [playerSeasonsSnapshot, , playerSeasonsError] = useCollection(
+		playerSeasonsSubcollection(playerId)
+	)
+
+	useEffect(() => {
+		if (playerSeasonsError) {
+			logger.error('Failed to load player seasons:', {
+				component: 'PlayerRankingHistory',
+				playerId,
+				error: playerSeasonsError.message,
+			})
+		}
+	}, [playerSeasonsError, playerId])
 
 	// Fetch all players for the dropdown
 	const [allPlayersSnapshot, allPlayersLoading, allPlayersError] =
@@ -299,25 +318,67 @@ export const PlayerRankingHistory = ({
 		return records
 	}, [allGamesSnapshot])
 
-	// Process player's team history from their seasons array
+	// Load each (canonicalTeamId, seasonId) team-season subdoc the player has
+	// participated in. Bounded by player history length (~5 docs typical).
+	const [teamSeasonByKey, setTeamSeasonByKey] = useState<
+		Map<string, TeamSeasonDocument>
+	>(new Map())
+
+	useEffect(() => {
+		const docs = playerSeasonsSnapshot?.docs ?? []
+		let cancelled = false
+		const load = async () => {
+			if (docs.length === 0) {
+				if (!cancelled) setTeamSeasonByKey(new Map())
+				return
+			}
+			const entries = await Promise.all(
+				docs.map(async (psDoc) => {
+					const ps = psDoc.data() as PlayerSeasonDocument
+					const teamRef = ps.team
+					if (!teamRef) return null
+					const seasonId = psDoc.id
+					const canonicalTeamId = teamRef.id
+					try {
+						const tsSnap = await getDoc(
+							teamSeasonRef(canonicalTeamId, seasonId)
+						)
+						if (!tsSnap.exists()) return null
+						const key = `${canonicalTeamId}::${seasonId}`
+						return [key, tsSnap.data() as TeamSeasonDocument] as const
+					} catch (err) {
+						logger.error('Failed to load team season for history row', {
+							component: 'PlayerRankingHistory',
+							canonicalTeamId,
+							seasonId,
+							error: err instanceof Error ? err.message : String(err),
+						})
+						return null
+					}
+				})
+			)
+			if (cancelled) return
+			const map = new Map<string, TeamSeasonDocument>()
+			for (const entry of entries) {
+				if (entry) map.set(entry[0], entry[1])
+			}
+			setTeamSeasonByKey(map)
+		}
+		load()
+		return () => {
+			cancelled = true
+		}
+	}, [playerSeasonsSnapshot])
+
+	// Process player's team history from their playerSeasons subcollection.
 	const teamHistory = useMemo((): TeamHistoryEntry[] => {
-		if (!allPlayersSnapshot?.docs || !playerId) return []
+		if (!playerSeasonsSnapshot?.docs || !playerId) return []
 
-		// Find the current player's document
-		const playerDoc = allPlayersSnapshot.docs.find((doc) => doc.id === playerId)
-		if (!playerDoc) return []
-
-		const playerData = playerDoc.data()
-		const seasons = playerData.seasons || []
-
-		if (!Array.isArray(seasons) || seasons.length === 0) return []
-
-		// Create a map of season timestamps for sorting
+		// Map seasonId → season dateStart timestamp for sorting.
 		const seasonTimestamps = new Map<string, number>()
 		seasonsQuerySnapshot?.docs.forEach((doc) => {
 			const data = doc.data()
 			if (data.dateStart) {
-				// Handle Firestore Timestamp or Date object
 				const timestamp =
 					typeof data.dateStart.toDate === 'function'
 						? data.dateStart.toDate().getTime()
@@ -330,62 +391,58 @@ export const PlayerRankingHistory = ({
 			}
 		})
 
-		// Process each season entry
-		const history: (TeamHistoryEntry & { sortTimestamp: number })[] = seasons
-			.map((seasonEntry) => {
-				// Get season name from context
-				const seasonRef = seasonEntry.season
-				const seasonDoc = seasonsQuerySnapshot?.docs.find(
-					(doc) => doc.ref.path === seasonRef?.path
-				)
-				const seasonName = seasonDoc?.data()?.name || 'Unknown Season'
-				const seasonId = seasonDoc?.id || ''
+		const history: (TeamHistoryEntry & { sortTimestamp: number })[] =
+			playerSeasonsSnapshot.docs
+				.map((psDoc) => {
+					const seasonId = psDoc.id
+					const ps = psDoc.data() as PlayerSeasonDocument
 
-				// Get team data from context
-				const teamRef = seasonEntry.team
-				let teamId: string | null = null
-				let teamName: string | null = null
-				let teamLogo: string | null = null
-				let placement: number | null = null
-
-				if (teamRef) {
-					const teamDoc = allTeamsQuerySnapshot?.docs.find(
-						(doc) => doc.ref.path === teamRef.path
+					const seasonDoc = seasonsQuerySnapshot?.docs.find(
+						(s) => s.id === seasonId
 					)
-					teamId = teamDoc?.id || null
-					teamName = teamDoc?.data()?.name || 'Unknown Team'
-					teamLogo = teamDoc?.data()?.logo || null
-					placement = teamDoc?.data()?.placement ?? null
-				}
+					const seasonName = seasonDoc?.data()?.name || 'Unknown Season'
 
-				// Get team record
-				const record = teamId ? teamRecords[teamId] : null
+					const teamRef = ps.team
+					let teamId: string | null = null
+					let teamName: string | null = null
+					let teamLogo: string | null = null
+					let placement: number | null = null
 
-				return {
-					seasonId,
-					seasonName,
-					teamId,
-					teamName,
-					teamLogo,
-					wins: record?.wins || 0,
-					losses: record?.losses || 0,
-					placement,
-					isCaptain: seasonEntry.captain || false,
-					sortTimestamp: seasonTimestamps.get(seasonId) || 0,
-				}
-			})
-			// Filter out entries without a team (free agents)
-			.filter((entry) => entry.teamId !== null)
+					if (teamRef) {
+						teamId = teamRef.id
+						const ts = teamSeasonByKey.get(`${teamRef.id}::${seasonId}`)
+						teamName = ts?.name ?? 'Unknown Team'
+						teamLogo = ts?.logo ?? null
+						placement = ts?.placement ?? null
+					}
+
+					const record = teamId ? teamRecords[teamId] : null
+
+					return {
+						seasonId,
+						seasonName,
+						teamId,
+						teamName,
+						teamLogo,
+						wins: record?.wins || 0,
+						losses: record?.losses || 0,
+						placement,
+						isCaptain: ps.captain || false,
+						sortTimestamp: seasonTimestamps.get(seasonId) || 0,
+					}
+				})
+				// Filter out entries without a team (free agents)
+				.filter((entry) => entry.teamId !== null)
 
 		// Sort by season dateStart timestamp (most recent first)
 		return history
 			.sort((a, b) => b.sortTimestamp - a.sortTimestamp)
-			.map(({ sortTimestamp: _sortTimestamp, ...entry }) => entry) // Remove the sortTimestamp from final output
+			.map(({ sortTimestamp: _sortTimestamp, ...entry }) => entry)
 	}, [
-		allPlayersSnapshot,
+		playerSeasonsSnapshot,
 		playerId,
 		seasonsQuerySnapshot,
-		allTeamsQuerySnapshot,
+		teamSeasonByKey,
 		teamRecords,
 	])
 

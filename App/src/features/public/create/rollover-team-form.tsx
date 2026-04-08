@@ -46,9 +46,8 @@ export const RolloverTeamForm = ({
 		form,
 		onSubmit,
 		handleTeamChange,
-		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
-		currentSeasonTeamsQuerySnapshot,
-		seasonsQuerySnapshot,
+		availableTeams,
+		hasCaptainTeams,
 		isSubmitting,
 	} = useRolloverTeamForm({
 		setNewTeamDocument,
@@ -58,7 +57,7 @@ export const RolloverTeamForm = ({
 
 	return (
 		<div className='w-full'>
-			{!teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot ? (
+			{!hasCaptainTeams ? (
 				<div className='text-center py-8'>
 					<p className='text-muted-foreground'>
 						No previous teams available for rollover
@@ -100,58 +99,25 @@ export const RolloverTeamForm = ({
 												</div>
 											</SelectTrigger>
 											<SelectContent>
-												{teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot?.docs
-													.sort((a, b) => {
-														const docs = seasonsQuerySnapshot?.docs
-														if (docs) {
-															const seasonA = docs.find(
-																(season) => season.id === a.data().season.id
-															)
-															const seasonB = docs.find(
-																(season) => season.id === b.data().season.id
-															)
-															if (seasonA && seasonB) {
-																return (
-																	seasonB.data()?.dateStart.seconds -
-																	seasonA.data()?.dateStart.seconds
-																)
-															}
-															return 0
-														}
-														return 0
-													})
-													.map((team) => {
-														const teamHasBeenRolledOver =
-															currentSeasonTeamsQuerySnapshot?.docs.some(
-																(teamQueryDocumentSnapshot) =>
-																	teamQueryDocumentSnapshot.data().teamId ===
-																	team.data().teamId
-															)
-														const seasonQueryDocumentSnapshot =
-															seasonsQuerySnapshot?.docs.find(
-																(season) => season.id === team.data().season.id
-															)
-
-														return (
-															<SelectItem
-																key={team.id}
-																value={team.data().name}
-																disabled={teamHasBeenRolledOver}
-																className='justify-center'
-															>
-																<div className='flex flex-col items-center text-center w-full'>
-																	<span className='font-medium'>
-																		{team.data().name}
-																	</span>
-																	<span className='text-xs text-muted-foreground'>
-																		{seasonQueryDocumentSnapshot?.data().name}
-																		{teamHasBeenRolledOver &&
-																			' (Already Rolled Over)'}
-																	</span>
-																</div>
-															</SelectItem>
-														)
-													})}
+												{availableTeams.map((team) => (
+													<SelectItem
+														key={team.canonicalTeamId}
+														value={team.canonicalTeamId}
+														disabled={team.alreadyRolledOver}
+														className='justify-center'
+													>
+														<div className='flex flex-col items-center text-center w-full'>
+															<span className='font-medium'>
+																{team.displayName}
+															</span>
+															<span className='text-xs text-muted-foreground'>
+																{team.mostRecentSeasonName}
+																{team.alreadyRolledOver &&
+																	' (Already Rolled Over)'}
+															</span>
+														</div>
+													</SelectItem>
+												))}
 											</SelectContent>
 										</Select>
 									</FormControl>

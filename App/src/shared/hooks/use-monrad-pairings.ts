@@ -12,7 +12,8 @@
 
 import { useMemo } from 'react'
 import { QuerySnapshot } from '@/firebase'
-import { GameDocument, TeamDocument } from '@/types'
+import { GameDocument, TeamSeasonDocument } from '@/types'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { SwissTeamStanding, sortBySwissScore } from './use-swiss-standings'
 
 export interface ScheduledGame {
@@ -148,7 +149,7 @@ export const getMatchupCount = (
 export const useMonradPairings = (
 	standings: Record<string, SwissTeamStanding>,
 	gamesQuerySnapshot: QuerySnapshot<GameDocument> | undefined,
-	teamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
+	teamsQuerySnapshot: QuerySnapshot<TeamSeasonDocument> | undefined
 ): MonradScheduleResult => {
 	return useMemo(() => {
 		// Get ranked teams from standings
@@ -160,11 +161,14 @@ export const useMonradPairings = (
 			rank: index + 1,
 		}))
 
-		// If no standings yet, use teams from snapshot in arbitrary order
+		// If no standings yet, use teams from snapshot in arbitrary order.
+		// `doc.id` on a teamSeasons subdoc is the seasonId; derive the
+		// canonical team id so the resulting ids match the canonical refs
+		// stored on games.
 		if (rankedTeams.length === 0 && teamsQuerySnapshot) {
 			teamsQuerySnapshot.docs.forEach((doc, index) => {
 				rankedTeams.push({
-					teamId: doc.id,
+					teamId: canonicalTeamIdFromTeamSeasonDoc(doc),
 					rank: index + 1,
 				})
 			})
