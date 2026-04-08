@@ -291,6 +291,57 @@ export const deleteUnregisteredTeamViaFunction = async (
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// MERGE TEAMS (Admin)
+//////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Request interface for merging two teams
+ */
+interface MergeTeamsRequest {
+	/** Canonical id of the team to keep */
+	winningTeamId: string
+	/** Canonical id of the team to merge in and delete */
+	losingTeamId: string
+}
+
+/**
+ * Response interface for merging two teams
+ */
+interface MergeTeamsResponse {
+	success: boolean
+	message: string
+	winningTeamId: string
+	losingTeamId: string
+	movedTeamSeasons: number
+	movedBadges: number
+	badgesDeduped: number
+	rewrittenGames: number
+	rewrittenOffers: number
+	rewrittenPlayerSeasons: number
+}
+
+/**
+ * Merges the "losing" team into the "winning" team via Firebase Function
+ * (Admin only). After the call, the losing team no longer exists and all
+ * of its history (team seasons, rosters, badges, game refs, offer refs,
+ * player-season refs) is attached to the winning team.
+ *
+ * Throws `failed-precondition` if either team has a team-season record
+ * for a season that the other team also has one for — the admin must
+ * resolve that collision manually first.
+ */
+export const mergeTeamsViaFunction = async (
+	data: MergeTeamsRequest
+): Promise<MergeTeamsResponse> => {
+	const mergeTeams = httpsCallable<MergeTeamsRequest, MergeTeamsResponse>(
+		functions,
+		'mergeTeams'
+	)
+	const result = await mergeTeams(data)
+	return result.data
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // UPDATE TEAM (Admin)
 //////////////////////////////////////////////////////////////////////////////
 
