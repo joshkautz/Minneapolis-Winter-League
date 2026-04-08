@@ -1,4 +1,4 @@
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerRankingDocument } from '../../../types.js'
 import { PlayerRatingState } from '../types.js'
@@ -25,12 +25,22 @@ async function loadPreviousRankings(): Promise<Map<string, number>> {
 
 /**
  * Converts player ratings map to ranked array with proper tie handling
- * Uses TrueSkill mu (skill estimate) for ranking
+ * Uses TrueSkill mu (skill estimate) for ranking.
+ *
+ * The returned objects are missing the `player` ref field (added later in
+ * `saveFinalRankings`) and use `FieldValue.serverTimestamp()` for
+ * `lastUpdated` (resolved to a `Timestamp` server-side at write time), so
+ * the return type is loosened with a structural type rather than the
+ * strict `PlayerRankingDocument`.
  */
 export function calculatePlayerRankings(
 	playerRatings: Map<string, PlayerRatingState>,
 	previousRatings: Map<string, number>
-): PlayerRankingDocument[] {
+): Array<
+	Omit<PlayerRankingDocument, 'player' | 'lastUpdated'> & {
+		lastUpdated: FieldValue
+	}
+> {
 	const rankedPlayers = calculateRanksWithTieHandling(playerRatings)
 
 	return rankedPlayers.map(({ player, rank }) => {
@@ -38,7 +48,9 @@ export function calculatePlayerRankings(
 		const previousRating = previousRatings.get(player.playerId)
 		const lastRatingChange = previousRating ? player.mu - previousRating : 0
 
-		// Note: player reference is set in saveFinalRankings when creating the batch
+		// Note: player reference is set in saveFinalRankings when creating the
+		// batch. `lastUpdated` is a server-timestamp sentinel that Firestore
+		// resolves to a Timestamp on commit.
 		return {
 			playerId: player.playerId,
 			playerName: player.playerName,
@@ -46,10 +58,10 @@ export function calculatePlayerRankings(
 			totalGames: player.totalGames,
 			totalSeasons: player.totalSeasons,
 			rank,
-			lastUpdated: Timestamp.now(),
+			lastUpdated: FieldValue.serverTimestamp(),
 			lastSeasonId: player.lastSeasonId,
 			lastRatingChange,
-		} as Omit<PlayerRankingDocument, 'player'> as PlayerRankingDocument
+		}
 	})
 }
 

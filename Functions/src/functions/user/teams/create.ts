@@ -12,7 +12,7 @@
  * from the most recent previous season to maintain ban continuity.
  */
 
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
 import { getPublicFileUrl } from '../../../shared/storage.js'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -203,7 +203,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 
 			await firestore.runTransaction(async (txn) => {
 				txn.set(teamCanonicalRef, {
-					createdAt: Timestamp.now(),
+					createdAt: FieldValue.serverTimestamp(),
 					createdBy: playerDocRef,
 				})
 				txn.set(teamSeasonDocRef, {
@@ -217,7 +217,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 				})
 				txn.set(rosterEntryDocRef, {
 					player: playerDocRef,
-					dateJoined: Timestamp.now(),
+					dateJoined: FieldValue.serverTimestamp(),
 				})
 
 				if (existingPlayerSeasonData) {

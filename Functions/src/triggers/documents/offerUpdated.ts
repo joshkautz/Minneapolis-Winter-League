@@ -8,7 +8,7 @@
  */
 
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
@@ -111,7 +111,7 @@ export const onOfferUpdated = onDocumentUpdated(
 					if (doc.id !== offerId) {
 						transaction.update(doc.ref, {
 							status: OfferStatus.CANCELED,
-							respondedAt: Timestamp.now(),
+							respondedAt: FieldValue.serverTimestamp(),
 							respondedBy: playerCanonicalRef,
 							canceledReason:
 								'Player joined another team by accepting a different offer',
@@ -135,7 +135,7 @@ export const onOfferUpdated = onDocumentUpdated(
 					processed: false,
 					processingError:
 						error instanceof Error ? error.message : 'Unknown error',
-					processingFailedAt: new Date(),
+					processingFailedAt: FieldValue.serverTimestamp(),
 				})
 		}
 	}

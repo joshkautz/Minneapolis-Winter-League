@@ -3,9 +3,9 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, NewsDocument, SeasonDocument } from '../../../types.js'
+import { Collections, SeasonDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
@@ -113,8 +113,8 @@ export const updateNews = onCall<UpdateNewsRequest>(
 			}
 
 			// Build update object
-			const updateData: Partial<NewsDocument> = {
-				updatedAt: Timestamp.now(),
+			const updateData: { [key: string]: unknown } = {
+				updatedAt: FieldValue.serverTimestamp(),
 			}
 
 			if (title !== undefined) {

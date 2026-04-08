@@ -54,7 +54,7 @@
  * @see TeamRosterDocument in types.ts (the team-side membership doc)
  */
 
-import { Timestamp, type Transaction } from 'firebase-admin/firestore'
+import { FieldValue, type Transaction } from 'firebase-admin/firestore'
 import {
 	playerRef,
 	playerSeasonRef,
@@ -121,7 +121,7 @@ export function addPlayerToTeam(
 	// Team-side: pure membership join.
 	transaction.set(rosterEntryDocRef, {
 		player: playerCanonicalRef,
-		dateJoined: Timestamp.now(),
+		dateJoined: FieldValue.serverTimestamp(),
 	})
 
 	// Player-side: create or update the season subdoc with the team ref.

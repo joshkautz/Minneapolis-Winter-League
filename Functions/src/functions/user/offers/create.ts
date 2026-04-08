@@ -12,7 +12,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
@@ -210,7 +210,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 					type,
 					status: OfferStatus.PENDING,
 					createdBy: firestore.collection(Collections.PLAYERS).doc(userId),
-					createdAt: new Date(),
+					createdAt: FieldValue.serverTimestamp(),
 				}
 
 				// Use transaction.set() with the deterministic document ID

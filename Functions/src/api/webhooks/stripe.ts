@@ -6,7 +6,7 @@
  */
 
 import { onRequest } from 'firebase-functions/v2/https'
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG, getStripeConfig } from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
@@ -137,7 +137,7 @@ async function handleCheckoutSessionCompleted(
 				typeof session.customer === 'string'
 					? session.customer
 					: session.customer?.id,
-			created: Timestamp.now(),
+			created: FieldValue.serverTimestamp(),
 			stripeCreated: Timestamp.fromMillis(session.created * 1000),
 			metadata: session.metadata,
 		}
@@ -190,7 +190,7 @@ async function handleProductEvent(
 					active: product.active,
 					metadata: product.metadata,
 					images: product.images,
-					updated: Timestamp.now(),
+					updated: FieldValue.serverTimestamp(),
 				},
 				{ merge: true }
 			)
@@ -240,7 +240,7 @@ async function handlePriceEvent(
 					type: price.type,
 					nickname: price.nickname,
 					metadata: price.metadata,
-					updated: Timestamp.now(),
+					updated: FieldValue.serverTimestamp(),
 				},
 				{ merge: true }
 			)

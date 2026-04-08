@@ -3,7 +3,7 @@
  */
 
 import { onDocumentCreated } from 'firebase-functions/v2/firestore'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections } from '../../types.js'
 import {
@@ -179,7 +179,7 @@ export const onPaymentCreated = onDocumentCreated(
 						signatureRequestId:
 							signatureResponse.body.signatureRequest.signatureRequestId,
 						status: 'pending',
-						createdAt: new Date(),
+						createdAt: FieldValue.serverTimestamp(),
 					})
 			}
 

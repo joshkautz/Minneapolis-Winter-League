@@ -5,7 +5,7 @@
  * how many roster members are paid + signed for the season.
  */
 
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { TEAM_CONFIG } from '../config/constants.js'
 import { playerSeasonRef, teamSeasonRef } from '../shared/database.js'
@@ -57,7 +57,9 @@ export async function updateTeamRegistrationStatus(
 		if (teamSeasonData?.registered !== shouldBeRegistered) {
 			await teamSeasonDocRef.update({
 				registered: shouldBeRegistered,
-				registeredDate: shouldBeRegistered ? Timestamp.now() : null,
+				registeredDate: shouldBeRegistered
+					? FieldValue.serverTimestamp()
+					: null,
 			})
 
 			logger.info('Updated team registration status', {

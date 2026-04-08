@@ -2,13 +2,12 @@
  * Create player callable function
  */
 
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
 	PLAYER_SEASONS_SUBCOLLECTION,
-	PlayerDocument,
 	PlayerSeasonDocument,
 	SeasonDocument,
 } from '../../../types.js'
@@ -113,13 +112,14 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 				.get()
 
 			// Create player parent doc + season subdoc per open-registration season,
-			// all in a single batched write.
-			const player: PlayerDocument = {
+			// all in a single batched write. createdAt is server-generated so the
+			// concrete type can't be PlayerDocument as-is — drop the annotation.
+			const player = {
 				admin: false,
 				email: email,
 				firstname: trimmedFirstname,
 				lastname: trimmedLastname,
-				createdAt: Timestamp.now(),
+				createdAt: FieldValue.serverTimestamp(),
 			}
 
 			const batch = firestore.batch()

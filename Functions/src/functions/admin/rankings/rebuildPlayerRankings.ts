@@ -13,7 +13,7 @@
  * - Running periodic full audits of the ranking system
  */
 
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { onCall } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { z } from 'zod'
@@ -86,7 +86,7 @@ export const rebuildPlayerRankings = onCall<RebuildRankingsRequest>(
 					error: {
 						message: errorMessage,
 						stack: errorStack,
-						timestamp: Timestamp.now(),
+						timestamp: FieldValue.serverTimestamp(),
 					},
 				})
 
@@ -172,7 +172,7 @@ async function processFullRebuild(calculationId: string): Promise<void> {
 		// Mark calculation as complete
 		await updateCalculationState(calculationId, {
 			status: 'completed',
-			completedAt: Timestamp.now(),
+			completedAt: FieldValue.serverTimestamp(),
 			'progress.currentStep': 'Complete',
 			'progress.percentComplete': 100,
 		})

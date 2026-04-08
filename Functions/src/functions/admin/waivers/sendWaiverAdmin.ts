@@ -14,7 +14,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
@@ -206,7 +206,7 @@ export const sendWaiverAdmin = onCall<SendWaiverAdminRequest>(
 					seasonId: seasonId,
 					signatureRequestId: signatureRequestId,
 					status: 'pending',
-					createdAt: new Date(),
+					createdAt: FieldValue.serverTimestamp(),
 				})
 
 			logger.info('Admin sent waiver to player', {

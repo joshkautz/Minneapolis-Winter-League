@@ -1,5 +1,5 @@
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
-import { Collections, RankingsCalculationDocument } from '../../../types.js'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
+import { Collections } from '../../../types.js'
 import { TRUESKILL_CONSTANTS } from '../constants.js'
 
 /**
@@ -11,10 +11,14 @@ export async function createCalculationState(
 ): Promise<string> {
 	const firestore = getFirestore()
 
-	const calculationDoc: Partial<RankingsCalculationDocument> = {
+	// Drop the explicit Partial<RankingsCalculationDocument> annotation so
+	// `FieldValue.serverTimestamp()` can be used in the `startedAt` field —
+	// it's the right runtime value but the strict interface type only knows
+	// about Timestamp.
+	const calculationDoc = {
 		calculationType,
 		status: 'pending',
-		startedAt: Timestamp.now(),
+		startedAt: FieldValue.serverTimestamp(),
 		completedAt: null,
 		triggeredBy: userId,
 		progress: {
@@ -38,11 +42,16 @@ export async function createCalculationState(
 }
 
 /**
- * Updates calculation state
+ * Updates calculation state.
+ *
+ * Type-loose `updates` so callers can pass `FieldValue.serverTimestamp()`
+ * for timestamp fields without fighting the strict
+ * `Partial<RankingsCalculationDocument>` shape (which only knows about
+ * concrete `Timestamp`).
  */
 export async function updateCalculationState(
 	calculationId: string,
-	updates: Partial<RankingsCalculationDocument>
+	updates: { [key: string]: unknown }
 ): Promise<void> {
 	const firestore = getFirestore()
 	await firestore

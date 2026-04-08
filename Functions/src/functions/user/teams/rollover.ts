@@ -14,7 +14,7 @@
  * - Admins bypass banned and registration date restrictions
  */
 
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
@@ -214,7 +214,7 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 				})
 				txn.set(rosterEntryDocRef, {
 					player: playerDocRef,
-					dateJoined: Timestamp.now(),
+					dateJoined: FieldValue.serverTimestamp(),
 				})
 				if (existingPlayerSeasonData) {
 					txn.update(playerSeasonDocRef, {

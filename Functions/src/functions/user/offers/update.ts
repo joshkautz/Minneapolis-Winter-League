@@ -3,7 +3,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
@@ -224,7 +224,7 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 				// Update offer status
 				transaction.update(offerRef, {
 					status,
-					respondedAt: new Date(),
+					respondedAt: FieldValue.serverTimestamp(),
 					respondedBy: firestore.collection(Collections.PLAYERS).doc(userId),
 				})
 

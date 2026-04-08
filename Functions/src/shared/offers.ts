@@ -3,12 +3,11 @@
  * Handles cancellation of pending offers when players join teams
  */
 
-import { Timestamp, Firestore } from 'firebase-admin/firestore'
+import { FieldValue, Firestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
 	DocumentReference,
-	OfferDocument,
 	OfferStatus,
 	PlayerDocument,
 	SeasonDocument,
@@ -53,14 +52,14 @@ export async function cancelPendingOffersForPlayer(
 			return
 		}
 
-		const updateData: Partial<OfferDocument> = {
-			status: OfferStatus.CANCELED,
-			respondedAt: Timestamp.now(),
-			respondedBy: playerRef,
-			canceledReason,
-		}
-
-		updatePromises.push(offerDoc.ref.update(updateData))
+		updatePromises.push(
+			offerDoc.ref.update({
+				status: OfferStatus.CANCELED,
+				respondedAt: FieldValue.serverTimestamp(),
+				respondedBy: playerRef,
+				canceledReason,
+			})
+		)
 		canceledCount++
 	})
 
