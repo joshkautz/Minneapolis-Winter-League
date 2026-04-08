@@ -175,6 +175,7 @@ export const Teams = () => {
 								<TeamCard
 									key={team.id}
 									teamId={team.id}
+									seasonId={selectedSeasonQueryDocumentSnapshot?.id}
 									teamData={{
 										name: team.data.name,
 										logo: team.data.logo,

@@ -7,6 +7,14 @@ import { Timestamp } from '@firebase/firestore'
 // Types for better TypeScript support
 interface TeamCardProps {
 	teamId: string
+	/**
+	 * Optional season id to embed in the link target. When provided, the
+	 * card links to `/teams/{teamId}/{seasonId}` so the user's currently-
+	 * selected season survives the navigation. Without this the bare
+	 * `/teams/{teamId}` route always renders the team's current-season
+	 * subdoc, which is wrong if the user was browsing a past season.
+	 */
+	seasonId?: string
 	teamData: {
 		name: string
 		logo?: string | null
@@ -34,17 +42,23 @@ const getOrdinalSuffix = (num: number): string => {
 }
 
 // Team Card Component
-export const TeamCard = ({ teamId, teamData, placement }: TeamCardProps) => {
+export const TeamCard = ({
+	teamId,
+	seasonId,
+	teamData,
+	placement,
+}: TeamCardProps) => {
 	const { name, logo, registered, registeredDate, rosterCount = 0 } = teamData
 	const MIN_PLAYERS_REQUIRED = 10
 	const progressPercentage = Math.min(
 		(rosterCount / MIN_PLAYERS_REQUIRED) * 100,
 		100
 	)
+	const linkTo = seasonId ? `/teams/${teamId}/${seasonId}` : `/teams/${teamId}`
 
 	return (
 		<Link
-			to={`/teams/${teamId}`}
+			to={linkTo}
 			className='group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg'
 			aria-label={`View details for team ${name}`}
 		>
