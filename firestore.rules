@@ -143,6 +143,25 @@ service cloud.firestore {
       allow delete: if false; // Use revokeBadgeViaFunction
     }
 
+    // Collection-group access. Firestore rules require an explicit recursive
+    // match for `collectionGroup()` queries even when the direct subcollection
+    // path is already allowed above. These mirror the read posture of the
+    // direct-path rules; writes stay locked behind Functions.
+    match /{path=**}/teamSeasons/{seasonId} {
+      allow read: if true;
+      allow write: if false; // Functions only
+    }
+
+    match /{path=**}/playerSeasons/{seasonId} {
+      allow read: if true;
+      allow write: if false; // Functions only
+    }
+
+    match /{path=**}/badges/{badgeId} {
+      allow read: if true;
+      allow write: if false; // Functions only
+    }
+
     match /siteSettings/{settingId} {
       allow read: if true; // Public read for theme settings
       allow create: if false; // Use updateSiteSettingsViaFunction
