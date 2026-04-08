@@ -1,14 +1,25 @@
 /**
  * Offer-related Firestore operations (invitations and requests)
+ *
+ * Caller pattern after the 2026 data model migration:
+ *   const { authStateUser, authenticatedUserSeasonsSnapshot } = useAuthContext()
+ *   const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+ *   const playerRef = getPlayerRef(authStateUser)
+ *   useCollection(outgoingOffersQuery(
+ *     playerRef,
+ *     authenticatedUserSeasonsSnapshot,
+ *     currentSeasonQueryDocumentSnapshot
+ *   ))
  */
 
 import {
 	query,
 	where,
 	collection,
-	type DocumentSnapshot,
+	type DocumentReference,
 	type QueryDocumentSnapshot,
 	type Query,
+	type QuerySnapshot,
 } from 'firebase/firestore'
 
 import { firestore } from '../app'
@@ -17,128 +28,125 @@ import {
 	OfferStatus,
 	OfferType,
 	PlayerDocument,
+	PlayerSeasonDocument,
 	TeamDocument,
 	SeasonDocument,
 	Collections,
-	PlayerSeason,
 } from '@/shared/utils'
 
 /**
- * Creates a query for outgoing offers (invitations sent by captains or requests sent by players)
+ * Look up the player's per-season subdoc for the current season and return
+ * `{ isCaptain, teamRef }` so callers can branch on captain-vs-player logic.
+ */
+const playerSeasonContext = (
+	playerSeasonsSnapshot: QuerySnapshot<PlayerSeasonDocument> | undefined,
+	currentSeasonQueryDocumentSnapshot:
+		| QueryDocumentSnapshot<SeasonDocument>
+		| undefined
+): {
+	isCaptain: boolean
+	teamRef: DocumentReference<TeamDocument> | null | undefined
+} => {
+	if (!playerSeasonsSnapshot || !currentSeasonQueryDocumentSnapshot) {
+		return { isCaptain: false, teamRef: undefined }
+	}
+	const seasonData = playerSeasonsSnapshot.docs
+		.find((d) => d.id === currentSeasonQueryDocumentSnapshot.id)
+		?.data()
+	return {
+		isCaptain: seasonData?.captain === true,
+		teamRef: seasonData?.team ?? null,
+	}
+}
+
+/**
+ * Outgoing offers — invitations sent by captains, or requests sent by players.
  */
 export const outgoingOffersQuery = (
-	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument> | undefined,
+	playerRef: DocumentReference<PlayerDocument> | undefined,
+	playerSeasonsSnapshot: QuerySnapshot<PlayerSeasonDocument> | undefined,
 	currentSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
 ): Query<OfferDocument> | undefined => {
-	if (!playerDocumentSnapshot || !currentSeasonQueryDocumentSnapshot) {
-		return undefined
-	}
+	if (!playerRef || !currentSeasonQueryDocumentSnapshot) return undefined
 
-	const isCaptain = playerDocumentSnapshot
-		.data()
-		?.seasons.some(
-			(item: PlayerSeason) =>
-				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
-				item.captain
-		)
+	const { isCaptain, teamRef } = playerSeasonContext(
+		playerSeasonsSnapshot,
+		currentSeasonQueryDocumentSnapshot
+	)
 
-	const team = playerDocumentSnapshot
-		.data()
-		?.seasons.find(
-			(item: PlayerSeason) =>
-				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
-				item.captain
-		)?.team
-
-	// If the user is a captain, show all the pending, unprocessed invitations to join their team
-	if (isCaptain) {
+	if (isCaptain && teamRef) {
 		return query(
 			collection(firestore, Collections.OFFERS),
-			where('team', '==', team),
+			where('team', '==', teamRef),
 			where('type', '==', OfferType.INVITATION),
 			where('status', '==', OfferStatus.PENDING)
 		) as Query<OfferDocument>
 	}
 
-	// If the user is a player, show all their pending, unprocessed requests to join teams
 	return query(
 		collection(firestore, Collections.OFFERS),
-		where('player', '==', playerDocumentSnapshot.ref),
+		where('player', '==', playerRef),
 		where('type', '==', OfferType.REQUEST),
 		where('status', '==', OfferStatus.PENDING)
 	) as Query<OfferDocument>
 }
 
 /**
- * Creates a query for incoming offers (requests to join captain's team or invitations for players)
+ * Incoming offers — requests to join the captain's team, or invitations
+ * sent to a player.
  */
 export const incomingOffersQuery = (
-	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument> | undefined,
+	playerRef: DocumentReference<PlayerDocument> | undefined,
+	playerSeasonsSnapshot: QuerySnapshot<PlayerSeasonDocument> | undefined,
 	currentSeasonQueryDocumentSnapshot:
 		| QueryDocumentSnapshot<SeasonDocument>
 		| undefined
 ): Query<OfferDocument> | undefined => {
-	if (!playerDocumentSnapshot || !currentSeasonQueryDocumentSnapshot) {
-		return undefined
-	}
+	if (!playerRef || !currentSeasonQueryDocumentSnapshot) return undefined
 
-	const isCaptain = playerDocumentSnapshot
-		.data()
-		?.seasons.some(
-			(item: PlayerSeason) =>
-				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
-				item.captain
-		)
+	const { isCaptain, teamRef } = playerSeasonContext(
+		playerSeasonsSnapshot,
+		currentSeasonQueryDocumentSnapshot
+	)
 
-	const team = playerDocumentSnapshot
-		.data()
-		?.seasons.find(
-			(item: PlayerSeason) =>
-				item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
-				item.captain
-		)?.team
-
-	// If the user is a captain, show all the pending, unprocessed requests to join their team
-	if (isCaptain) {
+	if (isCaptain && teamRef) {
 		return query(
 			collection(firestore, Collections.OFFERS),
-			where('team', '==', team),
+			where('team', '==', teamRef),
 			where('type', '==', OfferType.REQUEST),
 			where('status', '==', OfferStatus.PENDING)
 		) as Query<OfferDocument>
 	}
 
-	// If the user is a player, show all their pending, unprocessed invitations to join teams
 	return query(
 		collection(firestore, Collections.OFFERS),
-		where('player', '==', playerDocumentSnapshot.ref),
+		where('player', '==', playerRef),
 		where('type', '==', OfferType.INVITATION),
 		where('status', '==', OfferStatus.PENDING)
 	) as Query<OfferDocument>
 }
 
 /**
- * Creates a query for offers between a specific player and team
+ * Creates a query for offers between a specific player and team.
  */
 export const offersForPlayerByTeamQuery = (
-	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument> | undefined,
+	playerRef: DocumentReference<PlayerDocument> | undefined,
 	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamDocument> | undefined
 ) => {
-	if (!playerDocumentSnapshot || !teamQueryDocumentSnapshot) {
+	if (!playerRef || !teamQueryDocumentSnapshot) {
 		return
 	}
 	return query(
 		collection(firestore, Collections.OFFERS),
-		where('player', '==', playerDocumentSnapshot.ref),
+		where('player', '==', playerRef),
 		where('team', '==', teamQueryDocumentSnapshot.ref)
 	) as Query<OfferDocument>
 }
 
 /**
- * Creates a query for all pending offers (admin only)
- * Returns all offers with status = 'pending'
+ * Creates a query for all pending offers (admin only).
  */
 export const allPendingOffersQuery = (): Query<OfferDocument> => {
 	return query(

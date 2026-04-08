@@ -17,6 +17,7 @@ import {
 	incomingOffersQuery,
 	FirestoreError,
 	QuerySnapshot,
+	getPlayerRef,
 } from '@/firebase'
 import { useAuthContext } from './auth-context'
 import { OfferDocument, logger } from '@/shared/utils'
@@ -49,8 +50,8 @@ export const useOffersContext = () => useContext(OffersContext)
 
 export const OffersContextProvider = ({ children }: PropsWithChildren) => {
 	const {
-		authenticatedUserSnapshot,
-		authenticatedUserSnapshotLoading,
+		authenticatedUserSeasonsSnapshot,
+		authenticatedUserSeasonsSnapshotLoading,
 		authStateUser,
 		authStateLoading,
 	} = useAuthContext()
@@ -59,20 +60,22 @@ export const OffersContextProvider = ({ children }: PropsWithChildren) => {
 		currentSeasonQueryDocumentSnapshotLoading,
 	} = useSeasonsContext()
 
+	const playerRef = useMemo(
+		() => getPlayerRef(authStateUser),
+		[authStateUser]
+	)
+
 	// Track whether the dependencies needed to build the query are still loading
 	// This is different from the actual Firestore query loading
 	const dependenciesLoading = useMemo(() => {
-		// If auth state is still loading, we're loading
 		if (authStateLoading) return true
-		// If user is logged in but their player doc is still loading, we're loading
-		if (authStateUser && authenticatedUserSnapshotLoading) return true
-		// If season data is still loading, we're loading
+		if (authStateUser && authenticatedUserSeasonsSnapshotLoading) return true
 		if (currentSeasonQueryDocumentSnapshotLoading) return true
 		return false
 	}, [
 		authStateLoading,
 		authStateUser,
-		authenticatedUserSnapshotLoading,
+		authenticatedUserSeasonsSnapshotLoading,
 		currentSeasonQueryDocumentSnapshotLoading,
 	])
 
@@ -80,19 +83,29 @@ export const OffersContextProvider = ({ children }: PropsWithChildren) => {
 	const outgoingQuery = useMemo(
 		() =>
 			outgoingOffersQuery(
-				authenticatedUserSnapshot,
+				playerRef,
+				authenticatedUserSeasonsSnapshot,
 				currentSeasonQueryDocumentSnapshot
 			),
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
+		[
+			playerRef,
+			authenticatedUserSeasonsSnapshot,
+			currentSeasonQueryDocumentSnapshot,
+		]
 	)
 
 	const incomingQuery = useMemo(
 		() =>
 			incomingOffersQuery(
-				authenticatedUserSnapshot,
+				playerRef,
+				authenticatedUserSeasonsSnapshot,
 				currentSeasonQueryDocumentSnapshot
 			),
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
+		[
+			playerRef,
+			authenticatedUserSeasonsSnapshot,
+			currentSeasonQueryDocumentSnapshot,
+		]
 	)
 
 	const [
