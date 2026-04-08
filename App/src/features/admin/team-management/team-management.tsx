@@ -26,8 +26,8 @@ import { logger } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
+	canonicalTeamRefFromTeamSeasonDoc,
 	teamsInSeasonQuery,
-	getTeamRef,
 } from '@/firebase/collections/teams'
 import {
 	deleteUnregisteredTeamViaFunction,
@@ -157,10 +157,9 @@ export const TeamManagement = () => {
 		return teamsSnapshot.docs
 			.map((doc) => {
 				const data = doc.data() as TeamSeasonDocument
-				const canonicalId = canonicalTeamIdFromTeamSeasonDoc(doc)
 				return {
-					id: canonicalId,
-					ref: getTeamRef(canonicalId) as DocumentReference<TeamDocument>,
+					id: canonicalTeamIdFromTeamSeasonDoc(doc),
+					ref: canonicalTeamRefFromTeamSeasonDoc(doc),
 					name: data.name,
 					registered: data.registered,
 					data,
@@ -177,10 +176,9 @@ export const TeamManagement = () => {
 		return teamsSnapshot.docs
 			.map((doc) => {
 				const data = doc.data() as TeamSeasonDocument
-				const canonicalId = canonicalTeamIdFromTeamSeasonDoc(doc)
 				return {
-					id: canonicalId,
-					ref: getTeamRef(canonicalId) as DocumentReference<TeamDocument>,
+					id: canonicalTeamIdFromTeamSeasonDoc(doc),
+					ref: canonicalTeamRefFromTeamSeasonDoc(doc),
 					name: data.name,
 					registered: data.registered,
 					data,

@@ -15,6 +15,7 @@ import {
 	teamsInSeasonQuery,
 	DocumentSnapshot,
 } from '@/firebase'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { teamBadgesQuery } from '@/firebase/collections/badges'
 import {
 	GameDocument,
@@ -694,13 +695,14 @@ export const TeamProfile = () => {
 
 									const gameDate = gameData.date.toDate()
 									// teamsQuerySnapshot is a collectionGroup over teamSeasons —
-									// the canonical team id lives at parent.parent.id, not on
-									// the doc itself.
+									// derive the canonical team id from each subdoc's parent
+									// chain via the canonical helper.
 									const opponentName =
 										teamsQuerySnapshot?.docs
 											.find(
 												(team) =>
-													team.ref.parent.parent?.id === opponentTeamRef.id
+													canonicalTeamIdFromTeamSeasonDoc(team) ===
+													opponentTeamRef.id
 											)
 											?.data().name || 'TBD'
 
