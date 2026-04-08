@@ -1,12 +1,30 @@
 # 2026 Teams + Players Data Model Refactor — Resumption Roadmap
 
-This document picks up where commit `04f433c4` (`WIP: refactor types, helpers,
-and user/teams/ to v2 data shape`) left off. The migration script is finished
-and verified end-to-end on an emulator clone of production. Types, shared
-helpers, the team services, and the user-facing teams callables have been
-converted. **The Functions workspace does not currently typecheck.** Every
-remaining file in this checklist needs to be touched before the codebase will
-compile again.
+**Last updated**: after commit `1264e5b8`.
+
+## Status
+
+- ✅ **Migration script** done and verified on an emulator clone of production
+  (commit `2c22f8fb`).
+- ✅ **Functions workspace** completely refactored, types and helpers updated,
+  rules and indexes updated. **`cd Functions && npx tsc --noEmit` passes
+  clean.** (Commits `04f433c4`, `e45c3da5`, `36cdda0f`.)
+- 🚧 **App workspace** partially refactored: types updated, firebase/collections
+  layer rewritten, providers (`teams-context` + `auth-context`) updated, shared
+  utils + hooks (`season-utils`, `use-user-status`, `use-top-navigation`) updated,
+  player profile pages updated, team-profile/team-roster-player updated.
+  **~160 typecheck errors remain in App**, concentrated in:
+  - admin team-management (largest by far — heavy use of legacy team shape)
+  - admin player-management (legacy SeasonFormData + season array)
+  - admin season-management, swiss-rankings, game-management,
+    registration-management
+  - player team management pages (manage-team-detail and siblings)
+  - public schedule, standings, rankings, teams pages still have stale type
+    references in some places
+  - create/rollover-team-form hooks
+
+The migration script can run end-to-end against any data right now. Functions
+will deploy and execute correctly. The block is purely the App not compiling.
 
 ## Target shape (final, locked)
 
@@ -31,25 +49,173 @@ Single source of truth for **captain, paid, signed, banned**: the player
 season subdoc. The team's roster subcollection carries only `player` +
 `dateJoined`.
 
-## Done (in this branch)
+## Done
 
+### Layer 1: types + helpers
 - `Functions/src/types.ts` + `App/src/types.ts` (new shapes)
-- `Functions/src/shared/database.ts` (new helpers: `teamRef`, `teamSeasonRef`,
+- `App/src/shared/utils/interfaces.ts` (re-exports updated)
+- `Functions/src/shared/database.ts` (helpers: `teamRef`, `teamSeasonRef`,
   `teamRosterEntryRef`, `teamBadgeRef`, `playerRef`, `playerSeasonRef`,
   `getPlayerSeason`, `getTeamSeason`)
-- `Functions/src/shared/auth.ts` (`validateNotBanned` and `isPlayerBanned` are
-  now async and take `(firestore, playerId, seasonId)`)
-- `Functions/src/services/teamRegistrationService.ts` (signature
-  `(teamId, seasonId)`, reads roster subcollection)
-- `Functions/src/services/teamDeletionService.ts` (renamed to
-  `deleteTeamSeasonWithCleanup`, signature `(firestore, teamId, seasonId)`;
-  bulk variant takes `Array<{teamId, seasonId}>`)
-- `Functions/src/functions/user/teams/create.ts`
-- `Functions/src/functions/user/teams/rollover.ts`
-- `Functions/src/functions/user/teams/update.ts`
-- `Functions/src/functions/user/teams/updateRoster.ts`
-- `Functions/src/functions/user/teams/delete.ts`
-- Migration script (`scripts/migrations/2026-teams-v2/run.js`) — production-ready
+- `Functions/src/shared/auth.ts` (`validateNotBanned` / `isPlayerBanned` async)
+
+### Layer 2: services
+- `Functions/src/services/teamRegistrationService.ts`
+- `Functions/src/services/teamDeletionService.ts` (now
+  `deleteTeamSeasonWithCleanup`)
+
+### Layer 3: Functions callables
+- `user/teams/{create,rollover,update,updateRoster,delete}.ts`
+- `user/offers/{create,update}.ts`
+- `user/players/{create,update,delete}.ts`
+- `user/payments/createStripeCheckout.ts` (also fixed Stripe v22 type import)
+- `user/posts/{createPost,createReply}.ts` (validateNotBanned only)
+- `user/waivers/sendReminder.ts` (validateNotBanned only)
+- `admin/teams/updateTeamAdmin.ts` (linkToTeamId removed)
+- `admin/teams/deleteUnregisteredTeam.ts`
+- `admin/players/updatePlayerAdmin.ts` (per-subdoc writes)
+- `admin/seasons/{create,update,delete}.ts` (drops teams[] array)
+- `admin/games/create.ts` (validates team season subdoc)
+- `admin/badges/{awardBadge,revokeBadge}.ts` (drops teamId walk)
+- `admin/swiss/{setSeeding,getRankings}.ts` (per-team-season seed)
+- `admin/waivers/sendWaiverAdmin.ts`
+
+### Layer 4: triggers + webhooks
+- `triggers/documents/teamUpdated.ts` (now subscribes to roster subcollection)
+- `triggers/documents/teamRegistrationLock.ts` (subscribes to team season subdoc)
+- `triggers/documents/playerUpdated.ts` (subscribes to player season subdoc)
+- `triggers/documents/offerUpdated.ts` (writes roster + player season)
+- `triggers/auth/userDeleted.ts` (collection-group roster cleanup)
+- `triggers/payments/paymentCreated.ts` (writes player season subdoc)
+- `api/webhooks/dropboxSign.ts` (writes player season subdoc)
+
+### Layer 5: config
+- `firestore.rules` (adds /seasons + /roster + /player seasons rules)
+- `firestore.indexes.json` (adds collection-group indexes for new shape;
+  drops legacy team composite indexes)
+
+### Layer 6: App firebase + providers + shared
+- `App/src/firebase/collections/teams.ts` (full rewrite)
+- `App/src/firebase/collections/players.ts` (gains player season helpers)
+- `App/src/providers/teams-context.tsx` (collection-group based)
+- `App/src/providers/auth-context.tsx` (exposes
+  `authenticatedUserSeasonsSnapshot`)
+- `App/src/shared/utils/season-utils.ts` (consume QuerySnapshot)
+- `App/src/shared/hooks/use-user-status.ts`
+- `App/src/shared/hooks/use-top-navigation.ts`
+
+### Layer 7: App pages (partial — only the player-profile and team-profile/roster paths)
+- `App/src/features/player/profile/{profile,profile-actions,payment-section}.tsx`
+- `App/src/features/public/teams/team-profile/team-roster-player.tsx`
+
+### Migration script
+`scripts/migrations/2026-teams-v2/run.js` — production-ready, all 5 modes
+implemented and verified end-to-end on emulator.
+
+## Resumption — App remaining work (~160 type errors)
+
+The Functions workspace and the migration script are entirely done. Resume
+the App refactor by running `cd /Users/josh/Projects/joshkautz/Minneapolis-Winter-League && npx tsc --noEmit -p App/tsconfig.json`
+and fixing the listed errors. The remaining work is mostly mechanical
+field renames and snapshot type adjustments.
+
+### Common rename patterns to apply
+
+- `team.data().roster` (array on flat team doc) →
+  `useCollection(teamRosterSubcollection(teamId, seasonId))` returning
+  `QuerySnapshot<TeamRosterDocument>`
+- `team.data().name` and `team.data().logo` and `team.data().registered`
+  and `team.data().placement` — these now live on the team's season subdoc.
+  For "current season", load `teamSeasonRef(teamId, currentSeasonId)`.
+- `playerData.seasons.find((s) => s.season.id === seasonId)` →
+  `useDocument(playerSeasonRef(playerId, seasonId))` returning the
+  `PlayerSeasonDocument` directly.
+- `currentSeasonTeamsQuery(seasonSnapshot)` → `teamsInSeasonQuery(seasonSnapshot?.ref)`
+- `teamsBySeasonQuery(seasonRef)` → `teamsInSeasonQuery(seasonRef)`
+- `teamsHistoryQuery(teamId)` → `teamSeasonsQuery(teamId)`
+- `currentSeasonTeamsQuery` import → drop, use the providers context's
+  `currentSeasonTeamsQuerySnapshot` (now `QuerySnapshot<TeamSeasonDocument>`)
+- For team-profile pages, the URL should now address canonical id; the
+  team-profile component should load both `getTeamRef(id)` (for canonical
+  doc) AND `teamSeasonRef(id, currentSeasonId)` for renderable fields.
+
+### App files that need updating (from current typecheck errors)
+
+#### admin pages
+- `App/src/features/admin/team-management/team-management.tsx` — biggest
+  single file. The legacy code maps over a flat `teams` collection with
+  `{ id, ref, ...TeamDocument }` shape; needs to switch to
+  `teamsInSeasonQuery` returning `TeamSeasonDocument` and walk
+  `doc.ref.parent.parent.id` for the canonical team id.
+- `App/src/features/admin/team-management/components/team-edit-dialog.tsx`
+  — drop `linkToTeamId` UI; the file already imports a non-existent
+  `TeamRosterPlayer` type.
+- `App/src/features/admin/team-management/components/team-badges-dialog.tsx`
+  — should be straightforward, only the team ref shape changes.
+- `App/src/features/admin/player-management/player-management.tsx` —
+  iterates the player's seasons array; needs to switch to subcollection.
+  The form's `SeasonFormData` is fine but the seasons list comes from a
+  different source now. Note: the inner `SeasonCard` component was
+  recently updated for karma removal — its team ref handling needs the
+  new canonical-team-id treatment.
+- `App/src/features/admin/season-management/season-management.tsx`
+- `App/src/features/admin/swiss-rankings/swiss-rankings.tsx`
+- `App/src/features/admin/game-management/game-management.tsx`
+- `App/src/features/admin/registration-management/registration-management.tsx`
+
+#### player pages
+- `App/src/features/player/team/manage-team-detail.tsx`
+- `App/src/features/player/team/manage-team-roster-card.tsx`
+- `App/src/features/player/team/manage-team-roster-player.tsx`
+- `App/src/features/player/team/manage-team-request-card.tsx`
+- `App/src/features/player/team/manage-invite-player-*.tsx`
+- `App/src/features/player/team/manage-captains-offers-panel.tsx`
+- `App/src/features/player/team/manage-non-captains-offers-panel.tsx`
+- `App/src/features/player/team/manage-captain-actions.tsx`
+- `App/src/features/player/team/manage-non-captain-actions.tsx`
+- `App/src/features/player/team/manage-edit-team-dialog.tsx`
+- `App/src/features/player/team/manage-edit-team-form.tsx`
+- `App/src/features/player/team/components/team-management-view.tsx`
+- `App/src/features/player/team/components/team-options-view.tsx`
+- `App/src/features/player/team/hooks/use-team-management.ts`
+- `App/src/features/player/team/hooks/use-manage-captain-actions.ts`
+- `App/src/features/player/team/hooks/use-manage-edit-team-form.ts`
+
+#### public pages
+- `App/src/features/public/teams/teams.tsx`
+- `App/src/features/public/teams/team-card.tsx`
+- `App/src/features/public/teams/team-profile/team-profile.tsx` (largest
+  single team-profile change — needs to load canonical + current season
+  subdoc)
+- `App/src/features/public/teams/team-profile/team-history.tsx`
+- `App/src/features/public/standings/*` (use `teamsInSeasonQuery`)
+- `App/src/features/public/schedule/schedule-card.tsx` and related
+- `App/src/features/public/rankings/player-ranking-history.tsx`
+- `App/src/features/public/create/rollover-team-form.tsx` + hooks
+- `App/src/features/public/create/hooks/use-create-team-form.ts`
+- `App/src/features/public/create/hooks/use-team-creation.ts`
+
+#### shared hooks not yet touched
+- `App/src/shared/hooks/use-standings.ts`
+- `App/src/shared/hooks/use-swiss-standings.ts`
+- `App/src/shared/hooks/use-monrad-pairings.ts`
+- `App/src/shared/hooks/use-offer.ts`
+- `App/src/shared/hooks/use-account-section.ts`
+- `App/src/shared/hooks/use-schedule-data.ts`
+
+### Verification gate
+
+After all the App files are converted, run:
+
+```bash
+cd /Users/josh/Projects/joshkautz/Minneapolis-Winter-League
+npx tsc --noEmit -p App/tsconfig.json   # must be clean
+npm run lint:check                      # must pass
+npm run format:check                    # must pass
+npm run build                           # both workspaces must build
+```
+
+## (Below: original Functions roadmap, kept for reference but completed)
 
 ## Resumption: Functions remaining (sorted by typecheck error count)
 
