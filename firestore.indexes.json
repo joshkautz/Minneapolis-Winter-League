@@ -215,8 +215,8 @@
 			]
 		},
 		{
-			"collectionGroup": "teams",
-			"queryScope": "COLLECTION",
+			"collectionGroup": "seasons",
+			"queryScope": "COLLECTION_GROUP",
 			"fields": [
 				{
 					"fieldPath": "season",
@@ -229,15 +229,29 @@
 			]
 		},
 		{
-			"collectionGroup": "teams",
-			"queryScope": "COLLECTION",
+			"collectionGroup": "seasons",
+			"queryScope": "COLLECTION_GROUP",
 			"fields": [
 				{
-					"fieldPath": "teamId",
+					"fieldPath": "season",
 					"order": "ASCENDING"
 				},
 				{
-					"fieldPath": "season",
+					"fieldPath": "paid",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "signed",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "roster",
+			"queryScope": "COLLECTION_GROUP",
+			"fields": [
+				{
+					"fieldPath": "player",
 					"order": "ASCENDING"
 				}
 			]
@@ -275,6 +289,16 @@
 		{
 			"collectionGroup": "badges",
 			"fieldPath": "badge",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "badges",
+			"fieldPath": "seasonId",
 			"indexes": [
 				{
 					"order": "ASCENDING",

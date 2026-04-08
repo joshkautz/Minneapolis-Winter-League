@@ -67,13 +67,31 @@ service cloud.firestore {
       allow create: if false; // Use createTeamViaFunction
       allow update: if false; // Use editTeamViaFunction, manageTeamPlayerViaFunction
       allow delete: if false; // Use deleteTeamViaFunction
+
+      // Per-season participation subdocuments
+      match /seasons/{seasonId} {
+        allow read: if true;
+        allow write: if false; // Functions only
+
+        // Pure membership join, one doc per (team, season, player)
+        match /roster/{playerId} {
+          allow read: if true;
+          allow write: if false; // Functions only
+        }
+      }
     }
-    
+
     match /players/{playerId} {
       allow read: if true;
       allow create: if false; // Use createPlayerViaFunction
-      allow update: if false; // Use updatePlayerViaFunction  
+      allow update: if false; // Use updatePlayerViaFunction
       allow delete: if false; // Use deletePlayerViaFunction
+
+      // Per-season participation subdocuments (paid, signed, banned, captain, team)
+      match /seasons/{seasonId} {
+        allow read: if true;
+        allow write: if false; // Functions only
+      }
     }
     
     match /offers/{offerId} {

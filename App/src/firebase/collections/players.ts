@@ -3,21 +3,28 @@
  */
 
 import {
+	collection,
+	collectionGroup,
 	doc,
 	getDoc,
-	query,
-	where,
-	collection,
 	or,
+	query,
 	and,
-	type DocumentSnapshot,
+	where,
+	type CollectionReference,
 	type DocumentReference,
+	type DocumentSnapshot,
 	type Query,
 } from 'firebase/firestore'
 
 import { firestore } from '../app'
 import { User } from '../auth'
-import { PlayerDocument, Collections } from '@/shared/utils'
+import {
+	Collections,
+	PlayerDocument,
+	PlayerSeasonDocument,
+	SeasonDocument,
+} from '@/shared/utils'
 
 /**
  * Gets a player document snapshot by reference
@@ -42,6 +49,56 @@ export const getPlayerRef = (
 		Collections.PLAYERS,
 		authValue.uid
 	) as DocumentReference<PlayerDocument>
+}
+
+// ---- Per-player season subcollection -------------------------------------
+
+/**
+ * Get a player's season subdoc reference.
+ */
+export const playerSeasonRef = (
+	playerId: string | undefined,
+	seasonId: string | undefined
+): DocumentReference<PlayerSeasonDocument> | undefined => {
+	if (!playerId || !seasonId) return undefined
+	return doc(
+		firestore,
+		Collections.PLAYERS,
+		playerId,
+		'seasons',
+		seasonId
+	) as DocumentReference<PlayerSeasonDocument>
+}
+
+/**
+ * Get the seasons subcollection ref for a player (i.e. their full
+ * participation history).
+ */
+export const playerSeasonsSubcollection = (
+	playerId: string | undefined
+): CollectionReference<PlayerSeasonDocument> | undefined => {
+	if (!playerId) return undefined
+	return collection(
+		firestore,
+		Collections.PLAYERS,
+		playerId,
+		'seasons'
+	) as CollectionReference<PlayerSeasonDocument>
+}
+
+/**
+ * Query for every player season subdoc for a given season (collection
+ * group). Each result doc's `ref.parent.parent` is the canonical
+ * `players/{uid}` document.
+ */
+export const playerSeasonsInSeasonQuery = (
+	seasonRef: DocumentReference<SeasonDocument> | undefined
+): Query<PlayerSeasonDocument> | undefined => {
+	if (!seasonRef) return undefined
+	return query(
+		collectionGroup(firestore, 'seasons'),
+		where('season', '==', seasonRef)
+	) as Query<PlayerSeasonDocument>
 }
 
 /**
