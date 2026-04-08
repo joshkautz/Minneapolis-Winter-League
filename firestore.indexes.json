@@ -127,26 +127,6 @@
 			]
 		},
 		{
-			"collectionGroup": "waivers",
-			"queryScope": "COLLECTION",
-			"fields": [
-				{
-					"fieldPath": "seasonId",
-					"order": "ASCENDING"
-				}
-			]
-		},
-		{
-			"collectionGroup": "waivers",
-			"queryScope": "COLLECTION",
-			"fields": [
-				{
-					"fieldPath": "signatureRequestId",
-					"order": "ASCENDING"
-				}
-			]
-		},
-		{
 			"collectionGroup": "offers",
 			"queryScope": "COLLECTION",
 			"fields": [
@@ -247,16 +227,6 @@
 			]
 		},
 		{
-			"collectionGroup": "roster",
-			"queryScope": "COLLECTION_GROUP",
-			"fields": [
-				{
-					"fieldPath": "player",
-					"order": "ASCENDING"
-				}
-			]
-		},
-		{
 			"collectionGroup": "games",
 			"queryScope": "COLLECTION",
 			"fields": [
@@ -299,6 +269,16 @@
 		{
 			"collectionGroup": "badges",
 			"fieldPath": "seasonId",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "roster",
+			"fieldPath": "player",
 			"indexes": [
 				{
 					"order": "ASCENDING",
