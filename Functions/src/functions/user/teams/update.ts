@@ -118,8 +118,8 @@ export const updateTeam = onCall<EditTeamRequest>(
 					await file.save(buffer, {
 						metadata: { contentType: logoContentType },
 					})
-					const encodedPath = encodeURIComponent(fileName)
-					logoUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`
+					await file.makePublic()
+					logoUrl = file.publicUrl()
 					logoStoragePath = fileName
 					logger.info(`Successfully uploaded logo for team: ${teamId}`, {
 						fileName,

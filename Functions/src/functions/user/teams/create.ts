@@ -158,9 +158,9 @@ export const createTeam = onCall<CreateTeamRequest>(
 					await file.save(buffer, {
 						metadata: { contentType: logoContentType },
 					})
+					await file.makePublic()
 
-					const encodedPath = encodeURIComponent(fileName)
-					logoUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`
+					logoUrl = file.publicUrl()
 					storagePath = fileName
 
 					logger.info(`Successfully uploaded logo for team: ${teamId}`, {
