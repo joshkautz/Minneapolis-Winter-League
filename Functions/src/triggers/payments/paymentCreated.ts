@@ -13,6 +13,7 @@ import {
 } from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
 import { getCurrentSeason, playerSeasonRef } from '../../shared/database.js'
+import { isMigrationInProgress } from '../../shared/maintenance.js'
 import { SignatureRequestApi, SubSigningOptions } from '@dropbox/sign'
 
 /**
@@ -29,6 +30,15 @@ export const onPaymentCreated = onDocumentCreated(
 	},
 	async (event) => {
 		const { uid, paymentId } = event.params
+
+		if (await isMigrationInProgress(getFirestore())) {
+			logger.info('Skipping onPaymentCreated — migration in progress', {
+				eventId: event.id,
+				uid,
+				paymentId,
+			})
+			return
+		}
 
 		try {
 			logger.info(

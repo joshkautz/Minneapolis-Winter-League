@@ -22,6 +22,7 @@ import {
 	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../shared/database.js'
+import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 export const onOfferUpdated = onDocumentUpdated(
 	{
@@ -29,6 +30,14 @@ export const onOfferUpdated = onDocumentUpdated(
 		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {
+		if (await isMigrationInProgress(getFirestore())) {
+			logger.info('Skipping onOfferUpdated — migration in progress', {
+				eventId: event.id,
+				offerId: event.params.offerId,
+			})
+			return
+		}
+
 		const beforeData = event.data?.before.data() as OfferDocument | undefined
 		const afterData = event.data?.after.data() as OfferDocument | undefined
 

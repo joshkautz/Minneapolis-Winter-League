@@ -21,6 +21,7 @@ import {
 	PlayerDocument,
 } from '../../types.js'
 import { handleFunctionError } from '../../shared/errors.js'
+import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 	const { uid } = user
@@ -29,6 +30,11 @@ export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 		logger.info(`Processing user deletion for UID: ${uid}`)
 
 		const firestore = getFirestore()
+
+		if (await isMigrationInProgress(firestore)) {
+			logger.info('Skipping userDeleted — migration in progress', { uid })
+			return
+		}
 		const playerRef = firestore
 			.collection(Collections.PLAYERS)
 			.doc(uid) as DocumentReference<PlayerDocument>

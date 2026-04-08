@@ -6,9 +6,11 @@
  */
 
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
+import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'
+import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
 	{
@@ -17,6 +19,14 @@ export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
 	},
 	async (event) => {
 		const { teamId, seasonId } = event.params
+
+		if (await isMigrationInProgress(getFirestore())) {
+			logger.info(
+				'Skipping updateTeamRegistrationOnRosterChange — migration in progress',
+				{ eventId: event.id, teamId, seasonId }
+			)
+			return
+		}
 
 		// Only react to creates and deletes; updates to existing roster entries
 		// don't change the registration count.

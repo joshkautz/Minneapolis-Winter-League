@@ -550,9 +550,25 @@ After Functions compiles, switch to App.
 
 ## Cutover sequence (when code is compiling and ready)
 
-1. **Refresh local emulator data** from production: `npm run data:refresh`
-2. **Run migration in emulator** to verify the refactored code works against
-   the new shape:
+The kill-switch flag at `system/maintenance.migrationInProgress` makes
+every Firestore trigger no-op while the migration writes to canonical
+collections. Always flip it on before `--mode=migrate` and off after the
+final `--mode=validate`.
+
+Note: the new collection-group indexes must be live BEFORE the migration
+runs in production, otherwise validation queries against the new shape
+will error with missing-index. Deploy indexes first, wait for the build,
+then run the migration.
+
+### Emulator dry run
+
+1. Refresh local emulator data from production: `npm run data:refresh`
+2. Flip the kill switch on:
+   ```
+   FIRESTORE_EMULATOR_HOST=localhost:8080 GCLOUD_PROJECT=minnesota-winter-league \
+     node scripts/migrations/2026-teams-v2/set-maintenance.js on
+   ```
+3. Run migrate → validate → cutover → validate against the emulator:
    ```
    FIRESTORE_EMULATOR_HOST=localhost:8080 GCLOUD_PROJECT=minnesota-winter-league \
      node scripts/migrations/2026-teams-v2/run.js --mode=migrate --commit
@@ -560,23 +576,48 @@ After Functions compiles, switch to App.
      node scripts/migrations/2026-teams-v2/run.js --mode=validate
    FIRESTORE_EMULATOR_HOST=localhost:8080 GCLOUD_PROJECT=minnesota-winter-league \
      node scripts/migrations/2026-teams-v2/run.js --mode=cutover --commit
+   FIRESTORE_EMULATOR_HOST=localhost:8080 GCLOUD_PROJECT=minnesota-winter-league \
+     node scripts/migrations/2026-teams-v2/run.js --mode=validate
    ```
-3. **Smoke test the dev app** (`npm run dev`) — login, view standings, view a
+4. Flip the kill switch off:
+   ```
+   FIRESTORE_EMULATOR_HOST=localhost:8080 GCLOUD_PROJECT=minnesota-winter-league \
+     node scripts/migrations/2026-teams-v2/set-maintenance.js off
+   ```
+5. Smoke test the dev app (`npm run dev`) — login, view standings, view a
    team profile, create a team, accept an offer, award a badge, edit a
    player as admin
-4. **Take a Firestore export** of production to GCS as the rollback snapshot
-5. **Run migration in production**:
+
+### Production cutover
+
+6. Take a Firestore export of production to GCS as the rollback snapshot
+   (`gcloud firestore export gs://...`)
+7. Deploy the new collection-group indexes and WAIT for the build to
+   complete:
+   ```
+   firebase deploy --only firestore:indexes
+   ```
+8. Flip the kill switch on (production, no emulator host):
+   ```
+   node scripts/migrations/2026-teams-v2/set-maintenance.js on
+   ```
+9. Run migrate → validate → cutover → validate against production:
    ```
    node scripts/migrations/2026-teams-v2/run.js --mode=plan
    node scripts/migrations/2026-teams-v2/run.js --mode=migrate --commit
    node scripts/migrations/2026-teams-v2/run.js --mode=validate
    node scripts/migrations/2026-teams-v2/run.js --mode=cutover --commit
+   node scripts/migrations/2026-teams-v2/run.js --mode=validate
    ```
-6. **Deploy** new Functions + new App + new rules + new indexes:
-   ```
-   npm run deploy
-   ```
-7. **Smoke test in production**
+10. Flip the kill switch off:
+    ```
+    node scripts/migrations/2026-teams-v2/set-maintenance.js off
+    ```
+11. Deploy the new Functions + App + rules:
+    ```
+    npm run deploy
+    ```
+12. Smoke test in production
 
 ## Notes from the discovery
 

@@ -7,10 +7,12 @@
  */
 
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
+import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { PlayerSeasonDocument } from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'
+import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
 	{
@@ -19,6 +21,14 @@ export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
 	},
 	async (event) => {
 		const { playerId, seasonId } = event.params
+
+		if (await isMigrationInProgress(getFirestore())) {
+			logger.info(
+				'Skipping updateTeamRegistrationOnPlayerChange — migration in progress',
+				{ eventId: event.id, playerId, seasonId }
+			)
+			return
+		}
 
 		try {
 			const beforeData = event.data?.before.data() as

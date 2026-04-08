@@ -20,6 +20,7 @@ import {
 	getCurrentSeason,
 } from '../../shared/database.js'
 import { deleteUnregisteredTeamsForSeasonLock } from '../../services/teamDeletionService.js'
+import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 const LOCK_THRESHOLD = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
 
@@ -29,6 +30,17 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {
+		const { teamId: paramTeamId, seasonId: paramSeasonId } = event.params
+
+		if (await isMigrationInProgress(getFirestore())) {
+			logger.info('Skipping onTeamRegistrationChange — migration in progress', {
+				eventId: event.id,
+				teamId: paramTeamId,
+				seasonId: paramSeasonId,
+			})
+			return
+		}
+
 		const beforeData = event.data?.before.data() as
 			| TeamSeasonDocument
 			| undefined
