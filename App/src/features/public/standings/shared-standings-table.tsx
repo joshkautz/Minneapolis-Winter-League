@@ -42,10 +42,15 @@ export const SharedStandingsTable = ({
 
 	// Create a Map for O(1) team lookups instead of O(n) find() calls
 	const teamMap = useMemo(() => {
-		const map = new Map<string, { id: string; data: TeamSeasonDocument }>()
+		const map = new Map<
+			string,
+			{ id: string; seasonId: string; data: TeamSeasonDocument }
+		>()
 		teamsQuerySnapshot?.docs.forEach((doc) => {
 			const teamId = canonicalTeamIdFromTeamSeasonDoc(doc)
-			map.set(teamId, { id: teamId, data: doc.data() })
+			// `doc.id` on a teamSeasons subdoc is the seasonId — preserve it
+			// so navigation links can carry the user's selected season.
+			map.set(teamId, { id: teamId, seasonId: doc.id, data: doc.data() })
 		})
 		return map
 	}, [teamsQuerySnapshot])
@@ -151,9 +156,10 @@ export const SharedStandingsTable = ({
 							const rankValue = getRankValue(key, index, useTeamPlacement)
 
 							const teamId = teamEntry?.id
+							const seasonId = teamEntry?.seasonId
 							const teamName = teamDocument?.name
 							const navigateToTeam = () => {
-								if (teamId) navigate(`/teams/${teamId}`)
+								if (teamId && seasonId) navigate(`/teams/${teamId}/${seasonId}`)
 							}
 
 							return (

@@ -65,7 +65,7 @@ export const ScheduleCard = ({
 								<div className='grid flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3'>
 									{homeTeam ? (
 										<Link
-											to={`/teams/${canonicalTeamIdFromTeamSeasonDoc(homeTeam)}`}
+											to={`/teams/${canonicalTeamIdFromTeamSeasonDoc(homeTeam)}/${homeTeam.id}`}
 											className='inline-flex min-w-0 max-w-full items-center justify-self-end gap-3 hover:underline'
 										>
 											<span className='text-foreground truncate text-xs font-medium'>
@@ -90,7 +90,7 @@ export const ScheduleCard = ({
 									</p>
 									{awayTeam ? (
 										<Link
-											to={`/teams/${canonicalTeamIdFromTeamSeasonDoc(awayTeam)}`}
+											to={`/teams/${canonicalTeamIdFromTeamSeasonDoc(awayTeam)}/${awayTeam.id}`}
 											className='inline-flex min-w-0 max-w-full items-center justify-self-start gap-3 hover:underline'
 										>
 											<TeamIcon team={awayTeam} />

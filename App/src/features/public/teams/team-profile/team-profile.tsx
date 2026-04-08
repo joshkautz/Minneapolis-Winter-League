@@ -740,7 +740,11 @@ export const TeamProfile = () => {
 												</p>
 												<Link
 													className='flex-1 min-w-0 text-sm transition-colors hover:text-primary truncate'
-													to={`/teams/${opponentTeamRef.id}`}
+													to={
+														displayedSeasonId
+															? `/teams/${opponentTeamRef.id}/${displayedSeasonId}`
+															: `/teams/${opponentTeamRef.id}`
+													}
 													title={opponentName}
 												>
 													{opponentName}

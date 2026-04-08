@@ -38,10 +38,15 @@ export const SwissStandingsTable = ({
 
 	// Create a Map for O(1) team lookups
 	const teamMap = useMemo(() => {
-		const map = new Map<string, { id: string; data: TeamSeasonDocument }>()
+		const map = new Map<
+			string,
+			{ id: string; seasonId: string; data: TeamSeasonDocument }
+		>()
 		teamsQuerySnapshot?.docs.forEach((doc) => {
 			const teamId = canonicalTeamIdFromTeamSeasonDoc(doc)
-			map.set(teamId, { id: teamId, data: doc.data() })
+			// `doc.id` on a teamSeasons subdoc is the seasonId — preserve it
+			// so navigation links can carry the user's selected season.
+			map.set(teamId, { id: teamId, seasonId: doc.id, data: doc.data() })
 		})
 		return map
 	}, [teamsQuerySnapshot])
@@ -167,7 +172,8 @@ export const SwissStandingsTable = ({
 						const gamesPlayed = standing.wins + standing.losses
 						const teamName = teamDocument?.name
 						const navigateToTeam = () => {
-							if (teamEntry?.id) navigate(`/teams/${teamEntry.id}`)
+							if (teamEntry?.id)
+								navigate(`/teams/${teamEntry.id}/${teamEntry.seasonId}`)
 						}
 
 						return (
