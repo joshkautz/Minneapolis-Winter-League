@@ -58,7 +58,6 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { updateTeamAdminViaFunction } from '@/firebase/collections/functions'
 import {
 	TeamDocument,
@@ -373,7 +372,7 @@ export const TeamEditDialog = ({
 						</DialogDescription>
 					</DialogHeader>
 
-					<ScrollArea className='flex-1 min-h-0 pr-4'>
+					<div className='flex-1 min-h-0 overflow-y-auto pr-4'>
 						<div className='space-y-6 pb-4'>
 							{/* Section 1: Basic Information */}
 							<div className='space-y-4'>
@@ -544,7 +543,7 @@ export const TeamEditDialog = ({
 								</div>
 							</div>
 						</div>
-					</ScrollArea>
+					</div>
 				</DialogContent>
 			</Dialog>
 
