@@ -162,12 +162,12 @@ export const SeasonManagement = () => {
 					try {
 						// Get team IDs from the teams array
 						// TODO(2026-teams-v2): seasons no longer carry a teams[] array.
-					const teamIds =
-						(
-							seasonData as unknown as {
-								teams?: Array<{ id: string }>
-							}
-						).teams?.map((teamRef) => teamRef.id) || []
+						const teamIds =
+							(
+								seasonData as unknown as {
+									teams?: Array<{ id: string }>
+								}
+							).teams?.map((teamRef) => teamRef.id) || []
 
 						return {
 							id: seasonId,

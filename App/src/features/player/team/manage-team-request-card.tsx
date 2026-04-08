@@ -22,8 +22,7 @@ export const ManageTeamRequestCard = () => {
 
 			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument>
 		) => {
-			const canonicalTeamId =
-				teamQueryDocumentSnapshot?.ref.parent.parent?.id
+			const canonicalTeamId = teamQueryDocumentSnapshot?.ref.parent.parent?.id
 			if (!authenticatedUserDocumentSnapshot?.id || !canonicalTeamId) {
 				toast.error('Missing required data to send request')
 				return

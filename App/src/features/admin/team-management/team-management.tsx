@@ -24,10 +24,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { auth } from '@/firebase/auth'
 import { logger } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
-import {
-	teamsInSeasonQuery,
-	getTeamRef,
-} from '@/firebase/collections/teams'
+import { teamsInSeasonQuery, getTeamRef } from '@/firebase/collections/teams'
 import {
 	deleteUnregisteredTeamViaFunction,
 	deleteTeamViaFunction,

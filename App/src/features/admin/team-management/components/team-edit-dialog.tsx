@@ -137,8 +137,7 @@ export const TeamEditDialog = ({
 	const currentRoster = useMemo(() => {
 		if (!rosterSnapshot) return [] as Array<TeamRosterDocument & { id: string }>
 		return rosterSnapshot.docs.map(
-			(d) =>
-				({ id: d.id, ...d.data() }) as TeamRosterDocument & { id: string }
+			(d) => ({ id: d.id, ...d.data() }) as TeamRosterDocument & { id: string }
 		)
 	}, [rosterSnapshot])
 	const [captainMap, setCaptainMap] = useState<Record<string, boolean>>({})

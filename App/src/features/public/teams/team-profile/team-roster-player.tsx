@@ -7,11 +7,7 @@ import { StarFilledIcon } from '@radix-ui/react-icons'
 import { DocumentReference } from '@/firebase'
 import { playerSeasonRef } from '@/firebase/collections/players'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-	PlayerDocument,
-	SeasonDocument,
-	logger,
-} from '@/shared/utils'
+import { PlayerDocument, SeasonDocument, logger } from '@/shared/utils'
 import { Badge } from '@/components/ui/badge'
 
 export const TeamRosterPlayer = ({

@@ -63,9 +63,7 @@ export const Profile = () => {
 						currentSeasonQueryDocumentSnapshot={
 							currentSeasonQueryDocumentSnapshot
 						}
-						authenticatedUserSeasonsSnapshot={
-							authenticatedUserSeasonsSnapshot
-						}
+						authenticatedUserSeasonsSnapshot={authenticatedUserSeasonsSnapshot}
 						seasonsQuerySnapshot={seasonsQuerySnapshot}
 					/>
 				</div>

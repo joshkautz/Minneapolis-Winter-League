@@ -96,9 +96,9 @@ export const SwissRankings = () => {
 	const [isSavingSeeding, setIsSavingSeeding] = useState(false)
 
 	// Teams for the selected season (fetched separately from global context)
-	const [seasonTeams, setSeasonTeams] = useState<Map<string, TeamSeasonDocument>>(
-		new Map()
-	)
+	const [seasonTeams, setSeasonTeams] = useState<
+		Map<string, TeamSeasonDocument>
+	>(new Map())
 	const [isLoadingTeams, setIsLoadingTeams] = useState(false)
 
 	// Filter to only Swiss seasons

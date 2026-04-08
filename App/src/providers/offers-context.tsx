@@ -60,10 +60,7 @@ export const OffersContextProvider = ({ children }: PropsWithChildren) => {
 		currentSeasonQueryDocumentSnapshotLoading,
 	} = useSeasonsContext()
 
-	const playerRef = useMemo(
-		() => getPlayerRef(authStateUser),
-		[authStateUser]
-	)
+	const playerRef = useMemo(() => getPlayerRef(authStateUser), [authStateUser])
 
 	// Track whether the dependencies needed to build the query are still loading
 	// This is different from the actual Firestore query loading

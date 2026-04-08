@@ -26,14 +26,6 @@ Growing Pains - Place lower than you did last season.
 
 ---
 
----
-
----
-
-update the onTeamRegistrationChange firebase function so that it also changes the SeasonDocument to be in a registered state, so that all new Players created past that point will have "lookingForTeam" set to true. Before that point, all players created will have "lookingForTeam" set to false.
-
-update the onTeamRegistrationChange firebase function so that it also deletes all the other teams that are not fully registered. There should only be the 12 fully registered teams left in the current season after this function runs. All the players on those deleted teams should have their "lookingForTeam" value set to true, of course. But they should be treated as if they just left a team, so their team ref in their player document PlayerSeason for the current season should be set to null.
-
 Check to see if we can consolidate "lookingForTeam" and "locked" into one. See if we're able to create a missing value of "lookingForTeam" as undefined, so it's different than "false". Unless it doesn't actually matter, because if undefined is treated as false, then none of those players being added to teams will actually even affect karma gains.
 
 Update the firebase function that the PlayerRegistrationStatus component page calls so that it also returns the "lookingForTeam" value for each player, and then also show an indicator of whether or not each player is rostered on a fully registered team. Have the firebase function return this data, and also update the PlayerRegistrationStatus component to show this data.

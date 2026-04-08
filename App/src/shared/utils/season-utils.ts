@@ -66,7 +66,11 @@ export const didPlayerPayPreviousSeason = (
 	seasonsSnapshot: QuerySnapshot<PlayerSeasonDocument> | undefined,
 	allSeasonsSnapshot: QuerySnapshot<SeasonDocument> | undefined
 ): boolean => {
-	if (!seasonsSnapshot || !allSeasonsSnapshot || allSeasonsSnapshot.docs.length < 2) {
+	if (
+		!seasonsSnapshot ||
+		!allSeasonsSnapshot ||
+		allSeasonsSnapshot.docs.length < 2
+	) {
 		return false
 	}
 	// allSeasonsSnapshot is ordered by dateStart descending, so index 1 is "previous".

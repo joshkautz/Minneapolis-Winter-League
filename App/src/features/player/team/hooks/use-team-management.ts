@@ -47,9 +47,11 @@ export const useTeamManagement = (): UseTeamManagementReturn => {
 
 	const currentSeasonData = useMemo(
 		() =>
-			authenticatedUserSeasonsSnapshot?.docs.find(
-				(docSnap) => docSnap.id === currentSeasonQueryDocumentSnapshot?.id
-			)?.data(),
+			authenticatedUserSeasonsSnapshot?.docs
+				.find(
+					(docSnap) => docSnap.id === currentSeasonQueryDocumentSnapshot?.id
+				)
+				?.data(),
 		[authenticatedUserSeasonsSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 

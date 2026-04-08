@@ -25,13 +25,17 @@ export const ManageInvitePlayerDetail = ({
 	statusColor,
 	handleInvite,
 }: {
-	teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument> | undefined
+	teamQueryDocumentSnapshot:
+		| QueryDocumentSnapshot<TeamSeasonDocument>
+		| undefined
 	playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>
 	statusColor?: string
 	message?: string
 	handleInvite: (
 		playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
-		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument> | undefined
+		teamQueryDocumentSnapshot:
+			| QueryDocumentSnapshot<TeamSeasonDocument>
+			| undefined
 	) => void
 }) => {
 	const [offersForPlayerByTeamQuerySnapshot, , offersError] = useCollection(
@@ -76,8 +80,7 @@ export const ManageInvitePlayerDetail = ({
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
 				(team) =>
-					team.ref.parent.parent?.id ===
-					playerSeasonSnapshot?.data()?.team?.id
+					team.ref.parent.parent?.id === playerSeasonSnapshot?.data()?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, playerSeasonSnapshot]
 	)

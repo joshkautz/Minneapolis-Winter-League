@@ -18,15 +18,8 @@ import {
 	teamsQuery,
 } from '@/firebase/collections/teams'
 import { playerSeasonsSubcollection } from '@/firebase/collections/players'
-import {
-	FirestoreError,
-	QuerySnapshot,
-} from '@/firebase'
-import {
-	TeamDocument,
-	TeamSeasonDocument,
-	logger,
-} from '@/shared/utils'
+import { FirestoreError, QuerySnapshot } from '@/firebase'
+import { TeamDocument, TeamSeasonDocument, logger } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 import { useAuthContext } from './auth-context'
 
@@ -35,9 +28,7 @@ interface TeamProps {
 	 * Per-team season subdocs participating in the *current* season.
 	 * Each doc's ref.parent.parent is the canonical teams/{teamId} document.
 	 */
-	currentSeasonTeamsQuerySnapshot:
-		| QuerySnapshot<TeamSeasonDocument>
-		| undefined
+	currentSeasonTeamsQuerySnapshot: QuerySnapshot<TeamSeasonDocument> | undefined
 	currentSeasonTeamsQuerySnapshotLoading: boolean
 	currentSeasonTeamsQuerySnapshotError: FirestoreError | undefined
 	/** Per-team season subdocs participating in the *selected* season. */
@@ -118,9 +109,7 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 		currentSeasonTeamsQuerySnapshot,
 		currentSeasonTeamsQuerySnapshotLoading,
 		currentSeasonTeamsQuerySnapshotError,
-	] = useCollection(
-		teamsInSeasonQuery(currentSeasonQueryDocumentSnapshot?.ref)
-	)
+	] = useCollection(teamsInSeasonQuery(currentSeasonQueryDocumentSnapshot?.ref))
 
 	const [
 		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,

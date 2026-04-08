@@ -35,10 +35,11 @@ export const ManageInvitePlayerList = () => {
 	const handleInvite = useCallback(
 		(
 			playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
-			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument> | undefined
+			teamQueryDocumentSnapshot:
+				| QueryDocumentSnapshot<TeamSeasonDocument>
+				| undefined
 		) => {
-			const canonicalTeamId =
-				teamQueryDocumentSnapshot?.ref.parent.parent?.id
+			const canonicalTeamId = teamQueryDocumentSnapshot?.ref.parent.parent?.id
 			if (!playerQueryDocumentSnapshot?.id || !canonicalTeamId) {
 				toast.error('Missing required data to send invite')
 				return
