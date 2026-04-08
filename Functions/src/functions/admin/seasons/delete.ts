@@ -3,9 +3,9 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore, FieldValue } from 'firebase-admin/firestore'
+import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument } from '../../../types.js'
+import { Collections } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
@@ -59,33 +59,34 @@ export const deleteSeason = onCall<DeleteSeasonRequest>(
 			const seasonData = seasonDoc.data()
 			const seasonName = seasonData?.name || 'Unknown'
 
-			// Remove this season from all players
+			// Delete each player's season subdoc for this season.
 			const playersSnapshot = await firestore
 				.collection(Collections.PLAYERS)
 				.get()
 
-			const batch = firestore.batch()
+			let batch = firestore.batch()
+			let opsInBatch = 0
 			let playersUpdated = 0
+			const BATCH_SIZE = 400
 
 			for (const playerDoc of playersSnapshot.docs) {
-				const playerData = playerDoc.data() as PlayerDocument
-
-				// Find if player has this season
-				const seasonEntry = playerData.seasons?.find(
-					(ps) => ps.season.id === seasonId
-				)
-
-				if (seasonEntry) {
-					// Remove the season from the player's seasons array
-					batch.update(playerDoc.ref, {
-						seasons: FieldValue.arrayRemove(seasonEntry),
-					})
+				const seasonSubdocRef = playerDoc.ref.collection('seasons').doc(seasonId)
+				const seasonSubdocSnap = await seasonSubdocRef.get()
+				if (seasonSubdocSnap.exists) {
+					batch.delete(seasonSubdocRef)
+					opsInBatch++
 					playersUpdated++
+					if (opsInBatch >= BATCH_SIZE) {
+						await batch.commit()
+						batch = firestore.batch()
+						opsInBatch = 0
+					}
 				}
 			}
 
-			// Commit the batch update to remove season from players
-			await batch.commit()
+			if (opsInBatch > 0) {
+				await batch.commit()
+			}
 
 			logger.info(`Season removed from ${playersUpdated} players`, {
 				seasonId,

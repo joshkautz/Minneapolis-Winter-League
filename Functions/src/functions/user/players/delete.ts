@@ -5,7 +5,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerSeason, PlayerDocument } from '../../../types.js'
+import { Collections, PlayerDocument } from '../../../types.js'
 import {
 	validateAuthentication,
 	validateAdminUser,
@@ -64,41 +64,33 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 				.collection(Collections.PLAYERS)
 				.doc(targetPlayerId)
 
-			// Use transaction to atomically verify and delete
-			const playerDocument = await firestore.runTransaction(
-				async (transaction) => {
-					const playerDoc = await transaction.get(playerRef)
+			// Read player parent doc + check for any team associations via the
+			// player's seasons subcollection.
+			const playerDoc = await playerRef.get()
+			if (!playerDoc.exists) {
+				throw new HttpsError('not-found', 'Player not found')
+			}
+			const playerDocument = playerDoc.data() as PlayerDocument | undefined
+			if (!playerDocument) {
+				throw new HttpsError('not-found', 'Unable to retrieve player data')
+			}
 
-					if (!playerDoc.exists) {
-						throw new HttpsError('not-found', 'Player not found')
-					}
-
-					const playerData = playerDoc.data() as PlayerDocument | undefined
-
-					if (!playerData) {
-						throw new HttpsError('not-found', 'Unable to retrieve player data')
-					}
-
-					// Check for team associations
-					const hasTeamAssociations = playerData.seasons?.some(
-						(season: PlayerSeason) => season.team
-					)
-
-					if (hasTeamAssociations && !adminOverride) {
-						throw new HttpsError(
-							'failed-precondition',
-							'Player has team associations. Admin override required for deletion. ' +
-								'Note: This will remove the player from all teams and delete all offers.'
-						)
-					}
-
-					// Delete the player document
-					// Note: The userDeleted trigger will handle cleanup of team rosters and offers
-					transaction.delete(playerRef)
-
-					return playerData
-				}
+			const playerSeasonsSnap = await playerRef.collection('seasons').get()
+			const hasTeamAssociations = playerSeasonsSnap.docs.some(
+				(d) => d.data()?.team
 			)
+			if (hasTeamAssociations && !adminOverride) {
+				throw new HttpsError(
+					'failed-precondition',
+					'Player has team associations. Admin override required for deletion. ' +
+						'Note: This will remove the player from all teams and delete all offers.'
+				)
+			}
+
+			// Delete the player document. The userDeleted trigger walks the
+			// player's seasons subcollection + collection-group roster query and
+			// performs the cascade cleanup.
+			await playerRef.delete()
 
 			logger.info(`Successfully deleted player: ${targetPlayerId}`, {
 				deletedBy: userId,

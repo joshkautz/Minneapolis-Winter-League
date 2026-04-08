@@ -1,11 +1,17 @@
 /**
  * Update player (admin) callable function
  *
- * This function allows admins to update any player's document, including:
+ * Allows admins to update any player's document, including:
  * - Basic information (firstname, lastname)
  * - Admin status
- * - Season-specific data (captain, paid, signed, team)
  * - Email address (syncs with Firebase Authentication)
+ * - Email verification status
+ * - Per-season state (paid, signed, banned, captain, team)
+ *
+ * Per-season state writes go to `players/{uid}/seasons/{seasonId}` subdocs
+ * directly, one update per changed field. Team change writes the new roster
+ * entry, deletes the old one, and updates the player season's `team` and
+ * `captain` fields atomically.
  */
 
 import { getAuth } from 'firebase-admin/auth'
@@ -14,58 +20,40 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
+import {
+	playerSeasonRef,
+	teamRef as canonicalTeamRef,
+	teamRosterEntryRef,
+	teamSeasonRef,
+} from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	Collections,
 	type DocumentReference,
 	type PlayerDocument,
-	type PlayerSeason,
+	type PlayerSeasonDocument,
 	type SeasonDocument,
-	type TeamDocument,
-	type TeamRosterPlayer,
 } from '../../../types.js'
 
-/**
- * Season update data for a specific season
- */
 interface SeasonUpdate {
-	/** Season document ID */
 	seasonId: string
-	/** Whether the player is a team captain */
 	captain: boolean
-	/** Whether the player has paid for the season */
 	paid: boolean
-	/** Whether the player has signed the waiver */
 	signed: boolean
-	/** Whether the player is banned from the season (optional, defaults to false) */
 	banned?: boolean
-	/** Team document ID (null if not on a team) */
 	teamId: string | null
 }
 
-/**
- * Request interface for updating a player document
- */
 interface UpdatePlayerAdminRequest {
-	/** Player's Firebase Auth UID */
 	playerId: string
-	/** Player's first name (optional) */
 	firstname?: string
-	/** Player's last name (optional) */
 	lastname?: string
-	/** Admin status (optional) */
 	admin?: boolean
-	/** Email address (optional, will sync with Firebase Auth) */
 	email?: string
-	/** Email verification status (optional, will update Firebase Auth) */
 	emailVerified?: boolean
-	/** Season updates (optional) */
 	seasons?: SeasonUpdate[]
 }
 
-/**
- * Details about what changed in a season
- */
 interface SeasonChanges {
 	seasonId: string
 	seasonName?: string
@@ -79,47 +67,20 @@ interface SeasonChanges {
 	}
 }
 
-/**
- * Response interface for successful player update
- */
 interface UpdatePlayerAdminResponse {
 	success: true
 	playerId: string
 	message: string
-	/** Detailed changes made to the player document */
 	changes: {
-		/** Whether and how firstname was updated */
 		firstname?: { from: string; to: string }
-		/** Whether and how lastname was updated */
 		lastname?: { from: string; to: string }
-		/** Whether and how email was updated */
 		email?: { from: string; to: string }
-		/** Whether and how admin status was updated */
 		admin?: { from: boolean; to: boolean }
-		/** Whether and how email verification status was updated */
 		emailVerified?: { from: boolean; to: boolean }
-		/** Details about season changes */
 		seasons?: SeasonChanges[]
 	}
 }
 
-/**
- * Updates a player's document with admin privileges
- *
- * Security validations:
- * - User must be authenticated with verified email
- * - User must have admin privileges (admin: true in player document)
- * - Target player must exist
- * - Email format must be valid (if provided)
- * - Season IDs must exist (if provided)
- * - Team IDs must exist and belong to the correct season (if provided)
- *
- * After successful update:
- * - Player document is updated in Firestore
- * - Email is updated in Firebase Authentication (if changed)
- * - Email is automatically marked as verified (if changed)
- * - Operation is logged for audit purposes
- */
 export const updatePlayerAdmin = onCall<
 	UpdatePlayerAdminRequest,
 	Promise<UpdatePlayerAdminResponse>
@@ -136,7 +97,6 @@ export const updatePlayerAdmin = onCall<
 			hasSeasonsUpdate: !!data.seasons,
 		})
 
-		// Validate admin authentication
 		const firestore = getFirestore()
 		await validateAdminUser(auth, firestore)
 
@@ -150,16 +110,10 @@ export const updatePlayerAdmin = onCall<
 			seasons,
 		} = data
 
-		// Validate required fields
 		if (!playerId || typeof playerId !== 'string') {
-			logger.warn('Invalid playerId provided', { playerId })
-			throw new HttpsError(
-				'invalid-argument',
-				'Player ID is required and must be a valid string'
-			)
+			throw new HttpsError('invalid-argument', 'Player ID is required')
 		}
 
-		// Validate that at least one field is being updated
 		if (
 			firstname === undefined &&
 			lastname === undefined &&
@@ -168,714 +122,355 @@ export const updatePlayerAdmin = onCall<
 			emailVerified === undefined &&
 			!seasons
 		) {
-			logger.warn('No fields to update', { playerId })
 			throw new HttpsError(
 				'invalid-argument',
 				'At least one field must be provided for update'
 			)
 		}
 
-		// Validate email format if provided
+		// ---- Field validation ------------------------------------------------
 		if (email !== undefined) {
 			if (typeof email !== 'string' || !email.trim()) {
-				logger.warn('Invalid email provided', { email })
 				throw new HttpsError(
 					'invalid-argument',
 					'Email must be a non-empty string'
 				)
 			}
-
 			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 			if (!emailRegex.test(email.trim())) {
-				logger.warn('Invalid email format', { email: email.trim() })
 				throw new HttpsError(
 					'invalid-argument',
 					'Invalid email format. Please provide a valid email address.'
 				)
 			}
 		}
-
-		// Validate firstname if provided
-		if (firstname !== undefined) {
-			if (typeof firstname !== 'string' || !firstname.trim()) {
-				logger.warn('Invalid firstname provided', { firstname })
-				throw new HttpsError(
-					'invalid-argument',
-					'First name must be a non-empty string'
-				)
-			}
+		if (firstname !== undefined && (typeof firstname !== 'string' || !firstname.trim())) {
+			throw new HttpsError('invalid-argument', 'First name must be a non-empty string')
 		}
-
-		// Validate lastname if provided
-		if (lastname !== undefined) {
-			if (typeof lastname !== 'string' || !lastname.trim()) {
-				logger.warn('Invalid lastname provided', { lastname })
-				throw new HttpsError(
-					'invalid-argument',
-					'Last name must be a non-empty string'
-				)
-			}
+		if (lastname !== undefined && (typeof lastname !== 'string' || !lastname.trim())) {
+			throw new HttpsError('invalid-argument', 'Last name must be a non-empty string')
 		}
-
-		// Validate admin if provided
 		if (admin !== undefined && typeof admin !== 'boolean') {
-			logger.warn('Invalid admin value provided', { admin })
-			throw new HttpsError(
-				'invalid-argument',
-				'Admin status must be a boolean value'
-			)
+			throw new HttpsError('invalid-argument', 'Admin status must be a boolean value')
 		}
-
-		// Validate emailVerified if provided
 		if (emailVerified !== undefined && typeof emailVerified !== 'boolean') {
-			logger.warn('Invalid emailVerified value provided', {
-				emailVerified,
-			})
-			throw new HttpsError(
-				'invalid-argument',
-				'Email verified status must be a boolean value'
-			)
+			throw new HttpsError('invalid-argument', 'Email verified status must be a boolean value')
 		}
-
-		// Validate seasons if provided
 		if (seasons !== undefined) {
 			if (!Array.isArray(seasons)) {
-				logger.warn('Invalid seasons provided', { seasons })
 				throw new HttpsError('invalid-argument', 'Seasons must be an array')
 			}
-
-			for (const season of seasons) {
-				if (!season.seasonId || typeof season.seasonId !== 'string') {
-					logger.warn('Invalid seasonId in seasons array', {
-						season,
-					})
-					throw new HttpsError(
-						'invalid-argument',
-						'Each season must have a valid seasonId'
-					)
+			for (const s of seasons) {
+				if (!s.seasonId || typeof s.seasonId !== 'string') {
+					throw new HttpsError('invalid-argument', 'Each season must have a valid seasonId')
 				}
-
-				if (typeof season.captain !== 'boolean') {
-					logger.warn('Invalid captain value in seasons array', {
-						season,
-					})
-					throw new HttpsError(
-						'invalid-argument',
-						'Captain status must be a boolean value'
-					)
+				if (typeof s.captain !== 'boolean') {
+					throw new HttpsError('invalid-argument', 'Captain status must be a boolean value')
 				}
-
-				if (typeof season.paid !== 'boolean') {
-					logger.warn('Invalid paid value in seasons array', {
-						season,
-					})
-					throw new HttpsError(
-						'invalid-argument',
-						'Paid status must be a boolean value'
-					)
+				if (typeof s.paid !== 'boolean') {
+					throw new HttpsError('invalid-argument', 'Paid status must be a boolean value')
 				}
-
-				if (typeof season.signed !== 'boolean') {
-					logger.warn('Invalid signed value in seasons array', {
-						season,
-					})
-					throw new HttpsError(
-						'invalid-argument',
-						'Signed status must be a boolean value'
-					)
+				if (typeof s.signed !== 'boolean') {
+					throw new HttpsError('invalid-argument', 'Signed status must be a boolean value')
 				}
-
-				if (season.banned !== undefined && typeof season.banned !== 'boolean') {
-					logger.warn('Invalid banned value in seasons array', {
-						season,
-					})
-					throw new HttpsError(
-						'invalid-argument',
-						'Banned status must be a boolean value'
-					)
+				if (s.banned !== undefined && typeof s.banned !== 'boolean') {
+					throw new HttpsError('invalid-argument', 'Banned status must be a boolean value')
 				}
-
 				if (
-					season.teamId !== null &&
-					(typeof season.teamId !== 'string' || !season.teamId.trim())
+					s.teamId !== null &&
+					(typeof s.teamId !== 'string' || !s.teamId.trim())
 				) {
-					logger.warn('Invalid teamId in seasons array', { season })
-					throw new HttpsError(
-						'invalid-argument',
-						'Team ID must be a string or null'
-					)
+					throw new HttpsError('invalid-argument', 'Team ID must be a string or null')
 				}
 			}
 		}
 
 		try {
 			const authInstance = getAuth()
+			const playerDocRef = firestore
+				.collection(Collections.PLAYERS)
+				.doc(playerId) as DocumentReference<PlayerDocument>
 
-			// Verify target player exists in Firestore
-			logger.info('Fetching target player from Firestore', {
-				playerId,
-			})
-
-			const playerRef = firestore.collection(Collections.PLAYERS).doc(playerId)
-			const playerDoc = await playerRef.get()
-
+			const playerDoc = await playerDocRef.get()
 			if (!playerDoc.exists) {
-				logger.error('Target player not found in Firestore', {
-					playerId,
-				})
 				throw new HttpsError(
 					'not-found',
 					'Player not found. Please verify the Player ID is correct.'
 				)
 			}
-
 			const playerData = playerDoc.data()
 			const currentEmail = playerData?.email
 
-			logger.info('Current player data retrieved', {
-				playerId,
-				currentEmail,
-				currentFirstname: playerData?.firstname,
-				currentLastname: playerData?.lastname,
-				currentAdmin: playerData?.admin,
-			})
-
-			// Prepare update object for Firestore
 			const updates: Record<string, unknown> = {}
 			const changes: UpdatePlayerAdminResponse['changes'] = {}
 
-			// Update basic fields
-			if (
-				firstname !== undefined &&
-				firstname.trim() !== playerData?.firstname
-			) {
+			if (firstname !== undefined && firstname.trim() !== playerData?.firstname) {
 				updates.firstname = firstname.trim()
-				changes.firstname = {
-					from: playerData?.firstname || '',
-					to: firstname.trim(),
-				}
+				changes.firstname = { from: playerData?.firstname || '', to: firstname.trim() }
 			}
-
 			if (lastname !== undefined && lastname.trim() !== playerData?.lastname) {
 				updates.lastname = lastname.trim()
-				changes.lastname = {
-					from: playerData?.lastname || '',
-					to: lastname.trim(),
-				}
+				changes.lastname = { from: playerData?.lastname || '', to: lastname.trim() }
 			}
-
 			if (admin !== undefined && admin !== playerData?.admin) {
 				updates.admin = admin
-				changes.admin = {
-					from: playerData?.admin || false,
-					to: admin,
-				}
+				changes.admin = { from: playerData?.admin || false, to: admin }
 			}
 
-			// Handle email update
+			// ---- Email update -------------------------------------------------
 			if (email !== undefined) {
 				const trimmedNewEmail = email.trim().toLowerCase()
-
-				// Check if email is different
 				if (currentEmail?.toLowerCase() !== trimmedNewEmail) {
-					// Update email in Firebase Authentication
-					// Firebase Auth enforces email uniqueness atomically - if email is
-					// already in use by another account, it will throw auth/email-already-exists
-					// which is handled in our catch block below. This avoids a TOCTOU race
-					// condition where a pre-check could pass but then fail during update.
-					logger.info('Updating email in Firebase Authentication', {
-						playerId,
-						oldEmail: currentEmail,
-						newEmail: trimmedNewEmail,
-					})
-
 					await authInstance.updateUser(playerId, {
 						email: trimmedNewEmail,
 						emailVerified: true,
 					})
-
-					logger.info('Email successfully updated in Firebase Authentication', {
-						playerId,
-						newEmail: trimmedNewEmail,
-					})
-
-					// Update email in Firestore
 					updates.email = trimmedNewEmail
-					changes.email = {
-						from: currentEmail || '',
-						to: trimmedNewEmail,
-					}
-				} else {
-					logger.info('Email unchanged, skipping email update', {
-						playerId,
-						email: trimmedNewEmail,
-					})
+					changes.email = { from: currentEmail || '', to: trimmedNewEmail }
 				}
 			}
 
-			// Handle emailVerified update (independent of email change)
+			// ---- emailVerified update ----------------------------------------
 			if (emailVerified !== undefined) {
-				// Get current email verification status from Firebase Auth
 				const currentUser = await authInstance.getUser(playerId)
-				const currentEmailVerified = currentUser.emailVerified
-
-				if (emailVerified !== currentEmailVerified) {
-					logger.info(
-						'Updating email verification status in Firebase Authentication',
-						{
-							playerId,
-							from: currentEmailVerified,
-							to: emailVerified,
-						}
-					)
-
-					await authInstance.updateUser(playerId, {
-						emailVerified: emailVerified,
-					})
-
-					logger.info('Email verification status successfully updated', {
-						playerId,
-						emailVerified,
-					})
-
+				if (emailVerified !== currentUser.emailVerified) {
+					await authInstance.updateUser(playerId, { emailVerified })
 					changes.emailVerified = {
-						from: currentEmailVerified,
+						from: currentUser.emailVerified,
 						to: emailVerified,
 					}
-				} else {
-					logger.info('Email verification status unchanged, skipping update', {
-						playerId,
-						emailVerified,
-					})
 				}
 			}
 
-			// Handle seasons update
+			// ---- Seasons updates ---------------------------------------------
+			const seasonChanges: SeasonChanges[] = []
+			const playersAddedToTeam: Array<{
+				playerRef: DocumentReference<PlayerDocument>
+				seasonRef: DocumentReference<SeasonDocument>
+			}> = []
+
 			if (seasons && seasons.length > 0) {
-				logger.info('Processing season updates', {
-					playerId,
-					seasonsCount: seasons.length,
-				})
-
-				// Get current seasons from player document
-				const currentSeasons = (playerData?.seasons || []) as PlayerSeason[]
-
-				// Track season changes
-				const seasonChanges: SeasonChanges[] = []
-
-				// Validate all season and team references exist and fetch season names
+				// Pre-load season names + validate that the player has each season
+				// subdoc + each target team has a season subdoc.
 				const seasonNames = new Map<string, string>()
 				for (const seasonUpdate of seasons) {
-					// Check if trying to add a new season (not allowed)
-					const existsInCurrent = currentSeasons.some(
-						(cs) => cs.season.id === seasonUpdate.seasonId
+					// Player must have an existing season subdoc.
+					const playerSeasonDocRef = playerSeasonRef(
+						firestore,
+						playerId,
+						seasonUpdate.seasonId
 					)
-
-					if (!existsInCurrent) {
-						logger.warn('Attempt to add new season rejected', {
-							playerId,
-							seasonId: seasonUpdate.seasonId,
-						})
+					const playerSeasonSnap = await playerSeasonDocRef.get()
+					if (!playerSeasonSnap.exists) {
 						throw new HttpsError(
 							'invalid-argument',
-							`Cannot add new seasons through this function. Season ${seasonUpdate.seasonId} does not exist in player's current seasons. Use the dedicated season management functions to add seasons to players.`
+							`Cannot add new seasons through this function. Season ${seasonUpdate.seasonId} does not exist on the player. Use the season management functions to seed it first.`
 						)
 					}
 
-					// Verify season exists
-					const seasonRef = firestore
+					const seasonDoc = await firestore
 						.collection(Collections.SEASONS)
 						.doc(seasonUpdate.seasonId)
-					const seasonDoc = await seasonRef.get()
-
+						.get()
 					if (!seasonDoc.exists) {
-						logger.error('Season not found', {
-							seasonId: seasonUpdate.seasonId,
-						})
 						throw new HttpsError(
 							'not-found',
 							`Season ${seasonUpdate.seasonId} not found`
 						)
 					}
-
-					// Store season name for response
 					const seasonData = seasonDoc.data()
 					if (seasonData?.name) {
 						seasonNames.set(seasonUpdate.seasonId, seasonData.name)
 					}
 
-					// Verify team exists and belongs to season (if teamId provided)
 					if (seasonUpdate.teamId) {
-						const teamRef = firestore
-							.collection(Collections.TEAMS)
-							.doc(seasonUpdate.teamId)
-						const teamDoc = await teamRef.get()
-
-						if (!teamDoc.exists) {
-							logger.error('Team not found', {
-								teamId: seasonUpdate.teamId,
-							})
-							throw new HttpsError(
-								'not-found',
-								`Team ${seasonUpdate.teamId} not found`
-							)
-						}
-
-						const teamData = teamDoc.data()
-						const teamSeasonId = teamData?.season?.id
-
-						if (teamSeasonId !== seasonUpdate.seasonId) {
-							logger.error('Team does not belong to season', {
-								teamId: seasonUpdate.teamId,
-								teamSeasonId,
-								expectedSeasonId: seasonUpdate.seasonId,
-							})
+						const targetTeamSeasonSnap = await teamSeasonRef(
+							firestore,
+							seasonUpdate.teamId,
+							seasonUpdate.seasonId
+						).get()
+						if (!targetTeamSeasonSnap.exists) {
 							throw new HttpsError(
 								'invalid-argument',
-								`Team ${seasonUpdate.teamId} does not belong to season ${seasonUpdate.seasonId}`
+								`Team ${seasonUpdate.teamId} does not participate in season ${seasonUpdate.seasonId}`
 							)
 						}
 					}
 				}
 
-				// Validate captain changes - prevent leaving a team without any captains
+				// Apply each season update.
 				for (const seasonUpdate of seasons) {
-					const currentSeason = currentSeasons.find(
-						(cs) => cs.season.id === seasonUpdate.seasonId
+					const playerSeasonDocRef = playerSeasonRef(
+						firestore,
+						playerId,
+						seasonUpdate.seasonId
 					)
+					const currentPlayerSeasonSnap = await playerSeasonDocRef.get()
+					const currentPlayerSeason = currentPlayerSeasonSnap.data()
+					if (!currentPlayerSeason) continue
 
-					if (!currentSeason) continue
-
-					const oldTeamId = currentSeason.team?.id || null
+					const oldTeamId = currentPlayerSeason.team?.id || null
 					const newTeamId = seasonUpdate.teamId
-					const wasCaptain = currentSeason.captain === true
+					const wasCaptain = currentPlayerSeason.captain === true
 					const willBeCaptain = seasonUpdate.captain === true
 
-					// Case 1: Player is being demoted from captain while staying on the team
+					// Last-captain protection.
 					const isDemotingCaptain =
-						wasCaptain && !willBeCaptain && oldTeamId === newTeamId && newTeamId
-
-					// Case 2: Captain is being removed from team (moved to different team or no team)
+						wasCaptain && !willBeCaptain && oldTeamId === newTeamId && !!newTeamId
 					const isRemovingCaptainFromTeam =
 						wasCaptain && oldTeamId && oldTeamId !== newTeamId
 
 					if (isDemotingCaptain || isRemovingCaptainFromTeam) {
-						// Check the team the captain is leaving/being demoted on
-						// oldTeamId is guaranteed to be truthy when isDemotingCaptain or isRemovingCaptainFromTeam is true
 						const teamIdToCheck = oldTeamId as string
-						const teamRef = firestore
-							.collection(Collections.TEAMS)
-							.doc(teamIdToCheck)
-						const teamDoc = await teamRef.get()
-
-						if (teamDoc.exists) {
-							const teamData = teamDoc.data() as TeamDocument
-
-							// Count captains on the team (excluding this player)
-							const otherCaptains = teamData.roster.filter(
-								(rp: TeamRosterPlayer) =>
-									rp.captain === true && rp.player.id !== playerId
-							)
-
-							if (otherCaptains.length === 0) {
-								const seasonName =
-									seasonNames.get(seasonUpdate.seasonId) ||
-									seasonUpdate.seasonId
-
-								if (isDemotingCaptain) {
-									logger.warn('Cannot demote last captain from team', {
-										playerId,
-										teamId: teamIdToCheck,
-										teamName: teamData.name,
-										seasonId: seasonUpdate.seasonId,
-									})
-									throw new HttpsError(
-										'failed-precondition',
-										`Cannot remove captain status from ${playerData?.firstname} ${playerData?.lastname}. They are the only captain on team "${teamData.name}" for ${seasonName}. Please assign another captain first.`
-									)
-								} else {
-									logger.warn('Cannot remove last captain from team', {
-										playerId,
-										teamId: teamIdToCheck,
-										teamName: teamData.name,
-										seasonId: seasonUpdate.seasonId,
-										newTeamId,
-									})
-									throw new HttpsError(
-										'failed-precondition',
-										`Cannot remove ${playerData?.firstname} ${playerData?.lastname} from team "${teamData.name}". They are the only captain for ${seasonName}. Please assign another captain first.`
-									)
-								}
-							}
-						}
-					}
-				}
-
-				// Build updated seasons array
-				const updatedSeasons: PlayerSeason[] = currentSeasons.map(
-					(currentSeason) => {
-						// Find if this season is being updated
-						const seasonUpdate = seasons.find(
-							(s) => s.seasonId === currentSeason.season.id
+						const rosterSnap = await teamSeasonRef(
+							firestore,
+							teamIdToCheck,
+							seasonUpdate.seasonId
 						)
+							.collection('roster')
+							.get()
+						const captainSnaps = await Promise.all(
+							rosterSnap.docs.map((d) =>
+								playerSeasonRef(firestore, d.id, seasonUpdate.seasonId).get()
+							)
+						)
+						const otherCaptainCount = captainSnaps.filter((s, i) => {
+							return rosterSnap.docs[i].id !== playerId && s.data()?.captain === true
+						}).length
+						if (otherCaptainCount === 0) {
+							const seasonName =
+								seasonNames.get(seasonUpdate.seasonId) || seasonUpdate.seasonId
+							throw new HttpsError(
+								'failed-precondition',
+								`Cannot remove captain status from ${playerData?.firstname} ${playerData?.lastname}. They are the only captain on this team for ${seasonName}. Please assign another captain first.`
+							)
+						}
+					}
 
-						if (seasonUpdate) {
-							// Track what changed - initialize changes as non-optional object
-							const changes: NonNullable<SeasonChanges['changes']> = {}
+					// Build per-field change tracking.
+					const trackedChanges: NonNullable<SeasonChanges['changes']> = {}
+					if (seasonUpdate.captain !== currentPlayerSeason.captain) {
+						trackedChanges.captain = {
+							from: currentPlayerSeason.captain,
+							to: seasonUpdate.captain,
+						}
+					}
+					if (seasonUpdate.paid !== currentPlayerSeason.paid) {
+						trackedChanges.paid = {
+							from: currentPlayerSeason.paid,
+							to: seasonUpdate.paid,
+						}
+					}
+					if (seasonUpdate.signed !== currentPlayerSeason.signed) {
+						trackedChanges.signed = {
+							from: currentPlayerSeason.signed,
+							to: seasonUpdate.signed,
+						}
+					}
+					const oldBanned = currentPlayerSeason.banned ?? false
+					const newBanned = seasonUpdate.banned ?? oldBanned
+					if (newBanned !== oldBanned) {
+						trackedChanges.banned = { from: oldBanned, to: newBanned }
+					}
+					if (oldTeamId !== newTeamId) {
+						trackedChanges.team = { from: oldTeamId, to: newTeamId }
+					}
 
-							// Track individual field changes
-							if (seasonUpdate.captain !== currentSeason.captain) {
-								changes.captain = {
-									from: currentSeason.captain,
-									to: seasonUpdate.captain,
-								}
+					// Apply player season subdoc update + team membership writes.
+					const playerSeasonUpdate: Partial<PlayerSeasonDocument> = {
+						captain: seasonUpdate.captain,
+						paid: seasonUpdate.paid,
+						signed: seasonUpdate.signed,
+						banned: newBanned,
+					}
+					if (oldTeamId !== newTeamId) {
+						playerSeasonUpdate.team = newTeamId
+							? canonicalTeamRef(firestore, newTeamId)
+							: null
+					}
+
+					await firestore.runTransaction(async (txn) => {
+						txn.update(playerSeasonDocRef, playerSeasonUpdate)
+
+						if (oldTeamId !== newTeamId) {
+							if (oldTeamId) {
+								txn.delete(
+									teamRosterEntryRef(
+										firestore,
+										oldTeamId,
+										seasonUpdate.seasonId,
+										playerId
+									)
+								)
 							}
-
-							if (seasonUpdate.paid !== currentSeason.paid) {
-								changes.paid = {
-									from: currentSeason.paid,
-									to: seasonUpdate.paid,
-								}
-							}
-
-							if (seasonUpdate.signed !== currentSeason.signed) {
-								changes.signed = {
-									from: currentSeason.signed,
-									to: seasonUpdate.signed,
-								}
-							}
-
-							const oldBanned = currentSeason.banned ?? false
-							const newBanned = seasonUpdate.banned ?? oldBanned
-							if (newBanned !== oldBanned) {
-								changes.banned = {
-									from: oldBanned,
-									to: newBanned,
-								}
-							}
-
-							const oldTeamId = currentSeason.team?.id || null
-							const newTeamId = seasonUpdate.teamId
-							if (oldTeamId !== newTeamId) {
-								changes.team = {
-									from: oldTeamId,
-									to: newTeamId,
-								}
-							}
-
-							// Only add to changes if something actually changed
-							if (Object.keys(changes).length > 0) {
-								const seasonChange: SeasonChanges = {
-									seasonId: seasonUpdate.seasonId,
-									seasonName: seasonNames.get(seasonUpdate.seasonId),
-									updated: true,
-									changes,
-								}
-								seasonChanges.push(seasonChange)
-							}
-
-							// Update this season
-							const teamRef = seasonUpdate.teamId
-								? (firestore
-										.collection(Collections.TEAMS)
-										.doc(
-											seasonUpdate.teamId
-										) as DocumentReference<TeamDocument>)
-								: null
-
-							return {
-								...currentSeason,
-								captain: seasonUpdate.captain,
-								paid: seasonUpdate.paid,
-								signed: seasonUpdate.signed,
-								banned: newBanned,
-								team: teamRef,
+							if (newTeamId) {
+								txn.set(
+									teamRosterEntryRef(
+										firestore,
+										newTeamId,
+										seasonUpdate.seasonId,
+										playerId
+									),
+									{
+										player: playerDocRef,
+										dateJoined: Timestamp.now(),
+									}
+								)
 							}
 						}
+					})
 
-						// Keep current season data unchanged
-						return currentSeason
+					if (Object.keys(trackedChanges).length > 0) {
+						seasonChanges.push({
+							seasonId: seasonUpdate.seasonId,
+							seasonName: seasonNames.get(seasonUpdate.seasonId),
+							updated: true,
+							changes: trackedChanges,
+						})
 					}
-				)
 
-				updates.seasons = updatedSeasons
-
-				// Update team rosters when a player's team changes
-				for (const seasonUpdate of seasons) {
-					const currentSeason = currentSeasons.find(
-						(cs) => cs.season.id === seasonUpdate.seasonId
-					)
-
-					if (!currentSeason) continue
-
-					const oldTeamId = currentSeason.team?.id || null
-					const newTeamId = seasonUpdate.teamId
-
-					// Team changed - need to update rosters
-					if (oldTeamId !== newTeamId) {
-						const playerRefForRoster = firestore
-							.collection(Collections.PLAYERS)
-							.doc(playerId) as DocumentReference<PlayerDocument>
+					if (newTeamId && oldTeamId !== newTeamId) {
 						const seasonRefForOffers = firestore
 							.collection(Collections.SEASONS)
 							.doc(seasonUpdate.seasonId) as DocumentReference<SeasonDocument>
-
-						// Use a transaction to ensure atomicity of team roster changes
-						await firestore.runTransaction(async (teamTransaction) => {
-							// Remove from old team roster
-							if (oldTeamId) {
-								const oldTeamRef = firestore
-									.collection(Collections.TEAMS)
-									.doc(oldTeamId) as DocumentReference<TeamDocument>
-								const oldTeamDoc = await teamTransaction.get(oldTeamRef)
-
-								if (oldTeamDoc.exists) {
-									const oldTeamData = oldTeamDoc.data() as TeamDocument
-									const updatedRoster = oldTeamData.roster.filter(
-										(rp: TeamRosterPlayer) => rp.player.id !== playerId
-									)
-
-									teamTransaction.update(oldTeamRef, { roster: updatedRoster })
-								}
-							}
-
-							// Add to new team roster
-							if (newTeamId) {
-								const newTeamRef = firestore
-									.collection(Collections.TEAMS)
-									.doc(newTeamId) as DocumentReference<TeamDocument>
-								const newTeamDoc = await teamTransaction.get(newTeamRef)
-
-								if (newTeamDoc.exists) {
-									const newTeamData = newTeamDoc.data() as TeamDocument
-
-									// Check if player already exists in roster
-									const existsInRoster = newTeamData.roster.some(
-										(rp: TeamRosterPlayer) => rp.player.id === playerId
-									)
-
-									if (!existsInRoster) {
-										const newRosterEntry: TeamRosterPlayer = {
-											captain: seasonUpdate.captain,
-											player: playerRefForRoster,
-											dateJoined: Timestamp.now(),
-										}
-
-										teamTransaction.update(newTeamRef, {
-											roster: [...newTeamData.roster, newRosterEntry],
-										})
-									} else {
-										// Player exists, update captain status if needed
-										const updatedRoster = newTeamData.roster.map(
-											(rp: TeamRosterPlayer) => {
-												if (rp.player.id === playerId) {
-													return {
-														...rp,
-														captain: seasonUpdate.captain,
-													}
-												}
-												return rp
-											}
-										)
-
-										teamTransaction.update(newTeamRef, {
-											roster: updatedRoster,
-										})
-									}
-								}
-							}
+						playersAddedToTeam.push({
+							playerRef: playerDocRef,
+							seasonRef: seasonRefForOffers,
 						})
-
-						// Cancel any pending offers for this player (outside transaction)
-						if (newTeamId) {
-							const canceledOffersCount = await cancelPendingOffersForPlayer(
-								firestore,
-								playerRefForRoster,
-								seasonRefForOffers,
-								'Player was added to a team by an administrator'
-							)
-
-							logger.info('Team change completed', {
-								playerId,
-								oldTeamId,
-								newTeamId,
-								seasonId: seasonUpdate.seasonId,
-								captain: seasonUpdate.captain,
-								canceledPendingOffers: canceledOffersCount,
-							})
-						} else {
-							logger.info('Removed player from team', {
-								playerId,
-								oldTeamId,
-								seasonId: seasonUpdate.seasonId,
-							})
-						}
-					} else if (
-						newTeamId &&
-						seasonUpdate.captain !== currentSeason.captain
-					) {
-						// Team didn't change but captain status did
-						const teamRef = firestore
-							.collection(Collections.TEAMS)
-							.doc(newTeamId)
-						const teamDoc = await teamRef.get()
-
-						if (teamDoc.exists) {
-							const teamData = teamDoc.data() as TeamDocument
-							const updatedRoster = teamData.roster.map(
-								(rp: TeamRosterPlayer) => {
-									if (rp.player.id === playerId) {
-										return {
-											...rp,
-											captain: seasonUpdate.captain,
-										}
-									}
-									return rp
-								}
-							)
-
-							await teamRef.update({
-								roster: updatedRoster,
-							})
-
-							logger.info('Updated player captain status in team roster', {
-								playerId,
-								teamId: newTeamId,
-								seasonId: seasonUpdate.seasonId,
-								captain: seasonUpdate.captain,
-							})
-						}
 					}
 				}
 
-				// Add season changes to response if there were any
 				if (seasonChanges.length > 0) {
 					changes.seasons = seasonChanges
 				}
 			}
 
-			// Perform the update if there are any changes
+			// Apply player parent doc updates if any.
 			if (Object.keys(updates).length > 0) {
-				logger.info('Updating player document in Firestore', {
-					playerId,
-					updateFields: Object.keys(updates),
-				})
-
-				await playerRef.update(updates)
-
-				logger.info('Player document successfully updated', {
-					playerId,
-				})
-			} else {
-				logger.info('No changes to apply', { playerId })
+				await playerDocRef.update(updates)
 			}
 
-			// Log successful operation for audit trail
+			// Cancel pending offers for newly-added team memberships.
+			for (const { playerRef: pRef, seasonRef: sRef } of playersAddedToTeam) {
+				try {
+					await cancelPendingOffersForPlayer(
+						firestore,
+						pRef,
+						sRef,
+						'Player was added to a team by an administrator'
+					)
+				} catch (error) {
+					logger.warn('Failed to cancel pending offers for player', {
+						playerId: pRef.id,
+						error: error instanceof Error ? error.message : 'Unknown error',
+					})
+				}
+			}
+
 			logger.info('Player update completed successfully', {
 				playerId,
 				updatedBy: auth?.uid,
 				changes: Object.keys(changes),
-				timestamp: new Date().toISOString(),
 			})
 
 			return {
@@ -889,47 +484,11 @@ export const updatePlayerAdmin = onCall<
 				playerId,
 				adminUserId: auth?.uid,
 				error: error instanceof Error ? error.message : 'Unknown error',
-				stack: error instanceof Error ? error.stack : undefined,
 			})
-
-			// Re-throw HttpsError as-is
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Handle specific Firebase Auth errors
-			if (error && typeof error === 'object' && 'code' in error) {
-				const firebaseError = error as { code: string; message: string }
-				switch (firebaseError.code) {
-					case 'auth/invalid-email':
-						throw new HttpsError(
-							'invalid-argument',
-							'Invalid email format provided.'
-						)
-					case 'auth/user-not-found':
-						throw new HttpsError(
-							'not-found',
-							'User not found in Firebase Authentication.'
-						)
-					case 'auth/email-already-exists':
-						throw new HttpsError(
-							'already-exists',
-							'Email is already in use by another user.'
-						)
-					default:
-						logger.error('Unhandled Firebase error', {
-							code: firebaseError.code,
-							message: firebaseError.message,
-						})
-				}
-			}
-
-			// Wrap other errors
+			if (error instanceof HttpsError) throw error
 			throw new HttpsError(
 				'internal',
-				error instanceof Error
-					? error.message
-					: 'Failed to update player. Please try again.'
+				error instanceof Error ? error.message : 'Failed to update player'
 			)
 		}
 	}

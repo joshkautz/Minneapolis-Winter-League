@@ -1,53 +1,39 @@
 /**
- * Team document update triggers
+ * Team-season roster trigger
+ *
+ * Fires when a roster entry is created or deleted under a team's season
+ * subcollection. Recomputes the team's registration status for that season.
  */
 
-import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
+import { onDocumentWritten } from 'firebase-functions/v2/firestore'
 import { logger } from 'firebase-functions/v2'
-import { TeamDocument } from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
-import { getCurrentSeason } from '../../shared/database.js'
 import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'
 
-/**
- * When a team roster changes, update the team's registration status
- *
- * @see https://firebase.google.com/docs/functions/firestore-events#trigger_a_function_when_a_document_is_updated
- */
-export const updateTeamRegistrationOnRosterChange = onDocumentUpdated(
+export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
 	{
-		document: 'teams/{teamId}',
+		document: 'teams/{teamId}/seasons/{seasonId}/roster/{playerId}',
 		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {
-		const teamId = event.params.teamId
+		const { teamId, seasonId } = event.params
+
+		// Only react to creates and deletes; updates to existing roster entries
+		// don't change the registration count.
+		const before = event.data?.before
+		const after = event.data?.after
+		const wasCreatedOrDeleted = !before?.exists || !after?.exists
+		if (!wasCreatedOrDeleted) return
 
 		try {
-			const beforeData = event.data?.before.data() as TeamDocument | undefined
-			const afterData = event.data?.after.data() as TeamDocument | undefined
-			const teamRef = event.data?.after.ref
-
-			if (!beforeData || !afterData || !teamRef) {
-				logger.warn(`Missing team data for team: ${teamId}`)
-				return
-			}
-
-			// Check if roster size changed
-			const rosterSizeChanged =
-				beforeData.roster.length !== afterData.roster.length
-
-			if (rosterSizeChanged) {
-				const currentSeason = await getCurrentSeason()
-				if (currentSeason) {
-					await updateTeamRegistrationStatus(teamRef, currentSeason.id)
-					logger.info(
-						`Updated team registration status for roster change: ${teamId}`
-					)
-				}
-			}
+			await updateTeamRegistrationStatus(teamId, seasonId)
+			logger.info(
+				`Updated team registration status for roster change: ${teamId}/${seasonId}`
+			)
 		} catch (error) {
 			logger.error('Error updating team registration on roster change:', {
 				teamId,
+				seasonId,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
 		}

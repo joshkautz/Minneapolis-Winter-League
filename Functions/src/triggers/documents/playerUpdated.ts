@@ -1,70 +1,52 @@
 /**
- * Player document update triggers
+ * Player season update trigger
+ *
+ * Fires when a player's per-season subdoc changes (paid, signed, banned,
+ * captain, team). When paid or signed changes for a player who is on a team,
+ * recompute that team's registration status for the season.
  */
 
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { logger } from 'firebase-functions/v2'
-import { PlayerDocument } from '../../types.js'
+import { PlayerSeasonDocument } from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
-import { getCurrentSeason } from '../../shared/database.js'
 import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'
 
-/**
- * When a player's payment/waiver status changes, update their team's registration status
- *
- * @see https://firebase.google.com/docs/functions/firestore-events#trigger_a_function_when_a_document_is_updated
- */
 export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
 	{
-		document: 'players/{playerId}',
+		document: 'players/{playerId}/seasons/{seasonId}',
 		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {
-		const playerId = event.params.playerId
+		const { playerId, seasonId } = event.params
 
 		try {
-			const beforeData = event.data?.before.data() as PlayerDocument
-			const afterData = event.data?.after.data() as PlayerDocument
+			const beforeData = event.data?.before.data() as
+				| PlayerSeasonDocument
+				| undefined
+			const afterData = event.data?.after.data() as
+				| PlayerSeasonDocument
+				| undefined
 
-			if (!beforeData || !afterData) {
-				logger.warn(`Missing player data for player: ${playerId}`)
+			if (!beforeData || !afterData || !afterData.team) {
 				return
 			}
 
-			const currentSeason = await getCurrentSeason()
-			if (!currentSeason) {
-				logger.warn('No current season found')
-				return
-			}
-
-			// Find current season data for this player
-			const beforeSeasonData = beforeData.seasons?.find(
-				(season) => season.season.id === currentSeason.id
-			)
-			const afterSeasonData = afterData.seasons?.find(
-				(season) => season.season.id === currentSeason.id
-			)
-
-			if (!beforeSeasonData || !afterSeasonData || !afterSeasonData.team) {
-				return
-			}
-
-			// Check if payment or waiver status changed
-			const paymentChanged = beforeSeasonData.paid !== afterSeasonData.paid
-			const waiverChanged = beforeSeasonData.signed !== afterSeasonData.signed
+			const paymentChanged = beforeData.paid !== afterData.paid
+			const waiverChanged = beforeData.signed !== afterData.signed
 
 			if (paymentChanged || waiverChanged) {
-				await updateTeamRegistrationStatus(
-					afterSeasonData.team,
-					currentSeason.id
-				)
-				logger.info(
-					`Updated team registration status for player change: ${playerId}`
-				)
+				await updateTeamRegistrationStatus(afterData.team.id, seasonId)
+				logger.info('Updated team registration after player season change', {
+					playerId,
+					seasonId,
+					teamId: afterData.team.id,
+				})
 			}
 		} catch (error) {
 			logger.error('Error updating team registration on player change:', {
 				playerId,
+				seasonId,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
 		}

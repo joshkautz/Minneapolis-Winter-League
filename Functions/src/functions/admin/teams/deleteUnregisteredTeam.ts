@@ -1,61 +1,32 @@
 /**
  * Delete unregistered team callable function (Admin only)
  *
- * This function is only invoked via the Admin Dashboard.
- * It deletes an unregistered team for the current season and properly
- * removes all players from the team roster.
+ * Deletes an unregistered team's participation in the current season.
  */
 
-import { onCall } from 'firebase-functions/v2/https'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, TeamDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { getCurrentSeason } from '../../../shared/database.js'
-import { deleteTeamWithCleanup } from '../../../services/teamDeletionService.js'
+import {
+	getCurrentSeason,
+	teamSeasonRef,
+} from '../../../shared/database.js'
+import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletionService.js'
 
-/**
- * Request interface
- */
 interface DeleteUnregisteredTeamRequest {
-	/** The team ID to delete */
 	teamId: string
 }
 
-/**
- * Response interface for deleting an unregistered team
- */
 interface DeleteUnregisteredTeamResponse {
 	success: boolean
 	message: string
-	/** ID of the deleted team */
 	teamId: string
-	/** Name of the deleted team */
 	teamName: string
-	/** Number of players removed from the team */
 	playersRemoved: number
 }
 
-/**
- * Deletes an unregistered team and removes all players from the team roster
- *
- * Security validations performed:
- * - User must be authenticated with verified email
- * - User must have admin privileges
- * - Team must exist
- * - Team must belong to the current season
- * - Team must NOT be registered
- *
- * Features:
- * - Removes team reference from all player documents
- * - Sets player captain status to false
- * - Deletes all offers related to the team
- * - Deletes team logo from Storage
- * - Deletes the team document
- *
- * @returns {DeleteUnregisteredTeamResponse} Response containing success status and deleted team info
- */
 export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<DeleteUnregisteredTeamResponse> => {
@@ -63,79 +34,64 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 			const { auth: authContext, data } = request
 			const firestore = getFirestore()
 
-			// Validate admin authentication
 			await validateAdminUser(authContext, firestore)
 
 			const { teamId } = data
-
 			if (!teamId) {
-				throw new Error('Team ID is required')
+				throw new HttpsError('invalid-argument', 'Team ID is required')
 			}
 
-			// Get current season
 			const currentSeason = await getCurrentSeason()
 			if (!currentSeason || !currentSeason.id) {
-				throw new Error('No current season found')
+				throw new HttpsError('not-found', 'No current season found')
 			}
+			const seasonId = currentSeason.id
 
-			const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
-
-			// Verify team exists and belongs to current season
-			const teamDoc = await teamRef.get()
-
-			if (!teamDoc.exists) {
-				throw new Error('Team not found')
-			}
-
-			const teamDocument = teamDoc.data() as TeamDocument | undefined
-
-			if (!teamDocument) {
-				throw new Error('Unable to retrieve team data')
-			}
-
-			// Verify team belongs to current season
-			if (teamDocument.season.id !== currentSeason.id) {
-				throw new Error(
-					'Team does not belong to the current season and cannot be deleted'
+			// Verify the team has a season subdoc for the current season.
+			const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
+			const teamSeasonSnap = await teamSeasonDocRef.get()
+			if (!teamSeasonSnap.exists) {
+				throw new HttpsError(
+					'not-found',
+					'Team does not have a participation record for the current season'
 				)
 			}
-
-			// Verify team is NOT registered
-			if (teamDocument.registered) {
-				throw new Error(
+			const teamSeasonData = teamSeasonSnap.data()
+			if (teamSeasonData?.registered) {
+				throw new HttpsError(
+					'failed-precondition',
 					'Cannot delete a registered team. Only unregistered teams can be deleted.'
 				)
 			}
 
-			logger.info('Admin deleting unregistered team', {
+			logger.info('Admin deleting unregistered team season', {
 				teamId,
-				teamName: teamDocument.name,
-				seasonId: currentSeason.id,
-				seasonName: currentSeason.name,
-				rosterSize: teamDocument.roster?.length || 0,
+				seasonId,
+				teamName: teamSeasonData?.name,
 				adminUserId: authContext?.uid,
 			})
 
-			// Use shared deletion service
-			const result = await deleteTeamWithCleanup(
+			const result = await deleteTeamSeasonWithCleanup(
 				firestore,
-				teamRef as FirebaseFirestore.DocumentReference<TeamDocument>,
-				currentSeason.id,
-				{ skipRegisteredCheck: true } // Already validated above
+				teamId,
+				seasonId,
+				{ skipRegisteredCheck: true }
 			)
 
 			if (!result.success) {
-				throw new Error(result.error || 'Failed to delete team')
+				throw new HttpsError(
+					'internal',
+					result.error || 'Failed to delete team'
+				)
 			}
 
 			logger.info('Successfully deleted unregistered team', {
 				teamId,
+				seasonId,
 				teamName: result.teamName,
-				seasonId: currentSeason.id,
 				playersUpdated: result.playersUpdated,
 				offersDeleted: result.offersDeleted,
 				logoDeleted: result.logoDeleted,
-				adminUserId: authContext?.uid,
 			})
 
 			return {
@@ -146,17 +102,15 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 				playersRemoved: result.playersUpdated,
 			}
 		} catch (error) {
+			if (error instanceof HttpsError) throw error
 			const errorMessage =
 				error instanceof Error ? error.message : 'Unknown error'
-
 			logger.error('Error deleting unregistered team:', {
 				teamId: request.data.teamId,
 				adminUserId: request.auth?.uid,
 				error: errorMessage,
 			})
-
-			// Re-throw the original error message for better user experience
-			throw new Error(errorMessage)
+			throw new HttpsError('internal', errorMessage)
 		}
 	}
 )

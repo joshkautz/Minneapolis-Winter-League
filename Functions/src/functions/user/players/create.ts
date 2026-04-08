@@ -8,7 +8,7 @@ import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
 	PlayerDocument,
-	PlayerSeason,
+	PlayerSeasonDocument,
 	SeasonDocument,
 } from '../../../types.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
@@ -111,31 +111,37 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 				.where('registrationEnd', '>', now)
 				.get()
 
-			// Build seasons array for the new player
-			const playerSeasons: PlayerSeason[] = seasonsSnapshot.docs.map((doc) => ({
-				season: doc.ref as FirebaseFirestore.DocumentReference<SeasonDocument>,
-				team: null,
-				captain: false,
-				paid: false,
-				signed: false,
-				banned: false,
-			}))
-
-			// Create player document
+			// Create player parent doc + season subdoc per open-registration season,
+			// all in a single batched write.
 			const player: PlayerDocument = {
 				admin: false,
 				email: email,
 				firstname: trimmedFirstname,
 				lastname: trimmedLastname,
-				seasons: playerSeasons,
+				createdAt: Timestamp.now(),
 			}
 
-			await playerRef.set(player)
+			const batch = firestore.batch()
+			batch.set(playerRef, player)
+			for (const seasonDoc of seasonsSnapshot.docs) {
+				const seasonSubRef = playerRef.collection('seasons').doc(seasonDoc.id)
+				const seasonData: PlayerSeasonDocument = {
+					season:
+						seasonDoc.ref as FirebaseFirestore.DocumentReference<SeasonDocument>,
+					team: null,
+					paid: false,
+					signed: false,
+					banned: false,
+					captain: false,
+				}
+				batch.set(seasonSubRef, seasonData)
+			}
+			await batch.commit()
 
 			logger.info(`Successfully created player: ${userId}`, {
 				email,
 				name: `${trimmedFirstname} ${trimmedLastname}`,
-				seasonsAdded: playerSeasons.length,
+				seasonsAdded: seasonsSnapshot.size,
 				seasonIds: seasonsSnapshot.docs.map((d) => d.id),
 			})
 
@@ -143,8 +149,8 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 				success: true,
 				playerId: userId,
 				message:
-					playerSeasons.length > 0
-						? `Player created successfully with ${playerSeasons.length} active season(s)`
+					seasonsSnapshot.size > 0
+						? `Player created successfully with ${seasonsSnapshot.size} active season(s)`
 						: 'Player created successfully (no active seasons currently)',
 			}
 		} catch (error) {

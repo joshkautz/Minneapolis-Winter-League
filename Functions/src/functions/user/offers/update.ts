@@ -8,14 +8,13 @@ import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
 	OfferDocument,
-	TeamDocument,
 	SeasonDocument,
-	PlayerDocument,
 } from '../../../types.js'
 import {
 	validateAuthentication,
 	validateNotBanned,
 } from '../../../shared/auth.js'
+import { playerSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { formatDateForUser } from '../../../shared/format.js'
 
@@ -172,24 +171,23 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 							}
 						}
 					} else if (offerData.type === 'request') {
-						// Team captains can accept/reject requests to their team
-						// Creator (player) can cancel their own requests
+						// Team captains can accept/reject requests to their team.
+						// Creator (player) can cancel their own requests.
 						const canCancelAsCreator = isCreator && status === 'canceled'
 
 						if (canCancelAsCreator) {
 							// Allow creator to cancel their own request
 						} else {
-							// Check if user is a team captain for accepting/rejecting
-							// Use transaction.get() for consistency within the transaction
-							const teamDoc = await transaction.get(offerData.team)
-							if (!teamDoc.exists) {
-								throw new HttpsError('not-found', 'Team not found')
-							}
-
-							const teamDocument = teamDoc.data() as TeamDocument | undefined
-							const userIsCaptain = teamDocument?.roster?.some(
-								(member) => member.player.id === userId && member.captain
+							// Captain check: read the caller's player season subdoc and
+							// confirm they are a captain on the offer's target team for
+							// the offer's season.
+							const callerSeasonSnap = await transaction.get(
+								playerSeasonRef(firestore, userId, offerData.season.id)
 							)
+							const callerSeasonData = callerSeasonSnap.data()
+							const userIsCaptain =
+								callerSeasonData?.team?.id === offerData.team.id &&
+								callerSeasonData?.captain === true
 
 							if (!userIsCaptain) {
 								if (status === 'rejected') {

@@ -9,7 +9,6 @@ import {
 	Collections,
 	SeasonDocument,
 	SeasonFormat,
-	TeamDocument,
 } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
@@ -21,7 +20,6 @@ interface UpdateSeasonRequest {
 	dateEnd: Date
 	registrationStart: Date
 	registrationEnd: Date
-	teamIds?: string[] // Optional array of team IDs to set for the season
 	stripe?: {
 		priceId: string
 		priceIdDev?: string
@@ -59,7 +57,6 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 			dateEnd,
 			registrationStart,
 			registrationEnd,
-			teamIds,
 			stripe,
 			format,
 		} = data
@@ -114,19 +111,6 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 				new Date(registrationEnd)
 			)
 
-			// Build team references array
-			const teamReferences =
-				teamIds && teamIds.length > 0
-					? teamIds.map(
-							(teamId) =>
-								firestore
-									.collection(Collections.TEAMS)
-									.doc(
-										teamId
-									) as FirebaseFirestore.DocumentReference<TeamDocument>
-						)
-					: []
-
 			// Build stripe config (only include if at least priceId is provided)
 			const stripeConfig = stripe?.priceId
 				? {
@@ -148,7 +132,6 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 				dateEnd: dateEndTimestamp,
 				registrationStart: registrationStartTimestamp,
 				registrationEnd: registrationEndTimestamp,
-				teams: teamReferences,
 				...(stripeConfig && { stripe: stripeConfig }),
 				// Store format (undefined means traditional for backward compatibility)
 				format: format === SeasonFormat.SWISS ? SeasonFormat.SWISS : undefined,

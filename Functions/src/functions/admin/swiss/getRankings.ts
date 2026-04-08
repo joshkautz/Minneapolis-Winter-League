@@ -77,10 +77,34 @@ export const getSwissRankings = onCall<GetSwissRankingsRequest>(
 
 			const seasonData = seasonDoc.data() as SeasonDocument
 
-			// Get team IDs from season
-			const teamIds = seasonData.teams?.map((teamRef) => teamRef.id) || []
+			// Discover all teams participating in this season via collection-group
+			// query against the per-team season subcollection.
+			const teamSeasonsSnapshot = await firestore
+				.collectionGroup('seasons')
+				.where('season', '==', seasonRef)
+				.get()
+			const teamSeasonsForSeason = teamSeasonsSnapshot.docs.filter((d) => {
+				// Defensive: only keep docs whose parent path is teams/{id}/seasons/{sid}.
+				return d.ref.parent.parent?.parent.id === Collections.TEAMS
+			})
+			const teamIds = teamSeasonsForSeason
+				.map((d) => d.ref.parent.parent?.id)
+				.filter((id): id is string => !!id)
 
-			// Get all regular season games for this season
+			// Reconstruct initial seeding (if any) by reading swissSeed from each
+			// team-season subdoc.
+			const seededEntries = teamSeasonsForSeason
+				.map((d) => ({
+					teamId: d.ref.parent.parent?.id,
+					swissSeed: d.data().swissSeed as number | null | undefined,
+				}))
+				.filter((e) => typeof e.swissSeed === 'number' && e.teamId)
+				.sort((a, b) => (a.swissSeed as number) - (b.swissSeed as number))
+			const swissInitialSeeding =
+				seededEntries.length > 0
+					? seededEntries.map((e) => e.teamId as string)
+					: null
+
 			const gamesSnapshot = await firestore
 				.collection(Collections.GAMES)
 				.where('season', '==', seasonRef)
@@ -88,8 +112,6 @@ export const getSwissRankings = onCall<GetSwissRankingsRequest>(
 				.get()
 
 			const games = gamesSnapshot.docs.map((doc) => doc.data() as GameDocument)
-
-			// Count completed games
 			const completedGames = games.filter(
 				(game) =>
 					game.home &&
@@ -98,7 +120,6 @@ export const getSwissRankings = onCall<GetSwissRankingsRequest>(
 					game.awayScore !== null
 			)
 
-			// Calculate Swiss rankings
 			const { rankings } = calculateSwissRankings(games, teamIds)
 
 			logger.info('Swiss rankings retrieved', {
@@ -115,7 +136,7 @@ export const getSwissRankings = onCall<GetSwissRankingsRequest>(
 				seasonName: seasonData.name,
 				format: seasonData.format || SeasonFormat.TRADITIONAL,
 				rankings,
-				swissInitialSeeding: seasonData.swissInitialSeeding || null,
+				swissInitialSeeding,
 				gamesPlayed: completedGames.length,
 				totalTeams: teamIds.length,
 			} as GetSwissRankingsResponse

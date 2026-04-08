@@ -1,5 +1,9 @@
 /**
  * Award badge to team callable function
+ *
+ * Awards a badge to a canonical team. The badges subcollection lives on the
+ * canonical team, so there's exactly one place to write and the team-id
+ * dedup walk that the legacy implementation needed is gone.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -8,15 +12,21 @@ import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
 	BadgeDocument,
-	TeamDocument,
 	TeamBadgeDocument,
 } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
+import {
+	getCurrentSeason,
+	teamBadgeRef,
+	teamRef as canonicalTeamRef,
+} from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
 interface AwardBadgeRequest {
 	badgeId: string
 	teamId: string
+	/** Optional season id during which the badge was earned. Defaults to the current season. */
+	seasonId?: string
 }
 
 interface AwardBadgeResponse {
@@ -26,26 +36,12 @@ interface AwardBadgeResponse {
 	message: string
 }
 
-/**
- * Awards a badge to a specific team
- *
- * Security validations:
- * - User must be authenticated and email verified
- * - User must be an admin
- * - Badge must exist
- * - Team must exist
- * - Badge cannot already be awarded to the team
- *
- * Uses a transaction to ensure atomicity and prevent race conditions
- */
 export const awardBadge = onCall<AwardBadgeRequest>(
 	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<AwardBadgeResponse> => {
 		const { data, auth } = request
+		const { badgeId, teamId, seasonId: providedSeasonId } = data
 
-		const { badgeId, teamId } = data
-
-		// Validate required fields
 		if (!badgeId || !teamId) {
 			throw new HttpsError(
 				'invalid-argument',
@@ -55,40 +51,42 @@ export const awardBadge = onCall<AwardBadgeRequest>(
 
 		try {
 			const firestore = getFirestore()
-
-			// Validate admin authentication and get validated user ID
 			const userId = await validateAdminUser(auth, firestore)
-
-			// Get user reference for awardedBy field
 			const userRef = firestore.collection(Collections.PLAYERS).doc(userId)
 
-			// Document references
-			const badgeRef = firestore.collection(Collections.BADGES).doc(badgeId)
-			const teamRef = firestore.collection(Collections.TEAMS).doc(teamId)
-			const teamBadgeRef = teamRef.collection(Collections.BADGES).doc(badgeId)
+			// Resolve seasonId — explicit > current.
+			let seasonId = providedSeasonId
+			if (!seasonId) {
+				const currentSeason = await getCurrentSeason()
+				if (!currentSeason) {
+					throw new HttpsError(
+						'failed-precondition',
+						'No current season found and no seasonId provided'
+					)
+				}
+				seasonId = currentSeason.id
+			}
 
-			// Execute all operations atomically in a transaction
+			const badgeRef = firestore.collection(Collections.BADGES).doc(badgeId)
+			const teamCanonicalDocRef = canonicalTeamRef(firestore, teamId)
+			const teamBadgeDocRef = teamBadgeRef(firestore, teamId, badgeId)
+
 			const result = await firestore.runTransaction(async (transaction) => {
-				// Read all documents first (Firestore transaction requirement)
 				const [badgeDoc, teamDoc, teamBadgeDoc] = await Promise.all([
 					transaction.get(badgeRef),
-					transaction.get(teamRef),
-					transaction.get(teamBadgeRef),
+					transaction.get(teamCanonicalDocRef),
+					transaction.get(teamBadgeDocRef),
 				])
 
-				// Validate badge exists
 				if (!badgeDoc.exists) {
 					throw new HttpsError('not-found', 'Badge not found')
 				}
 				const badge = badgeDoc.data() as BadgeDocument
 
-				// Validate team exists
 				if (!teamDoc.exists) {
 					throw new HttpsError('not-found', 'Team not found')
 				}
-				const team = teamDoc.data() as TeamDocument
 
-				// Check if team already has this badge
 				if (teamBadgeDoc.exists) {
 					throw new HttpsError(
 						'already-exists',
@@ -96,97 +94,57 @@ export const awardBadge = onCall<AwardBadgeRequest>(
 					)
 				}
 
-				// Query all teams with same teamId to check if any already have badge
-				// Note: Queries in transactions are read-only and provide snapshot isolation
-				const teamsWithSameTeamId = await firestore
-					.collection(Collections.TEAMS)
-					.where('teamId', '==', team.teamId)
-					.get()
-
-				let shouldIncrementStats = true
-
-				// Check if any other team instance with same teamId already has this badge
-				for (const otherTeam of teamsWithSameTeamId.docs) {
-					if (otherTeam.id === teamId) continue
-
-					const otherTeamBadgeDoc = await transaction.get(
-						otherTeam.ref.collection(Collections.BADGES).doc(badgeId)
-					)
-
-					if (otherTeamBadgeDoc.exists) {
-						shouldIncrementStats = false
-						break
-					}
-				}
-
-				// Create team badge document
-				const now = FieldValue.serverTimestamp()
 				const teamBadgeDocument: Omit<TeamBadgeDocument, 'awardedAt'> & {
 					awardedAt: FirebaseFirestore.FieldValue
 				} = {
 					badge: badgeRef,
 					awardedBy: userRef,
-					awardedAt: now,
+					awardedAt: FieldValue.serverTimestamp(),
+					seasonId: seasonId as string,
+				}
+				transaction.set(teamBadgeDocRef, teamBadgeDocument)
+
+				if (!badge.stats) {
+					transaction.update(badgeRef, {
+						stats: {
+							totalTeamsAwarded: 1,
+							lastUpdated: FieldValue.serverTimestamp(),
+						},
+					})
+				} else {
+					transaction.update(badgeRef, {
+						'stats.totalTeamsAwarded': FieldValue.increment(1),
+						'stats.lastUpdated': FieldValue.serverTimestamp(),
+					})
 				}
 
-				transaction.set(teamBadgeRef, teamBadgeDocument)
-
-				// Update badge stats if this is the first time this teamId earned it
-				if (shouldIncrementStats) {
-					if (!badge.stats) {
-						transaction.update(badgeRef, {
-							stats: {
-								totalTeamsAwarded: 1,
-								lastUpdated: FieldValue.serverTimestamp(),
-							},
-						})
-					} else {
-						transaction.update(badgeRef, {
-							'stats.totalTeamsAwarded': FieldValue.increment(1),
-							'stats.lastUpdated': FieldValue.serverTimestamp(),
-						})
-					}
-				}
-
-				return {
-					badgeName: badge.name,
-					teamName: team.name,
-					incrementedStats: shouldIncrementStats,
-				}
+				return { badgeName: badge.name }
 			})
 
 			logger.info('Badge awarded to team successfully', {
 				badgeId,
 				badgeName: result.badgeName,
 				teamId,
-				teamName: result.teamName,
+				seasonId,
 				awardedBy: userId,
-				incrementedStats: result.incrementedStats,
 			})
 
 			return {
 				success: true,
 				badgeId,
 				teamId,
-				message: `Badge "${result.badgeName}" awarded to team "${result.teamName}" successfully`,
+				message: `Badge "${result.badgeName}" awarded to team successfully`,
 			}
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
+			if (error instanceof HttpsError) throw error
 			const errorMessage =
 				error instanceof Error ? error.message : 'Unknown error'
-
 			logger.error('Error awarding badge to team:', {
 				userId: auth?.uid,
 				badgeId: data.badgeId,
 				teamId: data.teamId,
 				error: errorMessage,
 			})
-
 			throw new HttpsError('internal', `Failed to award badge: ${errorMessage}`)
 		}
 	}

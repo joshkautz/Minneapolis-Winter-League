@@ -14,19 +14,13 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import {
-	Collections,
-	PlayerDocument,
-	TeamDocument,
-	SeasonDocument,
-} from '../../../types.js'
-import {
-	validateAuthentication,
-	validateNotBanned,
-} from '../../../shared/auth.js'
+import { Collections, SeasonDocument } from '../../../types.js'
+import { validateAuthentication } from '../../../shared/auth.js'
 import {
 	getCurrentSeason,
 	getCurrentSeasonRef,
+	playerSeasonRef,
+	teamSeasonRef,
 } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { formatDateForUser } from '../../../shared/format.js'
@@ -103,52 +97,63 @@ export const createOffer = onCall<CreateOfferRequest>(
 						)
 					}
 				}
-				// Get player, team, and season documents
-				const [playerDoc, teamDoc, seasonDoc] = await Promise.all([
+				// Read all the inputs we need: player parent doc, team season subdoc,
+				// season doc, target player season subdoc (banned + team check),
+				// caller player parent doc (admin), caller player season subdoc
+				// (captain check for invitations).
+				const [
+					playerDoc,
+					seasonDoc,
+					teamSeasonSnap,
+					targetPlayerSeasonSnap,
+					currentUserDoc,
+					currentUserSeasonSnap,
+				] = await Promise.all([
 					transaction.get(playerRef),
-					transaction.get(teamRef),
 					transaction.get(seasonRef),
+					transaction.get(teamSeasonRef(firestore, teamId, seasonRef.id)),
+					transaction.get(playerSeasonRef(firestore, playerId, seasonRef.id)),
+					transaction.get(
+						firestore.collection(Collections.PLAYERS).doc(userId)
+					),
+					transaction.get(playerSeasonRef(firestore, userId, seasonRef.id)),
 				])
 
-				if (!playerDoc.exists || !teamDoc.exists) {
-					throw new HttpsError('not-found', 'Player or team not found')
+				if (!playerDoc.exists) {
+					throw new HttpsError('not-found', 'Player not found')
 				}
-
+				if (!teamSeasonSnap.exists) {
+					throw new HttpsError(
+						'not-found',
+						'Team is not participating in the current season'
+					)
+				}
 				if (!seasonDoc.exists) {
 					throw new HttpsError('not-found', 'Season not found')
 				}
 
-				const playerDocument = playerDoc.data() as PlayerDocument | undefined
-				const teamDocument = teamDoc.data() as TeamDocument | undefined
 				const seasonData = seasonDoc.data() as SeasonDocument | undefined
-
-				if (!playerDocument || !teamDocument || !seasonData) {
-					throw new HttpsError(
-						'internal',
-						'Unable to retrieve player, team, or season data'
-					)
+				if (!seasonData) {
+					throw new HttpsError('internal', 'Unable to retrieve season data')
 				}
 
-				// Get current user to check admin status
-				const currentUserRef = firestore
-					.collection(Collections.PLAYERS)
-					.doc(userId)
-				const currentUserDoc = await transaction.get(currentUserRef)
 				const isAdmin = currentUserDoc.data()?.admin === true
 
-				// Validate target player is not banned for this season (skip for admins)
-				// This prevents:
-				// - Captains from inviting banned players
-				// - Banned players from requesting to join teams
+				// Validate target player is not banned for this season (skip for admins).
 				if (!isAdmin) {
-					await validateNotBanned(firestore, playerId, seasonRef.id)
+					const targetSeasonData = targetPlayerSeasonSnap.data()
+					if (targetSeasonData?.banned === true) {
+						throw new HttpsError(
+							'permission-denied',
+							'Target player is banned from this season'
+						)
+					}
 				}
 
-				// Validate that registration has not ended (skip for admins)
+				// Validate that registration has not ended (skip for admins).
 				if (!isAdmin) {
 					const now = new Date()
 					const registrationEnd = seasonData.registrationEnd.toDate()
-
 					if (now > registrationEnd) {
 						throw new HttpsError(
 							'failed-precondition',
@@ -157,12 +162,13 @@ export const createOffer = onCall<CreateOfferRequest>(
 					}
 				}
 
-				// Validate authorization based on offer type
+				// Validate authorization based on offer type.
 				if (type === 'invitation') {
-					// User must be a captain of the team
-					const userIsCaptain = teamDocument.roster.some(
-						(member) => member.player.id === userId && member.captain
-					)
+					// User must be a captain of the team for the current season.
+					const callerSeasonData = currentUserSeasonSnap.data()
+					const userIsCaptain =
+						callerSeasonData?.team?.id === teamId &&
+						callerSeasonData?.captain === true
 					if (!userIsCaptain) {
 						throw new HttpsError(
 							'permission-denied',
@@ -170,7 +176,6 @@ export const createOffer = onCall<CreateOfferRequest>(
 						)
 					}
 				} else if (type === 'request') {
-					// User must be the player making the request
 					if (userId !== playerId) {
 						throw new HttpsError(
 							'permission-denied',
@@ -179,12 +184,9 @@ export const createOffer = onCall<CreateOfferRequest>(
 					}
 				}
 
-				// Check if player is already on a team for current season
-				const currentSeasonData = playerDocument.seasons.find(
-					(season) => season.season.id === seasonRef.id
-				)
-
-				if (currentSeasonData?.team) {
+				// Check if player is already on a team for current season.
+				const targetSeasonData = targetPlayerSeasonSnap.data()
+				if (targetSeasonData?.team) {
 					throw new HttpsError(
 						'already-exists',
 						'Player is already on a team for this season'

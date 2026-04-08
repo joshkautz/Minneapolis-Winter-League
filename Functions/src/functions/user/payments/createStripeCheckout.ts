@@ -169,14 +169,7 @@ export const createStripeCheckout = onCall<
 				return newCustomer.id
 			})
 
-			// Build checkout session parameters.
-			// Stripe v22 reorganized the Checkout namespace re-exports, so the
-			// old `Stripe.Checkout.SessionCreateParams` path no longer resolves.
-			// Derive the type from the SDK method instead — this is forward-
-			// compatible with future Stripe SDK reorganizations.
-			const sessionParams: Parameters<
-				Stripe['checkout']['sessions']['create']
-			>[0] = {
+			const sessionParams: Stripe.Checkout.SessionCreateParams = {
 				customer,
 				mode: 'payment',
 				line_items: [

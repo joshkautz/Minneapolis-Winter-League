@@ -119,10 +119,14 @@ export const sendWaiverAdmin = onCall<SendWaiverAdminRequest>(
 				seasonDocument = seasonsSnapshot.docs[0].data() as SeasonDocument
 			}
 
-			// Check if player is paid for this season
-			const playerSeasonData = playerDocument.seasons?.find(
-				(s) => s.season.id === seasonId
-			)
+			// Check if player is paid for this season via the player season subdoc.
+			const playerSeasonSnap = await firestore
+				.collection(Collections.PLAYERS)
+				.doc(playerId)
+				.collection('seasons')
+				.doc(seasonId)
+				.get()
+			const playerSeasonData = playerSeasonSnap.data()
 
 			if (!playerSeasonData?.paid) {
 				throw new HttpsError(

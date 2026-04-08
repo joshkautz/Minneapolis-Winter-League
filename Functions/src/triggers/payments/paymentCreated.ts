@@ -5,14 +5,17 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument } from '../../types.js'
+import { Collections } from '../../types.js'
 import {
 	FIREBASE_CONFIG,
 	getDropboxSignConfig,
 	EMAIL_CONFIG,
 } from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
-import { getCurrentSeason } from '../../shared/database.js'
+import {
+	getCurrentSeason,
+	playerSeasonRef,
+} from '../../shared/database.js'
 import { SignatureRequestApi, SubSigningOptions } from '@dropbox/sign'
 
 /**
@@ -60,44 +63,54 @@ export const onPaymentCreated = onDocumentCreated(
 				throw new Error('No current season found')
 			}
 
-			// Use transaction to atomically check and update paid status
-			// This prevents race conditions where multiple payment triggers
-			// could both pass the idempotency check
+			// Atomically check + update the player's per-season paid flag.
 			const playerRef = firestore.collection(Collections.PLAYERS).doc(uid)
-
-			const { alreadyPaid, playerDocument } = await firestore.runTransaction(
-				async (transaction) => {
-					const playerDoc = await transaction.get(playerRef)
-
-					if (!playerDoc.exists) {
-						throw new Error(`Player document not found for UID: ${uid}`)
-					}
-
-					const playerData = playerDoc.data() as PlayerDocument
-
-					// Check if player is already paid for this season (idempotency check)
-					const currentSeasonData = playerData.seasons?.find(
-						(season) => season.season.id === currentSeason.id
-					)
-
-					if (currentSeasonData?.paid) {
-						// Already paid - return early from transaction
-						return { alreadyPaid: true, playerDocument: playerData }
-					}
-
-					// Update player's paid status for current season atomically
-					const updatedSeasons =
-						playerData.seasons?.map((season) =>
-							season.season.id === currentSeason.id
-								? { ...season, paid: true }
-								: season
-						) || []
-
-					transaction.update(playerRef, { seasons: updatedSeasons })
-
-					return { alreadyPaid: false, playerDocument: playerData }
-				}
+			const playerSeasonDocRef = playerSeasonRef(
+				firestore,
+				uid,
+				currentSeason.id
 			)
+
+			type PlayerForWaiver = {
+				firstname: string
+				lastname: string
+				email: string
+			}
+
+			const { alreadyPaid, playerDocument } = await firestore.runTransaction<{
+				alreadyPaid: boolean
+				playerDocument: PlayerForWaiver
+			}>(async (transaction) => {
+				const playerDoc = await transaction.get(playerRef)
+				if (!playerDoc.exists) {
+					throw new Error(`Player document not found for UID: ${uid}`)
+				}
+				const playerData = playerDoc.data() as PlayerForWaiver
+
+				const playerSeasonSnap = await transaction.get(playerSeasonDocRef)
+				if (playerSeasonSnap.exists && playerSeasonSnap.data()?.paid) {
+					return { alreadyPaid: true, playerDocument: playerData }
+				}
+
+				if (playerSeasonSnap.exists) {
+					transaction.update(playerSeasonDocRef, { paid: true })
+				} else {
+					// Defensive: create the subdoc if a Stripe payment lands before
+					// the season has otherwise been seeded for this player.
+					transaction.set(playerSeasonDocRef, {
+						season: firestore
+							.collection(Collections.SEASONS)
+							.doc(currentSeason.id),
+						team: null,
+						paid: true,
+						signed: false,
+						banned: false,
+						captain: false,
+					})
+				}
+
+				return { alreadyPaid: false, playerDocument: playerData }
+			})
 
 			if (alreadyPaid) {
 				logger.info(

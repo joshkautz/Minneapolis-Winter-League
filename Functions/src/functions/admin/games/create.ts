@@ -230,16 +230,19 @@ export const createGame = onCall<
 				)
 			}
 
-			// Validate teams exist (if provided)
+			// Validate teams exist and have a season subdoc for this game's season.
 			let homeTeamRef = null
 			if (homeTeamId) {
 				homeTeamRef = firestore.collection(Collections.TEAMS).doc(homeTeamId)
-				const homeTeamDoc = await homeTeamRef.get()
-				if (!homeTeamDoc.exists) {
-					logger.warn('Home team not found', { homeTeamId })
+				const homeSeasonSubdoc = await homeTeamRef
+					.collection('seasons')
+					.doc(seasonId)
+					.get()
+				if (!homeSeasonSubdoc.exists) {
+					logger.warn('Home team not in season', { homeTeamId, seasonId })
 					throw new HttpsError(
 						'not-found',
-						'Home team not found. Please verify the team ID is correct.'
+						'Home team is not participating in this season.'
 					)
 				}
 			}
@@ -247,12 +250,15 @@ export const createGame = onCall<
 			let awayTeamRef = null
 			if (awayTeamId) {
 				awayTeamRef = firestore.collection(Collections.TEAMS).doc(awayTeamId)
-				const awayTeamDoc = await awayTeamRef.get()
-				if (!awayTeamDoc.exists) {
-					logger.warn('Away team not found', { awayTeamId })
+				const awaySeasonSubdoc = await awayTeamRef
+					.collection('seasons')
+					.doc(seasonId)
+					.get()
+				if (!awaySeasonSubdoc.exists) {
+					logger.warn('Away team not in season', { awayTeamId, seasonId })
 					throw new HttpsError(
 						'not-found',
-						'Away team not found. Please verify the team ID is correct.'
+						'Away team is not participating in this season.'
 					)
 				}
 			}

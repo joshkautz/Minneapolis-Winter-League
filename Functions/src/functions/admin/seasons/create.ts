@@ -1,5 +1,10 @@
 /**
  * Create season callable function
+ *
+ * Creates a new season document and seeds a `players/{uid}/seasons/{seasonId}`
+ * subdoc for every existing player. The legacy `seasons.teams[]` array is no
+ * longer maintained — the list of teams in a season is derived from the
+ * collection-group `seasons` query at read time.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -7,11 +12,9 @@ import { getFirestore, Timestamp, WriteBatch } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
-	PlayerDocument,
-	PlayerSeason,
+	PlayerSeasonDocument,
 	SeasonDocument,
 	SeasonFormat,
-	TeamDocument,
 } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
@@ -22,14 +25,12 @@ interface CreateSeasonRequest {
 	dateEnd: Date
 	registrationStart: Date
 	registrationEnd: Date
-	teamIds?: string[] // Optional array of team IDs to add to the season
 	stripe?: {
 		priceId: string
 		priceIdDev?: string
 		returningPlayerCouponId?: string
 		returningPlayerCouponIdDev?: string
 	}
-	/** Season format - 'traditional' or 'swiss'. Defaults to 'traditional' */
 	format?: SeasonFormat
 }
 
@@ -39,16 +40,6 @@ interface CreateSeasonResponse {
 	seasonId?: string
 }
 
-/**
- * Creates a new season with proper authorization and validation
- * Automatically adds the season to all existing players
- *
- * Security validations:
- * - User must be authenticated and email verified
- * - User must be an admin
- * - Season name must be 3-100 characters
- * - All date fields are required
- */
 export const createSeason = onCall<CreateSeasonRequest>(
 	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
 	async (request) => {
@@ -60,12 +51,10 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			dateEnd,
 			registrationStart,
 			registrationEnd,
-			teamIds,
 			stripe,
 			format,
 		} = data
 
-		// Validate inputs
 		if (
 			!name ||
 			!dateStart ||
@@ -79,7 +68,6 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			)
 		}
 
-		// Validate season name length
 		if (name.length < 3 || name.length > 100) {
 			throw new HttpsError(
 				'invalid-argument',
@@ -89,11 +77,8 @@ export const createSeason = onCall<CreateSeasonRequest>(
 
 		try {
 			const firestore = getFirestore()
-
-			// Validate admin authentication
 			await validateAdminUser(auth, firestore)
 
-			// Convert dates to Timestamps
 			const dateStartTimestamp = Timestamp.fromDate(new Date(dateStart))
 			const dateEndTimestamp = Timestamp.fromDate(new Date(dateEnd))
 			const registrationStartTimestamp = Timestamp.fromDate(
@@ -103,20 +88,6 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				new Date(registrationEnd)
 			)
 
-			// Build team references array
-			const teamReferences =
-				teamIds && teamIds.length > 0
-					? teamIds.map(
-							(teamId) =>
-								firestore
-									.collection(Collections.TEAMS)
-									.doc(
-										teamId
-									) as FirebaseFirestore.DocumentReference<TeamDocument>
-						)
-					: []
-
-			// Build stripe config (only include if at least priceId is provided)
 			const stripeConfig = stripe?.priceId
 				? {
 						priceId: stripe.priceId,
@@ -130,16 +101,13 @@ export const createSeason = onCall<CreateSeasonRequest>(
 					}
 				: undefined
 
-			// Create the season document
 			const seasonData: SeasonDocument = {
 				name: name.trim(),
 				dateStart: dateStartTimestamp,
 				dateEnd: dateEndTimestamp,
 				registrationStart: registrationStartTimestamp,
 				registrationEnd: registrationEndTimestamp,
-				teams: teamReferences,
 				...(stripeConfig && { stripe: stripeConfig }),
-				// Only include format if it's swiss (traditional is the default)
 				...(format === SeasonFormat.SWISS && { format: SeasonFormat.SWISS }),
 			}
 
@@ -153,16 +121,12 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				createdBy: auth?.uid,
 			})
 
-			// Add this season to all existing players using chunked batches
+			// Seed a player season subdoc on every existing player.
 			const playersSnapshot = await firestore
 				.collection(Collections.PLAYERS)
 				.get()
 
 			if (playersSnapshot.empty) {
-				logger.info('No players found to add season to', {
-					seasonId: seasonRef.id,
-				})
-
 				return {
 					success: true,
 					message: `Season "${name}" created successfully (no existing players to update)`,
@@ -170,69 +134,55 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				} as CreateSeasonResponse
 			}
 
-			const BATCH_SIZE = 500 // Firestore batch limit
+			const BATCH_SIZE = 400
 			let batch: WriteBatch = firestore.batch()
 			let operationsInBatch = 0
 			let playersUpdated = 0
 			let playersSkipped = 0
 
 			for (const playerDoc of playersSnapshot.docs) {
-				const playerData = playerDoc.data() as PlayerDocument
-
-				// Check if player already has this season (shouldn't happen, but defensive)
-				const hasSeasonAlready = playerData.seasons?.some(
-					(ps) => ps.season.id === seasonRef.id
-				)
-
-				if (hasSeasonAlready) {
+				const playerSeasonsSubcollection = playerDoc.ref.collection('seasons')
+				const existingSeasonSubdoc = await playerSeasonsSubcollection
+					.doc(seasonRef.id)
+					.get()
+				if (existingSeasonSubdoc.exists) {
 					playersSkipped++
 					continue
 				}
 
-				// Preserve banned status from the most recent previous season
-				let bannedStatus = false
-				if (playerData.seasons && playerData.seasons.length > 0) {
-					const mostRecentSeason =
-						playerData.seasons[playerData.seasons.length - 1]
-					bannedStatus = mostRecentSeason.banned || false
-				}
+				// Preserve banned status from any prior banned season.
+				const otherSeasonSubdocs = await playerSeasonsSubcollection.get()
+				const bannedStatus = otherSeasonSubdocs.docs.some(
+					(d) => d.data()?.banned === true
+				)
 
-				// Create new season data
-				const newSeasonData: PlayerSeason = {
+				const newPlayerSeason: PlayerSeasonDocument = {
 					season: seasonRef,
 					team: null,
-					captain: false,
 					paid: false,
 					signed: false,
 					banned: bannedStatus,
+					captain: false,
 				}
-
-				// Add new season to existing seasons array
-				const updatedSeasons = [...(playerData.seasons || []), newSeasonData]
-				batch.update(playerDoc.ref, { seasons: updatedSeasons })
+				batch.set(
+					playerSeasonsSubcollection.doc(seasonRef.id),
+					newPlayerSeason
+				)
 				operationsInBatch++
 				playersUpdated++
 
-				// Commit batch when it reaches the limit and start a new one
 				if (operationsInBatch >= BATCH_SIZE) {
 					await batch.commit()
-					logger.info(
-						`Committed batch with ${operationsInBatch} player updates`
-					)
 					batch = firestore.batch()
 					operationsInBatch = 0
 				}
 			}
 
-			// Commit any remaining operations
 			if (operationsInBatch > 0) {
 				await batch.commit()
-				logger.info(
-					`Committed final batch with ${operationsInBatch} player updates`
-				)
 			}
 
-			logger.info(`Season added to players`, {
+			logger.info('Season added to players', {
 				seasonId: seasonRef.id,
 				playersUpdated,
 				playersSkipped,
@@ -245,25 +195,15 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				seasonId: seasonRef.id,
 			} as CreateSeasonResponse
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
+			if (error instanceof HttpsError) throw error
 			const errorMessage =
 				error instanceof Error ? error.message : 'Unknown error'
-
 			logger.error('Error creating season:', {
 				name,
 				userId: auth?.uid,
 				error: errorMessage,
 			})
-
-			throw new HttpsError(
-				'internal',
-				`Failed to create season: ${errorMessage}`
-			)
+			throw new HttpsError('internal', `Failed to create season: ${errorMessage}`)
 		}
 	}
 )

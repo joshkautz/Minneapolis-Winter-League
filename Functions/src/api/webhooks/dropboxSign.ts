@@ -15,7 +15,6 @@ import {
 	Collections,
 	WaiverDocument,
 	WaiverStatus,
-	PlayerDocument,
 } from '../../types.js'
 import {
 	FIREBASE_CONFIG,
@@ -174,13 +173,15 @@ async function handleWaiverStatusChange(
 		}
 
 		const waiverRef = waiverQuery.docs[0].ref
-		const playerRef = firestore.collection(Collections.PLAYERS).doc(firebaseUID)
+		const playerSeasonDocRef = firestore
+			.collection(Collections.PLAYERS)
+			.doc(firebaseUID)
+			.collection('seasons')
+			.doc(seasonId)
 
 		// Use transaction to atomically check status and update both documents
-		// This prevents race conditions when duplicate webhooks arrive
+		// This prevents race conditions when duplicate webhooks arrive.
 		const result = await firestore.runTransaction(async (transaction) => {
-			// IMPORTANT: All reads must happen before any writes in Firestore transactions
-			// Re-read waiver inside transaction to get fresh data
 			const waiverDoc = await transaction.get(waiverRef)
 			const waiverData = waiverDoc.data() as WaiverDocument | undefined
 
@@ -190,50 +191,28 @@ async function handleWaiverStatusChange(
 
 			const waiverAlreadyInStatus = waiverData.status === newStatus
 
-			// Read player document BEFORE any writes (Firestore transaction requirement)
-			// Always read player to check if they need updating, even if waiver is already signed
-			let playerDocument: PlayerDocument | undefined
 			let playerNeedsUpdate = false
 			if (updatePlayerSigned && newStatus === 'signed') {
-				const playerDoc = await transaction.get(playerRef)
-				if (playerDoc.exists) {
-					playerDocument = playerDoc.data() as PlayerDocument | undefined
-					// Check if player's signed status needs updating
-					const playerSeasonData = playerDocument?.seasons?.find(
-						(season) => season.season.id === seasonId
-					)
-					playerNeedsUpdate = playerSeasonData?.signed !== true
+				const playerSeasonSnap = await transaction.get(playerSeasonDocRef)
+				if (playerSeasonSnap.exists) {
+					playerNeedsUpdate = playerSeasonSnap.data()?.signed !== true
 				}
 			}
 
-			// If waiver is already in target status AND player doesn't need update, skip
 			if (waiverAlreadyInStatus && !playerNeedsUpdate) {
 				return { skipped: true, reason: 'already_in_status' }
 			}
 
-			// Now perform all writes after reads are complete
-			// Update waiver status (only if not already in target status)
 			if (!waiverAlreadyInStatus) {
-				const updateData: Record<string, unknown> = {
-					status: newStatus,
-				}
-
-				// Add signedAt timestamp only for signed status
+				const updateData: Record<string, unknown> = { status: newStatus }
 				if (newStatus === 'signed') {
 					updateData.signedAt = FieldValue.serverTimestamp()
 				}
-
 				transaction.update(waiverRef, updateData)
 			}
 
-			// Update player's signed status if needed (only for signed events)
-			if (playerNeedsUpdate && playerDocument) {
-				const updatedSeasons =
-					playerDocument.seasons?.map((season) =>
-						season.season.id === seasonId ? { ...season, signed: true } : season
-					) || []
-
-				transaction.update(playerRef, { seasons: updatedSeasons })
+			if (playerNeedsUpdate) {
+				transaction.update(playerSeasonDocRef, { signed: true })
 				logger.info(`Updated player signed status for season: ${seasonId}`)
 			}
 

@@ -1,5 +1,10 @@
 /**
  * Offer document update trigger
+ *
+ * Side effects of accepting an offer:
+ *  - Add the player to the team's roster subcollection for the offer's season
+ *  - Update the player's season subdoc to point at the new team
+ *  - Cancel any other pending offers for that player in that season
  */
 
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
@@ -9,18 +14,15 @@ import {
 	Collections,
 	DocumentReference,
 	OfferDocument,
-	PlayerDocument,
-	SeasonDocument,
-	TeamDocument,
-	TeamRosterPlayer,
+	PlayerSeasonDocument,
 } from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
-import { getCurrentSeason } from '../../shared/database.js'
+import {
+	playerSeasonRef,
+	teamRosterEntryRef,
+	teamSeasonRef,
+} from '../../shared/database.js'
 
-/**
- * Triggered when an offer document is updated
- * Handles the side effects of accepting offers (adding player to team)
- */
 export const onOfferUpdated = onDocumentUpdated(
 	{
 		document: 'offers/{offerId}',
@@ -41,116 +43,83 @@ export const onOfferUpdated = onDocumentUpdated(
 		try {
 			const firestore = getFirestore()
 			await firestore.runTransaction(async (transaction) => {
-				const currentSeason = await getCurrentSeason()
-				if (!currentSeason) {
-					throw new Error('No current season found')
-				}
-
-				// Get offer data
 				const offerRef = firestore
 					.collection(Collections.OFFERS)
 					.doc(offerId) as DocumentReference<OfferDocument>
 				const offerDoc = await transaction.get(offerRef)
-
-				if (!offerDoc.exists) {
-					throw new Error('Offer not found')
-				}
-
+				if (!offerDoc.exists) throw new Error('Offer not found')
 				const offerData = offerDoc.data()
-				if (!offerData) {
-					throw new Error('Invalid offer data')
+				if (!offerData) throw new Error('Invalid offer data')
+
+				const { player: playerCanonicalRef, team: teamCanonicalRef } = offerData
+				const seasonRef = offerData.season
+				const seasonId = seasonRef.id
+				const playerId = playerCanonicalRef.id
+				const teamId = teamCanonicalRef.id
+
+				// Verify team season exists.
+				const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
+				const teamSeasonSnap = await transaction.get(teamSeasonDocRef)
+				if (!teamSeasonSnap.exists) {
+					throw new Error('Team is not participating in this season')
 				}
 
-				const { player: playerRef, team: teamRef } = offerData
-
-				// Get player and team documents
-				const [playerDoc, teamDoc] = await Promise.all([
-					playerRef.get(),
-					teamRef.get(),
-				])
-
-				if (!playerDoc.exists || !teamDoc.exists) {
-					throw new Error('Player or team not found')
-				}
-
-				const playerDocument = playerDoc.data() as PlayerDocument | undefined
-				const teamDocument = teamDoc.data() as TeamDocument | undefined
-
-				if (!playerDocument || !teamDocument) {
-					throw new Error('Unable to retrieve player or team data')
-				} // Check if player is already on a team for current season
-				const currentSeasonData = playerDocument.seasons?.find(
-					(season) => season.season.id === currentSeason.id
-				)
-
-				if (currentSeasonData?.team) {
+				// Confirm player isn't already on a team for this season.
+				const playerSeasonDocRef = playerSeasonRef(firestore, playerId, seasonId)
+				const playerSeasonSnap = await transaction.get(playerSeasonDocRef)
+				const existingPlayerSeason = playerSeasonSnap.data()
+				if (existingPlayerSeason?.team) {
 					throw new Error('Player is already on a team for this season')
 				}
 
-				// Add player to team roster
-				const newRosterMember: TeamRosterPlayer = {
-					player: playerRef,
-					captain: false, // Players joining via offers are not captains
+				// Add roster entry.
+				const rosterEntryDocRef = teamRosterEntryRef(
+					firestore,
+					teamId,
+					seasonId,
+					playerId
+				)
+				transaction.set(rosterEntryDocRef, {
+					player: playerCanonicalRef,
 					dateJoined: Timestamp.now(),
-				}
+				})
 
-				const updatedRoster = [...(teamDocument.roster || []), newRosterMember]
-
-				transaction.update(teamRef, { roster: updatedRoster })
-
-				// Update player's season data
-				const seasonRef = firestore
-					.collection(Collections.SEASONS)
-					.doc(currentSeason.id) as DocumentReference<SeasonDocument>
-
-				const existingSeasonIndex =
-					playerDocument.seasons?.findIndex(
-						(season) => season.season.id === currentSeason.id
-					) ?? -1
-
-				let updatedSeasons = playerDocument.seasons || []
-
-				if (existingSeasonIndex >= 0) {
-					// Update existing season data
-					updatedSeasons[existingSeasonIndex] = {
-						...updatedSeasons[existingSeasonIndex],
-						team: teamRef,
-						captain: false, // Players joining via offers are not captains
-					}
+				// Create or update the player's season subdoc.
+				if (playerSeasonSnap.exists) {
+					transaction.update(playerSeasonDocRef, {
+						team: teamCanonicalRef,
+						captain: false,
+					})
 				} else {
-					// Create new season data if none exists
-					const newSeasonData = {
+					const newPlayerSeason: PlayerSeasonDocument = {
 						season: seasonRef,
-						team: teamRef,
-						captain: false, // Players joining via offers are not captains
+						team: teamCanonicalRef,
 						paid: false,
 						signed: false,
 						banned: false,
+						captain: false,
 					}
-					updatedSeasons = [...updatedSeasons, newSeasonData]
+					transaction.set(playerSeasonDocRef, newPlayerSeason)
 				}
 
-				transaction.update(playerRef, { seasons: updatedSeasons })
-
-				// Mark offer as processed
+				// Mark offer as processed.
 				transaction.update(offerRef, { processed: true })
 
-				// Cancel all other pending offers for this player in the current season
+				// Cancel all other pending offers for this player in this season.
 				const pendingOffersQuery = await firestore
 					.collection(Collections.OFFERS)
-					.where('player', '==', playerRef)
+					.where('player', '==', playerCanonicalRef)
 					.where('season', '==', seasonRef)
 					.where('status', '==', 'pending')
 					.get()
 
 				let canceledOffersCount = 0
-				pendingOffersQuery.forEach((offerDoc) => {
-					// Skip the current offer that was just accepted
-					if (offerDoc.id !== offerId) {
-						transaction.update(offerDoc.ref, {
+				pendingOffersQuery.forEach((doc) => {
+					if (doc.id !== offerId) {
+						transaction.update(doc.ref, {
 							status: 'canceled',
 							respondedAt: Timestamp.now(),
-							respondedBy: playerRef, // The player who accepted the other offer
+							respondedBy: playerCanonicalRef,
 							canceledReason:
 								'Player joined another team by accepting a different offer',
 						})
@@ -165,8 +134,6 @@ export const onOfferUpdated = onDocumentUpdated(
 		} catch (error) {
 			logger.error(`Error processing offer acceptance: ${offerId}`, error)
 
-			// Mark the offer as failed but preserve the accepted status
-			// This allows admins to see the user's intent and retry processing
 			const firestore = getFirestore()
 			await firestore
 				.collection(Collections.OFFERS)
