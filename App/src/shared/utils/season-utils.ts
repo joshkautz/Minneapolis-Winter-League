@@ -5,7 +5,7 @@ import { PlayerSeasonDocument, SeasonDocument } from '@/types'
  * Utility functions for working with player season data.
  *
  * After the 2026 data model migration, player season data lives in a
- * subcollection at `players/{uid}/seasons/{seasonId}`. These helpers take
+ * subcollection at `players/{uid}/playerSeasons/{seasonId}`. These helpers take
  * a `QuerySnapshot<PlayerSeasonDocument>` (typically from
  * `useAuthContext().authenticatedUserSeasonsSnapshot`) and look up the
  * subdoc for a given season.

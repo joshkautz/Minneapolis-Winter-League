@@ -1,10 +1,10 @@
 /**
  * Create season callable function
  *
- * Creates a new season document and seeds a `players/{uid}/seasons/{seasonId}`
+ * Creates a new season document and seeds a `players/{uid}/playerSeasons/{seasonId}`
  * subdoc for every existing player. The legacy `seasons.teams[]` array is no
  * longer maintained — the list of teams in a season is derived from the
- * collection-group `seasons` query at read time.
+ * `collectionGroup('teamSeasons')` query at read time.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'

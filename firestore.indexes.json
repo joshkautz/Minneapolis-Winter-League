@@ -61,11 +61,11 @@
 			"queryScope": "COLLECTION",
 			"fields": [
 				{
-					"fieldPath": "team",
+					"fieldPath": "player",
 					"order": "ASCENDING"
 				},
 				{
-					"fieldPath": "type",
+					"fieldPath": "team",
 					"order": "ASCENDING"
 				}
 			]
@@ -75,25 +75,11 @@
 			"queryScope": "COLLECTION",
 			"fields": [
 				{
-					"fieldPath": "player",
-					"order": "ASCENDING"
-				},
-				{
-					"fieldPath": "type",
-					"order": "ASCENDING"
-				}
-			]
-		},
-		{
-			"collectionGroup": "offers",
-			"queryScope": "COLLECTION",
-			"fields": [
-				{
-					"fieldPath": "player",
-					"order": "ASCENDING"
-				},
-				{
 					"fieldPath": "team",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "season",
 					"order": "ASCENDING"
 				}
 			]

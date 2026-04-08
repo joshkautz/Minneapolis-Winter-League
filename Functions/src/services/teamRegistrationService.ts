@@ -1,7 +1,7 @@
 /**
  * Team registration status management service
  *
- * Updates the `teams/{teamId}/seasons/{seasonId}.registered` flag based on
+ * Updates the `teams/{teamId}/teamSeasons/{seasonId}.registered` flag based on
  * how many roster members are paid + signed for the season.
  */
 

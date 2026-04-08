@@ -116,7 +116,7 @@ export enum SeasonFormat {
 /**
  * Player document structure representing a user in the system.
  *
- * Player season participation lives in the `players/{uid}/seasons/{seasonId}`
+ * Player season participation lives in the `players/{uid}/playerSeasons/{seasonId}`
  * subcollection (see PlayerSeasonDocument). The legacy `seasons[]` array on
  * the player document was removed in the 2026 data model migration.
  */
@@ -134,7 +134,7 @@ export interface PlayerDocument extends DocumentData {
 /**
  * Player's per-season participation document.
  *
- * Stored at `players/{uid}/seasons/{seasonId}`. The doc id matches the season
+ * Stored at `players/{uid}/playerSeasons/{seasonId}`. The doc id matches the season
  * document's id, so there is at most one doc per (player, season) pair.
  *
  * Captain status, payment status, waiver status, and ban status all live here
@@ -178,9 +178,9 @@ export interface PlayerSeasonDocument extends DocumentData {
  * Canonical team document structure. One document per real team, persistent
  * across seasons.
  *
- * Per-season state lives in the `teams/{teamId}/seasons/{seasonId}` subcollection
+ * Per-season state lives in the `teams/{teamId}/teamSeasons/{seasonId}` subcollection
  * (see TeamSeasonDocument). The roster lives in
- * `teams/{teamId}/seasons/{seasonId}/roster/{playerId}` (see TeamRosterDocument).
+ * `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` (see TeamRosterDocument).
  * Badges live in `teams/{teamId}/badges/{badgeId}` and span the team's entire
  * history (see TeamBadgeDocument).
  */
@@ -194,7 +194,7 @@ export interface TeamDocument extends DocumentData {
 /**
  * Per-season participation document for a team.
  *
- * Stored at `teams/{teamId}/seasons/{seasonId}`. Holds all per-season state
+ * Stored at `teams/{teamId}/teamSeasons/{seasonId}`. Holds all per-season state
  * (name, logo, registration status, placement). Subdoc id matches the season's
  * doc id so there is at most one entry per (team, season) pair.
  */

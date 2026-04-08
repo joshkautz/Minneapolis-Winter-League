@@ -53,9 +53,6 @@ export const getTeamRef = (
 	) as DocumentReference<TeamDocument>
 }
 
-/** Convenience alias preserved for callers that already use the legacy name. */
-export const getTeamById = getTeamRef
-
 /**
  * Query for multiple canonical teams by their refs.
  */
@@ -163,25 +160,6 @@ export const teamsBySeasonQuery = teamsInSeasonQuery
 // ---- Roster subcollection ------------------------------------------------
 
 /**
- * Get a single roster entry reference.
- */
-export const teamRosterEntryRef = (
-	teamId: string,
-	seasonId: string,
-	playerId: string
-): DocumentReference<TeamRosterDocument> => {
-	return doc(
-		firestore,
-		Collections.TEAMS,
-		teamId,
-		TEAM_SEASONS_SUBCOLLECTION,
-		seasonId,
-		'roster',
-		playerId
-	) as DocumentReference<TeamRosterDocument>
-}
-
-/**
  * Get the roster collection reference for a team-season.
  */
 export const teamRosterSubcollection = (
@@ -196,15 +174,4 @@ export const teamRosterSubcollection = (
 		seasonId,
 		'roster'
 	) as CollectionReference<TeamRosterDocument>
-}
-
-/**
- * Query for every roster entry under a team-season.
- */
-export const teamRosterQuery = (
-	teamId: string | undefined,
-	seasonId: string | undefined
-): Query<TeamRosterDocument> | undefined => {
-	if (!teamId || !seasonId) return undefined
-	return teamRosterSubcollection(teamId, seasonId)
 }

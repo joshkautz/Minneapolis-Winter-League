@@ -6,7 +6,7 @@ import { useAuthContext, useSeasonsContext } from '@/providers'
  * loading states, and user permissions in one place.
  *
  * After the 2026 data model migration, per-season player data lives in
- * the `players/{uid}/seasons/{seasonId}` subcollection, exposed by
+ * the `players/{uid}/playerSeasons/{seasonId}` subcollection, exposed by
  * AuthContext as `authenticatedUserSeasonsSnapshot`. This hook reads
  * from that snapshot.
  */

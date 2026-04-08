@@ -77,7 +77,7 @@ export async function validateAdminUser(
 /**
  * Validates that a player is not banned for a specific season.
  *
- * Reads `players/{playerId}/seasons/{seasonId}.banned` directly. Must be
+ * Reads `players/{playerId}/playerSeasons/{seasonId}.banned` directly. Must be
  * awaited.
  *
  * @throws HttpsError with 'permission-denied' if the player is banned

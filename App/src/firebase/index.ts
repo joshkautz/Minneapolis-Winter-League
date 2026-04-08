@@ -17,16 +17,13 @@ export { updatePlayerViaFunction } from './collections/functions'
 
 // Team operations
 export {
-	getTeamById,
 	getTeamRef,
 	teamsQuery,
 	teamSeasonsQuery,
 	teamsInSeasonQuery,
 	teamsBySeasonQuery,
 	teamSeasonRef,
-	teamRosterEntryRef,
 	teamRosterSubcollection,
-	teamRosterQuery,
 	allTeamsQuery,
 } from './collections/teams'
 
