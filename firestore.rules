@@ -183,12 +183,22 @@ service cloud.firestore {
       }
     }
 
-    // Maintenance / migration kill-switch flag. Read by Functions triggers
-    // (admin SDK bypasses these rules); admin clients can also read/write
-    // through normal SDK paths.
+    // Maintenance / migration kill-switch flag.
+    //
+    // Triggers and the set-maintenance.js CLI script use the firebase-admin
+    // SDK and bypass these rules entirely, which is how the flag actually
+    // gets flipped during a migration. The rules below exist as a
+    // defense-in-depth lock for the unlikely case that something tries to
+    // read or write `system/maintenance` from the App's client SDK — never
+    // currently happens, but this keeps it locked down.
+    //
+    // Admin status is sourced from the player document's `admin` boolean
+    // field (this codebase doesn't use Firebase Auth custom token claims),
+    // so we read the player doc to check it.
     function isAdmin() {
       return isAuthenticated()
-        && request.auth.token.admin == true;
+        && exists(/databases/$(database)/documents/players/$(request.auth.uid))
+        && get(/databases/$(database)/documents/players/$(request.auth.uid)).data.admin == true;
     }
 
     match /system/{document} {
