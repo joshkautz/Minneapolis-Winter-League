@@ -121,6 +121,9 @@ export const teamsInSeasonQuery = (
 	) as Query<TeamSeasonDocument>
 }
 
+/** Legacy alias preserved for callers that use the old name. */
+export const teamsBySeasonQuery = teamsInSeasonQuery
+
 // ---- Roster subcollection ------------------------------------------------
 
 /**
