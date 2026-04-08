@@ -1126,10 +1126,18 @@ async function runCutover() {
 		const playerRef = db.collection('players').doc(playerId)
 		const writes = []
 
-		// Strip the seasons array from the parent doc.
+		// Strip the legacy `seasons` array AND any other dead fields from the
+		// parent doc. The 2026 v2 PlayerDocument shape only has admin, email,
+		// firstname, lastname, createdAt — anything else is legacy clutter.
+		// `locked` and `lookingForTeam` lived as season-entry fields under the
+		// (now-deleted) `seasons[]` array; this defensive top-level delete
+		// covers any production drift where they may have leaked onto the
+		// parent doc as well.
 		writes.push((batch) =>
 			batch.update(playerRef, {
 				seasons: FieldValue.delete(),
+				locked: FieldValue.delete(),
+				lookingForTeam: FieldValue.delete(),
 			})
 		)
 
@@ -1169,6 +1177,42 @@ async function runCutover() {
 	console.log(
 		`     updated ${playersUpdated} players, wrote ${playerSeasonsWritten} season subdocs`
 	)
+
+	// ---- 3b. Strip dead fields from any players that had no seasons array. -
+	// The loop above only iterates `stagingByPlayerId`, which is sourced from
+	// players that had a `seasons` array. Players that exist in production
+	// without one (edge case — orphaned accounts, partially-deleted users,
+	// recently-created players) would otherwise keep any dead top-level
+	// fields forever. Walk every player doc once and apply the same delete.
+	console.log(
+		`\n[3b/7] Stripping dead top-level fields from any remaining players…`
+	)
+	const allPlayersSnap = await db.collection('players').get()
+	const cleanupWrites = []
+	let extraStripped = 0
+	for (const pDoc of allPlayersSnap.docs) {
+		if (stagingByPlayerId.has(pDoc.id)) continue // already handled in step 3
+		const data = pDoc.data() || {}
+		if (
+			!('seasons' in data) &&
+			!('locked' in data) &&
+			!('lookingForTeam' in data)
+		) {
+			continue
+		}
+		cleanupWrites.push((batch) =>
+			batch.update(pDoc.ref, {
+				seasons: FieldValue.delete(),
+				locked: FieldValue.delete(),
+				lookingForTeam: FieldValue.delete(),
+			})
+		)
+		extraStripped++
+	}
+	if (cleanupWrites.length > 0) {
+		await batchCommit(cleanupWrites)
+	}
+	console.log(`     stripped dead fields from ${extraStripped} extra players`)
 
 	// ---- 4. Rewrite games' team refs --------------------------------------
 	console.log(`\n[4/7] Rewriting games team refs…`)
