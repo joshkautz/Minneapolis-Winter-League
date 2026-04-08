@@ -10,11 +10,18 @@
 
 import { useMemo, useState } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
+import { collectionGroup, query, type Query } from 'firebase/firestore'
 import { toast } from 'sonner'
 import { Combine, Loader2, AlertTriangle } from 'lucide-react'
 
-import { logger } from '@/shared/utils'
-import { allTeamsQuery, teamsInSeasonQuery } from '@/firebase/collections/teams'
+import { firestore } from '@/firebase/app'
+import { logger, TeamSeasonDocument } from '@/shared/utils'
+import { TEAM_SEASONS_SUBCOLLECTION } from '@/types'
+import {
+	allTeamsQuery,
+	canonicalTeamIdFromTeamSeasonDoc,
+} from '@/firebase/collections/teams'
+import { useSeasonsContext } from '@/providers'
 import { mergeTeamsViaFunction } from '@/firebase/collections/functions'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -44,7 +51,12 @@ interface MergeTeamsDialogProps {
 
 type CanonicalTeamOption = {
 	id: string
-	label: string
+	/** Most-recent team-season name to display (or "Unknown team" fallback). */
+	name: string
+	/** Most-recent participating season's name (for the secondary line). */
+	mostRecentSeasonName: string
+	/** Sort key — most recent season's `dateStart.seconds`. */
+	mostRecentSeasonStartSeconds: number
 }
 
 export const MergeTeamsDialog = ({
@@ -58,24 +70,86 @@ export const MergeTeamsDialog = ({
 		open ? allTeamsQuery() : null
 	)
 
-	// Load all team-season subdocs across all seasons so we can show a
-	// friendly name next to each canonical team id. We use a non-season
-	// filter by just walking the team-seasons collectionGroup — but the
-	// simplest path here is to reuse teamsInSeasonQuery for the current
-	// season if available. To keep this light we just read all team docs
-	// and fall back to the id when no name is known.
-	void teamsInSeasonQuery
+	// Load every teamSeasons subdoc across the database so we can join each
+	// canonical team to its most-recent name. This is one collection-group
+	// read of ~30-50 docs in our scale, so it's cheap; gating on `open` makes
+	// sure we only do it when the dialog is actually visible.
+	const [allTeamSeasonsSnapshot, allTeamSeasonsLoading] = useCollection(
+		open
+			? (query(
+					collectionGroup(firestore, TEAM_SEASONS_SUBCOLLECTION)
+				) as Query<TeamSeasonDocument>)
+			: null
+	)
+
+	// Map seasonId → dateStart seconds for "most recent" sorting.
+	const { seasonsQuerySnapshot } = useSeasonsContext()
+	const seasonStartByIdSeconds = useMemo(() => {
+		const map = new Map<string, number>()
+		seasonsQuerySnapshot?.docs.forEach((d) => {
+			const data = d.data()
+			if (data.dateStart?.seconds !== undefined) {
+				map.set(d.id, data.dateStart.seconds)
+			}
+		})
+		return map
+	}, [seasonsQuerySnapshot])
 
 	const [selectedLosingTeamId, setSelectedLosingTeamId] = useState<string>('')
 	const [isMerging, setIsMerging] = useState(false)
 
 	const teamOptions: CanonicalTeamOption[] = useMemo(() => {
 		if (!allTeamsSnapshot) return []
+
+		// Build canonicalTeamId → most-recent { name, seasonId, seasonStart }.
+		const bestByCanonicalId = new Map<
+			string,
+			{ name: string; seasonId: string; seasonStartSeconds: number }
+		>()
+		allTeamSeasonsSnapshot?.docs.forEach((doc) => {
+			const canonicalId = canonicalTeamIdFromTeamSeasonDoc(doc)
+			const data = doc.data() as TeamSeasonDocument
+			const seasonId = doc.id
+			const seasonStartSeconds = seasonStartByIdSeconds.get(seasonId) ?? 0
+			const existing = bestByCanonicalId.get(canonicalId)
+			if (!existing || seasonStartSeconds > existing.seasonStartSeconds) {
+				bestByCanonicalId.set(canonicalId, {
+					name: data.name ?? 'Unknown team',
+					seasonId,
+					seasonStartSeconds,
+				})
+			}
+		})
+
 		return allTeamsSnapshot.docs
 			.filter((d) => d.id !== winningTeamId)
-			.map((d) => ({ id: d.id, label: d.id }))
-			.sort((a, b) => a.label.localeCompare(b.label))
-	}, [allTeamsSnapshot, winningTeamId])
+			.map((d) => {
+				const best = bestByCanonicalId.get(d.id)
+				const seasonName = best?.seasonId
+					? (seasonsQuerySnapshot?.docs
+							.find((s) => s.id === best.seasonId)
+							?.data().name ?? '')
+					: ''
+				return {
+					id: d.id,
+					name: best?.name ?? 'Unknown team',
+					mostRecentSeasonName: seasonName,
+					mostRecentSeasonStartSeconds: best?.seasonStartSeconds ?? 0,
+				} satisfies CanonicalTeamOption
+			})
+			.sort((a, b) => {
+				// Alphabetical by name; ties broken by most-recent season desc.
+				const byName = a.name.localeCompare(b.name)
+				if (byName !== 0) return byName
+				return b.mostRecentSeasonStartSeconds - a.mostRecentSeasonStartSeconds
+			})
+	}, [
+		allTeamsSnapshot,
+		allTeamSeasonsSnapshot,
+		seasonStartByIdSeconds,
+		seasonsQuerySnapshot,
+		winningTeamId,
+	])
 
 	const handleMerge = async () => {
 		if (!selectedLosingTeamId) return
@@ -135,12 +209,12 @@ export const MergeTeamsDialog = ({
 							<Select
 								value={selectedLosingTeamId}
 								onValueChange={setSelectedLosingTeamId}
-								disabled={allTeamsLoading || isMerging}
+								disabled={allTeamsLoading || allTeamSeasonsLoading || isMerging}
 							>
 								<SelectTrigger id='losing-team'>
 									<SelectValue
 										placeholder={
-											allTeamsLoading
+											allTeamsLoading || allTeamSeasonsLoading
 												? 'Loading teams...'
 												: 'Select a team to merge in'
 										}
@@ -149,7 +223,14 @@ export const MergeTeamsDialog = ({
 								<SelectContent>
 									{teamOptions.map((t) => (
 										<SelectItem key={t.id} value={t.id}>
-											{t.label}
+											<div className='flex flex-col'>
+												<span className='font-medium'>{t.name}</span>
+												<span className='text-xs text-muted-foreground'>
+													{t.mostRecentSeasonName
+														? `${t.mostRecentSeasonName} • ${t.id}`
+														: t.id}
+												</span>
+											</div>
 										</SelectItem>
 									))}
 								</SelectContent>
