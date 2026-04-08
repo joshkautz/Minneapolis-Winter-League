@@ -18,6 +18,7 @@ import {
 	Shield,
 	Award,
 	Pencil,
+	Combine,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -68,6 +69,7 @@ import { useSeasonsContext } from '@/providers'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { TeamBadgesDialog } from './components/team-badges-dialog'
 import { TeamEditDialog } from './components/team-edit-dialog'
+import { MergeTeamsDialog } from './components/merge-teams-dialog'
 import { DocumentReference } from '@/firebase'
 
 export const TeamManagement = () => {
@@ -150,6 +152,12 @@ export const TeamManagement = () => {
 		seasonId: string
 	} | null>(null)
 
+	// State for merge dialog (keyed by the winning team)
+	const [teamToMergeInto, setTeamToMergeInto] = useState<{
+		id: string
+		name: string
+	} | null>(null)
+
 	// Filter for unregistered teams
 	const unregisteredTeams = useMemo(() => {
 		if (!teamsSnapshot) return []
@@ -215,6 +223,10 @@ export const TeamManagement = () => {
 			name: teamName,
 			ref: teamRef,
 		})
+	}
+
+	const handleMergeClick = (team: TeamRow) => {
+		setTeamToMergeInto({ id: team.id, name: team.name })
 	}
 
 	const handleEditClick = (team: TeamRow) => {
@@ -462,6 +474,14 @@ export const TeamManagement = () => {
 														Badges
 													</Button>
 													<Button
+														variant='outline'
+														size='sm'
+														onClick={() => handleMergeClick(team)}
+													>
+														<Combine className='h-4 w-4 mr-2' />
+														Merge...
+													</Button>
+													<Button
 														variant='destructive'
 														size='sm'
 														onClick={() => handleDeleteClick(team, true)}
@@ -569,6 +589,14 @@ export const TeamManagement = () => {
 														Badges
 													</Button>
 													<Button
+														variant='outline'
+														size='sm'
+														onClick={() => handleMergeClick(team)}
+													>
+														<Combine className='h-4 w-4 mr-2' />
+														Merge...
+													</Button>
+													<Button
 														variant='destructive'
 														size='sm'
 														onClick={() => handleDeleteClick(team, false)}
@@ -652,6 +680,16 @@ export const TeamManagement = () => {
 					teamName={teamToEdit.name}
 					teamRef={teamToEdit.ref}
 					seasonId={teamToEdit.seasonId}
+				/>
+			)}
+
+			{/* Merge Teams Dialog */}
+			{teamToMergeInto && (
+				<MergeTeamsDialog
+					open={!!teamToMergeInto}
+					onOpenChange={(open) => !open && setTeamToMergeInto(null)}
+					winningTeamId={teamToMergeInto.id}
+					winningTeamName={teamToMergeInto.name}
 				/>
 			)}
 		</PageContainer>
