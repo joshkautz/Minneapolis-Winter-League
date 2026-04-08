@@ -14,6 +14,7 @@
 
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
+import { getPublicFileUrl } from '../../../shared/storage.js'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
@@ -160,7 +161,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 					})
 					await file.makePublic()
 
-					logoUrl = file.publicUrl()
+					logoUrl = getPublicFileUrl(bucket.name, fileName)
 					storagePath = fileName
 
 					logger.info(`Successfully uploaded logo for team: ${teamId}`, {

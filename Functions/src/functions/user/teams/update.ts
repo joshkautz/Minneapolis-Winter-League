@@ -8,6 +8,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getStorage } from 'firebase-admin/storage'
+import { getPublicFileUrl } from '../../../shared/storage.js'
 import { logger } from 'firebase-functions/v2'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
@@ -119,7 +120,7 @@ export const updateTeam = onCall<EditTeamRequest>(
 						metadata: { contentType: logoContentType },
 					})
 					await file.makePublic()
-					logoUrl = file.publicUrl()
+					logoUrl = getPublicFileUrl(bucket.name, fileName)
 					logoStoragePath = fileName
 					logger.info(`Successfully uploaded logo for team: ${teamId}`, {
 						fileName,
