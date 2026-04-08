@@ -7,7 +7,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { QueryDocumentSnapshot } from 'firebase/firestore'
 import { toast } from 'sonner'
 import {
 	ArrowLeft,
@@ -25,7 +24,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { auth } from '@/firebase/auth'
 import { logger } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { currentSeasonTeamsQuery } from '@/firebase/collections/teams'
+import {
+	teamsInSeasonQuery,
+	getTeamRef,
+} from '@/firebase/collections/teams'
 import {
 	deleteUnregisteredTeamViaFunction,
 	deleteTeamViaFunction,
@@ -60,7 +62,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { TeamDocument, SeasonDocument } from '@/types'
+import { TeamDocument, SeasonDocument, TeamSeasonDocument } from '@/types'
 import { useSeasonsContext } from '@/providers'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { TeamBadgesDialog } from './components/team-badges-dialog'
@@ -99,12 +101,10 @@ export const TeamManagement = () => {
 		? seasonsSnapshot?.docs.find((doc) => doc.id === selectedSeasonId)
 		: null
 
-	// Fetch teams for selected season
+	// Fetch team season subdocs for selected season
 	const [teamsSnapshot, teamsLoading, teamsError] = useCollection(
 		selectedSeasonSnapshot
-			? currentSeasonTeamsQuery(
-					selectedSeasonSnapshot as QueryDocumentSnapshot<SeasonDocument>
-				)
+			? teamsInSeasonQuery(selectedSeasonSnapshot.ref)
 			: null
 	)
 
@@ -145,7 +145,6 @@ export const TeamManagement = () => {
 	const [teamToEdit, setTeamToEdit] = useState<{
 		id: string
 		name: string
-		teamId: string
 		ref: DocumentReference<TeamDocument>
 		seasonId: string
 	} | null>(null)
@@ -155,11 +154,17 @@ export const TeamManagement = () => {
 		if (!teamsSnapshot) return []
 
 		return teamsSnapshot.docs
-			.map((doc) => ({
-				id: doc.id,
-				ref: doc.ref,
-				...doc.data(),
-			}))
+			.map((doc) => {
+				const data = doc.data() as TeamSeasonDocument
+				const canonicalId = doc.ref.parent.parent?.id ?? doc.id
+				return {
+					id: canonicalId,
+					ref: getTeamRef(canonicalId)!,
+					name: data.name,
+					registered: data.registered,
+					data,
+				}
+			})
 			.filter((team) => !team.registered)
 			.sort((a, b) => a.name.localeCompare(b.name))
 	}, [teamsSnapshot])
@@ -169,23 +174,34 @@ export const TeamManagement = () => {
 		if (!teamsSnapshot) return []
 
 		return teamsSnapshot.docs
-			.map((doc) => ({
-				id: doc.id,
-				ref: doc.ref,
-				...doc.data(),
-			}))
+			.map((doc) => {
+				const data = doc.data() as TeamSeasonDocument
+				const canonicalId = doc.ref.parent.parent?.id ?? doc.id
+				return {
+					id: canonicalId,
+					ref: getTeamRef(canonicalId)!,
+					name: data.name,
+					registered: data.registered,
+					data,
+				}
+			})
 			.filter((team) => team.registered)
 			.sort((a, b) => a.name.localeCompare(b.name))
 	}, [teamsSnapshot])
 
-	const handleDeleteClick = (
-		team: TeamDocument & { id: string },
-		isRegistered: boolean
-	) => {
+	type TeamRow = {
+		id: string
+		ref: DocumentReference<TeamDocument>
+		name: string
+		registered: boolean
+		data: TeamSeasonDocument
+	}
+
+	const handleDeleteClick = (team: TeamRow, isRegistered: boolean) => {
 		setTeamToDelete({
 			id: team.id,
 			name: team.name,
-			rosterSize: team.roster?.length || 0,
+			rosterSize: 0,
 			isRegistered,
 		})
 	}
@@ -202,13 +218,10 @@ export const TeamManagement = () => {
 		})
 	}
 
-	const handleEditClick = (
-		team: TeamDocument & { id: string; ref: DocumentReference<TeamDocument> }
-	) => {
+	const handleEditClick = (team: TeamRow) => {
 		setTeamToEdit({
 			id: team.id,
 			name: team.name,
-			teamId: team.teamId,
 			ref: team.ref,
 			seasonId: selectedSeasonId,
 		})
@@ -414,7 +427,7 @@ export const TeamManagement = () => {
 											<TableCell>
 												<div className='flex items-center gap-2'>
 													<UsersIcon className='h-4 w-4 text-muted-foreground' />
-													<span>{team.roster?.length || 0} players</span>
+													<span>roster</span>
 												</div>
 											</TableCell>
 											<TableCell>
@@ -521,7 +534,7 @@ export const TeamManagement = () => {
 											<TableCell>
 												<div className='flex items-center gap-2'>
 													<UsersIcon className='h-4 w-4 text-muted-foreground' />
-													<span>{team.roster?.length || 0} players</span>
+													<span>roster</span>
 												</div>
 											</TableCell>
 											<TableCell>
@@ -638,7 +651,6 @@ export const TeamManagement = () => {
 					onOpenChange={(open) => !open && setTeamToEdit(null)}
 					teamDocId={teamToEdit.id}
 					teamName={teamToEdit.name}
-					teamIdValue={teamToEdit.teamId}
 					teamRef={teamToEdit.ref}
 					seasonId={teamToEdit.seasonId}
 				/>

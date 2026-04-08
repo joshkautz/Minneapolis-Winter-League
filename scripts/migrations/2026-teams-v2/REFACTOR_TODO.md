@@ -1,6 +1,7 @@
 # 2026 Teams + Players Data Model Refactor — Resumption Roadmap
 
-**Last updated**: after commit `a5696846`. **Down to 51 App typecheck errors across 19 files** (started at 89 across ~30 files).
+**Last updated**: App workspace typechecks clean (0 errors). Ready for the
+verification gate (lint, format, build) and the cutover sequence.
 
 ## Quick start for next session
 
