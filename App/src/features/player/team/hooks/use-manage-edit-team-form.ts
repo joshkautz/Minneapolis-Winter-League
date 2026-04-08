@@ -5,6 +5,7 @@ import { TeamFormData, teamFormSchema } from '@/shared/utils/validation'
 import { editTeamViaFunction } from '@/firebase/collections/functions'
 import { logger } from '@/shared/utils'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
+import { useSeasonsContext } from '@/providers'
 import { useTeamManagement } from './use-team-management'
 
 interface UseManageEditTeamFormProps {
@@ -30,6 +31,8 @@ export const useManageEditTeamForm = ({
 	handleResult,
 }: UseManageEditTeamFormProps) => {
 	const { team } = useTeamManagement()
+	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const seasonId = currentSeasonQueryDocumentSnapshot?.id
 	// `team.id` is the seasonId on a teamSeasons subdoc; derive the canonical
 	// team id for backend calls.
 	const canonicalTeamId = team
@@ -66,7 +69,7 @@ export const useManageEditTeamForm = ({
 				return
 			}
 
-			if (!canonicalTeamId) {
+			if (!canonicalTeamId || !seasonId) {
 				handleResult({
 					success: false,
 					title: 'Team not found',
@@ -103,6 +106,7 @@ export const useManageEditTeamForm = ({
 				// Call Firebase Function to update team
 				const result = await editTeamViaFunction({
 					teamId: canonicalTeamId,
+					seasonId,
 					name: data.name,
 					logoBlob,
 					logoContentType,
@@ -154,7 +158,14 @@ export const useManageEditTeamForm = ({
 				setIsSubmitting(false)
 			}
 		},
-		[isSubmitting, setIsSubmitting, blob, canonicalTeamId, handleResult]
+		[
+			isSubmitting,
+			setIsSubmitting,
+			blob,
+			canonicalTeamId,
+			seasonId,
+			handleResult,
+		]
 	)
 
 	return {

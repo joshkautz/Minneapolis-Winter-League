@@ -484,6 +484,7 @@ export const updateTeamRosterViaFunction = async (
 
 interface EditTeamRequest {
 	teamId: string
+	seasonId: string
 	name?: string
 	logo?: string
 	storagePath?: string
