@@ -15,12 +15,14 @@ import {
 	type DocumentReference,
 	type DocumentSnapshot,
 	type Query,
+	type QueryDocumentSnapshot,
 } from 'firebase/firestore'
 
 import { firestore } from '../app'
 import { User } from '../auth'
 import {
 	Collections,
+	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerDocument,
 	PlayerSeasonDocument,
 	SeasonDocument,
@@ -65,7 +67,7 @@ export const playerSeasonRef = (
 		firestore,
 		Collections.PLAYERS,
 		playerId,
-		'seasons',
+		PLAYER_SEASONS_SUBCOLLECTION,
 		seasonId
 	) as DocumentReference<PlayerSeasonDocument>
 }
@@ -82,23 +84,55 @@ export const playerSeasonsSubcollection = (
 		firestore,
 		Collections.PLAYERS,
 		playerId,
-		'seasons'
+		PLAYER_SEASONS_SUBCOLLECTION
 	) as CollectionReference<PlayerSeasonDocument>
 }
 
 /**
  * Query for every player season subdoc for a given season (collection
- * group). Each result doc's `ref.parent.parent` is the canonical
- * `players/{uid}` document.
+ * group). Prefer `canonicalPlayerIdFromPlayerSeasonDoc` over reaching
+ * into `doc.ref.parent.parent` at call sites.
  */
 export const playerSeasonsInSeasonQuery = (
 	seasonRef: DocumentReference<SeasonDocument> | undefined
 ): Query<PlayerSeasonDocument> | undefined => {
 	if (!seasonRef) return undefined
 	return query(
-		collectionGroup(firestore, 'seasons'),
+		collectionGroup(firestore, PLAYER_SEASONS_SUBCOLLECTION),
 		where('season', '==', seasonRef)
 	) as Query<PlayerSeasonDocument>
+}
+
+// ---- Canonical derivation from player season doc snapshots ---------------
+
+/**
+ * Derive the canonical player id from a player-season subdoc snapshot.
+ * Use this at every collection-group call site instead of reaching into
+ * `doc.ref.parent.parent.id`.
+ */
+export const canonicalPlayerIdFromPlayerSeasonDoc = (
+	doc:
+		| QueryDocumentSnapshot<PlayerSeasonDocument>
+		| DocumentSnapshot<PlayerSeasonDocument>
+): string => {
+	const playerRef = doc.ref.parent.parent
+	if (!playerRef) throw new Error('PlayerSeasonDocument has no parent player')
+	return playerRef.id
+}
+
+/**
+ * Derive the canonical player document reference from a player-season
+ * subdoc snapshot. Use this at every collection-group call site instead
+ * of reaching into `doc.ref.parent.parent`.
+ */
+export const canonicalPlayerRefFromPlayerSeasonDoc = (
+	doc:
+		| QueryDocumentSnapshot<PlayerSeasonDocument>
+		| DocumentSnapshot<PlayerSeasonDocument>
+): DocumentReference<PlayerDocument> => {
+	const playerRef = doc.ref.parent.parent
+	if (!playerRef) throw new Error('PlayerSeasonDocument has no parent player')
+	return playerRef as DocumentReference<PlayerDocument>
 }
 
 /**

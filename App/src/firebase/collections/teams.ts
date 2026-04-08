@@ -2,14 +2,15 @@
  * Team-related Firestore operations (2026 data model)
  *
  * Teams are now canonical (one doc per real team forever). Per-season
- * state lives in the `seasons` subcollection on each team. The roster
+ * state lives in the `teamSeasons` subcollection on each team. The roster
  * for a (team, season) pair lives at
- * `teams/{teamId}/seasons/{seasonId}/roster/{playerId}`.
+ * `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}`.
  *
- * "All teams in season X" is a `collectionGroup('seasons')` query bounded
- * by a season ref. Each result doc's `ref.parent.parent` is the canonical
- * team document — use that to navigate to the team profile or to load the
- * canonical fields.
+ * "All teams in season X" is a `collectionGroup('teamSeasons')` query
+ * bounded by a season ref. Each result doc's `ref.parent.parent` is the
+ * canonical team document — prefer `canonicalTeamIdFromTeamSeasonDoc` /
+ * `canonicalTeamRefFromTeamSeasonDoc` below over touching `parent.parent`
+ * directly.
  */
 
 import {
@@ -21,13 +22,16 @@ import {
 	where,
 	type CollectionReference,
 	type DocumentReference,
+	type DocumentSnapshot,
 	type Query,
+	type QueryDocumentSnapshot,
 } from 'firebase/firestore'
 
 import { firestore } from '../app'
 import {
 	Collections,
 	SeasonDocument,
+	TEAM_SEASONS_SUBCOLLECTION,
 	TeamDocument,
 	TeamRosterDocument,
 	TeamSeasonDocument,
@@ -85,7 +89,7 @@ export const teamSeasonRef = (
 		firestore,
 		Collections.TEAMS,
 		teamId,
-		'seasons',
+		TEAM_SEASONS_SUBCOLLECTION,
 		seasonId
 	) as DocumentReference<TeamSeasonDocument>
 }
@@ -99,7 +103,7 @@ export const teamSeasonsQuery = (
 ): Query<TeamSeasonDocument> | undefined => {
 	if (!teamId) return undefined
 	return query(
-		collection(firestore, Collections.TEAMS, teamId, 'seasons')
+		collection(firestore, Collections.TEAMS, teamId, TEAM_SEASONS_SUBCOLLECTION)
 	) as Query<TeamSeasonDocument>
 }
 
@@ -116,9 +120,41 @@ export const teamsInSeasonQuery = (
 ): Query<TeamSeasonDocument> | undefined => {
 	if (!seasonRef) return undefined
 	return query(
-		collectionGroup(firestore, 'seasons'),
+		collectionGroup(firestore, TEAM_SEASONS_SUBCOLLECTION),
 		where('season', '==', seasonRef)
 	) as Query<TeamSeasonDocument>
+}
+
+// ---- Canonical derivation from team season doc snapshots -----------------
+
+/**
+ * Derive the canonical team id from a team-season subdoc snapshot. Use this
+ * at every collection-group call site instead of reaching into
+ * `doc.ref.parent.parent.id`.
+ */
+export const canonicalTeamIdFromTeamSeasonDoc = (
+	doc:
+		| QueryDocumentSnapshot<TeamSeasonDocument>
+		| DocumentSnapshot<TeamSeasonDocument>
+): string => {
+	const teamRef = doc.ref.parent.parent
+	if (!teamRef) throw new Error('TeamSeasonDocument has no parent team')
+	return teamRef.id
+}
+
+/**
+ * Derive the canonical team document reference from a team-season subdoc
+ * snapshot. Use this at every collection-group call site instead of
+ * reaching into `doc.ref.parent.parent`.
+ */
+export const canonicalTeamRefFromTeamSeasonDoc = (
+	doc:
+		| QueryDocumentSnapshot<TeamSeasonDocument>
+		| DocumentSnapshot<TeamSeasonDocument>
+): DocumentReference<TeamDocument> => {
+	const teamRef = doc.ref.parent.parent
+	if (!teamRef) throw new Error('TeamSeasonDocument has no parent team')
+	return teamRef as DocumentReference<TeamDocument>
 }
 
 /** Legacy alias preserved for callers that use the old name. */
@@ -138,7 +174,7 @@ export const teamRosterEntryRef = (
 		firestore,
 		Collections.TEAMS,
 		teamId,
-		'seasons',
+		TEAM_SEASONS_SUBCOLLECTION,
 		seasonId,
 		'roster',
 		playerId
@@ -156,7 +192,7 @@ export const teamRosterSubcollection = (
 		firestore,
 		Collections.TEAMS,
 		teamId,
-		'seasons',
+		TEAM_SEASONS_SUBCOLLECTION,
 		seasonId,
 		'roster'
 	) as CollectionReference<TeamRosterDocument>

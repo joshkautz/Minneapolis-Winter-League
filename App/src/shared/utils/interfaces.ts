@@ -20,4 +20,6 @@ export {
 	OfferDirection,
 	GameType,
 	SeasonFormat,
+	PLAYER_SEASONS_SUBCOLLECTION,
+	TEAM_SEASONS_SUBCOLLECTION,
 } from '../../types'

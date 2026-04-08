@@ -2,13 +2,19 @@
  * Database utilities for Firebase Functions
  */
 
-import { getFirestore } from 'firebase-admin/firestore'
+import {
+	getFirestore,
+	type DocumentSnapshot,
+	type QueryDocumentSnapshot,
+} from 'firebase-admin/firestore'
 import {
 	Collections,
 	DocumentReference,
+	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerDocument,
 	PlayerSeasonDocument,
 	SeasonDocument,
+	TEAM_SEASONS_SUBCOLLECTION,
 	TeamBadgeDocument,
 	TeamDocument,
 	TeamRosterDocument,
@@ -39,7 +45,7 @@ export function teamSeasonRef(
 	return firestore
 		.collection(Collections.TEAMS)
 		.doc(teamId)
-		.collection('seasons')
+		.collection(TEAM_SEASONS_SUBCOLLECTION)
 		.doc(seasonId) as DocumentReference<TeamSeasonDocument>
 }
 
@@ -52,7 +58,7 @@ export function teamRosterEntryRef(
 	return firestore
 		.collection(Collections.TEAMS)
 		.doc(teamId)
-		.collection('seasons')
+		.collection(TEAM_SEASONS_SUBCOLLECTION)
 		.doc(seasonId)
 		.collection('roster')
 		.doc(playerId) as DocumentReference<TeamRosterDocument>
@@ -87,8 +93,67 @@ export function playerSeasonRef(
 	return firestore
 		.collection(Collections.PLAYERS)
 		.doc(playerId)
-		.collection('seasons')
+		.collection(PLAYER_SEASONS_SUBCOLLECTION)
 		.doc(seasonId) as DocumentReference<PlayerSeasonDocument>
+}
+
+// ---- Canonical derivation from subcollection doc snapshots ---------------
+
+/**
+ * Derive the canonical team id from a team-season subdoc snapshot.
+ * Prefer this helper over reaching into `doc.ref.parent.parent.id`.
+ */
+export function canonicalTeamIdFromTeamSeasonDoc(
+	doc:
+		| QueryDocumentSnapshot<TeamSeasonDocument>
+		| DocumentSnapshot<TeamSeasonDocument>
+): string {
+	const teamRef = doc.ref.parent.parent
+	if (!teamRef) throw new Error('TeamSeasonDocument has no parent team')
+	return teamRef.id
+}
+
+/**
+ * Derive the canonical team document reference from a team-season subdoc
+ * snapshot. Prefer this helper over reaching into `doc.ref.parent.parent`.
+ */
+export function canonicalTeamRefFromTeamSeasonDoc(
+	doc:
+		| QueryDocumentSnapshot<TeamSeasonDocument>
+		| DocumentSnapshot<TeamSeasonDocument>
+): DocumentReference<TeamDocument> {
+	const teamRef = doc.ref.parent.parent
+	if (!teamRef) throw new Error('TeamSeasonDocument has no parent team')
+	return teamRef as DocumentReference<TeamDocument>
+}
+
+/**
+ * Derive the canonical player id from a player-season subdoc snapshot.
+ * Prefer this helper over reaching into `doc.ref.parent.parent.id`.
+ */
+export function canonicalPlayerIdFromPlayerSeasonDoc(
+	doc:
+		| QueryDocumentSnapshot<PlayerSeasonDocument>
+		| DocumentSnapshot<PlayerSeasonDocument>
+): string {
+	const playerRef = doc.ref.parent.parent
+	if (!playerRef) throw new Error('PlayerSeasonDocument has no parent player')
+	return playerRef.id
+}
+
+/**
+ * Derive the canonical player document reference from a player-season
+ * subdoc snapshot. Prefer this helper over reaching into
+ * `doc.ref.parent.parent`.
+ */
+export function canonicalPlayerRefFromPlayerSeasonDoc(
+	doc:
+		| QueryDocumentSnapshot<PlayerSeasonDocument>
+		| DocumentSnapshot<PlayerSeasonDocument>
+): DocumentReference<PlayerDocument> {
+	const playerRef = doc.ref.parent.parent
+	if (!playerRef) throw new Error('PlayerSeasonDocument has no parent player')
+	return playerRef as DocumentReference<PlayerDocument>
 }
 
 /**

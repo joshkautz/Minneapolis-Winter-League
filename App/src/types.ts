@@ -55,6 +55,20 @@ export enum Collections {
 }
 
 /**
+ * Subcollection name for per-player per-season state, living under
+ * `players/{uid}/playerSeasons/{seasonId}`. Renamed from `seasons` to
+ * disambiguate `collectionGroup()` queries from the team-side subcollection.
+ */
+export const PLAYER_SEASONS_SUBCOLLECTION = 'playerSeasons'
+
+/**
+ * Subcollection name for per-team per-season state, living under
+ * `teams/{teamId}/teamSeasons/{seasonId}`. Renamed from `seasons` to
+ * disambiguate `collectionGroup()` queries from the player-side subcollection.
+ */
+export const TEAM_SEASONS_SUBCOLLECTION = 'teamSeasons'
+
+/**
  * Available theme variants for the site
  * Add new themes here - they will automatically appear in the admin settings
  */
