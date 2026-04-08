@@ -5,7 +5,7 @@ import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { useTeamsContext, useAuthContext } from '@/providers'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { NotificationCard, LoadingSpinner } from '@/shared/components'
-import { PlayerDocument, TeamSeasonDocument } from '@/shared/utils'
+import { OfferType, PlayerDocument, TeamSeasonDocument } from '@/shared/utils'
 import { ManageTeamDetail } from './manage-team-detail'
 
 export const ManageTeamRequestCard = () => {
@@ -34,7 +34,7 @@ export const ManageTeamRequestCard = () => {
 			createOfferViaFunction({
 				playerId: authenticatedUserDocumentSnapshot.id,
 				teamId: canonicalTeamId,
-				type: 'request',
+				type: OfferType.REQUEST,
 			})
 				.then(() => {
 					toast.success('Request sent', {

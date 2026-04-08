@@ -37,7 +37,7 @@ export async function cancelPendingOffersForPlayer(
 		.collection(Collections.OFFERS)
 		.where('player', '==', playerRef)
 		.where('season', '==', seasonRef)
-		.where('status', '==', 'pending')
+		.where('status', '==', OfferStatus.PENDING)
 		.get()
 
 	if (pendingOffersQuery.empty) {

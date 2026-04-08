@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { getPlayersQuery, QueryDocumentSnapshot } from '@/firebase'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { NotificationCard } from '@/shared/components'
-import { PlayerDocument, TeamSeasonDocument } from '@/shared/utils'
+import { OfferType, PlayerDocument, TeamSeasonDocument } from '@/shared/utils'
 import { ManageInvitePlayerDetail } from './manage-invite-player-detail'
 import { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
 import { usePlayersSearch, useDebounce, useUserStatus } from '@/shared/hooks'
@@ -52,7 +52,7 @@ export const ManageInvitePlayerList = () => {
 			createOfferViaFunction({
 				playerId: playerQueryDocumentSnapshot.id,
 				teamId: canonicalTeamId,
-				type: 'invitation',
+				type: OfferType.INVITATION,
 			})
 				.then(() => {
 					toast.success('Invite sent', {

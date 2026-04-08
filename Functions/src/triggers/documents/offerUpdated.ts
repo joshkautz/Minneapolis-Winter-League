@@ -10,7 +10,12 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, DocumentReference, OfferDocument } from '../../types.js'
+import {
+	Collections,
+	DocumentReference,
+	OfferDocument,
+	OfferStatus,
+} from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { playerSeasonRef, teamSeasonRef } from '../../shared/database.js'
 import { addPlayerToTeam } from '../../shared/membership.js'
@@ -33,8 +38,11 @@ export const onOfferUpdated = onDocumentUpdated(
 		const beforeData = event.data?.before.data() as OfferDocument | undefined
 		const afterData = event.data?.after.data() as OfferDocument | undefined
 
-		// Only process when status changes to 'accepted'
-		if (beforeData?.status !== 'pending' || afterData?.status !== 'accepted') {
+		// Only process when status changes to ACCEPTED
+		if (
+			beforeData?.status !== OfferStatus.PENDING ||
+			afterData?.status !== OfferStatus.ACCEPTED
+		) {
 			return
 		}
 
@@ -95,14 +103,14 @@ export const onOfferUpdated = onDocumentUpdated(
 					.collection(Collections.OFFERS)
 					.where('player', '==', playerCanonicalRef)
 					.where('season', '==', seasonRef)
-					.where('status', '==', 'pending')
+					.where('status', '==', OfferStatus.PENDING)
 					.get()
 
 				let canceledOffersCount = 0
 				pendingOffersQuery.forEach((doc) => {
 					if (doc.id !== offerId) {
 						transaction.update(doc.ref, {
-							status: 'canceled',
+							status: OfferStatus.CANCELED,
 							respondedAt: Timestamp.now(),
 							respondedBy: playerCanonicalRef,
 							canceledReason:

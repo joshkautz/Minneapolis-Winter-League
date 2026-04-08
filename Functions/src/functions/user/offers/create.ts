@@ -14,7 +14,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, SeasonDocument } from '../../../types.js'
+import {
+	Collections,
+	OfferStatus,
+	OfferType,
+	SeasonDocument,
+} from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import {
 	getCurrentSeason,
@@ -28,7 +33,7 @@ import { formatDateForUser } from '../../../shared/format.js'
 interface CreateOfferRequest {
 	playerId: string
 	teamId: string
-	type: 'invitation' | 'request'
+	type: OfferType
 	timezone?: string
 }
 
@@ -54,7 +59,11 @@ export const createOffer = onCall<CreateOfferRequest>(
 			)
 		}
 
-		if (!['invitation', 'request'].includes(type)) {
+		const allowedOfferTypes: OfferType[] = [
+			OfferType.INVITATION,
+			OfferType.REQUEST,
+		]
+		if (!allowedOfferTypes.includes(type)) {
 			throw new HttpsError(
 				'invalid-argument',
 				'Invalid offer type. Must be invitation or request'
@@ -90,7 +99,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 
 				if (existingOfferDoc.exists) {
 					const existingData = existingOfferDoc.data()
-					if (existingData?.status === 'pending') {
+					if (existingData?.status === OfferStatus.PENDING) {
 						throw new HttpsError(
 							'already-exists',
 							'A pending offer already exists between this player and team'
@@ -163,7 +172,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 				}
 
 				// Validate authorization based on offer type.
-				if (type === 'invitation') {
+				if (type === OfferType.INVITATION) {
 					// User must be a captain of the team for the current season.
 					const callerSeasonData = currentUserSeasonSnap.data()
 					const userIsCaptain =
@@ -175,7 +184,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 							'Only team captains can send invitations'
 						)
 					}
-				} else if (type === 'request') {
+				} else if (type === OfferType.REQUEST) {
 					if (userId !== playerId) {
 						throw new HttpsError(
 							'permission-denied',
@@ -199,7 +208,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 					team: teamRef,
 					season: seasonRef,
 					type,
-					status: 'pending',
+					status: OfferStatus.PENDING,
 					createdBy: firestore.collection(Collections.PLAYERS).doc(userId),
 					createdAt: new Date(),
 				}
@@ -218,7 +227,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 				return {
 					success: true,
 					offerId: pendingOfferId,
-					message: `${type === 'invitation' ? 'Invitation' : 'Request'} created successfully`,
+					message: `${type === OfferType.INVITATION ? 'Invitation' : 'Request'} created successfully`,
 				}
 			})
 		} catch (error) {

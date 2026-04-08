@@ -42,7 +42,7 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { OfferDocument, OfferType, logger } from '@/shared/utils'
+import { OfferDocument, OfferStatus, OfferType, logger } from '@/shared/utils'
 import { useQueryErrorHandler } from '@/shared/hooks'
 
 interface ProcessedOffer {
@@ -311,7 +311,7 @@ export const OfferManagement = () => {
 	// Handle offer status update
 	const handleUpdateOfferStatus = async (
 		offerId: string,
-		status: 'accepted' | 'rejected' | 'canceled',
+		status: OfferStatus.ACCEPTED | OfferStatus.REJECTED | OfferStatus.CANCELED,
 		offerType: string
 	) => {
 		try {
@@ -323,7 +323,7 @@ export const OfferManagement = () => {
 			})
 
 			toast.success(
-				`${offerType === 'invitation' ? 'Invitation' : 'Request'} ${status} successfully`
+				`${offerType === OfferType.INVITATION ? 'Invitation' : 'Request'} ${status} successfully`
 			)
 
 			// The useCollection hook will automatically update with the new data
@@ -562,7 +562,7 @@ export const OfferManagement = () => {
 																onClick={() =>
 																	handleUpdateOfferStatus(
 																		offer.id,
-																		'accepted',
+																		OfferStatus.ACCEPTED,
 																		offer.offerType
 																	)
 																}
@@ -578,7 +578,7 @@ export const OfferManagement = () => {
 																onClick={() =>
 																	handleUpdateOfferStatus(
 																		offer.id,
-																		'rejected',
+																		OfferStatus.REJECTED,
 																		offer.offerType
 																	)
 																}
@@ -594,7 +594,7 @@ export const OfferManagement = () => {
 																onClick={() =>
 																	handleUpdateOfferStatus(
 																		offer.id,
-																		'canceled',
+																		OfferStatus.CANCELED,
 																		offer.offerType
 																	)
 																}

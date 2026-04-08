@@ -5,7 +5,13 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, OfferDocument, SeasonDocument } from '../../../types.js'
+import {
+	Collections,
+	OfferDocument,
+	OfferStatus,
+	OfferType,
+	SeasonDocument,
+} from '../../../types.js'
 import {
 	validateAuthentication,
 	validateNotBanned,
@@ -16,7 +22,7 @@ import { formatDateForUser } from '../../../shared/format.js'
 
 interface UpdateOfferRequest {
 	offerId: string
-	status: 'accepted' | 'rejected' | 'canceled'
+	status: OfferStatus.ACCEPTED | OfferStatus.REJECTED | OfferStatus.CANCELED
 	timezone?: string
 }
 
@@ -56,7 +62,12 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 			)
 		}
 
-		if (!['accepted', 'rejected', 'canceled'].includes(status)) {
+		const allowedStatuses: OfferStatus[] = [
+			OfferStatus.ACCEPTED,
+			OfferStatus.REJECTED,
+			OfferStatus.CANCELED,
+		]
+		if (!allowedStatuses.includes(status)) {
 			throw new HttpsError(
 				'invalid-argument',
 				'Invalid status. Must be accepted, rejected, or canceled'
@@ -81,7 +92,7 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 				}
 
 				// Check if offer is still pending
-				if (offerData.status !== 'pending') {
+				if (offerData.status !== OfferStatus.PENDING) {
 					throw new HttpsError(
 						'failed-precondition',
 						`Offer has already been ${offerData.status}`
@@ -118,7 +129,7 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 
 				// When accepting an offer, validate the player is not banned (skip for admins)
 				// This prevents banned players from joining teams
-				if (status === 'accepted' && !isAdmin) {
+				if (status === OfferStatus.ACCEPTED && !isAdmin) {
 					await validateNotBanned(
 						firestore,
 						offerData.player.id,
@@ -140,21 +151,23 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 					})
 				} else {
 					// Validate authorization based on offer type and action for non-admin users
-					if (offerData.type === 'invitation') {
+					if (offerData.type === OfferType.INVITATION) {
 						// Player can accept/reject invitations sent to them
 						// Creator (captain) can cancel their own invitations
 						const canRespondAsRecipient =
 							userId === offerData.player.id &&
-							(status === 'accepted' || status === 'rejected')
-						const canCancelAsCreator = isCreator && status === 'canceled'
+							(status === OfferStatus.ACCEPTED ||
+								status === OfferStatus.REJECTED)
+						const canCancelAsCreator =
+							isCreator && status === OfferStatus.CANCELED
 
 						if (!canRespondAsRecipient && !canCancelAsCreator) {
-							if (status === 'canceled' && !isCreator) {
+							if (status === OfferStatus.CANCELED && !isCreator) {
 								throw new HttpsError(
 									'permission-denied',
 									'Only the invitation creator can cancel this invitation'
 								)
-							} else if (status === 'rejected' && isCreator) {
+							} else if (status === OfferStatus.REJECTED && isCreator) {
 								throw new HttpsError(
 									'permission-denied',
 									'Creators should use canceled status instead of rejected to cancel their invitations'
@@ -166,10 +179,11 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 								)
 							}
 						}
-					} else if (offerData.type === 'request') {
+					} else if (offerData.type === OfferType.REQUEST) {
 						// Team captains can accept/reject requests to their team.
 						// Creator (player) can cancel their own requests.
-						const canCancelAsCreator = isCreator && status === 'canceled'
+						const canCancelAsCreator =
+							isCreator && status === OfferStatus.CANCELED
 
 						if (canCancelAsCreator) {
 							// Allow creator to cancel their own request
@@ -186,12 +200,12 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 								callerSeasonData?.captain === true
 
 							if (!userIsCaptain) {
-								if (status === 'rejected') {
+								if (status === OfferStatus.REJECTED) {
 									throw new HttpsError(
 										'permission-denied',
 										'Only team captains can reject join requests'
 									)
-								} else if (status === 'canceled') {
+								} else if (status === OfferStatus.CANCELED) {
 									throw new HttpsError(
 										'permission-denied',
 										'Only the request creator can cancel their own request'
@@ -215,7 +229,10 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 				})
 
 				// If rejected or canceled, we're done - the trigger will handle cleanup
-				if (status === 'rejected' || status === 'canceled') {
+				if (
+					status === OfferStatus.REJECTED ||
+					status === OfferStatus.CANCELED
+				) {
 					logger.info(`Offer ${status}: ${offerId}`, {
 						type: offerData.type,
 						respondedBy: userId,
@@ -223,8 +240,8 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 
 					return {
 						success: true,
-						status: 'rejected',
-						message: `${offerData.type === 'invitation' ? 'Invitation' : 'Request'} rejected`,
+						status: OfferStatus.REJECTED,
+						message: `${offerData.type === OfferType.INVITATION ? 'Invitation' : 'Request'} rejected`,
 					}
 				}
 
@@ -236,8 +253,8 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 
 				return {
 					success: true,
-					status: 'accepted',
-					message: `${offerData.type === 'invitation' ? 'Invitation' : 'Request'} accepted`,
+					status: OfferStatus.ACCEPTED,
+					message: `${offerData.type === OfferType.INVITATION ? 'Invitation' : 'Request'} accepted`,
 				}
 			})
 		} catch (error) {

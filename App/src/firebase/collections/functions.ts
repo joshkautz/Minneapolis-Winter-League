@@ -520,7 +520,7 @@ export const editTeamViaFunction = async (
 interface CreateOfferRequest {
 	playerId: string
 	teamId: string
-	type: 'invitation' | 'request'
+	type: OfferType
 }
 
 interface CreateOfferResponse {
@@ -545,7 +545,7 @@ export const createOfferViaFunction = async (
 
 interface UpdateOfferRequest {
 	offerId: string
-	status: 'accepted' | 'rejected' | 'canceled'
+	status: OfferStatus.ACCEPTED | OfferStatus.REJECTED | OfferStatus.CANCELED
 }
 
 interface UpdateOfferResponse {
@@ -1100,7 +1100,12 @@ export const removeFromTeam = async (
 // SITE SETTINGS FUNCTIONS (ADMIN ONLY)
 //////////////////////////////////////////////////////////////////////////////
 
-import type { ThemeVariant, SeasonFormat } from '@/types'
+import {
+	OfferStatus,
+	OfferType,
+	type ThemeVariant,
+	type SeasonFormat,
+} from '@/types'
 
 interface UpdateSiteSettingsRequest {
 	themeVariant: ThemeVariant

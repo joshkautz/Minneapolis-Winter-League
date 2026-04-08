@@ -8,7 +8,7 @@
  * - Email verification status
  * - Per-season state (paid, signed, banned, captain, team)
  *
- * Per-season state writes go to `players/{uid}/seasons/{seasonId}` subdocs
+ * Per-season state writes go to `players/{uid}/playerSeasons/{seasonId}` subdocs
  * directly, one update per changed field. Team change writes the new roster
  * entry, deletes the old one, and updates the player season's `team` and
  * `captain` fields atomically.

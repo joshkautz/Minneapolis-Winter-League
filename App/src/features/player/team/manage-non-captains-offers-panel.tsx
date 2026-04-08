@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { OfferDocument, OfferDirection, logger } from '@/shared/utils'
+import {
+	OfferDocument,
+	OfferDirection,
+	OfferStatus,
+	logger,
+} from '@/shared/utils'
 import {
 	NotificationCard,
 	LoadingSpinner,
@@ -34,7 +39,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 		try {
 			await updateOfferViaFunction({
 				offerId: offerDocumentReference.id,
-				status: 'rejected',
+				status: OfferStatus.REJECTED,
 			})
 			toast.success('Success', {
 				description: 'Invite rejected',
@@ -59,7 +64,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 		try {
 			await updateOfferViaFunction({
 				offerId: offerDocumentReference.id,
-				status: 'accepted',
+				status: OfferStatus.ACCEPTED,
 			})
 			toast.success('Success', {
 				description: 'Invite accepted',
@@ -84,7 +89,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 		try {
 			await updateOfferViaFunction({
 				offerId: offerDocumentReference.id,
-				status: 'canceled',
+				status: OfferStatus.CANCELED,
 			})
 			toast.success('Success', {
 				description: 'Request canceled',
