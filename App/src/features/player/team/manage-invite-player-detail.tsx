@@ -1,14 +1,17 @@
 import { useMemo, useEffect } from 'react'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { playerSeasonRef } from '@/firebase/collections/players'
-import type { DocumentReference } from '@/firebase'
-import type { TeamDocument } from '@/shared/utils'
+import {
+	QueryDocumentSnapshot,
+	offersForPlayerByTeamQuery,
+	type DocumentReference,
+} from '@/firebase'
 import { Mail } from 'lucide-react'
 import { toast } from 'sonner'
-import { QueryDocumentSnapshot, offersForPlayerByTeamQuery } from '@/firebase'
 import {
 	cn,
 	PlayerDocument,
+	TeamDocument,
 	TeamSeasonDocument,
 	OfferDocument,
 	OfferStatus,

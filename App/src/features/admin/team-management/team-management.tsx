@@ -156,7 +156,7 @@ export const TeamManagement = () => {
 				const canonicalId = doc.ref.parent.parent?.id ?? doc.id
 				return {
 					id: canonicalId,
-					ref: getTeamRef(canonicalId)!,
+					ref: getTeamRef(canonicalId) as DocumentReference<TeamDocument>,
 					name: data.name,
 					registered: data.registered,
 					data,
@@ -176,7 +176,7 @@ export const TeamManagement = () => {
 				const canonicalId = doc.ref.parent.parent?.id ?? doc.id
 				return {
 					id: canonicalId,
-					ref: getTeamRef(canonicalId)!,
+					ref: getTeamRef(canonicalId) as DocumentReference<TeamDocument>,
 					name: data.name,
 					registered: data.registered,
 					data,

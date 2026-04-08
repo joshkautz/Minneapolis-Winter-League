@@ -14,6 +14,7 @@ import {
 	where,
 	or,
 	and,
+	getDocs,
 	type DocumentReference,
 	type Query,
 } from 'firebase/firestore'
@@ -38,7 +39,6 @@ import {
 	getPlayerRef,
 	playerSeasonsSubcollection,
 } from '@/firebase/collections/players'
-import { getDocs } from 'firebase/firestore'
 import { useSeasonsContext } from '@/providers'
 import { teamsBySeasonQuery } from '@/firebase/collections/teams'
 import {
@@ -238,9 +238,9 @@ export const PlayerManagement = () => {
 
 			try {
 				const playerData = selectedPlayerSnapshot.data() as PlayerDocument
-				const playerSeasonsSnap = await getDocs(
-					playerSeasonsSubcollection(selectedPlayerId)!
-				)
+				const playerSeasonsRef = playerSeasonsSubcollection(selectedPlayerId)
+				if (!playerSeasonsRef) return
+				const playerSeasonsSnap = await getDocs(playerSeasonsRef)
 
 				// Fetch email verification status from Firebase Auth
 				let emailVerified = false

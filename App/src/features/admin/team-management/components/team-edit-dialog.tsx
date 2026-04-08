@@ -146,9 +146,14 @@ export const TeamEditDialog = ({
 		const fetchCaptains = async () => {
 			const entries: [string, boolean][] = []
 			for (const r of currentRoster) {
+				const ref = playerSeasonRef(r.player.id, seasonId)
+				if (!ref) {
+					entries.push([r.player.id, false])
+					continue
+				}
 				try {
 					const ps = await import('firebase/firestore').then(({ getDoc }) =>
-						getDoc(playerSeasonRef(r.player.id, seasonId)!)
+						getDoc(ref)
 					)
 					entries.push([r.player.id, ps.data()?.captain === true])
 				} catch {

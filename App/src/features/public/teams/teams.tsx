@@ -116,9 +116,9 @@ export const Teams = () => {
 
 					const seasonStatuses = await Promise.all(
 						rosterSnap.docs.map(async (rosterDoc) => {
-							const psSnap = await getDoc(
-								playerSeasonRef(rosterDoc.id, seasonId)!
-							)
+							const psRef = playerSeasonRef(rosterDoc.id, seasonId)
+							if (!psRef) return false
+							const psSnap = await getDoc(psRef)
 							const ps = psSnap.data()
 							return ps?.paid === true && ps?.signed === true
 						})

@@ -3,6 +3,7 @@ import {
 	QueryDocumentSnapshot,
 	DocumentSnapshot,
 	offersForPlayerByTeamQuery,
+	type DocumentReference,
 } from '@/firebase'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
@@ -16,7 +17,6 @@ import {
 	OfferStatus,
 	logger,
 } from '@/shared/utils'
-import type { DocumentReference } from '@/firebase'
 import { Link } from 'react-router-dom'
 
 export const ManageTeamDetail = ({

@@ -28,7 +28,6 @@ import { useQueryErrorHandler } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import { teamsInSeasonQuery } from '@/firebase/collections/teams'
-import { Collections } from '@/types'
 import {
 	createSeasonViaFunction,
 	updateSeasonViaFunction,
@@ -58,7 +57,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { DestructiveConfirmationDialog } from '@/shared/components/destructive-confirmation-dialog'
-import { SeasonDocument, SeasonFormat } from '@/types'
+import { Collections, SeasonDocument, SeasonFormat } from '@/types'
 
 interface ProcessedSeason {
 	id: string
@@ -221,14 +220,11 @@ export const SeasonManagement = () => {
 
 					if (teamsQuery) {
 						const teamsSnapshot = await getDocs(teamsQuery)
-						const teams = teamsSnapshot.docs
-							.filter(
-								(d) => d.ref.parent.parent?.parent.id === Collections.TEAMS
-							)
-							.map((d) => ({
-								id: d.ref.parent.parent!.id,
-								name: d.data().name,
-							}))
+						const teams = teamsSnapshot.docs.flatMap((d) => {
+							const canonicalRef = d.ref.parent.parent
+							if (canonicalRef?.parent.id !== Collections.TEAMS) return []
+							return [{ id: canonicalRef.id, name: d.data().name }]
+						})
 						setAvailableTeams(teams)
 					}
 				} catch (error) {

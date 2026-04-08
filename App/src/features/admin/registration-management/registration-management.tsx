@@ -9,7 +9,6 @@ import { useState, useEffect, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { collection, query } from 'firebase/firestore'
-import { playerSeasonsInSeasonQuery } from '@/firebase/collections/players'
 import {
 	ArrowLeft,
 	AlertTriangle,
@@ -22,7 +21,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { auth } from '@/firebase/auth'
 import { firestore } from '@/firebase/app'
 import { useQueryErrorHandler } from '@/shared/hooks'
-import { getPlayerRef } from '@/firebase/collections/players'
+import {
+	getPlayerRef,
+	playerSeasonsInSeasonQuery,
+} from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import {
 	Card,
