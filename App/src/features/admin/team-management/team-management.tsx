@@ -24,7 +24,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import { auth } from '@/firebase/auth'
 import { logger } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
-import { teamsInSeasonQuery, getTeamRef } from '@/firebase/collections/teams'
+import {
+	canonicalTeamIdFromTeamSeasonDoc,
+	teamsInSeasonQuery,
+	getTeamRef,
+} from '@/firebase/collections/teams'
 import {
 	deleteUnregisteredTeamViaFunction,
 	deleteTeamViaFunction,
@@ -153,7 +157,7 @@ export const TeamManagement = () => {
 		return teamsSnapshot.docs
 			.map((doc) => {
 				const data = doc.data() as TeamSeasonDocument
-				const canonicalId = doc.ref.parent.parent?.id ?? doc.id
+				const canonicalId = canonicalTeamIdFromTeamSeasonDoc(doc)
 				return {
 					id: canonicalId,
 					ref: getTeamRef(canonicalId) as DocumentReference<TeamDocument>,
@@ -173,7 +177,7 @@ export const TeamManagement = () => {
 		return teamsSnapshot.docs
 			.map((doc) => {
 				const data = doc.data() as TeamSeasonDocument
-				const canonicalId = doc.ref.parent.parent?.id ?? doc.id
+				const canonicalId = canonicalTeamIdFromTeamSeasonDoc(doc)
 				return {
 					id: canonicalId,
 					ref: getTeamRef(canonicalId) as DocumentReference<TeamDocument>,

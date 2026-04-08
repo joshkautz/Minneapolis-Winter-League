@@ -3,15 +3,14 @@ import {
 	QueryDocumentSnapshot,
 	DocumentSnapshot,
 	offersForPlayerByTeamQuery,
-	type DocumentReference,
 } from '@/firebase'
+import { canonicalTeamRefFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
 	PlayerDocument,
-	TeamDocument,
 	TeamSeasonDocument,
 	OfferDocument,
 	OfferStatus,
@@ -36,9 +35,9 @@ export const ManageTeamDetail = ({
 	const [offersForPlayerByTeamQuerySnapshot, , offersError] = useCollection(
 		offersForPlayerByTeamQuery(
 			playerDocumentSnapshot?.ref,
-			currentSeasonTeamsQueryDocumentSnapshot.ref.parent.parent as
-				| DocumentReference<TeamDocument>
-				| undefined
+			canonicalTeamRefFromTeamSeasonDoc(
+				currentSeasonTeamsQueryDocumentSnapshot
+			)
 		)
 	)
 

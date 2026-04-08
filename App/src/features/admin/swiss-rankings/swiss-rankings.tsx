@@ -24,7 +24,10 @@ import { logger, cn } from '@/shared/utils'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
-import { teamsBySeasonQuery } from '@/firebase/collections/teams'
+import {
+	canonicalTeamIdFromTeamSeasonDoc,
+	teamsBySeasonQuery,
+} from '@/firebase/collections/teams'
 import { getDocs } from 'firebase/firestore'
 import {
 	getSwissRankingsViaFunction,
@@ -134,7 +137,7 @@ export const SwissRankings = () => {
 					const teamsSnapshot = await getDocs(teamsQuery)
 					const map = new Map<string, TeamSeasonDocument>()
 					teamsSnapshot.docs.forEach((doc) => {
-						const teamId = doc.ref.parent.parent?.id ?? doc.id
+						const teamId = canonicalTeamIdFromTeamSeasonDoc(doc)
 						map.set(teamId, doc.data())
 					})
 					setSeasonTeams(map)

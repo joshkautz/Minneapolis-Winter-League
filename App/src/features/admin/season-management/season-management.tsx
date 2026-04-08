@@ -27,7 +27,10 @@ import { logger } from '@/shared/utils'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
-import { teamsInSeasonQuery } from '@/firebase/collections/teams'
+import {
+	canonicalTeamIdFromTeamSeasonDoc,
+	teamsInSeasonQuery,
+} from '@/firebase/collections/teams'
 import {
 	createSeasonViaFunction,
 	updateSeasonViaFunction,
@@ -57,7 +60,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { DestructiveConfirmationDialog } from '@/shared/components/destructive-confirmation-dialog'
-import { Collections, SeasonDocument, SeasonFormat } from '@/types'
+import { SeasonDocument, SeasonFormat } from '@/types'
 
 interface ProcessedSeason {
 	id: string
@@ -170,10 +173,7 @@ export const SeasonManagement = () => {
 						if (teamsQuery) {
 							const snap = await getDocs(teamsQuery)
 							snap.docs.forEach((d) => {
-								if (d.ref.parent.parent?.parent.id === Collections.TEAMS) {
-									const canonicalId = d.ref.parent.parent.id
-									teamIds.push(canonicalId)
-								}
+								teamIds.push(canonicalTeamIdFromTeamSeasonDoc(d))
 							})
 						}
 
@@ -220,11 +220,10 @@ export const SeasonManagement = () => {
 
 					if (teamsQuery) {
 						const teamsSnapshot = await getDocs(teamsQuery)
-						const teams = teamsSnapshot.docs.flatMap((d) => {
-							const canonicalRef = d.ref.parent.parent
-							if (canonicalRef?.parent.id !== Collections.TEAMS) return []
-							return [{ id: canonicalRef.id, name: d.data().name }]
-						})
+						const teams = teamsSnapshot.docs.map((d) => ({
+							id: canonicalTeamIdFromTeamSeasonDoc(d),
+							name: d.data().name,
+						}))
 						setAvailableTeams(teams)
 					}
 				} catch (error) {

@@ -8,6 +8,7 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { useTeamsContext } from '@/providers'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { TeamIcon } from './team-icon'
 
 export const ScheduleCard = ({
@@ -45,10 +46,12 @@ export const ScheduleCard = ({
 
 						if (hasAssignedTeams(game)) {
 							homeTeam = selectedSeasonTeamsQuerySnapshot?.docs.find(
-								(team) => team.ref.parent.parent?.id === game.home?.id
+								(team) =>
+									canonicalTeamIdFromTeamSeasonDoc(team) === game.home?.id
 							)
 							awayTeam = selectedSeasonTeamsQuerySnapshot?.docs.find(
-								(team) => team.ref.parent.parent?.id === game.away?.id
+								(team) =>
+									canonicalTeamIdFromTeamSeasonDoc(team) === game.away?.id
 							)
 						}
 
@@ -62,7 +65,7 @@ export const ScheduleCard = ({
 								<div className='grid flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3'>
 									{homeTeam ? (
 										<Link
-											to={`/teams/${homeTeam.ref.parent.parent?.id}`}
+											to={`/teams/${canonicalTeamIdFromTeamSeasonDoc(homeTeam)}`}
 											className='inline-flex min-w-0 max-w-full items-center justify-self-end gap-3 hover:underline'
 										>
 											<span className='text-foreground truncate text-xs font-medium'>
@@ -87,7 +90,7 @@ export const ScheduleCard = ({
 									</p>
 									{awayTeam ? (
 										<Link
-											to={`/teams/${awayTeam.ref.parent.parent?.id}`}
+											to={`/teams/${canonicalTeamIdFromTeamSeasonDoc(awayTeam)}`}
 											className='inline-flex min-w-0 max-w-full items-center justify-self-start gap-3 hover:underline'
 										>
 											<TeamIcon team={awayTeam} />

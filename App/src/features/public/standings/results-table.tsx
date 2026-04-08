@@ -1,4 +1,5 @@
 import { QuerySnapshot } from '@/firebase'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { TeamSeasonDocument } from '@/shared/utils'
 import { TeamStanding } from '@/shared/hooks'
 import { SharedStandingsTable } from './shared-standings-table'
@@ -17,10 +18,10 @@ export const ResultsTable = ({
 		b: [string, TeamStanding]
 	) => {
 		const aPlacement = teamsQuerySnapshot?.docs
-			.find((team) => team.ref.parent.parent?.id === a[0])
+			.find((team) => canonicalTeamIdFromTeamSeasonDoc(team) === a[0])
 			?.data()?.placement
 		const bPlacement = teamsQuerySnapshot?.docs
-			.find((team) => team.ref.parent.parent?.id === b[0])
+			.find((team) => canonicalTeamIdFromTeamSeasonDoc(team) === b[0])
 			?.data()?.placement
 
 		const aHasPlacement = aPlacement !== null && aPlacement !== undefined

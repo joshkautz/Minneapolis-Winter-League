@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
 import { QueryDocumentSnapshot } from 'firebase/firestore'
 import { useAuthContext, useTeamsContext, useSeasonsContext } from '@/providers'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import type { PlayerSeasonDocument, TeamSeasonDocument } from '@/types'
 
 interface TeamManagementResult {
@@ -59,7 +60,8 @@ export const useTeamManagement = (): UseTeamManagementReturn => {
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
 				(teamDoc) =>
-					teamDoc.ref.parent.parent?.id === currentSeasonData?.team?.id
+					canonicalTeamIdFromTeamSeasonDoc(teamDoc) ===
+					currentSeasonData?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)

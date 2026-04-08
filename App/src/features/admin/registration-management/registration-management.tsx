@@ -22,6 +22,7 @@ import { auth } from '@/firebase/auth'
 import { firestore } from '@/firebase/app'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import {
+	canonicalPlayerIdFromPlayerSeasonDoc,
 	getPlayerRef,
 	playerSeasonsInSeasonQuery,
 } from '@/firebase/collections/players'
@@ -176,13 +177,7 @@ export const RegistrationManagement = () => {
 		const players: ProcessedPlayer[] = []
 
 		playerSeasonsSnapshot.docs.forEach((doc) => {
-			// Collection-group `seasons` also matches teams/*/seasons. The
-			// player season subdoc lives at players/{uid}/seasons/{seasonId},
-			// so its grandparent collection id is `players`.
-			if (doc.ref.parent.parent?.parent.id !== Collections.PLAYERS) {
-				return
-			}
-			const playerId = doc.ref.parent.parent.id
+			const playerId = canonicalPlayerIdFromPlayerSeasonDoc(doc)
 			const playerData = playersById.get(playerId)
 			if (!playerData) return
 

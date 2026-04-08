@@ -1,17 +1,16 @@
 import { useMemo, useEffect } from 'react'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { playerSeasonRef } from '@/firebase/collections/players'
+import { QueryDocumentSnapshot, offersForPlayerByTeamQuery } from '@/firebase'
 import {
-	QueryDocumentSnapshot,
-	offersForPlayerByTeamQuery,
-	type DocumentReference,
-} from '@/firebase'
+	canonicalTeamIdFromTeamSeasonDoc,
+	canonicalTeamRefFromTeamSeasonDoc,
+} from '@/firebase/collections/teams'
 import { Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import {
 	cn,
 	PlayerDocument,
-	TeamDocument,
 	TeamSeasonDocument,
 	OfferDocument,
 	OfferStatus,
@@ -44,9 +43,9 @@ export const ManageInvitePlayerDetail = ({
 	const [offersForPlayerByTeamQuerySnapshot, , offersError] = useCollection(
 		offersForPlayerByTeamQuery(
 			playerQueryDocumentSnapshot.ref,
-			teamQueryDocumentSnapshot?.ref.parent.parent as
-				| DocumentReference<TeamDocument>
-				| undefined
+			teamQueryDocumentSnapshot
+				? canonicalTeamRefFromTeamSeasonDoc(teamQueryDocumentSnapshot)
+				: undefined
 		)
 	)
 
@@ -83,7 +82,8 @@ export const ManageInvitePlayerDetail = ({
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
 				(team) =>
-					team.ref.parent.parent?.id === playerSeasonSnapshot?.data()?.team?.id
+					canonicalTeamIdFromTeamSeasonDoc(team) ===
+					playerSeasonSnapshot?.data()?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, playerSeasonSnapshot]
 	)

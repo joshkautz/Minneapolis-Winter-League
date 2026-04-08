@@ -26,7 +26,7 @@ import { useAuthContext } from './auth-context'
 interface TeamProps {
 	/**
 	 * Per-team season subdocs participating in the *current* season.
-	 * Each doc's ref.parent.parent is the canonical teams/{teamId} document.
+	 * Use canonicalTeamIdFromTeamSeasonDoc to derive the canonical team id.
 	 */
 	currentSeasonTeamsQuerySnapshot: QuerySnapshot<TeamSeasonDocument> | undefined
 	currentSeasonTeamsQuerySnapshotLoading: boolean

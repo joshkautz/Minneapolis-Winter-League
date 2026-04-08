@@ -8,6 +8,7 @@ import { ManageInvitePlayerDetail } from './manage-invite-player-detail'
 import { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
 import { usePlayersSearch, useDebounce, useUserStatus } from '@/shared/hooks'
 import { useTeamsContext } from '@/providers'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 
 export const ManageInvitePlayerList = () => {
 	const [search, setSearch] = useState('')
@@ -27,7 +28,9 @@ export const ManageInvitePlayerList = () => {
 	const teamQueryDocumentSnapshot = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) => team.ref.parent.parent?.id === currentSeasonData?.team?.id
+				(team) =>
+					canonicalTeamIdFromTeamSeasonDoc(team) ===
+					currentSeasonData?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)
@@ -39,7 +42,9 @@ export const ManageInvitePlayerList = () => {
 				| QueryDocumentSnapshot<TeamSeasonDocument>
 				| undefined
 		) => {
-			const canonicalTeamId = teamQueryDocumentSnapshot?.ref.parent.parent?.id
+			const canonicalTeamId = teamQueryDocumentSnapshot
+				? canonicalTeamIdFromTeamSeasonDoc(teamQueryDocumentSnapshot)
+				: undefined
 			if (!playerQueryDocumentSnapshot?.id || !canonicalTeamId) {
 				toast.error('Missing required data to send invite')
 				return

@@ -15,6 +15,7 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { QuerySnapshot } from '@/firebase'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { TeamSeasonDocument, cn } from '@/shared/utils'
 import { TeamStanding } from '@/shared/hooks'
 
@@ -43,8 +44,8 @@ export const SharedStandingsTable = ({
 	const teamMap = useMemo(() => {
 		const map = new Map<string, { id: string; data: TeamSeasonDocument }>()
 		teamsQuerySnapshot?.docs.forEach((doc) => {
-			const teamId = doc.ref.parent.parent?.id
-			if (teamId) map.set(teamId, { id: teamId, data: doc.data() })
+			const teamId = canonicalTeamIdFromTeamSeasonDoc(doc)
+			map.set(teamId, { id: teamId, data: doc.data() })
 		})
 		return map
 	}, [teamsQuerySnapshot])

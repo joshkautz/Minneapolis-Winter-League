@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { DocumentSnapshot, QueryDocumentSnapshot } from '@/firebase'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { useTeamsContext, useAuthContext } from '@/providers'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { NotificationCard, LoadingSpinner } from '@/shared/components'
 import { PlayerDocument, TeamSeasonDocument } from '@/shared/utils'
 import { ManageTeamDetail } from './manage-team-detail'
@@ -22,7 +23,9 @@ export const ManageTeamRequestCard = () => {
 
 			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument>
 		) => {
-			const canonicalTeamId = teamQueryDocumentSnapshot?.ref.parent.parent?.id
+			const canonicalTeamId = teamQueryDocumentSnapshot
+				? canonicalTeamIdFromTeamSeasonDoc(teamQueryDocumentSnapshot)
+				: undefined
 			if (!authenticatedUserDocumentSnapshot?.id || !canonicalTeamId) {
 				toast.error('Missing required data to send request')
 				return

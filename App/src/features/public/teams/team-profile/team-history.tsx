@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { NotificationCard } from '@/shared/components'
 import { DocumentSnapshot, QuerySnapshot } from '@/firebase'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useSeasonsContext, useGamesContext } from '@/providers'
 import { TeamSeasonDocument, hasAssignedTeams } from '@/shared/utils'
 
@@ -101,7 +102,7 @@ export const TeamHistory = ({
 				const record = teamRecords[historyDoc.id]
 
 				return {
-					id: historyDoc.ref.parent.parent?.id ?? historyDoc.id,
+					id: canonicalTeamIdFromTeamSeasonDoc(historyDoc),
 					seasonId: data.season.id,
 					seasonName: seasonDoc?.data()?.name || 'Unknown Season',
 					teamName: data.name,

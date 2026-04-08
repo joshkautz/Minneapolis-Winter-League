@@ -1,6 +1,9 @@
 import { useMemo, useState, useEffect } from 'react'
 import { getDoc, getDocs } from 'firebase/firestore'
-import { teamRosterSubcollection } from '@/firebase/collections/teams'
+import {
+	canonicalTeamIdFromTeamSeasonDoc,
+	teamRosterSubcollection,
+} from '@/firebase/collections/teams'
 import { playerSeasonRef } from '@/firebase/collections/players'
 import { Timestamp } from '@firebase/firestore'
 import { Users } from 'lucide-react'
@@ -60,7 +63,7 @@ export const Teams = () => {
 			.map((team) => {
 				const teamData = team.data()
 				return {
-					id: team.ref.parent.parent?.id ?? team.id,
+					id: canonicalTeamIdFromTeamSeasonDoc(team),
 					data: teamData,
 					registeredDate: teamData.registered ? teamData.registeredDate : null,
 				}
@@ -83,7 +86,7 @@ export const Teams = () => {
 		// Map all teams with their placements
 		return selectedSeasonTeamsQuerySnapshot.docs.map((team) => {
 			const teamData = team.data()
-			const canonicalId = team.ref.parent.parent?.id ?? team.id
+			const canonicalId = canonicalTeamIdFromTeamSeasonDoc(team)
 			return {
 				id: canonicalId,
 				data: teamData,
@@ -107,8 +110,7 @@ export const Teams = () => {
 		const countRegisteredPlayers = async () => {
 			const promises = selectedSeasonTeamsQuerySnapshot.docs.map(
 				async (teamDoc) => {
-					const canonicalTeamId = teamDoc.ref.parent.parent?.id
-					if (!canonicalTeamId) return
+					const canonicalTeamId = canonicalTeamIdFromTeamSeasonDoc(teamDoc)
 
 					const rosterSnap = await getDocs(
 						teamRosterSubcollection(canonicalTeamId, seasonId)

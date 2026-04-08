@@ -1,4 +1,5 @@
 import { getPlayerSnapshot } from '@/firebase'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { QuerySnapshot, QueryDocumentSnapshot } from '@firebase/firestore'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { OfferDocument, TeamSeasonDocument, logger } from '@/shared/utils'
@@ -108,7 +109,8 @@ export const useOffer = (
 							teamsQuerySnapshot?.docs
 								.find(
 									(team: QueryDocumentSnapshot<TeamSeasonDocument>) =>
-										team.ref.parent.parent?.id === offerData.team.id
+										canonicalTeamIdFromTeamSeasonDoc(team) ===
+										offerData.team.id
 								)
 								?.data().name || '',
 						creatorName,
