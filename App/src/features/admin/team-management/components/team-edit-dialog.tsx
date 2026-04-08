@@ -373,7 +373,7 @@ export const TeamEditDialog = ({
 						</DialogDescription>
 					</DialogHeader>
 
-					<ScrollArea className='flex-1 pr-4'>
+					<ScrollArea className='flex-1 min-h-0 pr-4'>
 						<div className='space-y-6 pb-4'>
 							{/* Section 1: Basic Information */}
 							<div className='space-y-4'>
