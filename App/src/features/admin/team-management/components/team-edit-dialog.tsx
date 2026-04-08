@@ -8,7 +8,14 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { collection, Query, getDocs } from 'firebase/firestore'
+import {
+	collection,
+	collectionGroup,
+	query,
+	where,
+	getDocs,
+	Query,
+} from 'firebase/firestore'
 import {
 	Pencil,
 	Users,
@@ -24,10 +31,11 @@ import { firestore } from '@/firebase/app'
 import { DocumentReference } from '@/firebase'
 import { logger } from '@/shared/utils'
 import {
+	getTeamRef,
 	teamRosterSubcollection,
 	teamSeasonRef,
 } from '@/firebase/collections/teams'
-import { playerSeasonRef } from '@/firebase/collections/players'
+import { canonicalPlayerIdFromPlayerSeasonDoc } from '@/firebase/collections/players'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -55,7 +63,9 @@ import { updateTeamAdminViaFunction } from '@/firebase/collections/functions'
 import {
 	TeamDocument,
 	PlayerDocument,
+	PlayerSeasonDocument,
 	Collections,
+	PLAYER_SEASONS_SUBCOLLECTION,
 	TeamRosterDocument,
 } from '@/types'
 
@@ -144,29 +154,39 @@ export const TeamEditDialog = ({
 	useEffect(() => {
 		let cancelled = false
 		const fetchCaptains = async () => {
-			const entries: [string, boolean][] = []
-			for (const r of currentRoster) {
-				const ref = playerSeasonRef(r.player.id, seasonId)
-				if (!ref) {
-					entries.push([r.player.id, false])
-					continue
-				}
-				try {
-					const ps = await import('firebase/firestore').then(({ getDoc }) =>
-						getDoc(ref)
+			if (!open || currentRoster.length === 0) {
+				if (!cancelled) setCaptainMap({})
+				return
+			}
+			try {
+				const canonicalTeamRef = getTeamRef(teamDocId)
+				const captainsQuery = query(
+					collectionGroup(firestore, PLAYER_SEASONS_SUBCOLLECTION),
+					where('team', '==', canonicalTeamRef),
+					where('captain', '==', true)
+				) as Query<PlayerSeasonDocument>
+				const snap = await getDocs(captainsQuery)
+				const captainIds = new Set(
+					snap.docs.map((d) => canonicalPlayerIdFromPlayerSeasonDoc(d))
+				)
+				const map = Object.fromEntries(
+					currentRoster.map((r) => [r.player.id, captainIds.has(r.player.id)])
+				)
+				if (!cancelled) setCaptainMap(map)
+			} catch (error) {
+				logger.error('Failed to load captain status:', error)
+				if (!cancelled) {
+					setCaptainMap(
+						Object.fromEntries(currentRoster.map((r) => [r.player.id, false]))
 					)
-					entries.push([r.player.id, ps.data()?.captain === true])
-				} catch {
-					entries.push([r.player.id, false])
 				}
 			}
-			if (!cancelled) setCaptainMap(Object.fromEntries(entries))
 		}
 		fetchCaptains()
 		return () => {
 			cancelled = true
 		}
-	}, [currentRoster, seasonId])
+	}, [currentRoster, seasonId, teamDocId, open])
 
 	// Get roster player details
 	const rosterWithDetails = useMemo(() => {
@@ -230,8 +250,6 @@ export const TeamEditDialog = ({
 				}
 			})
 	}, [playerSearchQuery, allPlayersSnapshot, currentRoster])
-	void getDocs
-	void seasonId
 
 	// Handle name save
 	const handleSaveName = useCallback(async () => {

@@ -1,11 +1,9 @@
 import { useMemo, useState, useEffect } from 'react'
-import { getDoc, getDocs } from 'firebase/firestore'
-import {
-	canonicalTeamIdFromTeamSeasonDoc,
-	teamRosterSubcollection,
-} from '@/firebase/collections/teams'
-import { playerSeasonRef } from '@/firebase/collections/players'
+import { collectionGroup, getDocs, query, where } from 'firebase/firestore'
+import { firestore } from '@/firebase/app'
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { Timestamp } from '@firebase/firestore'
+import { PLAYER_SEASONS_SUBCOLLECTION, PlayerSeasonDocument } from '@/types'
 import { Users } from 'lucide-react'
 import { formatTimestamp } from '@/shared/utils'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
@@ -104,39 +102,32 @@ export const Teams = () => {
 			return
 		}
 
-		const seasonId = selectedSeasonQueryDocumentSnapshot.id
-		const counts = new Map<string, number>()
+		const seasonRef = selectedSeasonQueryDocumentSnapshot.ref
+		let cancelled = false
 
 		const countRegisteredPlayers = async () => {
-			const promises = selectedSeasonTeamsQuerySnapshot.docs.map(
-				async (teamDoc) => {
-					const canonicalTeamId = canonicalTeamIdFromTeamSeasonDoc(teamDoc)
-
-					const rosterSnap = await getDocs(
-						teamRosterSubcollection(canonicalTeamId, seasonId)
-					)
-
-					const seasonStatuses = await Promise.all(
-						rosterSnap.docs.map(async (rosterDoc) => {
-							const psRef = playerSeasonRef(rosterDoc.id, seasonId)
-							if (!psRef) return false
-							const psSnap = await getDoc(psRef)
-							const ps = psSnap.data()
-							return ps?.paid === true && ps?.signed === true
-						})
-					)
-
-					const registeredCount = seasonStatuses.filter(Boolean).length
-
-					counts.set(canonicalTeamId, registeredCount)
-				}
+			const psSnap = await getDocs(
+				query(
+					collectionGroup(firestore, PLAYER_SEASONS_SUBCOLLECTION),
+					where('season', '==', seasonRef),
+					where('paid', '==', true),
+					where('signed', '==', true)
+				)
 			)
-
-			await Promise.all(promises)
-			setRegisteredPlayerCounts(new Map(counts))
+			const counts = new Map<string, number>()
+			psSnap.docs.forEach((d) => {
+				const data = d.data() as PlayerSeasonDocument
+				const teamRef = data.team
+				if (!teamRef) return
+				counts.set(teamRef.id, (counts.get(teamRef.id) ?? 0) + 1)
+			})
+			if (!cancelled) setRegisteredPlayerCounts(counts)
 		}
 
 		countRegisteredPlayers()
+		return () => {
+			cancelled = true
+		}
 	}, [selectedSeasonTeamsQuerySnapshot, selectedSeasonQueryDocumentSnapshot])
 
 	const getEmptyStateMessage = (): string => {

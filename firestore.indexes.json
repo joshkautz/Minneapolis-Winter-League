@@ -247,6 +247,20 @@
 			]
 		},
 		{
+			"collectionGroup": "playerSeasons",
+			"queryScope": "COLLECTION_GROUP",
+			"fields": [
+				{
+					"fieldPath": "team",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "captain",
+					"order": "ASCENDING"
+				}
+			]
+		},
+		{
 			"collectionGroup": "roster",
 			"queryScope": "COLLECTION_GROUP",
 			"fields": [

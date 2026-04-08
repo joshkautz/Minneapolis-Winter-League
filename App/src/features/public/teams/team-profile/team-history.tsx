@@ -118,7 +118,7 @@ export const TeamHistory = ({
 	return (
 		<NotificationCard
 			title={'History'}
-			description={`Past seasons`}
+			description={processedHistory[0]?.teamName ?? 'Past seasons'}
 			className={'flex-1 basis-full shrink-0 max-w-full min-w-[360px]'}
 		>
 			{processedHistory.length > 0 ? (

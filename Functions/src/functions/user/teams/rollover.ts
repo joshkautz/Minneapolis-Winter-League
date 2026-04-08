@@ -188,8 +188,8 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 			let bannedStatus = false
 			if (!existingPlayerSeasonData) {
 				const otherSeasons = await playerDocRef
-				.collection(PLAYER_SEASONS_SUBCOLLECTION)
-				.get()
+					.collection(PLAYER_SEASONS_SUBCOLLECTION)
+					.get()
 				bannedStatus = otherSeasons.docs.some(
 					(d) => d.id !== seasonId && d.data()?.banned === true
 				)

@@ -57,15 +57,24 @@ npm run build                                     # CLEAN
 
 ## Known follow-ups (work but suboptimal)
 
-- `team-edit-dialog.tsx` captain lookup is N+1 sequential `getDoc`s in a
-  useEffect — works but should batch via `Promise.all` or a collectionGroup
-  query.
-- `public/teams/teams.tsx` registered-player-count walks the roster
-  subcollection plus per-player season subdocs via `Promise.all` — fine at
-  current scale.
-- `team-history.tsx` header subtitle is hardcoded to "Past seasons" because
-  the canonical team doc no longer carries `name`. Could pull from the most
-  recent team season subdoc.
+- ~~`team-edit-dialog.tsx` captain lookup is N+1~~ — fixed (single
+  collectionGroup `playerSeasons` query on team+captain).
+- ~~`public/teams/teams.tsx` registered-player-count walks per team~~ —
+  fixed (single collectionGroup `playerSeasons` query on
+  season+paid+signed).
+- ~~`team-history.tsx` header subtitle hardcoded~~ — fixed (pulls latest
+  team season name from existing `historyQuerySnapshot`).
+
+### Pre-cutover index deploy requirement
+
+A new collection-group index was added to `firestore.indexes.json` for the
+captain lookup fix:
+
+- `playerSeasons` (COLLECTION_GROUP): `(team ASC, captain ASC)`
+
+This index MUST be deployed (`firebase deploy --only firestore:indexes`)
+BEFORE the new App code goes live, otherwise the team-edit-dialog will
+throw a missing-index error on open.
 
 ## Next: cutover sequence
 
