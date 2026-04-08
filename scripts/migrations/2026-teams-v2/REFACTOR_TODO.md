@@ -1,6 +1,43 @@
 # 2026 Teams + Players Data Model Refactor — Resumption Roadmap
 
-**Last updated**: after commit `1264e5b8`.
+**Last updated**: after commit `a5696846`. **Down to 51 App typecheck errors across 19 files** (started at 89 across ~30 files).
+
+## Quick start for next session
+
+```bash
+cd /Users/josh/Projects/joshkautz/Minneapolis-Winter-League
+npm install                                       # ensures TS 6.0.2 is hoisted
+npx tsc --noEmit -p Functions/tsconfig.json       # should be CLEAN
+npx tsc --noEmit -p App/tsconfig.json 2>&1 | head -60   # 51 errors remain
+```
+
+## Error distribution (as of commit `a5696846`)
+
+| File | Errors |
+|---|---|
+| `App/src/features/admin/team-management/team-management.tsx` | **19** |
+| `App/src/features/public/teams/teams.tsx` | 3 |
+| `App/src/features/public/standings/standings.tsx` | 3 |
+| `App/src/features/admin/team-management/components/team-edit-dialog.tsx` | 3 |
+| `App/src/features/public/teams/team-profile/team-profile.tsx` | 2 |
+| `App/src/features/public/schedule/schedule-card.tsx` | 2 |
+| `App/src/features/player/team/manage-non-captains-offers-panel.tsx` | 2 |
+| `App/src/features/player/team/manage-invite-player-detail.tsx` | 2 |
+| `App/src/features/player/team/manage-captains-offers-panel.tsx` | 2 |
+| `App/src/features/player/team/hooks/use-team-management.ts` | 2 |
+| `App/src/features/admin/season-management/season-management.tsx` | 2 |
+| `App/src/features/admin/player-management/player-management.tsx` | 2 |
+| `App/src/features/public/create/hooks/use-team-creation.ts` | 1 |
+| `App/src/features/player/team/manage-team-roster-player.tsx` | 1 |
+| `App/src/features/player/team/manage-team-request-card.tsx` | 1 |
+| `App/src/features/player/team/manage-team-detail.tsx` | 1 |
+| `App/src/features/player/team/manage-invite-player-list.tsx` | 1 |
+| `App/src/features/admin/swiss-rankings/swiss-rankings.tsx` | 1 |
+| `App/src/features/admin/registration-management/registration-management.tsx` | 1 |
+
+**Recommended fix order**: small files first (single-error / 2-error files), then the team-edit-dialog (which has the linkToTeamId code to delete), then the public team-profile (the largest single semantic change), and finally `team-management.tsx` (the 19-error file, largest single file).
+
+
 
 ## Status
 
