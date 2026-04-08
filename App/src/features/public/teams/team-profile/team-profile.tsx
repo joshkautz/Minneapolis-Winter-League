@@ -9,7 +9,7 @@ import { NotificationCard } from '@/shared/components'
 import {
 	DocumentReference,
 	gamesByTeamQuery,
-	teamsHistoryQuery,
+	teamSeasonsQuery,
 	getTeamById,
 	DocumentSnapshot,
 	teamsBySeasonQuery,
@@ -108,7 +108,7 @@ export const TeamProfile = () => {
 		useDocument(getTeamById(id))
 
 	const [historyQuerySnapshot, historyQuerySnapshotLoading, historyError] =
-		useCollection(teamsHistoryQuery(teamDocumentSnapshot?.data()?.teamId))
+		useCollection(teamSeasonsQuery(id))
 
 	const [teamsQuerySnapshot, teamsQuerySnapshotLoading, teamsError] =
 		useCollection(teamsBySeasonQuery(teamDocumentSnapshot?.data()?.season))

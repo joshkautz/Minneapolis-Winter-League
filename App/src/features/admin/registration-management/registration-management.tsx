@@ -149,9 +149,17 @@ export const RegistrationManagement = () => {
 
 		playersSnapshot.docs.forEach((doc) => {
 			const playerData = doc.data() as PlayerDocument
-			const seasonData = playerData.seasons?.find(
-				(s) => s.season.id === filterSeasonId
-			)
+			// TODO(2026-teams-v2): rewrite to use playerSeasonRef subcollection.
+			const seasonData = (
+				playerData as unknown as {
+					seasons?: Array<{
+						season: { id: string }
+						paid?: boolean
+						signed?: boolean
+						team?: { id: string }
+					}>
+				}
+			).seasons?.find((s) => s.season.id === filterSeasonId)
 
 			if (!seasonData) {
 				// Player is not in this season at all

@@ -1,5 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
-import { getDoc } from 'firebase/firestore'
+import { getDoc, getDocs } from 'firebase/firestore'
+import { teamRosterSubcollection } from '@/firebase/collections/teams'
+import { playerSeasonRef } from '@/firebase/collections/players'
 import { Timestamp } from '@firebase/firestore'
 import { Users } from 'lucide-react'
 import { formatTimestamp } from '@/shared/utils'
@@ -11,7 +13,6 @@ import {
 	PageHeader,
 } from '@/shared/components'
 import { TeamCard } from './team-card'
-import { PlayerDocument } from '@/types'
 
 // Types for better TypeScript support
 enum SeasonStatus {
@@ -59,7 +60,7 @@ export const Teams = () => {
 			.map((team) => {
 				const teamData = team.data()
 				return {
-					id: team.id,
+					id: team.ref.parent.parent?.id ?? team.id,
 					data: teamData,
 					registeredDate: teamData.registered ? teamData.registeredDate : null,
 				}
@@ -82,10 +83,11 @@ export const Teams = () => {
 		// Map all teams with their placements
 		return selectedSeasonTeamsQuerySnapshot.docs.map((team) => {
 			const teamData = team.data()
+			const canonicalId = team.ref.parent.parent?.id ?? team.id
 			return {
-				id: team.id,
+				id: canonicalId,
 				data: teamData,
-				placement: placementMap.get(team.id),
+				placement: placementMap.get(canonicalId),
 			}
 		})
 	}, [selectedSeasonTeamsQuerySnapshot])
@@ -105,27 +107,26 @@ export const Teams = () => {
 		const countRegisteredPlayers = async () => {
 			const promises = selectedSeasonTeamsQuerySnapshot.docs.map(
 				async (teamDoc) => {
-					const teamData = teamDoc.data()
-					const roster = teamData.roster || []
+					const canonicalTeamId = teamDoc.ref.parent.parent?.id
+					if (!canonicalTeamId) return
 
-					// Fetch all player documents
-					const playerDocs = await Promise.all(
-						roster.map((rosterEntry) => getDoc(rosterEntry.player))
+					const rosterSnap = await getDocs(
+						teamRosterSubcollection(canonicalTeamId, seasonId)
 					)
 
-					// Count players who are registered (paid and signed for this season)
-					const registeredCount = playerDocs.filter((playerDoc) => {
-						if (!playerDoc.exists()) return false
+					const seasonStatuses = await Promise.all(
+						rosterSnap.docs.map(async (rosterDoc) => {
+							const psSnap = await getDoc(
+								playerSeasonRef(rosterDoc.id, seasonId)!
+							)
+							const ps = psSnap.data()
+							return ps?.paid === true && ps?.signed === true
+						})
+					)
 
-						const playerData = playerDoc.data() as PlayerDocument
-						const playerSeason = playerData.seasons?.find(
-							(s) => s.season.id === seasonId
-						)
+					const registeredCount = seasonStatuses.filter(Boolean).length
 
-						return playerSeason?.paid === true && playerSeason?.signed === true
-					}).length
-
-					counts.set(teamDoc.id, registeredCount)
+					counts.set(canonicalTeamId, registeredCount)
 				}
 			)
 
@@ -185,7 +186,7 @@ export const Teams = () => {
 										name: team.data.name,
 										logo: team.data.logo,
 										registered: team.data.registered,
-										registeredDate: team.data.registeredDate,
+										registeredDate: team.data.registeredDate ?? undefined,
 										rosterCount: registeredCount,
 									}}
 									placement={team.placement}

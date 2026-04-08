@@ -51,7 +51,7 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { SeasonDocument, SeasonFormat, TeamDocument } from '@/types'
+import { SeasonDocument, SeasonFormat, TeamSeasonDocument } from '@/types'
 
 /**
  * Swiss matchup pattern for 12 teams across 3 fields
@@ -96,7 +96,7 @@ export const SwissRankings = () => {
 	const [isSavingSeeding, setIsSavingSeeding] = useState(false)
 
 	// Teams for the selected season (fetched separately from global context)
-	const [seasonTeams, setSeasonTeams] = useState<Map<string, TeamDocument>>(
+	const [seasonTeams, setSeasonTeams] = useState<Map<string, TeamSeasonDocument>>(
 		new Map()
 	)
 	const [isLoadingTeams, setIsLoadingTeams] = useState(false)
@@ -132,9 +132,10 @@ export const SwissRankings = () => {
 				const teamsQuery = teamsBySeasonQuery(selectedSeason.ref)
 				if (teamsQuery) {
 					const teamsSnapshot = await getDocs(teamsQuery)
-					const map = new Map<string, TeamDocument>()
+					const map = new Map<string, TeamSeasonDocument>()
 					teamsSnapshot.docs.forEach((doc) => {
-						map.set(doc.id, doc.data())
+						const teamId = doc.ref.parent.parent?.id ?? doc.id
+						map.set(teamId, doc.data())
 					})
 					setSeasonTeams(map)
 				}

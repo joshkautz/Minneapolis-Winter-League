@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { NotificationCard } from '@/shared/components'
 import { DocumentSnapshot, QuerySnapshot } from '@/firebase'
 import { useSeasonsContext, useGamesContext } from '@/providers'
-import { TeamDocument, hasAssignedTeams } from '@/shared/utils'
+import { TeamSeasonDocument, hasAssignedTeams } from '@/shared/utils'
 
 // Format placement with ordinal suffix and medal emoji for top 3
 const formatPlacement = (placement: number | null) => {
@@ -38,9 +38,12 @@ export const TeamHistory = ({
 	teamDocumentSnapshot,
 	historyQuerySnapshot,
 }: {
-	teamDocumentSnapshot: DocumentSnapshot<TeamDocument> | undefined
-	historyQuerySnapshot: QuerySnapshot<TeamDocument>
+	teamDocumentSnapshot:
+		| DocumentSnapshot<import('@/shared/utils').TeamDocument>
+		| undefined
+	historyQuerySnapshot: QuerySnapshot<TeamSeasonDocument>
 }) => {
+	void teamDocumentSnapshot
 	const { seasonsQuerySnapshot } = useSeasonsContext()
 	const { allGamesQuerySnapshot } = useGamesContext()
 
@@ -98,7 +101,7 @@ export const TeamHistory = ({
 				const record = teamRecords[historyDoc.id]
 
 				return {
-					id: historyDoc.id,
+					id: historyDoc.ref.parent.parent?.id ?? historyDoc.id,
 					seasonId: data.season.id,
 					seasonName: seasonDoc?.data()?.name || 'Unknown Season',
 					teamName: data.name,
@@ -114,7 +117,7 @@ export const TeamHistory = ({
 	return (
 		<NotificationCard
 			title={'History'}
-			description={`${teamDocumentSnapshot?.data()?.name} past seasons`}
+			description={`Past seasons`}
 			className={'flex-1 basis-full shrink-0 max-w-full min-w-[360px]'}
 		>
 			{processedHistory.length > 0 ? (

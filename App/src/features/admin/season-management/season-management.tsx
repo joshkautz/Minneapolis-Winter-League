@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument } from 'react-firebase-hooks/firestore'
-import { getDocs, QueryDocumentSnapshot } from 'firebase/firestore'
+import { getDocs } from 'firebase/firestore'
 import {
 	ArrowLeft,
 	AlertTriangle,
@@ -57,7 +57,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { DestructiveConfirmationDialog } from '@/shared/components/destructive-confirmation-dialog'
-import { SeasonDocument, SeasonFormat, TeamDocument } from '@/types'
+import { SeasonDocument, SeasonFormat } from '@/types'
 
 interface ProcessedSeason {
 	id: string
@@ -161,7 +161,13 @@ export const SeasonManagement = () => {
 
 					try {
 						// Get team IDs from the teams array
-						const teamIds = seasonData.teams?.map((teamRef) => teamRef.id) || []
+						// TODO(2026-teams-v2): seasons no longer carry a teams[] array.
+					const teamIds =
+						(
+							seasonData as unknown as {
+								teams?: Array<{ id: string }>
+							}
+						).teams?.map((teamRef) => teamRef.id) || []
 
 						return {
 							id: seasonId,
@@ -206,12 +212,10 @@ export const SeasonManagement = () => {
 
 					if (teamsQuery) {
 						const teamsSnapshot = await getDocs(teamsQuery)
-						const teams = teamsSnapshot.docs.map(
-							(doc: QueryDocumentSnapshot<TeamDocument>) => ({
-								id: doc.id,
-								name: doc.data().name,
-							})
-						)
+						const teams = teamsSnapshot.docs.map((doc) => ({
+							id: doc.ref.parent.parent?.id ?? doc.id,
+							name: doc.data().name,
+						}))
 						setAvailableTeams(teams)
 					}
 				} catch (error) {

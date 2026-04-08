@@ -3,30 +3,31 @@
  *
  * Allows admins to:
  * - Edit team name
- * - Link team to another team's history (change teamId)
  * - Manage roster (add/remove players, change captain status)
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { collection, Query, QueryDocumentSnapshot } from 'firebase/firestore'
+import { collection, Query, getDocs } from 'firebase/firestore'
 import {
 	Pencil,
-	Link as LinkIcon,
 	Users,
 	Loader2,
-	Search,
 	UserPlus,
 	Trash2,
 	Star,
 	StarOff,
-	AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { firestore } from '@/firebase/app'
 import { DocumentReference } from '@/firebase'
 import { logger } from '@/shared/utils'
+import {
+	teamRosterSubcollection,
+	teamSeasonRef,
+} from '@/firebase/collections/teams'
+import { playerSeasonRef } from '@/firebase/collections/players'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -55,16 +56,14 @@ import {
 	TeamDocument,
 	PlayerDocument,
 	Collections,
-	TeamRosterPlayer,
+	TeamRosterDocument,
 } from '@/types'
-import { useSeasonsContext } from '@/providers'
 
 interface TeamEditDialogProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	teamDocId: string
 	teamName: string
-	teamIdValue: string // The team's teamId field (for linking)
 	teamRef: DocumentReference<TeamDocument>
 	seasonId: string
 }
@@ -74,13 +73,16 @@ export const TeamEditDialog = ({
 	onOpenChange,
 	teamDocId,
 	teamName: initialTeamName,
-	teamIdValue,
 	teamRef,
 	seasonId,
 }: TeamEditDialogProps) => {
-	// Fetch team document for real-time roster data
-	const [teamSnapshot, teamLoading, teamError] = useDocument(
-		open ? teamRef : null
+	void teamRef
+	// Fetch team season subdoc for real-time data
+	const [teamSeasonSnapshot, teamLoading, teamError] = useDocument(
+		open ? teamSeasonRef(teamDocId, seasonId) : null
+	)
+	const [rosterSnapshot] = useCollection(
+		open ? teamRosterSubcollection(teamDocId, seasonId) : null
 	)
 
 	// Fetch all players
@@ -89,9 +91,6 @@ export const TeamEditDialog = ({
 			? (collection(firestore, Collections.PLAYERS) as Query<PlayerDocument>)
 			: null
 	)
-
-	// Get seasons context
-	const { seasonsQuerySnapshot } = useSeasonsContext()
 
 	// Log errors
 	useEffect(() => {
@@ -111,15 +110,6 @@ export const TeamEditDialog = ({
 	const [teamName, setTeamName] = useState(initialTeamName)
 	const [isSavingName, setIsSavingName] = useState(false)
 
-	// Team linking state
-	const [teamSearchQuery, setTeamSearchQuery] = useState('')
-	const [isLinking, setIsLinking] = useState(false)
-	const [teamToLink, setTeamToLink] = useState<{
-		teamId: string
-		teamName: string
-		seasonName: string
-	} | null>(null)
-
 	// Roster state
 	const [playerSearchQuery, setPlayerSearchQuery] = useState('')
 	const [isAddingPlayer, setIsAddingPlayer] = useState(false)
@@ -137,36 +127,51 @@ export const TeamEditDialog = ({
 	useEffect(() => {
 		if (open) {
 			setTeamName(initialTeamName)
-			setTeamSearchQuery('')
 			setPlayerSearchQuery('')
-			setTeamToLink(null)
 			setPlayerToRemove(null)
 		}
 	}, [open, initialTeamName])
+	void teamSeasonSnapshot
 
-	// Fetch all teams for linking search
-	const [allTeamsSnapshot] = useCollection(
-		open
-			? (collection(firestore, Collections.TEAMS) as Query<TeamDocument>)
-			: null
-	)
-
-	// Get current roster from team snapshot
+	// Get current roster from roster subcollection (joined with player season for captain)
 	const currentRoster = useMemo(() => {
-		if (!teamSnapshot?.exists()) return []
-		const data = teamSnapshot.data()
-		return data?.roster || []
-	}, [teamSnapshot])
+		if (!rosterSnapshot) return [] as Array<TeamRosterDocument & { id: string }>
+		return rosterSnapshot.docs.map(
+			(d) =>
+				({ id: d.id, ...d.data() }) as TeamRosterDocument & { id: string }
+		)
+	}, [rosterSnapshot])
+	const [captainMap, setCaptainMap] = useState<Record<string, boolean>>({})
+	useEffect(() => {
+		let cancelled = false
+		const fetchCaptains = async () => {
+			const entries: [string, boolean][] = []
+			for (const r of currentRoster) {
+				try {
+					const ps = await import('firebase/firestore').then(({ getDoc }) =>
+						getDoc(playerSeasonRef(r.player.id, seasonId)!)
+					)
+					entries.push([r.player.id, ps.data()?.captain === true])
+				} catch {
+					entries.push([r.player.id, false])
+				}
+			}
+			if (!cancelled) setCaptainMap(Object.fromEntries(entries))
+		}
+		fetchCaptains()
+		return () => {
+			cancelled = true
+		}
+	}, [currentRoster, seasonId])
 
 	// Get roster player details
 	const rosterWithDetails = useMemo(() => {
 		if (!currentRoster.length || !allPlayersSnapshot) return []
 
 		return currentRoster
-			.map((rosterPlayer: TeamRosterPlayer) => {
+			.map((rosterPlayer) => {
 				const playerDoc = allPlayersSnapshot.docs.find(
-					(doc: QueryDocumentSnapshot<PlayerDocument>) =>
-						doc.id === rosterPlayer.player.id
+					(doc) => doc.id === rosterPlayer.player.id
 				)
 				if (!playerDoc) return null
 
@@ -175,7 +180,7 @@ export const TeamEditDialog = ({
 					playerId: playerDoc.id,
 					playerName:
 						`${playerData.firstname || ''} ${playerData.lastname || ''}`.trim(),
-					captain: rosterPlayer.captain,
+					captain: captainMap[rosterPlayer.player.id] === true,
 				}
 			})
 			.filter(Boolean) as {
@@ -183,51 +188,13 @@ export const TeamEditDialog = ({
 			playerName: string
 			captain: boolean
 		}[]
-	}, [currentRoster, allPlayersSnapshot])
+	}, [currentRoster, allPlayersSnapshot, captainMap])
 
 	// Count captains
 	const captainCount = useMemo(
 		() => rosterWithDetails.filter((p) => p.captain).length,
 		[rosterWithDetails]
 	)
-
-	// Search teams for linking
-	const teamSearchResults = useMemo(() => {
-		if (!teamSearchQuery.trim() || !allTeamsSnapshot) return []
-
-		const searchLower = teamSearchQuery.toLowerCase()
-
-		// Group teams by teamId and get the most relevant match
-		const teamsByTeamId = new Map<
-			string,
-			{ teamId: string; teamName: string; seasonId: string; seasonName: string }
-		>()
-
-		allTeamsSnapshot.docs.forEach((doc) => {
-			const data = doc.data()
-			// Skip the current team
-			if (data.teamId === teamIdValue) return
-
-			// Check if name matches search
-			if (!data.name.toLowerCase().includes(searchLower)) return
-
-			// Get season name
-			const seasonDoc = seasonsQuerySnapshot?.docs.find(
-				(s) => s.id === data.season.id
-			)
-			const seasonName = seasonDoc?.data()?.name || 'Unknown Season'
-
-			// Keep only one entry per teamId (prefer most recent by just overwriting)
-			teamsByTeamId.set(data.teamId, {
-				teamId: data.teamId,
-				teamName: data.name,
-				seasonId: data.season.id,
-				seasonName,
-			})
-		})
-
-		return Array.from(teamsByTeamId.values()).slice(0, 10)
-	}, [teamSearchQuery, allTeamsSnapshot, teamIdValue, seasonsQuerySnapshot])
 
 	// Search players for adding to roster
 	const playerSearchResults = useMemo(() => {
@@ -248,10 +215,6 @@ export const TeamEditDialog = ({
 				// Check if name matches
 				if (!fullName.includes(searchLower)) return false
 
-				// Check if player is on another team this season
-				const seasonData = data.seasons?.find((s) => s.season.id === seasonId)
-				if (seasonData?.team) return false // Already on a team
-
 				return true
 			})
 			.slice(0, 10)
@@ -262,7 +225,9 @@ export const TeamEditDialog = ({
 					playerName: `${data.firstname || ''} ${data.lastname || ''}`.trim(),
 				}
 			})
-	}, [playerSearchQuery, allPlayersSnapshot, currentRoster, seasonId])
+	}, [playerSearchQuery, allPlayersSnapshot, currentRoster])
+	void getDocs
+	void seasonId
 
 	// Handle name save
 	const handleSaveName = useCallback(async () => {
@@ -284,31 +249,6 @@ export const TeamEditDialog = ({
 			setIsSavingName(false)
 		}
 	}, [teamName, initialTeamName, teamDocId])
-
-	// Handle team linking
-	const handleLinkTeam = useCallback(async () => {
-		if (!teamToLink) return
-
-		setIsLinking(true)
-		try {
-			await updateTeamAdminViaFunction({
-				teamDocId,
-				linkToTeamId: teamToLink.teamId,
-			})
-			toast.success('Team history linked', {
-				description: `This team is now linked to ${teamToLink.teamName}'s history`,
-			})
-			setTeamToLink(null)
-			setTeamSearchQuery('')
-		} catch (error) {
-			logger.error('Failed to link team:', error)
-			toast.error('Failed to link team', {
-				description: error instanceof Error ? error.message : 'Unknown error',
-			})
-		} finally {
-			setIsLinking(false)
-		}
-	}, [teamToLink, teamDocId])
 
 	// Handle add player
 	const handleAddPlayer = useCallback(
@@ -439,77 +379,6 @@ export const TeamEditDialog = ({
 											)}
 										</Button>
 									</div>
-								</div>
-							</div>
-
-							<Separator />
-
-							{/* Section 2: Team History (Linking) */}
-							<div className='space-y-4'>
-								<h3 className='text-sm font-medium flex items-center gap-2'>
-									<LinkIcon className='h-4 w-4' />
-									Team History
-								</h3>
-								<div className='text-sm text-muted-foreground'>
-									<p>
-										Current Team ID:{' '}
-										<code className='bg-muted px-1 py-0.5 rounded text-xs'>
-											{teamIdValue}
-										</code>
-									</p>
-									<p className='mt-1'>
-										Link this team to another team's history to connect their
-										records across seasons.
-									</p>
-								</div>
-								<div className='space-y-2'>
-									<Label htmlFor='team-search'>Search teams to link</Label>
-									<div className='relative'>
-										<Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-										<Input
-											id='team-search'
-											value={teamSearchQuery}
-											onChange={(e) => setTeamSearchQuery(e.target.value)}
-											placeholder='Search by team name...'
-											className='pl-9'
-										/>
-									</div>
-									{teamSearchResults.length > 0 && (
-										<div className='border rounded-md divide-y'>
-											{teamSearchResults.map((team) => (
-												<div
-													key={team.teamId}
-													className='flex items-center justify-between p-3 hover:bg-muted/50'
-												>
-													<div>
-														<p className='font-medium'>{team.teamName}</p>
-														<p className='text-sm text-muted-foreground'>
-															{team.seasonName}
-														</p>
-													</div>
-													<Button
-														size='sm'
-														variant='outline'
-														onClick={() =>
-															setTeamToLink({
-																teamId: team.teamId,
-																teamName: team.teamName,
-																seasonName: team.seasonName,
-															})
-														}
-													>
-														<LinkIcon className='h-4 w-4 mr-1' />
-														Link
-													</Button>
-												</div>
-											))}
-										</div>
-									)}
-									{teamSearchQuery.trim() && teamSearchResults.length === 0 && (
-										<p className='text-sm text-muted-foreground text-center py-4'>
-											No teams found matching "{teamSearchQuery}"
-										</p>
-									)}
 								</div>
 							</div>
 
@@ -656,40 +525,6 @@ export const TeamEditDialog = ({
 					</ScrollArea>
 				</DialogContent>
 			</Dialog>
-
-			{/* Team Link Confirmation Dialog */}
-			<AlertDialog open={!!teamToLink} onOpenChange={() => setTeamToLink(null)}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle className='flex items-center gap-2'>
-							<AlertTriangle className='h-5 w-5 text-amber-500' />
-							Link Team History
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							This will link <strong>{initialTeamName}</strong> to the history
-							of <strong>{teamToLink?.teamName}</strong> (
-							{teamToLink?.seasonName}
-							).
-							<br />
-							<br />
-							Teams with the same Team ID are considered the same team across
-							seasons. This action will change this team's ID to match the
-							selected team.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isLinking}>Cancel</AlertDialogCancel>
-						<AlertDialogAction onClick={handleLinkTeam} disabled={isLinking}>
-							{isLinking ? (
-								<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-							) : (
-								<LinkIcon className='h-4 w-4 mr-2' />
-							)}
-							Link Teams
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
 
 			{/* Remove Player Confirmation Dialog */}
 			<AlertDialog
