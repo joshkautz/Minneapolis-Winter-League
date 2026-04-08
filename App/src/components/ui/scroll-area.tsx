@@ -5,6 +5,23 @@ import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area'
 
 import { cn } from '@/shared/utils'
 
+/**
+ * ⚠️ Known footgun: do NOT use `<ScrollArea>` inside a flex-column
+ * `<DialogContent>` with `flex-1 min-h-0`. Radix's ScrollArea Root uses
+ * `position: relative` with an absolute-positioned Viewport that needs
+ * its container to have an explicitly bounded height. Inside a flex
+ * column dialog, `flex-1 min-h-0` doesn't reliably bound the Root's
+ * height — the Viewport sizes to its content instead of its container,
+ * and the inner scrollbar never engages, leaving content unreachable.
+ *
+ * For dialogs use a plain `<div className='flex-1 min-h-0 overflow-y-auto'>`
+ * instead. See team-edit-dialog.tsx and merge-teams-dialog.tsx for the
+ * correct pattern, and commit `c9d18531` for the original fix.
+ *
+ * ScrollArea is fine in non-flex layouts where the Root has an
+ * explicit/intrinsic height (sidebars, dropdown menus, fixed-height
+ * cards).
+ */
 function ScrollArea({
 	className,
 	children,

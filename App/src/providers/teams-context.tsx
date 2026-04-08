@@ -97,19 +97,54 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 		return refs.length > 0 ? refs : undefined
 	}, [authenticatedUserSeasonsSnapshot])
 
+	// When the user hasn't switched the season selector, the "selected"
+	// season is the same doc as the "current" season — running both
+	// queries would double-fetch the same collection-group result. Detect
+	// the equal case and gate the duplicate `useCollection` to undefined
+	// so only one query fires; the consumer-facing accessors below alias
+	// the deduped result back into both names.
+	const selectedSeasonId = selectedSeasonQueryDocumentSnapshot?.id
+	const currentSeasonId = currentSeasonQueryDocumentSnapshot?.id
+	const seasonsAreEqual =
+		!!selectedSeasonId &&
+		!!currentSeasonId &&
+		selectedSeasonId === currentSeasonId
+
 	const [
-		selectedSeasonTeamsQuerySnapshot,
-		selectedSeasonTeamsQuerySnapshotLoading,
-		selectedSeasonTeamsQuerySnapshotError,
+		selectedSeasonTeamsQuerySnapshotInternal,
+		selectedSeasonTeamsQuerySnapshotInternalLoading,
+		selectedSeasonTeamsQuerySnapshotInternalError,
 	] = useCollection(
 		teamsInSeasonQuery(selectedSeasonQueryDocumentSnapshot?.ref)
 	)
 
 	const [
-		currentSeasonTeamsQuerySnapshot,
-		currentSeasonTeamsQuerySnapshotLoading,
-		currentSeasonTeamsQuerySnapshotError,
-	] = useCollection(teamsInSeasonQuery(currentSeasonQueryDocumentSnapshot?.ref))
+		currentSeasonTeamsQuerySnapshotInternal,
+		currentSeasonTeamsQuerySnapshotInternalLoading,
+		currentSeasonTeamsQuerySnapshotInternalError,
+	] = useCollection(
+		seasonsAreEqual
+			? undefined
+			: teamsInSeasonQuery(currentSeasonQueryDocumentSnapshot?.ref)
+	)
+
+	// Alias the deduped result when the seasons match, otherwise use the
+	// dedicated current-season query result.
+	const currentSeasonTeamsQuerySnapshot = seasonsAreEqual
+		? selectedSeasonTeamsQuerySnapshotInternal
+		: currentSeasonTeamsQuerySnapshotInternal
+	const currentSeasonTeamsQuerySnapshotLoading = seasonsAreEqual
+		? selectedSeasonTeamsQuerySnapshotInternalLoading
+		: currentSeasonTeamsQuerySnapshotInternalLoading
+	const currentSeasonTeamsQuerySnapshotError = seasonsAreEqual
+		? selectedSeasonTeamsQuerySnapshotInternalError
+		: currentSeasonTeamsQuerySnapshotInternalError
+	const selectedSeasonTeamsQuerySnapshot =
+		selectedSeasonTeamsQuerySnapshotInternal
+	const selectedSeasonTeamsQuerySnapshotLoading =
+		selectedSeasonTeamsQuerySnapshotInternalLoading
+	const selectedSeasonTeamsQuerySnapshotError =
+		selectedSeasonTeamsQuerySnapshotInternalError
 
 	const [
 		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
