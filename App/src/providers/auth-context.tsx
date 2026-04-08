@@ -13,13 +13,11 @@ import {
 	useAuthState,
 	useCreateUserWithEmailAndPassword,
 	useSignInWithEmailAndPassword,
-	// useUpdateEmail,
-	// useUpdatePassword,
 	useSendPasswordResetEmail,
 	useSendEmailVerification,
 	useSignOut,
 } from 'react-firebase-hooks/auth'
-import { useDocument } from 'react-firebase-hooks/firestore'
+import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 
 // Winter League
 import {
@@ -29,8 +27,14 @@ import {
 	AuthError,
 	ActionCodeSettings,
 } from '@/firebase/auth'
-import { getPlayerRef, FirestoreError, DocumentSnapshot } from '@/firebase'
-import { PlayerDocument } from '@/shared/utils'
+import {
+	getPlayerRef,
+	FirestoreError,
+	DocumentSnapshot,
+	QuerySnapshot,
+} from '@/firebase'
+import { playerSeasonsSubcollection } from '@/firebase/collections/players'
+import { PlayerDocument, PlayerSeasonDocument } from '@/shared/utils'
 
 /** How often to refresh user data from Firebase Auth (in milliseconds) */
 const USER_REFRESH_INTERVAL = 10000 // 10 seconds
@@ -46,6 +50,16 @@ interface AuthContextValue {
 	authenticatedUserSnapshot: DocumentSnapshot<PlayerDocument> | undefined
 	authenticatedUserSnapshotLoading: boolean
 	authenticatedUserSnapshotError: FirestoreError | undefined
+	/**
+	 * The authenticated user's per-season subdocs as a live collection
+	 * snapshot. Doc id matches the season id; data has paid/signed/banned/
+	 * captain/team.
+	 */
+	authenticatedUserSeasonsSnapshot:
+		| QuerySnapshot<PlayerSeasonDocument>
+		| undefined
+	authenticatedUserSeasonsSnapshotLoading: boolean
+	authenticatedUserSeasonsSnapshotError: FirestoreError | undefined
 	createUserWithEmailAndPassword: (
 		email: string,
 		password: string
@@ -92,6 +106,11 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
 		authenticatedUserSnapshotLoading,
 		authenticatedUserSnapshotError,
 	] = useDocument(getPlayerRef(authStateUser))
+	const [
+		authenticatedUserSeasonsSnapshot,
+		authenticatedUserSeasonsSnapshotLoading,
+		authenticatedUserSeasonsSnapshotError,
+	] = useCollection(playerSeasonsSubcollection(authStateUser?.uid))
 	const [
 		createUserWithEmailAndPassword,
 		createUserWithEmailAndPasswordUser,
@@ -167,6 +186,11 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
 			| undefined,
 		authenticatedUserSnapshotLoading,
 		authenticatedUserSnapshotError,
+		authenticatedUserSeasonsSnapshot: authenticatedUserSeasonsSnapshot as
+			| QuerySnapshot<PlayerSeasonDocument>
+			| undefined,
+		authenticatedUserSeasonsSnapshotLoading,
+		authenticatedUserSeasonsSnapshotError,
 		createUserWithEmailAndPassword,
 		createUserWithEmailAndPasswordUser,
 		createUserWithEmailAndPasswordLoading,

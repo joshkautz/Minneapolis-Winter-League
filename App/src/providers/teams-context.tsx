@@ -13,23 +13,40 @@ import { toast } from 'sonner'
 
 // Winter League
 import {
-	currentSeasonTeamsQuery,
+	allTeamsQuery,
+	teamsInSeasonQuery,
+	teamsQuery,
+} from '@/firebase/collections/teams'
+import { playerSeasonsSubcollection } from '@/firebase/collections/players'
+import {
 	FirestoreError,
 	QuerySnapshot,
-	teamsQuery,
 } from '@/firebase'
-import { allTeamsQuery } from '@/firebase/collections/teams'
-import { TeamDocument, logger } from '@/shared/utils'
+import {
+	TeamDocument,
+	TeamSeasonDocument,
+	logger,
+} from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 import { useAuthContext } from './auth-context'
 
 interface TeamProps {
-	currentSeasonTeamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
+	/**
+	 * Per-team season subdocs participating in the *current* season.
+	 * Each doc's ref.parent.parent is the canonical teams/{teamId} document.
+	 */
+	currentSeasonTeamsQuerySnapshot:
+		| QuerySnapshot<TeamSeasonDocument>
+		| undefined
 	currentSeasonTeamsQuerySnapshotLoading: boolean
 	currentSeasonTeamsQuerySnapshotError: FirestoreError | undefined
-	selectedSeasonTeamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
+	/** Per-team season subdocs participating in the *selected* season. */
+	selectedSeasonTeamsQuerySnapshot:
+		| QuerySnapshot<TeamSeasonDocument>
+		| undefined
 	selectedSeasonTeamsQuerySnapshotLoading: boolean
 	selectedSeasonTeamsQuerySnapshotError: FirestoreError | undefined
+	/** Canonical team docs the authenticated user is a captain of (any season). */
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot:
 		| QuerySnapshot<TeamDocument>
 		| undefined
@@ -37,6 +54,7 @@ interface TeamProps {
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError:
 		| FirestoreError
 		| undefined
+	/** All canonical teams in the system. */
 	allTeamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
 	allTeamsQuerySnapshotLoading: boolean
 	allTeamsQuerySnapshotError: FirestoreError | undefined
@@ -66,30 +84,43 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 		selectedSeasonQueryDocumentSnapshot,
 		currentSeasonQueryDocumentSnapshot,
 	} = useSeasonsContext()
-	const { authenticatedUserSnapshot } = useAuthContext()
+	const { authStateUser } = useAuthContext()
 
-	const teamsForWhichAuthenticatedUserIsCaptain = useMemo(
-		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.filter((season) => season.captain)
-				.map((season) => season.team),
-		[authenticatedUserSnapshot]
+	// Load the user's player season subcollection so we can derive which
+	// canonical teams they are a captain of (across all seasons).
+	const [authenticatedUserSeasonsSnapshot] = useCollection(
+		playerSeasonsSubcollection(authStateUser?.uid)
 	)
+
+	const teamsForWhichAuthenticatedUserIsCaptain = useMemo(() => {
+		if (!authenticatedUserSeasonsSnapshot) return undefined
+		const seen = new Set<string>()
+		const refs = []
+		for (const docSnap of authenticatedUserSeasonsSnapshot.docs) {
+			const data = docSnap.data()
+			if (data.captain && data.team && !seen.has(data.team.id)) {
+				seen.add(data.team.id)
+				refs.push(data.team)
+			}
+		}
+		return refs.length > 0 ? refs : undefined
+	}, [authenticatedUserSeasonsSnapshot])
 
 	const [
 		selectedSeasonTeamsQuerySnapshot,
 		selectedSeasonTeamsQuerySnapshotLoading,
 		selectedSeasonTeamsQuerySnapshotError,
 	] = useCollection(
-		currentSeasonTeamsQuery(selectedSeasonQueryDocumentSnapshot)
+		teamsInSeasonQuery(selectedSeasonQueryDocumentSnapshot?.ref)
 	)
 
 	const [
 		currentSeasonTeamsQuerySnapshot,
 		currentSeasonTeamsQuerySnapshotLoading,
 		currentSeasonTeamsQuerySnapshotError,
-	] = useCollection(currentSeasonTeamsQuery(currentSeasonQueryDocumentSnapshot))
+	] = useCollection(
+		teamsInSeasonQuery(currentSeasonQueryDocumentSnapshot?.ref)
+	)
 
 	const [
 		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
