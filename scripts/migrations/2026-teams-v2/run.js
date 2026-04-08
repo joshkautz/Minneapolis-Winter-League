@@ -816,19 +816,59 @@ async function runValidate() {
 	logHeader('Phase C — validate staged collections')
 
 	const plan = await buildMigrationPlan()
-	const {
-		groupsByLegacyTeamId,
-		legacyTeamIdToCanonical,
-		playersSnap,
-		legacyDocIdToCanonical,
-	} = plan
+	const { groupsByLegacyTeamId, playersSnap } = plan
 
 	const errors = []
 	const warnings = []
 
+	// Read the actual minted canonical ids from the staging idmap.
+	// `buildMigrationPlan` mints fresh ids on every call, so we cannot
+	// use the in-memory `legacyTeamIdToCanonical` from the validate phase
+	// to look up what migrate phase actually wrote — they would be
+	// different ids. Read from staging instead.
+	const idmapSnap = await db.collection(STAGING.idmap).get()
+	if (idmapSnap.empty) {
+		// Post-cutover state: staging has been deleted. Validate has nothing
+		// to compare against. Report a no-op success.
+		console.log(
+			'\n  Staging is empty — validate has nothing to check.\n  (This is expected after a successful cutover.)'
+		)
+		console.log(`\nValidation summary:`)
+		console.log(`  staged player seasons:    0`)
+		console.log(`  staged captains:          0`)
+		console.log(`  errors:                   0`)
+		console.log(`  warnings:                 0`)
+		console.log('\n✅ validate passed.')
+		return
+	}
+	// legacyDocId → canonicalTeamId (from staging idmap, source of truth)
+	const legacyDocIdToCanonical = new Map()
+	for (const doc of idmapSnap.docs) {
+		legacyDocIdToCanonical.set(doc.id, doc.data().canonicalTeamId)
+	}
+	// legacyTeamId → canonicalTeamId, derived by walking the
+	// `groupsByLegacyTeamId` (which knows which legacy doc ids belong to
+	// which legacy teamId) and joining against the idmap.
+	const legacyTeamIdToCanonical = new Map()
+	for (const [legacyTeamId, instances] of groupsByLegacyTeamId) {
+		for (const inst of instances) {
+			const canonicalId = legacyDocIdToCanonical.get(inst.docId)
+			if (canonicalId) {
+				legacyTeamIdToCanonical.set(legacyTeamId, canonicalId)
+				break
+			}
+		}
+	}
+
 	// 1. Every group has a canonical doc at the freshly-minted Firestore id.
 	for (const legacyTeamId of groupsByLegacyTeamId.keys()) {
 		const canonicalTeamId = legacyTeamIdToCanonical.get(legacyTeamId)
+		if (!canonicalTeamId) {
+			errors.push(
+				`teams_new/* missing for legacy teamId ${legacyTeamId} (no idmap entry)`
+			)
+			continue
+		}
 		const docSnap = await db
 			.collection(STAGING.teams)
 			.doc(canonicalTeamId)
