@@ -48,7 +48,8 @@ export const TeamHistory = ({
 	const { seasonsQuerySnapshot } = useSeasonsContext()
 	const { allGamesQuerySnapshot } = useGamesContext()
 
-	// Calculate team records from games
+	// Calculate team records from games. Keyed by `${canonicalTeamId}__${seasonId}`
+	// because a single team has different W/L records in different seasons.
 	const teamRecords = useMemo(() => {
 		const records: Record<string, { wins: number; losses: number }> = {}
 
@@ -60,30 +61,26 @@ export const TeamHistory = ({
 			// Skip games with null team references (placeholder games)
 			if (!hasAssignedTeams(gameData)) return
 
-			const { home, away, homeScore, awayScore } = gameData
+			const { home, away, homeScore, awayScore, season } = gameData
 
 			// Skip games that haven't been played yet (null scores)
 			if (homeScore === null || awayScore === null) return
+			if (!season?.id) return
 
-			// Update home team record
-			if (!records[home.id]) {
-				records[home.id] = { wins: 0, losses: 0 }
-			}
+			const homeKey = `${home.id}__${season.id}`
+			const awayKey = `${away.id}__${season.id}`
+
+			if (!records[homeKey]) records[homeKey] = { wins: 0, losses: 0 }
+			if (!records[awayKey]) records[awayKey] = { wins: 0, losses: 0 }
+
 			if (homeScore > awayScore) {
-				records[home.id].wins++
-			} else if (homeScore < awayScore) {
-				records[home.id].losses++
+				records[homeKey].wins++
+				records[awayKey].losses++
+			} else if (awayScore > homeScore) {
+				records[awayKey].wins++
+				records[homeKey].losses++
 			}
-
-			// Update away team record
-			if (!records[away.id]) {
-				records[away.id] = { wins: 0, losses: 0 }
-			}
-			if (awayScore > homeScore) {
-				records[away.id].wins++
-			} else if (awayScore < homeScore) {
-				records[away.id].losses++
-			}
+			// Ties (rare in ultimate but not impossible): no win/loss credit
 		})
 
 		return records
@@ -99,10 +96,13 @@ export const TeamHistory = ({
 				const seasonDoc = seasonsQuerySnapshot.docs.find(
 					(s) => s.id === data.season.id
 				)
-				const record = teamRecords[historyDoc.id]
+				const canonicalTeamId = canonicalTeamIdFromTeamSeasonDoc(historyDoc)
+				// Look up the record using (canonicalTeamId, seasonId) — the
+				// key matches what the games loop above produced.
+				const record = teamRecords[`${canonicalTeamId}__${data.season.id}`]
 
 				return {
-					id: canonicalTeamIdFromTeamSeasonDoc(historyDoc),
+					id: canonicalTeamId,
 					seasonId: data.season.id,
 					seasonName: seasonDoc?.data()?.name || 'Unknown Season',
 					teamName: data.name,
