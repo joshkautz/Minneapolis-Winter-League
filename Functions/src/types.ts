@@ -144,7 +144,18 @@ export interface PlayerDocument extends DocumentData {
 export interface PlayerSeasonDocument extends DocumentData {
 	/** Reference to the season this entry corresponds to */
 	season: DocumentReference<SeasonDocument>
-	/** Reference to the canonical team this player belongs to (null if not on a team) */
+	/**
+	 * Reference to the canonical team this player belongs to (null if not
+	 * on a team).
+	 *
+	 * **DENORMALIZED**: this field encodes the same player↔team relationship
+	 * as the corresponding `teams/{teamId}/teamSeasons/{seasonId}/roster/{uid}`
+	 * roster entry (see `TeamRosterDocument`). Both directions are needed
+	 * because Firestore has no joins and both reads are hot paths. Never
+	 * write either side directly — go through the helpers in
+	 * `shared/membership.ts` (`addPlayerToTeam`, `removePlayerFromTeam`)
+	 * which write both atomically in one transaction.
+	 */
 	team: DocumentReference<TeamDocument> | null
 	/** Whether the player has paid for the season */
 	paid: boolean
@@ -152,7 +163,14 @@ export interface PlayerSeasonDocument extends DocumentData {
 	signed: boolean
 	/** Whether the player is banned from the season */
 	banned: boolean
-	/** Whether the player is a team captain for this season */
+	/**
+	 * Whether the player is a team captain for this season.
+	 *
+	 * Single source of truth — the team-side roster doc carries no captain
+	 * field. Updates must go through `setPlayerCaptainStatus` in
+	 * `shared/membership.ts` so all membership-state writes flow through
+	 * one module.
+	 */
 	captain: boolean
 }
 
@@ -202,9 +220,16 @@ export interface TeamSeasonDocument extends DocumentData {
 /**
  * Single roster entry: pure membership join between team-season and player.
  *
- * Stored at `teams/{teamId}/seasons/{seasonId}/roster/{playerId}`. The doc id
- * is the player's UID. Carries no status fields — captain/paid/signed/banned
- * all live on the player's season subdoc.
+ * Stored at `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}`. The
+ * doc id is the player's UID. Carries no status fields —
+ * captain/paid/signed/banned all live on the player's season subdoc.
+ *
+ * **DENORMALIZED**: this entry encodes the same player↔team relationship as
+ * `players/{uid}/playerSeasons/{seasonId}.team` (see `PlayerSeasonDocument`).
+ * Both directions are needed because Firestore has no joins and both reads
+ * are hot paths. Never write either side directly — go through the helpers
+ * in `shared/membership.ts` (`addPlayerToTeam`, `removePlayerFromTeam`)
+ * which write both atomically in one transaction.
  */
 export interface TeamRosterDocument extends DocumentData {
 	/** Reference to the player document */

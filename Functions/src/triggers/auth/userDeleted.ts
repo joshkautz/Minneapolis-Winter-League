@@ -55,6 +55,14 @@ export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 		// teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}. After the
 		// seasons subcollection rename, the roster collection group is
 		// unambiguous so no parent-path disambiguation is required.
+		//
+		// Note: this intentionally bypasses `removePlayerFromTeam()` from
+		// shared/membership.ts. That helper sets `team: null, captain: false`
+		// on the player season subdoc to keep the dual-write invariant — but
+		// the next step recursive-deletes the player's seasons subcollection
+		// entirely, so the player-side write would be wasted work. Bulk
+		// player deletion is the one legitimate exception to "always go
+		// through the membership helper".
 		let rosterEntriesDeleted = 0
 		for (const rosterDoc of rosterEntriesSnap.docs) {
 			await rosterDoc.ref.delete()

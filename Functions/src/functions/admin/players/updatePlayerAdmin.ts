@@ -15,23 +15,22 @@
  */
 
 import { getAuth } from 'firebase-admin/auth'
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
+import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
 import {
-	playerSeasonRef,
-	teamRef as canonicalTeamRef,
-	teamRosterEntryRef,
-	teamSeasonRef,
-} from '../../../shared/database.js'
+	addPlayerToTeam,
+	removePlayerFromTeam,
+	setPlayerCaptainStatus,
+} from '../../../shared/membership.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	Collections,
 	type DocumentReference,
 	type PlayerDocument,
-	type PlayerSeasonDocument,
 	type SeasonDocument,
 } from '../../../types.js'
 
@@ -426,48 +425,54 @@ export const updatePlayerAdmin = onCall<
 						trackedChanges.team = { from: oldTeamId, to: newTeamId }
 					}
 
-					// Apply player season subdoc update + team membership writes.
-					const playerSeasonUpdate: Partial<PlayerSeasonDocument> = {
-						captain: seasonUpdate.captain,
-						paid: seasonUpdate.paid,
-						signed: seasonUpdate.signed,
-						banned: newBanned,
-					}
-					if (oldTeamId !== newTeamId) {
-						playerSeasonUpdate.team = newTeamId
-							? canonicalTeamRef(firestore, newTeamId)
-							: null
-					}
+					// We need the canonical season ref for addPlayerToTeam (when
+					// creating a new player season subdoc — this branch never hits
+					// because the validation above asserts the subdoc already exists,
+					// but the helper requires the ref regardless).
+					const seasonCanonicalRef = firestore
+						.collection(Collections.SEASONS)
+						.doc(seasonUpdate.seasonId) as DocumentReference<SeasonDocument>
 
-					await firestore.runTransaction(async (txn) => {
-						txn.update(playerSeasonDocRef, playerSeasonUpdate)
-
+					await firestore.runTransaction((txn) => {
+						// 1. Membership change (if any). Order matters: we run remove
+						// then add for moves so the player season subdoc's `team` field
+						// ends up pointing at the new team — the second write wins.
 						if (oldTeamId !== newTeamId) {
 							if (oldTeamId) {
-								txn.delete(
-									teamRosterEntryRef(
-										firestore,
-										oldTeamId,
-										seasonUpdate.seasonId,
-										playerId
-									)
-								)
+								removePlayerFromTeam(txn, firestore, {
+									playerId,
+									teamId: oldTeamId,
+									seasonId: seasonUpdate.seasonId,
+								})
 							}
 							if (newTeamId) {
-								txn.set(
-									teamRosterEntryRef(
-										firestore,
-										newTeamId,
-										seasonUpdate.seasonId,
-										playerId
-									),
-									{
-										player: playerDocRef,
-										dateJoined: Timestamp.now(),
-									}
-								)
+								addPlayerToTeam(txn, firestore, {
+									playerId,
+									teamId: newTeamId,
+									seasonId: seasonUpdate.seasonId,
+									seasonRef: seasonCanonicalRef,
+									captain: seasonUpdate.captain,
+									existingPlayerSeason: currentPlayerSeason,
+								})
 							}
+						} else if (wasCaptain !== willBeCaptain) {
+							// No team change, just captain status flip.
+							setPlayerCaptainStatus(txn, firestore, {
+								playerId,
+								seasonId: seasonUpdate.seasonId,
+								captain: seasonUpdate.captain,
+							})
 						}
+
+						// 2. Field-only updates (paid / signed / banned). These are
+						// independent of membership and always written. Captain is
+						// already handled above so we deliberately omit it here.
+						txn.update(playerSeasonDocRef, {
+							paid: seasonUpdate.paid,
+							signed: seasonUpdate.signed,
+							banned: newBanned,
+						})
+						return Promise.resolve()
 					})
 
 					if (Object.keys(trackedChanges).length > 0) {

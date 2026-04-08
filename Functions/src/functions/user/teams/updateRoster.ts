@@ -16,6 +16,10 @@ import {
 	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../../shared/database.js'
+import {
+	removePlayerFromTeam,
+	setPlayerCaptainStatus,
+} from '../../../shared/membership.js'
 import { formatDateForUser } from '../../../shared/format.js'
 import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../../config/constants.js'
 import { Collections } from '../../../types.js'
@@ -140,7 +144,14 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 
 			switch (action) {
 				case 'promote': {
-					await targetSeasonRef.update({ captain: true })
+					await firestore.runTransaction((txn) => {
+						setPlayerCaptainStatus(txn, firestore, {
+							playerId,
+							seasonId,
+							captain: true,
+						})
+						return Promise.resolve()
+					})
 					logger.info('Promoted player to captain', { teamId, playerId })
 					return {
 						success: true,
@@ -167,7 +178,14 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 							'Cannot demote the last captain. You must promote another player to captain first.'
 						)
 					}
-					await targetSeasonRef.update({ captain: false })
+					await firestore.runTransaction((txn) => {
+						setPlayerCaptainStatus(txn, firestore, {
+							playerId,
+							seasonId,
+							captain: false,
+						})
+						return Promise.resolve()
+					})
 					logger.info('Demoted player from captain', { teamId, playerId })
 					return {
 						success: true,
@@ -215,9 +233,13 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 						}
 					}
 
-					await firestore.runTransaction(async (txn) => {
-						txn.delete(targetRosterRef)
-						txn.update(targetSeasonRef, { team: null, captain: false })
+					await firestore.runTransaction((txn) => {
+						removePlayerFromTeam(txn, firestore, {
+							playerId,
+							teamId,
+							seasonId,
+						})
+						return Promise.resolve()
 					})
 
 					logger.info('Removed player from team', { teamId, playerId })

@@ -9,22 +9,25 @@
  * The team's roster subcollection is the pure membership join.
  */
 
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import {
 	playerSeasonRef,
-	teamRef as canonicalTeamRef,
 	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../../shared/database.js'
+import {
+	addPlayerToTeam,
+	removePlayerFromTeam,
+	setPlayerCaptainStatus,
+} from '../../../shared/membership.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	type DocumentReference,
 	type PlayerDocument,
-	type PlayerSeasonDocument,
 	type SeasonDocument,
 } from '../../../types.js'
 
@@ -110,7 +113,6 @@ export const updateTeamAdmin = onCall<
 			)
 		}
 
-		const teamCanonicalDocRef = canonicalTeamRef(firestore, teamId)
 		const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
 
 		// Verify team season exists.
@@ -184,28 +186,18 @@ export const updateTeamAdmin = onCall<
 					}
 
 					// Atomic add: create roster entry + create-or-update player season.
-					await firestore.runTransaction(async (txn) => {
-						txn.set(rosterEntryRef, {
-							player: playerDocRef,
-							dateJoined: Timestamp.now(),
+					await firestore.runTransaction((txn) => {
+						addPlayerToTeam(txn, firestore, {
+							playerId,
+							teamId,
+							seasonId,
+							seasonRef,
+							captain,
+							existingPlayerSeason: playerSeasonSnap.exists
+								? (playerSeasonData ?? null)
+								: null,
 						})
-
-						if (playerSeasonSnap.exists) {
-							txn.update(playerSeasonDocRef, {
-								team: teamCanonicalDocRef,
-								captain,
-							})
-						} else {
-							const newPlayerSeason: PlayerSeasonDocument = {
-								season: seasonRef,
-								team: teamCanonicalDocRef,
-								paid: false,
-								signed: false,
-								banned: false,
-								captain,
-							}
-							txn.set(playerSeasonDocRef, newPlayerSeason)
-						}
+						return Promise.resolve()
 					})
 
 					changes.rosterAdded.push(playerId)
@@ -268,12 +260,13 @@ export const updateTeamAdmin = onCall<
 						}
 					}
 
-					await firestore.runTransaction(async (txn) => {
-						txn.delete(rosterEntryRef)
-						txn.update(playerSeasonRef(firestore, playerId, seasonId), {
-							team: null,
-							captain: false,
+					await firestore.runTransaction((txn) => {
+						removePlayerFromTeam(txn, firestore, {
+							playerId,
+							teamId,
+							seasonId,
 						})
+						return Promise.resolve()
 					})
 
 					captainSetByPlayerId.delete(playerId)
@@ -329,8 +322,13 @@ export const updateTeamAdmin = onCall<
 						}
 					}
 
-					await playerSeasonRef(firestore, playerId, seasonId).update({
-						captain,
+					await firestore.runTransaction((txn) => {
+						setPlayerCaptainStatus(txn, firestore, {
+							playerId,
+							seasonId,
+							captain,
+						})
+						return Promise.resolve()
 					})
 					captainSetByPlayerId.set(playerId, captain)
 

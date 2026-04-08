@@ -10,18 +10,10 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import {
-	Collections,
-	DocumentReference,
-	OfferDocument,
-	PlayerSeasonDocument,
-} from '../../types.js'
+import { Collections, DocumentReference, OfferDocument } from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
-import {
-	playerSeasonRef,
-	teamRosterEntryRef,
-	teamSeasonRef,
-} from '../../shared/database.js'
+import { playerSeasonRef, teamSeasonRef } from '../../shared/database.js'
+import { addPlayerToTeam } from '../../shared/membership.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 export const onOfferUpdated = onDocumentUpdated(
@@ -80,40 +72,20 @@ export const onOfferUpdated = onDocumentUpdated(
 					seasonId
 				)
 				const playerSeasonSnap = await transaction.get(playerSeasonDocRef)
-				const existingPlayerSeason = playerSeasonSnap.data()
+				const existingPlayerSeason = playerSeasonSnap.data() ?? null
 				if (existingPlayerSeason?.team) {
 					throw new Error('Player is already on a team for this season')
 				}
 
-				// Add roster entry.
-				const rosterEntryDocRef = teamRosterEntryRef(
-					firestore,
+				// Atomic dual-write of the membership relationship.
+				addPlayerToTeam(transaction, firestore, {
+					playerId,
 					teamId,
 					seasonId,
-					playerId
-				)
-				transaction.set(rosterEntryDocRef, {
-					player: playerCanonicalRef,
-					dateJoined: Timestamp.now(),
+					seasonRef,
+					captain: false,
+					existingPlayerSeason,
 				})
-
-				// Create or update the player's season subdoc.
-				if (playerSeasonSnap.exists) {
-					transaction.update(playerSeasonDocRef, {
-						team: teamCanonicalRef,
-						captain: false,
-					})
-				} else {
-					const newPlayerSeason: PlayerSeasonDocument = {
-						season: seasonRef,
-						team: teamCanonicalRef,
-						paid: false,
-						signed: false,
-						banned: false,
-						captain: false,
-					}
-					transaction.set(playerSeasonDocRef, newPlayerSeason)
-				}
 
 				// Mark offer as processed.
 				transaction.update(offerRef, { processed: true })
