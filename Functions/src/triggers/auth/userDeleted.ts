@@ -14,7 +14,12 @@ import { auth } from 'firebase-functions/v1'
 import { UserRecord } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, DocumentReference, PlayerDocument } from '../../types.js'
+import {
+	Collections,
+	DocumentReference,
+	PLAYER_SEASONS_SUBCOLLECTION,
+	PlayerDocument,
+} from '../../types.js'
 import { handleFunctionError } from '../../shared/errors.js'
 
 export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
@@ -41,25 +46,19 @@ export const userDeleted = auth.user().onDelete(async (user: UserRecord) => {
 			.get()
 
 		// 2. Delete every roster entry. These docs live at
-		// teams/{teamId}/seasons/{seasonId}/roster/{playerId}.
+		// teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}. After the
+		// seasons subcollection rename, the roster collection group is
+		// unambiguous so no parent-path disambiguation is required.
 		let rosterEntriesDeleted = 0
 		for (const rosterDoc of rosterEntriesSnap.docs) {
-			// Defensive: only touch docs whose ancestor is the teams collection.
-			const seasonsCol = rosterDoc.ref.parent.parent
-			if (!seasonsCol) continue
-			const teamCanonicalRef = seasonsCol.parent.parent
-			if (
-				!teamCanonicalRef ||
-				teamCanonicalRef.parent.id !== Collections.TEAMS
-			) {
-				continue
-			}
 			await rosterDoc.ref.delete()
 			rosterEntriesDeleted++
 		}
 
 		// 3. Recursive-delete the player's seasons subcollection.
-		const playerSeasonsSnap = await playerRef.collection('seasons').get()
+		const playerSeasonsSnap = await playerRef
+			.collection(PLAYER_SEASONS_SUBCOLLECTION)
+			.get()
 		for (const seasonSubdoc of playerSeasonsSnap.docs) {
 			await seasonSubdoc.ref.delete()
 		}

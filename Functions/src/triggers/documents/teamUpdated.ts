@@ -12,7 +12,7 @@ import { updateTeamRegistrationStatus } from '../../services/teamRegistrationSer
 
 export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
 	{
-		document: 'teams/{teamId}/seasons/{seasonId}/roster/{playerId}',
+		document: 'teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}',
 		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {

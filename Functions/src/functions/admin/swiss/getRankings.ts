@@ -13,7 +13,10 @@ import {
 	SeasonFormat,
 	GameDocument,
 	GameType,
+	TEAM_SEASONS_SUBCOLLECTION,
+	TeamSeasonDocument,
 } from '../../../types.js'
+import { canonicalTeamIdFromTeamSeasonDoc } from '../../../shared/database.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
@@ -80,30 +83,26 @@ export const getSwissRankings = onCall<GetSwissRankingsRequest>(
 			// Discover all teams participating in this season via collection-group
 			// query against the per-team season subcollection.
 			const teamSeasonsSnapshot = await firestore
-				.collectionGroup('seasons')
+				.collectionGroup(TEAM_SEASONS_SUBCOLLECTION)
 				.where('season', '==', seasonRef)
 				.get()
-			const teamSeasonsForSeason = teamSeasonsSnapshot.docs.filter((d) => {
-				// Defensive: only keep docs whose parent path is teams/{id}/seasons/{sid}.
-				return d.ref.parent.parent?.parent.id === Collections.TEAMS
-			})
-			const teamIds = teamSeasonsForSeason
-				.map((d) => d.ref.parent.parent?.id)
-				.filter((id): id is string => !!id)
+			const teamSeasonsForSeason =
+				teamSeasonsSnapshot.docs as FirebaseFirestore.QueryDocumentSnapshot<TeamSeasonDocument>[]
+			const teamIds = teamSeasonsForSeason.map((d) =>
+				canonicalTeamIdFromTeamSeasonDoc(d)
+			)
 
 			// Reconstruct initial seeding (if any) by reading swissSeed from each
 			// team-season subdoc.
 			const seededEntries = teamSeasonsForSeason
 				.map((d) => ({
-					teamId: d.ref.parent.parent?.id,
+					teamId: canonicalTeamIdFromTeamSeasonDoc(d),
 					swissSeed: d.data().swissSeed as number | null | undefined,
 				}))
-				.filter((e) => typeof e.swissSeed === 'number' && e.teamId)
+				.filter((e) => typeof e.swissSeed === 'number')
 				.sort((a, b) => (a.swissSeed as number) - (b.swissSeed as number))
 			const swissInitialSeeding =
-				seededEntries.length > 0
-					? seededEntries.map((e) => e.teamId as string)
-					: null
+				seededEntries.length > 0 ? seededEntries.map((e) => e.teamId) : null
 
 			const gamesSnapshot = await firestore
 				.collection(Collections.GAMES)

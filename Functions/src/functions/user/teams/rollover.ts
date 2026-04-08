@@ -20,8 +20,10 @@ import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
 	DocumentReference,
+	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerDocument,
 	SeasonDocument,
+	TEAM_SEASONS_SUBCOLLECTION,
 } from '../../../types.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import {
@@ -110,7 +112,7 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 			// Verify the user has been a captain of this team in any previous season.
 			// Walk the team's `seasons` subcollection and check each roster entry.
 			const previousSeasonsSnap = await teamCanonicalDocRef
-				.collection('seasons')
+				.collection(TEAM_SEASONS_SUBCOLLECTION)
 				.get()
 			let userWasCaptain = false
 			let mostRecentSeasonName: string | null = null
@@ -185,7 +187,9 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 			// Determine banned status to seed if no player season subdoc exists.
 			let bannedStatus = false
 			if (!existingPlayerSeasonData) {
-				const otherSeasons = await playerDocRef.collection('seasons').get()
+				const otherSeasons = await playerDocRef
+				.collection(PLAYER_SEASONS_SUBCOLLECTION)
+				.get()
 				bannedStatus = otherSeasons.docs.some(
 					(d) => d.id !== seasonId && d.data()?.banned === true
 				)

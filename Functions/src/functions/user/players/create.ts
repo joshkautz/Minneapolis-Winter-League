@@ -7,6 +7,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
+	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerDocument,
 	PlayerSeasonDocument,
 	SeasonDocument,
@@ -124,7 +125,9 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 			const batch = firestore.batch()
 			batch.set(playerRef, player)
 			for (const seasonDoc of seasonsSnapshot.docs) {
-				const seasonSubRef = playerRef.collection('seasons').doc(seasonDoc.id)
+				const seasonSubRef = playerRef
+					.collection(PLAYER_SEASONS_SUBCOLLECTION)
+					.doc(seasonDoc.id)
 				const seasonData: PlayerSeasonDocument = {
 					season:
 						seasonDoc.ref as FirebaseFirestore.DocumentReference<SeasonDocument>,

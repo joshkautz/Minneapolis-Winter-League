@@ -12,6 +12,7 @@ import { getFirestore, Timestamp, WriteBatch } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
+	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerSeasonDocument,
 	SeasonDocument,
 	SeasonFormat,
@@ -141,7 +142,9 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			let playersSkipped = 0
 
 			for (const playerDoc of playersSnapshot.docs) {
-				const playerSeasonsSubcollection = playerDoc.ref.collection('seasons')
+				const playerSeasonsSubcollection = playerDoc.ref.collection(
+					PLAYER_SEASONS_SUBCOLLECTION
+				)
 				const existingSeasonSubdoc = await playerSeasonsSubcollection
 					.doc(seasonRef.id)
 					.get()

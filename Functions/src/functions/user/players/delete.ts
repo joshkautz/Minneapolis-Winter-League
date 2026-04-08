@@ -5,7 +5,11 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerDocument } from '../../../types.js'
+import {
+	Collections,
+	PLAYER_SEASONS_SUBCOLLECTION,
+	PlayerDocument,
+} from '../../../types.js'
 import {
 	validateAuthentication,
 	validateAdminUser,
@@ -75,7 +79,9 @@ export const deletePlayer = onCall<DeletePlayerRequest>(
 				throw new HttpsError('not-found', 'Unable to retrieve player data')
 			}
 
-			const playerSeasonsSnap = await playerRef.collection('seasons').get()
+			const playerSeasonsSnap = await playerRef
+				.collection(PLAYER_SEASONS_SUBCOLLECTION)
+				.get()
 			const hasTeamAssociations = playerSeasonsSnap.docs.some(
 				(d) => d.data()?.team
 			)

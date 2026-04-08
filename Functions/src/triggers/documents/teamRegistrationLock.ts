@@ -9,16 +9,23 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, TeamSeasonDocument } from '../../types.js'
+import {
+	Collections,
+	TEAM_SEASONS_SUBCOLLECTION,
+	TeamSeasonDocument,
+} from '../../types.js'
 import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../config/constants.js'
-import { getCurrentSeason } from '../../shared/database.js'
+import {
+	canonicalTeamIdFromTeamSeasonDoc,
+	getCurrentSeason,
+} from '../../shared/database.js'
 import { deleteUnregisteredTeamsForSeasonLock } from '../../services/teamDeletionService.js'
 
 const LOCK_THRESHOLD = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
 
 export const onTeamRegistrationChange = onDocumentUpdated(
 	{
-		document: 'teams/{teamId}/seasons/{seasonId}',
+		document: 'teams/{teamId}/teamSeasons/{seasonId}',
 		region: FIREBASE_CONFIG.REGION,
 	},
 	async (event) => {
@@ -48,19 +55,12 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 				.collection(Collections.SEASONS)
 				.doc(seasonId)
 			const registeredSnapshot = await firestore
-				.collectionGroup('seasons')
+				.collectionGroup(TEAM_SEASONS_SUBCOLLECTION)
 				.where('season', '==', seasonDocRef)
 				.where('registered', '==', true)
 				.get()
 
-			// Filter to only team-side season subdocs (parent path
-			// starts with teams/{id}). The collection-group query also matches
-			// player-side seasons subcollections, which we must exclude.
-			const registeredTeamSeasonDocs = registeredSnapshot.docs.filter(
-				(d) => d.ref.parent.parent?.parent.id === Collections.TEAMS
-			)
-
-			const registeredTeamCount = registeredTeamSeasonDocs.length
+			const registeredTeamCount = registeredSnapshot.size
 			logger.info(`Current registered team count: ${registeredTeamCount}`)
 
 			if (registeredTeamCount !== LOCK_THRESHOLD) {
@@ -71,22 +71,19 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 
 			// Find all UNREGISTERED team-season subdocs for this season.
 			const unregisteredSnapshot = await firestore
-				.collectionGroup('seasons')
+				.collectionGroup(TEAM_SEASONS_SUBCOLLECTION)
 				.where('season', '==', seasonDocRef)
 				.where('registered', '==', false)
 				.get()
-			const unregisteredTeamSeasonDocs = unregisteredSnapshot.docs.filter(
-				(d) => d.ref.parent.parent?.parent.id === Collections.TEAMS
-			)
 
-			if (unregisteredTeamSeasonDocs.length === 0) return
+			if (unregisteredSnapshot.empty) return
 
-			const pairs = unregisteredTeamSeasonDocs
-				.map((d) => ({
-					teamId: d.ref.parent.parent?.id,
-					seasonId,
-				}))
-				.filter((p): p is { teamId: string; seasonId: string } => !!p.teamId)
+			const pairs = unregisteredSnapshot.docs.map((d) => ({
+				teamId: canonicalTeamIdFromTeamSeasonDoc(
+					d as FirebaseFirestore.QueryDocumentSnapshot<TeamSeasonDocument>
+				),
+				seasonId,
+			}))
 
 			logger.info(`Deleting ${pairs.length} unregistered team-seasons...`)
 

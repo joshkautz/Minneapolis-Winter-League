@@ -18,6 +18,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
+	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerDocument,
 	SeasonDocument,
 	DocumentReference,
@@ -179,7 +180,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 			let bannedStatus = false
 			if (!existingPlayerSeasonData) {
 				const otherSeasons = await playerDocRef
-					.collection('seasons')
+					.collection(PLAYER_SEASONS_SUBCOLLECTION)
 					.orderBy('season')
 					.get()
 				const lastBanned = otherSeasons.docs.find(

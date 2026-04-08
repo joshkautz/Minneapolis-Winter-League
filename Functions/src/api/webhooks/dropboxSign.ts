@@ -11,7 +11,12 @@
 import { onRequest } from 'firebase-functions/v2/https'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, WaiverDocument, WaiverStatus } from '../../types.js'
+import {
+	Collections,
+	PLAYER_SEASONS_SUBCOLLECTION,
+	WaiverDocument,
+	WaiverStatus,
+} from '../../types.js'
 import {
 	FIREBASE_CONFIG,
 	getDropboxSignConfig,
@@ -172,7 +177,7 @@ async function handleWaiverStatusChange(
 		const playerSeasonDocRef = firestore
 			.collection(Collections.PLAYERS)
 			.doc(firebaseUID)
-			.collection('seasons')
+			.collection(PLAYER_SEASONS_SUBCOLLECTION)
 			.doc(seasonId)
 
 		// Use transaction to atomically check status and update both documents

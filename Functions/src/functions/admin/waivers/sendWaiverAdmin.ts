@@ -18,6 +18,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
+	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerDocument,
 	SeasonDocument,
 	WaiverDocument,
@@ -123,7 +124,7 @@ export const sendWaiverAdmin = onCall<SendWaiverAdminRequest>(
 			const playerSeasonSnap = await firestore
 				.collection(Collections.PLAYERS)
 				.doc(playerId)
-				.collection('seasons')
+				.collection(PLAYER_SEASONS_SUBCOLLECTION)
 				.doc(seasonId)
 				.get()
 			const playerSeasonData = playerSeasonSnap.data()

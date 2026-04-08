@@ -232,7 +232,7 @@ export interface SeasonStripeConfig {
  *
  * The `teams[]` array of team refs was removed in the 2026 data model
  * migration; the list of participating teams is now derived via a
- * `collectionGroup('seasons').where('season', '==', seasonRef)` query
+ * `collectionGroup('teamSeasons').where('season', '==', seasonRef)` query
  * against the per-team season subcollections.
  */
 export interface SeasonDocument extends DocumentData {

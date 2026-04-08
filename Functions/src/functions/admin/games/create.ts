@@ -10,7 +10,11 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG, GAME_CONFIG } from '../../../config/constants.js'
-import { Collections, GameType } from '../../../types.js'
+import {
+	Collections,
+	GameType,
+	TEAM_SEASONS_SUBCOLLECTION,
+} from '../../../types.js'
 
 /**
  * Request interface for creating a game
@@ -235,7 +239,7 @@ export const createGame = onCall<
 			if (homeTeamId) {
 				homeTeamRef = firestore.collection(Collections.TEAMS).doc(homeTeamId)
 				const homeSeasonSubdoc = await homeTeamRef
-					.collection('seasons')
+					.collection(TEAM_SEASONS_SUBCOLLECTION)
 					.doc(seasonId)
 					.get()
 				if (!homeSeasonSubdoc.exists) {
@@ -251,7 +255,7 @@ export const createGame = onCall<
 			if (awayTeamId) {
 				awayTeamRef = firestore.collection(Collections.TEAMS).doc(awayTeamId)
 				const awaySeasonSubdoc = await awayTeamRef
-					.collection('seasons')
+					.collection(TEAM_SEASONS_SUBCOLLECTION)
 					.doc(seasonId)
 					.get()
 				if (!awaySeasonSubdoc.exists) {
