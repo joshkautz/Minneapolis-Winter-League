@@ -500,20 +500,43 @@ async function buildMigrationPlan() {
 		})
 	}
 
-	// group team instances by canonical teamId
-	const groupsByTeamId = new Map()
+	// Group team instances by their legacy teamId field. This is the
+	// "instances of the same canonical team across multiple seasons" join
+	// key — it has nothing to do with the new doc id.
+	const groupsByLegacyTeamId = new Map()
 	for (const doc of teamsSnap.docs) {
 		const data = doc.data()
-		const teamId = data.teamId
-		if (!teamId) continue
-		if (!groupsByTeamId.has(teamId)) groupsByTeamId.set(teamId, [])
-		groupsByTeamId.get(teamId).push({ docId: doc.id, data })
+		const legacyTeamId = data.teamId
+		if (!legacyTeamId) continue
+		if (!groupsByLegacyTeamId.has(legacyTeamId))
+			groupsByLegacyTeamId.set(legacyTeamId, [])
+		groupsByLegacyTeamId.get(legacyTeamId).push({ docId: doc.id, data })
 	}
 
-	// legacy doc id → canonical teamId
+	// Mint a fresh Firestore-style canonical id for each group. The legacy
+	// `teamId` field on the original instance docs was a hyphenated UUID
+	// (e.g. `63aa66a9-c000-...`); the new canonical id should look like
+	// every other Firestore-generated doc id (20-char alphanumeric, no
+	// dashes) for visual consistency with the rest of the database.
+	//
+	// We sort the keys so that the same input data produces the same
+	// id-mint sequence on every run. Combined with `db.collection().doc()`
+	// being deterministic only if reseeded, this isn't strictly stable
+	// across re-runs of `--mode=migrate --commit`, but it doesn't have
+	// to be: the migrate phase is idempotent against the staging
+	// collections, and a re-run starts fresh anyway.
+	const sortedLegacyIds = [...groupsByLegacyTeamId.keys()].sort()
+	const legacyTeamIdToCanonical = new Map()
+	const teamsRootCol = db.collection('teams')
+	for (const legacyTeamId of sortedLegacyIds) {
+		legacyTeamIdToCanonical.set(legacyTeamId, teamsRootCol.doc().id)
+	}
+
+	// legacy doc id → canonical (Firestore-minted) team id
 	const legacyDocIdToCanonical = new Map()
-	for (const [teamId, instances] of groupsByTeamId) {
-		for (const inst of instances) legacyDocIdToCanonical.set(inst.docId, teamId)
+	for (const [legacyTeamId, instances] of groupsByLegacyTeamId) {
+		const canonicalId = legacyTeamIdToCanonical.get(legacyTeamId)
+		for (const inst of instances) legacyDocIdToCanonical.set(inst.docId, canonicalId)
 	}
 
 	return {
@@ -523,7 +546,8 @@ async function buildMigrationPlan() {
 		gamesSnap,
 		offersSnap,
 		seasonsById,
-		groupsByTeamId,
+		groupsByLegacyTeamId,
+		legacyTeamIdToCanonical,
 		legacyDocIdToCanonical,
 	}
 }
@@ -543,8 +567,13 @@ async function runMigrate() {
 	}
 
 	const plan = await buildMigrationPlan()
-	const { groupsByTeamId, seasonsById, playersSnap, legacyDocIdToCanonical } =
-		plan
+	const {
+		groupsByLegacyTeamId,
+		legacyTeamIdToCanonical,
+		seasonsById,
+		playersSnap,
+		legacyDocIdToCanonical,
+	} = plan
 
 	const stats = {
 		canonicalTeams: 0,
@@ -562,7 +591,8 @@ async function runMigrate() {
 	const writes = []
 
 	// ---- teams_new + subcollections ---------------------------------------
-	for (const [teamId, instances] of groupsByTeamId) {
+	for (const [legacyTeamId, instances] of groupsByLegacyTeamId) {
+		const canonicalTeamId = legacyTeamIdToCanonical.get(legacyTeamId)
 		// Sort by season start ascending for deterministic createdAt selection.
 		instances.sort((a, b) => {
 			const aMs = seasonsById.get(a.data.season?.id)?.dateStartMs ?? 0
@@ -585,7 +615,7 @@ async function runMigrate() {
 			createdByRef = firstCaptain?.player ?? null
 		}
 
-		const canonicalDocRef = teamsNewCol.doc(teamId)
+		const canonicalDocRef = teamsNewCol.doc(canonicalTeamId)
 		writes.push((batch) =>
 			batch.set(canonicalDocRef, {
 				createdAt,
@@ -635,12 +665,12 @@ async function runMigrate() {
 				stats.rosterDocs++
 			}
 
-			// idmap entry: legacy doc id → canonical team id (per season instance,
-			// since multiple legacy ids share the same canonical id only for
-			// different seasons).
+			// idmap entry: legacy doc id → canonical (Firestore-minted) team
+			// id (per season instance, since multiple legacy ids share the
+			// same canonical id only for different seasons).
 			writes.push((batch) =>
 				batch.set(idmapCol.doc(inst.docId), {
-					canonicalTeamId: teamId,
+					canonicalTeamId,
 					seasonId,
 				})
 			)
@@ -702,7 +732,7 @@ async function runMigrate() {
 	// (not a boolean) due to a historical write bug. The team-side roster
 	// entry is consistently boolean and is therefore the source of truth.
 	const captainsByPlayerSeason = new Map() // `${playerId}__${seasonId}` → boolean
-	for (const [teamId, instances] of groupsByTeamId) {
+	for (const [, instances] of groupsByLegacyTeamId) {
 		for (const inst of instances) {
 			const seasonId = inst.data.season?.id
 			if (!seasonId) continue
@@ -786,48 +816,61 @@ async function runValidate() {
 	logHeader('Phase C — validate staged collections')
 
 	const plan = await buildMigrationPlan()
-	const { groupsByTeamId, playersSnap, legacyDocIdToCanonical } = plan
+	const {
+		groupsByLegacyTeamId,
+		legacyTeamIdToCanonical,
+		playersSnap,
+		legacyDocIdToCanonical,
+	} = plan
 
 	const errors = []
 	const warnings = []
 
-	// 1. Every group has a canonical doc.
-	for (const teamId of groupsByTeamId.keys()) {
-		const docSnap = await db.collection(STAGING.teams).doc(teamId).get()
+	// 1. Every group has a canonical doc at the freshly-minted Firestore id.
+	for (const legacyTeamId of groupsByLegacyTeamId.keys()) {
+		const canonicalTeamId = legacyTeamIdToCanonical.get(legacyTeamId)
+		const docSnap = await db
+			.collection(STAGING.teams)
+			.doc(canonicalTeamId)
+			.get()
 		if (!docSnap.exists) {
-			errors.push(`teams_new/${teamId} is missing`)
+			errors.push(
+				`teams_new/${canonicalTeamId} is missing (legacy teamId ${legacyTeamId})`
+			)
 			continue
 		}
 		const data = docSnap.data()
-		if (!data.createdAt) errors.push(`teams_new/${teamId} missing createdAt`)
+		if (!data.createdAt)
+			errors.push(`teams_new/${canonicalTeamId} missing createdAt`)
 	}
 
 	// 2. Every legacy season instance has a corresponding subdoc + idmap.
-	for (const [teamId, instances] of groupsByTeamId) {
+	for (const [legacyTeamId, instances] of groupsByLegacyTeamId) {
+		const canonicalTeamId = legacyTeamIdToCanonical.get(legacyTeamId)
 		for (const inst of instances) {
 			const seasonId = inst.data.season?.id
 			if (!seasonId) continue
 			const subSnap = await db
 				.collection(STAGING.teams)
-				.doc(teamId)
+				.doc(canonicalTeamId)
 				.collection('teamSeasons')
 				.doc(seasonId)
 				.get()
 			if (!subSnap.exists) {
 				errors.push(
-					`teams_new/${teamId}/teamSeasons/${seasonId} missing (legacy doc ${inst.docId})`
+					`teams_new/${canonicalTeamId}/teamSeasons/${seasonId} missing (legacy doc ${inst.docId})`
 				)
 				continue
 			}
 			const subData = subSnap.data()
 			if (subData.registered !== (inst.data.registered ?? false)) {
 				errors.push(
-					`teams_new/${teamId}/teamSeasons/${seasonId}.registered drift (was ${inst.data.registered}, is ${subData.registered})`
+					`teams_new/${canonicalTeamId}/teamSeasons/${seasonId}.registered drift (was ${inst.data.registered}, is ${subData.registered})`
 				)
 			}
 			if ((subData.name ?? null) !== (inst.data.name ?? null)) {
 				errors.push(
-					`teams_new/${teamId}/teamSeasons/${seasonId}.name drift (was ${inst.data.name}, is ${subData.name})`
+					`teams_new/${canonicalTeamId}/teamSeasons/${seasonId}.name drift (was ${inst.data.name}, is ${subData.name})`
 				)
 			}
 
@@ -837,14 +880,14 @@ async function runValidate() {
 				: 0
 			const rosterSnap = await db
 				.collection(STAGING.teams)
-				.doc(teamId)
+				.doc(canonicalTeamId)
 				.collection('teamSeasons')
 				.doc(seasonId)
 				.collection('roster')
 				.get()
 			if (rosterSnap.size !== expectedRoster) {
 				errors.push(
-					`teams_new/${teamId}/teamSeasons/${seasonId}/roster has ${rosterSnap.size} docs, expected ${expectedRoster}`
+					`teams_new/${canonicalTeamId}/teamSeasons/${seasonId}/roster has ${rosterSnap.size} docs, expected ${expectedRoster}`
 				)
 			}
 
@@ -855,7 +898,7 @@ async function runValidate() {
 				.get()
 			if (!idmapSnap.exists) {
 				errors.push(
-					`teams_new_idmap/${inst.docId} missing (canonical ${teamId})`
+					`teams_new_idmap/${inst.docId} missing (canonical ${canonicalTeamId})`
 				)
 			}
 		}
@@ -913,7 +956,8 @@ async function runValidate() {
 
 	// 4. Round-trip check: for every staged roster entry, the corresponding
 	// player has a captain-or-not staged doc that matches.
-	for (const [teamId, instances] of groupsByTeamId) {
+	for (const [legacyTeamId, instances] of groupsByLegacyTeamId) {
+		const canonicalTeamId = legacyTeamIdToCanonical.get(legacyTeamId)
 		for (const inst of instances) {
 			const seasonId = inst.data.season?.id
 			if (!seasonId) continue
@@ -927,21 +971,21 @@ async function runValidate() {
 					.get()
 				if (!stageSnap.exists) {
 					errors.push(
-						`roster ${teamId}/${seasonId}/${playerId}: no staged player season`
+						`roster ${canonicalTeamId}/${seasonId}/${playerId}: no staged player season`
 					)
 					continue
 				}
 				const sData = stageSnap.data()
-				if (sData.team?.id !== teamId) {
+				if (sData.team?.id !== canonicalTeamId) {
 					errors.push(
-						`roster ${teamId}/${seasonId}/${playerId}: staged player.team is ${sData.team?.id}, expected ${teamId}`
+						`roster ${canonicalTeamId}/${seasonId}/${playerId}: staged player.team is ${sData.team?.id}, expected ${canonicalTeamId}`
 					)
 				}
 				// Captain SOT is the team-side roster entry. Compare strictly against
 				// the staged value (which was derived from the same source).
 				if ((entry.captain === true) !== sData.captain) {
 					errors.push(
-						`roster ${teamId}/${seasonId}/${playerId}: captain mismatch (roster=${entry.captain === true}, staged=${sData.captain})`
+						`roster ${canonicalTeamId}/${seasonId}/${playerId}: captain mismatch (roster=${entry.captain === true}, staged=${sData.captain})`
 					)
 				}
 			}
