@@ -126,7 +126,7 @@ export const TeamHistory = ({
 					{processedHistory.map((entry) => (
 						<Link
 							key={entry.seasonId}
-							to={`/teams/${entry.id}`}
+							to={`/teams/${entry.id}/${entry.seasonId}`}
 							className='flex items-center gap-4 px-4 py-3 border-b last:border-b-0 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
 							role='listitem'
 							aria-label={`${entry.teamName}, ${entry.seasonName}, ${entry.wins} wins ${entry.losses} losses, finished ${formatPlacement(entry.placement)}`}

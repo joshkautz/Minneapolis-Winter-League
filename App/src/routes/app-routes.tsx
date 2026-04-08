@@ -101,6 +101,16 @@ export const AppRoutes = () => {
 					}
 				/>
 				<Route
+					path='/teams/:id/:seasonId'
+					element={
+						<PublicRoute>
+							<ErrorBoundary>
+								<TeamProfile />
+							</ErrorBoundary>
+						</PublicRoute>
+					}
+				/>
+				<Route
 					path='/players'
 					element={
 						<PublicRoute>

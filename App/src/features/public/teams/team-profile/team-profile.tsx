@@ -99,22 +99,31 @@ const formatGameResult = (
 }
 
 export const TeamProfile = () => {
-	const { id } = useParams()
+	const { id, seasonId: seasonIdParam } = useParams()
 	const { currentSeasonQueryDocumentSnapshot, seasonsQuerySnapshot } =
 		useSeasonsContext()
 	const { allBadgesQuerySnapshot: allBadgesSnapshot } = useBadgesContext()
 	const { allTeamsQuerySnapshot: allTeamsSnapshot } = useTeamsContext()
 
+	// `:seasonId` is optional in the route. When omitted we render the team's
+	// current-season subdoc; when provided we render that historical season.
 	const currentSeasonId = currentSeasonQueryDocumentSnapshot?.id
-	const currentSeasonRef = currentSeasonQueryDocumentSnapshot?.ref
+	const displayedSeasonId = seasonIdParam ?? currentSeasonId
+	const displayedSeasonRef = useMemo(
+		() =>
+			seasonIdParam
+				? seasonsQuerySnapshot?.docs.find((d) => d.id === seasonIdParam)?.ref
+				: currentSeasonQueryDocumentSnapshot?.ref,
+		[seasonIdParam, seasonsQuerySnapshot, currentSeasonQueryDocumentSnapshot]
+	)
 
 	const [teamDocumentSnapshot, teamDocumentSnapshotLoading, teamError] =
 		useDocument(getTeamRef(id))
 
-	// Per-season data lives on teams/{id}/teamSeasons/{seasonId}. Default to
-	// the current season; the team-history component below shows other seasons.
+	// Per-season data lives on teams/{id}/teamSeasons/{seasonId}. Defaults to
+	// the current season; the team-history component below links to other ones.
 	const [teamSeasonSnapshot, teamSeasonLoading, teamSeasonError] = useDocument(
-		id && currentSeasonId ? teamSeasonRef(id, currentSeasonId) : undefined
+		id && displayedSeasonId ? teamSeasonRef(id, displayedSeasonId) : undefined
 	)
 
 	const [historyQuerySnapshot, historyQuerySnapshotLoading, historyError] =
@@ -122,15 +131,15 @@ export const TeamProfile = () => {
 
 	// Used for opponent-name lookups in the games list.
 	const [teamsQuerySnapshot, teamsQuerySnapshotLoading, teamsError] =
-		useCollection(teamsInSeasonQuery(currentSeasonRef))
+		useCollection(teamsInSeasonQuery(displayedSeasonRef))
 
 	const [gamesQuerySnapshot, gamesQuerySnapshotLoading, gamesError] =
 		useCollection(gamesByTeamQuery(teamDocumentSnapshot?.ref))
 
-	// Roster subcollection for the current season.
+	// Roster subcollection for the displayed season.
 	const [rosterSnapshot, rosterLoading, rosterError] = useCollection(
-		id && currentSeasonId
-			? teamRosterSubcollection(id, currentSeasonId)
+		id && displayedSeasonId
+			? teamRosterSubcollection(id, displayedSeasonId)
 			: undefined
 	)
 
@@ -368,15 +377,15 @@ export const TeamProfile = () => {
 		return seasonDoc?.data()?.name || null
 	}, [teamSeasonRefForGames, seasonsQuerySnapshot])
 
-	// Filter games to the current season only — gamesByTeamQuery returns
-	// every game the canonical team has ever played.
+	// Filter games to the displayed season — gamesByTeamQuery returns every
+	// game the canonical team has ever played, across all seasons.
 	const currentSeasonGames = useMemo(() => {
 		if (!gamesQuerySnapshot) return []
-		if (!currentSeasonId) return gamesQuerySnapshot.docs
+		if (!displayedSeasonId) return gamesQuerySnapshot.docs
 		return gamesQuerySnapshot.docs.filter(
-			(g) => g.data().season?.id === currentSeasonId
+			(g) => g.data().season?.id === displayedSeasonId
 		)
-	}, [gamesQuerySnapshot, currentSeasonId])
+	}, [gamesQuerySnapshot, displayedSeasonId])
 
 	return (
 		<div className={'container'}>
