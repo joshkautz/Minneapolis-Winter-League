@@ -18,7 +18,7 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
 import { logger, errorHandler, PlayerDocument } from '@/shared/utils'
-import type { PlayerSeason } from '@/types'
+import { playerSeasonRef } from '@/firebase/collections/players'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 export const ManageTeamRosterPlayer = ({
@@ -34,6 +34,9 @@ export const ManageTeamRosterPlayer = ({
 		currentSeasonData,
 	} = useUserStatus()
 	const [playerSnapshot, , playerError] = useDocument(playerRef)
+	const [playerSeasonSnapshot] = useDocument(
+		playerSeasonRef(playerRef.id, currentSeasonQueryDocumentSnapshot?.id)
+	)
 
 	// Log and notify on query errors
 	useEffect(() => {
@@ -58,36 +61,18 @@ export const ManageTeamRosterPlayer = ({
 	)
 
 	const isPlayerCaptain = useMemo(
-		() =>
-			playerSnapshot
-				?.data()
-				?.seasons.find(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.captain,
-		[playerSnapshot, currentSeasonQueryDocumentSnapshot]
+		() => playerSeasonSnapshot?.data()?.captain === true,
+		[playerSeasonSnapshot]
 	)
 
 	const isPlayerPaid = useMemo(
-		() =>
-			playerSnapshot
-				?.data()
-				?.seasons.find(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.paid,
-		[playerSnapshot, currentSeasonQueryDocumentSnapshot]
+		() => playerSeasonSnapshot?.data()?.paid === true,
+		[playerSeasonSnapshot]
 	)
 
 	const isPlayerSigned = useMemo(
-		() =>
-			playerSnapshot
-				?.data()
-				?.seasons.find(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				)?.signed,
-		[playerSnapshot, currentSeasonQueryDocumentSnapshot]
+		() => playerSeasonSnapshot?.data()?.signed === true,
+		[playerSeasonSnapshot]
 	)
 
 	const demoteFromCaptainOnClickHandler = useCallback(async () => {

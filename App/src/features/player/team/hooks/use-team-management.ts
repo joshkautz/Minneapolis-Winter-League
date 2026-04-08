@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
 import { QueryDocumentSnapshot } from 'firebase/firestore'
 import { useAuthContext, useTeamsContext, useSeasonsContext } from '@/providers'
-import type { PlayerSeason, TeamDocument } from '@/types'
+import type { PlayerSeasonDocument, TeamSeasonDocument } from '@/types'
 
 interface TeamManagementResult {
 	success: boolean
@@ -16,8 +16,8 @@ interface UseTeamManagementReturn {
 	isAdmin: boolean
 	isCaptain: boolean
 	hasTeam: boolean
-	team: QueryDocumentSnapshot<TeamDocument> | undefined
-	currentSeasonData: PlayerSeason | undefined
+	team: QueryDocumentSnapshot<TeamSeasonDocument> | undefined
+	currentSeasonData: PlayerSeasonDocument | undefined
 	handleResult: (result: TeamManagementResult) => void
 }
 
@@ -26,8 +26,11 @@ interface UseTeamManagementReturn {
  * Centralizes team management state and business logic
  */
 export const useTeamManagement = (): UseTeamManagementReturn => {
-	const { authenticatedUserSnapshot, authenticatedUserSnapshotLoading } =
-		useAuthContext()
+	const {
+		authenticatedUserSnapshot,
+		authenticatedUserSnapshotLoading,
+		authenticatedUserSeasonsSnapshot,
+	} = useAuthContext()
 	const {
 		currentSeasonTeamsQuerySnapshot,
 		currentSeasonTeamsQuerySnapshotLoading,
@@ -44,19 +47,17 @@ export const useTeamManagement = (): UseTeamManagementReturn => {
 
 	const currentSeasonData = useMemo(
 		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.find(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id
-				),
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
+			authenticatedUserSeasonsSnapshot?.docs.find(
+				(docSnap) => docSnap.id === currentSeasonQueryDocumentSnapshot?.id
+			)?.data(),
+		[authenticatedUserSeasonsSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
 	const team = useMemo(
 		() =>
 			currentSeasonTeamsQuerySnapshot?.docs.find(
-				(team) => team.id === currentSeasonData?.team?.id
+				(teamDoc) =>
+					teamDoc.ref.parent.parent?.id === currentSeasonData?.team?.id
 			),
 		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)

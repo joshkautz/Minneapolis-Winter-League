@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { StorageReference } from '@/firebase/storage'
 import { useAuthContext, useSeasonsContext, useTeamsContext } from '@/providers'
-import type { PlayerSeason } from '@/types'
 
 export interface TeamCreationData {
 	name: string | undefined
@@ -39,8 +38,11 @@ interface UseTeamCreationReturn {
  */
 export const useTeamCreation = (): UseTeamCreationReturn => {
 	const navigate = useNavigate()
-	const { authenticatedUserSnapshot, authenticatedUserSnapshotLoading } =
-		useAuthContext()
+	const {
+		authenticatedUserSnapshot,
+		authenticatedUserSnapshotLoading,
+		authenticatedUserSeasonsSnapshot,
+	} = useAuthContext()
 	const {
 		currentSeasonQueryDocumentSnapshot,
 		currentSeasonQueryDocumentSnapshotLoading,
@@ -56,14 +58,12 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 
 	const isRostered = useMemo(
 		() =>
-			authenticatedUserSnapshot
-				?.data()
-				?.seasons.some(
-					(item: PlayerSeason) =>
-						item.season.id === currentSeasonQueryDocumentSnapshot?.id &&
-						item.team
-				) || false,
-		[authenticatedUserSnapshot, currentSeasonQueryDocumentSnapshot]
+			authenticatedUserSeasonsSnapshot?.docs.some(
+				(docSnap) =>
+					docSnap.id === currentSeasonQueryDocumentSnapshot?.id &&
+					docSnap.data().team
+			) || false,
+		[authenticatedUserSeasonsSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
 	const isTeamRegistrationFull = useMemo(() => {

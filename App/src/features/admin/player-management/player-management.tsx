@@ -34,7 +34,11 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
 import { firestore } from '@/firebase/app'
-import { getPlayerRef } from '@/firebase/collections/players'
+import {
+	getPlayerRef,
+	playerSeasonsSubcollection,
+} from '@/firebase/collections/players'
+import { getDocs } from 'firebase/firestore'
 import { useSeasonsContext } from '@/providers'
 import { teamsBySeasonQuery } from '@/firebase/collections/teams'
 import {
@@ -63,9 +67,8 @@ import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import {
 	Collections,
 	type PlayerDocument,
-	type PlayerSeason,
 	type SeasonDocument,
-	type TeamDocument,
+	type TeamSeasonDocument,
 	logger,
 	extractErrorMessage,
 } from '@/shared/utils'
@@ -235,6 +238,9 @@ export const PlayerManagement = () => {
 
 			try {
 				const playerData = selectedPlayerSnapshot.data() as PlayerDocument
+				const playerSeasonsSnap = await getDocs(
+					playerSeasonsSubcollection(selectedPlayerId)!
+				)
 
 				// Fetch email verification status from Firebase Auth
 				let emailVerified = false
@@ -264,14 +270,17 @@ export const PlayerManagement = () => {
 					email: playerData.email,
 					admin: playerData.admin,
 					emailVerified,
-					seasons: playerData.seasons.map((ps: PlayerSeason) => ({
-						seasonId: ps.season.id,
-						captain: ps.captain,
-						paid: ps.paid,
-						signed: ps.signed,
-						banned: ps.banned ?? false,
-						teamId: ps.team?.id || null,
-					})),
+					seasons: playerSeasonsSnap.docs.map((d) => {
+						const ps = d.data()
+						return {
+							seasonId: ps.season.id,
+							captain: ps.captain,
+							paid: ps.paid,
+							signed: ps.signed,
+							banned: ps.banned ?? false,
+							teamId: ps.team?.id || null,
+						}
+					}),
 				}
 				setFormData(newFormData)
 				setOriginalFormData(newFormData)
@@ -953,7 +962,7 @@ const SeasonCard = ({
 				id: doc.id,
 				...doc.data(),
 			}))
-			.sort((a, b) => a.name.localeCompare(b.name)) as (TeamDocument & {
+			.sort((a, b) => a.name.localeCompare(b.name)) as (TeamSeasonDocument & {
 			id: string
 		})[]
 	}, [teamsSnapshot])
