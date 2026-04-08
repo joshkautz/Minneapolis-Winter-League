@@ -315,6 +315,20 @@ export interface OfferDocument extends DocumentData {
 export interface GameDocument extends DocumentData {
 	/** Reference to the away team (null for placeholder games) */
 	away: DocumentReference<TeamDocument> | null
+	/**
+	 * Away team's display name as of the time the game was played.
+	 *
+	 * **DENORMALIZED**: snapshot of `teams/{away.id}/teamSeasons/{season.id}.name`
+	 * captured when the game was created or its team ref was updated. Storing
+	 * the name on the game doc means rendering schedules, standings, and
+	 * games tables doesn't require a join against the team-seasons collection
+	 * group on every read. Also correctly preserves the team name even if the
+	 * team is later renamed in a future season.
+	 *
+	 * Always written by the createGame/updateGame callables — never write
+	 * to this field from the App directly. Null when `away` is null.
+	 */
+	awayName: string | null
 	/** Away team's score (null if score not yet recorded) */
 	awayScore: number | null
 	/** Game date and time */
@@ -323,6 +337,11 @@ export interface GameDocument extends DocumentData {
 	field: number
 	/** Reference to the home team (null for placeholder games) */
 	home: DocumentReference<TeamDocument> | null
+	/**
+	 * Home team's display name as of the time the game was played.
+	 * See `awayName` doc for the denormalization invariant.
+	 */
+	homeName: string | null
 	/** Home team's score (null if score not yet recorded) */
 	homeScore: number | null
 	/** Reference to the season this game belongs to */

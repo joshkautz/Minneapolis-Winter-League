@@ -69,7 +69,7 @@ export const ScheduleCard = ({
 											className='inline-flex min-w-0 max-w-full items-center justify-self-end gap-3 hover:underline'
 										>
 											<span className='text-foreground truncate text-xs font-medium'>
-												{homeTeam.data().name}
+												{game.homeName ?? homeTeam.data().name}
 											</span>
 											<TeamIcon team={homeTeam} />
 										</Link>
@@ -95,7 +95,7 @@ export const ScheduleCard = ({
 										>
 											<TeamIcon team={awayTeam} />
 											<span className='text-foreground truncate text-xs font-medium'>
-												{awayTeam.data().name}
+												{game.awayName ?? awayTeam.data().name}
 											</span>
 										</Link>
 									) : (

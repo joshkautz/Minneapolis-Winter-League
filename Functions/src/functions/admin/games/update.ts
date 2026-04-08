@@ -14,7 +14,11 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG, GAME_CONFIG } from '../../../config/constants.js'
-import { Collections, GameType } from '../../../types.js'
+import {
+	Collections,
+	GameType,
+	TEAM_SEASONS_SUBCOLLECTION,
+} from '../../../types.js'
 
 /**
  * Request interface for updating a game
@@ -155,7 +159,7 @@ export const updateGame = onCall<
 			// Build update data object
 			const updateData: Record<
 				string,
-				Timestamp | number | null | GameType | DocumentReference
+				Timestamp | number | string | null | GameType | DocumentReference
 			> = {}
 
 			// Handle timestamp update
@@ -304,42 +308,80 @@ export const updateGame = onCall<
 					updateData.season = seasonRef
 				}
 
-				// Handle team updates (explicitly handle null)
+				// Handle team updates (explicitly handle null). When the team
+				// ref changes, also re-capture the denormalized team name from
+				// the team-season subdoc for the game's (possibly updated)
+				// season — see GameDocument.homeName/awayName field doc.
+				const effectiveSeasonId =
+					seasonId ?? existingGameData.season?.id ?? null
+
 				if (homeTeamId !== undefined) {
 					if (homeTeamId === null) {
 						updateData.home = null
+						updateData.homeName = null
 					} else {
+						if (!effectiveSeasonId) {
+							throw new HttpsError(
+								'failed-precondition',
+								'Cannot update home team: game has no season reference.'
+							)
+						}
 						const homeTeamRef = firestore
 							.collection(Collections.TEAMS)
 							.doc(homeTeamId)
-						const homeTeamDoc = await transaction.get(homeTeamRef)
-						if (!homeTeamDoc.exists) {
-							logger.warn('Home team not found', { homeTeamId })
+						const homeSeasonSubdoc = await transaction.get(
+							homeTeamRef
+								.collection(TEAM_SEASONS_SUBCOLLECTION)
+								.doc(effectiveSeasonId)
+						)
+						if (!homeSeasonSubdoc.exists) {
+							logger.warn('Home team not in season', {
+								homeTeamId,
+								seasonId: effectiveSeasonId,
+							})
 							throw new HttpsError(
 								'not-found',
-								'Home team not found. Please verify the team ID is correct.'
+								'Home team is not participating in this season.'
 							)
 						}
 						updateData.home = homeTeamRef
+						updateData.homeName =
+							(homeSeasonSubdoc.data()?.name as string) ?? null
 					}
 				}
 
 				if (awayTeamId !== undefined) {
 					if (awayTeamId === null) {
 						updateData.away = null
+						updateData.awayName = null
 					} else {
+						if (!effectiveSeasonId) {
+							throw new HttpsError(
+								'failed-precondition',
+								'Cannot update away team: game has no season reference.'
+							)
+						}
 						const awayTeamRef = firestore
 							.collection(Collections.TEAMS)
 							.doc(awayTeamId)
-						const awayTeamDoc = await transaction.get(awayTeamRef)
-						if (!awayTeamDoc.exists) {
-							logger.warn('Away team not found', { awayTeamId })
+						const awaySeasonSubdoc = await transaction.get(
+							awayTeamRef
+								.collection(TEAM_SEASONS_SUBCOLLECTION)
+								.doc(effectiveSeasonId)
+						)
+						if (!awaySeasonSubdoc.exists) {
+							logger.warn('Away team not in season', {
+								awayTeamId,
+								seasonId: effectiveSeasonId,
+							})
 							throw new HttpsError(
 								'not-found',
-								'Away team not found. Please verify the team ID is correct.'
+								'Away team is not participating in this season.'
 							)
 						}
 						updateData.away = awayTeamRef
+						updateData.awayName =
+							(awaySeasonSubdoc.data()?.name as string) ?? null
 					}
 				}
 

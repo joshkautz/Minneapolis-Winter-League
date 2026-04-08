@@ -694,17 +694,25 @@ export const TeamProfile = () => {
 									}
 
 									const gameDate = gameData.date.toDate()
-									// teamsQuerySnapshot is a collectionGroup over teamSeasons —
-									// derive the canonical team id from each subdoc's parent
-									// chain via the canonical helper.
+									// Use the denormalized name from the game doc itself —
+									// it's a snapshot of the team-season name as of when
+									// the game was played, so it correctly preserves the
+									// opponent's then-current name even if the team is
+									// later renamed. Falls back to a teamsQuerySnapshot
+									// join for legacy games written before the backfill
+									// (shouldn't happen post-backfill).
+									const denormalizedOpponentName =
+										teamRole === 'home' ? gameData.awayName : gameData.homeName
 									const opponentName =
+										denormalizedOpponentName ??
 										teamsQuerySnapshot?.docs
 											.find(
 												(team) =>
 													canonicalTeamIdFromTeamSeasonDoc(team) ===
 													opponentTeamRef.id
 											)
-											?.data().name || 'TBD'
+											?.data().name ??
+										'TBD'
 
 									return (
 										<div

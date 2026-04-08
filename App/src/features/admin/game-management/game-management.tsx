@@ -720,16 +720,18 @@ export const GameManagement = () => {
 											<TableCell>{formatTime(game.date)}</TableCell>
 											<TableCell>Field {game.field}</TableCell>
 											<TableCell>
-												{game.home?.id
-													? teams?.find((t) => t.id === game.home?.id)?.name ||
-														game.home.id
-													: 'TBD'}
+												{game.homeName ??
+													(game.home?.id
+														? teams?.find((t) => t.id === game.home?.id)
+																?.name || game.home.id
+														: 'TBD')}
 											</TableCell>
 											<TableCell>
-												{game.away?.id
-													? teams?.find((t) => t.id === game.away?.id)?.name ||
-														game.away.id
-													: 'TBD'}
+												{game.awayName ??
+													(game.away?.id
+														? teams?.find((t) => t.id === game.away?.id)
+																?.name || game.away.id
+														: 'TBD')}
 											</TableCell>
 											<TableCell>
 												{game.homeScore !== null && game.awayScore !== null ? (

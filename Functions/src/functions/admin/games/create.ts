@@ -235,7 +235,11 @@ export const createGame = onCall<
 			}
 
 			// Validate teams exist and have a season subdoc for this game's season.
+			// Also capture the team-season name to denormalize onto the game doc
+			// (so reads can render the team name without a join — see the
+			// `homeName`/`awayName` field doc on GameDocument).
 			let homeTeamRef = null
+			let homeName: string | null = null
 			if (homeTeamId) {
 				homeTeamRef = firestore.collection(Collections.TEAMS).doc(homeTeamId)
 				const homeSeasonSubdoc = await homeTeamRef
@@ -249,9 +253,11 @@ export const createGame = onCall<
 						'Home team is not participating in this season.'
 					)
 				}
+				homeName = (homeSeasonSubdoc.data()?.name as string) ?? null
 			}
 
 			let awayTeamRef = null
+			let awayName: string | null = null
 			if (awayTeamId) {
 				awayTeamRef = firestore.collection(Collections.TEAMS).doc(awayTeamId)
 				const awaySeasonSubdoc = await awayTeamRef
@@ -265,6 +271,7 @@ export const createGame = onCall<
 						'Away team is not participating in this season.'
 					)
 				}
+				awayName = (awaySeasonSubdoc.data()?.name as string) ?? null
 			}
 
 			// Create game document with deterministic ID to prevent race conditions
@@ -275,7 +282,9 @@ export const createGame = onCall<
 
 			const gameData = {
 				home: homeTeamRef,
+				homeName,
 				away: awayTeamRef,
+				awayName,
 				homeScore,
 				awayScore,
 				field,
