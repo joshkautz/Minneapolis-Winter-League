@@ -64,13 +64,9 @@ export const ScheduleCard = ({
 						// resolved yet — render skeletons rather than flashing
 						// "TBD" placeholders.
 						const homeLoading =
-							assigned &&
-							!homeTeam &&
-							selectedSeasonTeamsQuerySnapshotLoading
+							assigned && !homeTeam && selectedSeasonTeamsQuerySnapshotLoading
 						const awayLoading =
-							assigned &&
-							!awayTeam &&
-							selectedSeasonTeamsQuerySnapshotLoading
+							assigned && !awayTeam && selectedSeasonTeamsQuerySnapshotLoading
 
 						// on mobile, show the team name only, not the logo
 						return (
