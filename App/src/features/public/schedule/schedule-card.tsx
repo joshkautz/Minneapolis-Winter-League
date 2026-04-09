@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card'
 import { useTeamsContext } from '@/providers'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
+import { Skeleton } from '@/components/ui/skeleton'
 import { TeamIcon } from './team-icon'
 
 export const ScheduleCard = ({
@@ -18,7 +19,10 @@ export const ScheduleCard = ({
 	games: GameDocument[]
 	title: string
 }) => {
-	const { selectedSeasonTeamsQuerySnapshot } = useTeamsContext()
+	const {
+		selectedSeasonTeamsQuerySnapshot,
+		selectedSeasonTeamsQuerySnapshotLoading,
+	} = useTeamsContext()
 
 	return (
 		<Card className='w-full'>
@@ -43,8 +47,9 @@ export const ScheduleCard = ({
 					.sort((a, b) => a.field - b.field)
 					.map((game, index) => {
 						let homeTeam, awayTeam
+						const assigned = hasAssignedTeams(game)
 
-						if (hasAssignedTeams(game)) {
+						if (assigned) {
 							homeTeam = selectedSeasonTeamsQuerySnapshot?.docs.find(
 								(team) =>
 									canonicalTeamIdFromTeamSeasonDoc(team) === game.home?.id
@@ -54,6 +59,18 @@ export const ScheduleCard = ({
 									canonicalTeamIdFromTeamSeasonDoc(team) === game.away?.id
 							)
 						}
+
+						// Game has assigned teams but the teams query hasn't
+						// resolved yet — render skeletons rather than flashing
+						// "TBD" placeholders.
+						const homeLoading =
+							assigned &&
+							!homeTeam &&
+							selectedSeasonTeamsQuerySnapshotLoading
+						const awayLoading =
+							assigned &&
+							!awayTeam &&
+							selectedSeasonTeamsQuerySnapshotLoading
 
 						// on mobile, show the team name only, not the logo
 						return (
@@ -73,6 +90,17 @@ export const ScheduleCard = ({
 											</span>
 											<TeamIcon team={homeTeam} />
 										</Link>
+									) : homeLoading ? (
+										<div className='inline-flex min-w-0 max-w-full items-center justify-self-end gap-3'>
+											{game.homeName ? (
+												<span className='text-foreground truncate text-xs font-medium'>
+													{game.homeName}
+												</span>
+											) : (
+												<Skeleton className='h-3 w-20' />
+											)}
+											<Skeleton className='h-8 w-8 shrink-0 rounded-full' />
+										</div>
 									) : (
 										<div className='inline-flex min-w-0 max-w-full items-center justify-self-end gap-3'>
 											<span className='text-foreground truncate text-xs font-medium'>
@@ -98,6 +126,17 @@ export const ScheduleCard = ({
 												{game.awayName ?? awayTeam.data().name}
 											</span>
 										</Link>
+									) : awayLoading ? (
+										<div className='inline-flex min-w-0 max-w-full items-center justify-self-start gap-3'>
+											<Skeleton className='h-8 w-8 shrink-0 rounded-full' />
+											{game.awayName ? (
+												<span className='text-foreground truncate text-xs font-medium'>
+													{game.awayName}
+												</span>
+											) : (
+												<Skeleton className='h-3 w-20' />
+											)}
+										</div>
 									) : (
 										<div className='inline-flex min-w-0 max-w-full items-center justify-self-start gap-3'>
 											<TeamIcon team={awayTeam} />
