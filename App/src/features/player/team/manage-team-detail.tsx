@@ -4,7 +4,10 @@ import {
 	DocumentSnapshot,
 	offersForPlayerByTeamQuery,
 } from '@/firebase'
-import { canonicalTeamRefFromTeamSeasonDoc } from '@/firebase/collections/teams'
+import {
+	canonicalTeamIdFromTeamSeasonDoc,
+	canonicalTeamRefFromTeamSeasonDoc,
+} from '@/firebase/collections/teams'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
@@ -69,7 +72,9 @@ export const ManageTeamDetail = ({
 
 	return (
 		<div className='flex items-center gap-2 py-2'>
-			<Link to={`/teams/${currentSeasonTeamsQueryDocumentSnapshot.id}`}>
+			<Link
+				to={`/teams/${canonicalTeamIdFromTeamSeasonDoc(currentSeasonTeamsQueryDocumentSnapshot)}/${currentSeasonTeamsQueryDocumentSnapshot.id}`}
+			>
 				<Avatar>
 					<AvatarImage
 						src={
@@ -83,7 +88,9 @@ export const ManageTeamDetail = ({
 					</AvatarFallback>
 				</Avatar>
 			</Link>
-			<Link to={`/teams/${currentSeasonTeamsQueryDocumentSnapshot.id}`}>
+			<Link
+				to={`/teams/${canonicalTeamIdFromTeamSeasonDoc(currentSeasonTeamsQueryDocumentSnapshot)}/${currentSeasonTeamsQueryDocumentSnapshot.id}`}
+			>
 				<div className='mr-2'>
 					<p>{currentSeasonTeamsQueryDocumentSnapshot.data().name}</p>
 				</div>

@@ -51,6 +51,7 @@ interface ProcessedOffer {
 	playerEmail: string
 	teamName: string
 	teamId: string
+	seasonId: string
 	offerType: OfferType
 	createdAt: Date
 	createdByName: string
@@ -261,6 +262,7 @@ export const OfferManagement = () => {
 						const seasonDoc = await getDoc(offerData.season)
 						const seasonData = seasonDoc.data()
 						const seasonName = seasonData?.name || 'Unknown Season'
+						const seasonId = seasonDoc.id
 
 						return {
 							id: offerId,
@@ -268,6 +270,7 @@ export const OfferManagement = () => {
 							playerEmail,
 							teamName,
 							teamId,
+							seasonId,
 							offerType: offerData.type,
 							createdAt: offerData.createdAt.toDate(),
 							createdByName,
@@ -523,7 +526,7 @@ export const OfferManagement = () => {
 											</TableCell>
 											<TableCell>
 												<Link
-													to={`/teams/${offer.teamId}`}
+													to={`/teams/${offer.teamId}/${offer.seasonId}`}
 													className='text-blue-600 hover:underline font-medium'
 												>
 													{offer.teamName}

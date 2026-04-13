@@ -428,7 +428,7 @@ export const TeamManagement = () => {
 											<TableCell>
 												<div className='flex items-center gap-2'>
 													<Link
-														to={`/teams/${team.id}`}
+														to={`/teams/${team.id}/${selectedSeasonId}`}
 														className='font-medium hover:underline'
 													>
 														{team.name}
@@ -543,7 +543,7 @@ export const TeamManagement = () => {
 											<TableCell>
 												<div className='flex items-center gap-2'>
 													<Link
-														to={`/teams/${team.id}`}
+														to={`/teams/${team.id}/${selectedSeasonId}`}
 														className='font-medium hover:underline'
 													>
 														{team.name}
