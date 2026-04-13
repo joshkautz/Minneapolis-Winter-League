@@ -101,7 +101,7 @@
 	"devDependencies": {
 		"@tailwindcss/postcss": "^4.2.2",
 		"@types/bad-words": "^3.0.3",
-		"@types/node": "^25.5.2",
+		"@types/node": "^25.6.0",
 		"@types/react": "^19.2.14",
 		"@types/react-dom": "^19.2.2",
 		"@types/react-katex": "^3.0.4",
