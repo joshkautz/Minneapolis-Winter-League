@@ -96,6 +96,19 @@ jobs:
         working-directory: ./Functions
         run: npm run build
 
+      # The steps above build against the workspace install at the repo root.
+      # `firebase deploy` does not: its predeploy hook in firebase.json runs
+      # `npm install --prefix Functions`, which resolves against
+      # Functions/package-lock.json instead. Those two lockfiles can drift,
+      # and when they do the deploy fails after CI has already gone green —
+      # which is exactly how a stale stripe pin broke a production deploy.
+      # Running the real predeploy here keeps them honest.
+      - name: Build Functions the way firebase deploy does
+        run: |
+          rm -rf Functions/node_modules
+          npm install --prefix Functions
+          npm run build --prefix Functions
+
       - name: Deploy to Firebase Functions
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MINNESOTA_WINTER_LEAGUE }}

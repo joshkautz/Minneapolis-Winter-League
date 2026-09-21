@@ -57,6 +57,28 @@ Re-export from `Functions/src/index.ts` under the matching comment banner. A
 function that is not exported there is not deployed — this is the single most
 common mistake in this codebase.
 
+## Two lockfiles
+
+`Functions/package-lock.json` exists **in addition to** the root workspace
+lockfile, and it is the one that governs deployment: the `predeploy` hook in
+`firebase.json` runs `npm install --prefix Functions`, which resolves against
+it and ignores the workspace tree.
+
+They drift silently. Everything local and in CI builds against the root
+workspace install, so a stale `Functions/package-lock.json` passes every check
+and then fails during `firebase deploy` — or worse, deploys different
+dependency versions than anything that was tested.
+
+When you change a dependency in `Functions/package.json`, update both:
+
+```bash
+npm install                      # root workspace lockfile
+npm install --prefix Functions   # Functions/package-lock.json
+```
+
+CI runs the real predeploy path (`Build Functions the way firebase deploy
+does`) to catch divergence before a deploy does.
+
 ## Lint strictness
 
 Stricter than App: `@typescript-eslint/no-explicit-any` and
