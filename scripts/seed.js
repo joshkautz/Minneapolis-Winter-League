@@ -130,6 +130,37 @@ const GameType = {
 	PLAYOFF: 'playoff',
 }
 
+/**
+ * Per-season state lives in subcollections, not on the parent document.
+ * These names must match PLAYER_SEASONS_SUBCOLLECTION / TEAM_SEASONS_SUBCOLLECTION
+ * in Functions/src/types.ts and the paths matched by firestore.rules.
+ */
+const PLAYER_SEASONS_SUBCOLLECTION = 'playerSeasons'
+const TEAM_SEASONS_SUBCOLLECTION = 'teamSeasons'
+const TEAM_ROSTER_SUBCOLLECTION = 'roster'
+
+/** players/{uid}/playerSeasons/{seasonId} */
+const playerSeasonRef = (playerId, seasonId) =>
+	db
+		.collection(Collections.PLAYERS)
+		.doc(playerId)
+		.collection(PLAYER_SEASONS_SUBCOLLECTION)
+		.doc(seasonId)
+
+/** teams/{teamId}/teamSeasons/{seasonId} */
+const teamSeasonRef = (teamId, seasonId) =>
+	db
+		.collection(Collections.TEAMS)
+		.doc(teamId)
+		.collection(TEAM_SEASONS_SUBCOLLECTION)
+		.doc(seasonId)
+
+/** teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId} */
+const teamRosterEntryRef = (teamId, seasonId, playerId) =>
+	teamSeasonRef(teamId, seasonId)
+		.collection(TEAM_ROSTER_SUBCOLLECTION)
+		.doc(playerId)
+
 // Helper function to create timestamps in Central timezone
 const createDate = (dateString) => {
 	// Create date in Central timezone by specifying the timezone offset
@@ -534,18 +565,21 @@ async function clearCollections() {
 
 	for (const collectionName of collections) {
 		const snapshot = await db.collection(collectionName).get()
-		const batch = db.batch()
 
-		snapshot.docs.forEach((doc) => {
-			batch.delete(doc.ref)
-		})
-
-		if (!snapshot.empty) {
-			await batch.commit()
-			console.log(
-				`   Cleared ${snapshot.size} documents from ${collectionName}`
-			)
+		if (snapshot.empty) {
+			continue
 		}
+
+		// recursiveDelete also removes subcollections. A plain batch delete
+		// would leave players/{uid}/playerSeasons and
+		// teams/{teamId}/teamSeasons orphaned — invisible in the console but
+		// still returned by the collectionGroup queries the App runs, so the
+		// next seed would show stale teams alongside the new ones.
+		for (const doc of snapshot.docs) {
+			await db.recursiveDelete(doc.ref)
+		}
+
+		console.log(`   Cleared ${snapshot.size} documents from ${collectionName}`)
 	}
 }
 
@@ -630,12 +664,13 @@ async function createPlayersFromAuth(authUsers) {
 		const firstname = nameParts[0] || 'Unknown'
 		const lastname = nameParts.slice(1).join(' ') || 'User'
 
+		// Per-season state goes in players/{uid}/playerSeasons/{seasonId},
+		// written later by createTeamsForActiveSeasons.
 		return {
 			admin: false, // All non-admin as requested
 			email: user.email,
 			firstname: firstname,
 			lastname: lastname,
-			seasons: [], // Will be populated when teams are assigned
 		}
 	})
 
@@ -919,20 +954,50 @@ async function createTeamsForActiveSeasons(seasons, players) {
 			// Generate and upload team logo from random image
 			const logoData = await selectAndUploadTeamLogo(teamName, consistentTeamId)
 
-			const teamData = {
-				logo: logoData.logoUrl,
+			// The canonical team document holds only identity. Everything that
+			// varies by season (name, logo, registration, placement) lives in
+			// teams/{teamId}/teamSeasons/{seasonId}, and roster membership in a
+			// further `roster` subcollection keyed by player uid. This mirrors
+			// TeamDocument / TeamSeasonDocument / TeamRosterDocument in
+			// Functions/src/types.ts — the App reads these via collectionGroup
+			// queries and sees nothing if they are missing.
+			const docRef = await db.collection(Collections.TEAMS).add({
+				createdAt: registrationDate,
+				createdBy: roster[0]?.player ?? null,
+			})
+
+			const teamSeasonData = {
+				season: createRef(Collections.SEASONS, season.id),
 				name: teamName,
-				placement: null, // Will be calculated after games are completed
+				logo: logoData.logoUrl,
+				storagePath: logoData.storagePath,
 				registered: true,
 				registeredDate: registrationDate,
-				roster: roster,
-				season: createRef(Collections.SEASONS, season.id),
-				storagePath: logoData.storagePath,
-				teamId: consistentTeamId,
+				placement: null, // Calculated after games are played
+			}
+			await teamSeasonRef(docRef.id, season.id).set(teamSeasonData)
+
+			// Roster entries are a pure membership join; captain/paid/signed
+			// status belongs on the player's season subdoc, not here.
+			for (const rosterEntry of roster) {
+				await teamRosterEntryRef(
+					docRef.id,
+					season.id,
+					rosterEntry.player.id
+				).set({
+					player: rosterEntry.player,
+					dateJoined: registrationDate,
+				})
 			}
 
-			const docRef = await db.collection(Collections.TEAMS).add(teamData)
-			const team = { id: docRef.id, ...teamData }
+			// Retain the legacy in-memory shape: the game, standings and
+			// placement passes below all read team.roster / team.season.
+			const team = {
+				id: docRef.id,
+				...teamSeasonData,
+				roster,
+				teamId: consistentTeamId,
+			}
 			teams.push(team)
 			seasonTeams.push(createRef(Collections.TEAMS, docRef.id))
 
@@ -966,12 +1031,20 @@ async function createTeamsForActiveSeasons(seasons, players) {
 		})
 	}
 
-	// Update all players with their season participation data
-	console.log('🔄 Updating players with season participation...')
+	// Write each player's per-season participation as its own subdocument at
+	// players/{uid}/playerSeasons/{seasonId}, matching PlayerSeasonDocument.
+	console.log('🔄 Writing player season participation subdocuments...')
 	for (const [playerId, seasonData] of allPlayerAssignments) {
-		await db.collection(Collections.PLAYERS).doc(playerId).update({
-			seasons: seasonData,
-		})
+		for (const entry of seasonData) {
+			await playerSeasonRef(playerId, entry.season.id).set({
+				season: entry.season,
+				team: entry.team,
+				captain: entry.captain,
+				paid: entry.paid,
+				signed: entry.signed,
+				banned: entry.banned,
+			})
+		}
 
 		// Log players with multiple seasons
 		if (seasonData.length > 1) {
@@ -2875,7 +2948,9 @@ async function updateTeamPlacements(teams, games) {
 		for (const team of seasonTeams) {
 			const placement = teamPlacements.get(team.id)
 			if (placement) {
-				await db.collection(Collections.TEAMS).doc(team.id).update({
+				// placement is per-season state, so it belongs on the
+				// teamSeasons subdoc rather than the canonical team document.
+				await teamSeasonRef(team.id, seasonId).update({
 					placement: placement,
 				})
 				console.log(
