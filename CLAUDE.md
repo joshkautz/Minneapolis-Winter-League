@@ -84,6 +84,10 @@ already allowed.
 
 ## Gotchas
 
+- The root `package.json` has an `overrides` entry pinning `re2`. npm will not
+  move a transitive that already satisfies its parent's range, so a security
+  bump to a nested package needs an override. Drop the entry once
+  `firebase-tools` requires a new enough `re2` on its own.
 - `Functions/package-lock.json` is a **second lockfile**, separate from the
   root workspace one, and it is what `firebase deploy` installs from. Change a
   Functions dependency and you must run both `npm install` and

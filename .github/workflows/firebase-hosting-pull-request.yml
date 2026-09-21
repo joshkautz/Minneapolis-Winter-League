@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set Node version
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: 'npm'
@@ -141,7 +141,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set Node version
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: 'npm'
@@ -186,7 +186,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set Node version
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: 'npm'
@@ -194,7 +194,7 @@ jobs:
       # The Firestore emulator needs a JDK, and firebase-tools 15 refuses
       # anything below 21 — older than the runner image's default.
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
