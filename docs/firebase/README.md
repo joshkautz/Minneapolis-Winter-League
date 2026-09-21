@@ -137,11 +137,29 @@ players
 
 ### Environment Management
 
+There is **one** cloud environment: the `minnesota-winter-league` Firebase
+project. Everything else is local.
+
 ```
-Development → Staging → Production
-    ↓           ↓          ↓
- Emulators → Preview → Live Firebase
+Local emulators  →  PR preview channel  →  Production
+   (isolated)        (production data)     (production)
 ```
+
+`.firebaserc` declares `staging` and `development` aliases pointing at
+`minnesota-winter-league-staging` and `minnesota-winter-league-dev`. **Neither
+project exists.** `App/.env.staging` and `App/.env.development` both set
+`VITE_FIREBASE_PROJECT_ID=minnesota-winter-league`, so `npm run build:staging`
+produces a build that talks to production like any other.
+
+The practical consequence: **a pull request preview channel is not isolated.**
+It serves a newly built frontend, but that frontend reads and writes the
+production Firestore, Auth and Functions. Exercising a preview writes real
+data. Use the emulators for anything destructive.
+
+Standing up a real staging environment would mean creating the Firebase
+project, giving it its own Firestore, Auth config and secrets (Stripe test
+keys, a Dropbox Sign sandbox), pointing `.env.staging` at it, and adding a
+deploy job. See [Roadmap](../ROADMAP.md).
 
 ### Deployment Commands
 

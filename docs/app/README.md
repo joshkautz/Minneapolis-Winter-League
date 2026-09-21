@@ -113,7 +113,7 @@ npm run dev             # Start with production Firebase
 
 ```bash
 npm run build           # Production build
-npm run build:staging   # Staging build with different config
+npm run build:staging   # Loads .env.staging (which currently points at production)
 npm run preview         # Preview production build
 ```
 
