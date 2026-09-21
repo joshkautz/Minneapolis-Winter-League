@@ -119,6 +119,16 @@ It runs against the real emulator — `npm run test:rules` starts one.
 Coverage is still thin overall (see `docs/ROADMAP.md`). When you touch a
 callable's authorization or a rules block, add a test in the same change.
 
+## Environments
+
+There is **one** cloud environment: the `minnesota-winter-league` Firebase
+project. `.firebaserc` also declares `staging` and `development` aliases, but
+those projects do not exist and `App/.env.staging` points at production.
+
+A PR preview channel is therefore **not isolated** — it serves a new frontend
+against the production Firestore, Auth and Functions. Use the emulators for
+anything that writes.
+
 ## Reference docs
 
 `docs/README.md` is the index. Start there rather than guessing filenames.

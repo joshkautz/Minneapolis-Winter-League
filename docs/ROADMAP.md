@@ -118,6 +118,31 @@ teamSeasons, roster, playerSeasons) but two gaps remain:
   produced by the `rebuildPlayerRankings` admin callable rather than the
   seeder, so it is empty locally until that function is run.
 
+## A real staging environment
+
+There is currently one cloud environment. `.firebaserc` has `staging` and
+`development` aliases, but `minnesota-winter-league-staging` and
+`minnesota-winter-league-dev` do not exist, and `App/.env.staging` points at
+production — so `npm run build:staging` builds against production.
+
+This also means **PR preview channels are not isolated**: they serve a new
+frontend against the production database, so clicking through a preview
+writes real data.
+
+To stand one up:
+
+1. Create the `minnesota-winter-league-staging` Firebase project.
+2. Enable Firestore, Auth and Storage; deploy `firestore.rules` and the
+   indexes to it.
+3. Give it its own secrets: Stripe **test** keys, a Dropbox Sign sandbox
+   account, and its own webhook endpoints.
+4. Point `App/.env.staging` at it.
+5. Add a deploy job (`firebase deploy --project staging`), and repoint the PR
+   preview channel at staging so previews stop touching production.
+6. Seed it, either from `npm run seed` or a sanitized production export.
+
+Until then, the emulators are the only safe place to exercise writes.
+
 ## Testing
 
 Done: Firestore rules tests (`tests/rules/`), `shared/auth.ts` validator tests
