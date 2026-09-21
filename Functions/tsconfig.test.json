@@ -1,0 +1,11 @@
+{
+	// Type-checks the test files, which tsconfig.json excludes so they stay
+	// out of the deployed bundle. Used by `npm run typecheck`.
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"types": ["vitest/globals"]
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "dist"]
+}
