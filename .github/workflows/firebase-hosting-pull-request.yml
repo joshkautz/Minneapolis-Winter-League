@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set Node version
         uses: actions/setup-node@v6
@@ -138,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set Node version
         uses: actions/setup-node@v6
@@ -170,7 +170,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set Node version
         uses: actions/setup-node@v6
