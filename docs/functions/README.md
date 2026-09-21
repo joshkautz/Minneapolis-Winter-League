@@ -142,7 +142,7 @@ Key configuration constants are defined in `config/constants.ts`:
 
 ```bash
 # From project root - start with Functions hot reload
-npm run dev:watch
+npm run dev
 
 # Functions will automatically recompile and reload when TypeScript files change
 # No need to manually rebuild or restart emulators

@@ -1,198 +1,49 @@
-# Setup and Development Documentation
+# Setup and Development
 
-This directory contains documentation for project setup, development environment, and deployment procedures.
+Index for setup, local development and deployment documentation.
 
-## 📚 Documents
+## Documents
 
-### Development Setup
+- **[Development Setup](./DEVELOPMENT_SETUP.md)** — prerequisites, install,
+  first run, daily commands, troubleshooting. Start here.
+- **[Environment Variables](./ENVIRONMENT_VARIABLES.md)** — Vite env files per
+  mode and Functions secrets.
+- **[Emulator Data](./EMULATOR_DATA_README.md)** — how local data is generated,
+  stored and reset.
 
-- **[Development Setup](./DEVELOPMENT_SETUP.md)** - Complete development environment setup guide
-- **[Environment Variables](./ENVIRONMENT_VARIABLES.md)** - Configuration and secrets management
-
-### Migration Guides
-
-- **[Functions Migration Status](./FIREBASE_FUNCTIONS_MIGRATION_STATUS.md)** - Firebase Functions migration progress
-- **[Documentation Migration Summary](./DOCUMENTATION_MIGRATION_SUMMARY.md)** - Documentation reorganization summary
-
-### Optimization
-
-- **[Bundle Optimization](./BUNDLE_OPTIMIZATION.md)** - Frontend performance and bundle analysis
-
-## 🚀 Quick Start
-
-### Prerequisites
+## The 60-second version
 
 ```bash
-# Required tools
-node >= 18.0.0
-npm >= 9.0.0
-firebase-tools >= 12.0.0
-git
+nvm use        # Node 22
+npm ci         # installs root + both workspaces
+npm run seed   # generate local data, no Firebase login needed
+npm run dev    # emulators + Functions watch + Vite
 ```
 
-### Initial Setup
+App at <http://localhost:5173>, Emulator UI at <http://localhost:4000>.
+
+Before opening a pull request:
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/Minneapolis-Winter-League.git
-cd Minneapolis-Winter-League
-
-# Install dependencies for all packages
-npm install                    # Root dependencies
-cd App && npm install         # React app
-cd ../Functions && npm install # Firebase Functions
+npm run verify   # format + lint + typecheck + test + build
 ```
 
-### Development Environment
+## Deployment
+
+Merging to `main` deploys Hosting and Functions via GitHub Actions. Pull
+requests get a Hosting preview channel, posted as a PR comment.
+
+Firestore rules and indexes are **not** deployed by CI:
 
 ```bash
-# Start Firebase Emulators
-firebase emulators:start
-
-# In a new terminal, start the React development server
-cd App
-npm run dev
+firebase deploy --only firestore
 ```
 
-## 🏗️ Project Architecture
+Deploy those before merging code that depends on them.
 
-### Monorepo Structure
+## Related
 
-```
-Minneapolis-Winter-League/
-├── App/                    # React frontend application
-├── Functions/              # Firebase Cloud Functions
-├── docs/                   # Documentation (this directory)
-├── .emulator/              # Firebase emulator test data
-└── *.json                  # Firebase and project configuration
-```
-
-## 🔧 Development Workflow
-
-### Daily Development
-
-1. **Start Emulators**: `firebase emulators:start`
-2. **Start App**: `cd App && npm run dev`
-3. **Code Changes**: Edit in any package
-4. **Test Locally**: Emulator suite provides full backend
-5. **Commit Changes**: Standard Git workflow
-
-### Package Development
-
-```bash
-# Functions development
-cd Functions
-npm run build             # Compile TypeScript
-npm run lint              # ESLint checks
-npm run deploy            # Deploy to Firebase (if needed)
-
-# App development
-cd App
-npm run dev               # Development server
-npm run build             # Production build
-npm run preview           # Preview production build
-```
-
-## 🧪 Testing Strategy
-
-### Testing Levels
-
-- **Unit Tests**: Individual function and component testing
-- **Integration Tests**: Firebase Functions with emulator
-- **E2E Tests**: Full application workflow testing
-- **Type Tests**: TypeScript compilation verification
-
-### Testing Commands
-
-```bash
-# Run all tests
-npm test                  # Root level test script
-
-# Package-specific testing
-cd Functions && npm test  # Functions unit tests
-cd App && npm test       # React component tests
-cd Shared && npm test    # Validation schema tests
-```
-
-## 🚀 Deployment Process
-
-### Environment Stages
-
-1. **Development**: Local with Firebase Emulators
-2. **Staging**: Firebase project preview
-3. **Production**: Live Firebase project
-
-### Deployment Commands
-
-```bash
-# Deploy all services to production
-firebase deploy
-
-# Deploy specific services
-firebase deploy --only functions    # Just Cloud Functions
-firebase deploy --only hosting     # Just React app
-firebase deploy --only firestore   # Just Firestore rules
-```
-
-### Pre-deployment Checklist
-
-- [ ] All tests passing
-- [ ] TypeScript compilation successful
-- [ ] Environment variables configured
-- [ ] Firebase project selected correctly
-
-## 🔐 Environment Configuration
-
-### Environment Variables
-
-```bash
-# App/.env.local
-VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-# ... additional Firebase config
-
-# Functions/.env
-STRIPE_SECRET_KEY=sk_test_...
-FIREBASE_PROJECT_ID=your-project-id
-# ... additional function config
-```
-
-### Configuration Management
-
-- **Development**: `.env.local` files (not committed)
-- **Production**: Firebase Functions config
-- **Shared**: Firebase project configuration
-- **Secrets**: Firebase Functions secret manager
-
-## 📊 Performance Monitoring
-
-### Frontend Performance
-
-- **Bundle Analysis**: `npm run build` in App/
-- **Lighthouse**: Automated performance testing
-- **Vite Build**: Optimized production builds
-
-### Backend Performance
-
-- **Functions Monitoring**: Firebase Console
-- **Firestore Performance**: Query optimization
-- **Emulator Insights**: Local performance testing
-
-## 🔮 Future Development
-
-### Planned Improvements
-
-- **CI/CD Pipeline**: Automated testing and deployment
-- **Docker Support**: Containerized development environment
-- **Advanced Testing**: E2E test automation
-- **Performance Monitoring**: Real-time performance tracking
-- **Documentation**: Automated API documentation generation
-
-### Contributing Guidelines
-
-1. **Fork Repository**: Create personal fork
-2. **Feature Branch**: Create feature-specific branch
-3. **Development**: Use emulator suite for testing
-4. **Testing**: Ensure all tests pass
-5. **Pull Request**: Submit for code review
-6. **Deployment**: Merge triggers deployment pipeline
+- [Project Structure](../PROJECT_STRUCTURE.md)
+- [Security Guidelines](../SECURITY.md)
+- [Bundle Optimization](../app/BUNDLE_OPTIMIZATION.md)
+- Historical migration notes: [`../historical/`](../historical/)

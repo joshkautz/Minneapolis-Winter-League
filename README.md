@@ -1,126 +1,130 @@
 # Minneapolis Winter League
 
-A modern, secure web application for managing Minneapolis Winter League hockey seasons, teams, and games. Built with React, TypeScript, and Firebase with a focus on security and performance.
+Web application for running the Minneapolis Winter League, a local ultimate
+frisbee league. It covers the full season lifecycle: registration and payment,
+team creation and rosters, the invite/request workflow, scheduling, standings,
+player rankings and signed waivers.
 
-| Environment | Status                                                                                                                                                                                                                                                     |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Production  | [![Production GitHub Workflow Status](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml/badge.svg)](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml) |
-| Staging     | [![Staging GitHub Workflow Status](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml/badge.svg)](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml)    |
+| Environment   | Status                                                                                                                                                                                                                                         |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Production    | [![Production](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml/badge.svg)](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-merge.yml)            |
+| Pull requests | [![Testing](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-pull-request.yml/badge.svg)](https://github.com/joshkautz/Minneapolis-Winter-League/actions/workflows/firebase-hosting-pull-request.yml) |
 
-## 🚀 Quick Start
+## Quick start
+
+Requires **Node 22** (see `.nvmrc`) and a JDK on your PATH for the Firebase
+emulators.
 
 ```bash
-# Clone and install
 git clone https://github.com/joshkautz/Minneapolis-Winter-League.git
 cd Minneapolis-Winter-League
-npm install
+nvm use
+npm ci
 
-# Start development environment
-npm run dev                    # Start Firebase emulators
-cd App && npm run dev:emulators # Start React app (new terminal)
+npm run seed   # generate local test data (no Firebase credentials needed)
+npm run dev    # emulators + Functions watch + Vite dev server
 ```
-
-**Access Points:**
 
 - App: <http://localhost:5173>
 - Firebase Emulator UI: <http://localhost:4000>
 
-## 🛠️ Tech Stack
+`npm run seed` creates a fully populated local dataset — 480 users, 4 seasons,
+36 teams and 216 games — entirely offline. Production access is never required
+for day-to-day development.
 
-- **Frontend**: React 18 + TypeScript + Vite + shadcn/ui + Tailwind CSS
-- **Backend**: Firebase (Auth, Firestore, Functions Gen 2, Storage, Hosting)
-- **Security**: Firebase Functions-first architecture with strict Firestore rules
-- **Validation**: Local type definitions and validation
-- **Payments**: Stripe integration
-- **Development**: Firebase Emulators with hot reload
+## Tech stack
 
-## 📚 Documentation
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS v4, shadcn/ui
+- **Backend**: Firebase Cloud Functions Gen 2 on Node 22
+- **Data**: Cloud Firestore, Firebase Auth, Cloud Storage, Firebase Hosting
+- **Payments**: Stripe (custom integration, not the Firebase extension)
+- **Waivers**: Dropbox Sign
+- **Testing**: Vitest + Testing Library
 
-| Category                       | Documents                                                                                                                                                                                  |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Setup & Development**        | [Development Setup](./docs/DEVELOPMENT_SETUP.md) • [Environment Variables](./docs/ENVIRONMENT_VARIABLES.md) • [Project Structure](./docs/PROJECT_STRUCTURE.md)                             |
-| **Security & Architecture**    | [Firebase Functions Migration](./docs/FIREBASE_FUNCTIONS_MIGRATION_STATUS.md) • [Security Guidelines](./docs/SECURITY.md) • [Authentication System](./docs/AUTHENTICATION_SYSTEM.md)       |
-| **Firebase Integration**       | [Firebase Migration Guide](./docs/FIREBASE_MIGRATION.md) • [Firebase Collections](./docs/FIREBASE_COLLECTIONS_README.md) • [Player Function Docs](./docs/PLAYER_FUNCTION_DOCUMENTATION.md) |
-| **Type Safety & Validation**   | [Zod Validation](./docs/ZOD_VALIDATION_ANALYSIS.md) • [TypeScript Improvements](./docs/TYPESCRIPT_IMPROVEMENTS.md)                                                                         |
-| **Performance & Optimization** | [Bundle Optimization](./docs/BUNDLE_OPTIMIZATION.md)                                                                                                                                       |
-
-## 🏗️ Architecture
+## Repository layout
 
 ```
-├── App/                     # React application (Vite + TypeScript)
-│   ├── src/features/        # Feature-based modules
-│   ├── src/firebase/        # Firebase SDK integration
-│   └── src/shared/          # Shared utilities & components
-├── Functions/               # Firebase Cloud Functions (Gen 2)
-│   ├── src/playerFunctions.ts    # Player CRUD operations
-│   ├── src/teamFunctions.ts      # Team management
-│   └── src/offerFunctions.ts     # Invitation/request workflow
-├── docs/                    # Complete documentation
-└── .emulator/           # Development test data
+├── App/              React front end (npm workspace)
+├── Functions/        Cloud Functions Gen 2 (npm workspace)
+├── scripts/          Seeding and maintenance scripts (plain Node, not a workspace)
+├── docs/             Documentation, grouped by area
+├── firestore.rules   Client access rules — all writes denied
+└── firebase.json     Emulator ports, hosting, functions runtime
 ```
 
-## 🔐 Security Features
+## Commands
 
-- **Functions-First Architecture**: All write operations server-side only
-- **Zero Client-Side Writes**: Firestore rules deny all client writes to core collections
-- **Role-Based Authorization**: Captain/Player/Admin permissions enforced
-- **Email Verification Required**: All operations require verified accounts
-- **Atomic Transactions**: Multi-document consistency guaranteed
-- **Comprehensive Audit Logging**: All actions tracked with user context
+Run from the repository root.
 
-## 🎯 Key Features
+| Command                   | What it does                                                   |
+| ------------------------- | -------------------------------------------------------------- |
+| `npm run dev`             | Emulators, Functions watch and Vite, together                  |
+| `npm run seed`            | Populate the emulators with synthetic data                     |
+| `npm run seed:attach`     | Reseed emulators that are already running                      |
+| `npm run emulators:clean` | Discard local emulator data and start empty                    |
+| `npm run data:refresh`    | Clone production into the emulators (needs gcloud credentials) |
+| `npm run verify`          | format + lint + typecheck + test + build                       |
+| `npm test`                | Vitest, single run                                             |
+| `npm run build`           | Production build of both workspaces                            |
+| `npm run deploy`          | Deploy everything via the Firebase CLI                         |
 
-- **Season Management**: Complete season lifecycle with automated workflows
-- **Team Organization**: Secure team creation, editing, and roster management
-- **Player Profiles**: Individual statistics and team history
-- **Invitation System**: Secure team invitations and join requests
-- **Game Scheduling**: Automated scheduling and result tracking
-- **Payment Integration**: Stripe checkout for registration
-- **Mobile Responsive**: Full mobile experience with PWA support
+## Architecture
 
-## 🚀 Deployment
+The application is **functions-first**. `firestore.rules` denies every client
+write; the client SDK reads and nothing more. All mutations go through callable
+Cloud Functions, which run with the Admin SDK and enforce authorization
+themselves.
 
-### Automatic Deployments
+This means:
 
-- **Pull Requests**: Auto-deploy to Firebase Hosting preview channels
-- **Main Branch**: Auto-deploy to production on merge
-- **Functions**: Deploy via Firebase CLI or GitHub Actions
+- Authorization lives in `Functions/src/shared/auth.ts`, not in rules. Admin
+  status is a boolean on the player document, not a Firebase Auth custom claim.
+- Multi-document changes (rosters, registration state, offers) run inside
+  Firestore transactions.
+- `Functions/src/index.ts` is the deploy manifest — a function that is not
+  re-exported there is not deployed.
 
-### Scripts
+Per-season state lives in subcollections rather than on the parent document:
+`players/{uid}/playerSeasons/{seasonId}` and
+`teams/{teamId}/teamSeasons/{seasonId}`, with roster membership as a further
+subcollection under the latter.
+
+## Documentation
+
+[`docs/README.md`](./docs/README.md) is the index.
+
+| Area               | Start here                                                                                                              |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Setup and workflow | [Development Setup](./docs/setup/DEVELOPMENT_SETUP.md) · [Environment Variables](./docs/setup/ENVIRONMENT_VARIABLES.md) |
+| Codebase structure | [Project Structure](./docs/PROJECT_STRUCTURE.md)                                                                        |
+| Security           | [Security Guidelines](./docs/SECURITY.md) · [Authentication](./docs/firebase/AUTHENTICATION_SYSTEM.md)                  |
+| Firestore          | [Collections](./docs/firebase/FIREBASE_COLLECTIONS_README.md) · [Indexes](./docs/firebase/FIRESTORE_INDEXES.md)         |
+| Functions          | [Functions overview](./docs/functions/README.md) · [Player rankings](./docs/functions/PLAYER_RANKING_ALGORITHM.md)      |
+| Front end          | [App overview](./docs/app/README.md) · [Bundle optimization](./docs/app/BUNDLE_OPTIMIZATION.md)                         |
+| Planned work       | [Roadmap](./docs/ROADMAP.md)                                                                                            |
+
+Working in this repo with Claude Code? [`CLAUDE.md`](./CLAUDE.md) carries the
+conventions, with path-scoped detail in `.claude/rules/`.
+
+## Deployment
+
+On merge to `main`, GitHub Actions deploys Hosting and Functions. Pull requests
+get a Firebase Hosting preview channel, commented on the PR.
+
+Firestore rules and indexes are **not** deployed by CI. Deploy them explicitly,
+and before shipping code that depends on them:
 
 ```bash
-# Development
-npm run dev                  # Start emulators with test data
-npm run dev:clean           # Start clean emulators
-
-# Production
-npm run build               # Build for production
-npm run deploy              # Deploy to Firebase
+firebase deploy --only firestore
 ```
 
-## 📈 Recent Major Updates
+## Contributing
 
-- ✅ **Security Migration Complete**: All operations moved to secure Firebase Functions
-- ✅ **TypeScript Strict Mode**: Full type safety across codebase
-- ✅ **Project-Specific Types**: Each project has its own Firebase SDK-compatible types
-- ✅ **Firebase Functions Gen 2**: Modern serverless architecture
-- ✅ **Zero Client-Side Writes**: Complete security lockdown
+1. Branch from `main`.
+2. Follow the [Development Setup Guide](./docs/setup/DEVELOPMENT_SETUP.md).
+3. Run `npm run verify` before opening a PR.
+4. Open a pull request; the preview channel URL is posted as a comment.
 
-## 🔮 Upcoming Features
+## License
 
-- **Enhanced Team Karma System**: Priority seeding based on team inclusivity
-- **Player Request Messages**: Allow custom messages with team join requests
-- **Team Availability Flags**: Teams can indicate they're looking for players
-- **Advanced Analytics**: Detailed player and team statistics
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Follow the [Development Setup Guide](./docs/DEVELOPMENT_SETUP.md)
-4. Make changes with tests
-5. Submit a Pull Request
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
