@@ -5,12 +5,12 @@ command in this document does not work, the document is wrong — please fix it.
 
 ## Prerequisites
 
-| Tool    | Version | Notes                                           |
-| ------- | ------- | ----------------------------------------------- |
-| Node.js | 22.x    | Pinned in `.nvmrc`; `nvm use` picks it up       |
-| npm     | 10+     | Ships with Node 22                              |
-| JDK     | 17+     | Required by the Firestore and Storage emulators |
-| Git     | any     |                                                 |
+| Tool    | Version | Notes                                                      |
+| ------- | ------- | ---------------------------------------------------------- |
+| Node.js | 22.x    | Pinned in `.nvmrc`; `nvm use` picks it up                  |
+| npm     | 10+     | Ships with Node 22                                         |
+| JDK     | 21+     | Required by the emulators; firebase-tools 15 rejects older |
+| Git     | any     |                                                            |
 
 The Firebase CLI does **not** need to be installed globally —
 `firebase-tools` is a dev dependency and the npm scripts use the local copy.

@@ -122,11 +122,18 @@ jobs:
           node-version: 22
           cache: 'npm'
 
+      # The Firestore emulator needs a JDK, and firebase-tools 15 refuses
+      # anything below 21 — older than the runner image's default.
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: Install dependencies
         run: npm ci
 
       # firestore.rules is the only thing standing between a client and the
       # database, and it is not covered by the App or Functions test suites.
-      # The runner already has a JDK, which the Firestore emulator needs.
       - name: Test Firestore rules
         run: npm run test:rules
