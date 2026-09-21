@@ -4,7 +4,7 @@
  * Displays and manages all outstanding offers
  */
 
-import { useState, useEffect, ReactNode, KeyboardEvent } from 'react'
+import { useState, useMemo, ReactNode, KeyboardEvent } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
@@ -43,7 +43,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { OfferDocument, OfferStatus, OfferType, logger } from '@/shared/utils'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 
 interface ProcessedOffer {
 	id: string
@@ -146,8 +146,6 @@ export const OfferManagement = () => {
 	})
 
 	// Use state to hold the resolved offers
-	const [offers, setOffers] = useState<ProcessedOffer[]>([])
-	const [isProcessing, setIsProcessing] = useState(false)
 
 	// Track which offer is currently being updated
 	const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null)
@@ -157,7 +155,6 @@ export const OfferManagement = () => {
 	const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
 
 	// Sorted offers
-	const [sortedOffers, setSortedOffers] = useState<ProcessedOffer[]>([])
 
 	// Handle sorting
 	const handleSort = (column: SortColumn) => {
@@ -171,53 +168,16 @@ export const OfferManagement = () => {
 		}
 	}
 
-	// Sort offers whenever offers or sort state changes
-	useEffect(() => {
-		const sorted = [...offers].sort((a, b) => {
-			let comparison = 0
-
-			switch (sortColumn) {
-				case 'type':
-					comparison = a.offerType.localeCompare(b.offerType)
-					break
-				case 'player':
-					comparison = a.playerName.localeCompare(b.playerName)
-					break
-				case 'team':
-					comparison = a.teamName.localeCompare(b.teamName)
-					break
-				case 'season':
-					comparison = a.seasonName.localeCompare(b.seasonName)
-					break
-				case 'createdBy':
-					comparison = a.createdByName.localeCompare(b.createdByName)
-					break
-				case 'created':
-					comparison = a.createdAt.getTime() - b.createdAt.getTime()
-					break
-				default:
-					comparison = 0
-			}
-
-			return sortDirection === 'asc' ? comparison : -comparison
-		})
-
-		setSortedOffers(sorted)
-	}, [offers, sortColumn, sortDirection])
-
-	// Process offers to resolve references
-	useEffect(() => {
-		if (!offersSnapshot) {
-			setOffers([])
-			setIsProcessing(false)
-			return
-		}
-
-		setIsProcessing(true)
-
-		const processOffers = async () => {
+	// Process offers to resolve references.
+	//
+	// useResolvedSnapshot derives the loading flag from which snapshot the
+	// rows belong to, so there is no synchronous setState in an effect, and a
+	// slow resolve for a superseded snapshot cannot overwrite newer rows.
+	const { items: offers, isProcessing } = useResolvedSnapshot(
+		offersSnapshot,
+		async (snapshot) => {
 			const results = await Promise.all(
-				offersSnapshot.docs.map(async (offerDoc) => {
+				snapshot.docs.map(async (offerDoc) => {
 					const offerData = offerDoc.data() as OfferDocument
 					const offerId = offerDoc.id
 
@@ -284,12 +244,42 @@ export const OfferManagement = () => {
 
 			// Filter out nulls
 			const validOffers = results.filter((r): r is ProcessedOffer => r !== null)
-			setOffers(validOffers)
-			setIsProcessing(false)
+			return validOffers
 		}
+	)
 
-		processOffers()
-	}, [offersSnapshot])
+	// Sorting is pure derivation from offers plus the sort state, so it is a
+	// memo rather than an effect writing to a second piece of state.
+	const sortedOffers = useMemo(() => {
+		return [...offers].sort((a, b) => {
+			let comparison = 0
+
+			switch (sortColumn) {
+				case 'type':
+					comparison = a.offerType.localeCompare(b.offerType)
+					break
+				case 'player':
+					comparison = a.playerName.localeCompare(b.playerName)
+					break
+				case 'team':
+					comparison = a.teamName.localeCompare(b.teamName)
+					break
+				case 'season':
+					comparison = a.seasonName.localeCompare(b.seasonName)
+					break
+				case 'createdBy':
+					comparison = a.createdByName.localeCompare(b.createdByName)
+					break
+				case 'created':
+					comparison = a.createdAt.getTime() - b.createdAt.getTime()
+					break
+				default:
+					comparison = 0
+			}
+
+			return sortDirection === 'asc' ? comparison : -comparison
+		})
+	}, [offers, sortColumn, sortDirection])
 
 	const formatDate = (date: Date) => {
 		return date.toLocaleDateString('en-US', {

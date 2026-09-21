@@ -4,7 +4,7 @@
  * Allows admins to create, edit, and delete news posts
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
@@ -68,7 +68,7 @@ import {
 } from '@/components/ui/select'
 import { NewsDocument, PlayerDocument, SeasonDocument } from '@/types'
 import { logger } from '@/shared/utils'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 
 interface ProcessedNews {
 	id: string
@@ -148,21 +148,15 @@ export const NewsManagement = () => {
 	})
 
 	// Process news to resolve references
-	const [newsList, setNewsList] = useState<ProcessedNews[]>([])
-	const [isProcessing, setIsProcessing] = useState(false)
 
-	useEffect(() => {
-		if (!newsSnapshot) {
-			setNewsList([])
-			setIsProcessing(false)
-			return
-		}
-
-		setIsProcessing(true)
-
-		const processNews = async () => {
+	// useResolvedSnapshot derives the loading flag from which snapshot the
+	// rows belong to, so there is no synchronous setState in an effect, and a
+	// slow resolve for a superseded snapshot cannot overwrite newer rows.
+	const { items: newsList, isProcessing } = useResolvedSnapshot(
+		newsSnapshot,
+		async (snapshot) => {
 			const results = await Promise.all(
-				newsSnapshot.docs.map(async (newsDoc) => {
+				snapshot.docs.map(async (newsDoc) => {
 					const newsData = newsDoc.data() as NewsDocument
 					const newsId = newsDoc.id
 
@@ -201,12 +195,9 @@ export const NewsManagement = () => {
 			)
 
 			const validNews = results.filter((n): n is ProcessedNews => n !== null)
-			setNewsList(validNews)
-			setIsProcessing(false)
+			return validNews
 		}
-
-		processNews()
-	}, [newsSnapshot])
+	)
 
 	// Dialog state
 	const [dialogMode, setDialogMode] = useState<DialogMode>('closed')

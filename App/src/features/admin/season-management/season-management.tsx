@@ -24,7 +24,7 @@ import { format } from 'date-fns'
 
 import { auth } from '@/firebase/auth'
 import { logger } from '@/shared/utils'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import {
@@ -148,17 +148,15 @@ export const SeasonManagement = () => {
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	// Process seasons
-	const [seasons, setSeasons] = useState<ProcessedSeason[]>([])
 
-	useEffect(() => {
-		if (!seasonsSnapshot) {
-			setSeasons([])
-			return
-		}
-
-		const processSeasons = async () => {
+	// useResolvedSnapshot derives the loading state from which snapshot the
+	// rows belong to, so there is no synchronous setState in an effect, and a
+	// slow resolve for a superseded snapshot cannot overwrite newer rows.
+	const { items: seasons } = useResolvedSnapshot(
+		seasonsSnapshot,
+		async (snapshot) => {
 			const results = await Promise.all(
-				seasonsSnapshot.docs.map(async (seasonDoc) => {
+				snapshot.docs.map(async (seasonDoc) => {
 					const seasonData = seasonDoc.data() as SeasonDocument
 					const seasonId = seasonDoc.id
 
@@ -199,11 +197,9 @@ export const SeasonManagement = () => {
 			const validSeasons = results.filter(
 				(r): r is ProcessedSeason => r !== null
 			)
-			setSeasons(validSeasons)
+			return validSeasons
 		}
-
-		processSeasons()
-	}, [seasonsSnapshot])
+	)
 
 	// Load available teams when editing a season
 	useEffect(() => {

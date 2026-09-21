@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useResolvedSnapshot } from '@/shared/hooks'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
 import { Award, Trash2, Loader2, CheckCircle } from 'lucide-react'
@@ -95,11 +96,8 @@ export const TeamBadgesDialog = ({
 	}, [teamBadgesError, teamId])
 
 	// Processed team badges
-	const [teamBadges, setTeamBadges] = useState<ProcessedTeamBadge[]>([])
-	const [isProcessing, setIsProcessing] = useState(false)
 
 	// Available badges (not yet awarded to team)
-	const [availableBadges, setAvailableBadges] = useState<AvailableBadge[]>([])
 
 	// Track which badge is currently being awarded (for loading state)
 	const [awardingBadgeId, setAwardingBadgeId] = useState<string | null>(null)
@@ -112,18 +110,14 @@ export const TeamBadgesDialog = ({
 	const [isRemoving, setIsRemoving] = useState(false)
 
 	// Process team badges to resolve references
-	useEffect(() => {
-		if (!teamBadgesSnapshot) {
-			setTeamBadges([])
-			setIsProcessing(false)
-			return
-		}
-
-		setIsProcessing(true)
-
-		const processTeamBadges = async () => {
+	// useResolvedSnapshot derives the loading flag from which snapshot the
+	// rows belong to, so there is no synchronous setState in an effect, and a
+	// slow resolve for a superseded snapshot cannot overwrite newer rows.
+	const { items: teamBadges, isProcessing } = useResolvedSnapshot(
+		teamBadgesSnapshot,
+		async (snapshot) => {
 			const results = await Promise.all(
-				teamBadgesSnapshot.docs.map(async (teamBadgeDoc) => {
+				snapshot.docs.map(async (teamBadgeDoc) => {
 					const teamBadgeData = teamBadgeDoc.data() as TeamBadgeDocument
 					const badgeId = teamBadgeDoc.id
 
@@ -170,37 +164,34 @@ export const TeamBadgesDialog = ({
 			// Sort by awarded date (most recent first)
 			validResults.sort((a, b) => b.awardedAt.getTime() - a.awardedAt.getTime())
 
-			setTeamBadges(validResults)
-			setIsProcessing(false)
+			return validResults
 		}
+	)
 
-		processTeamBadges()
-	}, [teamBadgesSnapshot])
-
-	// Calculate available badges (not yet awarded)
-	useEffect(() => {
+	// Available badges are a pure function of the two snapshots, so they are
+	// memoized rather than mirrored into state by an effect.
+	const availableBadges = useMemo<AvailableBadge[]>(() => {
 		if (!allBadgesSnapshot || !teamBadgesSnapshot) {
-			setAvailableBadges([])
-			return
+			return []
 		}
 
 		const earnedBadgeIds = new Set(teamBadgesSnapshot.docs.map((doc) => doc.id))
 
-		const available = allBadgesSnapshot.docs
-			.filter((badgeDoc) => !earnedBadgeIds.has(badgeDoc.id))
-			.map((badgeDoc) => {
-				const badgeData = badgeDoc.data() as BadgeDocument
-				return {
-					id: badgeDoc.id,
-					name: badgeData.name,
-					description: badgeData.description,
-					imageUrl: badgeData.imageUrl,
-				} as AvailableBadge
-			})
-			// Sort alphabetically
-			.sort((a, b) => a.name.localeCompare(b.name))
-
-		setAvailableBadges(available)
+		return (
+			allBadgesSnapshot.docs
+				.filter((badgeDoc) => !earnedBadgeIds.has(badgeDoc.id))
+				.map((badgeDoc) => {
+					const badgeData = badgeDoc.data() as BadgeDocument
+					return {
+						id: badgeDoc.id,
+						name: badgeData.name,
+						description: badgeData.description,
+						imageUrl: badgeData.imageUrl,
+					} as AvailableBadge
+				})
+				// Sort alphabetically
+				.sort((a, b) => a.name.localeCompare(b.name))
+		)
 	}, [allBadgesSnapshot, teamBadgesSnapshot])
 
 	// Award badge to team

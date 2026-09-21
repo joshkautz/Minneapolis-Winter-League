@@ -4,7 +4,7 @@
  * Allows admins to create, edit, and delete badges
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
@@ -75,7 +75,7 @@ import {
 } from '@/components/ui/select'
 import { BadgeDocument, PlayerDocument, SeasonDocument } from '@/types'
 import { logger } from '@/shared/utils'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 import { Badge } from '@/components/ui/badge'
 
 interface ProcessedBadge {
@@ -133,22 +133,16 @@ export const BadgeManagement = () => {
 		errorLabel: 'seasons',
 	})
 
-	// Process badges to resolve references
-	const [badgesList, setBadgesList] = useState<ProcessedBadge[]>([])
-	const [isProcessing, setIsProcessing] = useState(false)
-
-	useEffect(() => {
-		if (!badgesSnapshot) {
-			setBadgesList([])
-			setIsProcessing(false)
-			return
-		}
-
-		setIsProcessing(true)
-
-		const processBadges = async () => {
+	// Process badges to resolve references.
+	//
+	// useResolvedSnapshot derives the loading flag from which snapshot the
+	// rows belong to, so there is no synchronous setState in an effect, and a
+	// slow resolve for a superseded snapshot cannot overwrite newer rows.
+	const { items: badgesList, isProcessing } = useResolvedSnapshot(
+		badgesSnapshot,
+		async (snapshot) => {
 			const results = await Promise.all(
-				badgesSnapshot.docs.map(async (badgeDoc) => {
+				snapshot.docs.map(async (badgeDoc) => {
 					const badgeData = badgeDoc.data() as BadgeDocument
 					const badgeId = badgeDoc.id
 
@@ -182,12 +176,9 @@ export const BadgeManagement = () => {
 				})
 			)
 
-			setBadgesList(results)
-			setIsProcessing(false)
+			return results
 		}
-
-		processBadges()
-	}, [badgesSnapshot])
+	)
 
 	// Dialog state
 	const [dialogMode, setDialogMode] = useState<DialogMode>('closed')

@@ -82,18 +82,28 @@ its own dependencies.
 ## React effect cleanup
 
 `eslint-plugin-react-hooks` 7.1 promoted `react-hooks/set-state-in-effect` to
-an error. It flags 23 existing call sites; the rule is currently demoted to a
-warning in `App/eslint.config.js` so it does not gate CI.
+an error. Seventeen of the original twenty-three call sites are fixed; the
+rule is still a warning in `App/eslint.config.js` until the last six are done,
+then it should be restored to `error`.
 
-Each site needs individual judgement — some are genuine cascading-render bugs,
-others are deliberate synchronize-on-mount. Work through them and restore the
-rule to `error`:
+Fixed so far: the season selectors derive their default instead of seeding it
+in an effect, the reset-on-change effects adjust state during render, the
+snapshot-resolution effects moved to `useResolvedSnapshot` (which also fixes a
+race where a slow resolve could overwrite newer rows), pure derivations became
+`useMemo`, and `use-mobile` uses `useSyncExternalStore`.
 
-- `components/ui/carousel.tsx`, `shared/hooks/use-mobile.ts`
-- `features/public/news/news.tsx`, `features/public/posts/posts.tsx`
-- `features/public/create/hooks/use-rollover-team-form.ts`
-- `features/admin/` — badge, news, offer, posts, season, site-settings, swiss
-  and team management screens
+Remaining, all deliberately left because they could not be exercised against
+the current seed data and the change is behavioral rather than mechanical:
+
+| Site                                                               | Why it is still open                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `components/ui/carousel.tsx`                                       | shadcn-generated; notifies a parent setter from an effect. Revisit when the component is regenerated.                                                                                                                                             |
+| `features/public/news/news.tsx`, `features/public/posts/posts.tsx` | The first page is seeded from a snapshot and then extended by `loadMore`. Fixing it properly means deriving the first page and keeping only the extra pages in state. The seeder creates no news or posts, so there is nothing to verify against. |
+| `features/admin/swiss-rankings/swiss-rankings.tsx`                 | Loads teams for the selected Swiss season; the seeder creates no Swiss-format seasons.                                                                                                                                                            |
+| `features/public/create/hooks/use-rollover-team-form.ts` (x2)      | Needs a signed-in captain with a rolled-over team from a prior season.                                                                                                                                                                            |
+
+Seeder fixtures for news, posts, Swiss seasons and rollover-eligible captains
+would make all six verifiable, and are worth adding first.
 
 ## Seeder gaps
 

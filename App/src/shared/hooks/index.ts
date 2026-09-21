@@ -5,6 +5,7 @@
  */
 
 export { useIsMobile } from './use-mobile'
+export { useResolvedSnapshot } from './use-resolved-snapshot'
 export { useResponsiveDrawer } from './use-responsive-drawer'
 export { useAnchorScroll } from './use-anchor-scroll'
 export { useDebounce } from './use-debounce'
