@@ -26,7 +26,10 @@
  * Against production: omit FIRESTORE_EMULATOR_HOST. Uses ADC.
  */
 
-import admin from 'firebase-admin'
+// firebase-admin 14 removed the legacy default-export namespace, so the
+// modular entry points are the only supported form.
+import { initializeApp } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
 
 const PROJECT_ID = 'minnesota-winter-league'
 const VALID_MODES = ['plan', 'migrate']
@@ -41,8 +44,8 @@ if (!VALID_MODES.includes(MODE)) {
 	process.exit(1)
 }
 
-const app = admin.initializeApp({ projectId: PROJECT_ID })
-const db = app.firestore()
+const app = initializeApp({ projectId: PROJECT_ID })
+const db = getFirestore(app)
 
 function logHeader(title) {
 	const bar = '━'.repeat(60)

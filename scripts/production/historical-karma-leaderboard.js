@@ -14,7 +14,10 @@
  *   - gcloud auth application-default login
  */
 
-import admin from 'firebase-admin'
+// firebase-admin 14 removed the legacy default-export namespace, so the
+// modular entry points are the only supported form.
+import { initializeApp } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -22,8 +25,8 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const app = admin.initializeApp({ projectId: 'minnesota-winter-league' })
-const db = app.firestore()
+const app = initializeApp({ projectId: 'minnesota-winter-league' })
+const db = getFirestore(app)
 
 async function main() {
 	console.log('📊 Building historical karma leaderboard from production...')
@@ -86,7 +89,9 @@ async function main() {
 	lines.push(`Generated: ${new Date().toISOString()}`)
 	lines.push('')
 	lines.push('Rank  Karma  Team                                  Season')
-	lines.push('----  -----  ------------------------------------  ------------------------')
+	lines.push(
+		'----  -----  ------------------------------------  ------------------------'
+	)
 	rows.forEach((row, i) => {
 		const rank = String(i + 1).padStart(4, ' ')
 		const karma = String(row.karma).padStart(5, ' ')

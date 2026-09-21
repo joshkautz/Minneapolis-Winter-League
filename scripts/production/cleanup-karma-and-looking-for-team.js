@@ -19,13 +19,15 @@
  *   - gcloud auth application-default login
  */
 
-import admin from 'firebase-admin'
+// firebase-admin 14 removed the legacy default-export namespace, so the
+// modular entry points are the only supported form.
+import { initializeApp } from 'firebase-admin/app'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 
 const COMMIT = process.argv.includes('--commit')
 
-const app = admin.initializeApp({ projectId: 'minnesota-winter-league' })
-const db = app.firestore()
-const FieldValue = admin.firestore.FieldValue
+const app = initializeApp({ projectId: 'minnesota-winter-league' })
+const db = getFirestore(app)
 
 const stats = {
 	teamsWithKarmaField: 0,
@@ -148,8 +150,12 @@ async function main() {
 	console.log('\n📊 Summary')
 	console.log(`   Teams with karma field:        ${stats.teamsWithKarmaField}`)
 	console.log(`   Karma fields removed:          ${stats.karmaFieldsRemoved}`)
-	console.log(`   Karma transactions deleted:    ${stats.karmaTransactionsDeleted}`)
-	console.log(`   Players with lookingForTeam:   ${stats.playersWithLookingForTeam}`)
+	console.log(
+		`   Karma transactions deleted:    ${stats.karmaTransactionsDeleted}`
+	)
+	console.log(
+		`   Players with lookingForTeam:   ${stats.playersWithLookingForTeam}`
+	)
 	console.log(`   PlayerSeasons cleaned:         ${stats.playerSeasonsCleaned}`)
 
 	if (!COMMIT) {

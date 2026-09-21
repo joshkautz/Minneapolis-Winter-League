@@ -57,7 +57,10 @@
  *   node scripts/migrations/2026-teams-v2/run.js --mode=cutover --commit
  */
 
-import admin from 'firebase-admin'
+// firebase-admin 14 removed the legacy default-export namespace, so the
+// modular entry points are the only supported form.
+import { initializeApp } from 'firebase-admin/app'
+import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -83,10 +86,8 @@ if (!MODE || !VALID_MODES.includes(MODE)) {
 
 // ---- Firebase --------------------------------------------------------------
 
-const app = admin.initializeApp({ projectId: PROJECT_ID })
-const db = app.firestore()
-const FieldValue = admin.firestore.FieldValue
-const Timestamp = admin.firestore.Timestamp
+const app = initializeApp({ projectId: PROJECT_ID })
+const db = getFirestore(app)
 
 // ---- Constants -------------------------------------------------------------
 
@@ -421,9 +422,7 @@ async function runPlan() {
 	console.log(
 		`  dangling team refs:       ${report.players.entriesWithDanglingTeamRef}`
 	)
-	console.log(
-		`  captain entries:          ${report.players.captainEntries}`
-	)
+	console.log(`  captain entries:          ${report.players.captainEntries}`)
 	console.log(
 		`  game refs to rewrite:     ${report.games.homeRefsToRewrite} home + ${report.games.awayRefsToRewrite} away (dangling: ${report.games.danglingRefs})`
 	)
@@ -536,7 +535,8 @@ async function buildMigrationPlan() {
 	const legacyDocIdToCanonical = new Map()
 	for (const [legacyTeamId, instances] of groupsByLegacyTeamId) {
 		const canonicalId = legacyTeamIdToCanonical.get(legacyTeamId)
-		for (const inst of instances) legacyDocIdToCanonical.set(inst.docId, canonicalId)
+		for (const inst of instances)
+			legacyDocIdToCanonical.set(inst.docId, canonicalId)
 	}
 
 	return {
@@ -608,7 +608,10 @@ async function runMigrate() {
 
 		// createdBy: first captain on earliest instance, else first roster member, else null.
 		let createdByRef = null
-		if (Array.isArray(earliest.data.roster) && earliest.data.roster.length > 0) {
+		if (
+			Array.isArray(earliest.data.roster) &&
+			earliest.data.roster.length > 0
+		) {
 			const firstCaptain =
 				earliest.data.roster.find((r) => r && r.captain) ??
 				earliest.data.roster[0]
@@ -765,7 +768,8 @@ async function runMigrate() {
 			}
 			const captainKey = `${pDoc.id}__${seasonId}`
 			const captain =
-				captainsByPlayerSeason.get(captainKey) ?? false /* default if not on a team */
+				captainsByPlayerSeason.get(captainKey) ??
+				false /* default if not on a team */
 			const stageDocRef = playersNewSeasonsCol.doc(captainKey)
 			writes.push((batch) =>
 				batch.set(stageDocRef, {
@@ -784,7 +788,9 @@ async function runMigrate() {
 	}
 
 	console.log(`\nPlanned writes:`)
-	console.log(`  teams_new docs (canonical):            ${stats.canonicalTeams}`)
+	console.log(
+		`  teams_new docs (canonical):            ${stats.canonicalTeams}`
+	)
 	console.log(`  teams_new/.../seasons subdocs:         ${stats.teamSeasons}`)
 	console.log(
 		`  teams_new/.../teamSeasons/.../roster docs: ${stats.rosterDocs}`
@@ -801,7 +807,9 @@ async function runMigrate() {
 		return
 	}
 
-	console.log(`\nApplying ${writes.length} writes in batches of ${BATCH_LIMIT}…`)
+	console.log(
+		`\nApplying ${writes.length} writes in batches of ${BATCH_LIMIT}…`
+	)
 	await batchCommit(writes)
 	console.log('✅ migrate complete.')
 }
@@ -932,10 +940,7 @@ async function runValidate() {
 			}
 
 			// idmap entry exists for the legacy doc.
-			const idmapSnap = await db
-				.collection(STAGING.idmap)
-				.doc(inst.docId)
-				.get()
+			const idmapSnap = await db.collection(STAGING.idmap).doc(inst.docId).get()
 			if (!idmapSnap.exists) {
 				errors.push(
 					`teams_new_idmap/${inst.docId} missing (canonical ${canonicalTeamId})`
@@ -976,7 +981,9 @@ async function runValidate() {
 				errors.push(`players_new_seasons/${pDoc.id}__${seasonId} banned drift`)
 			// Team ref must point at staging teams_new collection if originally set.
 			if (entry?.team?.id) {
-				const expectedCanonicalTeamId = legacyDocIdToCanonical.get(entry.team.id)
+				const expectedCanonicalTeamId = legacyDocIdToCanonical.get(
+					entry.team.id
+				)
 				if (!expectedCanonicalTeamId) {
 					errors.push(
 						`player ${pDoc.id} season ${seasonId} has dangling team ref ${entry.team.id}`
@@ -1166,7 +1173,9 @@ async function runCutover() {
 	console.log(`     deleted ${legacyTeamsSnap.size} legacy team docs`)
 
 	// ---- 2. Write canonical teams ----------------------------------------
-	console.log(`\n[2/7] Writing ${canonicalTeamSubtrees.length} canonical teams…`)
+	console.log(
+		`\n[2/7] Writing ${canonicalTeamSubtrees.length} canonical teams…`
+	)
 	const teamsCol = db.collection('teams')
 	let teamsWritten = 0
 	for (const tree of canonicalTeamSubtrees) {

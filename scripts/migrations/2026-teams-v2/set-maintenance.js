@@ -11,7 +11,10 @@
  * Against production, omit FIRESTORE_EMULATOR_HOST. The script uses ADC.
  */
 
-import admin from 'firebase-admin'
+// firebase-admin 14 removed the legacy default-export namespace, so the
+// modular entry points are the only supported form.
+import { initializeApp } from 'firebase-admin/app'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 
 const arg = process.argv[2]
 if (arg !== 'on' && arg !== 'off') {
@@ -19,13 +22,13 @@ if (arg !== 'on' && arg !== 'off') {
 	process.exit(1)
 }
 
-const app = admin.initializeApp({ projectId: 'minnesota-winter-league' })
-const db = app.firestore()
+const app = initializeApp({ projectId: 'minnesota-winter-league' })
+const db = getFirestore(app)
 
 await db.doc('system/maintenance').set(
 	{
 		migrationInProgress: arg === 'on',
-		updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+		updatedAt: FieldValue.serverTimestamp(),
 	},
 	{ merge: true }
 )
