@@ -135,8 +135,7 @@ export const TeamBadgesDialog = ({
 						// Fetch awarded by player data
 						const awardedByDoc = await getDoc(teamBadgeData.awardedBy)
 						const awardedByData = awardedByDoc.data() as
-							| PlayerDocument
-							| undefined
+							PlayerDocument | undefined
 						const awardedByName = awardedByData
 							? `${awardedByData.firstname} ${awardedByData.lastname}`
 							: 'Unknown'

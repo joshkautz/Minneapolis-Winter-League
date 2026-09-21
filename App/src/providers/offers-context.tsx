@@ -153,13 +153,11 @@ export const OffersContextProvider = ({ children }: PropsWithChildren) => {
 		<OffersContext.Provider
 			value={{
 				outgoingOffersQuerySnapshot: outgoingOffersQuerySnapshot as
-					| QuerySnapshot<OfferDocument>
-					| undefined,
+					QuerySnapshot<OfferDocument> | undefined,
 				outgoingOffersQuerySnapshotLoading,
 				outgoingOffersQuerySnapshotError,
 				incomingOffersQuerySnapshot: incomingOffersQuerySnapshot as
-					| QuerySnapshot<OfferDocument>
-					| undefined,
+					QuerySnapshot<OfferDocument> | undefined,
 				incomingOffersQuerySnapshotLoading,
 				incomingOffersQuerySnapshotError,
 				dependenciesLoading,

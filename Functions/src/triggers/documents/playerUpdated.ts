@@ -32,11 +32,9 @@ export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
 
 		try {
 			const beforeData = event.data?.before.data() as
-				| PlayerSeasonDocument
-				| undefined
+				PlayerSeasonDocument | undefined
 			const afterData = event.data?.after.data() as
-				| PlayerSeasonDocument
-				| undefined
+				PlayerSeasonDocument | undefined
 
 			if (!beforeData || !afterData || !afterData.team) {
 				return

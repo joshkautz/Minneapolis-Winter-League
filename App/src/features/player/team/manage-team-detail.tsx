@@ -28,8 +28,7 @@ export const ManageTeamDetail = ({
 }: {
 	handleRequest: (
 		authenticatedUserDocumentSnapshot:
-			| DocumentSnapshot<PlayerDocument>
-			| undefined,
+			DocumentSnapshot<PlayerDocument> | undefined,
 		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument>
 	) => Promise<void> | undefined
 	currentSeasonTeamsQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument>

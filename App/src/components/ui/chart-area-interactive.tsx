@@ -235,10 +235,17 @@ export function ChartAreaInteractive() {
 								<ChartTooltipContent
 									{...props}
 									labelFormatter={(value) => {
-										return new Date(value).toLocaleDateString('en-US', {
-											month: 'short',
-											day: 'numeric',
-										})
+										// Recharts types the tooltip label as ReactNode. For this
+										// chart it is always the `date` string from chartData, but
+										// narrow rather than assert so a non-date label degrades
+										// to its own text instead of rendering "Invalid Date".
+										const date = new Date(String(value))
+										return Number.isNaN(date.getTime())
+											? String(value)
+											: date.toLocaleDateString('en-US', {
+													month: 'short',
+													day: 'numeric',
+												})
 									}}
 									indicator='dot'
 								/>

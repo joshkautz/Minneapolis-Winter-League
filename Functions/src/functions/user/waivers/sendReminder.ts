@@ -65,8 +65,7 @@ export const sendWaiverReminder = onCall<SendWaiverReminderRequest>(
 
 			// Get the current season
 			const currentSeason = (await getCurrentSeason()) as
-				| (SeasonDocument & { id: string })
-				| null
+				(SeasonDocument & { id: string }) | null
 			if (!currentSeason) {
 				throw new HttpsError('failed-precondition', 'No current season found')
 			}
@@ -129,8 +128,7 @@ export const sendWaiverReminder = onCall<SendWaiverReminderRequest>(
 			}
 
 			const waiverData = waiverQuery.docs[0].data() as
-				| WaiverDocument
-				| undefined
+				WaiverDocument | undefined
 			if (!waiverData) {
 				throw new HttpsError('internal', 'Invalid waiver data')
 			}

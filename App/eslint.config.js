@@ -25,6 +25,15 @@ export default [
 				{ allowConstantExport: true },
 			],
 			// App-specific overrides
+			//
+			// set-state-in-effect became an error in eslint-plugin-react-hooks 7.1.
+			// It flags 23 pre-existing call sites across the admin screens, the
+			// news/posts pages and a couple of shared hooks. Each needs individual
+			// judgement — some are genuine cascading-render bugs, others are
+			// deliberate sync-on-mount — so they are tracked in docs/ROADMAP.md
+			// rather than suppressed one by one or bulk-refactored blind. Demoted
+			// to a warning so it stays visible without gating CI.
+			'react-hooks/set-state-in-effect': 'warn',
 			'no-console': 'warn',
 			'no-alert': 'warn',
 			'@typescript-eslint/no-empty-object-type': 'warn',

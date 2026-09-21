@@ -53,13 +53,13 @@ export function getDropboxSignConfig(): {
 export function getStripeConfig(): {
 	readonly SECRET_KEY: string
 	readonly WEBHOOK_SECRET: string
-	readonly API_VERSION: '2026-03-25.dahlia'
+	readonly API_VERSION: '2026-08-26.dahlia'
 } {
 	const env = getENV()
 	return {
 		SECRET_KEY: env.stripeSecretKey,
 		WEBHOOK_SECRET: env.stripeWebhookSecret,
-		API_VERSION: '2026-03-25.dahlia' as const,
+		API_VERSION: '2026-08-26.dahlia' as const,
 	} as const
 }
 

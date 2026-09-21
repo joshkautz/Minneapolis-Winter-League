@@ -108,14 +108,14 @@ export const NewsManagement = () => {
 	}, [seasons])
 
 	// Selected season for filtering news
-	const [selectedSeasonId, setSelectedSeasonId] = useState<string>('')
-
-	// Set default selected season when current season is loaded
-	useEffect(() => {
-		if (currentSeason && !selectedSeasonId) {
-			setSelectedSeasonId(currentSeason.id)
-		}
-	}, [currentSeason, selectedSeasonId])
+	// Derived rather than stored: the selection defaults to the current season
+	// until the user picks one. An effect that seeded state once the season
+	// loaded rendered an empty selection first and then corrected it, which
+	// React 19 flags as a cascading render.
+	const [selectedSeasonOverride, setSelectedSeasonId] = useState<
+		string | undefined
+	>(undefined)
+	const selectedSeasonId = selectedSeasonOverride ?? currentSeason?.id ?? ''
 
 	// Fetch news for selected season
 	const selectedSeasonRef = useMemo(() => {

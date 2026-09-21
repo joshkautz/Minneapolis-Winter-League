@@ -42,8 +42,7 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 		}
 
 		const beforeData = event.data?.before.data() as
-			| TeamSeasonDocument
-			| undefined
+			TeamSeasonDocument | undefined
 		const afterData = event.data?.after.data() as TeamSeasonDocument | undefined
 
 		// Only process when registration flips from false → true.

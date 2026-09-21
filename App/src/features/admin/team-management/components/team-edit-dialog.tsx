@@ -132,14 +132,20 @@ export const TeamEditDialog = ({
 		string | null
 	>(null)
 
-	// Reset form when dialog opens
-	useEffect(() => {
+	// Reset the form each time the dialog opens.
+	//
+	// Adjusted during render rather than in an effect so the dialog never
+	// paints the previous team's name for a frame before resetting.
+	// https://react.dev/learn/you-might-not-need-an-effect
+	const [renderedOpen, setRenderedOpen] = useState(open)
+	if (open !== renderedOpen) {
+		setRenderedOpen(open)
 		if (open) {
 			setTeamName(initialTeamName)
 			setPlayerSearchQuery('')
 			setPlayerToRemove(null)
 		}
-	}, [open, initialTeamName])
+	}
 	void teamSeasonSnapshot
 
 	// Get current roster from roster subcollection (joined with player season for captain)

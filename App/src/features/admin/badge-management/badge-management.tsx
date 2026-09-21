@@ -111,17 +111,15 @@ export const BadgeManagement = () => {
 		...doc.data(),
 	})) as (SeasonDocument & { id: string })[] | undefined
 
-	// Selected season for team queries
-	const [selectedSeasonId, setSelectedSeasonId] = useState<string>(
-		() => currentSeasonQueryDocumentSnapshot?.id || ''
-	)
-
-	// Update selected season when current season changes
-	useEffect(() => {
-		if (currentSeasonQueryDocumentSnapshot?.id && !selectedSeasonId) {
-			setSelectedSeasonId(currentSeasonQueryDocumentSnapshot.id)
-		}
-	}, [currentSeasonQueryDocumentSnapshot?.id, selectedSeasonId])
+	// Derived rather than stored: the selection defaults to the current season
+	// until the user picks one. An effect that seeded state once the season
+	// loaded rendered an empty selection first and then corrected it, which
+	// React 19 flags as a cascading render.
+	const [selectedSeasonOverride, setSelectedSeasonId] = useState<
+		string | undefined
+	>(undefined)
+	const selectedSeasonId =
+		selectedSeasonOverride ?? currentSeasonQueryDocumentSnapshot?.id ?? ''
 
 	// Log and notify on query errors
 	useQueryErrorHandler({

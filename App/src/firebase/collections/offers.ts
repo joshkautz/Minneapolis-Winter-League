@@ -41,8 +41,7 @@ import {
 const playerSeasonContext = (
 	playerSeasonsSnapshot: QuerySnapshot<PlayerSeasonDocument> | undefined,
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument>
-		| undefined
+		QueryDocumentSnapshot<SeasonDocument> | undefined
 ): {
 	isCaptain: boolean
 	teamRef: DocumentReference<TeamDocument> | null | undefined
@@ -66,8 +65,7 @@ export const outgoingOffersQuery = (
 	playerRef: DocumentReference<PlayerDocument> | undefined,
 	playerSeasonsSnapshot: QuerySnapshot<PlayerSeasonDocument> | undefined,
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument>
-		| undefined
+		QueryDocumentSnapshot<SeasonDocument> | undefined
 ): Query<OfferDocument> | undefined => {
 	if (!playerRef || !currentSeasonQueryDocumentSnapshot) return undefined
 
@@ -101,8 +99,7 @@ export const incomingOffersQuery = (
 	playerRef: DocumentReference<PlayerDocument> | undefined,
 	playerSeasonsSnapshot: QuerySnapshot<PlayerSeasonDocument> | undefined,
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument>
-		| undefined
+		QueryDocumentSnapshot<SeasonDocument> | undefined
 ): Query<OfferDocument> | undefined => {
 	if (!playerRef || !currentSeasonQueryDocumentSnapshot) return undefined
 

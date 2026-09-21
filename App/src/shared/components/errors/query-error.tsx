@@ -16,12 +16,7 @@ import { Card, CardContent } from '@/components/ui/card'
  * Categorizes Firestore errors for user-friendly messaging
  */
 type ErrorCategory =
-	| 'permission'
-	| 'index'
-	| 'network'
-	| 'not-found'
-	| 'unavailable'
-	| 'unknown'
+	'permission' | 'index' | 'network' | 'not-found' | 'unavailable' | 'unknown'
 
 interface QueryErrorProps {
 	/** The error object from useCollection/useDocument hooks */

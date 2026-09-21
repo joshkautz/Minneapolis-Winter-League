@@ -38,8 +38,7 @@ export const ManageInvitePlayerList = () => {
 		(
 			playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
 			teamQueryDocumentSnapshot:
-				| QueryDocumentSnapshot<TeamSeasonDocument>
-				| undefined
+				QueryDocumentSnapshot<TeamSeasonDocument> | undefined
 		) => {
 			const canonicalTeamId = teamQueryDocumentSnapshot
 				? canonicalTeamIdFromTeamSeasonDoc(teamQueryDocumentSnapshot)

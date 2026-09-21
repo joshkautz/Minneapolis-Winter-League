@@ -116,14 +116,14 @@ export const PostsManagement = () => {
 	}, [seasons])
 
 	// Selected season for filtering posts
-	const [selectedSeasonId, setSelectedSeasonId] = useState<string>('')
-
-	// Set default selected season when current season is loaded
-	useEffect(() => {
-		if (currentSeason && !selectedSeasonId) {
-			setSelectedSeasonId(currentSeason.id)
-		}
-	}, [currentSeason, selectedSeasonId])
+	// Derived rather than stored: the selection defaults to the current season
+	// until the user picks one. An effect that seeded state once the season
+	// loaded rendered an empty selection first and then corrected it, which
+	// React 19 flags as a cascading render.
+	const [selectedSeasonOverride, setSelectedSeasonId] = useState<
+		string | undefined
+	>(undefined)
+	const selectedSeasonId = selectedSeasonOverride ?? currentSeason?.id ?? ''
 
 	// Fetch posts for selected season
 	const selectedSeasonRef = useMemo(() => {

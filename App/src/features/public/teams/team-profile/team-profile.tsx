@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
-import { Timestamp } from '@firebase/firestore'
+import { Timestamp } from 'firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { Award, Lock, Loader2, Calendar, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
@@ -330,8 +330,7 @@ export const TeamProfile = () => {
 	const [imageError, setImageError] = useState(false)
 
 	const teamSeasonData = teamSeasonSnapshot?.data() as
-		| TeamSeasonDocument
-		| undefined
+		TeamSeasonDocument | undefined
 	const teamName = teamSeasonData?.name
 	const teamLogo = teamSeasonData?.logo
 	const teamRegistered = teamSeasonData?.registered === true

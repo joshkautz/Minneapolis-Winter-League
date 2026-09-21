@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { User } from 'firebase/auth'
-import { Timestamp, QuerySnapshot } from '@firebase/firestore'
+import { Timestamp, QuerySnapshot } from 'firebase/firestore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -29,12 +29,10 @@ interface PaymentSectionProps {
 	isAuthenticatedUserBanned: boolean
 	isAuthenticatedUserPaid: boolean
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument>
-		| undefined
+		QueryDocumentSnapshot<SeasonDocument> | undefined
 	/** The authenticated user's per-season subdocs (for the returning-discount check). */
 	authenticatedUserSeasonsSnapshot:
-		| QuerySnapshot<PlayerSeasonDocument>
-		| undefined
+		QuerySnapshot<PlayerSeasonDocument> | undefined
 	/** All seasons snapshot for determining previous season */
 	seasonsQuerySnapshot: QuerySnapshot<SeasonDocument> | undefined
 }

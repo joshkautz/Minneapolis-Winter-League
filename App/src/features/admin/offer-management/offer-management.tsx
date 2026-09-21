@@ -59,12 +59,7 @@ interface ProcessedOffer {
 }
 
 type SortColumn =
-	| 'type'
-	| 'player'
-	| 'team'
-	| 'season'
-	| 'createdBy'
-	| 'created'
+	'type' | 'player' | 'team' | 'season' | 'createdBy' | 'created'
 type SortDirection = 'asc' | 'desc'
 
 interface SortableColumnHeaderProps {

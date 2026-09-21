@@ -4,7 +4,7 @@
  * Displays all teams for the current season and allows admin to manage them
  */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
@@ -86,18 +86,19 @@ export const TeamManagement = () => {
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	// Season selection state
-	const [selectedSeasonId, setSelectedSeasonId] = useState<string>('')
+	// Derived rather than stored: the selection defaults to the current season
+	// until the user picks one. An effect that seeded state once the season
+	// loaded rendered an empty selection first and then corrected it, which
+	// React 19 flags as a cascading render.
+	const [selectedSeasonOverride, setSelectedSeasonId] = useState<
+		string | undefined
+	>(undefined)
+	const selectedSeasonId =
+		selectedSeasonOverride ?? currentSeasonQueryDocumentSnapshot?.id ?? ''
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),
 	})) as (SeasonDocument & { id: string })[] | undefined
-
-	// Set default selected season to current season
-	useEffect(() => {
-		if (currentSeasonQueryDocumentSnapshot && !selectedSeasonId) {
-			setSelectedSeasonId(currentSeasonQueryDocumentSnapshot.id)
-		}
-	}, [currentSeasonQueryDocumentSnapshot, selectedSeasonId])
 
 	// Get selected season snapshot
 	const selectedSeasonSnapshot = selectedSeasonId

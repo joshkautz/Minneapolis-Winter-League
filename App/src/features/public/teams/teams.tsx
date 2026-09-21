@@ -1,8 +1,13 @@
 import { useMemo, useState, useEffect } from 'react'
-import { collectionGroup, getDocs, query, where } from 'firebase/firestore'
+import {
+	collectionGroup,
+	getDocs,
+	query,
+	where,
+	Timestamp,
+} from 'firebase/firestore'
 import { firestore } from '@/firebase/app'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
-import { Timestamp } from '@firebase/firestore'
 import { PLAYER_SEASONS_SUBCOLLECTION, PlayerSeasonDocument } from '@/types'
 import { Users } from 'lucide-react'
 import { formatTimestamp } from '@/shared/utils'

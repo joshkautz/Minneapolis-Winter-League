@@ -33,18 +33,15 @@ interface TeamProps {
 	currentSeasonTeamsQuerySnapshotError: FirestoreError | undefined
 	/** Per-team season subdocs participating in the *selected* season. */
 	selectedSeasonTeamsQuerySnapshot:
-		| QuerySnapshot<TeamSeasonDocument>
-		| undefined
+		QuerySnapshot<TeamSeasonDocument> | undefined
 	selectedSeasonTeamsQuerySnapshotLoading: boolean
 	selectedSeasonTeamsQuerySnapshotError: FirestoreError | undefined
 	/** Canonical team docs the authenticated user is a captain of (any season). */
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot:
-		| QuerySnapshot<TeamDocument>
-		| undefined
+		QuerySnapshot<TeamDocument> | undefined
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotLoading: boolean
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError:
-		| FirestoreError
-		| undefined
+		FirestoreError | undefined
 	/** All canonical teams in the system. */
 	allTeamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
 	allTeamsQuerySnapshotLoading: boolean
