@@ -84,6 +84,10 @@ already allowed.
 
 ## Gotchas
 
+- `Functions/package-lock.json` is a **second lockfile**, separate from the
+  root workspace one, and it is what `firebase deploy` installs from. Change a
+  Functions dependency and you must run both `npm install` and
+  `npm install --prefix Functions`, or the deploy builds something CI never saw.
 - `Functions/src/index.ts` is the deploy manifest. Forgetting to export is the
   most common way a new function silently does nothing.
 - `.emulator/` is gitignored and may hold real production data pulled down by
