@@ -37,17 +37,15 @@ Walk the diff and check:
 - **No production data.** `.emulator/` and `scripts/production/data/` are not
   staged. `git status --short` should not list them.
 
-## 3. Rules and index changes deploy separately
+## 3. Rules and index changes
 
-Hosting and Functions deploy from CI on merge to main. Firestore rules and
-indexes do **not** — they need an explicit deploy:
+Hosting, Functions, and Firestore rules and indexes all deploy from CI on
+merge to main. The Firestore job is gated on the rules test suite, so a change
+that opens a write cannot reach production.
 
-```bash
-firebase deploy --only firestore
-```
-
-Deploy rules and indexes *before* merging code that depends on them, or the
-first production request fails.
+Still check the index question yourself: the emulator does not enforce
+indexes, so a missing one passes every local check and fails only on the first
+production query.
 
 ## 4. Exercise it
 

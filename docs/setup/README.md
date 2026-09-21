@@ -33,13 +33,12 @@ npm run verify   # format + lint + typecheck + test + build
 Merging to `main` deploys Hosting and Functions via GitHub Actions. Pull
 requests get a Hosting preview channel, posted as a PR comment.
 
-Firestore rules and indexes are **not** deployed by CI:
+Firestore rules and indexes deploy from CI as well, gated on the rules test
+suite. To deploy them out of band:
 
 ```bash
 firebase deploy --only firestore
 ```
-
-Deploy those before merging code that depends on them.
 
 ## Related
 

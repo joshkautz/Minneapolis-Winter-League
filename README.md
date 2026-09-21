@@ -111,8 +111,8 @@ conventions, with path-scoped detail in `.claude/rules/`.
 On merge to `main`, GitHub Actions deploys Hosting and Functions. Pull requests
 get a Firebase Hosting preview channel, commented on the PR.
 
-Firestore rules and indexes are **not** deployed by CI. Deploy them explicitly,
-and before shipping code that depends on them:
+Firestore rules and indexes deploy from CI too, in a job gated on the rules
+test suite. To deploy them out of band:
 
 ```bash
 firebase deploy --only firestore
