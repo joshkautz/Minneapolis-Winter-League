@@ -11,6 +11,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   App:
     name: Deploy to Firebase Hosting
@@ -35,6 +38,14 @@ jobs:
       - name: Lint App
         working-directory: ./App
         run: npm run lint:check
+
+      - name: Typecheck App
+        working-directory: ./App
+        run: npm run typecheck
+
+      - name: Test App
+        working-directory: ./App
+        run: npm run test
 
       - name: Build App
         working-directory: ./App
@@ -77,6 +88,10 @@ jobs:
         working-directory: ./Functions
         run: npm run lint:check
 
+      - name: Typecheck Functions
+        working-directory: ./Functions
+        run: npm run typecheck
+
       - name: Build Functions
         working-directory: ./Functions
         run: npm run build
@@ -93,3 +108,25 @@ jobs:
 
           # Deploy to Firebase Functions
           firebase deploy --only functions
+
+  Rules:
+    name: Firestore Security Rules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Set Node version
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # firestore.rules is the only thing standing between a client and the
+      # database, and it is not covered by the App or Functions test suites.
+      # The runner already has a JDK, which the Firestore emulator needs.
+      - name: Test Firestore rules
+        run: npm run test:rules
