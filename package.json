@@ -8,16 +8,23 @@
 		"Functions"
 	],
 	"scripts": {
-		"dev": "concurrently \"npm run functions:watch\" \"npm run emulators:start\" \"npm run dev --workspace=App\"",
+		"dev": "concurrently --names functions,emulators,app --prefix-colors blue,yellow,green \"npm run functions:watch\" \"npm run emulators:start\" \"npm run dev:emulators --workspace=App\"",
+		"emulators:start": "./scripts/start-emulators.sh",
+		"emulators:clean": "rm -rf ./.emulator && ./scripts/start-emulators.sh",
+		"seed": "./scripts/seed-emulator.sh",
+		"seed:attach": "./scripts/seed-emulator.sh --attach",
 		"data:refresh": "./scripts/refresh-emulator-data.sh",
 		"functions:watch": "npm run build:watch --workspace=Functions",
 		"build": "npm run build --workspace=App && npm run build --workspace=Functions",
+		"typecheck": "npm run typecheck --workspace=App && npm run typecheck --workspace=Functions",
 		"format:check": "npm run format:check --workspace=App && npm run format:check --workspace=Functions",
 		"format:fix": "npm run format:fix --workspace=App && npm run format:fix --workspace=Functions",
 		"lint:check": "npm run lint:check --workspace=App && npm run lint:check --workspace=Functions",
 		"lint:fix": "npm run lint:fix --workspace=App && npm run lint:fix --workspace=Functions",
 		"test": "npm run test --workspace=App && npm run test --workspace=Functions",
-		"emulators:start": "firebase emulators:start --import ./.emulator --export-on-exit",
+		"test:rules": "firebase emulators:exec --only firestore --project mwl-rules-test \"vitest run --config tests/vitest.config.ts\"",
+		"test:watch": "npm run test:watch --workspace=App",
+		"verify": "npm run format:check && npm run lint:check && npm run typecheck && npm run test && npm run test:rules && npm run build",
 		"deploy": "firebase deploy",
 		"deploy:hosting": "firebase deploy --only hosting",
 		"deploy:functions": "firebase deploy --only functions",
@@ -29,9 +36,15 @@
 		"script:migrate-stripe": "cd Functions && npm run script:migrate-stripe --"
 	},
 	"devDependencies": {
-		"concurrently": "^9.2.1",
+		"@firebase/rules-unit-testing": "^5.0.2",
+		"concurrently": "^10.0.5",
 		"firebase-tools": "^15.14.0",
 		"jsdom": "^29.0.2",
-		"typescript": "^6.0.2"
+		"typescript": "^6.0.3",
+		"vitest": "^5.0.1"
+	},
+	"engines": {
+		"node": ">=22.0.0",
+		"npm": ">=10.0.0"
 	}
 }

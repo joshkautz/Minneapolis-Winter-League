@@ -33,11 +33,9 @@
 		// "exactOptionalPropertyTypes": true, // Temporarily disabled - enable gradually
 		// "noUncheckedIndexedAccess": true,   // Temporarily disabled - enable gradually
 
-		// `baseUrl` is deprecated in TypeScript 6.0 but still required for our
-		// path-alias resolution; suppress the deprecation warning until we
-		// migrate to bundler-resolved paths.
-		"ignoreDeprecations": "6.0",
-		"baseUrl": ".",
+		// TypeScript 7 removed `baseUrl`. Every mapping below is already
+		// written relative to this file ("./src/..."), which is how `paths`
+		// resolves without it, so the aliases are unchanged.
 		"paths": {
 			"@/*": ["./src/*"],
 			"@/features/*": ["./src/features/*"],
