@@ -4,7 +4,7 @@
  * Allows admins to moderate posts and replies
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
@@ -70,7 +70,7 @@ import {
 	SeasonDocument,
 } from '@/types'
 import { logger } from '@/shared/utils'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 
 interface ProcessedPost {
 	id: string
@@ -116,14 +116,14 @@ export const PostsManagement = () => {
 	}, [seasons])
 
 	// Selected season for filtering posts
-	const [selectedSeasonId, setSelectedSeasonId] = useState<string>('')
-
-	// Set default selected season when current season is loaded
-	useEffect(() => {
-		if (currentSeason && !selectedSeasonId) {
-			setSelectedSeasonId(currentSeason.id)
-		}
-	}, [currentSeason, selectedSeasonId])
+	// Derived rather than stored: the selection defaults to the current season
+	// until the user picks one. An effect that seeded state once the season
+	// loaded rendered an empty selection first and then corrected it, which
+	// React 19 flags as a cascading render.
+	const [selectedSeasonOverride, setSelectedSeasonId] = useState<
+		string | undefined
+	>(undefined)
+	const selectedSeasonId = selectedSeasonOverride ?? currentSeason?.id ?? ''
 
 	// Fetch posts for selected season
 	const selectedSeasonRef = useMemo(() => {
@@ -156,21 +156,15 @@ export const PostsManagement = () => {
 	})
 
 	// Process posts to resolve references
-	const [postsList, setPostsList] = useState<ProcessedPost[]>([])
-	const [isProcessing, setIsProcessing] = useState(false)
 
-	useEffect(() => {
-		if (!postsSnapshot) {
-			setPostsList([])
-			setIsProcessing(false)
-			return
-		}
-
-		setIsProcessing(true)
-
-		const processPosts = async () => {
+	// useResolvedSnapshot derives the loading flag from which snapshot the
+	// rows belong to, so there is no synchronous setState in an effect, and a
+	// slow resolve for a superseded snapshot cannot overwrite newer rows.
+	const { items: postsList, isProcessing } = useResolvedSnapshot(
+		postsSnapshot,
+		async (snapshot) => {
 			const results = await Promise.all(
-				postsSnapshot.docs.map(async (postDoc) => {
+				snapshot.docs.map(async (postDoc) => {
 					const postData = postDoc.data() as PostDocument
 					const postId = postDoc.id
 
@@ -203,12 +197,9 @@ export const PostsManagement = () => {
 			)
 
 			const validPosts = results.filter((p): p is ProcessedPost => p !== null)
-			setPostsList(validPosts)
-			setIsProcessing(false)
+			return validPosts
 		}
-
-		processPosts()
-	}, [postsSnapshot])
+	)
 
 	// Delete confirmation dialog state
 	const [deletingPostId, setDeletingPostId] = useState<string | null>(null)

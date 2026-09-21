@@ -12,5 +12,9 @@
 		"sourceMap": true,
 		"strict": true,
 		"esModuleInterop": true
-	}
+	},
+	// Only src is compiled, and tests are excluded from the emitted output so
+	// they are never deployed. tsconfig.test.json type-checks them separately.
+	"include": ["src/**/*"],
+	"exclude": ["src/**/*.test.ts", "node_modules", "dist"]
 }

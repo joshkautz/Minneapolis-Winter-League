@@ -4,7 +4,7 @@
  * Allows administrators to configure site-wide settings like theme variants.
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
@@ -482,10 +482,16 @@ export const SiteSettings = () => {
 	// Get the theme being previewed for display
 	const previewedTheme = THEME_OPTIONS.find((t) => t.id === previewVariant)
 
-	// Sync preview with saved value when Firebase data changes or on initial load
-	useEffect(() => {
+	// Re-sync the preview whenever the saved value changes in Firebase.
+	//
+	// Adjusted during render rather than in an effect so the preview never
+	// commits a frame showing the old variant after a save lands.
+	// https://react.dev/learn/you-might-not-need-an-effect
+	const [renderedSavedVariant, setRenderedSavedVariant] = useState(savedVariant)
+	if (savedVariant !== renderedSavedVariant) {
+		setRenderedSavedVariant(savedVariant)
 		setPreviewVariant(savedVariant)
-	}, [savedVariant])
+	}
 
 	// Apply the previewed theme (save to Firebase)
 	const applyTheme = async () => {

@@ -1,137 +1,55 @@
-# Documentation Index
+# Documentation
 
-This directory contains comprehensive documentation for the Minneapolis Winter League application, organized by component and functionality.
+Documentation for the Minneapolis Winter League application, grouped by area.
 
-## � Documentation Structure
+## By area
 
-### 🖥️ [App Documentation](./app/)
+| Directory                      | Contents                                                           |
+| ------------------------------ | ------------------------------------------------------------------ |
+| [`setup/`](./setup/)           | Environment setup, environment variables, emulator data, reloading |
+| [`app/`](./app/)               | React front end — features, error boundaries, bundle size          |
+| [`functions/`](./functions/)   | Cloud Functions — API reference, player ranking algorithm          |
+| [`firebase/`](./firebase/)     | Firestore collections, indexes, authentication                     |
+| [`historical/`](./historical/) | Completed migrations and superseded plans, kept for context        |
 
-Frontend React application documentation, including components, features, and user interface.
+Top-level documents: [Project Structure](./PROJECT_STRUCTURE.md),
+[Security Guidelines](./SECURITY.md), [Roadmap](./ROADMAP.md).
 
-### ⚡ [Functions Documentation](./functions/)
+## Start here
 
-Firebase Cloud Functions documentation, including API references, triggers, and backend logic.
+1. [Development Setup](./setup/DEVELOPMENT_SETUP.md) — get running locally
+2. [Project Structure](./PROJECT_STRUCTURE.md) — how the codebase is organized
+3. [Security Guidelines](./SECURITY.md) — the functions-first model
+4. [Firebase Collections](./firebase/FIREBASE_COLLECTIONS_README.md) — the data model
 
-### 🔥 [Firebase Infrastructure](./firebase/)
+## Security model in one paragraph
 
-Firebase services configuration, security rules, and database documentation.
+`firestore.rules` denies every client write. The client SDK reads league data
+and nothing else; all mutations go through callable Cloud Functions running on
+the Admin SDK, which enforce authorization themselves via
+`Functions/src/shared/auth.ts`. Admin status is a boolean field on the player
+document — this codebase does not use Firebase Auth custom claims. Per-user
+private data (`stripe/{uid}`, `dropbox/{uid}`) is readable only by its owner.
 
-### 🚀 [Setup & Development](./setup/)
+## Development URLs
 
-Development environment setup, deployment guides, and workflow documentation.
+| Service     | URL                     |
+| ----------- | ----------------------- |
+| React app   | <http://localhost:5173> |
+| Emulator UI | <http://localhost:4000> |
+| Firestore   | <http://localhost:8080> |
+| Auth        | <http://localhost:9099> |
+| Functions   | <http://localhost:5001> |
+| Storage     | <http://localhost:9199> |
+| Hosting     | <http://localhost:5005> |
 
-## 🏗️ Project Architecture
+Ports are defined in `firebase.json`.
 
-The Minneapolis Winter League is built as a modular TypeScript project:
+## Keeping docs honest
 
-```
-Minneapolis-Winter-League/
-├── App/                    # React frontend (Vite + TypeScript)
-├── Functions/              # Firebase Cloud Functions
-├── docs/                   # This documentation
-└── .emulator/             # Firebase emulator test data
-```
-
-## 🚀 Quick Start
-
-1. **[Development Setup](./setup/DEVELOPMENT_SETUP.md)** - Get your environment ready
-2. **[Project Structure](./PROJECT_STRUCTURE.md)** - Understand the codebase organization
-3. **[Authentication System](./firebase/AUTHENTICATION_SYSTEM.md)** - Learn the auth flow
-4. **[App Components](./app/)** - Explore the frontend architecture
-5. **[Functions API](./functions/)** - Understand the backend logic
-
-## 🔒 Security Architecture
-
-The application uses a **functions-first security model**:
-
-- **Client**: Read-only access with minimal permissions
-- **Functions**: All writes and sensitive operations
-- **Validation**: Server-side validation with Zod schemas
-- **Authentication**: Firebase Auth with custom claims
-
-## 📋 Quick Reference
-
-### Architecture Status
-
-| Component            | Status      | Security Level  |
-| -------------------- | ----------- | --------------- |
-| ✅ Player Management | Complete    | Functions-only  |
-| ✅ Team Management   | Complete    | Functions-only  |
-| ✅ Offer System      | Complete    | Functions-only  |
-| ✅ Authentication    | Stable      | Firebase Auth   |
-| ✅ Firestore Rules   | Locked Down | Deny all writes |
-| 🟡 Payment System    | Secure      | User-scoped     |
-
-### Common Commands
-
-```bash
-# Development Environment
-npm run dev                    # Start emulators with test data
-cd App && npm run dev:emulators # Start React app with emulators
-
-# Production Builds
-cd App && npm run build        # Production build
-cd App && npm run build:staging # Staging build
-
-# Emulator Management
-npm run dev:clean             # Start clean emulators
-npm run emulators:export      # Save emulator data
-npm run emulators:clear       # Clear all data
-
-# Functions Development
-cd Functions && npm run build  # Build Functions
-cd Functions && npm run deploy # Deploy Functions
-```
-
-### Key Technologies
-
-- **Frontend**: React 18 + TypeScript + Vite + shadcn/ui + Tailwind CSS
-- **Backend**: Firebase Functions Gen 2 + Firestore + Auth + Storage + Hosting
-- **Security**: Functions-first architecture with strict Firestore rules
-- **Validation**: Zod schemas with project-specific types
-- **Payments**: Stripe integration with Firebase Extensions
-- **Development**: Firebase Emulators + Hot Module Replacement
-
-### Documentation Categories
-
-| Category         | Purpose            | Key Documents                                             |
-| ---------------- | ------------------ | --------------------------------------------------------- |
-| **Setup**        | Getting started    | Development Setup, Environment Variables                  |
-| **Architecture** | System design      | Firebase Migration, Security Migration, Project Structure |
-| **Security**     | Security practices | Security Guidelines, Functions Migration Status           |
-| **Firebase**     | Database & queries | Collections Guide, Firestore Indexes, Functions API       |
-| **Development**  | Daily development  | TypeScript Improvements, Validation Patterns              |
-| **Reference**    | API & tools        | Player Functions, Emulator Data                           |
-
-- **Development**: Firebase Emulators + Hot Reload
-
-### Development URLs
-
-- React App: <http://localhost:5173>
-- Firebase Emulator UI: <http://localhost:4000>
-- Firestore Emulator: <http://localhost:8080>
-- Auth Emulator: <http://localhost:9099>
-
-## Contributing to Documentation
-
-When updating documentation:
-
-1. Keep it simple and focused
-2. Include working code examples
-3. Update related documents when making changes
-4. Use clear, descriptive headings
-5. Link between related documents
-
-## Document Status
-
-| Document                | Last Updated | Status     |
-| ----------------------- | ------------ | ---------- |
-| Development Setup       | Current      | ✅ Updated |
-| Environment Variables   | Current      | ✅ Updated |
-| Authentication System   | Current      | ✅ Current |
-| Firestore Indexes       | Aug 2025     | ✅ New     |
-| Project Structure       | Current      | ✅ Current |
-| Bundle Optimization     | Current      | ✅ Current |
-| TypeScript Improvements | Current      | ✅ Current |
-| Security Guidelines     | Current      | ✅ Current |
-| Zod Documentation       | Current      | ✅ Current |
+These documents drifted badly once before: the index linked to nine files that
+had been moved, and the setup guide documented ten npm scripts that did not
+exist. When you change behavior, update the document in the same commit, and
+verify any command you write by running it. If a document describes something
+that has already happened and will not happen again, move it to
+`historical/` rather than leaving it to rot in place.

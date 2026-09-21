@@ -79,3 +79,9 @@ scripts/production/data/**
 
 # Local emulator data snapshot (cloned from production via `npm run data:refresh`)
 .emulator/
+
+# Claude Code: personal overrides and agent worktrees are per-developer.
+# Shared config (CLAUDE.md, .claude/settings.json, rules, agents, skills,
+# hooks) is committed.
+.claude/settings.local.json
+.claude/worktrees/

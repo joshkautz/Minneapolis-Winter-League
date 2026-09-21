@@ -6,16 +6,16 @@ This directory contains documentation for Firebase services configuration and se
 
 ### Core Configuration
 
-- **[Firebase Migration](./FIREBASE_MIGRATION.md)** - Migration strategies and guides
+- **[Firebase Migration](../historical/FIREBASE_MIGRATION.md)** - Migration strategies and guides
 - **[Firebase Collections README](./FIREBASE_COLLECTIONS_README.md)** - Firestore data models and collections
 - **[Firestore Indexes](./FIRESTORE_INDEXES.md)** - Database indexing configuration
-- **[Security Migration](./SECURITY_MIGRATION.md)** - Security rules and access patterns
+- **[Security Migration](../historical/SECURITY_MIGRATION.md)** - Security rules and access patterns
 
 ### Emulator Development
 
-- **[Emulator Data README](./EMULATOR_DATA_README.md)** - Working with Firebase Emulator Suite
+- **[Emulator Data README](../setup/EMULATOR_DATA_README.md)** - Working with Firebase Emulator Suite
 - **[Authentication System](./AUTHENTICATION_SYSTEM.md)** - Firebase Auth implementation
-- **[Security Documentation](./SECURITY.md)** - Security rules and best practices
+- **[Security Documentation](../SECURITY.md)** - Security rules and best practices
 
 ## 🔥 Firebase Services
 
@@ -32,7 +32,9 @@ Firebase Project: Minneapolis Winter League
 
 ### Service Configuration
 
-- **Authentication**: Email/password, Google OAuth, custom claims
+- **Authentication**: Firebase Auth, email/password with verification.
+  Admin status is the `admin` boolean on the player document — this codebase
+  does not use custom claims.
 - **Firestore**: Multi-collection NoSQL with security rules
 - **Functions**: TypeScript-based callable and triggered functions
 - **Storage**: Image uploads with security rules

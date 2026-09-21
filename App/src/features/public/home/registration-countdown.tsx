@@ -1,6 +1,6 @@
 import { useSeasonsContext } from '@/providers'
 import { useEffect, useState, useMemo } from 'react'
-import { Timestamp } from '@firebase/firestore'
+import { Timestamp } from 'firebase/firestore'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const HOURS = 1000 * 60 * 60

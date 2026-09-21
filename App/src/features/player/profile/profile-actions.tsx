@@ -22,12 +22,10 @@ interface ProfileActionsProps {
 	isAuthenticatedUserPaid: boolean
 	isAuthenticatedUserSigned: boolean
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument>
-		| undefined
+		QueryDocumentSnapshot<SeasonDocument> | undefined
 	/** The authenticated user's per-season subdocs (for the returning-discount check). */
 	authenticatedUserSeasonsSnapshot:
-		| QuerySnapshot<PlayerSeasonDocument>
-		| undefined
+		QuerySnapshot<PlayerSeasonDocument> | undefined
 	/** All seasons snapshot for determining previous season */
 	seasonsQuerySnapshot: QuerySnapshot<SeasonDocument> | undefined
 }

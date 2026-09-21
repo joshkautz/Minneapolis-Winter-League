@@ -1,9 +1,25 @@
-import { useId, useEffect, useState, useMemo } from 'react'
-import Particles, { initParticlesEngine } from '@tsparticles/react'
-import type { ISourceOptions } from '@tsparticles/engine'
+import { useId, useState, useMemo } from 'react'
+import Particles, {
+	ParticlesProvider,
+	useParticlesProvider,
+} from '@tsparticles/react'
+import type { Engine, ISourceOptions } from '@tsparticles/engine'
 import { loadSlim } from '@tsparticles/slim'
 import { loadHeartShape } from '@tsparticles/shape-heart'
 import { motion } from 'framer-motion'
+
+/**
+ * Registers the particle bundles this app uses.
+ *
+ * @tsparticles/react v4 replaced the imperative `initParticlesEngine(cb)` with
+ * a `<ParticlesProvider init={...}>` that exposes readiness through
+ * `useParticlesProvider()`. Both loaders are idempotent, so mounting more than
+ * one provider is harmless.
+ */
+const registerParticlePlugins = async (engine: Engine): Promise<void> => {
+	await loadSlim(engine)
+	await loadHeartShape(engine)
+}
 
 type ParticlesProps = {
 	id?: string
@@ -19,12 +35,10 @@ type ParticlesProps = {
 }
 
 /**
- * Animated particles component supporting multiple visual variants.
- *
- * Uses @tsparticles/react with the slim bundle and heart shape extension.
- * Engine initialization happens once globally via initParticlesEngine.
+ * Renders the particle canvas. Must be inside a ParticlesProvider, which
+ * SparklesCore supplies.
  */
-export const SparklesCore = ({
+const SparklesCanvas = ({
 	id,
 	className,
 	background = 'transparent',
@@ -35,7 +49,7 @@ export const SparklesCore = ({
 	particleDensity = 120,
 	variant = 'snow',
 }: ParticlesProps) => {
-	const [init, setInit] = useState(false)
+	const { loaded: engineLoaded } = useParticlesProvider()
 	const [particlesReady, setParticlesReady] = useState(false)
 	const generatedId = useId()
 
@@ -44,18 +58,6 @@ export const SparklesCore = ({
 	const direction = isHearts ? 'top' : 'bottom'
 	const defaultColor = isHearts ? '#ff6b9d' : '#ffffff'
 	const shapeType = isHearts ? 'heart' : 'circle'
-
-	// Initialize particles engine once (idempotent - safe to call multiple times)
-	useEffect(() => {
-		initParticlesEngine(async (engine) => {
-			await loadSlim(engine)
-			await loadHeartShape(engine)
-		})
-			.then(() => setInit(true))
-			.catch(() => {
-				// Silently ignore initialization errors - particles are decorative
-			})
-	}, [])
 
 	// Callback when particles finish loading - triggers fade-in animation
 	const particlesLoaded = async () => {
@@ -161,7 +163,7 @@ export const SparklesCore = ({
 			aria-hidden='true'
 			role='presentation'
 		>
-			{init && (
+			{engineLoaded && (
 				<Particles
 					id={id || generatedId}
 					className='h-full w-full'
@@ -172,3 +174,16 @@ export const SparklesCore = ({
 		</motion.div>
 	)
 }
+
+/**
+ * Animated particles component supporting multiple visual variants.
+ *
+ * Uses @tsparticles/react with the slim bundle and heart shape extension.
+ * Purely decorative: if the engine fails to load, nothing renders and the
+ * surrounding layout is unaffected.
+ */
+export const SparklesCore = (props: ParticlesProps) => (
+	<ParticlesProvider init={registerParticlePlugins}>
+		<SparklesCanvas {...props} />
+	</ParticlesProvider>
+)

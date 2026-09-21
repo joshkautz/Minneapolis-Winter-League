@@ -28,16 +28,14 @@ export const ManageInvitePlayerDetail = ({
 	handleInvite,
 }: {
 	teamQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<TeamSeasonDocument>
-		| undefined
+		QueryDocumentSnapshot<TeamSeasonDocument> | undefined
 	playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>
 	statusColor?: string
 	message?: string
 	handleInvite: (
 		playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
 		teamQueryDocumentSnapshot:
-			| QueryDocumentSnapshot<TeamSeasonDocument>
-			| undefined
+			QueryDocumentSnapshot<TeamSeasonDocument> | undefined
 	) => void
 }) => {
 	const [offersForPlayerByTeamQuerySnapshot, , offersError] = useCollection(

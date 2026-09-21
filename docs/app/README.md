@@ -29,7 +29,7 @@ App/src/
 
 ## 🛠️ Tech Stack
 
-- **Framework**: React 18 with TypeScript
+- **Framework**: React 19 with TypeScript
 - **Build Tool**: Vite with Hot Module Replacement
 - **Styling**: Tailwind CSS + shadcn/ui components
 - **State Management**: React Query + Context API
@@ -121,8 +121,8 @@ npm run preview         # Preview production build
 
 ```bash
 npm run test            # Run tests
-npm run test:coverage   # Run with coverage
-npm run test:ui         # Visual test runner
+npm test   # Run with coverage
+npm run test:watch         # Visual test runner
 ```
 
 ## 🔧 Configuration

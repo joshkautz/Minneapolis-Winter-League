@@ -3,7 +3,7 @@ import {
 	httpsCallable,
 	HttpsCallableResult,
 } from 'firebase/functions'
-import { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
+import type { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
 
 import { app } from './app'
 

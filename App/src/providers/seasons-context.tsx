@@ -18,15 +18,13 @@ import { SeasonDocument, logger } from '@/shared/utils'
 
 interface SeasonsContextValue {
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument>
-		| undefined
+		QueryDocumentSnapshot<SeasonDocument> | undefined
 	currentSeasonQueryDocumentSnapshotLoading: boolean
 	seasonsQuerySnapshot: QuerySnapshot<SeasonDocument> | undefined
 	seasonsQuerySnapshotLoading: boolean
 	seasonsQuerySnapshotError: FirestoreError | undefined
 	selectedSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument>
-		| undefined
+		QueryDocumentSnapshot<SeasonDocument> | undefined
 	setSelectedSeasonQueryDocumentSnapshot: (
 		value: QueryDocumentSnapshot<SeasonDocument> | undefined
 	) => void
@@ -95,8 +93,7 @@ export const SeasonsContextProvider = ({
 	] = useState<QueryDocumentSnapshot<SeasonDocument> | undefined>()
 
 	const getMostRecentSeason = useCallback(():
-		| QueryDocumentSnapshot<SeasonDocument>
-		| undefined => {
+		QueryDocumentSnapshot<SeasonDocument> | undefined => {
 		return seasonsQuerySnapshot?.docs
 			.sort((a, b) => b.data().dateStart.seconds - a.data().dateStart.seconds)
 			?.find((season) => season)

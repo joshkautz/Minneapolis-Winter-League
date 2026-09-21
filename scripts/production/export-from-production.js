@@ -20,7 +20,13 @@
  * Note: This script can be run from any directory.
  */
 
-import admin from 'firebase-admin'
+// firebase-admin 14 removed the legacy default-export namespace and the
+// app.<service>() accessors, so the modular entry points are the only
+// supported form.
+import { initializeApp } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
+import { getAuth } from 'firebase-admin/auth'
+import { getStorage } from 'firebase-admin/storage'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -36,14 +42,14 @@ const skipAuth = args.includes('--skip-auth')
 const skipFirestore = args.includes('--skip-firestore')
 
 // Initialize production Firebase app
-const app = admin.initializeApp({
+const app = initializeApp({
 	projectId: 'minnesota-winter-league',
 	storageBucket: 'minnesota-winter-league.appspot.com',
 })
 
-const db = app.firestore()
-const auth = admin.auth()
-const storage = admin.storage()
+const db = getFirestore(app)
+const auth = getAuth(app)
+const storage = getStorage(app)
 
 async function exportAuthentication(outputDir) {
 	if (skipAuth) {

@@ -454,8 +454,8 @@ const testQueryPerformance = async () => {
 ## Related Documentation
 
 - [Firebase Collections Guide](./FIREBASE_COLLECTIONS_README.md) - Understanding collection structure
-- [Security Rules](./SECURITY.md) - Firestore security configuration
-- [Development Setup](./DEVELOPMENT_SETUP.md) - Local development with emulators
+- [Security Rules](../SECURITY.md) - Firestore security configuration
+- [Development Setup](../setup/DEVELOPMENT_SETUP.md) - Local development with emulators
 
 ---
 

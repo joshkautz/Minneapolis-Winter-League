@@ -11,7 +11,7 @@ import {
 	extractErrorMessage,
 } from '@/shared/utils'
 import { QueryDocumentSnapshot } from '@/firebase'
-import { Timestamp } from '@firebase/firestore'
+import { Timestamp } from 'firebase/firestore'
 import { sendWaiverReminderEmail } from '@/firebase/functions'
 
 /** Rate limit cooldown in milliseconds (5 minutes) */
@@ -24,8 +24,7 @@ interface WaiverSectionProps {
 	isAuthenticatedUserPaid: boolean | undefined
 	isAuthenticatedUserBanned: boolean
 	currentSeasonQueryDocumentSnapshot:
-		| QueryDocumentSnapshot<SeasonDocument>
-		| undefined
+		QueryDocumentSnapshot<SeasonDocument> | undefined
 }
 
 /**

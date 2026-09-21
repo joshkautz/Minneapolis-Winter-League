@@ -74,7 +74,7 @@ import {
 	SeasonFormat,
 	TeamSeasonDocument,
 } from '@/types'
-import { Timestamp } from '@firebase/firestore'
+import { Timestamp } from 'firebase/firestore'
 import { SwissPairingGuide } from './swiss-pairing-guide'
 
 interface GameFormData {

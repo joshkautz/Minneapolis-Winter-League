@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { cn, formatTimestampWithTime } from '@/shared/utils'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Timestamp } from '@firebase/firestore'
+import { Timestamp } from 'firebase/firestore'
 
 // Types for better TypeScript support
 interface TeamCardProps {

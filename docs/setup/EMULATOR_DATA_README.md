@@ -1,111 +1,101 @@
-# Firebase Emulator Data
+# Emulator Data
 
-This directory contains exported Firebase emulator data for development and testing.
+How local Firebase Emulator Suite data is created, stored and reset.
 
-## Overview
+## Where it lives
 
-This data is automatically imported when starting the Firebase emulators and exported when stopping them. This approach follows Firebase best practices for local development.
+`.emulator/` at the repository root, in the emulators' native export format:
 
-## Files
+| Path                            | Contents              |
+| ------------------------------- | --------------------- |
+| `auth_export/`                  | Auth users and config |
+| `firestore_export/`             | Firestore documents   |
+| `storage_export/`               | Cloud Storage objects |
+| `firebase-export-metadata.json` | Export manifest       |
 
-- `auth_export/` - Authentication users and settings
-- `firestore_export/` - Firestore database collections and documents
-- `storage_export/` - Cloud Storage files and metadata
-- `firebase-export-metadata.json` - Export metadata and version info
+**`.emulator/` is gitignored and must stay that way.** It can hold a clone of
+production pulled down by `npm run data:refresh`, which means real names and
+email addresses. It is not shared test data and is never committed.
 
-## Test Data Included
+Because it is gitignored, a fresh clone or a new git worktree starts with no
+data at all. `scripts/start-emulators.sh` handles that: it imports the
+snapshot when `firebase-export-metadata.json` is present and starts empty
+otherwise, rather than failing the way a bare `--import` would.
 
-### Authentication Users
+## Two ways to get data
 
-- **Captains**: captain1@test.com, captain2@test.com, captain3@test.com
-- **Players**: player1@test.com, player2@test.com, player3@test.com, player4@test.com
-- All users have password: `testpass123`
-
-### Firestore Collections
-
-#### Seasons
-
-- **test-season-2024**: A complete test season with registration and play dates
-
-#### Teams
-
-- **Test Team Alpha**: Captained by Captain One
-- **Test Team Beta**: Captained by Captain Two
-- **Test Team Gamma**: Captained by Captain Three
-
-#### Players
-
-- Mix of captains and regular players
-- Some assigned to teams, some unassigned
-- Various payment and waiver statuses for testing
-
-#### Games
-
-- Sample games between teams
-- Mix of completed and upcoming games
-- Includes scores for completed games
-
-## Usage
-
-### Start Development with Test Data (Recommended)
-
-#### Hot Reloading (Best for Active Development)
+### Synthetic (default)
 
 ```bash
-npm run dev:watch
+npm run seed
 ```
 
-This will:
+Boots a throwaway emulator set, runs the seeders in order, and exports the
+result to `.emulator/`. No Firebase login, no production access, no real
+personal data.
 
-- Start Firebase emulators with test data imported
-- Enable Functions hot reloading (automatic TypeScript compilation)
-- Automatically export any changes when you stop the emulators
-- Preserve your data modifications between sessions
+It produces:
 
-#### Standard Development
+| Collection | Count | Notes                                               |
+| ---------- | ----- | --------------------------------------------------- |
+| Auth users | 480   | Verified emails, no passwords set                   |
+| Seasons    | 4     | 2023 Fall through 2026 Winter                       |
+| Teams      | 36    | Across the active seasons, with full rosters        |
+| Players    | 480   | One per Auth user, varied payment and waiver states |
+| Games      | 216   | Mix of completed (with scores) and upcoming         |
+
+Placements and player rankings are **not** seeded — see
+[Roadmap](../ROADMAP.md#seeder-gaps). Everything else renders.
+
+Order matters: `generate-accounts.js` imports the Auth users, then `seed.js`
+builds Firestore documents from them. Running `seed.js` against an empty Auth
+emulator produces zero players and then fails while creating teams.
+
+`seed.js` takes optional arguments, forwarded through the npm script:
 
 ```bash
-npm run dev
+npm run seed -- --setup-only            # seasons, teams and players; no games
+npm run seed -- --week 1                # add a single week of results
 ```
 
-This will:
-
-- Start Firebase emulators with test data imported
-- Automatically export any changes when you stop the emulators
-- Preserve your data modifications between sessions
-- Requires manual Functions rebuild after changes
-
-### Start Clean (No Test Data)
+To reseed emulators that are already running, from a second terminal:
 
 ```bash
-npm run dev:clean
+npm run seed:attach
 ```
 
-### Export Current Data
+### Cloned from production
 
-If emulators are running and you want to save changes:
+Only for reproducing a real issue.
 
 ```bash
-npm run emulators:export
+gcloud auth application-default login
+npm run data:refresh
 ```
 
-### Clear All Data
+Exports production to `scripts/production/data/` (also gitignored), loads it
+into the emulators, and snapshots to `.emulator/`. Requires production
+credentials and puts live user data on your machine — prefer the synthetic
+path.
+
+## Signing in
+
+Seeded users have verified emails and no password. Sign in as any of them from
+the Auth tab of the Emulator UI at <http://localhost:4000/auth>, or create a
+user there.
+
+Admin access is the `admin` boolean on the player document, not an Auth custom
+claim. Set it from the Firestore tab.
+
+## Persisting your changes
+
+Data you create while `npm run dev` is running is exported back to
+`.emulator/` on clean shutdown (Ctrl-C). Killing the terminal loses the
+session.
+
+## Resetting
 
 ```bash
-npm run emulators:clear
+npm run emulators:clean   # discard ./.emulator, start empty
+npm run seed              # regenerate synthetic data
 ```
-
-## Modifying Test Data
-
-1. Start emulators: `npm run dev`
-2. Open Emulator UI: http://localhost:4000
-3. Make changes to data through the UI
-4. Stop emulators (Ctrl+C) - data is automatically exported
-5. Commit changes to version control
-
-## Benefits
-
-- **Fast startup**: No need to run seeding scripts
-- **Consistent data**: Everyone on the team gets identical test data
-- **Persistent changes**: Modifications are preserved between sessions
-- **Version controlled**: Test data changes can be tracked and shared

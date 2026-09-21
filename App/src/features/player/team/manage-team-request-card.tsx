@@ -18,8 +18,7 @@ export const ManageTeamRequestCard = () => {
 	const handleRequest = useCallback(
 		async (
 			authenticatedUserDocumentSnapshot:
-				| DocumentSnapshot<PlayerDocument>
-				| undefined,
+				DocumentSnapshot<PlayerDocument> | undefined,
 
 			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument>
 		) => {

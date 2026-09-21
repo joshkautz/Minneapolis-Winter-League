@@ -1,20 +1,85 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
+# Dependabot configuration
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Updates are grouped and weekly on purpose. A daily, ungrouped configuration
+# with a 50-PR limit previously accumulated 69 open pull requests, most of
+# them one dependency each — enough noise that real security updates were
+# indistinguishable from routine bumps. Groups keep related packages (all of
+# Radix, all of the lint toolchain) in a single reviewable PR.
+#
+# Security advisories are exempt from `open-pull-requests-limit` and are still
+# raised immediately, so lowering the limit does not delay them.
 
 version: 2
 updates:
-  # Maintain dependencies for GitHub Actions
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      interval: 'daily'
-    open-pull-requests-limit: 50
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - '*'
 
-  # Maintain dependencies for npm
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
-      interval: 'daily'
-    open-pull-requests-limit: 50
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 10
+    groups:
+      # Radix ships ~30 separately versioned packages that move together.
+      radix-ui:
+        patterns:
+          - '@radix-ui/*'
+      # Particles packages must stay on matching majors or the engine and
+      # the shape plugins disagree at runtime.
+      tsparticles:
+        patterns:
+          - '@tsparticles/*'
+      # The lint/format toolchain has to move as a unit: eslint majors are
+      # gated on every plugin supporting them.
+      lint-toolchain:
+        patterns:
+          - 'eslint'
+          - '@eslint/*'
+          - 'eslint-plugin-*'
+          - 'typescript-eslint'
+          - 'prettier'
+      # Vite, Vitest and the testing libraries are interdependent.
+      build-and-test:
+        patterns:
+          - 'vite'
+          - 'vitest'
+          - '@vitejs/*'
+          - '@vitest/*'
+          - '@testing-library/*'
+          - 'jsdom'
+      # Firebase client and admin SDKs plus the CLI.
+      firebase:
+        patterns:
+          - 'firebase'
+          - 'firebase-admin'
+          - 'firebase-functions'
+          - 'firebase-tools'
+          - '@firebase/*'
+      types:
+        patterns:
+          - '@types/*'
+      # Everything else, split so a patch flood cannot bury a major.
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+    ignore:
+      # Tracked in docs/ROADMAP.md: eslint-plugin-react caps at eslint ^9.7,
+      # and typescript-eslint refuses to load against TypeScript 7.0.
+      # Remove these entries once those upstreams catch up.
+      - dependency-name: 'eslint'
+        versions: ['>=10']
+      - dependency-name: '@eslint/js'
+        versions: ['>=10']
+      - dependency-name: 'typescript'
+        versions: ['>=7']

@@ -133,13 +133,21 @@ export const Posts = () => {
 		}
 	}, [hasMore, isLoadingMore, loadMore])
 
-	// Reset state when season changes
-	useEffect(() => {
+	// Reset pagination when the season changes.
+	//
+	// Adjusted during render rather than in an effect: React re-runs this
+	// component immediately with the cleared state and never commits the
+	// stale list, so the previous season's posts never flash on screen.
+	// https://react.dev/learn/you-might-not-need-an-effect
+	const seasonId = selectedSeasonQueryDocumentSnapshot?.id
+	const [renderedSeasonId, setRenderedSeasonId] = useState(seasonId)
+	if (seasonId !== renderedSeasonId) {
+		setRenderedSeasonId(seasonId)
 		setAllPosts([])
 		setLastDoc(undefined)
 		setHasMore(true)
 		setIsLoadingMore(false)
-	}, [selectedSeasonQueryDocumentSnapshot?.id])
+	}
 
 	// Check if user can post (authenticated with verified email)
 	const canPost = authStateUser?.emailVerified === true

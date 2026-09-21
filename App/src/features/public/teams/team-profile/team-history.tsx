@@ -45,8 +45,7 @@ export const TeamHistory = ({
 	gamesQuerySnapshot,
 }: {
 	teamDocumentSnapshot:
-		| DocumentSnapshot<import('@/shared/utils').TeamDocument>
-		| undefined
+		DocumentSnapshot<import('@/shared/utils').TeamDocument> | undefined
 	historyQuerySnapshot: QuerySnapshot<TeamSeasonDocument>
 	/**
 	 * Games for THIS team only — `gamesByTeamQuery(teamRef)` from the

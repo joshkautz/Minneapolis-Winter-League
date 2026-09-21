@@ -74,8 +74,7 @@ export const dropboxSignWebhook = onRequest(
 
 			// Extract metadata passed when creating the signature request
 			const metadata = signatureRequest?.metadata as
-				| { firebaseUID?: string; seasonId?: string }
-				| undefined
+				{ firebaseUID?: string; seasonId?: string } | undefined
 			const firebaseUID = metadata?.firebaseUID
 			const seasonId = metadata?.seasonId
 

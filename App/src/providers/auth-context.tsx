@@ -56,8 +56,7 @@ interface AuthContextValue {
 	 * captain/team.
 	 */
 	authenticatedUserSeasonsSnapshot:
-		| QuerySnapshot<PlayerSeasonDocument>
-		| undefined
+		QuerySnapshot<PlayerSeasonDocument> | undefined
 	authenticatedUserSeasonsSnapshotLoading: boolean
 	authenticatedUserSeasonsSnapshotError: FirestoreError | undefined
 	createUserWithEmailAndPassword: (
@@ -182,13 +181,11 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
 		userRefreshCount,
 		refreshUser,
 		authenticatedUserSnapshot: authenticatedUserSnapshot as
-			| DocumentSnapshot<PlayerDocument>
-			| undefined,
+			DocumentSnapshot<PlayerDocument> | undefined,
 		authenticatedUserSnapshotLoading,
 		authenticatedUserSnapshotError,
 		authenticatedUserSeasonsSnapshot: authenticatedUserSeasonsSnapshot as
-			| QuerySnapshot<PlayerSeasonDocument>
-			| undefined,
+			QuerySnapshot<PlayerSeasonDocument> | undefined,
 		authenticatedUserSeasonsSnapshotLoading,
 		authenticatedUserSeasonsSnapshotError,
 		createUserWithEmailAndPassword,

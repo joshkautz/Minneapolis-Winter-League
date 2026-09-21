@@ -1,10 +1,29 @@
 #!/usr/bin/env node
 
 /**
- * Script to generate 480 test users for Firebase Auth emulator
+ * Loads 480 synthetic users into the Firebase Auth emulator.
+ *
+ * seed.js builds player documents from whatever users already exist in Auth,
+ * so this has to run first — seeding an empty Auth emulator produces zero
+ * players and the team builder then fails.
+ *
+ * Users are written straight into the running emulator via the Admin SDK.
+ * An earlier version wrote a Firebase auth-export snapshot to disk instead,
+ * but it hardcoded an absolute path to a checkout that no longer exists and
+ * pointed at .emulator/test/, which nothing ever imported.
+ *
+ * Usage (emulators must already be running):
+ *   node scripts/generate-accounts.js
  */
 
-import { writeFileSync, mkdirSync, existsSync } from 'fs'
+import { initializeApp } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
+
+process.env.FIREBASE_AUTH_EMULATOR_HOST =
+	process.env.FIREBASE_AUTH_EMULATOR_HOST ?? 'localhost:9099'
+
+const app = initializeApp({ projectId: 'minnesota-winter-league' })
+const auth = getAuth(app)
 
 // Lists of masculine American first and last names
 const firstNames = [
@@ -251,49 +270,41 @@ for (let i = 0; i < 480; i++) {
 	users.push(user)
 }
 
-// Create the accounts object
-const accountsData = {
-	kind: 'identitytoolkit#DownloadAccountResponse',
-	users: users,
-}
+// The Auth emulator caps importUsers() at 1000 records per call; 480 fits in
+// one batch, but chunking keeps this correct if the count ever grows.
+const IMPORT_BATCH_SIZE = 500
 
-// Write to file
-const basePath = '/Users/josh/Projects/Minneapolis-Winter-League/.emulator/test'
-const authExportDir = `${basePath}/auth_export`
-const outputPath = `${authExportDir}/accounts.json`
+const records = users.map((user) => ({
+	uid: user.localId,
+	email: user.email,
+	displayName: user.displayName,
+	emailVerified: user.emailVerified,
+	disabled: user.disabled,
+}))
 
-// Create directory if it doesn't exist
-mkdirSync(authExportDir, { recursive: true })
+let imported = 0
+let skipped = 0
 
-// Create Firebase export metadata file if it doesn't exist
-const metadataPath = `${basePath}/firebase-export-metadata.json`
-if (!existsSync(metadataPath)) {
-	const metadataContent = {
-		version: '14.16.0',
-		auth: {
-			version: '14.16.0',
-			path: 'auth_export',
-		},
+for (let i = 0; i < records.length; i += IMPORT_BATCH_SIZE) {
+	const batch = records.slice(i, i + IMPORT_BATCH_SIZE)
+	const result = await auth.importUsers(batch)
+	imported += result.successCount
+	skipped += result.failureCount
+
+	// A duplicate uid/email means this script already ran against these
+	// emulators. That is benign and re-running stays idempotent, so only
+	// surface errors that are something else.
+	for (const failure of result.errors) {
+		const code = failure.error.code ?? ''
+		if (!code.includes('already-exists') && !code.includes('duplicate')) {
+			console.error(
+				`   Failed to import ${batch[failure.index].email}: ${failure.error.message}`
+			)
+		}
 	}
-	writeFileSync(metadataPath, JSON.stringify(metadataContent, null, 2))
-	console.log('✅ Created firebase-export-metadata.json')
 }
 
-// Create auth config file if it doesn't exist
-const configPath = `${authExportDir}/config.json`
-if (!existsSync(configPath)) {
-	const configContent = {
-		signIn: { allowDuplicateEmails: false },
-		emailPrivacyConfig: { enableImprovedEmailPrivacy: false },
-	}
-	writeFileSync(configPath, JSON.stringify(configContent))
-	console.log('✅ Created auth config.json')
+console.log(`Imported ${imported} users into the Auth emulator.`)
+if (skipped > 0) {
+	console.log(`   Skipped ${skipped} that already existed.`)
 }
-
-writeFileSync(outputPath, JSON.stringify(accountsData, null, 2))
-
-console.log(`✅ Generated ${users.length} users in accounts.json`)
-console.log(`   • 240 users with gmail.com emails`)
-console.log(`   • 240 users with joshkautz.com emails`)
-console.log(`   • All users have masculine American names`)
-console.log(`   • Consistent simple format with timestamps and settings`)

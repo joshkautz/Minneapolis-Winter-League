@@ -11,14 +11,18 @@
  *   - OR have GOOGLE_APPLICATION_CREDENTIALS set to a service account key
  */
 
-import admin from 'firebase-admin'
+// firebase-admin 14 removed the legacy default-export namespace and the
+// app.<service>() accessors, so the modular entry points are the only
+// supported form.
+import { initializeApp } from 'firebase-admin/app'
+import { getFirestore } from 'firebase-admin/firestore'
 
 // Initialize production Firebase app
-const app = admin.initializeApp({
+const app = initializeApp({
 	projectId: 'minnesota-winter-league',
 })
 
-const db = app.firestore()
+const db = getFirestore(app)
 
 async function getCurrentSeason() {
 	const seasonsSnapshot = await db
@@ -71,7 +75,9 @@ async function main() {
 
 	const currentSeason = await getCurrentSeason()
 	console.log(`Current season: ${currentSeason.name} (ID: ${currentSeason.id})`)
-	console.log(`Start date: ${currentSeason.dateStart?.toDate?.()?.toLocaleDateString() || 'N/A'}`)
+	console.log(
+		`Start date: ${currentSeason.dateStart?.toDate?.()?.toLocaleDateString() || 'N/A'}`
+	)
 	console.log('')
 
 	console.log('Fetching participant emails...\n')
@@ -83,7 +89,9 @@ async function main() {
 		(p) => p.paid && p.signed && p.hasTeam
 	)
 
-	console.log(`Found ${activeParticipants.length} active participants (paid, signed, on team) out of ${allParticipants.length} total for ${currentSeason.name}:\n`)
+	console.log(
+		`Found ${activeParticipants.length} active participants (paid, signed, on team) out of ${allParticipants.length} total for ${currentSeason.name}:\n`
+	)
 
 	// Sort by last name, first name
 	activeParticipants.sort((a, b) => {
@@ -93,7 +101,9 @@ async function main() {
 	})
 
 	// Print as a table
-	console.log('Name                          | Email                                    | Paid | Signed | Team')
+	console.log(
+		'Name                          | Email                                    | Paid | Signed | Team'
+	)
 	console.log('-'.repeat(100))
 
 	for (const p of activeParticipants) {
