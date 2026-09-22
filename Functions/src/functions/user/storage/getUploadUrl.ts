@@ -4,9 +4,9 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getStorage } from 'firebase-admin/storage'
-import { getAuth } from 'firebase-admin/auth'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { validateAuthentication } from '../../../shared/auth.js'
 
 /**
  * Get a signed upload URL for Firebase Storage
@@ -19,16 +19,16 @@ export const getUploadUrl = onCall(
 	},
 	async (request) => {
 		try {
-			// Validate authentication
-			if (!request.auth) {
-				throw new HttpsError('unauthenticated', 'Authentication required')
-			}
-
-			// Validate email verification
-			const userRecord = await getAuth().getUser(request.auth.uid)
-			if (!userRecord.emailVerified) {
-				throw new HttpsError('permission-denied', 'Email verification required')
-			}
+			// Validate authentication and email verification.
+			//
+			// This previously hand-rolled both checks: a truthiness test on
+			// request.auth, which passes for an auth object carrying no uid,
+			// followed by a live Auth lookup. The uid-less case then failed
+			// inside that lookup and surfaced as `internal` rather than
+			// `unauthenticated`. Its two siblings in this directory, and the
+			// other 45 callables, use the shared validator — which also avoids
+			// an Auth round-trip on every upload.
+			validateAuthentication(request.auth)
 
 			const { fileName, contentType, filePath } = request.data
 

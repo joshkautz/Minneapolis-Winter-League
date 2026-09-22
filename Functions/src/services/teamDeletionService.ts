@@ -99,26 +99,37 @@ export async function deleteTeamSeasonWithCleanup(
 		// 3. Apply the cleanup writes in a transaction so the team season,
 		// roster, and player season updates are atomic.
 		await firestore.runTransaction(async (transaction) => {
-			// Roster cleanup: delete each entry, clear the player's season subdoc.
-			for (const playerId of rosterPlayerIds) {
+			// Firestore requires every read in a transaction to happen before
+			// any write. This previously deleted each roster entry and then
+			// read that player's season subdoc inside the same loop, so the
+			// second iteration — in fact the first, since the read followed a
+			// delete — failed with "Firestore transactions require all reads
+			// to be executed before all writes." Every team has at least its
+			// captain on the roster, so team deletion failed outright.
+			//
+			// Phase 1: read every player season subdoc.
+			const playerSeasonDocRefs = rosterPlayerIds.map((playerId) =>
+				playerSeasonRef(firestore, playerId, seasonId)
+			)
+			const playerSeasonSnaps = await Promise.all(
+				playerSeasonDocRefs.map((ref) => transaction.get(ref))
+			)
+
+			// Phase 2: apply every write.
+			rosterPlayerIds.forEach((playerId, index) => {
 				const rosterEntryRef = teamSeasonDocRef
 					.collection('roster')
 					.doc(playerId)
 				transaction.delete(rosterEntryRef)
-				const playerSeasonDocRef = playerSeasonRef(
-					firestore,
-					playerId,
-					seasonId
-				)
-				const playerSeasonSnap = await transaction.get(playerSeasonDocRef)
-				if (playerSeasonSnap.exists) {
-					transaction.update(playerSeasonDocRef, {
+
+				if (playerSeasonSnaps[index].exists) {
+					transaction.update(playerSeasonDocRefs[index], {
 						team: null,
 						captain: false,
 					})
 					playersUpdated++
 				}
-			}
+			})
 
 			// Delete the season subdoc itself.
 			transaction.delete(teamSeasonDocRef)

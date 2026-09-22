@@ -254,6 +254,14 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 				message: 'Team rolled over successfully',
 			}
 		} catch (error) {
+			// Re-throw HttpsErrors so the code this function chose — not-found,
+			// failed-precondition, already-exists — reaches the client. Without
+			// this, every deliberate rejection arrived as `internal` and the UI
+			// could not tell "registration has closed" from a server fault.
+			if (error instanceof HttpsError) {
+				throw error
+			}
+
 			logger.error('Error rolling over team:', {
 				userId,
 				originalTeamId,
