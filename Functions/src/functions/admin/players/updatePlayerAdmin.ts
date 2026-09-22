@@ -22,6 +22,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
+import { validateAndNormalizeName } from '../../../shared/names.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
 import {
@@ -146,24 +147,16 @@ export const updatePlayerAdmin = onCall<
 				)
 			}
 		}
-		if (
-			firstname !== undefined &&
-			(typeof firstname !== 'string' || !firstname.trim())
-		) {
-			throw new HttpsError(
-				'invalid-argument',
-				'First name must be a non-empty string'
-			)
-		}
-		if (
-			lastname !== undefined &&
-			(typeof lastname !== 'string' || !lastname.trim())
-		) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Last name must be a non-empty string'
-			)
-		}
+		// Same rules the App's nameSchema applies, enforced here because an
+		// admin editing a name goes through this callable.
+		const normalizedFirstname =
+			firstname !== undefined
+				? validateAndNormalizeName(firstname, 'First name')
+				: undefined
+		const normalizedLastname =
+			lastname !== undefined
+				? validateAndNormalizeName(lastname, 'Last name')
+				: undefined
 		if (admin !== undefined && typeof admin !== 'boolean') {
 			throw new HttpsError(
 				'invalid-argument',
@@ -243,20 +236,23 @@ export const updatePlayerAdmin = onCall<
 			const changes: UpdatePlayerAdminResponse['changes'] = {}
 
 			if (
-				firstname !== undefined &&
-				firstname.trim() !== playerData?.firstname
+				normalizedFirstname !== undefined &&
+				normalizedFirstname !== playerData?.firstname
 			) {
-				updates.firstname = firstname.trim()
+				updates.firstname = normalizedFirstname
 				changes.firstname = {
 					from: playerData?.firstname || '',
-					to: firstname.trim(),
+					to: normalizedFirstname,
 				}
 			}
-			if (lastname !== undefined && lastname.trim() !== playerData?.lastname) {
-				updates.lastname = lastname.trim()
+			if (
+				normalizedLastname !== undefined &&
+				normalizedLastname !== playerData?.lastname
+			) {
+				updates.lastname = normalizedLastname
 				changes.lastname = {
 					from: playerData?.lastname || '',
-					to: lastname.trim(),
+					to: normalizedLastname,
 				}
 			}
 			if (admin !== undefined && admin !== playerData?.admin) {

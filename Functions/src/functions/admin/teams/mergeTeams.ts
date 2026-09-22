@@ -22,7 +22,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, type Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { isMigrationInProgress } from '../../../shared/maintenance.js'
@@ -337,6 +337,23 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 			// 6f: Rewrite player-season.team via centralized membership helpers.
 			// For each player pointing at A for season S, run a transaction that
 			// removes them from A and adds them to B, preserving captain status.
+			// Original join dates, so the membership rewrite below can preserve
+			// them. Without this, addPlayerToTeam stamps the merge's own time
+			// and every roster entry claims the players joined the moment an
+			// admin merged two teams.
+			const dateJoinedByPlayerAndSeason = new Map<string, Timestamp>()
+			for (const [seasonId, rosterDocs] of rosterByLosingSeasonId) {
+				for (const rosterDoc of rosterDocs) {
+					const dateJoined = rosterDoc.data()?.dateJoined
+					if (dateJoined) {
+						dateJoinedByPlayerAndSeason.set(
+							`${rosterDoc.id}:${seasonId}`,
+							dateJoined as Timestamp
+						)
+					}
+				}
+			}
+
 			let rewrittenPlayerSeasons = 0
 			for (const psDoc of playerSeasonsSnap.docs) {
 				const playerParent = psDoc.ref.parent.parent
@@ -366,6 +383,9 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 						seasonId,
 						seasonRef,
 						captain,
+						dateJoined: dateJoinedByPlayerAndSeason.get(
+							`${playerId}:${seasonId}`
+						),
 						// After removePlayerFromTeam's update, the doc still exists
 						// (removePlayerFromTeam updates rather than deletes), so pass
 						// the fresh data to take the "update" branch.

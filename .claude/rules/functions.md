@@ -102,6 +102,16 @@ size grows with the data must chunk, and must be covered by a unit test that
 counts commits rather than by an emulator test. See
 `services/playerRankings/persistence/rankingsSaver.ts`.
 
+## Validation is not the App's job
+
+`firestore.rules` denies all client writes, so every callable is the only
+thing standing between a request and the database — and a callable can be
+invoked by any authenticated user without going near the form. A Zod schema in
+`App/` is a convenience for the reader, never a control.
+
+Player names are validated by `shared/names.ts`, which mirrors the App's
+`nameSchema`. When you add a field with rules in the App, add them here too.
+
 ## Lint strictness
 
 Stricter than App: `@typescript-eslint/no-explicit-any` and

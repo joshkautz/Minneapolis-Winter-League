@@ -13,6 +13,7 @@ import {
 } from '../../../types.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { validateBasicAuthentication } from '../../../shared/auth.js'
+import { validateAndNormalizeName } from '../../../shared/names.js'
 
 /**
  * Request interface for creating a player
@@ -56,24 +57,11 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 		const { firstname, lastname, email } = data
 		const userId = auth?.uid ?? ''
 
-		// Validate required fields
-		if (
-			!firstname ||
-			typeof firstname !== 'string' ||
-			firstname.trim() === ''
-		) {
-			throw new HttpsError(
-				'invalid-argument',
-				'First name is required and must be a non-empty string'
-			)
-		}
-
-		if (!lastname || typeof lastname !== 'string' || lastname.trim() === '') {
-			throw new HttpsError(
-				'invalid-argument',
-				'Last name is required and must be a non-empty string'
-			)
-		}
+		// Validate required fields. The App's nameSchema enforces the same
+		// rules, but a callable can be invoked without ever going near the
+		// form, so this is the copy that actually holds.
+		const trimmedFirstname = validateAndNormalizeName(firstname, 'First name')
+		const trimmedLastname = validateAndNormalizeName(lastname, 'Last name')
 
 		if (!email || typeof email !== 'string') {
 			throw new HttpsError(
@@ -89,10 +77,6 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 				'Email must match authenticated user email'
 			)
 		}
-
-		// Trim whitespace from names
-		const trimmedFirstname = firstname.trim()
-		const trimmedLastname = lastname.trim()
 
 		try {
 			const firestore = getFirestore()

@@ -194,11 +194,11 @@ describe('mergeTeams', () => {
 		expect(await rosterIds(LOSER)).toEqual([])
 	})
 
-	it('resets dateJoined on the moved roster entry', async () => {
-		// Current behaviour, and a contradiction inside the function: the
-		// team-season copy preserves dateJoined, then the membership rewrite
-		// overwrites it with a server timestamp. Nothing reads the field
-		// today, so this is recorded rather than fixed — see docs/ROADMAP.md.
+	it('preserves the original join date through a merge', async () => {
+		// The roster entry's dateJoined is the record of when someone joined
+		// that team for that season. A merge is an administrative tidy-up, not
+		// a re-join, so stamping it with the merge's own time would rewrite
+		// history for every player on the team.
 		const originalJoin = Timestamp.fromMillis(1_000)
 		await seedTeamSeason(LOSER, SEASON, 'Old Name')
 		await seedMembership('player-1', LOSER, SEASON)
@@ -214,7 +214,41 @@ describe('mergeTeams', () => {
 			'player-1'
 		).get()
 
-		expect(entry.data()?.dateJoined.toMillis()).toBeGreaterThan(1_000)
+		expect(entry.data()?.dateJoined.toMillis()).toBe(1_000)
+	})
+
+	it('preserves a separate join date per season', async () => {
+		await seasonRef('season-2').set({ name: '2031 Winter' })
+		await seedTeamSeason(LOSER, SEASON, 'Old Name')
+		await seedTeamSeason(LOSER, 'season-2', 'Old Name')
+		await seedMembership('player-1', LOSER, SEASON)
+		await seedMembership('player-1', LOSER, 'season-2')
+		await teamRosterEntryRef(firestore, LOSER, SEASON, 'player-1').update({
+			dateJoined: Timestamp.fromMillis(1_000),
+		})
+		await teamRosterEntryRef(firestore, LOSER, 'season-2', 'player-1').update({
+			dateJoined: Timestamp.fromMillis(2_000),
+		})
+
+		await merge()
+
+		expect(
+			(await teamRosterEntryRef(firestore, WINNER, SEASON, 'player-1').get())
+				.data()
+				?.dateJoined.toMillis()
+		).toBe(1_000)
+		expect(
+			(
+				await teamRosterEntryRef(
+					firestore,
+					WINNER,
+					'season-2',
+					'player-1'
+				).get()
+			)
+				.data()
+				?.dateJoined.toMillis()
+		).toBe(2_000)
 	})
 
 	it('rewrites games that the losing team played at home and away', async () => {

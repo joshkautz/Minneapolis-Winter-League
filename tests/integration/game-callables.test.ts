@@ -431,12 +431,11 @@ describe('updateGame', () => {
 		expect((await readGame(gameId))?.homeScore).toBeNull()
 	})
 
-	it('leaves team names stale when only the season is moved', async () => {
-		// Known gap. Moving a game between seasons re-points `season` but
-		// only re-reads a team's name when that team's id is also supplied,
-		// so the game keeps the previous season's names. Recorded in
-		// docs/ROADMAP.md; the fix is to re-capture both names whenever the
-		// effective season changes.
+	it('re-captures both team names when only the season is moved', async () => {
+		// The name is a snapshot of the team's name *for the game's season*,
+		// so moving the season invalidates it even though neither team
+		// changed. This previously left the game pointing at the new season
+		// under the old season's names.
 		const gameId = await createDefault()
 		await firestore
 			.collection('seasons')
@@ -449,7 +448,76 @@ describe('updateGame', () => {
 		const game = await readGame(gameId)
 
 		expect(game?.season.path).toBe('seasons/season-2')
-		expect(game?.homeName).toBe('Homemade Furby')
+		expect(game?.homeName).toBe('Renamed For 2031')
+		expect(game?.awayName).toBe('Also Renamed')
+		expect(game?.home.path).toBe('teams/home-team')
+	})
+
+	it('refuses to move a game to a season its teams do not play', async () => {
+		// The alternative is a game listed under a season with names for
+		// teams that were never in it.
+		const gameId = await createDefault()
+		await firestore
+			.collection('seasons')
+			.doc('season-2')
+			.set({ name: '2031 Winter', dateStart: Timestamp.now() })
+
+		expect(
+			await errorCodeFrom(updateGame, {
+				auth: authed(ADMIN),
+				data: { gameId, seasonId: 'season-2' },
+			})
+		).toBe('not-found')
+		expect((await readGame(gameId))?.season.path).toBe(`seasons/${SEASON}`)
+	})
+
+	it('moves a placeholder game between seasons without a team to re-read', async () => {
+		const { gameId } = await call<{ gameId: string }>(
+			createGame,
+			validGame({ homeTeamId: null, awayTeamId: null })
+		)
+		await firestore
+			.collection('seasons')
+			.doc('season-2')
+			.set({ name: '2031 Winter', dateStart: Timestamp.now() })
+
+		await call(updateGame, { gameId, seasonId: 'season-2' })
+		const game = await readGame(gameId)
+
+		expect(game?.season.path).toBe('seasons/season-2')
+		expect(game?.homeName).toBeNull()
+	})
+
+	it('changes team and season together in one update', async () => {
+		const gameId = await createDefault()
+		await firestore
+			.collection('seasons')
+			.doc('season-2')
+			.set({ name: '2031 Winter', dateStart: Timestamp.now() })
+		await seedTeamSeason('home-team', 'Renamed For 2031', 'season-2')
+		await seedTeamSeason('third-team', 'Birdtown Ballers', 'season-2')
+
+		await call(updateGame, {
+			gameId,
+			seasonId: 'season-2',
+			awayTeamId: 'third-team',
+		})
+		const game = await readGame(gameId)
+
+		expect(game?.homeName).toBe('Renamed For 2031')
+		expect(game?.awayName).toBe('Birdtown Ballers')
+	})
+
+	it('does not re-read team names when neither team nor season changes', async () => {
+		// Recording a score must not require the teams to still be in the
+		// season — an admin fixing a typo after a season rolls over would
+		// otherwise be blocked.
+		const gameId = await createDefault()
+		await teamSeasonRef(firestore, 'away-team', SEASON).delete()
+
+		await call(updateGame, { gameId, homeScore: 15, awayScore: 13 })
+
+		expect((await readGame(gameId))?.homeScore).toBe(15)
 	})
 })
 

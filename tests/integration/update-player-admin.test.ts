@@ -87,8 +87,10 @@ const seedPlayer = async (
 	await playerRef(playerId).set({
 		admin: options.admin ?? false,
 		email: `${playerId}@example.com`,
-		firstname: playerId,
-		lastname: 'Player',
+		// A real name, because names are now validated server-side: an id like
+		// 'player-1' is rejected for its digit and hyphen.
+		firstname: 'Existing',
+		lastname: 'Name',
 	})
 	await playerSeasonRef(firestore, playerId, SEASON).set({
 		season: seasonRef(),
@@ -196,7 +198,7 @@ describe('updatePlayerAdmin: player document', () => {
 
 		const result = (await call({
 			playerId: PLAYER,
-			firstname: PLAYER,
+			firstname: 'Existing',
 			lastname: 'Changed',
 		})) as { changes: Record<string, unknown> }
 
