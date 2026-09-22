@@ -527,10 +527,13 @@ that did not make it — but stops being the thing that decides.
 This is a prerequisite, not a follow-up. Do it first, on its own, while it is
 still cheap to get wrong.
 
-**0b. Move waiver issuance to roster join.** Off `onPaymentCreated` and onto
-`shared/membership.ts`, which both `updateTeamRoster` and offer acceptance
-already go through. Until this lands, a team whose captain pays for everyone
-can never reach ten signed players.
+**0b. Move waiver issuance to roster join. — done.**
+`onRosterEntryCreated` fires on
+`teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` and issues the
+waiver, which catches every route onto a roster because they all write that
+document. `onPaymentCreated` now only marks a player paid. The send itself
+lives in `shared/waivers.ts`, shared with the admin sender, and is idempotent
+on (player, season) so a retry or a team merge cannot double-send.
 
 **0c. Give `deleteTeamSeasonWithCleanup` the no-orphan invariant** — a
 team-season with unsettled contributions cannot be deleted. It is the single
