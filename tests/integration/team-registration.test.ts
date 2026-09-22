@@ -106,20 +106,22 @@ describe('updateTeamRegistrationStatus', () => {
 		expect((await readTeamSeason())?.registered).toBe(false)
 	})
 
-	it('unregisters a team that drops below the threshold', async () => {
+	it('keeps a registered team registered when it drops below the threshold', async () => {
+		// A registration is a claimed spot, and the spot is gone from the
+		// season whether or not the roster later thins out. Under team-level
+		// payment there is also money attached to it. Reversing a
+		// registration is an administrative act that has to settle that
+		// money, not a side effect of a waiver being revoked.
 		const ids = await seedRoster(MIN, { paid: true, signed: true })
 		await updateTeamRegistrationStatus(TEAM, SEASON)
 		expect((await readTeamSeason())?.registered).toBe(true)
 
-		// One player's waiver is revoked.
 		await playerSeasonRef(firestore, ids[0], SEASON).update({ signed: false })
 		await updateTeamRegistrationStatus(TEAM, SEASON)
 
 		const data = await readTeamSeason()
-		expect(data?.registered).toBe(false)
-		// The date must be cleared, or the team keeps a registration date it
-		// no longer has.
-		expect(data?.registeredDate).toBeNull()
+		expect(data?.registered).toBe(true)
+		expect(data?.registeredDate).not.toBeNull()
 	})
 
 	it('ignores a roster entry whose player season subdoc is missing', async () => {

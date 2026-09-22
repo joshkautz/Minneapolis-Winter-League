@@ -270,6 +270,17 @@ export interface SeasonStripeConfig {
  * against the per-team season subcollections.
  */
 export interface SeasonDocument extends DocumentData {
+	/**
+	 * How many teams have claimed one of this season's registration spots.
+	 *
+	 * The authoritative count, incremented in the same transaction that sets a
+	 * team's `registered` flag. A collection-group count of registered teams
+	 * cannot be read consistently inside a transaction, so this is what makes
+	 * the twelve-spot limit a gate rather than a suggestion.
+	 *
+	 * Optional only for seasons created before it existed.
+	 */
+	registeredTeamCount?: number
 	/** Season end date */
 	dateEnd: Timestamp
 	/** Season start date */
