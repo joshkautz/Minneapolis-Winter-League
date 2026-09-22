@@ -178,10 +178,6 @@ the emulator suites are mutation-tested.
 
 Still uncovered, in rough priority order:
 
-- **`dropboxSignWebhook` end to end.** Its signature guard is covered, but
-  not what it does with a valid callback — matching the waiver back to a
-  player by the `firebaseUID` and `seasonId` metadata that `onPaymentCreated`
-  attaches.
 - **Deeper callable behaviour.** The authorization sweep covers all 46;
   `createTeam`, `deleteTeam`, `updateTeamRoster` and `createOffer` have
   behavioural tests. The rest are covered only at the gate.
