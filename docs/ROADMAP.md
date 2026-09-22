@@ -172,24 +172,37 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-Roughly 437 tests across four suites, all run by `npm run verify`. Every
-callable is covered for authorization, five of the six triggers are covered,
-and the emulator suites are mutation-tested.
+Roughly 453 tests across four suites, all run by `npm run verify`. Every
+callable is covered for authorization, **all six triggers** have suites, and
+the emulator suites are mutation-tested.
 
 Still uncovered, in rough priority order:
 
-- **`onPaymentCreated`.** The last untested trigger. It creates waiver
-  records from Stripe payment metadata and calls Dropbox Sign, so it needs
-  fixtures for both.
 - **Player rankings pipeline.** The TrueSkill maths is covered; the
   orchestration around it (game loading, round grouping, decay, persistence)
   is not.
+- **`dropboxSignWebhook` end to end.** Its signature guard is covered, but
+  not what it does with a valid callback — matching the waiver back to a
+  player by the `firebaseUID` and `seasonId` metadata that `onPaymentCreated`
+  attaches.
 - **Deeper callable behaviour.** The authorization sweep covers all 46;
   `createTeam`, `deleteTeam`, `updateTeamRoster` and `createOffer` have
   behavioural tests. The rest are covered only at the gate.
 - **App components.** Only the shell is mounted. The admin screens carry the
   most complex state and have no tests.
 - **End-to-end.** No test drives a browser against the emulators.
+
+### Writing trigger tests
+
+Triggers are invoked with `.run(event)` and a synthetic event carrying
+`{ params, data: { before, after } }`. Two things are worth keeping:
+
+- Every trigger suite covers the **migration kill-switch**. While
+  `system/maintenance.migrationInProgress` is set, a trigger must
+  early-return without writing.
+- Mutation-test new suites. The payment trigger's already-paid
+  short-circuit initially passed with the guard removed, because the
+  waiver-exists check masked it — the gap only showed under mutation.
 
 ## Inconsistent error codes on offers
 
