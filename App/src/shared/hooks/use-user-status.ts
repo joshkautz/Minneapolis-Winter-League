@@ -72,9 +72,16 @@ export const useUserStatus = () => {
 		[currentSeasonData]
 	)
 
+	/**
+	 * A ban applies to the person, not a season. The season subdoc is still
+	 * consulted for players the backfill has not reached, which mirrors
+	 * `isPlayerBanned` on the server.
+	 */
 	const isBanned = useMemo(
-		() => Boolean(currentSeasonData?.banned),
-		[currentSeasonData]
+		() =>
+			authenticatedUserSnapshot?.data()?.banned ??
+			Boolean(currentSeasonData?.banned),
+		[authenticatedUserSnapshot, currentSeasonData]
 	)
 
 	const isEmailVerified = useMemo(

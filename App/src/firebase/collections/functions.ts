@@ -152,6 +152,8 @@ interface UpdatePlayerAdminRequest {
 	email?: string
 	/** Email verification status (optional, will update Firebase Auth) */
 	emailVerified?: boolean
+	/** League-wide ban (optional). Applies to the person, not a season. */
+	banned?: boolean
 	/** Season updates (optional) */
 	seasons?: SeasonUpdateData[]
 }
@@ -188,6 +190,8 @@ interface UpdatePlayerAdminResponse {
 		admin?: { from: boolean; to: boolean }
 		/** Whether and how email verification status was updated */
 		emailVerified?: { from: boolean; to: boolean }
+		/** Whether and how the league-wide ban was updated */
+		banned?: { from: boolean; to: boolean }
 		/** Details about season changes */
 		seasons?: SeasonChanges[]
 	}

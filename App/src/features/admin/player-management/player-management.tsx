@@ -27,6 +27,7 @@ import {
 	Save,
 	Mail,
 	Shield,
+	Ban,
 	UserCog,
 	Loader2,
 	Send,
@@ -102,6 +103,11 @@ interface PlayerFormData {
 	 * it. Either way the auth fields are left alone.
 	 */
 	hasAuthAccount: boolean | null
+	/**
+	 * League-wide ban. A ban applies to the person, not a season — see the
+	 * field doc on PlayerDocument.
+	 */
+	banned: boolean
 	seasons: SeasonFormData[]
 }
 
@@ -319,6 +325,11 @@ export const PlayerManagement = () => {
 					admin: playerData.admin,
 					emailVerified,
 					hasAuthAccount,
+					// Falls back to the season subdocs for players the backfill
+					// has not reached, matching isPlayerBanned on the server.
+					banned:
+						playerData.banned ??
+						playerSeasonsSnap.docs.some((d) => d.data()?.banned === true),
 					seasons: playerSeasonsSnap.docs.map((d) => {
 						const ps = d.data()
 						return {
@@ -394,6 +405,7 @@ export const PlayerManagement = () => {
 				firstname: formData.firstname,
 				lastname: formData.lastname,
 				admin: formData.admin,
+				banned: formData.banned,
 				seasons: formData.seasons,
 				// Both of these write to Firebase Authentication. Sending them
 				// for a player with no Auth account fails the whole save, so
@@ -424,6 +436,12 @@ export const PlayerManagement = () => {
 			if (result.changes.admin !== undefined) {
 				changesList.push(
 					`Admin status: ${result.changes.admin.to ? 'enabled' : 'disabled'}`
+				)
+			}
+
+			if (result.changes.banned !== undefined) {
+				changesList.push(
+					`League ban: ${result.changes.banned.to ? 'banned' : 'not banned'}`
 				)
 			}
 
@@ -840,6 +858,53 @@ export const PlayerManagement = () => {
 										</div>
 
 										<div className='space-y-2'>
+											<Label htmlFor='banned'>League Ban</Label>
+											<div
+												role='button'
+												tabIndex={0}
+												onClick={() =>
+													setFormData({
+														...formData,
+														banned: !formData.banned,
+													})
+												}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter' || e.key === ' ') {
+														e.preventDefault()
+														setFormData({
+															...formData,
+															banned: !formData.banned,
+														})
+													}
+												}}
+												className='bg-background hover:bg-accent/50 focus-visible:ring-ring flex h-9 cursor-pointer items-center rounded-md border px-3 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
+												aria-pressed={formData.banned}
+												aria-label='Toggle league ban'
+											>
+												<Checkbox
+													id='banned'
+													checked={formData.banned}
+													onCheckedChange={(checked) =>
+														setFormData({
+															...formData,
+															banned: checked as boolean,
+														})
+													}
+													onClick={(e) => e.stopPropagation()}
+													tabIndex={-1}
+												/>
+												<span className='ml-2 flex items-center gap-2 text-sm'>
+													<Ban className='h-4 w-4 text-red-600' />
+													Banned from the league
+												</span>
+											</div>
+											<p className='text-muted-foreground text-xs'>
+												Applies to every season, past and future. Previously set
+												per season, which meant a ban could not be lifted.
+											</p>
+										</div>
+
+										<div className='space-y-2'>
 											<Label htmlFor='emailVerified'>Email Verified</Label>
 											{formData.hasAuthAccount === true ? (
 												<>
@@ -1140,22 +1205,6 @@ const SeasonCard = ({
 							className='cursor-pointer'
 						>
 							Signed Waiver
-						</Label>
-					</div>
-
-					<div className='flex items-center space-x-2'>
-						<Checkbox
-							id={`banned-${seasonData.seasonId}`}
-							checked={seasonData.banned}
-							onCheckedChange={(checked) =>
-								onFieldChange(seasonData.seasonId, 'banned', checked as boolean)
-							}
-						/>
-						<Label
-							htmlFor={`banned-${seasonData.seasonId}`}
-							className='cursor-pointer text-red-600'
-						>
-							Banned
 						</Label>
 					</div>
 				</div>

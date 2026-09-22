@@ -17,7 +17,7 @@ import {
 	SeasonDocument,
 	SeasonFormat,
 } from '../../../types.js'
-import { validateAdminUser } from '../../../shared/auth.js'
+import { isPlayerBanned, validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
 interface CreateSeasonRequest {
@@ -153,10 +153,13 @@ export const createSeason = onCall<CreateSeasonRequest>(
 					continue
 				}
 
-				// Preserve banned status from any prior banned season.
-				const otherSeasonSubdocs = await playerSeasonsSubcollection.get()
-				const bannedStatus = otherSeasonSubdocs.docs.some(
-					(d) => d.data()?.banned === true
+				// Mirror the account-level ban onto the new subdoc so the
+				// fallback in isPlayerBanned stays consistent until the
+				// backfill lands and this whole block goes away.
+				const bannedStatus = await isPlayerBanned(
+					firestore,
+					playerDoc.id,
+					seasonRef.id
 				)
 
 				const newPlayerSeason: PlayerSeasonDocument = {

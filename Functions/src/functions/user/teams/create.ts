@@ -19,7 +19,6 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
-	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerDocument,
 	SeasonDocument,
 	DocumentReference,
@@ -28,6 +27,7 @@ import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import {
 	validateAuthentication,
 	validateNotBanned,
+	isPlayerBanned,
 } from '../../../shared/auth.js'
 import {
 	playerSeasonRef,
@@ -180,14 +180,10 @@ export const createTeam = onCall<CreateTeamRequest>(
 			// player's most recently-created season subdoc.
 			let bannedStatus = false
 			if (!existingPlayerSeasonData) {
-				const otherSeasons = await playerDocRef
-					.collection(PLAYER_SEASONS_SUBCOLLECTION)
-					.orderBy('season')
-					.get()
-				const lastBanned = otherSeasons.docs.find(
-					(d) => d.id !== seasonId && d.data()?.banned === true
-				)
-				bannedStatus = !!lastBanned
+				// Mirror the account-level ban onto the new subdoc so the
+				// fallback in isPlayerBanned stays consistent until the
+				// backfill lands and this whole block goes away.
+				bannedStatus = await isPlayerBanned(firestore, userId, seasonId)
 			}
 
 			// Atomically: create canonical team parent + season subdoc + roster

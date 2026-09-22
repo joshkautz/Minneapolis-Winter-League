@@ -129,6 +129,21 @@ export interface PlayerDocument extends DocumentData {
 	firstname: string
 	/** Player's last name */
 	lastname: string
+	/**
+	 * Whether the player is banned from the league.
+	 *
+	 * A ban is a fact about a person, not about a season. It lived on the
+	 * per-season subdoc until 2026, but every path that created a new subdoc
+	 * — `createSeason`, `createTeam`, `rolloverTeam` — copied it forward from
+	 * any previously banned season, so it already behaved as an account-level
+	 * flag. It just could not be lifted: clearing one season left the others
+	 * set, and the next carry-forward re-applied it.
+	 *
+	 * Optional during the migration. `isPlayerBanned` in
+	 * `shared/auth.ts` falls back to the season subdoc while this is
+	 * undefined; see docs/ROADMAP.md for the remaining steps.
+	 */
+	banned?: boolean
 }
 
 /**
@@ -161,7 +176,13 @@ export interface PlayerSeasonDocument extends DocumentData {
 	paid: boolean
 	/** Whether the player has signed the waiver */
 	signed: boolean
-	/** Whether the player is banned from the season */
+	/**
+	 * Whether the player is banned from the season.
+	 *
+	 * @deprecated Superseded by `banned` on the parent player document — a
+	 * ban applies to a person, not a season. Still written and still read as
+	 * a fallback until the backfill completes. Do not add new readers.
+	 */
 	banned: boolean
 	/**
 	 * Whether the player is a team captain for this season.
