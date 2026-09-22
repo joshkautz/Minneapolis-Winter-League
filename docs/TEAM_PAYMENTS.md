@@ -126,39 +126,82 @@ Had the contributions been captured on arrival, the same race would cost a
 $200 refund and its unrecoverable fee. This is the strongest argument for
 manual capture — it turns an inevitable, recurring cost into nothing.
 
-### The seven-day window is the real constraint
+### A hold must never be allowed to expire
 
-A card authorization lasts **7 days** for online payments. Registration
-windows have run **15 to 31 days**, so a hold cannot simply wait for the
-window to close.
+A card authorization lasts **7 days** for online payments, and registration
+windows have run **15 to 31 days**. A hold can therefore outlive its
+usefulness before the team resolves.
 
-[Extended authorizations](https://docs.stripe.com/payments/extended-authorization)
-go up to 30 days, and at first glance solve this. They do not, quite:
+The wrong answer is to let it lapse and ask the contributor to pay again.
+Re-authorization means emailing someone that the $1,000 they already paid has
+silently come back, and asking them to do it again while their team is still
+in the running. That is not a burden to put on a volunteer who has already
+collected money from nineteen teammates, and it invites exactly the "did this
+league just take my money twice?" reaction that produces disputes.
 
-- They require **IC+ pricing**. On blended pricing (which this account almost
-  certainly uses) you have to ask Stripe for access.
-- Visa adds **0.08% per transaction** outside hotel, lodging, vehicle rental
-  and cruise categories. A sports league is outside them.
-- **American Express only supports lodging and vehicle rental**, so Amex
-  contributions would not get the extended window at all.
-- The compliance note says extended windows are intended for cases where you
-  do not know the final amount at authorization time. We do know it.
+So: **capture before the authorization expires**, rather than letting it go.
 
-Worth a conversation with Stripe, not worth designing around.
+```
+Contribution authorized
+        │
+        ├── team registers            → capture now            (normal fee)
+        ├── team loses the 12th spot  → cancel now             (free)
+        └── neither, and expiry nears → capture at ~6h before  (normal fee)
+                                          │
+                                          └── team later fails → refund (fee lost)
+```
 
-**So: accept the 7-day window and let holds expire.** A contribution that is
-still uncaptured after 7 days is released automatically and the contributor is
-never charged. That is the correct outcome — the team did not come together,
-so nobody should pay.
+Every path ends in the team either being charged properly or released cleanly.
+Nobody is ever asked to pay twice.
 
-What this needs is honesty in the UI. A contributor must see, at the time of
-paying and afterwards, that their money is _held, not taken_, and the date the
-hold releases. `capture_before` on the charge gives the exact deadline; read it
-rather than assuming seven days.
+Stripe can do the last branch natively.
+[`capture_method: 'automatic_delayed'`](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method#automatic-delayed-capture)
+with `capture_by: 'auth_expiry'` captures roughly six hours before the
+authorization would lapse, and you can still capture or cancel manually before
+then. It is in private preview, so it needs requesting — but if granted it
+removes the need to build and operate a scheduled sweep, which is the only
+fiddly part of this design. Ask for it.
 
-Do **not** auto-capture a hold that is about to expire for an incomplete team.
-That converts a free release into a payment you will have to refund at cost,
-for a team that is not playing.
+Without it, the same thing is a scheduled function reading `capture_before`
+off each charge and capturing anything inside its last day.
+
+### Why not simply capture on arrival
+
+Capturing immediately is simpler: no capture step, no expiry handling, no hold
+states in the ledger. It is a reasonable thing to want, and the reason to
+resist it is that it gives up free cancellation in exactly the case that
+happens most.
+
+The common failure is not a team that dithers for a fortnight. It is a team
+that pays and **loses the race**, which resolves in seconds or minutes: twelve
+other teams were already complete. Under holds that is a cancellation costing
+nothing. Under immediate capture it is a $1,000 refund whose fee — around $29
+— is gone for good, on a team that never played.
+
+With roughly fifteen teams chasing twelve spots, that is a few hundred dollars
+a season converted from nothing into a real cost, for a simplification worth
+maybe a day of work.
+
+The expiry safety net above is what removes the objection to holds. It is not
+much more code than plain manual capture, and it means the seven-day window
+never reaches a contributor at all.
+
+### What the UI actually has to say
+
+Once holds never expire, the explanation gets short, because the seven days
+stop being a deadline anyone has to act on:
+
+> **Your card is authorized for $1,000 now, and charged when your team is
+> confirmed.** If your team does not get one of the twelve spots, the
+> authorization is released and you are never charged.
+
+No countdown, no expiry date, no instruction. The only thing a contributor
+needs to know is that the money is committed but not yet taken, and that they
+do not have to do anything else.
+
+It is still worth showing, on the team page, that a contribution is
+`authorized` rather than `paid` — a captain chasing the last two signatures
+should be able to see the money is real. But that is information, not a task.
 
 ### Statement descriptors matter more than usual
 
@@ -183,9 +226,9 @@ teams/{teamId}/teamSeasons/{seasonId}
 teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}
   player: DocumentReference<PlayerDocument>
   amountCents: number
-  status: 'authorized' | 'captured' | 'released' | 'canceled'
+  status: 'authorized' | 'captured' | 'refunded' | 'canceled'
   paymentIntentId: string
-  captureBefore: Timestamp       // from the charge; when the hold expires
+  captureBefore: Timestamp       // from the charge; capture before this
   createdAt: Timestamp
 ```
 
@@ -289,32 +332,17 @@ thirteenth team is holding authorized funds that should never have been
 committed. **The cap must be enforced in the same transaction that registers a
 team**, before any of this ships. See the roadmap entry.
 
-## The open question this leaves
+## Resolved: holds and the seven-day window
 
-**A team whose holds expire while it is still in contention.**
+A team can authorize $1,000 and still be hunting its tenth signed player a
+week later. Rather than let the hold lapse and ask for payment again, the
+authorization is captured shortly before it would expire, and refunded if the
+team ultimately does not play. See "A hold must never be allowed to expire".
 
-A team authorizes $1,000 on day one and is still looking for its tenth signed
-player on day eight. The hold has expired and released itself. The team is
-still eligible — twelve others have not finished — but its money is gone and
-it silently drops out of the race without anyone deciding that.
-
-Options:
-
-1. **Tell them and let them re-authorize.** Email the contributor when a hold
-   is close to expiring and again when it releases, and let them pay again.
-   Honest, no money at risk, some friction.
-2. **Capture at expiry and hold real money.** Keeps the team in the race but
-   converts a free release into a refund with an unrecoverable fee, for a team
-   that may not play.
-3. **Require ten signed players before any money is taken.** Removes the
-   problem completely — and removes the ability to secure a spot quickly,
-   which is the point of the change.
-
-Option 1 is the only one that does not either cost money or defeat the
-feature, but it is worth confirming: **is a seven-day window to find ten
-signed players acceptable, given a registration period of two to four weeks?**
-If most teams already have their roster before registration opens, this
-barely arises.
+That trades a rare refund fee for never burdening a contributor, which is the
+right way round. The free cancellation still applies to the failure that
+actually happens most — losing the race for the twelfth spot, which resolves
+in minutes.
 
 ## Migration
 
