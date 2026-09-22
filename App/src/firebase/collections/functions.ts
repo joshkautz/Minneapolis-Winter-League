@@ -225,7 +225,13 @@ interface GetPlayerAuthInfoRequest {
 interface GetPlayerAuthInfoResponse {
 	success: true
 	playerId: string
-	/** Whether the user's email is verified */
+	/**
+	 * Whether a Firebase Auth user exists for this player at all. A player
+	 * document can outlive its Auth account, and that is not the same as an
+	 * unverified email.
+	 */
+	hasAuthAccount: boolean
+	/** Whether the user's email is verified. False when there is no account. */
 	emailVerified: boolean
 	/** The user's email address from Firebase Auth */
 	email: string | undefined

@@ -240,6 +240,30 @@ export const updatePlayerAdmin = onCall<
 			const playerData = playerDoc.data()
 			const currentEmail = playerData?.email
 
+			// Both of the fields below write to Firebase Authentication, and a
+			// player document can outlive its Auth account. Check once, up
+			// front, so a missing account is a clear message rather than an
+			// opaque 500 raised halfway through — every other change in the
+			// same save (name, admin, season state) would be abandoned with
+			// it, leaving the admin unable to edit the player at all.
+			if (email !== undefined || emailVerified !== undefined) {
+				try {
+					await authInstance.getUser(playerId)
+				} catch (error) {
+					const code =
+						error && typeof error === 'object' && 'code' in error
+							? (error as { code: string }).code
+							: ''
+					if (code === 'auth/user-not-found') {
+						throw new HttpsError(
+							'failed-precondition',
+							'This player has no sign-in account, so their email and verification status cannot be changed. Their name, admin status and season details can still be edited.'
+						)
+					}
+					throw error
+				}
+			}
+
 			const updates: Record<string, unknown> = {}
 			const changes: UpdatePlayerAdminResponse['changes'] = {}
 
