@@ -77,11 +77,17 @@ describe('nameSchema', () => {
 		expect(nameSchema.parse('josh kautz')).toBe('Josh Kautz')
 	})
 
-	it('rejects consecutive spaces rather than collapsing them', () => {
-		// The refine that rejects consecutive spaces runs before the transform
-		// that would collapse them, so the transform's \s+ replacement is
-		// unreachable for this input. Pinned so the ordering is deliberate.
-		expect(nameSchema.safeParse('josh   kautz').success).toBe(false)
+	it('collapses runs of spaces instead of rejecting them', () => {
+		// A double-typed or pasted space is a typo, not a malformed name.
+		expect(nameSchema.parse('josh   kautz')).toBe('Josh Kautz')
+	})
+
+	it('collapses tabs and newlines in a pasted name', () => {
+		expect(nameSchema.parse('josh\tkautz')).toBe('Josh Kautz')
+	})
+
+	it('still rejects consecutive apostrophes', () => {
+		expect(nameSchema.safeParse("o''brien").success).toBe(false)
 	})
 
 	it('accepts hyphens and apostrophes', () => {

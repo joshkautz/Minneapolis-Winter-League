@@ -40,14 +40,10 @@ interface CreateOfferRequest {
 export const createOffer = onCall<CreateOfferRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
-		// Validate authentication
-		try {
-			validateAuthentication(request.auth)
-		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Authentication failed'
-			throw new HttpsError('unauthenticated', errorMessage)
-		}
+		// Let the validator's own code through. Flattening it to
+		// 'unauthenticated' told a client to log in again when the real
+		// problem was an unverified email, which logging in never fixes.
+		validateAuthentication(request.auth)
 
 		const { playerId, teamId, type, timezone } = request.data
 		const userId = request.auth?.uid ?? ''

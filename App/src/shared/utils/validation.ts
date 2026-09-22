@@ -63,11 +63,13 @@ export const nameSchema = z
 	)
 	.refine(
 		(name) => {
-			// Check for consecutive spaces or special characters
-			return !/\s{2,}|'{2,}|-{2,}/.test(name)
+			// Consecutive apostrophes or hyphens are malformed; consecutive
+			// spaces are a typo the transform below collapses, so they are
+			// deliberately not rejected here.
+			return !/'{2,}|-{2,}/.test(name)
 		},
 		{
-			error: 'Name cannot contain consecutive spaces or special characters',
+			error: 'Name cannot contain consecutive hyphens or apostrophes',
 		}
 	)
 	.refine(
@@ -81,9 +83,10 @@ export const nameSchema = z
 		}
 	)
 	.transform((name) => {
-		// Capitalize first letter of each word and normalize spaces
+		// Collapse runs of whitespace before title-casing, so a double-typed
+		// or pasted space normalises instead of being rejected.
 		return name
-			.replace(/\s+/g, ' ') // Replace multiple spaces with single space
+			.replace(/\s+/g, ' ')
 			.replace(/\b\w/g, (char) => char.toUpperCase())
 	})
 

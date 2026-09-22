@@ -85,19 +85,6 @@ const USER_CALLABLES = [
  */
 const ALLOWS_UNVERIFIED_EMAIL = new Set(['createPlayer', 'updatePlayer'])
 
-/**
- * createOffer and updateOffer wrap validateAuthentication in a try/catch and
- * re-throw everything as `unauthenticated`, so an unverified email surfaces
- * with that code rather than the `permission-denied` every other callable
- * uses. The request is still rejected; only the code a client sees differs,
- * which means the UI cannot tell "log in" from "verify your email".
- * Recorded in docs/ROADMAP.md.
- */
-const REPORTS_UNVERIFIED_AS_UNAUTHENTICATED = new Set([
-	'createOffer',
-	'updateOffer',
-])
-
 /** Triggers and webhooks: not callables, excluded from the sweep. */
 const NON_CALLABLES = new Set([
 	'dropboxSignWebhook',
@@ -148,12 +135,22 @@ beforeEach(async () => {
 	await firestore
 		.collection('players')
 		.doc('player-1')
-		.set({ admin: false, email: 'p@example.com', firstname: 'P', lastname: 'One' })
+		.set({
+			admin: false,
+			email: 'p@example.com',
+			firstname: 'P',
+			lastname: 'One',
+		})
 	// A signed-in admin.
 	await firestore
 		.collection('players')
 		.doc('admin-1')
-		.set({ admin: true, email: 'a@example.com', firstname: 'A', lastname: 'One' })
+		.set({
+			admin: true,
+			email: 'a@example.com',
+			firstname: 'A',
+			lastname: 'One',
+		})
 })
 
 describe('the sweep covers every callable in the deploy manifest', () => {
@@ -194,26 +191,23 @@ describe('the sweep covers every callable in the deploy manifest', () => {
 	})
 })
 
-describe.each([...ADMIN_CALLABLES, ...USER_CALLABLES])(
-	'%s',
-	(name) => {
-		it('rejects an unauthenticated caller', async () => {
-			const code = await errorCodeFrom(callable(name), {
-				auth: undefined,
-				data: payload(name),
-			})
-			expect(code).toBe('unauthenticated')
+describe.each([...ADMIN_CALLABLES, ...USER_CALLABLES])('%s', (name) => {
+	it('rejects an unauthenticated caller', async () => {
+		const code = await errorCodeFrom(callable(name), {
+			auth: undefined,
+			data: payload(name),
 		})
+		expect(code).toBe('unauthenticated')
+	})
 
-		it('rejects a caller with no uid', async () => {
-			const code = await errorCodeFrom(callable(name), {
-				auth: { token: {} } as never,
-				data: payload(name),
-			})
-			expect(code).toBe('unauthenticated')
+	it('rejects a caller with no uid', async () => {
+		const code = await errorCodeFrom(callable(name), {
+			auth: { token: {} } as never,
+			data: payload(name),
 		})
-	}
-)
+		expect(code).toBe('unauthenticated')
+	})
+})
 
 describe.each(
 	[...ADMIN_CALLABLES, ...USER_CALLABLES].filter(
@@ -227,10 +221,9 @@ describe.each(
 			auth: unverified('unverified-1'),
 			data: payload(name),
 		})
-		const expected = REPORTS_UNVERIFIED_AS_UNAUTHENTICATED.has(name)
-			? 'unauthenticated'
-			: 'permission-denied'
-		expect(code).toBe(expected)
+		// Uniformly permission-denied, so a client can tell this apart from
+		// 'unauthenticated' and prompt for verification rather than a login.
+		expect(code).toBe('permission-denied')
 	})
 })
 
