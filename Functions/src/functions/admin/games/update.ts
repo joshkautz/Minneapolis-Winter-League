@@ -308,82 +308,80 @@ export const updateGame = onCall<
 					updateData.season = seasonRef
 				}
 
-				// Handle team updates (explicitly handle null). When the team
-				// ref changes, also re-capture the denormalized team name from
-				// the team-season subdoc for the game's (possibly updated)
-				// season — see GameDocument.homeName/awayName field doc.
+				// Handle team updates (explicitly handle null), and re-capture the
+				// denormalized team names — see GameDocument.homeName/awayName.
+				//
+				// The name is a snapshot of the team's name *for the game's season*,
+				// so it goes stale when either side of that pair changes: a different
+				// team, or the same team in a different season. Re-reading only when
+				// a team id was supplied left a game moved between seasons pointing
+				// at the new season under the old season's names.
 				const effectiveSeasonId =
 					seasonId ?? existingGameData.season?.id ?? null
+				const seasonChanged =
+					seasonId !== undefined && seasonId !== existingGameData.season?.id
 
-				if (homeTeamId !== undefined) {
-					if (homeTeamId === null) {
-						updateData.home = null
-						updateData.homeName = null
-					} else {
-						if (!effectiveSeasonId) {
-							throw new HttpsError(
-								'failed-precondition',
-								'Cannot update home team: game has no season reference.'
-							)
-						}
-						const homeTeamRef = firestore
-							.collection(Collections.TEAMS)
-							.doc(homeTeamId)
-						const homeSeasonSubdoc = await transaction.get(
-							homeTeamRef
-								.collection(TEAM_SEASONS_SUBCOLLECTION)
-								.doc(effectiveSeasonId)
-						)
-						if (!homeSeasonSubdoc.exists) {
-							logger.warn('Home team not in season', {
-								homeTeamId,
-								seasonId: effectiveSeasonId,
-							})
-							throw new HttpsError(
-								'not-found',
-								'Home team is not participating in this season.'
-							)
-						}
-						updateData.home = homeTeamRef
-						updateData.homeName =
-							(homeSeasonSubdoc.data()?.name as string) ?? null
+				/**
+				 * Resolves one side's team ref and name together, so the two can
+				 * never disagree. Returns nothing when this side needs no write.
+				 */
+				const resolveTeamSide = async (
+					side: 'home' | 'away',
+					requestedTeamId: string | null | undefined
+				): Promise<void> => {
+					const teamChanged = requestedTeamId !== undefined
+					if (!teamChanged && !seasonChanged) {
+						return
 					}
+
+					const nameField = side === 'home' ? 'homeName' : 'awayName'
+					const currentTeamRef = existingGameData[side] as
+						DocumentReference | null | undefined
+					const teamId = teamChanged
+						? requestedTeamId
+						: (currentTeamRef?.id ?? null)
+
+					if (!teamId) {
+						// Only an explicit clear writes; a season move on a placeholder
+						// game has no name to re-capture.
+						if (teamChanged) {
+							updateData[side] = null
+							updateData[nameField] = null
+						}
+						return
+					}
+
+					if (!effectiveSeasonId) {
+						throw new HttpsError(
+							'failed-precondition',
+							`Cannot update ${side} team: game has no season reference.`
+						)
+					}
+
+					const teamDocRef = firestore.collection(Collections.TEAMS).doc(teamId)
+					const teamSeasonSubdoc = await transaction.get(
+						teamDocRef
+							.collection(TEAM_SEASONS_SUBCOLLECTION)
+							.doc(effectiveSeasonId)
+					)
+					if (!teamSeasonSubdoc.exists) {
+						logger.warn(`${side} team not in season`, {
+							teamId,
+							seasonId: effectiveSeasonId,
+						})
+						throw new HttpsError(
+							'not-found',
+							`${side === 'home' ? 'Home' : 'Away'} team is not participating in this season.`
+						)
+					}
+
+					updateData[side] = teamDocRef
+					updateData[nameField] =
+						(teamSeasonSubdoc.data()?.name as string) ?? null
 				}
 
-				if (awayTeamId !== undefined) {
-					if (awayTeamId === null) {
-						updateData.away = null
-						updateData.awayName = null
-					} else {
-						if (!effectiveSeasonId) {
-							throw new HttpsError(
-								'failed-precondition',
-								'Cannot update away team: game has no season reference.'
-							)
-						}
-						const awayTeamRef = firestore
-							.collection(Collections.TEAMS)
-							.doc(awayTeamId)
-						const awaySeasonSubdoc = await transaction.get(
-							awayTeamRef
-								.collection(TEAM_SEASONS_SUBCOLLECTION)
-								.doc(effectiveSeasonId)
-						)
-						if (!awaySeasonSubdoc.exists) {
-							logger.warn('Away team not in season', {
-								awayTeamId,
-								seasonId: effectiveSeasonId,
-							})
-							throw new HttpsError(
-								'not-found',
-								'Away team is not participating in this season.'
-							)
-						}
-						updateData.away = awayTeamRef
-						updateData.awayName =
-							(awaySeasonSubdoc.data()?.name as string) ?? null
-					}
-				}
+				await resolveTeamSide('home', homeTeamId)
+				await resolveTeamSide('away', awayTeamId)
 
 				// Check for duplicate game if date or field changed
 				const updatedField = field ?? existingGameData.field
