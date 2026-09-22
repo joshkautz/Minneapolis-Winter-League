@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from './card'
 import { Alert, AlertDescription } from './alert'
 import { Button } from './button'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
+import { NewVersionAvailable } from './new-version-available'
+import { isStaleDeploymentError } from '@/shared/utils/stale-deployment'
 
 interface Props {
 	children: ReactNode
@@ -37,6 +39,17 @@ export class ErrorBoundary extends Component<Props, State> {
 	}
 
 	public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+		// A stale deployment is expected after every release and says nothing
+		// about the app, so it is noted rather than logged as a fault.
+		if (isStaleDeploymentError(error)) {
+			// eslint-disable-next-line no-console
+			console.info(
+				'ErrorBoundary: chunk from a previous deployment is gone; prompting for a refresh'
+			)
+			this.setState({ error, errorInfo })
+			return
+		}
+
 		// Enhanced error logging with context
 		const errorContext = {
 			error: error.message,
@@ -69,16 +82,15 @@ export class ErrorBoundary extends Component<Props, State> {
 		}
 	}
 
-	private handleReset = () => {
-		this.setState({
-			hasError: false,
-			error: null,
-			errorInfo: null,
-		})
-	}
-
 	public override render() {
 		if (this.state.hasError) {
+			// Checked before any custom fallback: a stale deployment is not an
+			// application error and must not be reported as one, whichever
+			// boundary happens to catch it.
+			if (isStaleDeploymentError(this.state.error)) {
+				return <NewVersionAvailable />
+			}
+
 			// If a custom fallback is provided, use it
 			if (this.props.fallback) {
 				return this.props.fallback
@@ -98,39 +110,20 @@ export class ErrorBoundary extends Component<Props, State> {
 							<Alert variant='destructive'>
 								<AlertTriangle className='h-4 w-4' />
 								<AlertDescription>
-									An unexpected error occurred while loading this component.
+									An unexpected error occurred while loading this part of the
+									page. Reloading usually clears it up.
 								</AlertDescription>
 							</Alert>
 
-							<div className='space-y-3'>
-								<h3 className='font-semibold text-sm'>Error Details:</h3>
-								<div className='bg-muted p-3 rounded-md text-sm font-mono overflow-auto max-h-32'>
-									{this.state.error?.message || 'Unknown error occurred'}
-								</div>
-
-								{process.env.NODE_ENV === 'development' &&
-									this.state.errorInfo && (
-										<details className='mt-4'>
-											<summary className='cursor-pointer text-sm font-semibold text-muted-foreground hover:text-foreground'>
-												Stack Trace (Development)
-											</summary>
-											<div className='bg-muted p-3 rounded-md text-xs font-mono overflow-auto max-h-40 mt-2'>
-												{this.state.errorInfo.componentStack}
-											</div>
-										</details>
-									)}
-							</div>
+							{/*
+							 * The error message itself is deliberately not shown. It is
+							 * never actionable for a reader and rarely for us — the
+							 * details that matter are in the console log above, with the
+							 * component stack and route.
+							 */}
 
 							<div className='flex gap-2 pt-4'>
 								<Button
-									onClick={this.handleReset}
-									className='flex items-center gap-2'
-								>
-									<RefreshCw className='h-4 w-4' />
-									Try Again
-								</Button>
-								<Button
-									variant='outline'
 									onClick={() => window.location.reload()}
 									className='flex items-center gap-2'
 								>
