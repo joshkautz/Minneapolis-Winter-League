@@ -10,6 +10,7 @@ import {
 	validateAdminUser,
 	validateBasicAuthentication,
 } from '../../../shared/auth.js'
+import { validateAndNormalizeName } from '../../../shared/names.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
 /**
@@ -63,26 +64,16 @@ export const updatePlayer = onCall<UpdatePlayerRequest>(
 			)
 		}
 
-		// Validate field values if provided
-		if (
-			firstname !== undefined &&
-			(typeof firstname !== 'string' || firstname.trim() === '')
-		) {
-			throw new HttpsError(
-				'invalid-argument',
-				'First name must be a non-empty string'
-			)
-		}
-
-		if (
-			lastname !== undefined &&
-			(typeof lastname !== 'string' || lastname.trim() === '')
-		) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Last name must be a non-empty string'
-			)
-		}
+		// Validate and normalize the provided names. Same rules as the App's
+		// nameSchema, enforced here because a callable bypasses the form.
+		const normalizedFirstname =
+			firstname !== undefined
+				? validateAndNormalizeName(firstname, 'First name')
+				: undefined
+		const normalizedLastname =
+			lastname !== undefined
+				? validateAndNormalizeName(lastname, 'Last name')
+				: undefined
 
 		try {
 			const firestore = getFirestore()
@@ -92,11 +83,11 @@ export const updatePlayer = onCall<UpdatePlayerRequest>(
 
 			// Build update data
 			const updateData: Record<string, unknown> = {}
-			if (firstname !== undefined) {
-				updateData.firstname = firstname.trim()
+			if (normalizedFirstname !== undefined) {
+				updateData.firstname = normalizedFirstname
 			}
-			if (lastname !== undefined) {
-				updateData.lastname = lastname.trim()
+			if (normalizedLastname !== undefined) {
+				updateData.lastname = normalizedLastname
 			}
 
 			// Use transaction to atomically verify existence and update
