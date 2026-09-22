@@ -172,22 +172,32 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-Roughly 120 tests across four suites, all run by `npm run verify`.
+Roughly 387 tests across four suites, all run by `npm run verify`. Every
+callable is covered for authorization; the emulator suites are mutation-tested.
 
 Still uncovered, in rough priority order:
 
-- **Callables end to end.** None of the 46 are invoked in a test. The
-  authorization helpers they call are covered, but not the per-callable
-  ownership and captaincy checks. `firebase-functions-test` would let the
-  integration suite invoke them directly.
 - **Firestore triggers.** `onOfferUpdated`, `playerUpdated`,
   `teamRegistrationLock` and the payment triggers all run unobserved.
 - **Player rankings pipeline.** The TrueSkill maths is covered; the
   orchestration around it (game loading, round grouping, decay, persistence)
   is not.
+- **Deeper callable behaviour.** The authorization sweep covers all 46, and
+  `createTeam`, `deleteTeam`, `updateTeamRoster` and `createOffer` have
+  behavioural tests. The rest are covered only at the gate.
 - **App components.** Only the shell is mounted. The admin screens carry the
   most complex state and have no tests.
 - **End-to-end.** No test drives a browser against the emulators.
+
+## Inconsistent error codes on offers
+
+`createOffer` and `updateOffer` wrap `validateAuthentication` in a try/catch
+and re-throw everything as `unauthenticated`, so a verified-but-unconfirmed
+email surfaces with that code rather than the `permission-denied` every other
+callable uses. The request is still rejected; only the code a client sees
+differs, which means the UI cannot distinguish "log in" from "verify your
+email". Current behaviour is pinned in
+`tests/integration/callables-authorization.test.ts`.
 
 ## Email validation rejects padded input
 
