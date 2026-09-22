@@ -118,6 +118,33 @@ teamSeasons, roster, playerSeasons) but two gaps remain:
   produced by the `rebuildPlayerRankings` admin callable rather than the
   seeder, so it is empty locally until that function is run.
 
+## Firestore index drift
+
+`firestore.indexes.json` declares 17 indexes; production has **23**. The six
+that exist only in production are:
+
+| Collection           | Fields                         |
+| -------------------- | ------------------------------ |
+| `karma_transactions` | player, reason, season, amount |
+| `offers`             | player, type                   |
+| `offers`             | team, type                     |
+| `teams`              | season, registered             |
+| `teams`              | teamId, season                 |
+| `waivers`            | player, season                 |
+
+They look like pre-migration leftovers: `karma_transactions` has **zero**
+references left in the codebase, and `teams.season` / `teams.teamId` are the
+flat shape that the `teamSeasons` subcollection replaced.
+
+Nothing is at risk today — the CI deploy runs `firebase deploy --only
+firestore` **without** `--force`, so indexes present only in production are
+never deleted. But the two are out of step, and anyone adding `--force` would
+drop them.
+
+Worth doing, carefully: confirm each of the six is genuinely unused, then
+delete them from production so the file is the whole truth. Deleting a live
+index breaks any query depending on it, so verify before removing.
+
 ## A real staging environment
 
 There is currently one cloud environment. `.firebaserc` has `staging` and
@@ -145,19 +172,34 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-Done: Firestore rules tests (`tests/rules/`), `shared/auth.ts` validator tests
-and webhook guard tests (`Functions/src/**/*.test.ts`). 41 tests total.
+Roughly 120 tests across four suites, all run by `npm run verify`.
 
-Still thin — the App has one smoke test and no callable has an end-to-end
-test. In rough priority order:
+Still uncovered, in rough priority order:
 
-- `onPaymentCreated` — waiver creation with metadata.
-- `dropboxSignSendReminderEmail` — rate limiting, authorization.
-- The remaining callables' authorization paths, especially captain-only
-  actions on `teams/` and `offers/`.
-- Component tests for the admin screens, which have none and carry the most
-  complex state.
-- End-to-end tests running against the emulator suite.
+- **Callables end to end.** None of the 46 are invoked in a test. The
+  authorization helpers they call are covered, but not the per-callable
+  ownership and captaincy checks. `firebase-functions-test` would let the
+  integration suite invoke them directly.
+- **Firestore triggers.** `onOfferUpdated`, `playerUpdated`,
+  `teamRegistrationLock` and the payment triggers all run unobserved.
+- **Player rankings pipeline.** The TrueSkill maths is covered; the
+  orchestration around it (game loading, round grouping, decay, persistence)
+  is not.
+- **App components.** Only the shell is mounted. The admin screens carry the
+  most complex state and have no tests.
+- **End-to-end.** No test drives a browser against the emulators.
+
+## Email validation rejects padded input
+
+`emailSchema` chains `.email().trim().toLowerCase()`, so validation runs
+before the trim and a pasted `"  player@example.com  "` is reported as an
+invalid address. Moving `.trim()` ahead of `.email()` fixes it. Current
+behaviour is pinned in `App/src/shared/utils/validation.test.ts` so the change
+is deliberate when someone makes it.
+
+Relatedly, `nameSchema` rejects consecutive spaces in a refine that runs
+before the transform which would have collapsed them, so that part of the
+transform is unreachable.
 
 ## Registration window enforcement
 

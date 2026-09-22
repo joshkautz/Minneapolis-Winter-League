@@ -179,7 +179,7 @@ jobs:
           npm run build --prefix Functions
 
   Rules:
-    name: Firestore Security Rules
+    name: Emulator Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -206,3 +206,10 @@ jobs:
       # database, and it is not covered by the App or Functions test suites.
       - name: Test Firestore rules
         run: npm run test:rules
+
+      # Runs the real Functions source against the emulator. Covers what
+      # mocked-Firestore unit tests cannot: actual document paths,
+      # transaction atomicity across the denormalized player/team
+      # relationship, and collection-group reads.
+      - name: Integration tests against the emulator
+        run: npm run test:integration
