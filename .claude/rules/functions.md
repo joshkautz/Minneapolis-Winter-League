@@ -51,6 +51,20 @@ export const doThing = onCall<DoThingRequest>(
   (`playerSeasonRef`, `teamSeasonRef`, `teamRosterEntryRef`) rather than
   assembling paths by hand.
 
+## Rosters
+
+A team's roster for a season is the subcollection
+`teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}`. Before the 2026
+migration it was an array field on the team document, and `TeamDocument`
+extends `DocumentData`, so `teamData.roster` still **type-checks** and simply
+evaluates to `undefined` at runtime. Code written against the old shape fails
+silently rather than loudly — the rankings pipeline read it for months and
+produced an empty leaderboard without erroring.
+
+Read rosters through `loadRosterPlayerRefs` or a `.collection('roster')` query
+off `teamSeasonRef`, and never write either side of the player↔team
+relationship directly — `shared/membership.ts` writes both atomically.
+
 ## Registering
 
 Re-export from `Functions/src/index.ts` under the matching comment banner. A

@@ -8,6 +8,7 @@ import {
 } from '../persistence/progressTracker.js'
 import { GameProcessingData, PlayerRatingState } from '../types.js'
 import { groupGamesByRounds, formatRoundInfo } from './roundGrouper.js'
+import { loadRosterPlayerRefs } from './rosterLoader.js'
 
 /**
  * Extracts all player IDs participating in the games of a round
@@ -21,33 +22,13 @@ async function getPlayersInRound(
 		if (!game.home || !game.away) continue
 
 		try {
-			// Get team documents
-			const [homeTeamDoc, awayTeamDoc] = await Promise.all([
-				game.home.get(),
-				game.away.get(),
+			const [homeRoster, awayRoster] = await Promise.all([
+				loadRosterPlayerRefs(game.home, game.season.id),
+				loadRosterPlayerRefs(game.away, game.season.id),
 			])
 
-			if (homeTeamDoc.exists && awayTeamDoc.exists) {
-				const homeTeamData = homeTeamDoc.data()
-				const awayTeamData = awayTeamDoc.data()
-
-				// Add home team players
-				if (homeTeamData?.roster) {
-					for (const rosterEntry of homeTeamData.roster) {
-						if (rosterEntry.player?.id) {
-							playerIds.add(rosterEntry.player.id)
-						}
-					}
-				}
-
-				// Add away team players
-				if (awayTeamData?.roster) {
-					for (const rosterEntry of awayTeamData.roster) {
-						if (rosterEntry.player?.id) {
-							playerIds.add(rosterEntry.player.id)
-						}
-					}
-				}
+			for (const playerRef of [...homeRoster, ...awayRoster]) {
+				playerIds.add(playerRef.id)
 			}
 		} catch (error) {
 			logger.warn(`Error getting players for game ${game.id}:`, error)

@@ -1,9 +1,10 @@
 import { logger } from 'firebase-functions/v2'
-import { PlayerDocument, TeamDocument } from '../../../types.js'
+import { PlayerDocument } from '../../../types.js'
 import { TRUESKILL_CONSTANTS } from '../constants.js'
 import { TrueSkillRating, updateRatings } from '../algorithms/trueskill.js'
 import { initializePlayerRoundTracking } from '../algorithms/decay.js'
 import { GameProcessingData, PlayerRatingState } from '../types.js'
+import { loadRosterPlayerRefs } from './rosterLoader.js'
 
 /**
  * Processes a single game and updates player ratings using TrueSkill algorithm
@@ -23,27 +24,12 @@ export async function processGame(
 		return // Skip incomplete games
 	}
 
-	// Get rosters for both teams
-	const [homeTeamDoc, awayTeamDoc] = await Promise.all([
-		game.home.get(),
-		game.away.get(),
+	// Rosters live in the team's per-season subcollection, keyed by the season
+	// the game belongs to.
+	const [homeRoster, awayRoster] = await Promise.all([
+		loadRosterPlayerRefs(game.home, game.season.id),
+		loadRosterPlayerRefs(game.away, game.season.id),
 	])
-
-	if (!homeTeamDoc.exists || !awayTeamDoc.exists) {
-		logger.warn(`Missing team data for game ${game.id}`)
-		return
-	}
-
-	const homeTeamData = homeTeamDoc.data() as TeamDocument | undefined
-	const awayTeamData = awayTeamDoc.data() as TeamDocument | undefined
-
-	if (!homeTeamData || !awayTeamData) {
-		logger.warn(`Invalid team data for game ${game.id}`)
-		return
-	}
-
-	const homeRoster = homeTeamData.roster || []
-	const awayRoster = awayTeamData.roster || []
 
 	if (homeRoster.length === 0 || awayRoster.length === 0) {
 		logger.warn(`Empty roster for game ${game.id}`)
@@ -69,13 +55,13 @@ export async function processGame(
 	const awayRatings: TrueSkillRating[] = []
 
 	// Process home team players
-	for (const rosterEntry of homeRoster) {
-		const playerId = rosterEntry.player.id
+	for (const playerRef of homeRoster) {
+		const playerId = playerRef.id
 		let playerState = playerRatings.get(playerId)
 
 		if (!playerState) {
 			// Create new player state
-			const playerDoc = await rosterEntry.player.get()
+			const playerDoc = await playerRef.get()
 			const playerData = playerDoc.data() as PlayerDocument | undefined
 
 			if (!playerData) {
@@ -105,13 +91,13 @@ export async function processGame(
 	}
 
 	// Process away team players
-	for (const rosterEntry of awayRoster) {
-		const playerId = rosterEntry.player.id
+	for (const playerRef of awayRoster) {
+		const playerId = playerRef.id
 		let playerState = playerRatings.get(playerId)
 
 		if (!playerState) {
 			// Create new player state
-			const playerDoc = await rosterEntry.player.get()
+			const playerDoc = await playerRef.get()
 			const playerData = playerDoc.data() as PlayerDocument | undefined
 
 			if (!playerData) {
