@@ -20,7 +20,17 @@ interface GetPlayerAuthInfoRequest {
 interface GetPlayerAuthInfoResponse {
 	success: true
 	playerId: string
-	/** Whether the user's email is verified */
+	/**
+	 * Whether a Firebase Auth user exists for this player at all.
+	 *
+	 * A player document can outlive its Auth account — someone removed from
+	 * Authentication keeps their Firestore record, their roster entries and
+	 * their history. Reporting that as `emailVerified: false` is misleading:
+	 * there is no email to verify and no account to verify it against, and an
+	 * admin toggling verification on such a player gets an opaque failure.
+	 */
+	hasAuthAccount: boolean
+	/** Whether the user's email is verified. False when there is no account. */
 	emailVerified: boolean
 	/** The user's email address from Firebase Auth */
 	email: string | undefined
@@ -32,7 +42,10 @@ interface GetPlayerAuthInfoResponse {
  * Security validations:
  * - User must be authenticated
  * - User must have admin privileges
- * - Target player must exist in Firebase Auth
+ *
+ * A missing Auth user is reported as `hasAuthAccount: false` rather than
+ * raised as an error — it is a normal state for an old player record, and the
+ * admin screen needs to show it rather than fail loading the player.
  */
 export const getPlayerAuthInfo = onCall<
 	GetPlayerAuthInfoRequest,
@@ -74,6 +87,7 @@ export const getPlayerAuthInfo = onCall<
 			return {
 				success: true,
 				playerId,
+				hasAuthAccount: true,
 				emailVerified: userRecord.emailVerified,
 				email: userRecord.email,
 			}
@@ -84,14 +98,18 @@ export const getPlayerAuthInfo = onCall<
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
 
-			// Handle user not found
+			// A player with no Auth account is a state to report, not a fault.
 			if (error && typeof error === 'object' && 'code' in error) {
 				const firebaseError = error as { code: string }
 				if (firebaseError.code === 'auth/user-not-found') {
-					throw new HttpsError(
-						'not-found',
-						'User not found in Firebase Authentication.'
-					)
+					logger.info('Player has no Firebase Auth account', { playerId })
+					return {
+						success: true,
+						playerId,
+						hasAuthAccount: false,
+						emailVerified: false,
+						email: undefined,
+					}
 				}
 			}
 

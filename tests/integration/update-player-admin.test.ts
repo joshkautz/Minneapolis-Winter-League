@@ -9,7 +9,10 @@ import {
 	resetFirestore,
 	seedAuthUser,
 } from './helpers.js'
-import { updatePlayerAdmin } from '../../Functions/src/index.js'
+import {
+	getPlayerAuthInfo,
+	updatePlayerAdmin,
+} from '../../Functions/src/index.js'
 import {
 	playerSeasonRef,
 	teamRosterEntryRef,
@@ -256,6 +259,95 @@ describe('updatePlayerAdmin: player document', () => {
 
 	it('rejects a player that does not exist', async () => {
 		expect(await fails({ playerId: 'ghost', admin: true })).toBe('not-found')
+	})
+})
+
+describe('a player with no Firebase Auth account', () => {
+	/**
+	 * A player document can outlive its Auth user — someone removed from
+	 * Authentication keeps their Firestore record, their roster entries and
+	 * their history. The admin screen has to stay usable for them.
+	 *
+	 * It previously was not: the auth lookup threw, the screen showed a
+	 * misleading "Not Verified" toggle, and saving anything at all failed
+	 * with an opaque 500 that abandoned the name and season edits alongside
+	 * it. An admin could not edit such a player at all.
+	 */
+
+	beforeEach(async () => {
+		await seedPlayer(PLAYER)
+		// resetFirestore does not touch the Auth emulator, so an account
+		// seeded by an earlier test in this file would still be here.
+		try {
+			await getAuth().deleteUser(PLAYER)
+		} catch {
+			// Already absent, which is the state we want.
+		}
+	})
+
+	it('reports the missing account rather than failing the lookup', async () => {
+		const result = (await getPlayerAuthInfo.run({
+			auth: authed(ADMIN),
+			data: { playerId: PLAYER },
+		} as unknown as CallableRequest<never>)) as {
+			hasAuthAccount: boolean
+			emailVerified: boolean
+		}
+
+		expect(result.hasAuthAccount).toBe(false)
+		expect(result.emailVerified).toBe(false)
+	})
+
+	it('distinguishes that from an account with an unverified email', async () => {
+		await seedAuthUser(PLAYER, false)
+
+		const result = (await getPlayerAuthInfo.run({
+			auth: authed(ADMIN),
+			data: { playerId: PLAYER },
+		} as unknown as CallableRequest<never>)) as {
+			hasAuthAccount: boolean
+			emailVerified: boolean
+		}
+
+		expect(result.hasAuthAccount).toBe(true)
+		expect(result.emailVerified).toBe(false)
+	})
+
+	it('still allows editing everything that is not an auth field', async () => {
+		await call({
+			playerId: PLAYER,
+			firstname: 'Renamed',
+			seasons: [seasonUpdate({ paid: true })],
+		})
+
+		expect((await readPlayer())?.firstname).toBe('Renamed')
+		expect((await readSeason())?.paid).toBe(true)
+	})
+
+	it('refuses an email change with a message that says why', async () => {
+		const code = await fails({ playerId: PLAYER, email: 'new@example.com' })
+
+		expect(code).toBe('failed-precondition')
+	})
+
+	it('refuses a verification change with a message that says why', async () => {
+		expect(await fails({ playerId: PLAYER, emailVerified: true })).toBe(
+			'failed-precondition'
+		)
+	})
+
+	it('abandons nothing else when it refuses', async () => {
+		// The check runs before any write, so a rejected auth field does not
+		// half-apply the rest of the form.
+		await fails({
+			playerId: PLAYER,
+			emailVerified: true,
+			firstname: 'Renamed',
+			seasons: [seasonUpdate({ paid: true })],
+		})
+
+		expect((await readPlayer())?.firstname).toBe('Existing')
+		expect((await readSeason())?.paid).toBe(false)
 	})
 })
 

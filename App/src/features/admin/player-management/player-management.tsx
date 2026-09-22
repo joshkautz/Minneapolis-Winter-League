@@ -92,6 +92,16 @@ interface PlayerFormData {
 	email: string
 	admin: boolean
 	emailVerified: boolean
+	/**
+	 * Whether a Firebase Auth user exists behind this player.
+	 *
+	 * `null` means we could not find out — the lookup failed. That is
+	 * deliberately not the same as `false`: claiming a player has no account
+	 * because a request timed out would be a lie, and assuming they do have
+	 * one puts back the toggle whose save aborts every other edit alongside
+	 * it. Either way the auth fields are left alone.
+	 */
+	hasAuthAccount: boolean | null
 	seasons: SeasonFormData[]
 }
 
@@ -109,11 +119,44 @@ export const PlayerManagement = () => {
 	const [originalFormData, setOriginalFormData] =
 		useState<PlayerFormData | null>(null)
 
+	const [showAllSeasons, setShowAllSeasons] = useState(false)
+
 	// Check if form has changes compared to original data
 	const hasChanges = useMemo(() => {
 		if (!formData || !originalFormData) return false
 		return JSON.stringify(formData) !== JSON.stringify(originalFormData)
 	}, [formData, originalFormData])
+
+	/**
+	 * Seasons the player actually took part in.
+	 *
+	 * A season subdoc is created for every player at sign-up for each season
+	 * whose registration is open, and again defensively when a payment lands,
+	 * so most players carry subdocs for seasons they never played. Listing all
+	 * of them buries the two or three that mean anything.
+	 *
+	 * "Took part" is any state at all, not just a team: someone who paid but
+	 * has not been placed yet still needs to be findable here, and that is
+	 * usually the reason an admin opened this screen. The untouched ones stay
+	 * one click away rather than disappearing — a player with no season state
+	 * can still be assigned to a team.
+	 */
+	const visibleSeasons = useMemo(() => {
+		if (!formData) return []
+		if (showAllSeasons) return formData.seasons
+		return formData.seasons.filter(
+			(season) =>
+				season.teamId !== null ||
+				season.paid ||
+				season.signed ||
+				season.captain ||
+				season.banned
+		)
+	}, [formData, showAllSeasons])
+
+	const hiddenSeasonCount = formData
+		? formData.seasons.length - visibleSeasons.length
+		: 0
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
@@ -247,6 +290,7 @@ export const PlayerManagement = () => {
 
 				// Fetch email verification status from Firebase Auth
 				let emailVerified = false
+				let hasAuthAccount: boolean | null = null
 				try {
 					const authInfo = await getPlayerAuthInfoViaFunction({
 						playerId: selectedPlayerId,
@@ -254,6 +298,7 @@ export const PlayerManagement = () => {
 					// Check if component/selection changed during async operation
 					if (isCancelled) return
 					emailVerified = authInfo.emailVerified
+					hasAuthAccount = authInfo.hasAuthAccount
 				} catch (error) {
 					if (isCancelled) return
 					logger.error('Failed to fetch player auth info:', {
@@ -273,6 +318,7 @@ export const PlayerManagement = () => {
 					email: playerData.email,
 					admin: playerData.admin,
 					emailVerified,
+					hasAuthAccount,
 					seasons: playerSeasonsSnap.docs.map((d) => {
 						const ps = d.data()
 						return {
@@ -347,10 +393,17 @@ export const PlayerManagement = () => {
 				playerId: selectedPlayerId,
 				firstname: formData.firstname,
 				lastname: formData.lastname,
-				email: formData.email,
 				admin: formData.admin,
-				emailVerified: formData.emailVerified,
 				seasons: formData.seasons,
+				// Both of these write to Firebase Authentication. Sending them
+				// for a player with no Auth account fails the whole save, so
+				// they are omitted rather than sent and rejected.
+				...(formData.hasAuthAccount === true
+					? {
+							email: formData.email,
+							emailVerified: formData.emailVerified,
+						}
+					: {}),
 			})
 
 			// Build detailed description of changes
@@ -788,48 +841,79 @@ export const PlayerManagement = () => {
 
 										<div className='space-y-2'>
 											<Label htmlFor='emailVerified'>Email Verified</Label>
-											<div
-												role='button'
-												tabIndex={0}
-												onClick={() =>
-													setFormData({
-														...formData,
-														emailVerified: !formData.emailVerified,
-													})
-												}
-												onKeyDown={(e) => {
-													if (e.key === 'Enter' || e.key === ' ') {
-														e.preventDefault()
-														setFormData({
-															...formData,
-															emailVerified: !formData.emailVerified,
-														})
-													}
-												}}
-												className='flex items-center justify-between h-9 px-3 border rounded-md bg-background cursor-pointer transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-												aria-pressed={formData.emailVerified}
-												aria-label='Toggle email verification status'
-											>
-												<span className='flex items-center gap-2 text-sm'>
-													<Mail className='h-4 w-4 text-muted-foreground' />
-													{formData.emailVerified ? 'Verified' : 'Not Verified'}
-												</span>
-												<Switch
-													id='emailVerified'
-													checked={formData.emailVerified}
-													onCheckedChange={(checked) =>
-														setFormData({
-															...formData,
-															emailVerified: checked,
-														})
-													}
-													onClick={(e) => e.stopPropagation()}
-													tabIndex={-1}
-												/>
-											</div>
-											<p className='text-xs text-muted-foreground'>
-												Updates Firebase Authentication status
-											</p>
+											{formData.hasAuthAccount === true ? (
+												<>
+													<div
+														role='button'
+														tabIndex={0}
+														onClick={() =>
+															setFormData({
+																...formData,
+																emailVerified: !formData.emailVerified,
+															})
+														}
+														onKeyDown={(e) => {
+															if (e.key === 'Enter' || e.key === ' ') {
+																e.preventDefault()
+																setFormData({
+																	...formData,
+																	emailVerified: !formData.emailVerified,
+																})
+															}
+														}}
+														className='flex items-center justify-between h-9 px-3 border rounded-md bg-background cursor-pointer transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+														aria-pressed={formData.emailVerified}
+														aria-label='Toggle email verification status'
+													>
+														<span className='flex items-center gap-2 text-sm'>
+															<Mail className='h-4 w-4 text-muted-foreground' />
+															{formData.emailVerified
+																? 'Verified'
+																: 'Not Verified'}
+														</span>
+														<Switch
+															id='emailVerified'
+															checked={formData.emailVerified}
+															onCheckedChange={(checked) =>
+																setFormData({
+																	...formData,
+																	emailVerified: checked,
+																})
+															}
+															onClick={(e) => e.stopPropagation()}
+															tabIndex={-1}
+														/>
+													</div>
+													<p className='text-muted-foreground text-xs'>
+														Updates Firebase Authentication. The player picks up
+														the change the next time their session refreshes,
+														not instantly.
+													</p>
+												</>
+											) : (
+												<>
+													{/*
+													 * Either there is no Firebase Auth user behind this
+													 * player, or we could not find out. Neither is an
+													 * unverified email, and offering the toggle for
+													 * either used to fail the whole save — taking the
+													 * name and season edits down with it.
+													 */}
+													<div className='bg-muted/40 flex h-9 items-center gap-2 rounded-md border px-3'>
+														<Mail className='text-muted-foreground h-4 w-4' />
+														<span className='text-muted-foreground text-sm'>
+															{formData.hasAuthAccount === false
+																? 'No sign-in account'
+																: 'Sign-in status unavailable'}
+														</span>
+													</div>
+													<p className='text-muted-foreground text-xs'>
+														{formData.hasAuthAccount === false
+															? 'This player has no Firebase Authentication account, so their email and verification cannot be changed here. Everything else is still editable.'
+															: 'Could not load this player\u2019s sign-in status, so their email and verification are left unchanged. Everything else is still editable.'}
+													</p>
+												</>
+											)}
 										</div>
 									</div>
 								</div>
@@ -838,15 +922,40 @@ export const PlayerManagement = () => {
 
 								{/* Season Information */}
 								<div className='space-y-4'>
-									<h3 className='text-lg font-semibold'>Season Information</h3>
+									<div className='flex flex-wrap items-center justify-between gap-2'>
+										<h3 className='text-lg font-semibold'>
+											Season Information
+										</h3>
+										{hiddenSeasonCount > 0 && (
+											<Button
+												type='button'
+												variant='ghost'
+												size='sm'
+												onClick={() => setShowAllSeasons(!showAllSeasons)}
+											>
+												{showAllSeasons
+													? 'Hide seasons they did not play'
+													: `Show ${hiddenSeasonCount} season${
+															hiddenSeasonCount === 1 ? '' : 's'
+														} they did not play`}
+											</Button>
+										)}
+									</div>
 
 									{formData.seasons.length === 0 && (
-										<p className='text-sm text-muted-foreground'>
+										<p className='text-muted-foreground text-sm'>
 											No seasons configured for this player
 										</p>
 									)}
 
-									{formData.seasons.map((seasonData) => (
+									{formData.seasons.length > 0 &&
+										visibleSeasons.length === 0 && (
+											<p className='text-muted-foreground text-sm'>
+												This player has not played in any season yet.
+											</p>
+										)}
+
+									{visibleSeasons.map((seasonData) => (
 										<SeasonCard
 											key={seasonData.seasonId}
 											seasonData={seasonData}
