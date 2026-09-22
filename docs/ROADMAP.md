@@ -35,6 +35,25 @@ Badges already implemented are marked `x`. The rest are designed but not built.
 |      | Improvement         | Place higher than last season                                   |
 |      | Growing Pains       | Place lower than last season                                    |
 
+## Team-level payment ($1,000 collective)
+
+Designed, not built: `docs/TEAM_PAYMENTS.md`. A team registers when it has ten
+signed players **and** its players have collectively paid $1,000, in any
+split, replacing ten individual $100 payments.
+
+Two consequences are easy to miss and are the bulk of the work:
+
+- **"Fully registered player" stops meaning "paid."** If one person pays
+  $1,000, nobody else is paid, so the ten must become ten players who are
+  rostered and have signed.
+- **The waiver trigger has to move off payment.** `onPaymentCreated` sends a
+  player their waiver today; if one person pays for the team, the rest never
+  get one and the team can never reach ten signed.
+
+The open questions at the end of that document need answering first — most are
+product decisions, and the returning-player discount in particular cannot
+carry over unchanged.
+
 ## Waivers
 
 - **Waiver history UI** — the per-season subcollection already stores every
