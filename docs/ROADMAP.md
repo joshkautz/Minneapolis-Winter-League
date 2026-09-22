@@ -172,7 +172,7 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-Roughly 453 tests across four suites, all run by `npm run verify`. Every
+Roughly 480 tests across four suites, all run by `npm run verify`. Every
 callable is covered for authorization, **all six triggers** have suites, and
 the emulator suites are mutation-tested.
 
@@ -196,20 +196,6 @@ Triggers are invoked with `.run(event)` and a synthetic event carrying
 - Mutation-test new suites. The payment trigger's already-paid
   short-circuit initially passed with the guard removed, because the
   waiver-exists check masked it — the gap only showed under mutation.
-
-## Rankings keep players who no longer play
-
-`saveFinalRankings` writes one document per player in the current rebuild but
-never deletes the rest, so `rankings/` accumulates everyone who has ever
-played. A player removed from every roster keeps their last rating, and
-because ranks are computed only over the rebuilt set, a stale document can
-still outrank current players in a raw read of the collection.
-
-Fixing it means either deleting rankings not present in the rebuild, or
-marking them inactive and filtering in the App. Covered by a test that
-asserts the current behaviour, so the test has to change with the fix:
-`tests/integration/rankings-pipeline.test.ts`, "replaces the previous
-leaderboard rather than leaving stale entries".
 
 ## Inconsistent error codes on offers
 

@@ -93,6 +93,15 @@ npm install --prefix Functions   # Functions/package-lock.json
 CI runs the real predeploy path (`Build Functions the way firebase deploy
 does`) to catch divergence before a deploy does.
 
+## Batch limits
+
+A Firestore `WriteBatch` caps at **500 operations**, counting sets, updates
+and deletes together. The emulator does not enforce this — a 600-operation
+batch commits there and fails in production — so any code path whose batch
+size grows with the data must chunk, and must be covered by a unit test that
+counts commits rather than by an emulator test. See
+`services/playerRankings/persistence/rankingsSaver.ts`.
+
 ## Lint strictness
 
 Stricter than App: `@typescript-eslint/no-explicit-any` and

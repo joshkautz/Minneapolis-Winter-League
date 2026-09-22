@@ -557,7 +557,7 @@ describe('rebuildPlayerRankings', () => {
 		expect(saved.get('w1')?.totalGames).toBe(1)
 	})
 
-	it('replaces the previous leaderboard rather than leaving stale entries', async () => {
+	it('removes players who no longer appear in any game', async () => {
 		await seedOneRoundSeason()
 		await firestore
 			.collection('rankings')
@@ -578,12 +578,85 @@ describe('rebuildPlayerRankings', () => {
 		await rebuild()
 		const saved = await rankings()
 
-		// Known gap: a rebuild writes every current player but never deletes
-		// rankings for players who no longer appear in any game, so the stale
-		// document survives and still outranks everyone. Recorded here so the
-		// behaviour is visible rather than surprising.
-		expect(saved.has('retired-player')).toBe(true)
+		// A rebuild processes every season, so a player only drops out when
+		// they are no longer on the roster of any game ever played. Left
+		// behind, this document keeps a rating and a rank computed against a
+		// leaderboard that no longer exists — and outranks everyone.
+		expect(saved.has('retired-player')).toBe(false)
+		expect(saved.size).toBe(4)
 	})
+
+	it('keeps a player who only appears in an older season', async () => {
+		// The counterpart to the deletion above: not playing *this* season is
+		// not the same as never having played, and only the latter should
+		// remove someone from the leaderboard.
+		await seedSeason('season-1', '2029-01-01T00:00:00.000Z')
+		await seedSeason('season-2', '2030-01-01T00:00:00.000Z')
+		await seedTeamWithRoster('old-winners', 'season-1', ['retiree'])
+		await seedTeamWithRoster('old-losers', 'season-1', ['old-loser'])
+		await seedTeamWithRoster('new-winners', 'season-2', ['current'])
+		await seedTeamWithRoster('new-losers', 'season-2', ['new-loser'])
+		await seedGame('old-game', {
+			seasonId: 'season-1',
+			home: 'old-winners',
+			away: 'old-losers',
+			homeScore: 15,
+			awayScore: 10,
+			date: '2029-01-05T18:00:00.000Z',
+		})
+		await seedGame('new-game', {
+			seasonId: 'season-2',
+			home: 'new-winners',
+			away: 'new-losers',
+			homeScore: 15,
+			awayScore: 10,
+			date: '2030-01-05T18:00:00.000Z',
+		})
+
+		await rebuild()
+		const saved = await rankings()
+
+		expect(saved.has('retiree')).toBe(true)
+		expect(saved.get('retiree')?.lastSeasonId).toBe('season-1')
+	})
+
+	it('rebuilds a full-size league and clears a large backlog of stale entries', async () => {
+		// Closer to production scale than the rest of the suite: 252 players
+		// and 300 documents to remove. The batch chunking this crosses is not
+		// covered here — the emulator does not enforce Firestore's 500-op
+		// batch limit, so that is pinned in rankingsSaver.test.ts instead.
+		const playersPerTeam = 126
+		await seedSeason('season-1', '2030-01-01T00:00:00.000Z')
+		await seedTeamWithRoster(
+			'big-winners',
+			'season-1',
+			Array.from({ length: playersPerTeam }, (_, i) => `w${i}`)
+		)
+		await seedTeamWithRoster(
+			'big-losers',
+			'season-1',
+			Array.from({ length: playersPerTeam }, (_, i) => `l${i}`)
+		)
+		await seedGame('game-1', {
+			seasonId: 'season-1',
+			home: 'big-winners',
+			away: 'big-losers',
+			homeScore: 15,
+			awayScore: 10,
+			date: '2030-01-05T18:00:00.000Z',
+		})
+		for (let i = 0; i < 300; i++) {
+			await firestore
+				.collection('rankings')
+				.doc(`gone-${i}`)
+				.set({ playerId: `gone-${i}`, rating: 25, rank: 1 })
+		}
+
+		const result = await rebuild()
+
+		expect(result.status).toBe('completed')
+		expect((await rankings()).size).toBe(playersPerTeam * 2)
+	}, 60_000)
 
 	it('is idempotent across repeated rebuilds of the same data', async () => {
 		await seedOneRoundSeason()
