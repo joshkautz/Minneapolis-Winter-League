@@ -535,20 +535,27 @@ document. `onPaymentCreated` now only marks a player paid. The send itself
 lives in `shared/waivers.ts`, shared with the admin sender, and is idempotent
 on (player, season) so a retry or a team merge cannot double-send.
 
-**0c. Give `deleteTeamSeasonWithCleanup` the no-orphan invariant** — a
-team-season with unsettled contributions cannot be deleted. It is the single
-chokepoint for three of the four deletion paths, and the invariant is easier
-to add before there is any money for it to guard.
+**0c. Give `deleteTeamSeasonWithCleanup` the no-orphan invariant. — done.**
+A team-season with unsettled contributions cannot be deleted, which covers
+three of the four deletion paths through their shared chokepoint.
+`mergeTeams` is the fourth and refuses outright rather than moving money
+whose PaymentIntent metadata names the old team.
 
 **0d. Decide the testing approach** — see below. Worth settling before there
 is code to retrofit.
 
 ### Phase 1 — the ledger, still no money
 
-Add `contributions` and the two totals. Teach `updateTeamRegistrationStatus`
-the new rule behind a per-season flag, so both rules coexist and the old
-seasons keep working. Test the arithmetic and the registration threshold
-exhaustively here, where there is no Stripe involved at all.
+**1a. The ledger itself. — done.** `shared/contributions.ts` records a
+contribution keyed on its PaymentIntent id and keeps `authorizedCents` and
+`capturedCents` on the team-season in step with it, in one transaction. The
+arithmetic — what is committed, what is still live — is pure and tested
+without a database.
+
+**1b. The registration rule.** Teach `updateTeamRegistrationStatus` to count
+signed players rather than paid-and-signed ones, and to require the committed
+total, behind a per-season flag so both rules coexist and old seasons keep
+working.
 
 ### Phase 2 — taking money
 

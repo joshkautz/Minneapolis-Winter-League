@@ -16,12 +16,16 @@
 
 import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
-import { Collections } from '../types.js'
+import { Collections, type TeamContributionDocument } from '../types.js'
 import {
 	playerSeasonRef,
 	teamRef as canonicalTeamRef,
 	teamSeasonRef,
 } from '../shared/database.js'
+import {
+	CONTRIBUTIONS_SUBCOLLECTION,
+	hasUnsettledMoney,
+} from '../shared/contributions.js'
 
 export interface TeamDeletionResult {
 	teamId: string
@@ -84,6 +88,32 @@ export async function deleteTeamSeasonWithCleanup(
 				offersDeleted: 0,
 				logoDeleted: false,
 				error: 'Cannot delete a registered team',
+			}
+		}
+
+		// Money must be settled before anything is deleted. Every route that
+		// removes a team-season is a route to losing track of a contribution,
+		// and three of the four go through here — so the invariant lives here
+		// rather than being remembered at each call site.
+		const contributionsSnap = await teamSeasonDocRef
+			.collection(CONTRIBUTIONS_SUBCOLLECTION)
+			.get()
+		const contributions = contributionsSnap.docs.map(
+			(doc) => doc.data() as TeamContributionDocument
+		)
+
+		if (hasUnsettledMoney(contributions)) {
+			return {
+				teamId,
+				seasonId,
+				teamName,
+				success: false,
+				playersUpdated: 0,
+				offersDeleted: 0,
+				logoDeleted: false,
+				error:
+					'Cannot delete a team with money still committed to it. ' +
+					'Cancel or refund its contributions first.',
 			}
 		}
 

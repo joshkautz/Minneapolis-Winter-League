@@ -248,6 +248,45 @@ export interface TeamRosterDocument extends DocumentData {
 }
 
 /**
+ * Where a team contribution stands with the payment processor.
+ *
+ * `authorized` is a hold: the money is committed but has not left the payer's
+ * account. `captured` is money actually taken. The other two are terminal and
+ * count toward nothing — `canceled` for a hold released before capture, which
+ * costs nothing, and `refunded` for money returned after capture, which does.
+ */
+export type ContributionStatus =
+	'authorized' | 'captured' | 'canceled' | 'refunded'
+
+/**
+ * One payment toward a team's registration total.
+ *
+ * Stored at `teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}`.
+ * The document id is the Stripe PaymentIntent id, so a webhook delivered twice
+ * updates one document rather than creating a second.
+ *
+ * **DENORMALIZED**: `authorizedCents` and `capturedCents` on the parent
+ * team-season are sums over this subcollection, written in the same
+ * transaction. Never change one without the other — see `shared/contributions.ts`.
+ */
+export interface TeamContributionDocument extends DocumentData {
+	/** The player who paid. Always someone on the roster for this season. */
+	player: DocumentReference<PlayerDocument>
+	/** Amount in cents, as charged. */
+	amountCents: number
+	status: ContributionStatus
+	/** Stripe PaymentIntent id; matches the document id. */
+	paymentIntentId: string
+	/**
+	 * When the authorization expires, from the charge's `capture_before`.
+	 * Null once the contribution reaches a terminal state, or when unknown.
+	 */
+	captureBefore: Timestamp | null
+	createdAt: Timestamp
+	updatedAt: Timestamp
+}
+
+/**
  * Stripe payment configuration for a season
  */
 export interface SeasonStripeConfig {
