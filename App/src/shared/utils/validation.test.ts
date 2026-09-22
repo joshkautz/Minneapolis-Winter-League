@@ -24,12 +24,16 @@ describe('emailSchema', () => {
 		expect(emailSchema.parse('Player@Example.COM')).toBe('player@example.com')
 	})
 
-	it('rejects a padded address rather than trimming it', () => {
-		// Documents current behaviour, which is very likely unintended: the
-		// chain is .email().trim().toLowerCase(), so validation runs before
-		// the trim and a pasted "  a@b.com  " is reported as invalid.
-		// Tracked in docs/ROADMAP.md — moving .trim() ahead of .email() fixes it.
-		expect(emailSchema.safeParse('  player@example.com  ').success).toBe(false)
+	it('trims a pasted address rather than rejecting it', () => {
+		// The chain runs in order. With .email() first, a pasted
+		// "  a@b.com  " was reported as a malformed address.
+		expect(emailSchema.parse('  player@example.com  ')).toBe(
+			'player@example.com'
+		)
+	})
+
+	it('still rejects an address whose interior is malformed, after trimming', () => {
+		expect(emailSchema.safeParse('  not an email  ').success).toBe(false)
 	})
 
 	it.each([

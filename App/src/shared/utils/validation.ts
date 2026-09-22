@@ -18,9 +18,11 @@ export const emailSchema = z
 			return 'Please enter a valid email address'
 		},
 	})
-	.email('Please enter a valid email address')
+	// Trim before validating: the chain runs in order, so validating first
+	// rejected a pasted "  a@b.com  " as a malformed address.
 	.trim()
 	.toLowerCase()
+	.email('Please enter a valid email address')
 
 export const passwordSchema = z
 	.string({
