@@ -172,15 +172,17 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-Roughly 480 tests across four suites, all run by `npm run verify`. Every
+Roughly 520 tests across four suites, all run by `npm run verify`. Every
 callable is covered for authorization, **all six triggers** have suites, and
 the emulator suites are mutation-tested.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 46;
-  `createTeam`, `deleteTeam`, `updateTeamRoster` and `createOffer` have
-  behavioural tests. The rest are covered only at the gate.
+- **Deeper callable behaviour.** The authorization sweep covers all 46.
+  `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer` and the three
+  game callables have behavioural tests. The rest are covered only at the
+  gate; `mergeTeams`, `rolloverTeam` and `updatePlayerAdmin` are the next
+  most consequential.
 - **App components.** Only the shell is mounted. The admin screens carry the
   most complex state and have no tests.
 - **End-to-end.** No test drives a browser against the emulators.
@@ -196,6 +198,25 @@ Triggers are invoked with `.run(event)` and a synthetic event carrying
 - Mutation-test new suites. The payment trigger's already-paid
   short-circuit initially passed with the guard removed, because the
   waiver-exists check masked it — the gap only showed under mutation.
+
+## Moving a game between seasons leaves stale team names
+
+`GameDocument.homeName` / `awayName` are snapshots of the team's name for the
+game's season — that is what lets schedules and standings render without a
+join, and what keeps an old game showing a team's old name after a rename.
+
+`updateGame` re-captures those names whenever a team id changes, but not when
+only `seasonId` changes. A game moved between seasons keeps the previous
+season's names while pointing at the new season, so the schedule shows names
+no team has any more.
+
+The fix is to re-read both names whenever the effective season changes, not
+just when a team id is supplied. Current behaviour is pinned by
+`tests/integration/game-callables.test.ts`, "leaves team names stale when only
+the season is moved", so that test changes with the fix.
+
+Nothing in the App offers this today — the admin game editor sets the season
+at creation — so it is reachable only by calling `updateGame` directly.
 
 ## Name validation is client-side only
 

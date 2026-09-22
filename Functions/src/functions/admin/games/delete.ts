@@ -5,7 +5,7 @@
  * It deletes a game from the current season.
  */
 
-import { onCall } from 'firebase-functions/v2/https'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, GameDocument } from '../../../types.js'
@@ -53,7 +53,7 @@ export const deleteGame = onCall<DeleteGameRequest>(
 			const { gameId } = data
 
 			if (!gameId) {
-				throw new Error('Game ID is required')
+				throw new HttpsError('invalid-argument', 'Game ID is required')
 			}
 
 			// Get game document
@@ -61,13 +61,13 @@ export const deleteGame = onCall<DeleteGameRequest>(
 			const gameDoc = await gameRef.get()
 
 			if (!gameDoc.exists) {
-				throw new Error('Game not found')
+				throw new HttpsError('not-found', 'Game not found')
 			}
 
 			const gameDocument = gameDoc.data() as GameDocument | undefined
 
 			if (!gameDocument) {
-				throw new Error('Unable to retrieve game data')
+				throw new HttpsError('not-found', 'Unable to retrieve game data')
 			}
 
 			// Delete the game
@@ -90,11 +90,16 @@ export const deleteGame = onCall<DeleteGameRequest>(
 				stack: error instanceof Error ? error.stack : undefined,
 			})
 
-			if (error instanceof Error) {
+			// Re-throw HttpsError as-is so the client keeps the real code;
+			// anything else is an unexpected failure.
+			if (error instanceof HttpsError) {
 				throw error
 			}
 
-			throw new Error('Failed to delete game')
+			throw new HttpsError(
+				'internal',
+				error instanceof Error ? error.message : 'Failed to delete game'
+			)
 		}
 	}
 )
