@@ -120,30 +120,18 @@ teamSeasons, roster, playerSeasons) but two gaps remain:
 
 ## Firestore index drift
 
-`firestore.indexes.json` declares 17 indexes; production has **23**. The six
-that exist only in production are:
+Resolved: Firestore holds 17 composite indexes and `firestore.indexes.json`
+declares the same 17. `scripts/production/prune-firestore-indexes.js` derives
+the difference and deletes anything present only in Firestore; run
+`--mode=plan` after any index change to confirm the file is still the truth.
 
-| Collection           | Fields                         |
-| -------------------- | ------------------------------ |
-| `karma_transactions` | player, reason, season, amount |
-| `offers`             | player, type                   |
-| `offers`             | team, type                     |
-| `teams`              | season, registered             |
-| `teams`              | teamId, season                 |
-| `waivers`            | player, season                 |
+It can drift again, because CI deploys indexes without `--force` and so never
+deletes. That is deliberate — an accidental deletion breaks live queries —
+but it means removals have to be made on purpose with that script.
 
-They look like pre-migration leftovers: `karma_transactions` has **zero**
-references left in the codebase, and `teams.season` / `teams.teamId` are the
-flat shape that the `teamSeasons` subcollection replaced.
-
-Nothing is at risk today — the CI deploy runs `firebase deploy --only
-firestore` **without** `--force`, so indexes present only in production are
-never deleted. But the two are out of step, and anyone adding `--force` would
-drop them.
-
-Worth doing, carefully: confirm each of the six is genuinely unused, then
-delete them from production so the file is the whole truth. Deleting a live
-index breaks any query depending on it, so verify before removing.
+**The emulator does not enforce composite indexes**, so a query that needs a
+missing one passes locally and fails only in production. Neither the test
+suites nor local development will catch it.
 
 ## A real staging environment
 
