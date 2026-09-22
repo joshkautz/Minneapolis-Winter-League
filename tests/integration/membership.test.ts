@@ -77,10 +77,12 @@ beforeEach(async () => {
 		name: 'Test Team',
 		registered: false,
 	})
-	await firestore
-		.collection('players')
-		.doc(PLAYER)
-		.set({ admin: false, email: 'p@example.com', firstname: 'P', lastname: 'One' })
+	await firestore.collection('players').doc(PLAYER).set({
+		admin: false,
+		email: 'p@example.com',
+		firstname: 'P',
+		lastname: 'One',
+	})
 })
 
 describe('addPlayerToTeam', () => {
@@ -118,12 +120,11 @@ describe('addPlayerToTeam', () => {
 		expect(playerSeason).toMatchObject({
 			paid: false,
 			signed: false,
-			banned: false,
 			captain: false,
 		})
 	})
 
-	it('preserves paid, signed and banned when a season already exists', async () => {
+	it('preserves paid and signed when a season already exists', async () => {
 		// The regression this guards: overwriting the subdoc on a team change
 		// would silently clear a player's payment and waiver status.
 		const existing = {
@@ -131,7 +132,6 @@ describe('addPlayerToTeam', () => {
 			team: null,
 			paid: true,
 			signed: true,
-			banned: true,
 			captain: false,
 		}
 		await playerSeasonRef(firestore, PLAYER, SEASON).set(existing)
@@ -147,7 +147,10 @@ describe('addPlayerToTeam', () => {
 		})
 
 		const { playerSeason } = await readBothSides()
-		expect(playerSeason).toMatchObject({ paid: true, signed: true, banned: true })
+		expect(playerSeason).toMatchObject({
+			paid: true,
+			signed: true,
+		})
 		expect(playerSeason?.team?.id).toBe(TEAM)
 	})
 

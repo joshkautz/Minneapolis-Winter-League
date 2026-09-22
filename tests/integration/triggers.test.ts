@@ -60,7 +60,6 @@ const seedAlmostRegistered = async (): Promise<void> => {
 			paid: true,
 			// The last player has not signed, so the team is one short.
 			signed: i < MIN - 1,
-			banned: false,
 			captain: i === 0,
 		})
 	}
@@ -100,7 +99,11 @@ describe('updateTeamRegistrationOnPlayerChange', () => {
 	beforeEach(seedAlmostRegistered)
 
 	it('registers the team when the last waiver is signed', async () => {
-		const base = { season: seasonRef(), team: teamRef(), paid: true, banned: false }
+		const base = {
+			season: seasonRef(),
+			team: teamRef(),
+			paid: true,
+		}
 		await fire({ ...base, signed: false }, { ...base, signed: true })
 
 		// The trigger reads current Firestore state, so reflect the change.
@@ -119,7 +122,6 @@ describe('updateTeamRegistrationOnPlayerChange', () => {
 			team: teamRef(),
 			paid: true,
 			signed: true,
-			banned: false,
 		}
 		await playerSeasonRef(firestore, `player-${MIN - 1}`, SEASON).update({
 			signed: true,
@@ -131,7 +133,7 @@ describe('updateTeamRegistrationOnPlayerChange', () => {
 	})
 
 	it('does nothing when the player is not on a team', async () => {
-		const base = { season: seasonRef(), team: null, paid: true, banned: false }
+		const base = { season: seasonRef(), team: null, paid: true }
 		await fire({ ...base, signed: false }, { ...base, signed: true })
 		expect((await readTeamSeason())?.registered).toBe(false)
 	})
@@ -144,7 +146,11 @@ describe('updateTeamRegistrationOnPlayerChange', () => {
 			signed: true,
 		})
 
-		const base = { season: seasonRef(), team: teamRef(), paid: true, banned: false }
+		const base = {
+			season: seasonRef(),
+			team: teamRef(),
+			paid: true,
+		}
 		await fire({ ...base, signed: false }, { ...base, signed: true })
 
 		expect((await readTeamSeason())?.registered).toBe(false)
@@ -152,12 +158,19 @@ describe('updateTeamRegistrationOnPlayerChange', () => {
 
 	it('swallows errors rather than crashing the trigger', async () => {
 		// An unhandled throw would retry the event indefinitely.
-		const base = { season: seasonRef(), team: teamRef(), paid: true, banned: false }
+		const base = {
+			season: seasonRef(),
+			team: teamRef(),
+			paid: true,
+		}
 		await expect(
 			manifest.updateTeamRegistrationOnPlayerChange.run({
 				id: 'evt-2',
 				params: { playerId: 'ghost', seasonId: 'no-such-season' },
-				data: { before: snap(true, { ...base, signed: false }), after: snap(true, { ...base, signed: true }) },
+				data: {
+					before: snap(true, { ...base, signed: false }),
+					after: snap(true, { ...base, signed: true }),
+				},
 			})
 		).resolves.toBeUndefined()
 	})

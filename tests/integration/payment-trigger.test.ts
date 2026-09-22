@@ -145,7 +145,6 @@ describe('onPaymentCreated', () => {
 		expect(await readPlayerSeason()).toMatchObject({
 			paid: true,
 			signed: false,
-			banned: false,
 			captain: false,
 			team: null,
 		})
@@ -157,7 +156,6 @@ describe('onPaymentCreated', () => {
 			team: firestore.collection('teams').doc('team-1'),
 			paid: false,
 			signed: false,
-			banned: false,
 			captain: true,
 		})
 		await seedPayment('paid')
@@ -210,7 +208,6 @@ describe('onPaymentCreated', () => {
 			team: null,
 			paid: true,
 			signed: false,
-			banned: false,
 			captain: false,
 		})
 		expect(await readWaivers()).toHaveLength(0)

@@ -15,17 +15,17 @@ import {
 import { playerSeasonRef } from '../../Functions/src/shared/database.js'
 
 /**
- * A ban is a fact about a person, not a season, and it now lives on the
- * player document. It used to live on each season subdoc, with three
- * separate paths — createSeason, createTeam, rolloverTeam — copying it
- * forward onto every new one. That already made it account-level in effect,
- * but it also made it impossible to lift: clearing one season left the
- * others set and the next carry-forward reinstated it.
+ * A ban is a fact about a person, not a season, and it lives on the player
+ * document. It used to live on each season subdoc, with three separate paths
+ * — createSeason, createTeam, rolloverTeam — copying it forward onto every
+ * new one. That made it account-level in effect while making it impossible
+ * to lift: clearing one season left the others set and the next
+ * carry-forward reinstated it.
  *
- * The backfill has not run everywhere, so reads still fall back to the
- * season subdocs for any player missing the new field. These tests pin both
- * halves — the new field wins where present, the old one still counts where
- * it does not — and the un-ban that was previously impossible.
+ * The backfill has run over every player and the season field is gone. What
+ * these pin is that one flag decides the answer everywhere, that lifting a
+ * ban actually lifts it, and that residual `banned` data left on old season
+ * subdocs cannot resurrect one.
  */
 
 const ADMIN = 'admin-uid'
@@ -63,7 +63,11 @@ const seedPlayer = async (
 const seedSeasonState = async (
 	playerId: string,
 	seasonId: string,
-	banned: boolean
+	/**
+	 * Residual data only. Nothing writes this field any more; it is seeded
+	 * here to prove that leftovers on old documents are ignored.
+	 */
+	residualBanned?: boolean
 ) => {
 	await playerSeasonRef(firestore, playerId, seasonId).set({
 		season: seasonRef(seasonId),
@@ -71,7 +75,7 @@ const seedSeasonState = async (
 		captain: false,
 		paid: true,
 		signed: true,
-		banned,
+		...(residualBanned === undefined ? {} : { banned: residualBanned }),
 	})
 }
 
@@ -92,60 +96,40 @@ beforeEach(async () => {
 })
 
 describe('isPlayerBanned', () => {
-	it('uses the player document when it has the field', async () => {
+	it('reports a banned player', async () => {
 		await seedPlayer(PLAYER, { banned: true })
-		await seedSeasonState(PLAYER, SEASON, false)
 
-		expect(await isPlayerBanned(firestore, PLAYER, SEASON)).toBe(true)
+		expect(await isPlayerBanned(firestore, PLAYER)).toBe(true)
 	})
 
-	it('lets the player document clear a stale season flag', async () => {
-		// This is the whole point of the move. The season subdoc still says
-		// banned; the player document is the answer and says otherwise.
+	it('reports a player who is not banned', async () => {
+		await seedPlayer(PLAYER, { banned: false })
+
+		expect(await isPlayerBanned(firestore, PLAYER)).toBe(false)
+	})
+
+	it('ignores a leftover ban on an old season subdoc', async () => {
+		// The field is no longer written, but production documents still
+		// carry it. A lifted ban must stay lifted.
 		await seedPlayer(PLAYER, { banned: false })
 		await seedSeasonState(PLAYER, SEASON, true)
 
-		expect(await isPlayerBanned(firestore, PLAYER, SEASON)).toBe(false)
+		expect(await isPlayerBanned(firestore, PLAYER)).toBe(false)
 	})
 
-	it('falls back to the asked-about season before the backfill', async () => {
-		await seedPlayer(PLAYER)
-		await seedSeasonState(PLAYER, SEASON, true)
+	it('answers without needing any season subdoc', async () => {
+		// The ban applies to the person, so it holds for a season they never
+		// registered for — which is what stopped a banned player simply
+		// waiting for the next season to open.
+		await seedPlayer(PLAYER, { banned: true })
 
-		expect(await isPlayerBanned(firestore, PLAYER, SEASON)).toBe(true)
+		expect(await isPlayerBanned(firestore, PLAYER)).toBe(true)
 	})
 
-	it('falls back to any other season before the backfill', async () => {
-		// Banned in one season means banned, which is what the three
-		// carry-forward sites already assumed.
-		await seedPlayer(PLAYER)
-		await seedSeasonState(PLAYER, SEASON, false)
-		await seedSeasonState(PLAYER, OTHER_SEASON, true)
-
-		expect(await isPlayerBanned(firestore, PLAYER, SEASON)).toBe(true)
-	})
-
-	it('is false for an unmigrated player banned nowhere', async () => {
-		await seedPlayer(PLAYER)
-		await seedSeasonState(PLAYER, SEASON, false)
-		await seedSeasonState(PLAYER, OTHER_SEASON, false)
-
-		expect(await isPlayerBanned(firestore, PLAYER, SEASON)).toBe(false)
-	})
-
-	it('is false for a player with no seasons at all', async () => {
+	it('is false for a player document with no banned field', async () => {
 		await seedPlayer(PLAYER)
 
-		expect(await isPlayerBanned(firestore, PLAYER, SEASON)).toBe(false)
-	})
-
-	it('answers for a season the player has no subdoc for', async () => {
-		// A banned player must stay banned for a season they never joined,
-		// or the ban is lifted by the season rolling over.
-		await seedPlayer(PLAYER)
-		await seedSeasonState(PLAYER, OTHER_SEASON, true)
-
-		expect(await isPlayerBanned(firestore, PLAYER, SEASON)).toBe(true)
+		expect(await isPlayerBanned(firestore, PLAYER)).toBe(false)
 	})
 })
 
@@ -153,56 +137,51 @@ describe('validateNotBanned', () => {
 	it('throws for a banned player', async () => {
 		await seedPlayer(PLAYER, { banned: true })
 
-		await expect(
-			validateNotBanned(firestore, PLAYER, SEASON)
-		).rejects.toMatchObject({ code: 'permission-denied' })
+		await expect(validateNotBanned(firestore, PLAYER)).rejects.toMatchObject({
+			code: 'permission-denied',
+		})
 	})
 
 	it('resolves for a player who is not banned', async () => {
 		await seedPlayer(PLAYER, { banned: false })
 
-		await expect(
-			validateNotBanned(firestore, PLAYER, SEASON)
-		).resolves.toBeUndefined()
+		await expect(validateNotBanned(firestore, PLAYER)).resolves.toBeUndefined()
 	})
 })
 
 describe('updatePlayerAdmin: league ban', () => {
 	beforeEach(async () => {
-		await seedPlayer(PLAYER)
-		await seedSeasonState(PLAYER, SEASON, false)
-		await seedSeasonState(PLAYER, OTHER_SEASON, false)
+		await seedPlayer(PLAYER, { banned: false })
+		await seedSeasonState(PLAYER, SEASON)
+		await seedSeasonState(PLAYER, OTHER_SEASON)
 	})
 
 	it('bans a player league-wide in one action', async () => {
 		await call({ playerId: PLAYER, banned: true })
 
 		expect((await readPlayer())?.banned).toBe(true)
-		expect(await isPlayerBanned(firestore, PLAYER, SEASON)).toBe(true)
+		expect(await isPlayerBanned(firestore, PLAYER)).toBe(true)
 	})
 
-	it('mirrors the ban onto every season subdoc', async () => {
-		// The mirror keeps the fallback honest while it still exists. Without
-		// it, a player banned here would read as unbanned by any code path
-		// still consulting a season.
+	it('lifts a ban in one action', async () => {
+		// Previously impossible: the flag was per season, so clearing one
+		// left the others set and the next carry-forward put it back.
 		await call({ playerId: PLAYER, banned: true })
-
-		expect((await readSeason(SEASON))?.banned).toBe(true)
-		expect((await readSeason(OTHER_SEASON))?.banned).toBe(true)
-	})
-
-	it('lifts a ban that spans several seasons', async () => {
-		// Previously impossible: clearing one season left the others set and
-		// the next carry-forward put it back.
-		await seedSeasonState(PLAYER, SEASON, true)
-		await seedSeasonState(PLAYER, OTHER_SEASON, true)
 
 		await call({ playerId: PLAYER, banned: false })
 
 		expect((await readPlayer())?.banned).toBe(false)
-		expect((await readSeason(SEASON))?.banned).toBe(false)
-		expect((await readSeason(OTHER_SEASON))?.banned).toBe(false)
-		expect(await isPlayerBanned(firestore, PLAYER, SEASON)).toBe(false)
+		expect(await isPlayerBanned(firestore, PLAYER)).toBe(false)
+	})
+
+	it('does not touch the season subdocs', async () => {
+		// The ban is not season state any more, so a ban must not rewrite
+		// documents it has nothing to do with.
+		await call({ playerId: PLAYER, banned: true })
+		const season = await readSeason(SEASON)
+
+		expect(season?.banned).toBeUndefined()
+		expect(season?.paid).toBe(true)
 	})
 
 	it('reports the change it made', async () => {
@@ -233,76 +212,18 @@ describe('updatePlayerAdmin: league ban', () => {
 	})
 
 	it('accepts a ban as the only field in the request', async () => {
-		// It is not a season field any more, so it has to stand alone.
 		await call({ playerId: PLAYER, banned: true })
 
 		expect((await readPlayer())?.banned).toBe(true)
 	})
 
-	it('leaves a player with no seasons bannable', async () => {
+	it('bans a player who has no seasons at all', async () => {
 		await resetFirestore(firestore)
 		await seedPlayer(ADMIN, { admin: true })
-		await seasonRef(SEASON).set({ name: '2030 Winter' })
 		await seedPlayer(PLAYER)
 
 		await call({ playerId: PLAYER, banned: true })
 
 		expect((await readPlayer())?.banned).toBe(true)
-	})
-})
-
-describe('the ban follows the player into a new season', () => {
-	it('stays banned when a season subdoc is created later', async () => {
-		// The carry-forward sites now read the account-level flag, so a new
-		// subdoc inherits it rather than re-deriving it from its siblings.
-		await seedPlayer(PLAYER, { banned: true })
-
-		await playerSeasonRef(firestore, PLAYER, OTHER_SEASON).set({
-			season: seasonRef(OTHER_SEASON),
-			team: null,
-			captain: false,
-			paid: false,
-			signed: false,
-			banned: await isPlayerBanned(firestore, PLAYER, OTHER_SEASON),
-		})
-
-		expect((await readSeason(OTHER_SEASON))?.banned).toBe(true)
-	})
-})
-
-describe('a player document without the field', () => {
-	it('is treated as unmigrated rather than unbanned', async () => {
-		// The distinction matters: `undefined` means "ask the seasons", and
-		// reading it as `false` would silently unban everyone the backfill
-		// has not reached yet.
-		await seedPlayer(PLAYER)
-		await seedSeasonState(PLAYER, SEASON, true)
-		const stored = await readPlayer()
-
-		expect(stored?.banned).toBeUndefined()
-		expect(await isPlayerBanned(firestore, PLAYER, SEASON)).toBe(true)
-	})
-})
-
-describe('timestamps are untouched', () => {
-	it('does not disturb other season fields when mirroring', async () => {
-		await seedPlayer(PLAYER)
-		await playerSeasonRef(firestore, PLAYER, SEASON).set({
-			season: seasonRef(SEASON),
-			team: null,
-			captain: true,
-			paid: true,
-			signed: true,
-			banned: false,
-			joinedAt: Timestamp.fromMillis(1_000),
-		})
-
-		await call({ playerId: PLAYER, banned: true })
-		const season = await readSeason(SEASON)
-
-		expect(season?.banned).toBe(true)
-		expect(season?.captain).toBe(true)
-		expect(season?.paid).toBe(true)
-		expect(season?.joinedAt.toMillis()).toBe(1_000)
 	})
 })

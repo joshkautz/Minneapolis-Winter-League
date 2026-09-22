@@ -107,7 +107,9 @@ describe('onOfferUpdated', () => {
 		await firestore.collection('offers').doc('offer-1').set(offerDoc())
 		await fire('offer-1', 'pending', 'accepted')
 
-		const offer = (await firestore.collection('offers').doc('offer-1').get()).data()
+		const offer = (
+			await firestore.collection('offers').doc('offer-1').get()
+		).data()
 		expect(offer?.processed).toBe(true)
 		expect(offer?.processingError).toBeUndefined()
 	})
@@ -122,7 +124,9 @@ describe('onOfferUpdated', () => {
 
 		await fire('offer-1', 'pending', 'accepted')
 
-		const other = (await firestore.collection('offers').doc('offer-2').get()).data()
+		const other = (
+			await firestore.collection('offers').doc('offer-2').get()
+		).data()
 		expect(other?.status).toBe('canceled')
 		expect(other?.canceledReason).toMatch(/another team/i)
 	})
@@ -187,14 +191,15 @@ describe('onOfferUpdated', () => {
 			team: teamRef(OTHER_TEAM),
 			paid: false,
 			signed: false,
-			banned: false,
 			captain: false,
 		})
 		await firestore.collection('offers').doc('offer-1').set(offerDoc())
 
 		await fire('offer-1', 'pending', 'accepted')
 
-		const offer = (await firestore.collection('offers').doc('offer-1').get()).data()
+		const offer = (
+			await firestore.collection('offers').doc('offer-1').get()
+		).data()
 		expect(offer?.processed).toBe(false)
 		expect(offer?.processingError).toMatch(/already on a team/i)
 
@@ -211,7 +216,9 @@ describe('onOfferUpdated', () => {
 
 		await fire('offer-1', 'pending', 'accepted')
 
-		const offer = (await firestore.collection('offers').doc('offer-1').get()).data()
+		const offer = (
+			await firestore.collection('offers').doc('offer-1').get()
+		).data()
 		expect(offer?.processed).toBe(false)
 		expect(offer?.processingError).toMatch(/not participating/i)
 	})

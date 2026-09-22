@@ -63,8 +63,7 @@ in `Functions/src/types.ts` and `App/src/types.ts` — **keep both in sync**.
 Per-season state hangs off subcollections rather than the parent document:
 
 - `players/{uid}/playerSeasons/{seasonId}` — paid, signed, captain, team
-  (`banned` also still lives here, deprecated — a ban is account-level, on
-  `players/{uid}.banned`; see `docs/ROADMAP.md`)
+  (a ban is **not** season state — it lives on `players/{uid}.banned`)
 - `teams/{teamId}/teamSeasons/{seasonId}` — per-season team participation
 - `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` — membership join
 
@@ -109,7 +108,7 @@ already allowed.
 
 ## Tests
 
-Four suites (~783 tests), all run by `npm run verify`:
+Four suites (~771 tests), all run by `npm run verify`:
 
 | Suite           | Location                      | Covers                                                  |
 | --------------- | ----------------------------- | ------------------------------------------------------- |

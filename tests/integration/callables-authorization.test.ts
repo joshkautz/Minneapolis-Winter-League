@@ -132,25 +132,19 @@ beforeEach(async () => {
 	await seedAuthUser('admin-1', true)
 
 	// A signed-in, non-admin player.
-	await firestore
-		.collection('players')
-		.doc('player-1')
-		.set({
-			admin: false,
-			email: 'p@example.com',
-			firstname: 'P',
-			lastname: 'One',
-		})
+	await firestore.collection('players').doc('player-1').set({
+		admin: false,
+		email: 'p@example.com',
+		firstname: 'P',
+		lastname: 'One',
+	})
 	// A signed-in admin.
-	await firestore
-		.collection('players')
-		.doc('admin-1')
-		.set({
-			admin: true,
-			email: 'a@example.com',
-			firstname: 'A',
-			lastname: 'One',
-		})
+	await firestore.collection('players').doc('admin-1').set({
+		admin: true,
+		email: 'a@example.com',
+		firstname: 'A',
+		lastname: 'One',
+	})
 })
 
 describe('the sweep covers every callable in the deploy manifest', () => {

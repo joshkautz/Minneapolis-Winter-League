@@ -67,9 +67,7 @@ export async function errorCodeFrom(
 /** Wipes every collection the tests touch. */
 export async function resetFirestore(firestore: Firestore): Promise<void> {
 	const collections = await firestore.listCollections()
-	await Promise.all(
-		collections.map((c) => firestore.recursiveDelete(c))
-	)
+	await Promise.all(collections.map((c) => firestore.recursiveDelete(c)))
 }
 
 /**

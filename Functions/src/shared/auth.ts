@@ -4,12 +4,7 @@
 
 import { CallableRequest, HttpsError } from 'firebase-functions/v2/https'
 import { Firestore } from 'firebase-admin/firestore'
-import {
-	Collections,
-	PLAYER_SEASONS_SUBCOLLECTION,
-	PlayerDocument,
-} from '../types.js'
-import { getPlayerSeason } from './database.js'
+import { Collections, PlayerDocument } from '../types.js'
 
 /**
  * Validates that a user is authenticated and has a verified email
@@ -81,24 +76,19 @@ export async function validateAdminUser(
 /**
  * Whether a player is banned from the league.
  *
- * A ban is a fact about a person, so the answer lives on the player document.
- * While the backfill is outstanding, a player document with no `banned` field
- * has not been migrated yet, and the answer comes from their season subdocs
- * instead — banned in **any** season means banned, which is what the three
- * carry-forward sites already assumed.
+ * A ban is a fact about a person, so it lives on the player document. It used
+ * to live on each season subdoc, with `createSeason`, `createTeam` and
+ * `rolloverTeam` copying it forward onto every new one — which made it
+ * account-level in effect but impossible to lift, since clearing one season
+ * left the others set and the next carry-forward reinstated it.
  *
- * Reading the per-season flag directly is what made a ban impossible to lift:
- * clearing one season left the others set and the next carry-forward
- * reinstated it. Nothing outside this module should read it.
- *
- * `seasonId` is optional and only an optimisation: when the caller knows
- * which season they are asking about, the fallback checks that subdoc first
- * as a single read before widening to a query over all of them.
+ * A player document with no `banned` field is not banned. That is only safe
+ * because the backfill has run over every player; before it had, an absent
+ * field meant "ask the seasons".
  */
 export async function isPlayerBanned(
 	firestore: Firestore,
-	playerId: string,
-	seasonId?: string
+	playerId: string
 ): Promise<boolean> {
 	const playerSnapshot = await firestore
 		.collection(Collections.PLAYERS)
@@ -106,28 +96,7 @@ export async function isPlayerBanned(
 		.get()
 	const playerData = playerSnapshot.data() as PlayerDocument | undefined
 
-	if (typeof playerData?.banned === 'boolean') {
-		return playerData.banned
-	}
-
-	// Not migrated yet. Check the season asked about first — it is one read
-	// and covers the common case — then every other season the player has.
-	if (seasonId) {
-		const seasonData = await getPlayerSeason(firestore, playerId, seasonId)
-		if (seasonData?.banned === true) {
-			return true
-		}
-	}
-
-	const otherSeasons = await firestore
-		.collection(Collections.PLAYERS)
-		.doc(playerId)
-		.collection(PLAYER_SEASONS_SUBCOLLECTION)
-		.where('banned', '==', true)
-		.limit(1)
-		.get()
-
-	return !otherSeasons.empty
+	return playerData?.banned === true
 }
 
 /**
@@ -137,10 +106,9 @@ export async function isPlayerBanned(
  */
 export async function validateNotBanned(
 	firestore: Firestore,
-	playerId: string,
-	seasonId: string
+	playerId: string
 ): Promise<void> {
-	if (await isPlayerBanned(firestore, playerId, seasonId)) {
+	if (await isPlayerBanned(firestore, playerId)) {
 		throw new HttpsError(
 			'permission-denied',
 			'Account is banned from the league'

@@ -202,43 +202,23 @@ Triggers are invoked with `.run(event)` and a synthetic event carrying
   short-circuit initially passed with the guard removed, because the
   waiver-exists check masked it — the gap only showed under mutation.
 
-## Finishing the account-level ban migration
+## Remove the residual per-season ban field
 
-A ban is a fact about a person and now lives at `players/{uid}.banned`. It
-used to live on each season subdoc, with `createSeason`, `createTeam` and
-`rolloverTeam` each copying it forward — which made it account-level in
-effect but impossible to lift, because clearing one season left the others
-set and the next carry-forward reinstated it.
+A ban is now a single flag at `players/{uid}.banned`. The backfill has run
+over all 598 production players and no code reads or writes the per-season
+`banned` field any more — but the field is still **present on 1765 season
+subdocs**, frozen at whatever it was when the backfill ran.
 
-The code is shipped and reads the new field, falling back to the season
-subdocs for any player the backfill has not reached. Remaining steps, in
-order:
+It is inert, and a test pins that leftovers are ignored. It is also
+misleading: a reader finding `banned: true` on a season subdoc for someone
+since unbanned would draw the wrong conclusion.
 
-1. **Run the backfill.**
+```bash
+node scripts/migrations/2026-account-level-ban/run.js --mode=cleanup
+node scripts/migrations/2026-account-level-ban/run.js --mode=cleanup --commit
+```
 
-   ```bash
-   node scripts/migrations/2026-account-level-ban/run.js --mode=plan
-   node scripts/migrations/2026-account-level-ban/run.js --mode=migrate --commit
-   ```
-
-   Plan mode is read-only and lists every player who comes out banned.
-   Against production, omit `FIRESTORE_EMULATOR_HOST`; it uses ADC.
-
-2. **Confirm** every player document has a boolean `banned`, so the fallback
-   never fires.
-
-3. **Remove the fallback**, in one change:
-   - the season branch of `isPlayerBanned` in `Functions/src/shared/auth.ts`
-   - the `bannedInAnotherSeason` arm of the stub in `auth.test.ts`
-   - the season mirror in `updatePlayerAdmin`
-   - `banned` from `PlayerSeasonDocument` in both `types.ts` files, and the
-     writes in `createSeason`, `createTeam`, `rolloverTeam`,
-     `paymentCreated`, `membership.ts` and `scripts/seed.js`
-   - the `?? currentSeasonData?.banned` fallback in `use-user-status.ts`
-   - `banned` becomes non-optional on `PlayerDocument`
-
-Do not remove the season field before the backfill has run everywhere: the
-fallback is the only thing keeping unmigrated players banned.
+Safe to run now that the reading code has shipped.
 
 ## Name validation duplicates the App's rules
 

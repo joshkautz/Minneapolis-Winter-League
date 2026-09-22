@@ -50,7 +50,10 @@ const seedTeams = async (
 	for (let i = 0; i < count; i++) {
 		const teamId = `${prefix}-${i}`
 		ids.push(teamId)
-		await firestore.collection('teams').doc(teamId).set({ createdAt: Timestamp.now() })
+		await firestore
+			.collection('teams')
+			.doc(teamId)
+			.set({ createdAt: Timestamp.now() })
 		await teamSeasonRef(firestore, teamId, SEASON).set({
 			season: seasonRef(),
 			name: teamId,
@@ -140,10 +143,13 @@ describe('onTeamRegistrationChange', () => {
 
 	it('does nothing for a season that is not the current one', async () => {
 		// A late registration on a past season must not delete teams there.
-		await firestore.collection('seasons').doc('season-newer').set({
-			name: '2031 Winter',
-			dateStart: Timestamp.fromDate(new Date('2031-01-01')),
-		})
+		await firestore
+			.collection('seasons')
+			.doc('season-newer')
+			.set({
+				name: '2031 Winter',
+				dateStart: Timestamp.fromDate(new Date('2031-01-01')),
+			})
 		await seedTeams('reg', LOCK, true)
 		const unregistered = await seedTeams('unreg', 2, false)
 

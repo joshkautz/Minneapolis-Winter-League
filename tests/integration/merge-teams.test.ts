@@ -106,7 +106,6 @@ const seedMembership = async (
 		captain: options.captain ?? false,
 		paid: true,
 		signed: true,
-		banned: false,
 	})
 }
 

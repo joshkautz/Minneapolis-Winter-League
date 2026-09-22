@@ -83,7 +83,6 @@ interface SeasonFormData {
 	captain: boolean
 	paid: boolean
 	signed: boolean
-	banned: boolean
 	teamId: string | null
 }
 
@@ -152,11 +151,7 @@ export const PlayerManagement = () => {
 		if (showAllSeasons) return formData.seasons
 		return formData.seasons.filter(
 			(season) =>
-				season.teamId !== null ||
-				season.paid ||
-				season.signed ||
-				season.captain ||
-				season.banned
+				season.teamId !== null || season.paid || season.signed || season.captain
 		)
 	}, [formData, showAllSeasons])
 
@@ -327,9 +322,7 @@ export const PlayerManagement = () => {
 					hasAuthAccount,
 					// Falls back to the season subdocs for players the backfill
 					// has not reached, matching isPlayerBanned on the server.
-					banned:
-						playerData.banned ??
-						playerSeasonsSnap.docs.some((d) => d.data()?.banned === true),
+					banned: playerData.banned === true,
 					seasons: playerSeasonsSnap.docs.map((d) => {
 						const ps = d.data()
 						return {
@@ -337,7 +330,6 @@ export const PlayerManagement = () => {
 							captain: ps.captain,
 							paid: ps.paid,
 							signed: ps.signed,
-							banned: ps.banned ?? false,
 							teamId: ps.team?.id || null,
 						}
 					}),

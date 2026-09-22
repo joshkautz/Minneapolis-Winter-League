@@ -207,7 +207,9 @@ describe('collection group queries', () => {
 
 	it('allows listing a team roster', async () => {
 		await assertSucceeds(
-			getDocs(collection(anonymous(), 'teams/team-1/teamSeasons/season-1/roster'))
+			getDocs(
+				collection(anonymous(), 'teams/team-1/teamSeasons/season-1/roster')
+			)
 		)
 	})
 })
@@ -233,7 +235,9 @@ describe('system maintenance flag', () => {
 		})
 		const db = verified('admin-1')
 		await assertSucceeds(getDoc(doc(db, 'system/maintenance')))
-		await assertSucceeds(setDoc(doc(db, 'system/maintenance'), { enabled: true }))
+		await assertSucceeds(
+			setDoc(doc(db, 'system/maintenance'), { enabled: true })
+		)
 	})
 })
 
@@ -241,8 +245,6 @@ describe('unknown collections', () => {
 	it('are denied by the catch-all rule', async () => {
 		const db = verified()
 		await assertFails(getDoc(doc(db, 'not-a-real-collection/doc-1')))
-		await assertFails(
-			setDoc(doc(db, 'not-a-real-collection/doc-1'), { x: 1 })
-		)
+		await assertFails(setDoc(doc(db, 'not-a-real-collection/doc-1'), { x: 1 }))
 	})
 })

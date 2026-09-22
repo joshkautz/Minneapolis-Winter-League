@@ -27,7 +27,6 @@ import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import {
 	validateAuthentication,
 	validateNotBanned,
-	isPlayerBanned,
 } from '../../../shared/auth.js'
 import {
 	playerSeasonRef,
@@ -114,7 +113,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 			const isAdmin = playerDocument.admin === true
 
 			if (!isAdmin) {
-				await validateNotBanned(firestore, userId, seasonId)
+				await validateNotBanned(firestore, userId)
 			}
 
 			if (!isAdmin) {
@@ -175,17 +174,6 @@ export const createTeam = onCall<CreateTeamRequest>(
 				}
 			}
 
-			// Determine banned status to seed onto the player's new season subdoc
-			// if it doesn't already exist. Preserves ban continuity by reading the
-			// player's most recently-created season subdoc.
-			let bannedStatus = false
-			if (!existingPlayerSeasonData) {
-				// Mirror the account-level ban onto the new subdoc so the
-				// fallback in isPlayerBanned stays consistent until the
-				// backfill lands and this whole block goes away.
-				bannedStatus = await isPlayerBanned(firestore, userId, seasonId)
-			}
-
 			// Atomically: create canonical team parent + season subdoc + roster
 			// entry, and create or update the player's season subdoc.
 			const teamCanonicalRef = canonicalTeamRef(firestore, teamId)
@@ -227,7 +215,6 @@ export const createTeam = onCall<CreateTeamRequest>(
 						team: teamCanonicalRef,
 						paid: false,
 						signed: false,
-						banned: bannedStatus,
 						captain: true,
 					})
 				}

@@ -104,7 +104,10 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	deletePlayer: {},
 
 	// --- user: posts -------------------------------------------------------
-	createPost: { content: 'Looking for a team this season.', seasonId: 'season-1' },
+	createPost: {
+		content: 'Looking for a team this season.',
+		seasonId: 'season-1',
+	},
 	updatePost: { postId: 'post-1', content: 'Edited post content.' },
 	createReply: { postId: 'post-1', content: 'Replying to this post.' },
 	updateReply: {

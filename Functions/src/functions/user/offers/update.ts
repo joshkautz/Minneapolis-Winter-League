@@ -126,11 +126,7 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 				// When accepting an offer, validate the player is not banned (skip for admins)
 				// This prevents banned players from joining teams
 				if (status === OfferStatus.ACCEPTED && !isAdmin) {
-					await validateNotBanned(
-						firestore,
-						offerData.player.id,
-						offerData.season.id
-					)
+					await validateNotBanned(firestore, offerData.player.id)
 				}
 
 				// Check if user is the creator of the offer (for cancellation)
