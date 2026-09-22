@@ -139,6 +139,54 @@ describe('validateAndNormalizeName', () => {
 		})
 	})
 
+	describe('names that are not plain ASCII', () => {
+		// This class of name was rejected outright until the character set
+		// was widened. Two players in this league are stored with a curly
+		// apostrophe, which is what iOS and macOS type by default.
+
+		it('accepts a curly apostrophe and stores a straight one', () => {
+			expect(validateAndNormalizeName('o\u2019dowd', 'Last name')).toBe(
+				"O'Dowd"
+			)
+		})
+
+		it('accepts a typographic hyphen and stores an ASCII one', () => {
+			expect(validateAndNormalizeName('mary\u2013jane', 'Last name')).toBe(
+				'Mary-Jane'
+			)
+		})
+
+		it.each([
+			['Jos\u00e9', 'Jos\u00e9'],
+			['M\u00fcller', 'M\u00fcller'],
+			['Nguy\u1ec5n', 'Nguy\u1ec5n'],
+			['\u041e\u043b\u0435\u0433', '\u041e\u043b\u0435\u0433'],
+			['\u738b', '\u738b\u738b'],
+		])('accepts %s', (input, _unused) => {
+			void _unused
+			expect(() =>
+				validateAndNormalizeName(
+					input.length === 1 ? input + input : input,
+					'Last name'
+				)
+			).not.toThrow()
+		})
+
+		it('capitalizes a non-ASCII first letter', () => {
+			expect(validateAndNormalizeName('\u00e9lodie', 'Last name')).toBe(
+				'\u00c9lodie'
+			)
+		})
+
+		it('still rejects punctuation that is not part of a name', () => {
+			expect(codeOf('Hayden \u201cSlotz\u201d')).toBe('invalid-argument')
+		})
+
+		it('still rejects digits in any script', () => {
+			expect(codeOf('Player1')).toBe('invalid-argument')
+		})
+	})
+
 	it('names the field in the error so a client can point at it', () => {
 		try {
 			validateAndNormalizeName('', 'Last name')

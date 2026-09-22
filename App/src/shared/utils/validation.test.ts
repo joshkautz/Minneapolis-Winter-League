@@ -107,6 +107,31 @@ describe('nameSchema', () => {
 		expect(nameSchema.safeParse('a'.repeat(51)).success).toBe(false)
 	})
 
+	describe('names that are not plain ASCII', () => {
+		it('accepts a curly apostrophe and stores a straight one', () => {
+			// What iOS and macOS type by default. Two players in this league
+			// are stored with one, and the form used to refuse them.
+			expect(nameSchema.parse('o\u2019dowd')).toBe("O'Dowd")
+		})
+
+		it.each(['Jos\u00e9', 'M\u00fcller', 'Nguy\u1ec5n'])(
+			'accepts %s',
+			(name) => {
+				expect(nameSchema.safeParse(name).success).toBe(true)
+			}
+		)
+
+		it('capitalizes a non-ASCII first letter', () => {
+			expect(nameSchema.parse('\u00e9lodie')).toBe('\u00c9lodie')
+		})
+
+		it('still rejects quote marks', () => {
+			expect(nameSchema.safeParse('Hayden \u201cSlotz\u201d').success).toBe(
+				false
+			)
+		})
+	})
+
 	it('rejects an obscenity', () => {
 		expect(nameSchema.safeParse('Shit').success).toBe(false)
 	})
