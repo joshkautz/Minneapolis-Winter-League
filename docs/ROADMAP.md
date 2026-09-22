@@ -172,17 +172,17 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-Roughly 543 tests across four suites, all run by `npm run verify`. Every
+Roughly 576 tests across four suites, all run by `npm run verify`. Every
 callable is covered for authorization, **all six triggers** have suites, and
 the emulator suites are mutation-tested.
 
 Still uncovered, in rough priority order:
 
 - **Deeper callable behaviour.** The authorization sweep covers all 46.
-  `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`
-  and the three game callables have behavioural tests. The rest are covered
-  only at the gate; `rolloverTeam` and `updatePlayerAdmin` are the next most
-  consequential.
+  `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
+  `updatePlayerAdmin` and the three game callables have behavioural tests. The
+  rest are covered only at the gate; `rolloverTeam`, `deletePlayer` and the
+  badge callables are the next most consequential.
 - **App components.** Only the shell is mounted. The admin screens carry the
   most complex state and have no tests.
 - **End-to-end.** No test drives a browser against the emulators.
@@ -231,6 +231,22 @@ user-visible effect, which is why it is recorded rather than fixed. It needs
 addressing before anything surfaces join dates. Pinned by
 `tests/integration/merge-teams.test.ts`, "resets dateJoined on the moved
 roster entry".
+
+## An admin can lock every admin out
+
+`updatePlayerAdmin` is the only thing that writes the `admin` boolean, and it
+will happily clear it on the caller's own player document. Nothing checks that
+another admin remains, so the last admin can revoke themselves and there is no
+in-app way back — admin is not a token claim, so it cannot be restored from
+the Firebase console's user editor either. Recovery means writing the field
+directly in the Firestore console.
+
+Compare the last-captain rule in the same function, which refuses to leave a
+team with nobody able to manage it. The same shape of guard applies here:
+refuse to clear `admin` when the target is the caller, or when no other player
+has `admin: true`. Current behaviour is pinned by
+`tests/integration/update-player-admin.test.ts`, "lets an admin revoke their
+own admin status".
 
 ## Name validation is client-side only
 
