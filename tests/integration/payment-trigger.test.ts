@@ -103,37 +103,23 @@ beforeEach(async () => {
 })
 
 describe('onPaymentCreated', () => {
-	it('marks the player paid for the current season and requests a waiver', async () => {
+	it('marks the player paid for the current season', async () => {
 		await seedPayment('paid')
 		await fire()
 
 		expect((await readPlayerSeason())?.paid).toBe(true)
-		expect(sendWithTemplate).toHaveBeenCalledTimes(1)
-
-		const waivers = await readWaivers()
-		expect(waivers).toHaveLength(1)
-		expect(waivers[0]).toMatchObject({
-			seasonId: CURRENT_SEASON,
-			signatureRequestId: 'sig-req-1',
-			status: 'pending',
-		})
 	})
 
-	it('sends the metadata the webhook needs to find the player again', async () => {
-		// dropboxSignWebhook looks the player up by these two fields; a wrong
-		// value here leaves a signed waiver that can never be matched.
+	it('does not send a waiver', async () => {
+		// Waivers moved to onRosterEntryCreated. Tying one to a payment
+		// worked only while every player paid for themselves; under
+		// team-level payment one person can pay for everyone, and the rest
+		// would go without. See waiver-on-roster-join.test.ts.
 		await seedPayment('paid')
 		await fire()
 
-		const [args] = sendWithTemplate.mock.calls[0]
-		expect(args.metadata).toEqual({
-			firebaseUID: UID,
-			seasonId: CURRENT_SEASON,
-		})
-		expect(args.signers[0]).toMatchObject({
-			name: 'Test Player',
-			emailAddress: 'player@example.com',
-		})
+		expect(sendWithTemplate).not.toHaveBeenCalled()
+		expect(await readWaivers()).toHaveLength(0)
 	})
 
 	it('creates the season subdoc when a payment lands before one exists', async () => {
@@ -184,64 +170,15 @@ describe('onPaymentCreated', () => {
 		expect(sendWithTemplate).not.toHaveBeenCalled()
 	})
 
-	it('does not charge a second waiver when the player already paid', async () => {
-		// Stripe can deliver the same event twice. A second waiver would mean
-		// a second signature request email to the player.
+	it('is a no-op when the player is already paid', async () => {
+		// Stripe can deliver the same event twice.
 		await seedPayment('paid')
 		await fire()
-		expect(sendWithTemplate).toHaveBeenCalledTimes(1)
 
 		await seedPayment('paid', UID, 'pay-2')
 		await fire(UID, 'pay-2')
 
-		expect(sendWithTemplate).toHaveBeenCalledTimes(1)
-		expect(await readWaivers()).toHaveLength(1)
-	})
-
-	it('does not re-send when the player already paid but no waiver was created', async () => {
-		// The gap the waiver-exists check does not cover. If the first run
-		// marked the player paid but Dropbox returned no signature request
-		// id, there is no waiver document to find — only the already-paid
-		// short-circuit stops a retry sending a second request.
-		await playerSeasonRef(firestore, UID, CURRENT_SEASON).set({
-			season: seasonRef(CURRENT_SEASON),
-			team: null,
-			paid: true,
-			signed: false,
-			captain: false,
-		})
-		expect(await readWaivers()).toHaveLength(0)
-
-		await seedPayment('paid')
-		await fire()
-
-		expect(sendWithTemplate).not.toHaveBeenCalled()
-	})
-
-	it('does not send a second waiver when one already exists for the season', async () => {
-		await firestore
-			.collection('dropbox')
-			.doc(UID)
-			.collection('waivers')
-			.add({ seasonId: CURRENT_SEASON, status: 'pending' })
-		await seedPayment('paid')
-		await fire()
-
-		expect(sendWithTemplate).not.toHaveBeenCalled()
-		expect(await readWaivers()).toHaveLength(1)
-	})
-
-	it('still sends a waiver when the only existing one is for another season', async () => {
-		await firestore
-			.collection('dropbox')
-			.doc(UID)
-			.collection('waivers')
-			.add({ seasonId: OLD_SEASON, status: 'signed' })
-		await seedPayment('paid')
-		await fire()
-
-		expect(sendWithTemplate).toHaveBeenCalledTimes(1)
-		expect(await readWaivers()).toHaveLength(2)
+		expect((await readPlayerSeason())?.paid).toBe(true)
 	})
 
 	it('throws when the player document is missing, so the event is retried', async () => {

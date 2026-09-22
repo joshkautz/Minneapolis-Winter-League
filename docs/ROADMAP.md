@@ -53,7 +53,8 @@ Three decisions carry it:
   shortly before the 7-day authorization would expire, so nobody is ever
   asked to pay again.
 - **Waivers issue on joining a roster**, not on paying — otherwise a team
-  whose captain pays for everyone can never reach ten signed players.
+  whose captain pays for everyone can never reach ten signed players. Done:
+  `onRosterEntryCreated`.
 
 Also retires the per-player returning discount, which does not map onto a team
 total.

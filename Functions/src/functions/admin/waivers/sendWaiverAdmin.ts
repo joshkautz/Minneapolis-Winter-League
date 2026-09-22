@@ -14,22 +14,17 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore, FieldValue } from 'firebase-admin/firestore'
+import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
 	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerDocument,
 	SeasonDocument,
-	WaiverDocument,
 } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
-import {
-	FIREBASE_CONFIG,
-	getDropboxSignConfig,
-	EMAIL_CONFIG,
-} from '../../../config/constants.js'
-import { SignatureRequestApi, SubSigningOptions } from '@dropbox/sign'
+import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { requestWaiver } from '../../../shared/waivers.js'
 
 interface SendWaiverAdminRequest {
 	/** Player's Firebase Auth UID */
@@ -137,83 +132,37 @@ export const sendWaiverAdmin = onCall<SendWaiverAdminRequest>(
 				)
 			}
 
-			// Check if waiver already exists for this player/season
-			const existingWaiver = await firestore
-				.collection(Collections.DROPBOX)
-				.doc(playerId)
-				.collection('waivers')
-				.where('seasonId', '==', seasonId)
-				.limit(1)
-				.get()
+			// The shared helper owns the Dropbox Sign call and the waiver
+			// document, and is idempotent on (player, season). The admin path
+			// reports an existing waiver as an error rather than silently
+			// doing nothing, since an admin asked for it explicitly.
+			const result = await requestWaiver(firestore, { playerId, seasonId })
 
-			if (!existingWaiver.empty) {
-				const existingWaiverData =
-					existingWaiver.docs[0].data() as WaiverDocument
+			if (result.outcome === 'already-requested') {
 				throw new HttpsError(
 					'already-exists',
-					`A waiver already exists for this player/season (status: ${existingWaiverData.status}). ` +
+					'A waiver already exists for this player and season. ' +
 						'Use the "Send Reminder" function if you need to resend the waiver email.'
 				)
 			}
-
-			// Initialize Dropbox Sign API
-			const dropboxConfig = getDropboxSignConfig()
-			const dropbox = new SignatureRequestApi()
-			dropbox.username = dropboxConfig.API_KEY
-
-			// Send Dropbox signature request
-			const signatureResponse = await dropbox.signatureRequestSendWithTemplate({
-				templateIds: [dropboxConfig.TEMPLATE_ID],
-				subject: EMAIL_CONFIG.WAIVER_SUBJECT,
-				message: EMAIL_CONFIG.WAIVER_MESSAGE,
-				signers: [
-					{
-						role: 'Participant',
-						name: `${playerDocument.firstname} ${playerDocument.lastname}`,
-						emailAddress: playerDocument.email,
-					},
-				],
-				signingOptions: {
-					draw: true,
-					type: true,
-					upload: true,
-					phone: false,
-					defaultType: SubSigningOptions.DefaultTypeEnum.Type,
-				},
-				metadata: {
-					firebaseUID: playerId,
-					seasonId: seasonId,
-				},
-				testMode: dropboxConfig.TEST_MODE,
-			})
-
-			const signatureRequestId =
-				signatureResponse.body.signatureRequest?.signatureRequestId
-
-			if (!signatureRequestId) {
+			if (result.outcome === 'no-player') {
+				throw new HttpsError(
+					'not-found',
+					'Player not found, or they have no email address on file.'
+				)
+			}
+			if (result.outcome === 'no-signature-request-id') {
 				throw new HttpsError(
 					'internal',
 					'Failed to create signature request - no ID returned from Dropbox Sign'
 				)
 			}
 
-			// Create waiver document in dropbox/{uid}/waivers subcollection
-			await firestore
-				.collection(Collections.DROPBOX)
-				.doc(playerId)
-				.collection('waivers')
-				.add({
-					seasonId: seasonId,
-					signatureRequestId: signatureRequestId,
-					status: 'pending',
-					createdAt: FieldValue.serverTimestamp(),
-				})
-
 			logger.info('Admin sent waiver to player', {
 				adminId: auth?.uid,
 				playerId,
 				seasonId,
-				signatureRequestId,
+				signatureRequestId: result.signatureRequestId,
 				playerEmail: playerDocument.email,
 			})
 
@@ -221,7 +170,7 @@ export const sendWaiverAdmin = onCall<SendWaiverAdminRequest>(
 				success: true,
 				playerId,
 				seasonId,
-				signatureRequestId,
+				signatureRequestId: result.signatureRequestId,
 				message: `Waiver sent successfully to ${playerDocument.email}`,
 			}
 		} catch (error) {

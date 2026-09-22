@@ -92,6 +92,7 @@ const NON_CALLABLES = new Set([
 	'onOfferUpdated',
 	'onPaymentCreated',
 	'onTeamRegistrationChange',
+	'onRosterEntryCreated',
 	'updateTeamRegistrationOnPlayerChange',
 	'updateTeamRegistrationOnRosterChange',
 	'userDeleted',

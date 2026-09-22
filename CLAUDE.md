@@ -108,7 +108,7 @@ already allowed.
 
 ## Tests
 
-Four suites (~805 tests), all run by `npm run verify`:
+Four suites (~815 tests), all run by `npm run verify`:
 
 | Suite           | Location                      | Covers                                                  |
 | --------------- | ----------------------------- | ------------------------------------------------------- |
