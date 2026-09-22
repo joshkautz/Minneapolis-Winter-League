@@ -344,6 +344,141 @@ right way round. The free cancellation still applies to the failure that
 actually happens most — losing the race for the twelfth spot, which resolves
 in minutes.
 
+## Before building anything
+
+Three of these are decisions or account work with lead time. Start them now;
+they are not blocked on any code.
+
+### Ask Stripe for two things
+
+1. **`automatic_delayed` capture** (private preview). It captures about six
+   hours before an authorization lapses, which is the safety net this design
+   depends on. Granted, it removes the only scheduled job here. Request it at
+   the form on the
+   [hold documentation](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method).
+2. **Extended authorizations**, or at least what they would cost. They need
+   IC+ pricing and add 0.08% on Visa outside travel categories, so they are
+   probably not worth it — but a 30-day window would make the expiry branch
+   moot, and it is a five-minute question to their support.
+
+Neither blocks the build. Both change how much of it there is.
+
+### Set up the Stripe account
+
+- Create the **"Team Registration" Product**. Inline pricing needs a Product
+  to attach to; the Price is per-session.
+- Create a **restricted API key** scoped to Checkout Sessions, PaymentIntents,
+  Customers and Refunds. Worth doing regardless — it shrinks the blast radius
+  of the integration that is already live.
+- Check the **statement descriptor** reads as the league, not something
+  generic. A $1,000 hold nobody recognises becomes a dispute, and a dispute
+  costs the fee _and_ the amount.
+
+### Two decisions left
+
+- **Can a registered team become unregistered?** Today `registered` can flip
+  back to false if the roster drops below ten. Once money is captured that is
+  no longer sensible — the team has paid and been given a spot. Suggested:
+  once a team registers, the flag is sticky for the season and only an admin
+  can reverse it, with an explicit refund.
+- **What happens to a team's money if an admin deletes it?**
+  `deleteUnregisteredTeamsForSeasonLock` already deletes teams wholesale when
+  the season locks. That path must now cancel or refund first, and it must be
+  impossible to delete a team and orphan its holds.
+
+## Implementation order
+
+Each phase is shippable and leaves the system working. Nothing before phase 3
+touches money.
+
+### Phase 0 — prerequisites
+
+**0a. Make the twelve-team cap transactional.**
+`updateTeamRegistrationStatus` currently sets `registered` from the roster
+count with no cap, and the cap is a trigger that tidies up afterwards. Under
+money that lets a thirteenth team commit funds it should never have been
+asked for.
+
+Put a counter on the season — `registeredTeamCount` — and register inside a
+transaction:
+
+```
+read seasons/{seasonId}.registeredTeamCount
+if count >= 12                      -> do not register
+else                                -> set registered = true, increment count
+```
+
+Firestore transactions make that atomic, and the twelfth spot goes to whoever
+wins it. Twelve registrations a season means no contention worth worrying
+about. `onTeamRegistrationChange` keeps its cleanup job — deleting the teams
+that did not make it — but stops being the thing that decides.
+
+This is a prerequisite, not a follow-up. Do it first, on its own, while it is
+still cheap to get wrong.
+
+**0b. Move waiver issuance to roster join.** Off `onPaymentCreated` and onto
+`shared/membership.ts`, which both `updateTeamRoster` and offer acceptance
+already go through. Until this lands, a team whose captain pays for everyone
+can never reach ten signed players.
+
+**0c. Decide the testing approach** — see below. Worth settling before there
+is code to retrofit.
+
+### Phase 1 — the ledger, still no money
+
+Add `contributions` and the two totals. Teach `updateTeamRegistrationStatus`
+the new rule behind a per-season flag, so both rules coexist and the old
+seasons keep working. Test the arithmetic and the registration threshold
+exhaustively here, where there is no Stripe involved at all.
+
+### Phase 2 — taking money
+
+`createTeamContributionCheckout`: validate the amount against the live
+balance, create the session with inline pricing and `capture_method: manual`.
+Extend the webhook to record an authorized contribution against the team.
+
+### Phase 3 — the capture lifecycle
+
+Capture on registration, cancel on losing the race, capture before expiry.
+Admin refund action. This is where the money decisions live and where the
+tests matter most.
+
+### Phase 4 — UI
+
+Team payment page: balance, remaining, contribute, and each contribution's
+state. Admin view of a team's ledger.
+
+### Phase 5 — cutover
+
+Turn the flag on for the new season. The old rule stays available for any
+season still using it.
+
+## Testing this without a payment processor
+
+The integration suite runs offline against the emulators, and it should stay
+that way. Hitting Stripe's sandbox from CI means network, keys and rate
+limits, for tests that would still not be deterministic.
+
+**Keep the money decisions out of the Stripe-calling code.** Given a team's
+contributions and its roster, deciding what to capture, what to cancel and
+for how much is a pure function. Written that way it can be tested
+exhaustively against the emulator — the overpayment race, partial capture,
+expiry ordering, a team that fails after capture — with no payment processor
+in sight. The Stripe layer on top is then thin enough to cover by mocking the
+SDK, the way `payment-trigger.test.ts` already mocks Dropbox Sign.
+
+Reserve Stripe test mode for a small set of manual checks that the API shapes
+are right: that a manual-capture session really does produce
+`requires_capture`, that `capture_before` is populated, that a partial capture
+releases the rest.
+
+**Rehearse the race before registration day.** Seed the emulator with fifteen
+teams completing within a few seconds of each other and confirm that exactly
+twelve register, that the other three are cancelled rather than refunded, and
+that no team ends up registered without the full amount. That rehearsal is
+worth more than any single test in the suite, because the failure it is
+looking for only appears under concurrency.
+
 ## Migration
 
 The rule changes between seasons, so existing seasons keep their data. Past
