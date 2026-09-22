@@ -104,20 +104,27 @@ already allowed.
 
 ## Tests
 
-Three suites, all run by `npm run verify`:
+Four suites, all run by `npm run verify`:
 
-| Suite           | Location                     | Covers                          |
-| --------------- | ---------------------------- | ------------------------------- |
-| App             | `App/src/**/*.test.tsx`      | Component smoke test            |
-| Functions       | `Functions/src/**/*.test.ts` | Auth validators, webhook guards |
-| Firestore rules | `tests/rules/*.test.ts`      | The deny-all-writes invariant   |
+| Suite           | Location                      | Covers                                                  |
+| --------------- | ----------------------------- | ------------------------------------------------------- |
+| App             | `App/src/**/*.test.{ts,tsx}`  | Validation schemas, season helpers, hooks, app shell    |
+| Functions       | `Functions/src/**/*.test.ts`  | Auth validators, webhook guards, TrueSkill, Swiss ranks |
+| Firestore rules | `tests/rules/*.test.ts`       | The deny-all-writes invariant                           |
+| Integration     | `tests/integration/*.test.ts` | Real Functions code against the emulator                |
 
-The rules suite matters most: `firestore.rules` is the only thing between a
-client and the database, and nothing else catches a change that opens a write.
-It runs against the real emulator — `npm run test:rules` starts one.
+The two emulator-backed suites matter most, and both are mutation-tested —
+opening a write in `firestore.rules`, or dropping one side of a membership
+write, makes them fail.
 
-Coverage is still thin overall (see `docs/ROADMAP.md`). When you touch a
-callable's authorization or a rules block, add a test in the same change.
+- `npm run test:rules` — `firestore.rules` is the only thing between a client
+  and the database.
+- `npm run test:integration` — document paths, transaction atomicity and
+  collection-group reads, none of which a mocked Firestore can catch.
+
+When you touch a callable's authorization, a rules block, or anything writing
+both sides of the player/team relationship, add a test in the same change.
+Remaining gaps are listed in `docs/ROADMAP.md`.
 
 ## Environments
 
