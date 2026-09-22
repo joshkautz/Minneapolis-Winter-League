@@ -104,18 +104,19 @@ already allowed.
 
 ## Tests
 
-Four suites, all run by `npm run verify`:
+Four suites (~611 tests), all run by `npm run verify`:
 
 | Suite           | Location                      | Covers                                                  |
 | --------------- | ----------------------------- | ------------------------------------------------------- |
 | App             | `App/src/**/*.test.{ts,tsx}`  | Validation schemas, season helpers, hooks, app shell    |
-| Functions       | `Functions/src/**/*.test.ts`  | Auth validators, webhook guards, TrueSkill, Swiss ranks |
+| Functions       | `Functions/src/**/*.test.ts`  | Auth validators, webhook guards, TrueSkill, batch sizes |
 | Firestore rules | `tests/rules/*.test.ts`       | The deny-all-writes invariant                           |
 | Integration     | `tests/integration/*.test.ts` | Real Functions code against the emulator                |
 
-The two emulator-backed suites matter most, and both are mutation-tested —
-opening a write in `firestore.rules`, or dropping one side of a membership
-write, makes them fail.
+Every callable is covered for authorization and every trigger has a suite.
+Behavioural coverage is deeper on the operations that span documents —
+`mergeTeams`, `updatePlayerAdmin`, the game callables, the rankings rebuild.
+Remaining gaps are listed in `docs/ROADMAP.md`.
 
 - `npm run test:rules` — `firestore.rules` is the only thing between a client
   and the database.
@@ -124,7 +125,26 @@ write, makes them fail.
 
 When you touch a callable's authorization, a rules block, or anything writing
 both sides of the player/team relationship, add a test in the same change.
-Remaining gaps are listed in `docs/ROADMAP.md`.
+
+### Three conventions worth keeping
+
+**Mutation-test what you add.** Break the thing the test exists for and
+confirm that test fails. Several suites here gained a test only because a
+mutation survived: the payment trigger's already-paid short-circuit was
+masked by its waiver-exists check, and `gameLoader`'s completed-games filter
+was masked by a redundant guard in `processGame` — the filter's real effect is
+that an unplayed game forms no round, so the test counts snapshots.
+
+**Emulator ≠ production.** The Firestore emulator does not enforce the 500-op
+`WriteBatch` limit; a 600-op batch commits there and fails in production.
+Anything whose batch size grows with the data needs a unit test that counts
+commits instead (`rankingsSaver.test.ts`).
+
+**Pin behaviour you decide not to change.** Where a known-wrong behaviour is
+left alone, there is a test asserting it with a comment saying why and a
+`docs/ROADMAP.md` entry. The test then has to change with the fix, so the
+decision cannot be lost. Grep the roadmap for the test name before assuming a
+test encodes intended behaviour.
 
 ## Environments
 
