@@ -44,6 +44,33 @@ checks.
 **Writes go through callables**, never the client SDK. `firestore.rules` denies
 all client writes. Add the call to `App/src/firebase/collections/functions.ts`.
 
+## Collection-group queries: never use `doc.id`
+
+`teamsInSeasonQuery` / `teamsBySeasonQuery` are collection-group queries over
+`teamSeasons`, and those subdocs are keyed by **season id**. So every result
+of a single-season query has the _same_ `doc.id`, and it is not the team's id.
+
+This is quiet rather than loud: the code type-checks, the list renders, and the
+only symptoms are duplicate React keys and a `<Select>` whose options all carry
+one value that matches nothing — which is how the admin player editor came to
+show a blank team for every season.
+
+Derive the canonical id from the parent instead:
+
+```ts
+import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
+
+const teams = snapshot.docs.map((doc) => ({
+	...doc.data(),
+	id: canonicalTeamIdFromTeamSeasonDoc(doc),
+}))
+```
+
+The same applies to `playerSeasons`, via
+`canonicalPlayerIdFromPlayerSeasonDoc`. A useful check when reviewing: if a
+collection-group result's `id` is used to match against a document reference's
+`.id`, it has to come from one of these helpers.
+
 ## Providers
 
 `providers-wrapper.tsx` composes the full context stack and is mounted in
