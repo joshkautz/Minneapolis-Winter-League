@@ -40,7 +40,10 @@ import {
 	playerSeasonsSubcollection,
 } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
-import { teamsBySeasonQuery } from '@/firebase/collections/teams'
+import {
+	canonicalTeamIdFromTeamSeasonDoc,
+	teamsBySeasonQuery,
+} from '@/firebase/collections/teams'
 import {
 	updatePlayerAdminViaFunction,
 	getPlayerAuthInfoViaFunction,
@@ -959,8 +962,13 @@ const SeasonCard = ({
 
 		return teamsSnapshot.docs
 			.map((doc) => ({
-				id: doc.id,
 				...doc.data(),
+				// This is a collection-group query over `teamSeasons`, so each
+				// result's own id is the SEASON id — the same value for every
+				// team. Using it here gave every option in the dropdown an
+				// identical value that matched no player's team, so the select
+				// rendered blank. The canonical team id is the parent document.
+				id: canonicalTeamIdFromTeamSeasonDoc(doc),
 			}))
 			.sort((a, b) => a.name.localeCompare(b.name)) as (TeamSeasonDocument & {
 			id: string
