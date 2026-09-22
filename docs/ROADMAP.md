@@ -197,23 +197,21 @@ Triggers are invoked with `.run(event)` and a synthetic event carrying
   short-circuit initially passed with the guard removed, because the
   waiver-exists check masked it — the gap only showed under mutation.
 
-## Inconsistent error codes on offers
+## Name validation is client-side only
 
-`createOffer` and `updateOffer` wrap `validateAuthentication` in a try/catch
-and re-throw everything as `unauthenticated`, so a verified-but-unconfirmed
-email surfaces with that code rather than the `permission-denied` every other
-callable uses. The request is still rejected; only the code a client sees
-differs, which means the UI cannot distinguish "log in" from "verify your
-email". Current behaviour is pinned in
-`tests/integration/callables-authorization.test.ts`.
+`nameSchema` in `App/src/shared/utils/validation.ts` enforces length, an
+allowed character set and a profanity filter. `createPlayer` and
+`updatePlayer` only check that the name is a non-empty string and trim it.
 
-## Name validation swallows its own transform
+Callables are directly invocable by any authenticated user, so the schema is
+not a control — someone calling `updatePlayer` outside the App can set a name
+to anything non-empty, of any length. Names are shown on rosters, the
+schedule and the public rankings.
 
-`nameSchema` rejects consecutive spaces in a refine that runs before the
-transform which would have collapsed them, so that part of the transform is
-unreachable. Either drop the dead branch or reorder so "josh kautz"
-normalises to "Josh Kautz" instead of being rejected. Current behaviour is
-pinned in `App/src/shared/utils/validation.test.ts`.
+The fix is to validate server-side, which means either duplicating the rules
+in `Functions/` or extracting them somewhere both workspaces can import. The
+two `types.ts` files are already duplicated deliberately, so duplication is
+consistent with how this repo handles the split.
 
 ## Registration window enforcement
 
