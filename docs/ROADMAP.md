@@ -202,61 +202,19 @@ Triggers are invoked with `.run(event)` and a synthetic event carrying
   short-circuit initially passed with the guard removed, because the
   waiver-exists check masked it — the gap only showed under mutation.
 
-## Known bugs
+## Name validation duplicates the App's rules
 
-Found while writing tests, and deliberately not fixed in the same change —
-each is pinned by a test asserting today's behaviour, so the test has to
-change with the fix and the decision cannot be quietly lost. Ordered by how
-much damage each could do.
+`Functions/src/shared/names.ts` and `App/src/shared/utils/validation.ts`
+enforce the same rules on player names, deliberately duplicated the way
+`types.ts` is: the workspaces build against different SDKs and neither imports
+from the other. **Change them together.**
 
-### Name validation is client-side only
-
-`nameSchema` in `App/src/shared/utils/validation.ts` enforces length, an
-allowed character set and a profanity filter. `createPlayer` and
-`updatePlayer` only check that the name is a non-empty string and trim it.
-
-Callables are directly invocable by any authenticated user, so the schema is
-not a control — someone calling `updatePlayer` outside the App can set a name
-to anything non-empty, of any length. Names are shown on rosters, the
-schedule and the public rankings.
-
-The fix is to validate server-side, which means either duplicating the rules
-in `Functions/` or extracting them somewhere both workspaces can import. The
-two `types.ts` files are already duplicated deliberately, so duplication is
-consistent with how this repo handles the split.
-
-### Moving a game between seasons leaves stale team names
-
-`GameDocument.homeName` / `awayName` are snapshots of the team's name for the
-game's season — that is what lets schedules and standings render without a
-join, and what keeps an old game showing a team's old name after a rename.
-
-`updateGame` re-captures those names whenever a team id changes, but not when
-only `seasonId` changes. A game moved between seasons keeps the previous
-season's names while pointing at the new season, so the schedule shows names
-no team has any more.
-
-The fix is to re-read both names whenever the effective season changes, not
-just when a team id is supplied. Current behaviour is pinned by
-`tests/integration/game-callables.test.ts`, "leaves team names stale when only
-the season is moved", so that test changes with the fix.
-
-Nothing in the App offers this today — the admin game editor sets the season
-at creation — so it is reachable only by calling `updateGame` directly.
-
-### A merge resets roster join dates
-
-`mergeTeams` copies each roster entry with its original `dateJoined`, then
-re-points every player through `addPlayerToTeam`, which writes a fresh
-`FieldValue.serverTimestamp()`. The preservation in the first step is
-therefore dead work and the original join date is lost.
-
-Nothing reads `dateJoined` today — it is written by `createTeam`,
-`rolloverTeam` and the membership helpers and read nowhere — so this has no
-user-visible effect, which is why it is recorded rather than fixed. It needs
-addressing before anything surfaces join dates. Pinned by
-`tests/integration/merge-teams.test.ts`, "resets dateJoined on the moved
-roster entry".
+The Functions copy is missing one rule — the profanity filter, which needs the
+`bad-words` package that only the App depends on. Adding it to Functions would
+close the gap; until then a name that would be rejected in the form can still
+be set by calling `createPlayer`, `updatePlayer` or `updatePlayerAdmin`
+directly. Everything else — length, character set, repeated punctuation and
+the normalization — is enforced on both sides.
 
 ## Registration window enforcement
 

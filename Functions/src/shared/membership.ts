@@ -54,7 +54,11 @@
  * @see TeamRosterDocument in types.ts (the team-side membership doc)
  */
 
-import { FieldValue, type Transaction } from 'firebase-admin/firestore'
+import {
+	FieldValue,
+	type Timestamp,
+	type Transaction,
+} from 'firebase-admin/firestore'
 import {
 	playerRef,
 	playerSeasonRef,
@@ -103,10 +107,17 @@ export function addPlayerToTeam(
 		seasonRef: DocumentReference<SeasonDocument>
 		captain?: boolean
 		existingPlayerSeason: PlayerSeasonDocument | null
+		/**
+		 * When the player is not joining for the first time — a team merge
+		 * moving an existing membership, say — pass the original so the join
+		 * date survives. Defaults to now, which is right for a real join.
+		 */
+		dateJoined?: Timestamp
 	}
 ): void {
 	const { playerId, teamId, seasonId, seasonRef, existingPlayerSeason } = params
 	const captain = params.captain ?? false
+	const dateJoined = params.dateJoined ?? FieldValue.serverTimestamp()
 
 	const rosterEntryDocRef = teamRosterEntryRef(
 		firestore,
@@ -121,7 +132,7 @@ export function addPlayerToTeam(
 	// Team-side: pure membership join.
 	transaction.set(rosterEntryDocRef, {
 		player: playerCanonicalRef,
-		dateJoined: FieldValue.serverTimestamp(),
+		dateJoined,
 	})
 
 	// Player-side: create or update the season subdoc with the team ref.
