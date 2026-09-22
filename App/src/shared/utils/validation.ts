@@ -7,8 +7,46 @@
 import * as z from 'zod'
 import { Filter } from 'bad-words'
 
-// Initialize profanity filter
+/**
+ * Entries removed from the `bad-words` blocklist because they are real
+ * people's names, and this filter is applied to names.
+ *
+ * Out of the box the list blocks Cox, Wang, Butt, Schaffer, Dick and Dyke,
+ * among others — Cox is a top-1000 US surname and Wang is one of the most
+ * common surnames in the world, so the form refused to let either register.
+ *
+ * The criterion for removal is: an established given name or surname whose
+ * word is not primarily a slur against a group.
+ *
+ * **Keep in sync with `Functions/src/shared/names.ts`**, which holds the
+ * authoritative copy — this one is a convenience so the reader sees the error
+ * inline instead of after submitting.
+ */
+const REAL_NAMES_WRONGLY_FLAGGED = [
+	'butt',
+	'cox',
+	'dick',
+	'dyke',
+	'fanny',
+	'fuk',
+	'gaylord',
+	'hoar',
+	'hoare',
+	'hore',
+	'kuntz',
+	'lipshits',
+	'lipshitz',
+	'muff',
+	'pecker',
+	'schaffer',
+	'schmuck',
+	'wang',
+	'willies',
+	'willy',
+]
+
 const filter = new Filter()
+filter.removeWords(...REAL_NAMES_WRONGLY_FLAGGED)
 
 // Common validation schemas using Zod v4 best practices
 export const emailSchema = z

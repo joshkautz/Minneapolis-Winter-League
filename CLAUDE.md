@@ -91,7 +91,10 @@ already allowed.
 - `Functions/package-lock.json` is a **second lockfile**, separate from the
   root workspace one, and it is what `firebase deploy` installs from. Change a
   Functions dependency and you must run both `npm install` and
-  `npm install --prefix Functions`, or the deploy builds something CI never saw.
+  `npm install --prefix Functions --package-lock-only`, or the deploy builds
+  something CI never saw. Keep the `--package-lock-only`: a full install there
+  creates a `Functions/node_modules` that shadows the hoisted workspace tree
+  and silently breaks `vi.mock()` in the emulator tests.
 - `Functions/src/index.ts` is the deploy manifest. Forgetting to export is the
   most common way a new function silently does nothing.
 - `.emulator/` is gitignored and may hold real production data pulled down by
@@ -104,7 +107,7 @@ already allowed.
 
 ## Tests
 
-Four suites (~719 tests), all run by `npm run verify`:
+Four suites (~746 tests), all run by `npm run verify`:
 
 | Suite           | Location                      | Covers                                                  |
 | --------------- | ----------------------------- | ------------------------------------------------------- |

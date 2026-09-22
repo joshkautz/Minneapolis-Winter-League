@@ -207,14 +207,34 @@ Triggers are invoked with `.run(event)` and a synthetic event carrying
 `Functions/src/shared/names.ts` and `App/src/shared/utils/validation.ts`
 enforce the same rules on player names, deliberately duplicated the way
 `types.ts` is: the workspaces build against different SDKs and neither imports
-from the other. **Change them together.**
+from the other. **Change them together** — including
+`REAL_NAMES_WRONGLY_FLAGGED`, which appears in both.
 
-The Functions copy is missing one rule — the profanity filter, which needs the
-`bad-words` package that only the App depends on. Adding it to Functions would
-close the gap; until then a name that would be rejected in the form can still
-be set by calling `createPlayer`, `updatePlayer` or `updatePlayerAdmin`
-directly. Everything else — length, character set, repeated punctuation and
-the normalization — is enforced on both sides.
+The Functions copy is the control; the App's exists so the reader sees the
+error inline rather than after submitting.
+
+### The profanity blocklist and real names
+
+`bad-words` ships a 896-word list that includes Cox, Wang, Butt, Schaffer,
+Dick, Dyke, Kuntz, Hoare, Gaylord, Fanny, Schmuck and Lipshitz — all real
+surnames. Cox is a top-1000 US surname and Wang is one of the most common in
+the world, so before this was corrected the sign-up form refused to let either
+register.
+
+`REAL_NAMES_WRONGLY_FLAGGED` removes them. The criterion is: an established
+given name or surname whose word is not primarily a slur against a group.
+Entries that are principally slurs stay blocked even where they also occur as
+surnames.
+
+This cannot be complete — surnames are not enumerable, and someone will
+eventually hit a word still on the list. Two things cover that:
+
+- The error tells them to contact the league rather than just refusing.
+- **Admin edits skip the profanity check entirely.** `updatePlayerAdmin`
+  passes `checkProfanity: false`, so an organizer can always set a name the
+  filter refuses. The structural rules still apply.
+
+If a real name is reported as blocked, add it to the list in **both** files.
 
 ## Registration window enforcement
 

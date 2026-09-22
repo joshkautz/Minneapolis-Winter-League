@@ -106,6 +106,20 @@ describe('nameSchema', () => {
 	it('rejects a name longer than 50 characters', () => {
 		expect(nameSchema.safeParse('a'.repeat(51)).success).toBe(false)
 	})
+
+	it('rejects an obscenity', () => {
+		expect(nameSchema.safeParse('Shit').success).toBe(false)
+	})
+
+	it.each(['Cox', 'Wang', 'Butt', 'Schaffer', 'Dick', 'Dyke', 'Hoare'])(
+		'accepts %s, which is a real surname the blocklist ships with',
+		(name) => {
+			// The form refused to let anyone with these names register. Cox is
+			// a top-1000 US surname and Wang is one of the most common in the
+			// world. Kept in sync with Functions/src/shared/names.ts.
+			expect(nameSchema.parse(name)).toBe(name)
+		}
+	)
 })
 
 describe('teamNameSchema', () => {
