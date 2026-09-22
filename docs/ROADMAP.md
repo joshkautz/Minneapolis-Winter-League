@@ -56,6 +56,34 @@ Three decisions carry it:
 Also retires the per-player returning discount, which does not map onto a team
 total.
 
+## The twelve-team cap is a cleanup pass, not a gate
+
+`onTeamRegistrationChange` closes the season once twelve teams are
+registered, deleting every team-season that has not. It works, and
+`tests/integration/registration-lock.test.ts` covers it — including three
+ways it does not hold, pinned as the behaviour it has today.
+
+**Nothing stops a thirteenth team registering.**
+`updateTeamRegistrationStatus` sets `registered` purely from the roster count
+and never consults the cap. The trigger only tidies up afterwards, so a season
+can hold more registered teams than it has spots.
+
+**Overshooting the threshold disables the lock entirely.** The guard is
+`registeredTeamCount !== LOCK_THRESHOLD`, an exact match. Two teams completing
+close together both observe thirteen by the time their trigger queries, so
+neither locks and the unregistered teams are never cleared — registration
+silently stays open. `>=` fixes the guard but not the first problem.
+
+**The trigger is eventually consistent.** It runs after the write that flipped
+the flag and can retry, so it can never be the thing that decides a race.
+
+This has been tolerable while registration meant ten separate $100 payments
+trickling in over weeks. Under team-level payment it becomes a race for twelve
+spots with money committed, and a thirteenth team that registers holds
+authorized funds that should never have been taken. Enforcing the cap at the
+moment a team registers, in the same transaction, is a **prerequisite** for
+`docs/TEAM_PAYMENTS.md` rather than a follow-up to it.
+
 ## Waivers
 
 - **Waiver history UI** — the per-season subcollection already stores every

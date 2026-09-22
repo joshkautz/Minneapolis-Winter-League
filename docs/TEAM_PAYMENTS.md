@@ -251,22 +251,70 @@ Customers and Refunds, write; everything else off.
 Worth doing as its own change, independent of this one. It reduces the blast
 radius of the existing integration, not just the new code.
 
-## Open questions
+## Decided
 
-1. **Minimum contribution?** Suggested $10, so the processing fee stays a sane
-   fraction of it.
-2. **Can a player contribute before joining a roster?** Suggested no — it
-   makes authorization and cancellation much simpler.
-3. **A team that authorizes $1,000 but never reaches ten signed players.**
-   The holds expire after 7 days and release themselves, which is the safe
-   default. Is that the behaviour you want, or should the team be able to
-   re-authorize and keep trying?
-4. **Who can see the team's balance?** Suggested: any rostered player, since
-   they are the ones being asked to chip in.
-5. **Does the twelve-team cap get enforced in code?** Today it appears to be
-   managed by hand. If registration becomes a race, the cap probably needs to
-   be a real check — and that decides whether a thirteenth team's holds are
-   cancelled automatically.
+- **Minimum contribution: $10.** Below that the processing fee is a
+  meaningful fraction of the contribution.
+- **Only rostered players may contribute.** No paying into a team you have
+  not joined; it keeps authorization and cancellation simple, and nobody
+  wants it.
+- **The balance is visible to rostered players only.** Not to other teams and
+  not publicly — what a team paid, and who paid it, is their business.
+- **A team with the money but not the players is not registered.** It holds
+  its authorizations and keeps recruiting. If it reaches ten signed players
+  before twelve other teams complete, it locks in automatically; if twelve
+  others get there first, its holds are released and it does not field a
+  team.
+
+That last one settles the ordering: **teams are ranked by when they satisfy
+both conditions**, not by when their money arrived. Paying first buys nothing
+on its own.
+
+## The twelve-team cap has to move first
+
+The cap is enforced by `onTeamRegistrationChange`, which counts registered
+teams after the fact and deletes the rest. Three properties make it unfit to
+decide a race for money, all pinned in
+`tests/integration/registration-lock.test.ts`:
+
+- Nothing stops a thirteenth team registering — the cap is never consulted
+  when a team's `registered` flag is set.
+- The lock's guard is an exact `!== 12`, so two teams completing together
+  both see thirteen and neither locks. Registration stays open silently.
+- It is a Firestore trigger: it runs after the write and can retry, so it can
+  never be authoritative about who was twelfth.
+
+Today that costs a team a spot it thought it had. Under this design it means a
+thirteenth team is holding authorized funds that should never have been
+committed. **The cap must be enforced in the same transaction that registers a
+team**, before any of this ships. See the roadmap entry.
+
+## The open question this leaves
+
+**A team whose holds expire while it is still in contention.**
+
+A team authorizes $1,000 on day one and is still looking for its tenth signed
+player on day eight. The hold has expired and released itself. The team is
+still eligible — twelve others have not finished — but its money is gone and
+it silently drops out of the race without anyone deciding that.
+
+Options:
+
+1. **Tell them and let them re-authorize.** Email the contributor when a hold
+   is close to expiring and again when it releases, and let them pay again.
+   Honest, no money at risk, some friction.
+2. **Capture at expiry and hold real money.** Keeps the team in the race but
+   converts a free release into a refund with an unrecoverable fee, for a team
+   that may not play.
+3. **Require ten signed players before any money is taken.** Removes the
+   problem completely — and removes the ability to secure a spot quickly,
+   which is the point of the change.
+
+Option 1 is the only one that does not either cost money or defeat the
+feature, but it is worth confirming: **is a seven-day window to find ten
+signed players acceptable, given a registration period of two to four weeks?**
+If most teams already have their roster before registration opens, this
+barely arises.
 
 ## Migration
 
