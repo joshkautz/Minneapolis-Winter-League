@@ -209,22 +209,6 @@ each is pinned by a test asserting today's behaviour, so the test has to
 change with the fix and the decision cannot be quietly lost. Ordered by how
 much damage each could do.
 
-### An admin can lock every admin out
-
-`updatePlayerAdmin` is the only thing that writes the `admin` boolean, and it
-will happily clear it on the caller's own player document. Nothing checks that
-another admin remains, so the last admin can revoke themselves and there is no
-in-app way back — admin is not a token claim, so it cannot be restored from
-the Firebase console's user editor either. Recovery means writing the field
-directly in the Firestore console.
-
-Compare the last-captain rule in the same function, which refuses to leave a
-team with nobody able to manage it. The same shape of guard applies here:
-refuse to clear `admin` when the target is the caller, or when no other player
-has `admin: true`. Current behaviour is pinned by
-`tests/integration/update-player-admin.test.ts`, "lets an admin revoke their
-own admin status".
-
 ### Name validation is client-side only
 
 `nameSchema` in `App/src/shared/utils/validation.ts` enforces length, an
