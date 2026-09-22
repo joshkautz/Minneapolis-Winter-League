@@ -47,9 +47,11 @@ Three decisions carry it:
   Stripe's pay-what-you-want feature cannot express "at most what this team
   still owes", and hands us the amount only after the money has moved.
 - **Manual capture on every contribution.** Money is held, never taken, until
-  the team is actually going to play. Cancelling a hold is free where a refund
-  never returns the processing fee, and it makes the concurrent-overpayment
-  race free to resolve too. The cost is a 7-day authorization window.
+  the team is going to play. Cancelling a hold is free where a refund never
+  returns the processing fee, and it makes the concurrent-overpayment race
+  free to resolve too. A hold is never allowed to lapse — it is captured
+  shortly before the 7-day authorization would expire, so nobody is ever
+  asked to pay again.
 - **Waivers issue on joining a roster**, not on paying — otherwise a team
   whose captain pays for everyone can never reach ten signed players.
 
