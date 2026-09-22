@@ -172,17 +172,22 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-Roughly 387 tests across four suites, all run by `npm run verify`. Every
-callable is covered for authorization; the emulator suites are mutation-tested.
+Roughly 406 tests across four suites, all run by `npm run verify`. Every
+callable is covered for authorization; the emulator suites are
+mutation-tested.
 
 Still uncovered, in rough priority order:
 
-- **Firestore triggers.** `onOfferUpdated`, `playerUpdated`,
-  `teamRegistrationLock` and the payment triggers all run unobserved.
+- **`onPaymentCreated` and `onOfferUpdated`.** The two triggers with the most
+  logic. `onPaymentCreated` creates waiver records from Stripe payment
+  metadata; `onOfferUpdated` moves a player onto a team when an offer is
+  accepted. Both need Stripe and Dropbox Sign fixtures.
+- **`userDeleted` and `onTeamRegistrationChange`.** Account teardown and the
+  season lock at twelve registered teams.
 - **Player rankings pipeline.** The TrueSkill maths is covered; the
   orchestration around it (game loading, round grouping, decay, persistence)
   is not.
-- **Deeper callable behaviour.** The authorization sweep covers all 46, and
+- **Deeper callable behaviour.** The authorization sweep covers all 46;
   `createTeam`, `deleteTeam`, `updateTeamRoster` and `createOffer` have
   behavioural tests. The rest are covered only at the gate.
 - **App components.** Only the shell is mounted. The admin screens carry the
