@@ -12,11 +12,10 @@
  * `types.ts` is: the workspaces build against different SDKs and neither
  * imports from the other. They must be changed together.
  *
- * One rule is deliberately missing here: the profanity filter, which needs the
- * `bad-words` package that only the App depends on. See docs/ROADMAP.md.
  */
 
 import { HttpsError } from 'firebase-functions/v2/https'
+import { Filter } from 'bad-words'
 
 /** Matches the App's `nameSchema` bounds. */
 const MIN_LENGTH = 2
@@ -24,6 +23,52 @@ const MAX_LENGTH = 50
 
 /** Letters, spaces, hyphens and apostrophes. */
 const ALLOWED_CHARACTERS = /^[a-zA-Z\s'-]+$/
+
+/**
+ * Entries removed from the `bad-words` blocklist because they are real
+ * people's names, and this filter is applied to names.
+ *
+ * Out of the box the list blocks Cox, Wang, Butt, Schaffer, Dick and Dyke,
+ * among others — Cox is a top-1000 US surname and Wang is one of the most
+ * common surnames in the world. Refusing them tells someone their legal name
+ * is unacceptable, and a server-side rejection is the final word on it.
+ *
+ * The criterion for removal is: an established given name or surname whose
+ * word is not primarily a slur against a group. Entries that are principally
+ * slurs stay blocked even where they also occur as surnames, because the harm
+ * of publishing one is higher and the collision is rarer.
+ *
+ * This is best-effort and cannot be complete — surnames are not enumerable.
+ * The backstop is that admins bypass this check entirely (see
+ * `checkProfanity`), so an organizer can always set a name the filter refuses.
+ *
+ * **Keep in sync with `App/src/shared/utils/validation.ts`.**
+ */
+const REAL_NAMES_WRONGLY_FLAGGED = [
+	'butt',
+	'cox',
+	'dick',
+	'dyke',
+	'fanny',
+	'fuk',
+	'gaylord',
+	'hoar',
+	'hoare',
+	'hore',
+	'kuntz',
+	'lipshits',
+	'lipshitz',
+	'muff',
+	'pecker',
+	'schaffer',
+	'schmuck',
+	'wang',
+	'willies',
+	'willy',
+]
+
+const profanityFilter = new Filter()
+profanityFilter.removeWords(...REAL_NAMES_WRONGLY_FLAGGED)
 
 /** Doubled punctuation is malformed; doubled spaces are collapsed instead. */
 const REPEATED_PUNCTUATION = /'{2,}|-{2,}/
@@ -41,7 +86,16 @@ const REPEATED_PUNCTUATION = /'{2,}|-{2,}/
  */
 export function validateAndNormalizeName(
 	value: unknown,
-	label: string
+	label: string,
+	options: {
+		/**
+		 * Admin edits skip the profanity check. The filter cannot know every
+		 * surname, so an organizer typing a name deliberately is the override
+		 * for a real person it refuses — the same reasoning as an admin-set
+		 * email counting as verified. The structural rules still apply.
+		 */
+		checkProfanity?: boolean
+	} = {}
 ): string {
 	if (typeof value !== 'string') {
 		throw new HttpsError(
@@ -77,6 +131,13 @@ export function validateAndNormalizeName(
 		throw new HttpsError(
 			'invalid-argument',
 			`${label} cannot contain consecutive hyphens or apostrophes`
+		)
+	}
+
+	if (options.checkProfanity !== false && profanityFilter.isProfane(trimmed)) {
+		throw new HttpsError(
+			'invalid-argument',
+			`${label} contains inappropriate language. If this is your real name, please contact the league and an organizer will set it for you.`
 		)
 	}
 

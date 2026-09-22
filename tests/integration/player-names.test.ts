@@ -126,6 +126,16 @@ describe('createPlayer', () => {
 	it('rejects a non-string name rather than coercing it', async () => {
 		expect(await failsWith({ firstname: 42 })).toBe('invalid-argument')
 	})
+
+	it('rejects an obscenity', async () => {
+		expect(await failsWith({ lastname: 'Shit' })).toBe('invalid-argument')
+	})
+
+	it('accepts a real surname the blocklist ships with', async () => {
+		await create({ firstname: 'Josh', lastname: 'Cox' })
+
+		expect((await readPlayer())?.lastname).toBe('Cox')
+	})
 })
 
 describe('updatePlayer', () => {
@@ -153,6 +163,19 @@ describe('updatePlayer', () => {
 		await failsWith({ firstname: 'a'.repeat(51) })
 
 		expect((await readPlayer())?.firstname).toBe('Existing')
+	})
+
+	it('rejects an obscenity', async () => {
+		expect(await failsWith({ lastname: 'Shit' })).toBe('invalid-argument')
+	})
+
+	it('accepts a real surname the blocklist ships with', async () => {
+		await updatePlayer.run({
+			auth: authed(PLAYER),
+			data: { lastname: 'Wang' },
+		} as unknown as CallableRequest<never>)
+
+		expect((await readPlayer())?.lastname).toBe('Wang')
 	})
 
 	it('still allows updating one name on its own', async () => {
@@ -195,6 +218,23 @@ describe('updatePlayerAdmin', () => {
 		await failsWith({ playerId: PLAYER, firstname: 'Josh--Kautz' })
 
 		expect((await readPlayer())?.firstname).toBe('Existing')
+	})
+
+	it('lets an admin set a name the profanity filter refuses', async () => {
+		// The escape hatch for a real person the blocklist cannot know about.
+		// An organizer typing the name deliberately is the override.
+		await updatePlayerAdmin.run({
+			auth: authed(ADMIN),
+			data: { playerId: PLAYER, lastname: 'Shit' },
+		} as unknown as CallableRequest<never>)
+
+		expect((await readPlayer())?.lastname).toBe('Shit')
+	})
+
+	it('still applies the structural rules to an admin edit', async () => {
+		expect(
+			await failsWith({ playerId: PLAYER, lastname: 'a'.repeat(51) })
+		).toBe('invalid-argument')
 	})
 
 	it('reports the normalized value as the change it made', async () => {

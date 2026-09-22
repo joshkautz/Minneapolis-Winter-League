@@ -149,13 +149,21 @@ export const updatePlayerAdmin = onCall<
 		}
 		// Same rules the App's nameSchema applies, enforced here because an
 		// admin editing a name goes through this callable.
+		// The profanity check is skipped for admin edits: the blocklist cannot
+		// know every surname, so an organizer typing a name deliberately is
+		// the override for a real person it wrongly refuses. Length, character
+		// set and normalization still apply.
 		const normalizedFirstname =
 			firstname !== undefined
-				? validateAndNormalizeName(firstname, 'First name')
+				? validateAndNormalizeName(firstname, 'First name', {
+						checkProfanity: false,
+					})
 				: undefined
 		const normalizedLastname =
 			lastname !== undefined
-				? validateAndNormalizeName(lastname, 'Last name')
+				? validateAndNormalizeName(lastname, 'Last name', {
+						checkProfanity: false,
+					})
 				: undefined
 		if (admin !== undefined && typeof admin !== 'boolean') {
 			throw new HttpsError(

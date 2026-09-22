@@ -80,6 +80,65 @@ describe('validateAndNormalizeName', () => {
 		expect(codeOf(input)).toBe('invalid-argument')
 	})
 
+	describe('profanity', () => {
+		it('rejects an obscenity', () => {
+			expect(codeOf('Shit')).toBe('invalid-argument')
+		})
+
+		it.each([
+			['Cox', 'a top-1000 US surname'],
+			['Wang', 'one of the most common surnames in the world'],
+			['Butt', 'a common South Asian surname'],
+			['Schaffer', 'a common German surname'],
+			['Dick', 'a surname and a given name'],
+			['Dyke', 'a surname'],
+			['Kuntz', 'a German surname'],
+			['Hoare', 'an English surname'],
+			['Gaylord', 'a surname and a given name'],
+			['Fanny', 'a given name'],
+			['Schmuck', 'a German surname'],
+			['Lipshitz', 'a surname'],
+		])('accepts %s, %s', (name) => {
+			// The blocklist ships with all of these. Refusing them tells
+			// someone their legal name is unacceptable, and a server-side
+			// rejection is the last word on it.
+			expect(validateAndNormalizeName(name, 'Last name')).toBe(name)
+		})
+
+		it('still rejects an obscenity that is not a name', () => {
+			expect(codeOf('Fuck')).toBe('invalid-argument')
+		})
+
+		it('tells someone with a real name how to proceed', () => {
+			// The list cannot cover every surname, so the error has to lead
+			// somewhere rather than just refusing.
+			try {
+				validateAndNormalizeName('Shit', 'Last name')
+				expect.unreachable('should have thrown')
+			} catch (error) {
+				expect((error as Error).message).toMatch(/contact the league/i)
+			}
+		})
+
+		it('skips the check when the caller opts out', () => {
+			// Admin edits take this path: an organizer typing a name
+			// deliberately overrides a filter that cannot know every surname.
+			expect(
+				validateAndNormalizeName('Shit', 'Last name', {
+					checkProfanity: false,
+				})
+			).toBe('Shit')
+		})
+
+		it('still applies the structural rules when profanity is skipped', () => {
+			expect(() =>
+				validateAndNormalizeName('a'.repeat(51), 'Last name', {
+					checkProfanity: false,
+				})
+			).toThrow()
+		})
+	})
+
 	it('names the field in the error so a client can point at it', () => {
 		try {
 			validateAndNormalizeName('', 'Last name')

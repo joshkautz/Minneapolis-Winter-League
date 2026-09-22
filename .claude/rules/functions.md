@@ -86,12 +86,23 @@ dependency versions than anything that was tested.
 When you change a dependency in `Functions/package.json`, update both:
 
 ```bash
-npm install                      # root workspace lockfile
-npm install --prefix Functions   # Functions/package-lock.json
+npm install                                        # root workspace lockfile
+npm install --prefix Functions --package-lock-only  # Functions/package-lock.json
 ```
 
+`--package-lock-only` matters. Without it the command also installs a full
+`Functions/node_modules`, which then **shadows the hoisted workspace tree**:
+the deploy manifest resolves a package from `Functions/node_modules` while a
+test's `vi.mock('<package>')` resolves the root copy, so the mock silently
+stops intercepting and emulator tests fail with real network calls. The flag
+writes the lockfile and nothing else, which is all that is wanted here — the
+root install is what local builds and tests run against.
+
+If you have already created `Functions/node_modules`, delete it.
+
 CI runs the real predeploy path (`Build Functions the way firebase deploy
-does`) to catch divergence before a deploy does.
+does`) to catch divergence before a deploy does. It is a separate job with its
+own `npm ci`, so it never sees the shadowing tree.
 
 ## Batch limits
 
