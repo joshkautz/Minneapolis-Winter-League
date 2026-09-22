@@ -1,4 +1,8 @@
-import { getFirestore, FieldValue } from 'firebase-admin/firestore'
+import {
+	getFirestore,
+	FieldValue,
+	type WriteBatch,
+} from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, PlayerRankingDocument } from '../../../types.js'
 import { PlayerRatingState } from '../types.js'
@@ -66,7 +70,22 @@ export function calculatePlayerRankings(
 }
 
 /**
- * Saves final player rankings to Firestore
+ * Firestore caps a write batch at 500 operations. A rebuild writes one
+ * document per player and deletes the leftovers, so a large enough league
+ * would silently exceed a single batch.
+ */
+const MAX_BATCH_OPERATIONS = 500
+
+/**
+ * Saves final player rankings to Firestore.
+ *
+ * Rankings are a pure projection of the games in the database: a rebuild
+ * processes every season, so a player only drops out of the result when they
+ * are no longer on the roster of any game that was ever played. Documents for
+ * those players are deleted rather than left behind — a stale document keeps
+ * its old rating and its old rank, and since ranks are only computed over the
+ * rebuilt set, it can still outrank current players in a raw read of the
+ * collection.
  */
 export async function saveFinalRankings(
 	playerRatings: Map<string, PlayerRatingState>
@@ -77,26 +96,38 @@ export async function saveFinalRankings(
 	const previousRatings = await loadPreviousRankings()
 
 	const rankings = calculatePlayerRankings(playerRatings, previousRatings)
+	const rankedPlayerIds = new Set(rankings.map((ranking) => ranking.playerId))
 
-	// Use batch writes to update all rankings efficiently
-	const batch = firestore.batch()
+	const staleRankingIds = [...previousRatings.keys()].filter(
+		(playerId) => !rankedPlayerIds.has(playerId)
+	)
 
-	for (const ranking of rankings) {
-		// Create a clean ranking document without circular references
-		const rankingDoc = {
-			...ranking,
-			// Remove the player reference that was causing issues
-			player: firestore.collection(Collections.PLAYERS).doc(ranking.playerId),
+	const operations: ((batch: WriteBatch) => void)[] = [
+		...rankings.map((ranking) => (batch: WriteBatch) => {
+			batch.set(
+				firestore.collection(Collections.RANKINGS).doc(ranking.playerId),
+				{
+					...ranking,
+					player: firestore
+						.collection(Collections.PLAYERS)
+						.doc(ranking.playerId),
+				}
+			)
+		}),
+		...staleRankingIds.map((playerId) => (batch: WriteBatch) => {
+			batch.delete(firestore.collection(Collections.RANKINGS).doc(playerId))
+		}),
+	]
+
+	for (let i = 0; i < operations.length; i += MAX_BATCH_OPERATIONS) {
+		const batch = firestore.batch()
+		for (const operation of operations.slice(i, i + MAX_BATCH_OPERATIONS)) {
+			operation(batch)
 		}
-
-		// Use the actual player ID for the document ID
-		const rankingRef = firestore
-			.collection(Collections.RANKINGS)
-			.doc(ranking.playerId)
-
-		batch.set(rankingRef, rankingDoc)
+		await batch.commit()
 	}
 
-	await batch.commit()
-	logger.info(`Saved ${rankings.length} player rankings to Firestore`)
+	logger.info(`Saved ${rankings.length} player rankings to Firestore`, {
+		removed: staleRankingIds.length,
+	})
 }
