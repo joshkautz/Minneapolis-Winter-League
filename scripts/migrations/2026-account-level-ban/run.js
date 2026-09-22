@@ -124,6 +124,37 @@ async function main() {
 	const players = await db.collection('players').get()
 	console.log(`Found ${players.size} players`)
 
+	// Refuse to run once cleanup has removed the source data.
+	//
+	// This derives each player's ban from their season subdocs. After
+	// `--mode=cleanup` those subdocs no longer carry the field, so every
+	// player derives as not banned — and re-running this would quietly clear
+	// the real, account-level bans instead of restoring them. The migration
+	// is a one-way step and there is nothing here to re-run.
+	// A full scan rather than a `where`, because filtering on `banned` needs
+	// a collection-group index that no longer has any reason to exist.
+	const allSeasons = await db
+		.collectionGroup(PLAYER_SEASONS_SUBCOLLECTION)
+		.get()
+	const sourceDataGone = allSeasons.docs.every(
+		(doc) => doc.data()?.banned === undefined
+	)
+	if (sourceDataGone) {
+		const bannedNow = await db
+			.collection('players')
+			.where('banned', '==', true)
+			.get()
+		console.error(
+			'\nRefusing to run: no season subdoc carries `banned` any more, so' +
+				' this has already been migrated and cleaned up.' +
+				`\nThe league currently has ${bannedNow.size} banned player(s), held on` +
+				' the player documents.' +
+				'\nRunning anyway would derive "not banned" for everyone and clear them.'
+		)
+		process.exitCode = 1
+		return
+	}
+
 	const pending = []
 	let alreadyCorrect = 0
 	const bannedPlayers = []
