@@ -39,6 +39,10 @@ import {
 	removePlayerFromTeam,
 } from '../../../shared/membership.js'
 import {
+	CONTRIBUTIONS_SUBCOLLECTION,
+	hasUnsettledMoney,
+} from '../../../shared/contributions.js'
+import {
 	Collections,
 	PLAYER_SEASONS_SUBCOLLECTION,
 	TEAM_SEASONS_SUBCOLLECTION,
@@ -48,6 +52,7 @@ import {
 	type PlayerSeasonDocument,
 	type SeasonDocument,
 	type TeamBadgeDocument,
+	type TeamContributionDocument,
 	type TeamSeasonDocument,
 } from '../../../types.js'
 
@@ -154,6 +159,28 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 						', '
 					)}]. Delete one of the conflicting team-season records first.`
 				)
+			}
+
+			// ---- Validation: the losing team holds no unsettled money -------
+			// The merge ends by recursively deleting the losing team, which
+			// would take its contributions with it. Moving them is possible
+			// but the money is tied to a PaymentIntent whose metadata names
+			// the old team, so refusing is both simpler and honest — settle
+			// it first, then merge.
+			for (const teamSeasonDoc of losingTeamSeasonsSnap.docs) {
+				const contributionsSnap = await teamSeasonDoc.ref
+					.collection(CONTRIBUTIONS_SUBCOLLECTION)
+					.get()
+				const contributions = contributionsSnap.docs.map(
+					(doc) => doc.data() as TeamContributionDocument
+				)
+				if (hasUnsettledMoney(contributions)) {
+					throw new HttpsError(
+						'failed-precondition',
+						`Cannot merge: team ${losingTeamId} still has money committed for ` +
+							`season ${teamSeasonDoc.id}. Cancel or refund its contributions first.`
+					)
+				}
 			}
 
 			logger.info('Admin merging teams', {
