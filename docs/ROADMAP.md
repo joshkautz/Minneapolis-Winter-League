@@ -35,6 +35,27 @@ Badges already implemented are marked `x`. The rest are designed but not built.
 |      | Improvement         | Place higher than last season                                   |
 |      | Growing Pains       | Place lower than last season                                    |
 
+## Team-level payment ($1,000 collective)
+
+Designed, not built: `docs/TEAM_PAYMENTS.md`. A team registers when it has ten
+signed players **and** its players have collectively committed $1,000, in any
+split, replacing ten individual $100 payments.
+
+Three decisions carry it:
+
+- **Inline pricing**, so the server decides the amount rather than the payer.
+  Stripe's pay-what-you-want feature cannot express "at most what this team
+  still owes", and hands us the amount only after the money has moved.
+- **Manual capture on every contribution.** Money is held, never taken, until
+  the team is actually going to play. Cancelling a hold is free where a refund
+  never returns the processing fee, and it makes the concurrent-overpayment
+  race free to resolve too. The cost is a 7-day authorization window.
+- **Waivers issue on joining a roster**, not on paying — otherwise a team
+  whose captain pays for everyone can never reach ten signed players.
+
+Also retires the per-player returning discount, which does not map onto a team
+total.
+
 ## Waivers
 
 - **Waiver history UI** — the per-season subcollection already stores every

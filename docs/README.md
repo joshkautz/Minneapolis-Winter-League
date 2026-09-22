@@ -13,7 +13,8 @@ Documentation for the Minneapolis Winter League application, grouped by area.
 | [`historical/`](./historical/) | Completed migrations and superseded plans, kept for context        |
 
 Top-level documents: [Project Structure](./PROJECT_STRUCTURE.md),
-[Security Guidelines](./SECURITY.md), [Roadmap](./ROADMAP.md).
+[Security Guidelines](./SECURITY.md), [Roadmap](./ROADMAP.md),
+[Team Payments](./TEAM_PAYMENTS.md) (design, not yet built).
 
 ## Start here
 
