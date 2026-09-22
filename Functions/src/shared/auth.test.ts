@@ -28,6 +28,12 @@ const authOf = (overrides: Record<string, unknown> = {}): Auth =>
 const firestoreStub = (opts: {
 	player?: Record<string, unknown> | null
 	playerSeason?: Record<string, unknown> | null
+	/**
+	 * Whether a `where('banned','==',true)` over the player's seasons would
+	 * match anything. `isPlayerBanned` runs that query as its last resort for
+	 * a player the account-level backfill has not reached.
+	 */
+	bannedInAnotherSeason?: boolean
 }): Firestore => {
 	const seasonDoc = {
 		get: vi.fn(async () => ({
@@ -35,12 +41,22 @@ const firestoreStub = (opts: {
 			data: () => opts.playerSeason ?? undefined,
 		})),
 	}
+	const seasonsCollection = {
+		doc: vi.fn(() => seasonDoc),
+		where: vi.fn(() => ({
+			limit: vi.fn(() => ({
+				get: vi.fn(async () => ({
+					empty: opts.bannedInAnotherSeason !== true,
+				})),
+			})),
+		})),
+	}
 	const playerDoc = {
 		get: vi.fn(async () => ({
 			exists: opts.player !== null && opts.player !== undefined,
 			data: () => opts.player ?? undefined,
 		})),
-		collection: vi.fn(() => ({ doc: vi.fn(() => seasonDoc) })),
+		collection: vi.fn(() => seasonsCollection),
 	}
 	return {
 		collection: vi.fn(() => ({ doc: vi.fn(() => playerDoc) })),
@@ -203,6 +219,12 @@ describe('validateNotBanned', () => {
 	})
 })
 
+/**
+ * A ban lives on the player document. The season subdocs are only consulted
+ * for players the backfill has not reached — see
+ * `tests/integration/account-level-ban.test.ts`, which covers the same rules
+ * against real documents and a real query.
+ */
 describe('isPlayerBanned', () => {
 	it('reports true only for an explicit boolean ban', async () => {
 		await expect(
@@ -222,5 +244,43 @@ describe('isPlayerBanned', () => {
 		await expect(
 			isPlayerBanned(firestoreStub({ playerSeason: null }), 'u', 's')
 		).resolves.toBe(false)
+	})
+
+	it('prefers the player document over the season subdoc', async () => {
+		await expect(
+			isPlayerBanned(
+				firestoreStub({
+					player: { banned: false },
+					playerSeason: { banned: true },
+				}),
+				'u',
+				's'
+			)
+		).resolves.toBe(false)
+	})
+
+	it('treats a missing player-level flag as unmigrated, not unbanned', async () => {
+		// Reading `undefined` as `false` would silently unban everyone the
+		// backfill has not reached.
+		await expect(
+			isPlayerBanned(
+				firestoreStub({ player: {}, playerSeason: { banned: true } }),
+				'u',
+				's'
+			)
+		).resolves.toBe(true)
+	})
+
+	it('falls back to a ban held in some other season', async () => {
+		await expect(
+			isPlayerBanned(
+				firestoreStub({
+					playerSeason: { banned: false },
+					bannedInAnotherSeason: true,
+				}),
+				'u',
+				's'
+			)
+		).resolves.toBe(true)
 	})
 })

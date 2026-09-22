@@ -20,13 +20,13 @@ import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
 	DocumentReference,
-	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerDocument,
 	SeasonDocument,
 	TEAM_SEASONS_SUBCOLLECTION,
 } from '../../../types.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import {
+	isPlayerBanned,
 	validateAuthentication,
 	validateNotBanned,
 } from '../../../shared/auth.js'
@@ -187,12 +187,10 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 			// Determine banned status to seed if no player season subdoc exists.
 			let bannedStatus = false
 			if (!existingPlayerSeasonData) {
-				const otherSeasons = await playerDocRef
-					.collection(PLAYER_SEASONS_SUBCOLLECTION)
-					.get()
-				bannedStatus = otherSeasons.docs.some(
-					(d) => d.id !== seasonId && d.data()?.banned === true
-				)
+				// Mirror the account-level ban onto the new subdoc so the
+				// fallback in isPlayerBanned stays consistent until the
+				// backfill lands and this whole block goes away.
+				bannedStatus = await isPlayerBanned(firestore, userId, seasonId)
 			}
 
 			const rosterEntryDocRef = teamRosterEntryRef(

@@ -20,7 +20,7 @@ import {
 	OfferType,
 	SeasonDocument,
 } from '../../../types.js'
-import { validateAuthentication } from '../../../shared/auth.js'
+import { isPlayerBanned, validateAuthentication } from '../../../shared/auth.js'
 import {
 	getCurrentSeason,
 	getCurrentSeasonRef,
@@ -144,13 +144,14 @@ export const createOffer = onCall<CreateOfferRequest>(
 
 				const isAdmin = currentUserDoc.data()?.admin === true
 
-				// Validate target player is not banned for this season (skip for admins).
+				// Validate the target player is not banned (skip for admins).
+				// A ban is account-level; isPlayerBanned owns where it is read
+				// from while the migration is outstanding.
 				if (!isAdmin) {
-					const targetSeasonData = targetPlayerSeasonSnap.data()
-					if (targetSeasonData?.banned === true) {
+					if (await isPlayerBanned(firestore, playerId, currentSeason.id)) {
 						throw new HttpsError(
 							'permission-denied',
-							'Target player is banned from this season'
+							'Target player is banned from the league'
 						)
 					}
 				}

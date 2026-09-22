@@ -21,7 +21,7 @@ import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
-import { validateAdminUser } from '../../../shared/auth.js'
+import { isPlayerBanned, validateAdminUser } from '../../../shared/auth.js'
 import { validateAndNormalizeName } from '../../../shared/names.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
@@ -33,6 +33,7 @@ import {
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	Collections,
+	PLAYER_SEASONS_SUBCOLLECTION,
 	type DocumentReference,
 	type PlayerDocument,
 	type SeasonDocument,
@@ -54,6 +55,13 @@ interface UpdatePlayerAdminRequest {
 	admin?: boolean
 	email?: string
 	emailVerified?: boolean
+	/**
+	 * League-wide ban. Applies to the person, not a season — see the field
+	 * doc on PlayerDocument. While the backfill is outstanding this is also
+	 * mirrored onto every one of the player's season subdocs, so the fallback
+	 * read in `isPlayerBanned` agrees with it.
+	 */
+	banned?: boolean
 	seasons?: SeasonUpdate[]
 }
 
@@ -80,6 +88,7 @@ interface UpdatePlayerAdminResponse {
 		email?: { from: string; to: string }
 		admin?: { from: boolean; to: boolean }
 		emailVerified?: { from: boolean; to: boolean }
+		banned?: { from: boolean; to: boolean }
 		seasons?: SeasonChanges[]
 	}
 }
@@ -110,6 +119,7 @@ export const updatePlayerAdmin = onCall<
 			admin,
 			email,
 			emailVerified,
+			banned,
 			seasons,
 		} = data
 
@@ -123,6 +133,7 @@ export const updatePlayerAdmin = onCall<
 			admin === undefined &&
 			email === undefined &&
 			emailVerified === undefined &&
+			banned === undefined &&
 			!seasons
 		) {
 			throw new HttpsError(
@@ -169,6 +180,12 @@ export const updatePlayerAdmin = onCall<
 			throw new HttpsError(
 				'invalid-argument',
 				'Admin status must be a boolean value'
+			)
+		}
+		if (banned !== undefined && typeof banned !== 'boolean') {
+			throw new HttpsError(
+				'invalid-argument',
+				'Banned status must be a boolean value'
 			)
 		}
 		if (emailVerified !== undefined && typeof emailVerified !== 'boolean') {
@@ -338,6 +355,43 @@ export const updatePlayerAdmin = onCall<
 						from: currentUser.emailVerified,
 						to: emailVerified,
 					}
+				}
+			}
+
+			// ---- League-wide ban ---------------------------------------------
+			// The flag lives on the player document. It is also mirrored onto
+			// every season subdoc for as long as `isPlayerBanned` falls back to
+			// them; without the mirror, lifting a ban here would leave stale
+			// `true`s behind and the fallback would keep reporting it — which
+			// is exactly the bug that motivated moving the field.
+			if (banned !== undefined) {
+				// The comparison has to be against the *effective* state, not
+				// the raw field. An unmigrated player has no `banned` field
+				// while still being banned through their seasons; treating the
+				// absent field as `false` would make un-banning them a no-op —
+				// the field would never be written, and the fallback would go
+				// on reporting the ban. Always write when the field is absent,
+				// so the player ends up migrated either way.
+				const currentBanned = await isPlayerBanned(firestore, playerId)
+				if (playerData?.banned === undefined || banned !== currentBanned) {
+					updates.banned = banned
+				}
+				if (banned !== currentBanned) {
+					changes.banned = { from: currentBanned, to: banned }
+				}
+
+				const playerSeasonsSnapshot = await playerDocRef
+					.collection(PLAYER_SEASONS_SUBCOLLECTION)
+					.get()
+				const staleSeasons = playerSeasonsSnapshot.docs.filter(
+					(doc) => (doc.data()?.banned === true) !== banned
+				)
+				if (staleSeasons.length > 0) {
+					const batch = firestore.batch()
+					for (const doc of staleSeasons) {
+						batch.update(doc.ref, { banned })
+					}
+					await batch.commit()
 				}
 			}
 

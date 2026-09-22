@@ -220,20 +220,22 @@ describe('rolloverTeam', () => {
 		expect(season?.signed).toBe(false)
 	})
 
-	it('carries a ban forward from another season', async () => {
-		// A ban has to survive the gap between seasons, or serving one is a
-		// matter of waiting for the next registration to open.
+	it('refuses a captain who is banned from the league', async () => {
+		// The ban is recorded against OLD_SEASON and the new season has no
+		// subdoc yet. That used to mean the guard saw nothing and let the
+		// rollover through, marking the new subdoc banned afterwards — so a
+		// banned captain could still put a team on the board. A ban is
+		// account-level now, so it is caught before anything is written.
 		await seedPriorSeason(OLD_SEASON, {
 			name: 'Homemade Furby',
 			captain: true,
 			banned: true,
 		})
 
-		// The ban is on OLD_SEASON, so the new season's guard does not see it
-		// and the rollover proceeds — but the new subdoc inherits it.
-		await rollover()
-
-		expect((await readNewPlayerSeason())?.banned).toBe(true)
+		expect(await fails()).toBe('permission-denied')
+		expect(
+			(await teamSeasonRef(firestore, TEAM, NEW_SEASON).get()).exists
+		).toBe(false)
 	})
 
 	it('keeps paid state when the captain already registered for the season', async () => {
