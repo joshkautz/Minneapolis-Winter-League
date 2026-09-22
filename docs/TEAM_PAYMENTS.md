@@ -240,6 +240,104 @@ codebase, and the same rule applies — never write one side without the other.
 Note that the registration test uses **authorized**, not captured: a team
 secures its spot when the money is committed, and capture follows.
 
+### The registration rule, stated exactly
+
+Two independent conditions, both on the team:
+
+```ts
+const registered =
+	signedPlayerCount >= 10 && // roster members who have signed a waiver
+	authorizedCents >= 100_000 // committed by anyone on the roster
+```
+
+- **A player is registered when they sign their waiver.** Nothing else — not
+  payment, not merely being on a roster.
+- **A team is registered when it has ten registered players and $1,000
+  committed**, in any split, from any of its rostered players.
+
+The two conditions need not be satisfied by the same people. A team of eleven
+where the captain pays the whole $1,000 and has not yet signed, while the
+other ten have, **is registered**: it has ten signed players and it has the
+money. The captain's own waiver decides whether _they_ can play, not whether
+the team is in.
+
+Reading it the other way — requiring the $1,000 to come from the ten signed
+players specifically — would block a team on its own captain's paperwork
+despite having everything the league asked for, and is incoherent in the
+"one person pays for everyone" case that motivated this change: there, one
+player contributes $1,000 and nine contribute nothing.
+
+### Registration is irreversible
+
+Once a team registers it is locked in for the season. `registered` does not
+flip back if the roster later drops below ten signed players, so
+`updateTeamRegistrationStatus` must lose its ability to set it to `false`.
+
+Only an admin can reverse it, deliberately, and that path settles the money —
+there is no way to un-register a team and leave $1,000 captured against it.
+
+## Returning money that should not be kept
+
+Two events oblige the league to give money back, and both apply to any team
+holding contributions that has not registered:
+
+1. **Twelve other teams register.** The season is full; every unregistered
+   team is settled.
+2. **The registration window closes.** Anything still unregistered is
+   settled.
+
+"Settle" is one operation with two branches, decided per contribution:
+
+| Contribution state | Action                   | Cost               |
+| ------------------ | ------------------------ | ------------------ |
+| `authorized`       | Cancel the PaymentIntent | Nothing            |
+| `captured`         | Refund it                | Fee, unrecoverable |
+
+Most will be `authorized` and cost nothing. A contribution is only ever
+`captured` while unregistered if the expiry safety net reached it first — a
+team that took more than seven days and then did not make it.
+
+### Orphaned money has to be impossible, not merely avoided
+
+Every route that deletes a team-season is a route to losing track of a
+contribution. There are four today:
+
+- `deleteTeamSeasonWithCleanup` — the shared path, used by the lock cascade,
+  the admin `deleteUnregisteredTeam`, and the captain-facing `deleteTeam`.
+- `mergeTeams` — `recursiveDelete` on the losing team, which would take its
+  contributions with it.
+
+Rather than remember to settle in each, make it structural:
+
+- **`deleteTeamSeasonWithCleanup` settles first, or refuses.** It is already
+  the single chokepoint for three of the four paths. Give it the invariant:
+  a team-season with unsettled contributions cannot be deleted. Everything
+  upstream then inherits it.
+- **`mergeTeams` moves contributions to the winning team**, the way it
+  already moves roster entries and badges — or refuses when the losing team
+  has unsettled money, which is simpler and almost certainly rare enough.
+- **A reconciliation job** lists PaymentIntents in `requires_capture` with no
+  matching live contribution, and reports them. A backstop, not a mechanism:
+  if it ever finds something, the invariant above has a hole.
+
+Both deletion paths need a test that a team with outstanding money cannot be
+deleted, because this is exactly the kind of guarantee that decays when
+someone adds a fifth path.
+
+### This needs scheduled functions, which the codebase has never used
+
+Two of these run on a clock rather than in response to a write:
+
+- Settling unregistered teams when the registration window closes.
+- Capturing a hold before it expires, if Stripe does not grant
+  `automatic_delayed` capture.
+
+There are no `onSchedule` functions in `Functions/src` today, so this is a new
+capability rather than a new instance of an existing pattern. It needs the
+same care as the triggers: pinned region, idempotent by construction (settling
+an already-settled contribution is a no-op), and honouring the migration
+kill-switch.
+
 ## Two consequences that are easy to miss
 
 ### "Fully registered player" has to stop meaning "paid"
@@ -309,7 +407,13 @@ radius of the existing integration, not just the new code.
   others get there first, its holds are released and it does not field a
   team.
 
-That last one settles the ordering: **teams are ranked by when they satisfy
+- **Registration is irreversible.** Once a team is in, it is in for the
+  season; only an admin can reverse it, and that path settles the money.
+- **Any unregistered team holding money is settled** when twelve teams
+  register or the window closes — cancelled if still authorized, refunded if
+  the expiry net captured it.
+
+That last one about recruiting settles the ordering: **teams are ranked by when they satisfy
 both conditions**, not by when their money arrived. Paying first buys nothing
 on its own.
 
@@ -421,7 +525,12 @@ still cheap to get wrong.
 already go through. Until this lands, a team whose captain pays for everyone
 can never reach ten signed players.
 
-**0c. Decide the testing approach** — see below. Worth settling before there
+**0c. Give `deleteTeamSeasonWithCleanup` the no-orphan invariant** — a
+team-season with unsettled contributions cannot be deleted. It is the single
+chokepoint for three of the four deletion paths, and the invariant is easier
+to add before there is any money for it to guard.
+
+**0d. Decide the testing approach** — see below. Worth settling before there
 is code to retrofit.
 
 ### Phase 1 — the ledger, still no money
@@ -437,11 +546,14 @@ exhaustively here, where there is no Stripe involved at all.
 balance, create the session with inline pricing and `capture_method: manual`.
 Extend the webhook to record an authorized contribution against the team.
 
-### Phase 3 — the capture lifecycle
+### Phase 3 — the capture and settlement lifecycle
 
-Capture on registration, cancel on losing the race, capture before expiry.
-Admin refund action. This is where the money decisions live and where the
-tests matter most.
+Capture on registration; settle every unregistered team when the twelfth
+registers; capture before expiry; settle whatever is left when the window
+closes. Admin refund action, and `mergeTeams` taught about contributions.
+
+This is where the money decisions live and where the tests matter most. It is
+also where the first `onSchedule` functions appear.
 
 ### Phase 4 — UI
 
