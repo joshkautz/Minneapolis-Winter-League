@@ -172,17 +172,15 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-Roughly 427 tests across four suites, all run by `npm run verify`. Every
-callable is covered for authorization, four of the six triggers are covered,
+Roughly 437 tests across four suites, all run by `npm run verify`. Every
+callable is covered for authorization, five of the six triggers are covered,
 and the emulator suites are mutation-tested.
 
 Still uncovered, in rough priority order:
 
-- **`onPaymentCreated`.** Creates waiver records from Stripe payment
-  metadata and calls Dropbox Sign. Needs fixtures for both, which is why it
-  is still open.
-- **`userDeleted`.** Account teardown — what happens to a departing player's
-  roster entries, offers and season subdocs.
+- **`onPaymentCreated`.** The last untested trigger. It creates waiver
+  records from Stripe payment metadata and calls Dropbox Sign, so it needs
+  fixtures for both.
 - **Player rankings pipeline.** The TrueSkill maths is covered; the
   orchestration around it (game loading, round grouping, decay, persistence)
   is not.
@@ -203,17 +201,13 @@ differs, which means the UI cannot distinguish "log in" from "verify your
 email". Current behaviour is pinned in
 `tests/integration/callables-authorization.test.ts`.
 
-## Email validation rejects padded input
+## Name validation swallows its own transform
 
-`emailSchema` chains `.email().trim().toLowerCase()`, so validation runs
-before the trim and a pasted `"  player@example.com  "` is reported as an
-invalid address. Moving `.trim()` ahead of `.email()` fixes it. Current
-behaviour is pinned in `App/src/shared/utils/validation.test.ts` so the change
-is deliberate when someone makes it.
-
-Relatedly, `nameSchema` rejects consecutive spaces in a refine that runs
-before the transform which would have collapsed them, so that part of the
-transform is unreachable.
+`nameSchema` rejects consecutive spaces in a refine that runs before the
+transform which would have collapsed them, so that part of the transform is
+unreachable. Either drop the dead branch or reorder so "josh kautz"
+normalises to "Josh Kautz" instead of being rejected. Current behaviour is
+pinned in `App/src/shared/utils/validation.test.ts`.
 
 ## Registration window enforcement
 
