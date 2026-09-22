@@ -8,6 +8,9 @@
  * - Email verification status
  * - Per-season state (paid, signed, banned, captain, team)
  *
+ * Two invariants are enforced here and nowhere else: the league always has at
+ * least one admin, and a team with a roster always has at least one captain.
+ *
  * Per-season state writes go to `players/{uid}/playerSeasons/{seasonId}` subdocs
  * directly, one update per changed field. Team change writes the new roster
  * entry, deletes the old one, and updates the player season's `team` and
@@ -257,6 +260,30 @@ export const updatePlayerAdmin = onCall<
 				}
 			}
 			if (admin !== undefined && admin !== playerData?.admin) {
+				// Last-admin protection, the counterpart to the last-captain rule
+				// further down. Losing every admin has no in-app recovery: admin
+				// is a field on the player document rather than a token claim, so
+				// it cannot be restored from the Firebase console's user editor —
+				// only by editing Firestore directly.
+				if (admin === false) {
+					// Two is enough to answer the question: if the only match is
+					// the player being demoted, there is no one else left.
+					const adminsSnapshot = await firestore
+						.collection(Collections.PLAYERS)
+						.where('admin', '==', true)
+						.limit(2)
+						.get()
+					const anotherAdminRemains = adminsSnapshot.docs.some(
+						(doc) => doc.id !== playerId
+					)
+					if (!anotherAdminRemains) {
+						throw new HttpsError(
+							'failed-precondition',
+							'Cannot remove admin access from the only administrator. Grant admin to another player first.'
+						)
+					}
+				}
+
 				updates.admin = admin
 				changes.admin = { from: playerData?.admin || false, to: admin }
 			}

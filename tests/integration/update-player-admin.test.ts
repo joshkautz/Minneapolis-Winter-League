@@ -145,12 +145,40 @@ describe('updatePlayerAdmin: player document', () => {
 		expect((await readPlayer())?.admin).toBe(false)
 	})
 
-	it('lets an admin revoke their own admin status', async () => {
-		// Nothing prevents this. Recorded because the last admin locking
-		// themselves out has no in-app recovery — see docs/ROADMAP.md.
+	it('refuses to remove the only administrator', async () => {
+		// There is no in-app recovery from this. Admin is a field on the
+		// player document rather than a token claim, so it cannot be restored
+		// from the Firebase console's user editor — only by editing Firestore
+		// directly, which is not something a league organiser can do.
+		expect(await fails({ playerId: ADMIN, admin: false })).toBe(
+			'failed-precondition'
+		)
+		expect((await readPlayer(ADMIN))?.admin).toBe(true)
+	})
+
+	it('lets an admin step down once another admin exists', async () => {
+		// Stepping down is legitimate; only being the last one is not.
+		await seedPlayer('second-admin', { admin: true })
+
 		await call({ playerId: ADMIN, admin: false })
 
 		expect((await readPlayer(ADMIN))?.admin).toBe(false)
+	})
+
+	it('allows demoting another admin, which always leaves the caller', async () => {
+		// The caller must be an admin to get here, so demoting anyone else can
+		// never be the last one — the guard only ever bites on self-demotion.
+		await seedPlayer(PLAYER, { admin: true })
+
+		await call({ playerId: PLAYER, admin: false })
+
+		expect((await readPlayer(PLAYER))?.admin).toBe(false)
+	})
+
+	it('leaves other fields unwritten when the last-admin rule refuses', async () => {
+		await fails({ playerId: ADMIN, admin: false, firstname: 'Renamed' })
+
+		expect((await readPlayer(ADMIN))?.firstname).toBeUndefined()
 	})
 
 	it('renames a player and trims the input', async () => {
