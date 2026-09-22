@@ -38,21 +38,23 @@ Badges already implemented are marked `x`. The rest are designed but not built.
 ## Team-level payment ($1,000 collective)
 
 Designed, not built: `docs/TEAM_PAYMENTS.md`. A team registers when it has ten
-signed players **and** its players have collectively paid $1,000, in any
+signed players **and** its players have collectively committed $1,000, in any
 split, replacing ten individual $100 payments.
 
-Two consequences are easy to miss and are the bulk of the work:
+Three decisions carry it:
 
-- **"Fully registered player" stops meaning "paid."** If one person pays
-  $1,000, nobody else is paid, so the ten must become ten players who are
-  rostered and have signed.
-- **The waiver trigger has to move off payment.** `onPaymentCreated` sends a
-  player their waiver today; if one person pays for the team, the rest never
-  get one and the team can never reach ten signed.
+- **Inline pricing**, so the server decides the amount rather than the payer.
+  Stripe's pay-what-you-want feature cannot express "at most what this team
+  still owes", and hands us the amount only after the money has moved.
+- **Manual capture on every contribution.** Money is held, never taken, until
+  the team is actually going to play. Cancelling a hold is free where a refund
+  never returns the processing fee, and it makes the concurrent-overpayment
+  race free to resolve too. The cost is a 7-day authorization window.
+- **Waivers issue on joining a roster**, not on paying — otherwise a team
+  whose captain pays for everyone can never reach ten signed players.
 
-The open questions at the end of that document need answering first — most are
-product decisions, and the returning-player discount in particular cannot
-carry over unchanged.
+Also retires the per-player returning discount, which does not map onto a team
+total.
 
 ## Waivers
 

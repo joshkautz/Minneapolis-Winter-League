@@ -12,69 +12,57 @@ team price removes that, and lets a team coordinate outside the app — pool the
 money, have one person pay the lot the moment registration opens, and secure
 one of the twelve spots.
 
-## What Stripe gives us
+## The shape of the solution
 
-### Use inline pricing, not pay-what-you-want
+Three decisions carry the design:
+
+1. **Inline pricing**, so the server decides the amount rather than the payer.
+2. **Manual capture** for every contribution, so money is only ever _taken_
+   from a team that is actually going to play.
+3. **Waivers issue on joining a roster**, not on paying.
+
+The rest follows from those.
+
+## Deciding the amount
+
+### Inline pricing, not pay-what-you-want
 
 Stripe has a purpose-built "customer chooses price" feature:
 [`custom_unit_amount`](https://docs.stripe.com/payments/checkout/pay-what-you-want)
 on a Price, with optional `preset`, `minimum` and `maximum`. The payer types
 the amount into Stripe's own checkout page.
 
-**Do not use it here.** Three reasons, in order of severity:
+It is the obvious candidate and it is still the wrong tool, for two reasons
+that survive dropping discounts:
 
-1. **It cannot be combined with discounts or promotion codes.** The
-   returning-player coupon (`returningPlayerCouponId` on each season) would
-   stop working.
-2. **`minimum` and `maximum` live on the Price**, so they are fixed for
-   everyone. We need "at most what this team still owes", which changes per
-   team and per minute.
-3. **The amount is chosen inside Stripe's UI**, so our server first learns of
+1. **`minimum` and `maximum` live on the Price**, so they are fixed for
+   everyone who uses it. What we need is "at most what _this_ team still
+   owes", which differs per team and changes as contributions land. You could
+   create a throwaway Price per attempt with the right `maximum`, but that is
+   strictly more work than inline pricing for a worse result.
+2. **The amount is chosen inside Stripe's UI**, so our server first learns of
    it in the webhook — after the money has moved. Validation after the fact is
    not validation.
 
-Use [inline pricing](https://docs.stripe.com/products-prices/how-products-and-prices-work#inline-pricing)
-instead: the amount is chosen in _our_ UI, validated by _our_ server, and
-passed to Stripe as `price_data.unit_amount` when the Checkout Session is
-created.
+(A third objection, that `custom_unit_amount` cannot be combined with
+discounts or promotion codes, no longer applies: the per-player returning
+discount is being retired along with per-player pricing.)
 
-```ts
-await stripe.checkout.sessions.create(
-	{
-		mode: 'payment',
-		customer: stripeCustomerId,
-		line_items: [
-			{
-				quantity: 1,
-				price_data: {
-					currency: 'usd',
-					// Server-computed. Never the raw value from the client.
-					unit_amount: amountCents,
-					product: seasonConfig.teamRegistrationProductId,
-				},
-			},
-		],
-		payment_intent_data: {
-			metadata: { firebaseUID, seasonId, teamId, kind: 'team_registration' },
-		},
-		metadata: { firebaseUID, seasonId, teamId, kind: 'team_registration' },
-		success_url,
-		cancel_url,
-	},
-	{ idempotencyKey: `team_reg_${teamId}_${seasonId}_${nonce}` }
-)
-```
+Use [inline pricing](https://docs.stripe.com/products-prices/how-products-and-prices-work#inline-pricing)
+instead. The payer picks an amount in _our_ UI, where we can show the team's
+remaining balance and offer sensible presets; our server validates it against
+the live balance and passes it as `price_data.unit_amount`.
 
 Inline prices create throwaway `Price` objects that do not appear in the
-Dashboard catalog. That is fine and expected — the `Product` stays stable and
-is what shows on the receipt.
+Dashboard catalog. That is expected — the `Product` stays stable and is what
+appears on the receipt.
 
 ### It is not a donation
 
 A donation is money given without receiving goods or services. This is payment
 for a roster spot in a league. Stripe has
 [separate requirements for accepting tips and donations](https://support.stripe.com/questions/requirements-for-accepting-tips-or-donations),
-and describing league fees as donations would misrepresent the business to the
+and describing league fees that way would misrepresent the business to the
 processor and to the payer.
 
 Model it as a Product — "Team Registration" — with inline amounts. Do not set
@@ -84,116 +72,157 @@ Checkout's `submit_type` to `donate`.
 
 Checkout can let the payer change the quantity of a line item, so a $100 price
 with `adjustable_quantity` would let someone buy "5 player slots" for $500.
-It is tidy, but it forces every contribution to be a multiple of $100 and
-rules out the "twenty players at $50" case in the brief.
+Tidy, but it forces every contribution to be a multiple of $100 and rules out
+the "twenty players at $50" case.
 
-### Manual capture is the interesting one
+## Not losing money on cancellations
 
-[Separate authorization and capture](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method)
-(`payment_intent_data.capture_method = 'manual'`) places a hold rather than
-taking the money. Capture it when the team completes; cancel it if they never
-do. **Cancelling an uncaptured authorization is free, whereas Stripe does not
-return the processing fee on a refund.** Stripe explicitly recommends this for
-businesses that refund close to the time of transaction.
+This is the part worth getting right, and Stripe gives a clean answer.
 
-The blocker is the window. A card authorization lasts **7 days** online, and
-our registration windows have run **15 to 31 days**. Holding every partial
-contribution until the window closes is not possible.
+**Stripe does not return the processing fee on a refund**, but **cancelling an
+uncaptured authorization is free**. Stripe
+[recommends manual capture explicitly](https://docs.stripe.com/refunds#cost-optimization)
+for businesses that refund close to the time of transaction, which is exactly
+this.
 
-It is still usable, but only behind a business rule: _a team has 7 days from
-its first contribution to reach $1,000._ That is a product decision, not a
-technical one. See "Open questions".
+### Authorize everything; capture only a team that is going to play
+
+Every contribution is created with
+`payment_intent_data.capture_method = 'manual'`. That places a hold instead of
+taking the money. Capture happens when, and only when, the team is complete:
+
+```ts
+const complete =
+	signedPlayerCount >= TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION &&
+	authorizedCents >= TEAM_CONFIG.REGISTRATION_TOTAL_CENTS
+```
+
+At that moment, capture every outstanding hold for the team. Until then, no
+money has left anyone's account and every exit is free:
+
+| Outcome                         | Action                        | Cost                  |
+| ------------------------------- | ----------------------------- | --------------------- |
+| Team completes                  | Capture all holds             | Normal processing fee |
+| Team never completes            | Cancel all holds              | **Nothing**           |
+| Team misses the twelve-spot cut | Cancel all holds              | **Nothing**           |
+| Team overpays through a race    | Capture part, cancel the rest | **Nothing extra**     |
+
+For the common case this is invisible. One person pays $1,000 for a team that
+already has ten signed players, and the capture happens in the same second —
+it behaves exactly like a normal payment.
+
+### It also makes the overpayment race free
+
+Two players both see "$200 remaining" and both pay $200. The team is now
+holding $1,200 in authorizations.
+
+Capture supports
+[capturing less than the authorized amount](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method#capture-funds)
+via `amount_to_capture`, and a partial capture automatically releases the
+rest. So: capture $200 from the first and cancel the second, or capture $100
+from each. Either way nobody is overcharged and no refund is issued.
+
+Had the contributions been captured on arrival, the same race would cost a
+$200 refund and its unrecoverable fee. This is the strongest argument for
+manual capture — it turns an inevitable, recurring cost into nothing.
+
+### The seven-day window is the real constraint
+
+A card authorization lasts **7 days** for online payments. Registration
+windows have run **15 to 31 days**, so a hold cannot simply wait for the
+window to close.
+
+[Extended authorizations](https://docs.stripe.com/payments/extended-authorization)
+go up to 30 days, and at first glance solve this. They do not, quite:
+
+- They require **IC+ pricing**. On blended pricing (which this account almost
+  certainly uses) you have to ask Stripe for access.
+- Visa adds **0.08% per transaction** outside hotel, lodging, vehicle rental
+  and cruise categories. A sports league is outside them.
+- **American Express only supports lodging and vehicle rental**, so Amex
+  contributions would not get the extended window at all.
+- The compliance note says extended windows are intended for cases where you
+  do not know the final amount at authorization time. We do know it.
+
+Worth a conversation with Stripe, not worth designing around.
+
+**So: accept the 7-day window and let holds expire.** A contribution that is
+still uncaptured after 7 days is released automatically and the contributor is
+never charged. That is the correct outcome — the team did not come together,
+so nobody should pay.
+
+What this needs is honesty in the UI. A contributor must see, at the time of
+paying and afterwards, that their money is _held, not taken_, and the date the
+hold releases. `capture_before` on the charge gives the exact deadline; read it
+rather than assuming seven days.
+
+Do **not** auto-capture a hold that is about to expire for an incomplete team.
+That converts a free release into a payment you will have to refund at cost,
+for a team that is not playing.
+
+### Statement descriptors matter more than usual
+
+A hold appears on a statement much like a charge. Someone who does not
+recognise a $1,000 line disputes it, and a dispute costs the fee _and_ the
+amount. Set a clear
+[statement descriptor](https://docs.stripe.com/get-started/account/statement-descriptors)
+and use Checkout's `custom_text` to say plainly that this is an authorization
+for a team registration that will be released if the team does not complete.
 
 ## Data model
 
 Money becomes a team-season concern, so it needs a ledger. A single running
-total is not enough: refunds need to know who paid what.
+total is not enough: cancellation and capture both need to know who paid what.
 
 ```
 teams/{teamId}/teamSeasons/{seasonId}
-  amountPaidCents: number        // denormalized running total
-  registered: boolean            // recomputed from the rule below
+  authorizedCents: number        // sum of holds not yet captured or released
+  capturedCents: number          // money actually taken
+  registered: boolean            // recomputed from the rule above
 
 teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}
   player: DocumentReference<PlayerDocument>
   amountCents: number
-  status: 'pending' | 'paid' | 'refunded' | 'canceled'
+  status: 'authorized' | 'captured' | 'released' | 'canceled'
   paymentIntentId: string
+  captureBefore: Timestamp       // from the charge; when the hold expires
   createdAt: Timestamp
 ```
 
-The contributions subcollection is the source of truth; `amountPaidCents` is a
-denormalized sum, recomputed in the same transaction that writes a
-contribution. That mirrors how the roster and player-season already work, and
-the same rule applies — never write one without the other.
+The contributions subcollection is the source of truth; the two totals are
+denormalized and recomputed in the same transaction that writes a
+contribution. That mirrors the roster and player-season pairing already in the
+codebase, and the same rule applies — never write one side without the other.
 
-### The registration rule
-
-```ts
-const registered =
-	signedPlayerCount >= TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION &&
-	amountPaidCents >= TEAM_CONFIG.REGISTRATION_TOTAL_CENTS // 100_000
-```
-
-`updateTeamRegistrationStatus` already recomputes registration from the roster.
-It gains the second clause and changes what it counts — see below.
+Note that the registration test uses **authorized**, not captured: a team
+secures its spot when the money is committed, and capture follows.
 
 ## Two consequences that are easy to miss
 
 ### "Fully registered player" has to stop meaning "paid"
 
-Today a player counts toward the ten when they are **paid and signed**. If one
-person pays $1,000, nobody else on the roster is paid, so under the current
-rule the team has one qualifying player and can never register.
+Confirmed. A player counts toward the ten when they are **on the roster and
+have signed their waiver**. Money moves entirely to the team level, and
+`playerSeasons.paid` stops being part of the registration test.
 
-So the ten must become **ten players who are on the roster and have signed the
-waiver**. Money moves to the team level entirely; `playerSeasons.paid` stops
-being part of the registration test.
-
-That leaves a question about what `paid` means at all. Suggested: keep it as a
-record of whether _that person_ contributed money, useful for refunds and for
-a captain chasing their team, but remove it from any gate.
+Suggested: keep `paid` as a record of whether that person contributed money —
+useful for a captain chasing their team, and for knowing who to talk to if a
+hold needs re-taking — but remove it from every gate.
 
 ### The waiver trigger has to move
 
-`onPaymentCreated` currently sends a player their waiver when they pay. If one
-person pays for the whole team, **the other nineteen never get a waiver** — and
-since registration now needs ten signed players, the team cannot register.
+Confirmed, and it is the largest piece of work. `onPaymentCreated` currently
+sends a player their waiver when they pay. If one person pays for the whole
+team, **the other nineteen never get a waiver** — and since registration now
+needs ten signed players, the team can never register.
 
-Waiver issuance must move off payment and onto something every player does.
-Joining a roster is the natural trigger: `updateTeamRoster` and the offer
-acceptance path both already write membership.
+Waiver issuance moves onto joining a roster. Both `updateTeamRoster` and the
+offer-acceptance path already write membership, and
+`Functions/src/shared/membership.ts` is the single place both go through.
 
-This is the largest piece of work in the change and the one most likely to
-break quietly, because the failure mode is a waiver that never arrives rather
-than an error anyone sees.
-
-## Refunds
-
-Money will need returning. A team that collects $600 and never reaches $1,000
-cannot be left holding it, and a team that completes but misses the twelve-spot
-cut needs the whole $1,000 back.
-
-Stripe does not return the original processing fee on a refund, so a $600
-refund costs the league roughly $17.70 that it never sees again.
-
-Three options:
-
-|                                                     | Cost of returning money               | Constraint                               |
-| --------------------------------------------------- | ------------------------------------- | ---------------------------------------- |
-| **A. Capture immediately, refund later**            | ~2.9% + 30¢ per refund, unrecoverable | None                                     |
-| **B. Manual capture, cancel if incomplete**         | Free                                  | 7-day authorization window               |
-| **C. Require 10 signed players before any payment** | Refunds become rare                   | Defeats "pay instantly to secure a spot" |
-
-**Recommendation: A**, with a first-class admin refund action and a scheduled
-job that flags incomplete teams when registration closes. It has no constraint
-on how long a team takes, and the cost is small and rare — most teams will pay
-in one transaction, which is the entire point of the change.
-
-B is worth revisiting if partial payments turn out to be common. It is a real
-saving, but it buys that saving by putting a 7-day clock on every team.
-
-C is the cheapest and the worst: it removes the speed that motivated this.
+The failure mode here is a waiver that never arrives rather than an error
+anyone sees, so it needs a test that asserts a waiver is requested on join,
+and an admin view of who on a roster is still unsigned.
 
 ## Security
 
@@ -201,51 +230,47 @@ The amount is now attacker-controlled input, which it was not before.
 
 - **Never trust a client-supplied amount.** The server computes the maximum
   from the team's live remaining balance and rejects anything above it. The
-  client may _propose_ an amount; the server decides.
-- **Enforce a floor** so the processing fee cannot exceed the contribution.
-- **Re-derive everything in the webhook** from `metadata`, and treat the
-  metadata as the only trusted channel. The session's amount is authoritative
-  for what was charged; the team it applies to comes from metadata that our
-  server set.
+  client may _propose_; the server decides.
+- **Enforce a floor** so the processing fee cannot swallow the contribution.
+- **Re-derive everything in the webhook** from metadata our server set. The
+  amount charged is authoritative from Stripe; the team it belongs to is not
+  something the client gets to assert.
 - **Idempotency keys** on session creation, and idempotent webhook handling
   keyed on the PaymentIntent id — Stripe retries.
-- **Authorization**: only a player on that team's roster for that season may
-  contribute to it. Captains are not special here; any rostered player can pay.
+- **Authorization**: only a player rostered on that team for that season may
+  contribute to it. Captains are not special; any rostered player can pay.
 
-### The race worth thinking about
+### Use a restricted key
 
-Two players both see "$200 remaining" and both pay $200. Both succeed, and the
-team has paid $1,200.
+The integration currently uses `STRIPE_SECRET_KEY`, which can do anything the
+account can. Stripe's guidance is to use a
+[restricted API key](https://docs.stripe.com/keys/restricted-api-keys) scoped
+to what the Functions actually need — Checkout Sessions, PaymentIntents,
+Customers and Refunds, write; everything else off.
 
-Reserving the balance is possible but adds a whole expiry mechanism for a rare
-case. Simpler and honest: **allow the overpayment, record it, and refund the
-excess.** The team is registered either way, which is the outcome both payers
-wanted. Surface the overage in the admin UI so it gets returned.
+Worth doing as its own change, independent of this one. It reduces the blast
+radius of the existing integration, not just the new code.
 
 ## Open questions
 
-These need answers before implementation, and most are product decisions
-rather than technical ones.
-
-1. **Does the returning-player discount survive?** It is currently a per-player
-   coupon on a $100 price. Against a team total it could become a reduced team
-   price, a credit, or be dropped. This has to be decided — it cannot be
-   carried over unchanged.
-2. **Minimum contribution?** Suggested $10, so the processing fee stays a sane
-   fraction.
-3. **Can a player contribute before joining a roster?** Suggested no; it makes
-   refunds and authorization much simpler.
-4. **What happens to a team that pays $1,000 but never reaches ten signed
-   players?** Refund, or hold and let them recruit until the deadline?
-5. **Is there a deadline for completing a partial payment**, separate from the
-   registration window close? Required if option B is ever chosen.
-6. **Who can see the team's balance?** Suggested: any rostered player, since
+1. **Minimum contribution?** Suggested $10, so the processing fee stays a sane
+   fraction of it.
+2. **Can a player contribute before joining a roster?** Suggested no — it
+   makes authorization and cancellation much simpler.
+3. **A team that authorizes $1,000 but never reaches ten signed players.**
+   The holds expire after 7 days and release themselves, which is the safe
+   default. Is that the behaviour you want, or should the team be able to
+   re-authorize and keep trying?
+4. **Who can see the team's balance?** Suggested: any rostered player, since
    they are the ones being asked to chip in.
+5. **Does the twelve-team cap get enforced in code?** Today it appears to be
+   managed by hand. If registration becomes a race, the cap probably needs to
+   be a real check — and that decides whether a thirteenth team's holds are
+   cancelled automatically.
 
 ## Migration
 
 The rule changes between seasons, so existing seasons keep their data. Past
-`playerSeasons.paid` values stay as a historical record. `amountPaidCents` and
-the contributions ledger start empty and are only populated for seasons using
-the new model — add a per-season flag so both rules can coexist while the
-change is proven.
+`playerSeasons.paid` values stay as a historical record. The contributions
+ledger starts empty and is only populated for seasons using the new model —
+add a per-season flag so both rules can coexist while the change is proven.
