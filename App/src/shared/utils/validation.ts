@@ -85,6 +85,21 @@ export const loginPasswordSchema = z.string({
 	error: 'Password is required',
 })
 
+/**
+ * Typographic characters that mean the same thing as their ASCII
+ * counterparts, normalized before validating.
+ *
+ * iOS and macOS substitute a curly apostrophe (U+2019) as you type, so
+ * "O'Dowd" typed on a phone arrives as "O\u2019Dowd". Rejecting that tells
+ * someone their own name is invalid for a reason they cannot see.
+ *
+ * **Keep in sync with `Functions/src/shared/names.ts`.**
+ */
+const TYPOGRAPHIC_REPLACEMENTS: [RegExp, string][] = [
+	[/[\u2018\u2019\u02BC\u055A]/g, "'"],
+	[/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, '-'],
+]
+
 export const nameSchema = z
 	.string({
 		error: (issue) => {
@@ -93,39 +108,54 @@ export const nameSchema = z
 		},
 	})
 	.trim()
-	.min(2, 'Name must be at least 2 characters')
-	.max(50, 'Name must be less than 50 characters')
-	.regex(
-		/^[a-zA-Z\s'-]+$/,
-		'Name can only contain letters, spaces, hyphens, and apostrophes'
+	.transform((name) =>
+		TYPOGRAPHIC_REPLACEMENTS.reduce(
+			(text, [pattern, replacement]) => text.replace(pattern, replacement),
+			name
+		)
 	)
-	.refine(
-		(name) => {
-			// Consecutive apostrophes or hyphens are malformed; consecutive
-			// spaces are a typo the transform below collapses, so they are
-			// deliberately not rejected here.
-			return !/'{2,}|-{2,}/.test(name)
-		},
-		{
-			error: 'Name cannot contain consecutive hyphens or apostrophes',
-		}
-	)
-	.refine(
-		(name) => {
-			// Check for inappropriate language using bad-words package
-			return !filter.isProfane(name)
-		},
-		{
-			error:
-				'Name contains inappropriate language. Please choose a different name.',
-		}
+	.pipe(
+		z
+			.string()
+			.min(2, 'Name must be at least 2 characters')
+			.max(50, 'Name must be less than 50 characters')
+			// Letters from any script: José and Nguyễn are names, and an
+			// ASCII-only class refuses them.
+			.regex(
+				/^[\p{L}\p{M}\s'-]+$/u,
+				'Name can only contain letters, spaces, hyphens, and apostrophes'
+			)
+			.refine(
+				(name) => {
+					// Consecutive apostrophes or hyphens are malformed;
+					// consecutive spaces are a typo the transform below
+					// collapses, so they are deliberately not rejected here.
+					return !/'{2,}|-{2,}/.test(name)
+				},
+				{
+					error: 'Name cannot contain consecutive hyphens or apostrophes',
+				}
+			)
+			.refine(
+				(name) => {
+					// Check for inappropriate language using bad-words package
+					return !filter.isProfane(name)
+				},
+				{
+					error:
+						'Name contains inappropriate language. Please choose a different name.',
+				}
+			)
 	)
 	.transform((name) => {
-		// Collapse runs of whitespace before title-casing, so a double-typed
-		// or pasted space normalises instead of being rejected.
+		// Collapse runs of whitespace, then capitalize each word. `\b\w`
+		// would only reach ASCII, leaving non-Latin names uncapitalized.
 		return name
 			.replace(/\s+/g, ' ')
-			.replace(/\b\w/g, (char) => char.toUpperCase())
+			.replace(
+				/(^|[\s'-])(\p{L})/gu,
+				(_match, boundary, letter) => boundary + letter.toUpperCase()
+			)
 	})
 
 export const teamNameSchema = z

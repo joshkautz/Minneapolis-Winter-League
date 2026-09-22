@@ -202,6 +202,19 @@ Triggers are invoked with `.run(event)` and a synthetic event carrying
   short-circuit initially passed with the guard removed, because the
   waiver-exists check masked it — the gap only showed under mutation.
 
+## One player name still needs a human decision
+
+`players/SzxvT9AJsuhgkDORAhDD1hC4VQY2` has the firstname
+`Hayden “Slotz”` — a nickname in quote marks, stored before names were
+validated anywhere. Quote marks are not letters, so it fails validation.
+
+Nothing is broken by it: the name renders, and updating their _last_ name
+alone still works. But saving their first name from the profile form or the
+admin editor will be refused until it is corrected, most likely to `Hayden`.
+
+Left alone deliberately — dropping someone's nickname is their call, not a
+migration's. Fix it from the admin player editor.
+
 ## Name validation duplicates the App's rules
 
 `Functions/src/shared/names.ts` and `App/src/shared/utils/validation.ts`

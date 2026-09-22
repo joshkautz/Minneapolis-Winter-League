@@ -21,8 +21,22 @@ import { Filter } from 'bad-words'
 const MIN_LENGTH = 2
 const MAX_LENGTH = 50
 
-/** Letters, spaces, hyphens and apostrophes. */
-const ALLOWED_CHARACTERS = /^[a-zA-Z\s'-]+$/
+/** Letters from any script, plus spaces, hyphens and apostrophes. */
+const ALLOWED_CHARACTERS = /^[\p{L}\p{M}\s'-]+$/u
+
+/**
+ * Typographic characters that mean the same thing as their ASCII
+ * counterparts, normalized before validating.
+ *
+ * iOS and macOS substitute a curly apostrophe (U+2019) as you type, so
+ * "O'Dowd" typed on a phone arrives as "O\u2019Dowd". Rejecting that tells
+ * someone their own name is invalid for a reason they cannot see. Two players
+ * in this league are already stored with one.
+ */
+const TYPOGRAPHIC_REPLACEMENTS: [RegExp, string][] = [
+	[/[\u2018\u2019\u02BC\u055A]/g, "'"],
+	[/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, '-'],
+]
 
 /**
  * Entries removed from the `bad-words` blocklist because they are real
@@ -104,7 +118,10 @@ export function validateAndNormalizeName(
 		)
 	}
 
-	const trimmed = value.trim()
+	const trimmed = TYPOGRAPHIC_REPLACEMENTS.reduce(
+		(text, [pattern, replacement]) => text.replace(pattern, replacement),
+		value.trim()
+	)
 
 	if (trimmed.length < MIN_LENGTH) {
 		throw new HttpsError(
@@ -141,7 +158,12 @@ export function validateAndNormalizeName(
 		)
 	}
 
+	// Capitalize the first letter of each word. `\b\w` would only reach
+	// ASCII, leaving "josé" as "José" but "ñoño" untouched.
 	return trimmed
 		.replace(/\s+/g, ' ')
-		.replace(/\b\w/g, (character) => character.toUpperCase())
+		.replace(
+			/(^|[\s'-])(\p{L})/gu,
+			(_match, boundary, letter) => boundary + letter.toUpperCase()
+		)
 }
