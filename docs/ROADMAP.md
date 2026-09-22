@@ -202,24 +202,6 @@ Triggers are invoked with `.run(event)` and a synthetic event carrying
   short-circuit initially passed with the guard removed, because the
   waiver-exists check masked it — the gap only showed under mutation.
 
-## Remove the residual per-season ban field
-
-A ban is now a single flag at `players/{uid}.banned`. The backfill has run
-over all 598 production players and no code reads or writes the per-season
-`banned` field any more — but the field is still **present on 1765 season
-subdocs**, frozen at whatever it was when the backfill ran.
-
-It is inert, and a test pins that leftovers are ignored. It is also
-misleading: a reader finding `banned: true` on a season subdoc for someone
-since unbanned would draw the wrong conclusion.
-
-```bash
-node scripts/migrations/2026-account-level-ban/run.js --mode=cleanup
-node scripts/migrations/2026-account-level-ban/run.js --mode=cleanup --commit
-```
-
-Safe to run now that the reading code has shipped.
-
 ## Name validation duplicates the App's rules
 
 `Functions/src/shared/names.ts` and `App/src/shared/utils/validation.ts`
