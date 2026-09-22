@@ -5,3 +5,12 @@ dist/**/*.js.map
 
 # Node.js dependency directory
 node_modules/
+
+# Compiled output emitted beside a source file.
+#
+# tsconfig.json scopes the build to src/, but vitest.config.ts sits at the
+# package root and was compiled in place before that scoping existed — the
+# resulting .js and .js.map were committed. A stale .js next to its .ts also
+# confuses config resolution, so keep them out.
+vitest.config.js
+vitest.config.js.map
