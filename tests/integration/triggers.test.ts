@@ -198,6 +198,7 @@ describe('updateTeamRegistrationOnRosterChange', () => {
 	})
 
 	it('recomputes when a roster entry is deleted', async () => {
+		// The recompute still runs — it just cannot take a claimed spot back.
 		await seedAlmostRegistered()
 		await playerSeasonRef(firestore, `player-${MIN - 1}`, SEASON).update({
 			signed: true,
@@ -207,7 +208,7 @@ describe('updateTeamRegistrationOnRosterChange', () => {
 
 		await teamRosterEntryRef(firestore, TEAM, SEASON, 'player-0').delete()
 		await fire(true, false)
-		expect((await readTeamSeason())?.registered).toBe(false)
+		expect((await readTeamSeason())?.registered).toBe(true)
 	})
 
 	it('ignores an update to an existing roster entry', async () => {

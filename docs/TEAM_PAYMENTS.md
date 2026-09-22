@@ -497,7 +497,14 @@ touches money.
 
 ### Phase 0 — prerequisites
 
-**0a. Make the twelve-team cap transactional.**
+**0a. Make the twelve-team cap transactional. — done.**
+`updateTeamRegistrationStatus` now claims a spot inside a transaction against
+`seasons/{seasonId}.registeredTeamCount`, and registration is irreversible.
+Covered by `tests/integration/team-registration-cap.test.ts`, including five
+teams racing for two spots. The counter is backfilled on all four production
+seasons.
+
+~~**0a. Make the twelve-team cap transactional.**~~
 `updateTeamRegistrationStatus` currently sets `registered` from the roster
 count with no cap, and the cap is a trigger that tidies up afterwards. Under
 money that lets a thirteenth team commit funds it should never have been
