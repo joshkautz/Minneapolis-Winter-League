@@ -172,18 +172,17 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-Roughly 406 tests across four suites, all run by `npm run verify`. Every
-callable is covered for authorization; the emulator suites are
-mutation-tested.
+Roughly 427 tests across four suites, all run by `npm run verify`. Every
+callable is covered for authorization, four of the six triggers are covered,
+and the emulator suites are mutation-tested.
 
 Still uncovered, in rough priority order:
 
-- **`onPaymentCreated` and `onOfferUpdated`.** The two triggers with the most
-  logic. `onPaymentCreated` creates waiver records from Stripe payment
-  metadata; `onOfferUpdated` moves a player onto a team when an offer is
-  accepted. Both need Stripe and Dropbox Sign fixtures.
-- **`userDeleted` and `onTeamRegistrationChange`.** Account teardown and the
-  season lock at twelve registered teams.
+- **`onPaymentCreated`.** Creates waiver records from Stripe payment
+  metadata and calls Dropbox Sign. Needs fixtures for both, which is why it
+  is still open.
+- **`userDeleted`.** Account teardown — what happens to a departing player's
+  roster entries, offers and season subdocs.
 - **Player rankings pipeline.** The TrueSkill maths is covered; the
   orchestration around it (game loading, round grouping, decay, persistence)
   is not.
