@@ -1009,7 +1009,6 @@ async function createTeamsForActiveSeasons(seasons, players) {
 				}
 
 				allPlayerAssignments.get(playerId).push({
-					banned: false,
 					captain: rosterEntry.captain,
 					paid: true, // All players have paid
 					season: createRef(Collections.SEASONS, season.id),
@@ -1042,7 +1041,6 @@ async function createTeamsForActiveSeasons(seasons, players) {
 				captain: entry.captain,
 				paid: entry.paid,
 				signed: entry.signed,
-				banned: entry.banned,
 			})
 		}
 

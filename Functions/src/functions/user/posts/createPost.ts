@@ -90,7 +90,7 @@ export const createPost = onCall<
 			}
 
 			void playerDoc.data()
-			await validateNotBanned(firestore, auth.uid, seasonId)
+			await validateNotBanned(firestore, auth.uid)
 
 			// Verify season exists
 			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)

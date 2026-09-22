@@ -147,7 +147,6 @@ export function addPlayerToTeam(
 			team: teamCanonicalRef,
 			paid: false,
 			signed: false,
-			banned: false,
 			captain,
 		}
 		transaction.set(playerSeasonDocRef, newPlayerSeason)
@@ -167,7 +166,7 @@ export function addPlayerToTeam(
  * no validation; it only performs the writes.
  *
  * The player season subdoc is always updated, never deleted — it still
- * carries `paid`/`signed`/`banned` state that's relevant after the player
+ * carries `paid`/`signed` state that's relevant after the player
  * leaves.
  */
 export function removePlayerFromTeam(

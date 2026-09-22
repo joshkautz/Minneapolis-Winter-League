@@ -26,7 +26,6 @@ import {
 } from '../../../types.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import {
-	isPlayerBanned,
 	validateAuthentication,
 	validateNotBanned,
 } from '../../../shared/auth.js'
@@ -91,7 +90,7 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 			const isAdmin = playerDocument.admin === true
 
 			if (!isAdmin) {
-				await validateNotBanned(firestore, userId, seasonId)
+				await validateNotBanned(firestore, userId)
 
 				const registrationEnd = seasonData.registrationEnd.toDate()
 				if (Timestamp.now().toDate() > registrationEnd) {
@@ -184,15 +183,6 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 				)
 			}
 
-			// Determine banned status to seed if no player season subdoc exists.
-			let bannedStatus = false
-			if (!existingPlayerSeasonData) {
-				// Mirror the account-level ban onto the new subdoc so the
-				// fallback in isPlayerBanned stays consistent until the
-				// backfill lands and this whole block goes away.
-				bannedStatus = await isPlayerBanned(firestore, userId, seasonId)
-			}
-
 			const rosterEntryDocRef = teamRosterEntryRef(
 				firestore,
 				originalTeamId,
@@ -225,7 +215,6 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 						team: teamCanonicalDocRef,
 						paid: false,
 						signed: false,
-						banned: bannedStatus,
 						captain: true,
 					})
 				}

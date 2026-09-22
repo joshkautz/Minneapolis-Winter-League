@@ -105,8 +105,7 @@ export const createReply = onCall<
 			}
 
 			void playerDoc.data()
-			const seasonId = postData.season.id
-			await validateNotBanned(firestore, auth.uid, seasonId)
+			await validateNotBanned(firestore, auth.uid)
 
 			// Create reply and increment reply count in a transaction
 			let replyId: string = ''

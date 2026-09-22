@@ -58,23 +58,28 @@ const seedPlayerEverywhere = async (uid: string): Promise<void> => {
 			team: teamRef(teamId),
 			paid: true,
 			signed: true,
-			banned: false,
 			captain: false,
 		})
 	}
 
 	// An outstanding offer.
-	await firestore.collection('offers').doc(`offer-${uid}`).set({
-		createdAt: Timestamp.now(),
-		player: playerRef(uid),
-		season: seasonRef(),
-		team: teamRef(TEAM),
-		status: 'pending',
-		type: 'invitation',
-	})
+	await firestore
+		.collection('offers')
+		.doc(`offer-${uid}`)
+		.set({
+			createdAt: Timestamp.now(),
+			player: playerRef(uid),
+			season: seasonRef(),
+			team: teamRef(TEAM),
+			status: 'pending',
+			type: 'invitation',
+		})
 
 	// Local Stripe records.
-	await firestore.collection('stripe').doc(uid).set({ stripeId: `cus_${uid}` })
+	await firestore
+		.collection('stripe')
+		.doc(uid)
+		.set({ stripeId: `cus_${uid}` })
 	await firestore
 		.collection('stripe')
 		.doc(uid)
@@ -142,9 +147,7 @@ describe('userDeleted', () => {
 
 	it('deletes every player season subdoc', async () => {
 		await fire(VICTIM)
-		const seasons = await playerRef(VICTIM)
-			.collection('playerSeasons')
-			.get()
+		const seasons = await playerRef(VICTIM).collection('playerSeasons').get()
 		expect(seasons.empty).toBe(true)
 	})
 
@@ -186,7 +189,8 @@ describe('userDeleted', () => {
 
 		expect((await playerRef(BYSTANDER).get()).exists).toBe(true)
 		expect(
-			(await teamRosterEntryRef(firestore, TEAM, SEASON, BYSTANDER).get()).exists
+			(await teamRosterEntryRef(firestore, TEAM, SEASON, BYSTANDER).get())
+				.exists
 		).toBe(true)
 		expect(
 			(await playerSeasonRef(firestore, BYSTANDER, SEASON).get()).exists

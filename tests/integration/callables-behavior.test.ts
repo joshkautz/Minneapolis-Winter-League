@@ -147,14 +147,9 @@ describe('createTeam', () => {
 	})
 
 	it('refuses a banned player', async () => {
-		await playerSeasonRef(firestore, PLAYER, SEASON).set({
-			season: firestore.collection('seasons').doc(SEASON),
-			team: null,
-			paid: false,
-			signed: false,
-			banned: true,
-			captain: false,
-		})
+		// A ban is account-level, so it is set on the player document and
+		// applies whether or not they have a subdoc for this season.
+		await firestore.collection('players').doc(PLAYER).update({ banned: true })
 
 		const code = await errorCodeFrom(fn('createTeam'), {
 			auth: authed(PLAYER),

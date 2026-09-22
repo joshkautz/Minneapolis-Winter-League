@@ -126,7 +126,6 @@ const seedPendingWaiver = async (options?: {
 		captain: false,
 		paid: true,
 		signed: false,
-		banned: false,
 	})
 }
 

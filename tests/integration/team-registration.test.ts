@@ -49,7 +49,6 @@ const seedRoster = async (
 			team: firestore.collection('teams').doc(TEAM),
 			paid: state.paid,
 			signed: state.signed,
-			banned: false,
 			captain: i === 0,
 		})
 	}
@@ -66,7 +65,10 @@ beforeAll(() => {
 beforeEach(async () => {
 	await resetFirestore(firestore)
 	await seasonRef().set({ name: '2030 Winter' })
-	await firestore.collection('teams').doc(TEAM).set({ createdAt: Timestamp.now() })
+	await firestore
+		.collection('teams')
+		.doc(TEAM)
+		.set({ createdAt: Timestamp.now() })
 	await teamSeasonRef(firestore, TEAM, SEASON).set({
 		season: seasonRef(),
 		name: 'Test Team',
@@ -162,11 +164,15 @@ describe('isMigrationInProgress', () => {
 		await firestore.doc('system/maintenance').set({ migrationInProgress: true })
 		await expect(isMigrationInProgress(firestore)).resolves.toBe(true)
 
-		await firestore.doc('system/maintenance').set({ migrationInProgress: false })
+		await firestore
+			.doc('system/maintenance')
+			.set({ migrationInProgress: false })
 		await expect(isMigrationInProgress(firestore)).resolves.toBe(false)
 
 		// A truthy non-boolean must not switch the kill-switch on.
-		await firestore.doc('system/maintenance').set({ migrationInProgress: 'yes' })
+		await firestore
+			.doc('system/maintenance')
+			.set({ migrationInProgress: 'yes' })
 		await expect(isMigrationInProgress(firestore)).resolves.toBe(false)
 	})
 })

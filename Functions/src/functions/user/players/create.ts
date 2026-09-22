@@ -118,7 +118,6 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 					team: null,
 					paid: false,
 					signed: false,
-					banned: false,
 					captain: false,
 				}
 				batch.set(seasonSubRef, seasonData)

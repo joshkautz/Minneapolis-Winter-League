@@ -148,7 +148,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 				// A ban is account-level; isPlayerBanned owns where it is read
 				// from while the migration is outstanding.
 				if (!isAdmin) {
-					if (await isPlayerBanned(firestore, playerId, currentSeason.id)) {
+					if (await isPlayerBanned(firestore, playerId)) {
 						throw new HttpsError(
 							'permission-denied',
 							'Target player is banned from the league'

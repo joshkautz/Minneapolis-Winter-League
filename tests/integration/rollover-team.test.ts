@@ -96,7 +96,6 @@ const seedPriorSeason = async (
 		logo?: string | null
 		playerId?: string
 		captain?: boolean
-		banned?: boolean
 	}
 ) => {
 	const teamId = options.teamId ?? TEAM
@@ -121,7 +120,6 @@ const seedPriorSeason = async (
 		captain: options.captain ?? false,
 		paid: true,
 		signed: true,
-		banned: options.banned ?? false,
 	})
 }
 
@@ -221,16 +219,12 @@ describe('rolloverTeam', () => {
 	})
 
 	it('refuses a captain who is banned from the league', async () => {
-		// The ban is recorded against OLD_SEASON and the new season has no
-		// subdoc yet. That used to mean the guard saw nothing and let the
-		// rollover through, marking the new subdoc banned afterwards — so a
-		// banned captain could still put a team on the board. A ban is
-		// account-level now, so it is caught before anything is written.
-		await seedPriorSeason(OLD_SEASON, {
-			name: 'Homemade Furby',
-			captain: true,
-			banned: true,
-		})
+		// The ban lives on the player document and the new season has no
+		// subdoc yet. It used to be recorded per season, which meant the
+		// guard saw nothing here and let the rollover through — a banned
+		// captain could still put a team on the board.
+		await seedPriorSeason(OLD_SEASON, { name: 'Homemade Furby', captain: true })
+		await playerRef(CAPTAIN).update({ banned: true })
 
 		expect(await fails()).toBe('permission-denied')
 		expect(
@@ -246,7 +240,6 @@ describe('rolloverTeam', () => {
 			captain: false,
 			paid: true,
 			signed: true,
-			banned: false,
 		})
 
 		await rollover()
@@ -326,7 +319,6 @@ describe('rolloverTeam', () => {
 			captain: false,
 			paid: false,
 			signed: false,
-			banned: false,
 		})
 
 		expect(await fails()).toBe('already-exists')
@@ -339,16 +331,16 @@ describe('rolloverTeam', () => {
 		expect(await fails()).toBe('already-exists')
 	})
 
-	it('refuses a captain banned for the new season', async () => {
+	it('refuses a banned captain who already registered for the season', async () => {
 		await seedPriorSeason(OLD_SEASON, { name: 'Homemade Furby', captain: true })
 		await playerSeasonRef(firestore, CAPTAIN, NEW_SEASON).set({
 			season: seasonRef(NEW_SEASON),
 			team: null,
 			captain: false,
-			paid: false,
-			signed: false,
-			banned: true,
+			paid: true,
+			signed: true,
 		})
+		await playerRef(CAPTAIN).update({ banned: true })
 
 		expect(await fails()).toBe('permission-denied')
 	})

@@ -84,7 +84,6 @@ const seedPlayer = async (
 		captain?: boolean
 		paid?: boolean
 		signed?: boolean
-		banned?: boolean
 	} = {}
 ) => {
 	await playerRef(playerId).set({
@@ -101,7 +100,6 @@ const seedPlayer = async (
 		captain: options.captain ?? false,
 		paid: options.paid ?? false,
 		signed: options.signed ?? false,
-		banned: options.banned ?? false,
 	})
 	if (options.teamId) {
 		await teamRosterEntryRef(firestore, options.teamId, SEASON, playerId).set({
@@ -365,20 +363,14 @@ describe('updatePlayerAdmin: season state', () => {
 		expect(season?.signed).toBe(true)
 	})
 
-	it('bans a player for a season', async () => {
+	it('bans a player league-wide, not per season', async () => {
+		// Covered in depth by account-level-ban.test.ts; this pins that the
+		// field is no longer accepted as part of a season update.
 		await seedPlayer(PLAYER)
 
-		await call({ playerId: PLAYER, seasons: [seasonUpdate({ banned: true })] })
+		await call({ playerId: PLAYER, banned: true })
 
-		expect((await readSeason())?.banned).toBe(true)
-	})
-
-	it('leaves banned alone when the field is omitted', async () => {
-		await seedPlayer(PLAYER, { banned: true })
-
-		await call({ playerId: PLAYER, seasons: [seasonUpdate({ paid: true })] })
-
-		expect((await readSeason())?.banned).toBe(true)
+		expect((await readPlayer())?.banned).toBe(true)
 	})
 
 	it('adds a player to a team, writing both sides', async () => {

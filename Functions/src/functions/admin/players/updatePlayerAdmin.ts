@@ -6,7 +6,8 @@
  * - Admin status
  * - Email address (syncs with Firebase Authentication)
  * - Email verification status
- * - Per-season state (paid, signed, banned, captain, team)
+ * - League-wide ban (account-level, not per season)
+ * - Per-season state (paid, signed, captain, team)
  *
  * Two invariants are enforced here and nowhere else: the league always has at
  * least one admin, and a team with a roster always has at least one captain.
@@ -21,7 +22,7 @@ import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
-import { isPlayerBanned, validateAdminUser } from '../../../shared/auth.js'
+import { validateAdminUser } from '../../../shared/auth.js'
 import { validateAndNormalizeName } from '../../../shared/names.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
@@ -33,7 +34,6 @@ import {
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	Collections,
-	PLAYER_SEASONS_SUBCOLLECTION,
 	type DocumentReference,
 	type PlayerDocument,
 	type SeasonDocument,
@@ -44,7 +44,6 @@ interface SeasonUpdate {
 	captain: boolean
 	paid: boolean
 	signed: boolean
-	banned?: boolean
 	teamId: string | null
 }
 
@@ -73,7 +72,6 @@ interface SeasonChanges {
 		captain?: { from: boolean; to: boolean }
 		paid?: { from: boolean; to: boolean }
 		signed?: { from: boolean; to: boolean }
-		banned?: { from: boolean; to: boolean }
 		team?: { from: string | null; to: string | null }
 	}
 }
@@ -223,12 +221,6 @@ export const updatePlayerAdmin = onCall<
 						'Signed status must be a boolean value'
 					)
 				}
-				if (s.banned !== undefined && typeof s.banned !== 'boolean') {
-					throw new HttpsError(
-						'invalid-argument',
-						'Banned status must be a boolean value'
-					)
-				}
 				if (
 					s.teamId !== null &&
 					(typeof s.teamId !== 'string' || !s.teamId.trim())
@@ -359,39 +351,13 @@ export const updatePlayerAdmin = onCall<
 			}
 
 			// ---- League-wide ban ---------------------------------------------
-			// The flag lives on the player document. It is also mirrored onto
-			// every season subdoc for as long as `isPlayerBanned` falls back to
-			// them; without the mirror, lifting a ban here would leave stale
-			// `true`s behind and the fallback would keep reporting it — which
-			// is exactly the bug that motivated moving the field.
+			// One flag on the player document. It used to live on each season
+			// subdoc, which is what made a ban impossible to lift.
 			if (banned !== undefined) {
-				// The comparison has to be against the *effective* state, not
-				// the raw field. An unmigrated player has no `banned` field
-				// while still being banned through their seasons; treating the
-				// absent field as `false` would make un-banning them a no-op —
-				// the field would never be written, and the fallback would go
-				// on reporting the ban. Always write when the field is absent,
-				// so the player ends up migrated either way.
-				const currentBanned = await isPlayerBanned(firestore, playerId)
-				if (playerData?.banned === undefined || banned !== currentBanned) {
-					updates.banned = banned
-				}
+				const currentBanned = playerData?.banned === true
 				if (banned !== currentBanned) {
+					updates.banned = banned
 					changes.banned = { from: currentBanned, to: banned }
-				}
-
-				const playerSeasonsSnapshot = await playerDocRef
-					.collection(PLAYER_SEASONS_SUBCOLLECTION)
-					.get()
-				const staleSeasons = playerSeasonsSnapshot.docs.filter(
-					(doc) => (doc.data()?.banned === true) !== banned
-				)
-				if (staleSeasons.length > 0) {
-					const batch = firestore.batch()
-					for (const doc of staleSeasons) {
-						batch.update(doc.ref, { banned })
-					}
-					await batch.commit()
 				}
 			}
 
@@ -525,11 +491,6 @@ export const updatePlayerAdmin = onCall<
 							to: seasonUpdate.signed,
 						}
 					}
-					const oldBanned = currentPlayerSeason.banned ?? false
-					const newBanned = seasonUpdate.banned ?? oldBanned
-					if (newBanned !== oldBanned) {
-						trackedChanges.banned = { from: oldBanned, to: newBanned }
-					}
 					if (oldTeamId !== newTeamId) {
 						trackedChanges.team = { from: oldTeamId, to: newTeamId }
 					}
@@ -573,13 +534,12 @@ export const updatePlayerAdmin = onCall<
 							})
 						}
 
-						// 2. Field-only updates (paid / signed / banned). These are
+						// 2. Field-only updates (paid / signed). These are
 						// independent of membership and always written. Captain is
 						// already handled above so we deliberately omit it here.
 						txn.update(playerSeasonDocRef, {
 							paid: seasonUpdate.paid,
 							signed: seasonUpdate.signed,
-							banned: newBanned,
 						})
 						return Promise.resolve()
 					})

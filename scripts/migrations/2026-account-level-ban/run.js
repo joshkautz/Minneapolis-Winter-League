@@ -24,6 +24,11 @@
  *   --mode=plan       (default) read-only summary of who would be banned
  *                     and how many documents would be written. No writes.
  *   --mode=migrate    write the flag. Use --commit to actually apply.
+ *   --mode=cleanup    delete the now-unread `banned` field from every season
+ *                     subdoc. Run this only after `migrate` has completed and
+ *                     the code that reads the season field has shipped —
+ *                     while that fallback exists, these values are the only
+ *                     thing keeping unmigrated players banned.
  *
  * Examples:
  *   FIRESTORE_EMULATOR_HOST=localhost:8080 GCLOUD_PROJECT=minnesota-winter-league \
@@ -35,10 +40,10 @@
  */
 
 import { initializeApp } from 'firebase-admin/app'
-import { getFirestore } from 'firebase-admin/firestore'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 
 const PROJECT_ID = 'minnesota-winter-league'
-const VALID_MODES = ['plan', 'migrate']
+const VALID_MODES = ['plan', 'migrate', 'cleanup']
 const PLAYER_SEASONS_SUBCOLLECTION = 'playerSeasons'
 
 // Firestore caps a write batch at 500 operations.
@@ -62,12 +67,58 @@ function logHeader(title) {
 	console.log(`\n${bar}\n  ${title}\n${bar}`)
 }
 
+/**
+ * Deletes the deprecated per-season `banned` field.
+ *
+ * Nothing reads it any more, so the values are inert — but they are also
+ * frozen at whatever they were when the migration ran, and a reader finding
+ * `banned: true` on a season subdoc for a player who has since been unbanned
+ * would be badly misled.
+ */
+async function cleanup() {
+	logHeader('Reading season subdocs')
+	const seasons = await db.collectionGroup('playerSeasons').get()
+	const withField = seasons.docs.filter(
+		(doc) => doc.data()?.banned !== undefined
+	)
+
+	console.log(`Season subdocs found:          ${seasons.size}`)
+	console.log(`Still carrying the field:      ${withField.length}`)
+	console.log(
+		`  of those, set to true:       ${withField.filter((d) => d.data()?.banned === true).length}`
+	)
+
+	if (!COMMIT) {
+		console.log('\nDry run. Add --commit to apply.')
+		return
+	}
+
+	logHeader('Deleting')
+	let written = 0
+	for (let i = 0; i < withField.length; i += BATCH_LIMIT) {
+		const batch = db.batch()
+		for (const doc of withField.slice(i, i + BATCH_LIMIT)) {
+			batch.update(doc.ref, { banned: FieldValue.delete() })
+		}
+		await batch.commit()
+		written += Math.min(BATCH_LIMIT, withField.length - i)
+		console.log(`  committed ${written}/${withField.length}`)
+	}
+
+	console.log(`\nDone. Cleared the field from ${written} season subdoc(s).`)
+}
+
 async function main() {
 	console.log('Minneapolis Winter League — backfill account-level bans')
 	console.log(`Project: ${PROJECT_ID}`)
 	console.log(`Mode:    ${MODE}`)
 	console.log(`Commit:  ${COMMIT}`)
 	console.log(`Target:  ${process.env.FIRESTORE_EMULATOR_HOST ?? 'PRODUCTION'}`)
+
+	if (MODE === 'cleanup') {
+		await cleanup()
+		return
+	}
 
 	logHeader('Reading players')
 	const players = await db.collection('players').get()

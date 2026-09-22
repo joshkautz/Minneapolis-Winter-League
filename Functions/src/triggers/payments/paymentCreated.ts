@@ -111,7 +111,6 @@ export const onPaymentCreated = onDocumentCreated(
 						team: null,
 						paid: true,
 						signed: false,
-						banned: false,
 						captain: false,
 					})
 				}

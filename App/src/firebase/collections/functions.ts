@@ -133,8 +133,6 @@ interface SeasonUpdateData {
 	paid: boolean
 	/** Whether the player has signed the waiver */
 	signed: boolean
-	/** Whether the player is banned from the season (optional, defaults to false) */
-	banned?: boolean
 	/** Team document ID (null if not on a team) */
 	teamId: string | null
 }
@@ -169,7 +167,6 @@ interface SeasonChanges {
 		captain?: { from: boolean; to: boolean }
 		paid?: { from: boolean; to: boolean }
 		signed?: { from: boolean; to: boolean }
-		banned?: { from: boolean; to: boolean }
 		team?: { from: string | null; to: string | null }
 	}
 }
