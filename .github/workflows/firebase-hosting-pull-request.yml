@@ -182,6 +182,23 @@ jobs:
           npm install --prefix Functions
           npm run build --prefix Functions
 
+      # The production deploy runs with --force, which would silently delete a
+      # function dropped from the manifest. Catch that here, before merge,
+      # rather than in the deploy. Forks and Dependabot get no deploy
+      # credentials, and neither changes the manifest.
+      - name: Check the deploy would not delete or re-trigger a function
+        if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MINNESOTA_WINTER_LEAGUE }}
+        run: |
+          npm install -g firebase-tools
+
+          echo "$GCP_SA_KEY" > /opt/gcp_key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/opt/gcp_key.json
+
+          firebase functions:list --json > /tmp/deployed-functions.json
+          node scripts/ci/check-functions-deploy.js /tmp/deployed-functions.json
+
   Rules:
     name: Emulator Tests
     runs-on: ubuntu-latest

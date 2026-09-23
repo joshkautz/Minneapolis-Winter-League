@@ -73,6 +73,13 @@ to 24 hours. So:
 - **Classify every new trigger** in `trigger-retries.test.ts`, which fails
   until you do.
 
+CI therefore deploys Functions with `--force`: the CLI will not deploy a
+newly retried trigger non-interactively without it. `--force` also approves
+deleting a function missing from the source and changing a trigger's type,
+so `scripts/ci/check-functions-deploy.js` runs first and fails the deploy if
+it would do either. To delete or re-trigger a function on purpose, run
+`firebase functions:delete <name>` by hand, then let CI deploy.
+
 ## Rosters
 
 A team's roster for a season is the subcollection
