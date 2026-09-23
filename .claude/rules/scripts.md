@@ -48,3 +48,10 @@ the repository root:
 ```js
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 ```
+
+## CI scripts
+
+`scripts/ci/` holds checks the deploy workflows run. They import the built
+`Functions/dist`, so they run after the Functions build. Keep the decision
+logic in exported pure functions and the I/O in `main()`, guarded so importing
+the file does not run it — the tests in `tests/integration/` import them.

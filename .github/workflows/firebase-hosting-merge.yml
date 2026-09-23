@@ -119,8 +119,15 @@ jobs:
           echo "$GCP_SA_KEY" > /opt/gcp_key.json
           export GOOGLE_APPLICATION_CREDENTIALS=/opt/gcp_key.json
 
-          # Deploy to Firebase Functions
-          firebase deploy --only functions
+          # --force is required to deploy a trigger that is newly retried on
+          # failure; the CLI refuses it non-interactively otherwise. It also
+          # approves deleting functions missing from the source and changing
+          # a function's trigger type, so the guard below fails the job if
+          # this deploy would do either. See scripts/ci/check-functions-deploy.js.
+          firebase functions:list --json > /tmp/deployed-functions.json
+          node scripts/ci/check-functions-deploy.js /tmp/deployed-functions.json
+
+          firebase deploy --only functions --force
 
   Rules:
     name: Emulator Tests
