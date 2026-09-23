@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
 	committedCents,
+	contributionAmountError,
 	hasUnsettledMoney,
 	totalsFrom,
 } from './contributions.js'
@@ -130,5 +131,57 @@ describe('hasUnsettledMoney', () => {
 				contribution(1_000, 'authorized'),
 			])
 		).toBe(true)
+	})
+})
+
+describe('contributionAmountError', () => {
+	// The amount is the one number a payer gets to choose. The server is the
+	// only check on it: the App's form is a convenience, and a callable can
+	// be invoked with anything.
+	const REMAINING = 60_000
+
+	it('accepts an amount between the floor and the balance', () => {
+		expect(contributionAmountError(25_000, REMAINING)).toBeNull()
+	})
+
+	it('accepts exactly the floor', () => {
+		expect(contributionAmountError(1_000, REMAINING)).toBeNull()
+	})
+
+	it('accepts exactly the remaining balance', () => {
+		expect(contributionAmountError(REMAINING, REMAINING)).toBeNull()
+	})
+
+	it('rejects one cent below the floor', () => {
+		expect(contributionAmountError(999, REMAINING)).toMatch(/at least \$10\.00/)
+	})
+
+	it('rejects one cent over the balance', () => {
+		// Stops a single payer committing more than the team can use, which
+		// would be a hold settlement has to release.
+		expect(contributionAmountError(REMAINING + 1, REMAINING)).toMatch(
+			/only needs \$600\.00/
+		)
+	})
+
+	it('lowers the floor to the balance when less than the floor is owed', () => {
+		// A team $5 short has to be able to pay $5; otherwise it could never
+		// finish.
+		expect(contributionAmountError(500, 500)).toBeNull()
+		expect(contributionAmountError(499, 500)).toMatch(/at least \$5\.00/)
+	})
+
+	it.each([
+		['zero', 0],
+		['a negative amount', -1_000],
+		['fractional cents', 1_000.5],
+		['NaN', Number.NaN],
+		['Infinity', Number.POSITIVE_INFINITY],
+		['an unsafe integer', 2 ** 53],
+		['a numeric string', '5000'],
+		['null', null],
+		['undefined', undefined],
+	])('rejects %s', (_label, amount) => {
+		expect(contributionAmountError(amount, REMAINING)).toMatch(/whole number/)
 	})
 })

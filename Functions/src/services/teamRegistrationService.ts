@@ -144,7 +144,12 @@ async function claimSpotIfQualified(
 		// roster rather than after.
 		const seasonSnap = await transaction.get(seasonDocRef)
 		const seasonData = seasonSnap.data() as SeasonDocument | undefined
-		const teamTotalCents = seasonData?.teamRegistrationTotalCents
+		// Checked by type rather than presence, so a field cleared to null
+		// falls back to the per-player rule instead of a $0 team total.
+		const teamTotalCents =
+			typeof seasonData?.teamRegistrationTotalCents === 'number'
+				? seasonData.teamRegistrationTotalCents
+				: undefined
 
 		const rosterSnap = await transaction.get(
 			teamSeasonDocRef.collection('roster')

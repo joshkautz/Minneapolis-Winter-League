@@ -3,7 +3,10 @@ import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
 import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import { updateTeamRegistrationStatus } from '../../Functions/src/services/teamRegistrationService.js'
-import { recordContribution } from '../../Functions/src/shared/contributions.js'
+import {
+	recordContribution,
+	setContributionStatus,
+} from '../../Functions/src/shared/contributions.js'
 import { updateTeamRegistrationOnContributionChange } from '../../Functions/src/index.js'
 import {
 	playerSeasonRef,
@@ -175,20 +178,34 @@ describe('team-total registration', () => {
 		expect(await isRegistered()).toBe(true)
 	})
 
-	it('does not count money that was cancelled or refunded', async () => {
+	it.each(['canceled', 'refunded'] as const)(
+		'does not count money that was %s',
+		async (status) => {
+			await seedSignedRoster(MIN)
+			await contribute('pi_1', TOTAL)
+			await setContributionStatus(firestore, {
+				teamId: TEAM,
+				seasonId: SEASON,
+				paymentIntentId: 'pi_1',
+				status,
+			})
+
+			await updateTeamRegistrationStatus(TEAM, SEASON)
+
+			expect(await isRegistered()).toBe(false)
+		}
+	)
+
+	it('falls back to the per-player rule when the total is null', async () => {
+		// A field cleared to null rather than deleted must not read as a $0
+		// team total, which every team would clear on signatures alone.
+		await seasonRef().update({ teamRegistrationTotalCents: null })
 		await seedSignedRoster(MIN)
 		await contribute('pi_1', TOTAL)
-		await recordContribution(firestore, {
-			teamId: TEAM,
-			seasonId: SEASON,
-			playerId: 'signed-0',
-			paymentIntentId: 'pi_1',
-			amountCents: TOTAL,
-			status: 'canceled',
-		})
 
 		await updateTeamRegistrationStatus(TEAM, SEASON)
 
+		// Per-player needs each of the ten paid as well as signed.
 		expect(await isRegistered()).toBe(false)
 	})
 

@@ -130,6 +130,7 @@ export { sendWaiverAdmin } from './functions/admin/waivers/sendWaiverAdmin.js'
 
 // Payment functions (user-accessible)
 export { createStripeCheckout } from './functions/user/payments/createStripeCheckout.js'
+export { createTeamContributionCheckout } from './functions/user/payments/createTeamContributionCheckout.js'
 
 // Game management functions (admin-only)
 export { createGame } from './functions/admin/games/create.js'

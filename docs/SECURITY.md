@@ -37,6 +37,19 @@ This application implements a **Functions-First Security Model** for maximum pro
 - **User authentication required** for all sensitive operations
 - **Role-based permissions** (captains, admins) enforced server-side
 
+### Payments
+
+- **The server decides what is charged.** A team contribution's amount is
+  checked against the team's live remaining balance, with a floor, and the
+  team is read from the payer's own roster rather than the request.
+- **Return URLs are allowlisted.** Checkout redirects to whatever it is
+  given, so both checkout callables accept only the league's own origins
+  (`Functions/src/shared/returnUrls.ts`).
+- **The webhook trusts only signed events and server-set metadata**, and
+  releases any hold it cannot attribute to a team rather than keeping it.
+
+See `docs/TEAM_PAYMENTS.md` for the full design.
+
 ### Data Protection
 
 - **Input validation** on all Function parameters

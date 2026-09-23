@@ -17,6 +17,11 @@ export const FIREBASE_CONFIG = {
 export const TEAM_CONFIG = {
 	MIN_PLAYERS_FOR_REGISTRATION: 10,
 	REGISTERED_TEAMS_FOR_LOCK: 12,
+	/**
+	 * Smallest team contribution accepted, in cents. Below this the card
+	 * processing fee takes a disproportionate share of the money.
+	 */
+	MIN_CONTRIBUTION_CENTS: 1_000,
 } as const
 
 // Game Configuration
