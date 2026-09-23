@@ -43,7 +43,7 @@ export const doThing = onCall<DoThingRequest>(
   Every existing callable does this and it is the fastest way to review one.
 - Use the `shared/auth.ts` validators rather than hand-rolling checks:
   `validateAuthentication` (auth + verified email), `validateBasicAuthentication`
-  (auth only, for pre-verification flows), `validateAdmin`, `validateNotBanned`.
+  (auth only, for pre-verification flows), `validateAdminUser`, `validateNotBanned`.
 - Throw `HttpsError` with an accurate code (`invalid-argument`, `not-found`,
   `permission-denied`, `failed-precondition`). Never return an error shape.
 - Multi-document writes go in a Firestore transaction or batch. Roster and

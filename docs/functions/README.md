@@ -1,201 +1,124 @@
 # Firebase Functions
 
-This directory contains all Firebase Functions for the Minneapolis Winter League application. The functions are organized by functionality for better maintainability and testing.
+Every write to Firestore goes through here. `firestore.rules` denies all
+client writes, so these functions are the application's entire write path —
+see [the architecture section of CLAUDE.md](../../CLAUDE.md) for why.
 
-## Directory Structure
+All functions are Gen 2 except `userDeleted`, which uses the v1 Auth trigger
+because Gen 2 has no equivalent for account deletion.
+
+Conventions for writing new functions — validators, error codes, batch limits,
+the two lockfiles — live in
+[`.claude/rules/functions.md`](../../.claude/rules/functions.md). This page is
+a map of what exists.
+
+## Layout
 
 ```
-src/
-├── index.ts                 # Main entry point - exports all functions
-├── initializeApp.ts         # Firebase Admin initialization
-├── config/
-│   ├── constants.ts         # Application constants and configuration
-│   └── environment.ts       # Environment variable validation
-├── utils/
-│   └── helpers.ts          # Shared utility functions
-├── triggers/
-│   ├── authTriggers.ts     # Authentication event triggers
-│   ├── paymentTriggers.ts  # Payment and waiver related triggers
-│   └── teamTriggers.ts     # Team registration status triggers
-├── playerFunctions.ts      # Player management callable functions
-├── teamFunctions.ts        # Team management callable functions
-├── offerFunctions.ts       # Offer management callable functions
-└── storageFunctions.ts     # File storage callable functions
+Functions/src/
+  index.ts                  deploy manifest — a function not exported here is not deployed
+  functions/user/<domain>/  callables any signed-in player may invoke
+  functions/admin/<domain>/ callables that require an admin
+  triggers/auth/            Auth lifecycle triggers
+  triggers/documents/       Firestore document triggers
+  triggers/payments/        the per-player payment trigger
+  api/webhooks/             Stripe and Dropbox Sign HTTP endpoints
+  services/                 multi-step domain logic
+  shared/                   helpers used across functions
+  config/                   constants.ts (static) and environment.ts (secrets)
+  types.ts                  Collections enum and document shapes, mirrored in App/src/types.ts
 ```
 
-## Function Types
+## Callables
 
-### Trigger Functions (Event-driven)
+47 in total, every one covered by the authorization sweep in
+`tests/integration/callables-authorization.test.ts`.
 
-#### Authentication Triggers (`triggers/authTriggers.ts`)
+| Domain        | User                                                                         | Admin                                                                                 |
+| ------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Players       | `createPlayer`, `updatePlayer`, `deletePlayer`                               | `updatePlayerEmail`, `updatePlayerAdmin`, `getPlayerAuthInfo`                         |
+| Teams         | `createTeam`, `rolloverTeam`, `updateTeam`, `deleteTeam`, `updateTeamRoster` | `deleteUnregisteredTeam`, `updateTeamAdmin`, `mergeTeams`                             |
+| Offers        | `createOffer`, `updateOffer`                                                 |                                                                                       |
+| Payments      | `createStripeCheckout`, `createTeamContributionCheckout`                     |                                                                                       |
+| Waivers       | `sendWaiverReminder`                                                         | `sendWaiverAdmin`                                                                     |
+| Storage       | `getUploadUrl`, `getDownloadUrl`, `getFileMetadata`                          |                                                                                       |
+| Posts         | `createPost`, `updatePost`, `createReply`, `updateReply`                     | `deletePost`, `deleteReply`                                                           |
+| Seasons       |                                                                              | `createSeason`, `updateSeason`, `deleteSeason`, `setSwissSeeding`, `getSwissRankings` |
+| Games         |                                                                              | `createGame`, `updateGame`, `deleteGame`                                              |
+| Rankings      |                                                                              | `rebuildPlayerRankings`                                                               |
+| News          |                                                                              | `createNews`, `updateNews`, `deleteNews`                                              |
+| Badges        |                                                                              | `createBadge`, `updateBadge`, `deleteBadge`, `awardBadge`, `revokeBadge`              |
+| Site settings |                                                                              | `updateSiteSettings`                                                                  |
 
-- **`userDeleted`** - Cleans up all player data when a user account is deleted
+`createPlayer` and `updatePlayer` accept an unverified email, because they run
+during account setup. Everything else requires a verified one.
 
-#### Payment & Waiver Triggers (`triggers/paymentTriggers.ts`)
+## Triggers
 
-- **`onPaymentCreated`** - Processes successful payments and creates waiver requests
-- **`dropboxSignWebhook`** - Handles Dropbox Sign webhook events for waiver signing
+| Function                                     | Fires on                                               | Does                                                                                    |
+| -------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `userDeleted`                                | Auth account deleted                                   | Removes the player from every roster and deletes their data                             |
+| `onOfferUpdated`                             | `offers/{offerId}` updated                             | On acceptance, adds the player to the roster and points their season record at the team |
+| `onRosterEntryCreated`                       | `teams/{t}/teamSeasons/{s}/roster/{p}` created         | Sends the player their waiver for that season                                           |
+| `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes the team's registration                                                      |
+| `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                 |
+| `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes                                     |
+| `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Once twelve teams are registered, removes the unregistered ones                         |
+| `onPaymentCreated`                           | `stripe/{uid}/payments/{id}` created                   | Marks a per-player registration paid                                                    |
 
-#### Dropbox Sign Functions
+Every trigger honours the migration kill-switch,
+`system/maintenance.migrationInProgress`, and returns without writing while it
+is set.
 
-- **`dropboxSignSendReminderEmail`** - Sends reminder email for existing signature requests
+## Webhooks
 
-#### Team Registration Triggers (`triggers/teamTriggers.ts`)
+Both are public HTTP endpoints. The signature check is the only thing between
+them and a forged request, and it runs before any read or write.
 
-- **`updateTeamRegistrationOnPlayerChange`** - Updates team status when player payment/waiver changes
-- **`updateTeamRegistrationOnRosterChange`** - Updates team status when roster changes
-- **`updateTeamRegistrationDate`** - Timestamps registration status changes
+- **`stripeWebhook`** — `checkout.session.completed`. A per-player checkout
+  writes `stripe/{uid}/payments/{sessionId}`, which fires `onPaymentCreated`.
+  A team contribution is recorded in the team's contribution ledger instead;
+  see [TEAM_PAYMENTS.md](../TEAM_PAYMENTS.md). Also mirrors Products and
+  Prices into Firestore.
+- **`dropboxSignWebhook`** — marks a player's season signed when their waiver
+  is completed.
 
-### Callable Functions (Client-invoked)
+## Services and shared helpers
 
-#### Player Management (`playerFunctions.ts`)
-
-- **`createPlayer`** - Creates new player profiles
-- **`updatePlayer`** - Updates player information
-- **`deletePlayer`** - Deletes player profiles (admin only)
-
-#### Team Management (`teamFunctions.ts`)
-
-- **`createTeam`** - Creates new teams
-- **`deleteTeam`** - Deletes teams (captain only)
-- **`manageTeamPlayer`** - Manages team roster (promote/demote/remove players)
-- **`editTeam`** - Updates team information
-
-#### Offer Management (`offerFunctions.ts`)
-
-- **`createOffer`** - Creates team invitations/requests
-- **`updateOfferStatus`** - Accepts/rejects offers
-- **`onOfferUpdated`** - Processes offer status changes
-
-#### Storage Functions (`storageFunctions.ts`)
-
-- **`getUploadUrl`** - Generates signed upload URLs
-- **`getDownloadUrl`** - Generates signed download URLs
-- **`getFileMetadata`** - Retrieves file metadata
+| Module                             | Holds                                                                                           |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `services/teamRegistrationService` | The registration rule and the transactional twelve-team cap                                     |
+| `services/teamDeletionService`     | Deleting a team-season, refusing while it holds unsettled money                                 |
+| `services/playerRankings`          | The TrueSkill rankings rebuild — see [PLAYER_RANKING_ALGORITHM.md](PLAYER_RANKING_ALGORITHM.md) |
+| `services/swissRankings`           | Swiss-format standings                                                                          |
+| `shared/auth`                      | `validateAuthentication`, `validateAdminUser`, `validateNotBanned` and friends                  |
+| `shared/membership`                | Writing both sides of the player↔team relationship atomically                                   |
+| `shared/contributions`             | The team contribution ledger and its arithmetic                                                 |
+| `shared/stripe`                    | Stripe client, customer lookup, the team registration Product                                   |
+| `shared/returnUrls`                | The allowlist for Checkout return URLs                                                          |
+| `shared/waivers`                   | Sending a waiver, idempotent per player and season                                              |
+| `shared/names`                     | Player name validation, mirroring the App's schema                                              |
+| `shared/database`                  | Document reference builders and the current-season lookup                                       |
 
 ## Configuration
 
-### Environment Variables
+Secrets are Firebase secrets in production and `Functions/.secret.local` under
+the emulator:
 
-Required environment variables:
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `DROPBOX_SIGN_API_KEY`
 
-- **`DROPBOX_SIGN_API_KEY`** - Dropbox Sign API key for waiver management
-- **`NODE_ENV`** - Environment (development/production)
+Static settings — region, CORS origins, team registration thresholds, the
+Stripe API version — are in `config/constants.ts`.
 
-### Constants
-
-Key configuration constants are defined in `config/constants.ts`:
-
-- Dropbox Sign settings (API key, template ID, test mode)
-- Firebase settings (region, CORS origins)
-- Business logic settings (minimum players for team registration)
-- Email templates
-
-## Best Practices Implemented
-
-### Security
-
-- All functions validate authentication and authorization
-- Input validation on all user data
-- Environment variable validation
-- Proper error handling and logging
-
-### Performance
-
-- Efficient Firestore queries with proper indexing
-- Transaction usage for data consistency
-- Minimal function cold starts through proper imports
-
-### Maintainability
-
-- Modular organization by functionality
-- Shared utilities to reduce code duplication
-- Comprehensive TypeScript typing
-- Standardized error handling
-- Clear documentation and comments
-
-### Firebase Best Practices
-
-- Gen 2 functions for new features (better performance)
-- Gen 1 functions only where necessary (auth triggers)
-- Proper function naming conventions
-- Appropriate timeouts and memory allocation
-- CORS configuration for web clients
-
-## Development Guidelines
-
-### Adding New Functions
-
-1. **Determine function type**: Trigger (event-driven) or Callable (client-invoked)
-2. **Choose appropriate file**: Add to existing file or create new module
-3. **Follow naming conventions**:
-   - Triggers: `onEventHappened` or `updateSomethingOnChange`
-   - Callables: `actionResource` (e.g., `createPlayer`, `updateTeam`)
-4. **Add comprehensive validation**: Authentication, input validation, business rules
-5. **Use shared utilities**: Leverage helpers for common operations
-6. **Add proper error handling**: Use `handleFunctionError` utility
-7. **Export from index.ts**: Make function available to clients
-
-### Testing & Development
-
-#### Hot Reloading Development (Recommended)
+## Running and deploying
 
 ```bash
-# From project root - start with Functions hot reload
-npm run dev
-
-# Functions will automatically recompile and reload when TypeScript files change
-# No need to manually rebuild or restart emulators
+npm run dev                                        # emulators + Functions watch + Vite
+npm run test:integration                           # Functions against the emulator
+firebase deploy --only functions:<functionName>    # one function
 ```
 
-#### Manual Development
-
-```bash
-# Build Functions manually after changes
-cd Functions && npm run build
-
-# Start emulators separately
-npm run emulators:start
-```
-
-#### Testing Guidelines
-
-- Test functions locally using Firebase emulator
-- Use test data from `.emulator/` directory
-- Validate authentication flows
-- Test error scenarios and edge cases
-- Functions hot reload automatically during development
-
-### Deployment
-
-Functions are deployed as part of the overall Firebase project deployment. Individual functions can be deployed using:
-
-```bash
-firebase deploy --only functions:functionName
-```
-
-## Error Handling
-
-All functions use standardized error handling:
-
-- Comprehensive logging with context
-- Proper HTTP status codes for callable functions
-- Graceful degradation where possible
-- User-friendly error messages
-
-## Monitoring
-
-Functions include logging for:
-
-- Function execution start/completion
-- Business logic events (user creation, team registration, etc.)
-- Errors with full context
-- Performance metrics
-
-## Security Considerations
-
-- All callable functions require authentication
-- Email verification required for most operations
-- Admin-only functions have proper authorization checks
-- Input sanitization and validation
-- Rate limiting through Firebase's built-in protections
+Run commands from the repository root. Deploys install from
+`Functions/package-lock.json`, not the workspace lockfile — see the
+Two lockfiles section of the rules file before changing a dependency.
