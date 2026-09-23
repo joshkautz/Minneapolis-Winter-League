@@ -156,8 +156,9 @@ describe('updateTeamRegistrationOnPlayerChange', () => {
 		expect((await readTeamSeason())?.registered).toBe(false)
 	})
 
-	it('swallows errors rather than crashing the trigger', async () => {
-		// An unhandled throw would retry the event indefinitely.
+	it('treats a team with no season record as nothing to do', async () => {
+		// Not an error: nothing would change on a retry, so it must not throw
+		// and have the platform retry it for a day.
 		const base = {
 			season: seasonRef(),
 			team: teamRef(),
@@ -173,6 +174,27 @@ describe('updateTeamRegistrationOnPlayerChange', () => {
 				},
 			})
 		).resolves.toBeUndefined()
+	})
+
+	it('propagates a failure so the platform retries it', async () => {
+		// A signature whose recompute is lost mid-race costs the team its
+		// spot. Swallowing the error was how that happened silently. The
+		// unusable season id makes the recompute itself throw.
+		const base = {
+			season: seasonRef(),
+			team: teamRef(),
+			paid: true,
+		}
+		await expect(
+			manifest.updateTeamRegistrationOnPlayerChange.run({
+				id: 'evt-3',
+				params: { playerId: 'player-0', seasonId: 'not/a-document' },
+				data: {
+					before: snap(true, { ...base, signed: false }),
+					after: snap(true, { ...base, signed: true }),
+				},
+			})
+		).rejects.toThrow()
 	})
 })
 
@@ -232,5 +254,22 @@ describe('updateTeamRegistrationOnRosterChange', () => {
 
 		await fire(false, true)
 		expect((await readTeamSeason())?.registered).toBe(false)
+	})
+
+	it('propagates a failure so the platform retries it', async () => {
+		await expect(
+			manifest.updateTeamRegistrationOnRosterChange.run({
+				id: 'evt-2',
+				params: {
+					teamId: TEAM,
+					seasonId: 'not/a-document',
+					playerId: 'player-0',
+				},
+				data: {
+					before: snap(false, {}),
+					after: snap(true, { dateJoined: Timestamp.now() }),
+				},
+			})
+		).rejects.toThrow()
 	})
 })

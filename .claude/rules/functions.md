@@ -52,6 +52,27 @@ export const doThing = onCall<DoThingRequest>(
   (`playerSeasonRef`, `teamSeasonRef`, `teamRosterEntryRef`) rather than
   assembling paths by hand.
 
+## Triggers and retries
+
+A Gen 2 event trigger that throws is **not retried** unless its options set
+`retry: true`. Rethrowing "so the trigger retries" does nothing without the
+flag — several triggers here did exactly that until
+`tests/integration/trigger-retries.test.ts` caught it.
+
+With the flag, the platform retries with backoff (10 to 600 seconds) for up
+to 24 hours. So:
+
+- **Set `retry: true` on any trigger whose lost run would lose something** —
+  a registration recompute, a waiver request, a payment.
+- **Make the handler idempotent first.** A retry can follow a partial
+  success. Recomputes that run in a transaction are; so is anything keyed on
+  a stable id.
+- **Return, don't throw, on failures a retry cannot fix** — a missing
+  document, an invalid offer. Throwing those just repeats the failure for a
+  day.
+- **Classify every new trigger** in `trigger-retries.test.ts`, which fails
+  until you do.
+
 ## Rosters
 
 A team's roster for a season is the subcollection

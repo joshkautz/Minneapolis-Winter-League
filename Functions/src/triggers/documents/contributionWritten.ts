@@ -28,6 +28,8 @@ export const updateTeamRegistrationOnContributionChange = onDocumentWritten(
 		document:
 			'teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}',
 		region: FIREBASE_CONFIG.REGION,
+		// A throw is only retried with this set; see .claude/rules/functions.md.
+		retry: true,
 	},
 	async (event) => {
 		const { teamId, seasonId, paymentIntentId } = event.params
@@ -49,7 +51,7 @@ export const updateTeamRegistrationOnContributionChange = onDocumentWritten(
 		try {
 			await updateTeamRegistrationStatus(teamId, seasonId)
 		} catch (error) {
-			// Rethrow so the trigger retries. In a race for twelve spots a
+			// Rethrown so the platform retries. In a race for twelve spots a
 			// missed recompute costs a team the spot it just paid for, and the
 			// recompute is a transaction that short-circuits once a team is
 			// registered, so a retry is safe.

@@ -16,6 +16,8 @@ export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
 	{
 		document: 'teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}',
 		region: FIREBASE_CONFIG.REGION,
+		// A throw is only retried with this set; see .claude/rules/functions.md.
+		retry: true,
 	},
 	async (event) => {
 		const { teamId, seasonId } = event.params
@@ -41,11 +43,13 @@ export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
 				`Updated team registration status for roster change: ${teamId}/${seasonId}`
 			)
 		} catch (error) {
+			// Rethrown so the platform retries; see playerUpdated.ts.
 			logger.error('Error updating team registration on roster change:', {
 				teamId,
 				seasonId,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
+			throw error
 		}
 	}
 )

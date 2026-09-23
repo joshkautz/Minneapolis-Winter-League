@@ -24,6 +24,8 @@ export const onRosterEntryCreated = onDocumentCreated(
 	{
 		document: 'teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}',
 		region: FIREBASE_CONFIG.REGION,
+		// A throw is only retried with this set; see .claude/rules/functions.md.
+		retry: true,
 		secrets: ['DROPBOX_SIGN_API_KEY'],
 	},
 	async (event) => {

@@ -21,6 +21,8 @@ export const onPaymentCreated = onDocumentCreated(
 	{
 		document: 'stripe/{uid}/payments/{paymentId}',
 		region: FIREBASE_CONFIG.REGION,
+		// A throw is only retried with this set; see .claude/rules/functions.md.
+		retry: true,
 	},
 	async (event) => {
 		const { uid, paymentId } = event.params
