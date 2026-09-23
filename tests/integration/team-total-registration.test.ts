@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
 import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
@@ -13,6 +13,13 @@ import {
 	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
+import { addHold, fakeStripe, resetFakeStripe } from './fake-stripe.js'
+
+// The contribution trigger settles a team once it registers, which calls
+// Stripe. Without this the suite would reach the real API.
+vi.mock('stripe', async () => ({
+	default: (await import('./fake-stripe.js')).FakeStripe,
+}))
 
 /**
  * Team-total registration: ten players who have signed their waiver, plus
@@ -100,6 +107,7 @@ beforeAll(() => {
 })
 
 beforeEach(async () => {
+	resetFakeStripe()
 	await resetFirestore(firestore)
 	await seedSeason(TOTAL)
 	await teamRef().set({ createdAt: Timestamp.now(), createdBy: null })
@@ -311,6 +319,7 @@ describe('money arriving last', () => {
 
 	it('registers the team when its contribution lands', async () => {
 		await seedSignedRoster(MIN)
+		addHold('pi_1', TOTAL, { kind: 'team_contribution' })
 		await contribute('pi_1', TOTAL)
 		expect(await isRegistered()).toBe(false)
 
@@ -320,6 +329,10 @@ describe('money arriving last', () => {
 		})
 
 		expect(await isRegistered()).toBe(true)
+		// And, having registered, it is charged.
+		expect(fakeStripe.calls).toEqual([
+			{ method: 'capture', paymentIntentId: 'pi_1', amount: TOTAL },
+		])
 	})
 
 	it('ignores a write that changes neither status nor amount', async () => {

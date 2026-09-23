@@ -16,6 +16,7 @@ import {
 	TeamSeasonNotFoundError,
 } from '../../shared/contributions.js'
 import { TEAM_CONTRIBUTION_KIND } from '../../shared/stripe.js'
+import { reconcileContribution } from '../../services/teamSettlementService.js'
 import type { ContributionStatus } from '../../types.js'
 import Stripe from 'stripe'
 
@@ -88,6 +89,30 @@ export const stripeWebhook = onRequest(
 						await handleTeamContributionCompleted(stripe, session)
 					} else {
 						await handleCheckoutSessionCompleted(session)
+					}
+					break
+				}
+
+				// A team contribution's PaymentIntent changed outside this
+				// code — refunded or cancelled in the Dashboard, or a hold that
+				// lapsed. Settlement updates the ledger itself; these keep it
+				// honest about everything else.
+				case 'payment_intent.canceled':
+				case 'payment_intent.succeeded':
+					await handleTeamPaymentIntentChange(
+						stripe,
+						(event.data.object as Stripe.PaymentIntent).id
+					)
+					break
+
+				case 'charge.refunded': {
+					const charge = event.data.object as Stripe.Charge
+					const paymentIntentId =
+						typeof charge.payment_intent === 'string'
+							? charge.payment_intent
+							: charge.payment_intent?.id
+					if (paymentIntentId) {
+						await handleTeamPaymentIntentChange(stripe, paymentIntentId)
 					}
 					break
 				}
@@ -262,6 +287,56 @@ async function handleTeamContributionCompleted(
 
 		throw handleFunctionError(error, 'handleTeamContributionCompleted', {
 			sessionId: session.id,
+			paymentIntentId,
+			teamId,
+			seasonId,
+		})
+	}
+}
+
+/**
+ * Brings a team contribution's ledger entry into line with its PaymentIntent.
+ *
+ * Reads the PaymentIntent fresh rather than trusting the event: events can
+ * arrive out of order, and only the current state is worth recording.
+ * PaymentIntents that are not team contributions — every per-player payment
+ * — are ignored, as is one the ledger has not recorded yet, since the
+ * checkout completion that records it reads Stripe fresh too.
+ */
+async function handleTeamPaymentIntentChange(
+	stripe: Stripe,
+	paymentIntentId: string
+): Promise<void> {
+	const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId, {
+		expand: ['latest_charge'],
+	})
+
+	if (paymentIntent.metadata?.kind !== TEAM_CONTRIBUTION_KIND) return
+
+	const { teamId, seasonId } = paymentIntent.metadata
+	if (!teamId || !seasonId) {
+		logger.error('Team contribution PaymentIntent is missing its metadata', {
+			paymentIntentId,
+			metadata: paymentIntent.metadata,
+		})
+		return
+	}
+
+	try {
+		const outcome = await reconcileContribution(getFirestore(), {
+			teamId,
+			seasonId,
+			paymentIntent,
+		})
+		logger.info('Reconciled team contribution from Stripe', {
+			teamId,
+			seasonId,
+			paymentIntentId,
+			paymentIntentStatus: paymentIntent.status,
+			outcome,
+		})
+	} catch (error) {
+		throw handleFunctionError(error, 'handleTeamPaymentIntentChange', {
 			paymentIntentId,
 			teamId,
 			seasonId,

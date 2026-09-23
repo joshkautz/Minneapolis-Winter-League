@@ -2,8 +2,19 @@
  * Team registration lock trigger
  *
  * Fires when a team's per-season registration flag flips from false → true.
- * When the threshold (12 registered teams) is reached, deletes every other
- * unregistered team-season participation for the current season.
+ *
+ * 1. Settles that team's money. Under team payments this is where holds are
+ *    captured: exactly the season's total, oldest first, with any excess
+ *    released.
+ * 2. When the threshold (12 registered teams) is reached, releases every
+ *    unregistered team's money and then deletes those team-seasons. The
+ *    release has to come first — deletion refuses a team still holding
+ *    money — and a team whose release fails is left in place for the retry
+ *    rather than deleted with its money unaccounted for.
+ *
+ * Retried on failure. Both steps are idempotent: settlement reads Stripe
+ * before acting, and the cascade only ever finds the teams a previous
+ * attempt did not finish.
  */
 
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
@@ -20,6 +31,7 @@ import {
 	getCurrentSeason,
 } from '../../shared/database.js'
 import { deleteUnregisteredTeamsForSeasonLock } from '../../services/teamDeletionService.js'
+import { settleTeamSeason } from '../../services/teamSettlementService.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 const LOCK_THRESHOLD = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
@@ -28,6 +40,9 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 	{
 		document: 'teams/{teamId}/teamSeasons/{seasonId}',
 		region: FIREBASE_CONFIG.REGION,
+		// A throw is only retried with this set; see .claude/rules/functions.md.
+		retry: true,
+		secrets: ['STRIPE_SECRET_KEY'],
 	},
 	async (event) => {
 		const { teamId: paramTeamId, seasonId: paramSeasonId } = event.params
@@ -55,6 +70,11 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 
 		try {
 			const firestore = getFirestore()
+
+			// The team is in, so its money is kept. A no-op for a season on
+			// per-player pricing.
+			await settleTeamSeason(teamId, seasonId)
+
 			const currentSeason = await getCurrentSeason()
 			if (!currentSeason || currentSeason.id !== seasonId) {
 				// Only the current season triggers the lock cascade.
@@ -96,11 +116,28 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 				seasonId,
 			}))
 
-			logger.info(`Deleting ${pairs.length} unregistered team-seasons...`)
+			// Give back every unregistered team's money before deleting it.
+			// Each is settled on its own so one failure does not stop the
+			// others; a team that fails keeps its team-season until the retry.
+			const settled: typeof pairs = []
+			const settlementFailures: { teamId: string; error: string }[] = []
+			for (const pair of pairs) {
+				try {
+					await settleTeamSeason(pair.teamId, seasonId)
+					settled.push(pair)
+				} catch (error) {
+					settlementFailures.push({
+						teamId: pair.teamId,
+						error: error instanceof Error ? error.message : 'Unknown error',
+					})
+				}
+			}
+
+			logger.info(`Deleting ${settled.length} unregistered team-seasons...`)
 
 			const results = await deleteUnregisteredTeamsForSeasonLock(
 				firestore,
-				pairs
+				settled
 			)
 
 			const successCount = results.filter((r) => r.success).length
@@ -115,12 +152,23 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 					.filter((r) => !r.success)
 					.map((r) => ({ id: r.teamId, name: r.teamName, error: r.error })),
 			})
+
+			if (settlementFailures.length > 0) {
+				throw new Error(
+					`Could not release the money of ${settlementFailures.length} ` +
+						`unregistered team(s): ` +
+						settlementFailures.map((f) => `${f.teamId} (${f.error})`).join('; ')
+				)
+			}
 		} catch (error) {
+			// Rethrown so the platform retries. Money left held against a team
+			// that is out of the season is exactly what this must not do.
 			logger.error('Error processing team registration lock:', {
 				teamId,
 				seasonId,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
+			throw error
 		}
 	}
 )

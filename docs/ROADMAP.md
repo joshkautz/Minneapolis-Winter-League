@@ -43,10 +43,11 @@ committed $1,000, in any split, replacing ten individual $100 payments.
 
 Done: the transactional twelve-team cap, waivers on roster join, the
 contribution ledger and its no-orphan guards, the registration rule, and
-taking money (`createTeamContributionCheckout` plus the webhook). Left: the
-capture and settlement lifecycle (phase 3), the team payment UI, and
-cutover. Holds are placed but nothing captures them yet, which is safe only
-because no season opts in.
+taking money (`createTeamContributionCheckout` plus the webhook), and
+settlement on registration and on the twelve-team lock. Left: the scheduled
+sweep for the window closing and holds nearing expiry, an admin release
+action, the team payment UI, and cutover. No season opts in, so none of it
+touches money yet.
 
 Three decisions carry it:
 

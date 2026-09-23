@@ -229,14 +229,52 @@ describe('moving a contribution through its lifecycle', () => {
 			paymentIntentId: 'pi_1',
 			status: 'captured',
 		})
+		const updatedAt = (
+			await teamContributionsCollection(firestore, TEAM, SEASON)
+				.doc('pi_1')
+				.get()
+		).data()?.updatedAt
+
+		await expect(
+			setContributionStatus(firestore, {
+				teamId: TEAM,
+				seasonId: SEASON,
+				paymentIntentId: 'pi_1',
+				status: 'captured',
+			})
+		).resolves.toBe('unchanged')
+
+		expect((await totals()).capturedCents).toBe(60_000)
+		// Nothing was written, so the contribution trigger does not fire for
+		// a settlement that found nothing new.
+		const after = (
+			await teamContributionsCollection(firestore, TEAM, SEASON)
+				.doc('pi_1')
+				.get()
+		).data()?.updatedAt
+		expect(after?.isEqual(updatedAt)).toBe(true)
+	})
+
+	it('records a partial capture and keeps what was first authorized', async () => {
 		await setContributionStatus(firestore, {
 			teamId: TEAM,
 			seasonId: SEASON,
 			paymentIntentId: 'pi_1',
 			status: 'captured',
+			amountCents: 40_000,
 		})
 
-		expect((await totals()).capturedCents).toBe(60_000)
+		const doc = (
+			await teamContributionsCollection(firestore, TEAM, SEASON)
+				.doc('pi_1')
+				.get()
+		).data()
+		expect(doc).toMatchObject({
+			status: 'captured',
+			amountCents: 40_000,
+			authorizedAmountCents: 60_000,
+		})
+		expect((await totals()).capturedCents).toBe(40_000)
 	})
 
 	it('refuses to update a contribution that was never recorded', async () => {

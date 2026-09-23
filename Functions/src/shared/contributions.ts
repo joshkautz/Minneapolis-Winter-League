@@ -24,6 +24,9 @@ import {
 
 export const CONTRIBUTIONS_SUBCOLLECTION = 'contributions'
 
+/** Contributions and team totals are whole dollars. */
+export const CENTS_PER_DOLLAR = 100
+
 /** Statuses whose money is still committed to the team. */
 const LIVE_STATUSES: ContributionStatus[] = ['authorized', 'captured']
 
@@ -116,6 +119,13 @@ export function contributionAmountError(
 		amountCents <= 0
 	) {
 		return 'Contribution must be a whole number of cents greater than zero.'
+	}
+
+	// Whole dollars keep every capture above Stripe's 50-cent minimum: a
+	// remainder can never be smaller than a dollar, so settlement never has
+	// to choose between overcharging and writing money off.
+	if (amountCents % CENTS_PER_DOLLAR !== 0) {
+		return 'Contribution must be a whole number of dollars.'
 	}
 
 	const floor = Math.min(TEAM_CONFIG.MIN_CONTRIBUTION_CENTS, remainingCents)
@@ -222,11 +232,30 @@ export async function recordContribution(
 	})
 }
 
+/** Thrown when a status change names a contribution the ledger does not have. */
+export class ContributionNotFoundError extends Error {
+	constructor(paymentIntentId: string) {
+		super(
+			`Cannot update a contribution that does not exist: ${paymentIntentId}`
+		)
+		this.name = 'ContributionNotFoundError'
+	}
+}
+
 /**
- * Moves a contribution to a terminal state and updates the totals.
+ * Changes a contribution's status, and optionally its amount, and updates
+ * the totals in the same transaction.
  *
- * Used when a hold is captured, cancelled or refunded. Idempotent: setting a
- * status it already has is a no-op that still leaves the totals correct.
+ * The amount changes when a hold is partly captured — $500 held, $400 taken,
+ * the rest released — or partly refunded. The amount first authorized is
+ * kept as `authorizedAmountCents` so the record still shows what the payer
+ * committed.
+ *
+ * A change to what is already recorded is a no-op and writes nothing, so a
+ * settlement that re-reads Stripe and finds nothing new does not fire the
+ * contribution trigger again.
+ *
+ * @throws ContributionNotFoundError if the contribution is not in the ledger
  */
 export async function setContributionStatus(
 	firestore: Firestore,
@@ -235,11 +264,12 @@ export async function setContributionStatus(
 		seasonId: string
 		paymentIntentId: string
 		status: ContributionStatus
+		amountCents?: number
 	}
-): Promise<void> {
+): Promise<'updated' | 'unchanged'> {
 	const { teamId, seasonId, paymentIntentId, status } = params
 
-	await firestore.runTransaction(async (transaction) => {
+	return firestore.runTransaction(async (transaction) => {
 		const teamSeasonDocRef = firestore
 			.collection(Collections.TEAMS)
 			.doc(teamId)
@@ -253,9 +283,13 @@ export async function setContributionStatus(
 
 		const contributionSnap = await transaction.get(contributionRef)
 		if (!contributionSnap.exists) {
-			throw new Error(
-				`Cannot update a contribution that does not exist: ${paymentIntentId}`
-			)
+			throw new ContributionNotFoundError(paymentIntentId)
+		}
+		const current = contributionSnap.data() as TeamContributionDocument
+		const amountCents = params.amountCents ?? current.amountCents
+
+		if (current.status === status && current.amountCents === amountCents) {
+			return 'unchanged' as const
 		}
 
 		const all = await transaction.get(
@@ -264,13 +298,22 @@ export async function setContributionStatus(
 
 		const contributions = all.docs.map((doc) => {
 			const data = doc.data() as TeamContributionDocument
-			return doc.id === paymentIntentId ? { ...data, status } : data
+			return doc.id === paymentIntentId
+				? { ...data, status, amountCents }
+				: data
 		})
 
 		transaction.update(contributionRef, {
 			status,
+			amountCents,
+			...(amountCents !== current.amountCents &&
+			current.authorizedAmountCents === undefined
+				? { authorizedAmountCents: current.amountCents }
+				: {}),
 			updatedAt: FieldValue.serverTimestamp(),
 		})
 		transaction.update(teamSeasonDocRef, totalsFrom(contributions))
+
+		return 'updated' as const
 	})
 }

@@ -43,6 +43,7 @@ const productsRetrieve = vi.fn()
 const productsCreate = vi.fn()
 const paymentIntentsRetrieve = vi.fn()
 const paymentIntentsCancel = vi.fn()
+const paymentIntentsCapture = vi.fn()
 const refundsCreate = vi.fn()
 const constructEvent = vi.fn()
 
@@ -54,6 +55,7 @@ vi.mock('stripe', () => ({
 		paymentIntents = {
 			retrieve: paymentIntentsRetrieve,
 			cancel: paymentIntentsCancel,
+			capture: paymentIntentsCapture,
 		}
 		refunds = { create: refundsCreate }
 		webhooks = { constructEvent }
@@ -421,6 +423,18 @@ describe('createTeamContributionCheckout', () => {
 				teamRegistrationTotalCents: FieldValue.delete(),
 			})
 			expect(await codeOf()).toBe('failed-precondition')
+			expect(sessionsCreate).not.toHaveBeenCalled()
+		})
+
+		it.each([
+			['not whole dollars', 100_050],
+			['zero', 0],
+			['negative', -100_000],
+		])('refuses a season whose total is %s', async (_label, total) => {
+			// Contributions are whole dollars, so such a total would leave every
+			// team owing a remainder it is not allowed to pay.
+			await seasonRef().update({ teamRegistrationTotalCents: total })
+			await expect(run()).rejects.toThrow(/not set up correctly/)
 			expect(sessionsCreate).not.toHaveBeenCalled()
 		})
 
@@ -837,6 +851,12 @@ describe('stripeWebhook: a completed team contribution', () => {
 		).data()
 		expect(teamSeason?.registered).toBe(true)
 		expect((await seasonRef().get()).data()?.registeredTeamCount).toBe(1)
+		// Registering settles the team: the hold is taken in full.
+		expect(paymentIntentsCapture).toHaveBeenCalledWith(
+			PI,
+			{ amount_to_capture: TOTAL },
+			{ idempotencyKey: `settle_capture_${PI}_${TOTAL}` }
+		)
 	})
 })
 
