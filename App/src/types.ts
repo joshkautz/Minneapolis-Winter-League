@@ -320,6 +320,19 @@ export interface SeasonDocument extends DocumentData {
 	 * Optional only for seasons created before it existed.
 	 */
 	registeredTeamCount?: number
+	/**
+	 * The collective amount a team must commit to register, in cents.
+	 *
+	 * Its presence is what selects the pricing model. Set, the season uses
+	 * **team-total** pricing: a team registers on ten players who have signed
+	 * their waiver plus this much committed by any of its rostered players, in
+	 * any split. Absent, the season keeps the original **per-player** rule,
+	 * where ten players must each individually be paid and signed.
+	 *
+	 * One field rather than a mode plus an amount, so the two cannot disagree.
+	 * Past seasons leave it unset and go on behaving as they always did.
+	 */
+	teamRegistrationTotalCents?: number
 	/** Season end date */
 	dateEnd: Timestamp
 	/** Season start date */

@@ -552,10 +552,18 @@ contribution keyed on its PaymentIntent id and keeps `authorizedCents` and
 arithmetic — what is committed, what is still live — is pure and tested
 without a database.
 
-**1b. The registration rule.** Teach `updateTeamRegistrationStatus` to count
-signed players rather than paid-and-signed ones, and to require the committed
-total, behind a per-season flag so both rules coexist and old seasons keep
-working.
+**1b. The registration rule. — done.** A season opts in by setting
+`teamRegistrationTotalCents`; its presence selects the model and carries the
+amount, so the two cannot disagree. Under it, `updateTeamRegistrationStatus`
+counts players who have _signed_ and requires the committed total. Seasons
+without the field keep the per-player rule unchanged.
+
+It also needed a trigger nobody had planned for.
+`updateTeamRegistrationOnContributionChange` recomputes registration when the
+ledger changes. The existing recomputes fire on roster and waiver changes
+only, so a team that signed its players in advance and then paid — the
+common case this whole change is for — would have had its money arrive last
+and never registered.
 
 ### Phase 2 — taking money
 

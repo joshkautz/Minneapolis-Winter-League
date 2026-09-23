@@ -3,6 +3,15 @@
  *
  * Decides whether a team has met the season's registration requirements and,
  * if so, claims one of the season's limited spots for it.
+ *
+ * Two rules, chosen by whether the season sets
+ * `teamRegistrationTotalCents`:
+ *
+ * - **Per-player** (the original): ten roster members each individually paid
+ *   and signed.
+ * - **Team-total**: ten roster members who have signed, plus that much money
+ *   committed by any of them, in any split. A player is registered by their
+ *   waiver; the money belongs to the team.
  */
 
 import {
@@ -12,7 +21,15 @@ import {
 } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { TEAM_CONFIG } from '../config/constants.js'
-import { Collections } from '../types.js'
+import {
+	Collections,
+	type SeasonDocument,
+	type TeamContributionDocument,
+} from '../types.js'
+import {
+	committedCents,
+	teamContributionsCollection,
+} from '../shared/contributions.js'
 import { playerSeasonRef, teamSeasonRef } from '../shared/database.js'
 
 /**
@@ -55,6 +72,17 @@ export async function updateTeamRegistrationStatus(
 			return
 		}
 
+		if (result.outcome === 'underfunded') {
+			logger.info('Team has its players but not yet the money', {
+				teamId,
+				seasonId,
+				qualifyingPlayers: result.qualifyingPlayers,
+				committedCents: result.committedCents,
+				requiredCents: result.requiredCents,
+			})
+			return
+		}
+
 		if (result.outcome === 'season-full') {
 			logger.info('Team qualified but the season is full', {
 				teamId,
@@ -77,6 +105,12 @@ type ClaimOutcome =
 	| { outcome: 'registered'; qualifyingPlayers: number; spotsClaimed: number }
 	| { outcome: 'season-full'; qualifyingPlayers: number; spotsClaimed: number }
 	| { outcome: 'not-qualified'; qualifyingPlayers: number }
+	| {
+			outcome: 'underfunded'
+			qualifyingPlayers: number
+			committedCents: number
+			requiredCents: number
+	  }
 	| { outcome: 'already-registered' }
 	| { outcome: 'no-team-season' }
 
@@ -106,6 +140,12 @@ async function claimSpotIfQualified(
 			return { outcome: 'already-registered' }
 		}
 
+		// The season decides which rule applies, so it is read before the
+		// roster rather than after.
+		const seasonSnap = await transaction.get(seasonDocRef)
+		const seasonData = seasonSnap.data() as SeasonDocument | undefined
+		const teamTotalCents = seasonData?.teamRegistrationTotalCents
+
 		const rosterSnap = await transaction.get(
 			teamSeasonDocRef.collection('roster')
 		)
@@ -114,20 +154,46 @@ async function claimSpotIfQualified(
 				transaction.get(playerSeasonRef(firestore, rosterDoc.id, seasonId))
 			)
 		)
+
+		// Under team-total pricing a player qualifies by signing their waiver.
+		// Payment is the team's business, not theirs: one person can cover the
+		// whole roster, which would leave everyone else unpaid and the team
+		// permanently unable to register under the original rule.
 		const qualifyingPlayers = playerSeasons.filter((snap) => {
 			if (!snap.exists) return false
 			const data = snap.data()
-			return Boolean(data?.paid && data?.signed)
+			return teamTotalCents === undefined
+				? Boolean(data?.paid && data?.signed)
+				: Boolean(data?.signed)
 		}).length
 
 		if (qualifyingPlayers < TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION) {
 			return { outcome: 'not-qualified', qualifyingPlayers }
 		}
 
-		const seasonSnap = await transaction.get(seasonDocRef)
+		if (teamTotalCents !== undefined) {
+			const contributionsSnap = await transaction.get(
+				teamContributionsCollection(firestore, teamId, seasonId)
+			)
+			const committed = committedCents(
+				contributionsSnap.docs.map(
+					(doc) => doc.data() as TeamContributionDocument
+				)
+			)
+
+			if (committed < teamTotalCents) {
+				return {
+					outcome: 'underfunded',
+					qualifyingPlayers,
+					committedCents: committed,
+					requiredCents: teamTotalCents,
+				}
+			}
+		}
+
 		// Absent on seasons created before the counter existed; the backfill in
 		// scripts/migrations/2026-registered-team-count sets it.
-		const spotsClaimed = seasonSnap.data()?.registeredTeamCount ?? 0
+		const spotsClaimed = seasonData?.registeredTeamCount ?? 0
 
 		if (spotsClaimed >= TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK) {
 			return { outcome: 'season-full', qualifyingPlayers, spotsClaimed }
