@@ -224,6 +224,12 @@ export interface TeamSeasonDocument extends DocumentData {
 	placement: number | null
 	/** Initial seed for Swiss-format seasons (nullable) */
 	swissSeed?: number | null
+	/**
+	 * Team payments only: sums over the contributions ledger, kept in step
+	 * with it in the same transaction. Absent until the first contribution.
+	 */
+	authorizedCents?: number
+	capturedCents?: number
 }
 
 /**
@@ -287,6 +293,10 @@ export interface TeamContributionDocument extends DocumentData {
 	 * `amountCents`. Absent while the two are the same.
 	 */
 	authorizedAmountCents?: number
+	/** Set when an admin released this contribution by hand. */
+	releasedBy?: DocumentReference<PlayerDocument>
+	releaseReason?: string
+	releasedAt?: Timestamp
 	createdAt: Timestamp
 	updatedAt: Timestamp
 }

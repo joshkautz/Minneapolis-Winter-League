@@ -14,6 +14,7 @@ Functions/src/
   functions/admin/<domain>/   callables that require admin
   functions/user/<domain>/    callables available to signed-in players
   triggers/{auth,documents,payments}/   Firestore and lifecycle triggers
+  triggers/scheduled/   onSchedule functions (the team payments sweep and reconciliation)
   api/webhooks/         Stripe and Dropbox Sign HTTP endpoints
   services/             multi-step domain logic (playerRankings, swissRankings)
   shared/               auth, database, errors, format, offers, storage, stripe,

@@ -1465,3 +1465,40 @@ export const getSwissRankingsViaFunction = async (
 	const result = await getSwissRankings(data)
 	return result.data
 }
+
+export interface ReleaseTeamContributionRequest {
+	teamId: string
+	seasonId: string
+	/** The contribution's id in the team's ledger. */
+	paymentIntentId: string
+	/** Why it is being released. Required: it is the audit trail. */
+	reason: string
+}
+
+export interface ReleaseTeamContributionResponse {
+	success: true
+	status: 'canceled' | 'refunded'
+}
+
+/**
+ * Release one team contribution by hand (admin only)
+ *
+ * Cancels it if it is still a hold, refunds it if it was captured, and
+ * records who did it and why. The team's registration is not affected.
+ *
+ * Security features:
+ * - Only admins can call this function
+ * - A reason is required and stored with the contribution
+ * - Stripe is checked first; if it disagrees with the record, the record is
+ *   corrected and nothing is released
+ */
+export const releaseTeamContributionViaFunction = async (
+	data: ReleaseTeamContributionRequest
+): Promise<ReleaseTeamContributionResponse> => {
+	const releaseTeamContribution = httpsCallable<
+		ReleaseTeamContributionRequest,
+		ReleaseTeamContributionResponse
+	>(functions, 'releaseTeamContribution')
+	const result = await releaseTeamContribution(data)
+	return result.data
+}

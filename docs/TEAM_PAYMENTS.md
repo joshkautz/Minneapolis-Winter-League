@@ -448,49 +448,33 @@ right way round. The free cancellation still applies to the failure that
 actually happens most — losing the race for the twelfth spot, which resolves
 in minutes.
 
-## Before building anything
+## Account setup
 
-Three of these are decisions or account work with lead time. Start them now;
-they are not blocked on any code.
+What the Stripe account needed, and where each item stands.
 
-### Ask Stripe for two things
+- **Webhook events — done.** The endpoint receives
+  `checkout.session.completed`, `payment_intent.canceled`,
+  `payment_intent.succeeded` and `charge.refunded`.
+- **The "Team Registration" Product — not needed.** The callable creates it
+  on first use under the fixed id `mwl_team_registration`.
+- **`automatic_delayed` capture — no longer needed.** It would have captured
+  a hold about six hours before it lapsed. The hourly sweep does the same
+  job, a day ahead, so there is nothing to request.
+- **Extended authorizations — not worth asking for.** They need IC+ pricing
+  and add 0.08% on Visa, to solve a problem the sweep already solves.
+- **A restricted API key — optional, recommended.** The Functions use the
+  account's full secret key. A key scoped to Checkout Sessions,
+  PaymentIntents, Customers, Products and Refunds (write) shrinks the blast
+  radius of a leaked key. Stripe does not let keys be created through its
+  API, so this is a Dashboard step; swapping it in is then one
+  `firebase functions:secrets:set STRIPE_SECRET_KEY`.
+- **The statement descriptor — worth a look.** A $1,000 hold nobody
+  recognises becomes a dispute, which costs the fee _and_ the amount. It
+  should read as the league.
 
-1. **`automatic_delayed` capture** (private preview). It captures about six
-   hours before an authorization lapses, which is the safety net this design
-   depends on. Granted, it removes the only scheduled job here. Request it at
-   the form on the
-   [hold documentation](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method).
-2. **Extended authorizations**, or at least what they would cost. They need
-   IC+ pricing and add 0.08% on Visa outside travel categories, so they are
-   probably not worth it — but a 30-day window would make the expiry branch
-   moot, and it is a five-minute question to their support.
-
-Neither blocks the build. Both change how much of it there is.
-
-### Set up the Stripe account
-
-- ~~Create the "Team Registration" Product.~~ Not needed: the callable
-  creates it on first use under the fixed id `mwl_team_registration`, so
-  there is no Dashboard step and no chance of two instances each making
-  their own.
-- Create a **restricted API key** scoped to Checkout Sessions, PaymentIntents,
-  Customers and Refunds. Worth doing regardless — it shrinks the blast radius
-  of the integration that is already live.
-- Check the **statement descriptor** reads as the league, not something
-  generic. A $1,000 hold nobody recognises becomes a dispute, and a dispute
-  costs the fee _and_ the amount.
-
-### Two decisions left
-
-- **Can a registered team become unregistered?** Today `registered` can flip
-  back to false if the roster drops below ten. Once money is captured that is
-  no longer sensible — the team has paid and been given a spot. Suggested:
-  once a team registers, the flag is sticky for the season and only an admin
-  can reverse it, with an explicit refund.
-- **What happens to a team's money if an admin deletes it?**
-  `deleteUnregisteredTeamsForSeasonLock` already deletes teams wholesale when
-  the season locks. That path must now cancel or refund first, and it must be
-  impossible to delete a team and orphan its holds.
+The two design questions this section once listed — whether registration can
+be reversed, and what deleting a team does to its money — are settled:
+registration is irreversible, and a team holding money cannot be deleted.
 
 ## Implementation order
 
@@ -665,14 +649,40 @@ Decisions made while building it:
 
 The Stripe webhook endpoint now handles `payment_intent.canceled`,
 `payment_intent.succeeded` and `charge.refunded` for team contributions.
-**Subscribe the endpoint to those events in the Dashboard** — until then,
-only changes settlement makes itself reach the ledger.
+The endpoint is subscribed to those events.
 
-**3b. Left:** the scheduled sweep (release unregistered teams when the window
-closes; capture holds inside the last day before they expire), an admin
-action to release a single contribution, and a reconciliation report of
-Stripe holds with no live ledger entry. That is where the first `onSchedule`
-functions appear.
+**3b. The clock, and the backstops. — done.** The codebase's first scheduled
+functions, both in `triggers/scheduled/`:
+
+- **`sweepTeamPaymentsHourly`** settles every team holding money, in every
+  season on team payments. Settlement already decides from the current time
+  what money should be doing, so this is what releases unregistered teams
+  once registration closes and captures a hold in the last day before it
+  would expire. Nothing new decides anything.
+- **`reconcileTeamPaymentsDaily`** checks Stripe and the ledger against each
+  other at 04:00. A hold Stripe has and the ledger does not is taken in
+  exactly as the checkout webhook would have — recorded, or released if its
+  team is gone — and logged as an error, since finding one means an event
+  was lost. A live ledger entry Stripe disagrees with is corrected, which
+  matters because registration counts committed money: a lapsed hold must
+  stop counting.
+
+**`releaseTeamContribution`** is the admin's manual release: it cancels a
+hold or refunds a capture, and records who did it, when and why. It checks
+Stripe first, so if the money is not where the ledger says, the ledger is
+corrected and nothing is claimed. It does not touch registration.
+
+Decisions made while building it:
+
+- **A failed sweep is not retried by the scheduler.** The next hourly run is
+  the retry; the failed one throws so it shows in the logs.
+- **Past seasons are swept too.** A hold from last season is still money,
+  whichever season is newest.
+- **The checkout webhook and the reconciliation share one intake**
+  (`services/teamContributionIntake.ts`), so a hold found late is treated
+  exactly like one found on time.
+
+Phase 3 is complete.
 
 ### Phase 4 — UI
 
