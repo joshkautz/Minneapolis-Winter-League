@@ -26,14 +26,14 @@ const RETRIED = [
 	'onRosterEntryCreated',
 	// Runs after a player has been charged.
 	'onPaymentCreated',
+	// Captures a registered team's money and releases everyone else's.
+	'onTeamRegistrationChange',
 ]
 
 /** Not retried, each for a stated reason. */
 const NOT_RETRIED: Record<string, string> = {
 	onOfferUpdated:
 		'throws on offers that can never succeed (already on a team, team not in the season); retrying would repeat the failure for a day',
-	onTeamRegistrationChange:
-		'catches its own errors; its deletions are not yet safe to repeat',
 	userDeleted: 'a v1 Auth trigger, which this suite does not govern',
 }
 

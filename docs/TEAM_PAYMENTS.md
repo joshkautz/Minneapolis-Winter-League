@@ -619,12 +619,60 @@ ledger.
 
 ### Phase 3 — the capture and settlement lifecycle
 
-Capture on registration; settle every unregistered team when the twelfth
-registers; capture before expiry; settle whatever is left when the window
-closes. Admin refund action, and `mergeTeams` taught about contributions.
+**Prerequisite: triggers that retry. — done.** No trigger set `retry: true`,
+so every one that rethrew "so the trigger retries" was never retried, and a
+recompute lost during the race was simply gone. The five whose lost run
+loses something now retry, a suite requires every trigger to be classified,
+and CI deploys with `--force` behind a guard that still refuses deleting or
+re-triggering a function. See `.claude/rules/functions.md`.
 
-This is where the money decisions live and where the tests matter most. It is
-also where the first `onSchedule` functions appear.
+**3a. Settlement on registration and on the lock. — done.** One idempotent
+operation, `settleTeamSeason`, brings a team's money into line with where
+the team stands, and everything that can change that calls it:
+
+| Where it runs                                | What it does                                                  |
+| -------------------------------------------- | ------------------------------------------------------------- |
+| `onTeamRegistrationChange`, for the new team | Captures exactly the total, oldest first; releases the rest   |
+| the same trigger, when the twelfth registers | Releases every unregistered team's money, then deletes it     |
+| the contribution trigger, on a new hold      | Releases a hold that landed too late; leaves a live one alone |
+| the webhook, on Dashboard or bank changes    | Corrects the ledger to what Stripe says                       |
+
+The decisions are a pure planner (`shared/settlement.ts`) with no Stripe in
+it; the executor (`services/teamSettlementService.ts`) reads each
+PaymentIntent before acting, keys every write, and records what Stripe
+reports afterwards rather than what it asked for.
+
+Decisions made while building it:
+
+- **Oldest contributions are charged first.** In an overpaid team, whoever
+  committed earliest pays, and whoever piled on after the team was covered
+  is released. Ties break on PaymentIntent id so concurrent settlements
+  plan identically.
+- **A partial capture keeps the original amount on record** as
+  `authorizedAmountCents`.
+- **Contributions are whole dollars.** A remainder can then never fall
+  below Stripe's 50-cent minimum, so settlement never has to choose between
+  overcharging and writing money off. A season total that is not whole
+  dollars is refused at checkout.
+- **A team whose release fails is not deleted.** The cascade releases each
+  losing team separately, deletes only those that succeeded, and throws so
+  the retry picks up the rest.
+- **A registered team that ends up short is logged, not unregistered.**
+  Registration is irreversible; a hold the bank released after the team got
+  in is for a person to chase.
+- **Deleting a team-season leaves its contributions in place**, so the
+  record of whose hold was released survives the cascade.
+
+The Stripe webhook endpoint now handles `payment_intent.canceled`,
+`payment_intent.succeeded` and `charge.refunded` for team contributions.
+**Subscribe the endpoint to those events in the Dashboard** — until then,
+only changes settlement makes itself reach the ledger.
+
+**3b. Left:** the scheduled sweep (release unregistered teams when the window
+closes; capture holds inside the last day before they expire), an admin
+action to release a single contribution, and a reconciliation report of
+Stripe holds with no live ledger entry. That is where the first `onSchedule`
+functions appear.
 
 ### Phase 4 — UI
 

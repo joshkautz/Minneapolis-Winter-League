@@ -39,6 +39,7 @@ import {
 	teamSeasonRef,
 } from '../../../shared/database.js'
 import {
+	CENTS_PER_DOLLAR,
 	committedCents,
 	contributionAmountError,
 	teamContributionsCollection,
@@ -144,6 +145,22 @@ export const createTeamContributionCheckout = onCall<
 			throw new HttpsError(
 				'failed-precondition',
 				'This season does not use team payments'
+			)
+		}
+		// Contributions are whole dollars, so a total that is not would leave
+		// every team owing a remainder nobody is allowed to pay.
+		if (
+			!Number.isSafeInteger(teamTotalCents) ||
+			teamTotalCents <= 0 ||
+			teamTotalCents % CENTS_PER_DOLLAR !== 0
+		) {
+			logger.error('Season team registration total is misconfigured', {
+				seasonId,
+				teamTotalCents,
+			})
+			throw new HttpsError(
+				'failed-precondition',
+				'Team payments are not set up correctly for this season'
 			)
 		}
 

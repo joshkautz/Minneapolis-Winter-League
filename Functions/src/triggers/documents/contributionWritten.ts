@@ -14,6 +14,13 @@
  *
  * Only the committed total can change the outcome, so a write that leaves the
  * status alone (a metadata update, say) is skipped.
+ *
+ * It then settles the team whenever a live hold is involved. A hold can land
+ * where it is no longer wanted: on a team that registered while the payer
+ * was on the Checkout page, in a season that filled up, after registration
+ * closed. Settlement captures it, releases it or leaves it, by the same rules
+ * as everywhere else. Changes settlement makes itself — captured, cancelled,
+ * refunded — do not settle again.
  */
 
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
@@ -21,6 +28,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'
+import { settleTeamSeason } from '../../services/teamSettlementService.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 export const updateTeamRegistrationOnContributionChange = onDocumentWritten(
@@ -30,6 +38,7 @@ export const updateTeamRegistrationOnContributionChange = onDocumentWritten(
 		region: FIREBASE_CONFIG.REGION,
 		// A throw is only retried with this set; see .claude/rules/functions.md.
 		retry: true,
+		secrets: ['STRIPE_SECRET_KEY'],
 	},
 	async (event) => {
 		const { teamId, seasonId, paymentIntentId } = event.params
@@ -50,12 +59,17 @@ export const updateTeamRegistrationOnContributionChange = onDocumentWritten(
 
 		try {
 			await updateTeamRegistrationStatus(teamId, seasonId)
+
+			if (after?.status === 'authorized') {
+				await settleTeamSeason(teamId, seasonId)
+			}
 		} catch (error) {
 			// Rethrown so the platform retries. In a race for twelve spots a
 			// missed recompute costs a team the spot it just paid for, and the
 			// recompute is a transaction that short-circuits once a team is
-			// registered, so a retry is safe.
-			logger.error('Error updating team registration on contribution change', {
+			// registered. Settlement reads Stripe before acting and keys every
+			// write, so a retry after a partial settlement finishes the job.
+			logger.error('Error handling a contribution change', {
 				teamId,
 				seasonId,
 				paymentIntentId,

@@ -80,6 +80,22 @@ so `scripts/ci/check-functions-deploy.js` runs first and fails the deploy if
 it would do either. To delete or re-trigger a function on purpose, run
 `firebase functions:delete <name>` by hand, then let CI deploy.
 
+## Stripe in tests
+
+Any integration suite that can reach settlement — which now includes the
+contribution and registration triggers — must mock Stripe, or it calls the
+real API. Use the stateful fake rather than bare `vi.fn()`s:
+
+```ts
+vi.mock('stripe', async () => ({
+	default: (await import('./fake-stripe.js')).FakeStripe,
+}))
+```
+
+`tests/integration/fake-stripe.ts` enforces what Stripe does — no capturing
+a cancelled hold, no refunding more than was taken, idempotency keys replay
+— and `gateRetrieves` forces concurrent settlements to genuinely race.
+
 ## Rosters
 
 A team's roster for a season is the subcollection
