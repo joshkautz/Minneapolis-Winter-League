@@ -16,7 +16,8 @@ Functions/src/
   triggers/{auth,documents,payments}/   Firestore and lifecycle triggers
   api/webhooks/         Stripe and Dropbox Sign HTTP endpoints
   services/             multi-step domain logic (playerRankings, swissRankings)
-  shared/               auth, database, errors, format, offers, storage helpers
+  shared/               auth, database, errors, format, offers, storage, stripe,
+                        returnUrls, contributions (team payment ledger) helpers
   config/               constants.ts (static) and environment.ts (secrets)
   types.ts              Collections enum and document interfaces
 ```
@@ -119,6 +120,11 @@ counts commits rather than by an emulator test. See
 thing standing between a request and the database — and a callable can be
 invoked by any authenticated user without going near the form. A Zod schema in
 `App/` is a convenience for the reader, never a control.
+
+Anything that sends a payer to Stripe takes its return URLs from the client,
+and Stripe redirects to whatever it is given. Check them with
+`isAllowedReturnUrl` from `shared/returnUrls.ts`; an unchecked one is an open
+redirect off a genuine payment page.
 
 Player names are validated by `shared/names.ts`, which mirrors the App's
 `nameSchema`. When you add a field with rules in the App, add them here too.
