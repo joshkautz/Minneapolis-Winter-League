@@ -113,6 +113,30 @@ describe('recording a contribution', () => {
 		expect((await totals()).authorizedCents).toBe(100_000)
 	})
 
+	it('never rewrites a contribution already in the ledger', async () => {
+		// Insert-only. A webhook redelivered after the hold was captured must
+		// not wind it back to authorized; status changes go through
+		// setContributionStatus and nothing else.
+		await add('pi_1', 100_000)
+		await setContributionStatus(firestore, {
+			teamId: TEAM,
+			seasonId: SEASON,
+			paymentIntentId: 'pi_1',
+			status: 'captured',
+		})
+
+		await expect(add('pi_1', 100_000)).resolves.toBe('already-recorded')
+
+		const doc = await teamContributionsCollection(firestore, TEAM, SEASON)
+			.doc('pi_1')
+			.get()
+		expect(doc.data()?.status).toBe('captured')
+		expect(await totals()).toEqual({
+			authorizedCents: 0,
+			capturedCents: 100_000,
+		})
+	})
+
 	it('accumulates contributions from several payers', async () => {
 		await add('pi_1', 50_000)
 		await add('pi_2', 30_000)

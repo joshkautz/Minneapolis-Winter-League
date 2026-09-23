@@ -61,8 +61,12 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS=/opt/gcp_key.json
 
           # Deploy to Firebase Hosting Preview Channel.
-          DATE=$(date +'%A-%m-%d-%Y-%H-%M-%S')
-          CHANNEL="Preview-"$DATE
+          # One channel per pull request, redeployed on every push. A site
+          # holds at most 50 preview channels and expired ones keep counting
+          # until Firebase gets round to deleting them, so a fresh channel
+          # per push exhausts the quota within a busy day and every deploy
+          # after that fails.
+          CHANNEL="pr-${{ github.event.pull_request.number }}"
           DEPLOYMENT_OUTPUT=$(firebase hosting:channel:deploy $CHANNEL --expires 1d --json)
 
           # Prepare Firebase Hosting Preview Channel URL for GitHub environment file.

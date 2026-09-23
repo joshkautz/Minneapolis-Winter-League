@@ -469,8 +469,10 @@ Neither blocks the build. Both change how much of it there is.
 
 ### Set up the Stripe account
 
-- Create the **"Team Registration" Product**. Inline pricing needs a Product
-  to attach to; the Price is per-session.
+- ~~Create the "Team Registration" Product.~~ Not needed: the callable
+  creates it on first use under the fixed id `mwl_team_registration`, so
+  there is no Dashboard step and no chance of two instances each making
+  their own.
 - Create a **restricted API key** scoped to Checkout Sessions, PaymentIntents,
   Customers and Refunds. Worth doing regardless — it shrinks the blast radius
   of the integration that is already live.
@@ -565,11 +567,55 @@ only, so a team that signed its players in advance and then paid — the
 common case this whole change is for — would have had its money arrive last
 and never registered.
 
-### Phase 2 — taking money
+### Phase 2 — taking money — done
 
-`createTeamContributionCheckout`: validate the amount against the live
-balance, create the session with inline pricing and `capture_method: manual`.
-Extend the webhook to record an authorized contribution against the team.
+`createTeamContributionCheckout` opens a Checkout session for a hold, and the
+webhook records it in the ledger, which fires the contribution trigger and
+registers the team if that was the last thing missing. Nothing is captured
+yet — that is phase 3 — and no season sets `teamRegistrationTotalCents`, so
+the callable refuses every request in production until cutover.
+
+Decisions made while building it:
+
+- **The client never names a team.** The callable reads it from the
+  caller's player-season and confirms it against the roster entry; a
+  request carrying a `teamId` has it ignored.
+- **No admin bypass of the registration window.** The per-player checkout
+  lets admins pay at any time. Money that arrives after the window can only
+  be sent back, so here the window applies to everyone.
+- **Cards only.** Every card network supports manual capture, and the
+  hold's expiry is read from the card details on the charge.
+- **Sessions expire after 31 minutes**, just over Stripe's floor. The
+  balance an amount was checked against goes stale while the payer is on
+  Stripe's page; the extra minute absorbs clock drift, since Stripe rejects
+  anything under thirty minutes by its own clock.
+- **Two teammates can both pay the last $200.** Refusing that would need a
+  reservation system for a race that costs nothing: the excess is a hold,
+  and settlement releases it.
+- **The ledger is insert-only.** `recordContribution` leaves an existing
+  entry untouched, so a webhook Stripe redelivers after capture cannot wind
+  the status back to authorized. Status changes go through
+  `setContributionStatus` alone.
+- **Money that cannot be attributed is released in the webhook.** A team
+  deleted while its payer was on the Checkout page is not protected by the
+  deletion guard — the money is not in its ledger yet — so the webhook
+  cancels the hold (or refunds a capture) rather than retrying forever
+  against a team that is gone. Incomplete metadata is handled the same way.
+- **The amount comes from Stripe.** The webhook records the PaymentIntent's
+  capturable amount, read from a fresh retrieve rather than the event, so a
+  redelivery after settlement sees the settled state.
+
+It also closed an open redirect in the existing per-player checkout, which
+passed client-supplied return URLs to Stripe unchecked. Both callables now
+share `shared/returnUrls.ts`: the league's domains, the Firebase Hosting
+defaults and this project's preview channels, plus localhost under the
+emulator only.
+
+Phase 3 needs the Stripe webhook endpoint subscribed to more than
+`checkout.session.completed` — at least `payment_intent.canceled`,
+`payment_intent.amount_capturable_updated` and `charge.refunded` — so a hold
+that is cancelled, expires or is refunded outside our code still reaches the
+ledger.
 
 ### Phase 3 — the capture and settlement lifecycle
 

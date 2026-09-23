@@ -37,9 +37,16 @@ Badges already implemented are marked `x`. The rest are designed but not built.
 
 ## Team-level payment ($1,000 collective)
 
-Designed, not built: `docs/TEAM_PAYMENTS.md`. A team registers when it has ten
-signed players **and** its players have collectively committed $1,000, in any
-split, replacing ten individual $100 payments.
+Part-built, not yet switched on: `docs/TEAM_PAYMENTS.md`. A team registers
+when it has ten signed players **and** its players have collectively
+committed $1,000, in any split, replacing ten individual $100 payments.
+
+Done: the transactional twelve-team cap, waivers on roster join, the
+contribution ledger and its no-orphan guards, the registration rule, and
+taking money (`createTeamContributionCheckout` plus the webhook). Left: the
+capture and settlement lifecycle (phase 3), the team payment UI, and
+cutover. Holds are placed but nothing captures them yet, which is safe only
+because no season opts in.
 
 Three decisions carry it:
 
@@ -192,7 +199,7 @@ that is deliberately not fixed — are in `CLAUDE.md`.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 46.
+- **Deeper callable behaviour.** The authorization sweep covers all 47.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
   `updatePlayerAdmin`, `rolloverTeam` and the three game callables have
   behavioural tests. The rest are covered only at the gate; `deletePlayer`,

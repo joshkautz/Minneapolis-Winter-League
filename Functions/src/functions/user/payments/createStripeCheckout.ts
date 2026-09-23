@@ -9,21 +9,28 @@
  * - User must not be banned for the current season
  * - Registration must be open (between registrationStart and registrationEnd)
  * - Admins bypass registration date and banned restrictions
+ * - Return URLs must be on one of the league's own origins, so the checkout
+ *   cannot be used as an open redirect
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 import { logger } from 'firebase-functions/v2'
-import { FIREBASE_CONFIG, getStripeConfig } from '../../../config/constants.js'
+import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	validateAuthentication,
 	validateNotBanned,
 } from '../../../shared/auth.js'
 import { getCurrentSeason } from '../../../shared/database.js'
+import { isAllowedReturnUrl } from '../../../shared/returnUrls.js'
+import {
+	createStripeClient,
+	getOrCreateStripeCustomer,
+} from '../../../shared/stripe.js'
 import { Collections, PlayerDocument, SeasonDocument } from '../../../types.js'
 import { formatDateForUser } from '../../../shared/format.js'
-import Stripe from 'stripe'
+import type Stripe from 'stripe'
 
 interface CreateStripeCheckoutRequest {
 	priceId: string
@@ -61,6 +68,13 @@ export const createStripeCheckout = onCall<
 			throw new HttpsError(
 				'invalid-argument',
 				'Price ID, success URL, and cancel URL are required'
+			)
+		}
+
+		if (!isAllowedReturnUrl(successUrl) || !isAllowedReturnUrl(cancelUrl)) {
+			throw new HttpsError(
+				'invalid-argument',
+				'Success and cancel URLs must point back to this site'
 			)
 		}
 
@@ -107,66 +121,10 @@ export const createStripeCheckout = onCall<
 				}
 			}
 
-			// Initialize Stripe
-			const stripeConfig = getStripeConfig()
-			const stripe = new Stripe(stripeConfig.SECRET_KEY, {
-				apiVersion: stripeConfig.API_VERSION,
-			})
-
-			// Get or create Stripe customer
-			const customerDocRef = firestore.collection('stripe').doc(userId)
-
-			const customer = await firestore.runTransaction(async (transaction) => {
-				const customerDoc = await transaction.get(customerDocRef)
-				const customerData = customerDoc.data()
-
-				if (customerData?.stripeId) {
-					// Verify the customer exists in Stripe
-					try {
-						await stripe.customers.retrieve(customerData.stripeId)
-						logger.info(
-							`Using existing Stripe customer: ${customerData.stripeId}`
-						)
-						return customerData.stripeId
-					} catch (stripeError: unknown) {
-						const error = stripeError as { type?: string; code?: string }
-						if (
-							error?.type === 'StripeInvalidRequestError' &&
-							error?.code === 'resource_missing'
-						) {
-							logger.info(
-								`Stripe customer ${customerData.stripeId} not found, creating new one`
-							)
-						} else {
-							throw stripeError
-						}
-					}
-				}
-
-				// Create new Stripe customer
-				logger.info(`Creating new Stripe customer for ${userId}`)
-				const newCustomer = await stripe.customers.create(
-					{
-						email: userRecord.email,
-						metadata: {
-							firebaseUID: userId,
-						},
-					},
-					{ idempotencyKey: `customer_${userId}` }
-				)
-
-				// Save customer ID to Firestore
-				transaction.set(
-					customerDocRef,
-					{
-						stripeId: newCustomer.id,
-						email: userRecord.email,
-					},
-					{ merge: true }
-				)
-
-				logger.info(`Created new Stripe customer: ${newCustomer.id}`)
-				return newCustomer.id
+			const stripe = createStripeClient()
+			const customer = await getOrCreateStripeCustomer(firestore, stripe, {
+				userId,
+				email: userRecord.email,
 			})
 
 			// Stripe v22's published types stopped re-exporting

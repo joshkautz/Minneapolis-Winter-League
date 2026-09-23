@@ -119,8 +119,13 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	// --- user: payments ----------------------------------------------------
 	createStripeCheckout: {
 		priceId: 'price_test',
-		successUrl: 'https://example.com/ok',
-		cancelUrl: 'https://example.com/cancel',
+		successUrl: 'https://mplswinterleague.com/profile?payment=success',
+		cancelUrl: 'https://mplswinterleague.com/profile?payment=cancel',
+	},
+	createTeamContributionCheckout: {
+		amountCents: 25_000,
+		successUrl: 'https://mplswinterleague.com/teams/team-1?payment=success',
+		cancelUrl: 'https://mplswinterleague.com/teams/team-1?payment=cancel',
 	},
 
 	// --- user: teams -------------------------------------------------------
