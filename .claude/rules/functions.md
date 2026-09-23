@@ -98,7 +98,14 @@ on the account CI deploys as,
 `github-action-666139608@minnesota-winter-league.iam.gserviceaccount.com`.
 Without it the function deploys but its job does not, and the deploy fails
 with a 403 on `cloudscheduler.jobs.update`. The first scheduled functions hit
-exactly that.
+exactly that; the role has since been granted.
+
+**Rerunning a failed deploy does not repair a missing job.** The function
+itself was created, so the rerun skips it as unchanged and never retries the
+job — the deploy reports success and the schedule still does not exist.
+Deploy the function by name, which is never skipped:
+`firebase deploy --only functions:<name> --force`, then confirm the job with
+Cloud Scheduler.
 
 ## Stripe in tests
 
