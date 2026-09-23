@@ -18,6 +18,8 @@ export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
 	{
 		document: 'players/{playerId}/playerSeasons/{seasonId}',
 		region: FIREBASE_CONFIG.REGION,
+		// A throw is only retried with this set; see .claude/rules/functions.md.
+		retry: true,
 	},
 	async (event) => {
 		const { playerId, seasonId } = event.params
@@ -52,11 +54,15 @@ export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(
 				})
 			}
 		} catch (error) {
+			// Rethrown so the platform retries. A signature that lands during
+			// the race and whose recompute is lost costs the team its spot;
+			// the recompute is an idempotent transaction, so a retry is safe.
 			logger.error('Error updating team registration on player change:', {
 				playerId,
 				seasonId,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
+			throw error
 		}
 	}
 )
