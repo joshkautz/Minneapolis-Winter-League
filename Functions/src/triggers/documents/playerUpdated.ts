@@ -1,8 +1,8 @@
 /**
  * Player season update trigger
  *
- * Fires when a player's per-season subdoc changes (paid, signed, banned,
- * captain, team). When paid or signed changes for a player who is on a team,
+ * Fires when a player's per-season subdoc changes (paid, signed, captain,
+ * team). When paid or signed changes for a player who is on a team,
  * recompute that team's registration status for the season.
  */
 
