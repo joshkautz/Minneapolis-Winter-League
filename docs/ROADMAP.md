@@ -43,11 +43,11 @@ committed $1,000, in any split, replacing ten individual $100 payments.
 
 Done: the transactional twelve-team cap, waivers on roster join, the
 contribution ledger and its no-orphan guards, the registration rule, and
-taking money (`createTeamContributionCheckout` plus the webhook), and
-settlement on registration and on the twelve-team lock. Left: the scheduled
-sweep for the window closing and holds nearing expiry, an admin release
-action, the team payment UI, and cutover. No season opts in, so none of it
-touches money yet.
+taking money (`createTeamContributionCheckout` plus the webhook), and the
+whole settlement lifecycle: capture on registration, release on the
+twelve-team lock and when registration closes, capture before expiry, an
+admin release, and a daily reconciliation with Stripe. Left: the team payment
+UI and cutover. No season opts in, so none of it touches money yet.
 
 Three decisions carry it:
 
@@ -200,7 +200,7 @@ that is deliberately not fixed — are in `CLAUDE.md`.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 47.
+- **Deeper callable behaviour.** The authorization sweep covers all 48.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
   `updatePlayerAdmin`, `rolloverTeam` and the three game callables have
   behavioural tests. The rest are covered only at the gate; `deletePlayer`,

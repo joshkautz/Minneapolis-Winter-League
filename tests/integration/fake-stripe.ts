@@ -49,6 +49,8 @@ interface FakeState {
 	failures: { method: Method; paymentIntentId: string; message: string }[]
 	/** What `webhooks.constructEvent` returns: the event being delivered. */
 	nextEvent: unknown
+	/** Every search query sent, in order. */
+	searches: string[]
 	/**
 	 * Holds retrieves of one PaymentIntent until `count` callers are waiting,
 	 * then lets them all through at once, so concurrent settlements all read
@@ -68,6 +70,7 @@ export const fakeStripe: FakeState = {
 	idempotent: new Map(),
 	failures: [],
 	nextEvent: undefined,
+	searches: [],
 	retrieveGate: null,
 }
 
@@ -77,6 +80,7 @@ export function resetFakeStripe(): void {
 	fakeStripe.idempotent.clear()
 	fakeStripe.failures.length = 0
 	fakeStripe.nextEvent = undefined
+	fakeStripe.searches.length = 0
 	fakeStripe.retrieveGate = null
 }
 
@@ -179,6 +183,24 @@ export class FakeStripe {
 			maybeFail('retrieve', id)
 			await passGate(id)
 			return copy(intent(id))
+		},
+
+		/**
+		 * Stands in for the one search the code runs: live team holds. The
+		 * query is recorded so a test can assert it; results are every
+		 * uncaptured PaymentIntent tagged as a team contribution, which is
+		 * what that query means.
+		 */
+		search: (params: { query: string }): AsyncIterable<FakePaymentIntent> => {
+			fakeStripe.searches.push(params.query)
+			const matches = [...fakeStripe.intents.values()].filter(
+				(pi) =>
+					pi.status === 'requires_capture' &&
+					pi.metadata.kind === 'team_contribution'
+			)
+			return (async function* () {
+				for (const pi of matches) yield copy(pi)
+			})()
 		},
 
 		capture: async (

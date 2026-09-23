@@ -11,13 +11,9 @@ import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG, getStripeConfig } from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
-import {
-	recordContribution,
-	TeamSeasonNotFoundError,
-} from '../../shared/contributions.js'
 import { TEAM_CONTRIBUTION_KIND } from '../../shared/stripe.js'
 import { reconcileContribution } from '../../services/teamSettlementService.js'
-import type { ContributionStatus } from '../../types.js'
+import { recordContributionFromStripe } from '../../services/teamContributionIntake.js'
 import Stripe from 'stripe'
 
 /**
@@ -204,13 +200,8 @@ async function handleCheckoutSessionCompleted(
  * Handle a completed team contribution checkout.
  *
  * Records the hold in the team's ledger, which in turn recomputes the team's
- * registration. Everything that identifies the team comes from metadata our
- * own callable set; the amount comes from Stripe.
- *
- * Money must never be left held against nothing. If the contribution cannot
- * be attributed — its metadata is incomplete, or the team was deleted while
- * the payer was on the Checkout page — the hold is released on the spot
- * instead of being retried forever against a team that is gone.
+ * registration — or releases it, if it cannot be attributed. See
+ * services/teamContributionIntake.ts.
  */
 async function handleTeamContributionCompleted(
 	stripe: Stripe,
@@ -233,63 +224,15 @@ async function handleTeamContributionCompleted(
 		expand: ['latest_charge'],
 	})
 
-	const held = heldMoney(paymentIntent)
-	if (!held) {
-		logger.warn('Team contribution PaymentIntent holds no money', {
-			sessionId: session.id,
-			paymentIntentId,
-			paymentIntentStatus: paymentIntent.status,
-		})
-		return
-	}
-
-	const { firebaseUID, teamId, seasonId } = session.metadata ?? {}
-	if (!firebaseUID || !teamId || !seasonId) {
-		logger.error('Team contribution is missing its metadata; releasing it', {
-			sessionId: session.id,
-			paymentIntentId,
+	try {
+		await recordContributionFromStripe(getFirestore(), stripe, {
+			paymentIntent,
 			metadata: session.metadata,
 		})
-		await releaseUnattributableMoney(stripe, paymentIntentId, held.status)
-		return
-	}
-
-	try {
-		const outcome = await recordContribution(getFirestore(), {
-			teamId,
-			seasonId,
-			playerId: firebaseUID,
-			paymentIntentId,
-			amountCents: held.amountCents,
-			status: held.status,
-			captureBefore: held.captureBefore,
-		})
-
-		logger.info('Team contribution received', {
-			teamId,
-			seasonId,
-			firebaseUID,
-			paymentIntentId,
-			amountCents: held.amountCents,
-			status: held.status,
-			outcome,
-		})
 	} catch (error) {
-		if (error instanceof TeamSeasonNotFoundError) {
-			logger.warn('Team contribution for a team that no longer exists', {
-				teamId,
-				seasonId,
-				paymentIntentId,
-			})
-			await releaseUnattributableMoney(stripe, paymentIntentId, held.status)
-			return
-		}
-
 		throw handleFunctionError(error, 'handleTeamContributionCompleted', {
 			sessionId: session.id,
 			paymentIntentId,
-			teamId,
-			seasonId,
 		})
 	}
 }
@@ -342,86 +285,6 @@ async function handleTeamPaymentIntentChange(
 			seasonId,
 		})
 	}
-}
-
-/**
- * What a PaymentIntent is actually holding, or null if nothing.
- *
- * A manual-capture PaymentIntent in `requires_capture` is a live hold; one
- * that has `succeeded` has been captured, which does not happen from Checkout
- * with manual capture but is recorded faithfully if it ever does. Read from a
- * fresh retrieve rather than the event, so a webhook redelivered after the
- * money was settled sees it as settled.
- */
-function heldMoney(paymentIntent: Stripe.PaymentIntent): {
-	status: ContributionStatus
-	amountCents: number
-	captureBefore: Timestamp | null
-} | null {
-	const charge =
-		typeof paymentIntent.latest_charge === 'object'
-			? paymentIntent.latest_charge
-			: null
-
-	if (paymentIntent.status === 'requires_capture') {
-		const captureBeforeSeconds =
-			charge?.payment_method_details?.card?.capture_before
-
-		return {
-			status: 'authorized',
-			amountCents: paymentIntent.amount_capturable,
-			captureBefore:
-				typeof captureBeforeSeconds === 'number'
-					? Timestamp.fromMillis(captureBeforeSeconds * 1000)
-					: null,
-		}
-	}
-
-	if (paymentIntent.status === 'succeeded') {
-		// A refund leaves the PaymentIntent `succeeded`, so what is still held
-		// is what was received less what has gone back. Without this, a
-		// redelivery after a refund would try to refund it a second time.
-		const amountCents =
-			paymentIntent.amount_received - (charge?.amount_refunded ?? 0)
-		if (amountCents <= 0) return null
-
-		return {
-			status: 'captured',
-			amountCents,
-			captureBefore: null,
-		}
-	}
-
-	return null
-}
-
-/**
- * Gives money back that cannot be attributed to a team.
- *
- * A hold is cancelled, which is free; money already captured is refunded.
- * Idempotency keys make a redelivered webhook repeat the same request rather
- * than issue a second one.
- */
-async function releaseUnattributableMoney(
-	stripe: Stripe,
-	paymentIntentId: string,
-	status: ContributionStatus
-): Promise<void> {
-	if (status === 'authorized') {
-		await stripe.paymentIntents.cancel(
-			paymentIntentId,
-			{ cancellation_reason: 'abandoned' },
-			{ idempotencyKey: `release_${paymentIntentId}` }
-		)
-		logger.info('Released unattributable hold', { paymentIntentId })
-		return
-	}
-
-	await stripe.refunds.create(
-		{ payment_intent: paymentIntentId },
-		{ idempotencyKey: `refund_unattributable_${paymentIntentId}` }
-	)
-	logger.info('Refunded unattributable payment', { paymentIntentId })
 }
 
 /**

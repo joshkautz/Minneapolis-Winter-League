@@ -60,6 +60,10 @@ export { onTeamRegistrationChange } from './triggers/documents/teamRegistrationL
 // Payment triggers
 export { onPaymentCreated } from './triggers/payments/paymentCreated.js'
 
+// Scheduled functions
+export { sweepTeamPaymentsHourly } from './triggers/scheduled/sweepTeamPayments.js'
+export { reconcileTeamPaymentsDaily } from './triggers/scheduled/reconcileTeamPayments.js'
+
 //////////////////////////////////////////////////////////////////////////////
 // API ENDPOINTS
 //////////////////////////////////////////////////////////////////////////////
@@ -131,6 +135,9 @@ export { sendWaiverAdmin } from './functions/admin/waivers/sendWaiverAdmin.js'
 // Payment functions (user-accessible)
 export { createStripeCheckout } from './functions/user/payments/createStripeCheckout.js'
 export { createTeamContributionCheckout } from './functions/user/payments/createTeamContributionCheckout.js'
+
+// Payment management functions (admin-only)
+export { releaseTeamContribution } from './functions/admin/payments/releaseTeamContribution.js'
 
 // Game management functions (admin-only)
 export { createGame } from './functions/admin/games/create.js'

@@ -304,3 +304,80 @@ export async function reconcileContribution(
 		throw error
 	}
 }
+
+export type ReleaseOutcome =
+	| { outcome: 'released'; status: 'canceled' | 'refunded' }
+	| { outcome: 'not-found' }
+	| { outcome: 'already-settled'; status: TeamContributionDocument['status'] }
+	/**
+	 * Stripe was not in the state the ledger claimed, so nothing was
+	 * released; the ledger now matches Stripe and the release can be retried.
+	 */
+	| { outcome: 'stripe-disagreed'; stripeStatus: string }
+
+/**
+ * Gives back one contribution by hand: cancels it if it is still a hold,
+ * refunds it if it was captured.
+ *
+ * For an admin resolving something the rules do not cover — a dispute, a
+ * payer who left the team before it registered. It does not touch the
+ * team's registration, which is irreversible; releasing money from a
+ * registered team leaves it short, and settlement then reports the
+ * shortfall.
+ *
+ * Goes through the same retrieve-then-act and reconcile as settlement, so a
+ * contribution already settled in Stripe is recorded rather than acted on
+ * twice.
+ */
+export async function releaseContribution(
+	firestore: Firestore,
+	stripe: Stripe,
+	params: { teamId: string; seasonId: string; paymentIntentId: string }
+): Promise<ReleaseOutcome> {
+	const { teamId, seasonId, paymentIntentId } = params
+	const snap = await teamContributionsCollection(firestore, teamId, seasonId)
+		.doc(paymentIntentId)
+		.get()
+	if (!snap.exists) return { outcome: 'not-found' }
+
+	const contribution = snap.data() as TeamContributionDocument
+	if (
+		contribution.status !== 'authorized' &&
+		contribution.status !== 'captured'
+	) {
+		return { outcome: 'already-settled', status: contribution.status }
+	}
+
+	// Stripe first. If the money is not where the ledger says — a hold the
+	// bank already let go — nothing is released by this call, and the admin
+	// should see that rather than be recorded as having done it.
+	const current = await retrieveWithCharge(stripe, paymentIntentId)
+	if (
+		contributionStateFromPaymentIntent(current)?.status !== contribution.status
+	) {
+		await reconcileContribution(firestore, {
+			teamId,
+			seasonId,
+			paymentIntent: current,
+		})
+		return { outcome: 'stripe-disagreed', stripeStatus: current.status }
+	}
+
+	const action: SettlementAction =
+		contribution.status === 'authorized'
+			? { type: 'cancel', paymentIntentId }
+			: {
+					type: 'refund',
+					paymentIntentId,
+					amountCents: contribution.amountCents,
+				}
+
+	const paymentIntent = await applyAction(stripe, action)
+	await reconcileContribution(firestore, { teamId, seasonId, paymentIntent })
+
+	const state = contributionStateFromPaymentIntent(paymentIntent)
+	if (state?.status === 'canceled' || state?.status === 'refunded') {
+		return { outcome: 'released', status: state.status }
+	}
+	return { outcome: 'stripe-disagreed', stripeStatus: paymentIntent.status }
+}
