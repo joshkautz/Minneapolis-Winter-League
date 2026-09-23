@@ -5,51 +5,18 @@
 import { logger } from 'firebase-functions/v2'
 
 interface EnvironmentConfig {
-	dropboxSignApiKey: string
-	stripeSecretKey: string
-	stripeWebhookSecret: string
 	nodeEnv: string
 	isProduction: boolean
 	isDevelopment: boolean
 }
 
 /**
- * Validates and loads environment variables/secrets
+ * Loads the non-secret runtime environment.
  * This should be called only when needed, not at module load time
  */
 export function getEnvironmentConfig(): EnvironmentConfig {
 	const nodeEnv = process.env.NODE_ENV || 'development'
-	const dropboxSignApiKey = process.env.DROPBOX_SIGN_API_KEY
-	const stripeSecretKey = process.env.STRIPE_SECRET_KEY
-	const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-
-	// In production, secrets are injected as environment variables by Firebase
-	// In development, they come from .secret.local file (loaded by emulator)
-	if (!dropboxSignApiKey) {
-		const error =
-			'DROPBOX_SIGN_API_KEY is required (set via Firebase secret or .secret.local)'
-		logger.warn(error)
-		// Don't throw to allow functions to load even without secrets
-		// Functions that need the secret will fail at runtime instead
-	}
-
-	if (!stripeSecretKey) {
-		const error =
-			'STRIPE_SECRET_KEY is required (set via Firebase secret or .secret.local)'
-		logger.warn(error)
-	}
-
-	if (!stripeWebhookSecret) {
-		const error =
-			'STRIPE_WEBHOOK_SECRET is required (set via Firebase secret or .secret.local)'
-		logger.warn(error)
-	}
-
 	return {
-		dropboxSignApiKey: dropboxSignApiKey || 'DEVELOPMENT_PLACEHOLDER_DROPBOX',
-		stripeSecretKey: stripeSecretKey || 'DEVELOPMENT_PLACEHOLDER_STRIPE',
-		stripeWebhookSecret:
-			stripeWebhookSecret || 'DEVELOPMENT_PLACEHOLDER_STRIPE_WEBHOOK',
 		nodeEnv,
 		isProduction: nodeEnv === 'production',
 		isDevelopment: nodeEnv === 'development',
@@ -66,4 +33,57 @@ export function getENV(): EnvironmentConfig {
 		_envConfig = getEnvironmentConfig()
 	}
 	return _envConfig
+}
+
+export type SecretName =
+	'DROPBOX_SIGN_API_KEY' | 'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET'
+
+/**
+ * Returned in place of a missing secret so functions still load without one.
+ * A function that uses the placeholder fails at the provider instead.
+ */
+const SECRET_PLACEHOLDERS: Record<SecretName, string> = {
+	DROPBOX_SIGN_API_KEY: 'DEVELOPMENT_PLACEHOLDER_DROPBOX',
+	STRIPE_SECRET_KEY: 'DEVELOPMENT_PLACEHOLDER_STRIPE',
+	STRIPE_WEBHOOK_SECRET: 'DEVELOPMENT_PLACEHOLDER_STRIPE_WEBHOOK',
+}
+
+const warnedMissingSecrets = new Set<SecretName>()
+
+/**
+ * Reads one secret at the moment it is needed.
+ *
+ * Firebase injects only the secrets listed in a function's `secrets` option,
+ * so every other secret is legitimately absent from that instance. Checking
+ * them all together logged a warning for each undeclared one on every cold
+ * start; checking per read means a warning points at a secret some code
+ * actually tried to use. It is logged once per instance, not per read.
+ *
+ * In production the value is a Firebase secret; under the emulator it comes
+ * from `Functions/.secret.local`.
+ */
+export function getSecret(name: SecretName): string {
+	const value = process.env[name]
+	if (value) {
+		return value
+	}
+	if (!warnedMissingSecrets.has(name)) {
+		warnedMissingSecrets.add(name)
+		logger.warn(
+			`${name} is required (set via Firebase secret or .secret.local)`
+		)
+	}
+	return SECRET_PLACEHOLDERS[name]
+}
+
+export function getDropboxSignApiKey(): string {
+	return getSecret('DROPBOX_SIGN_API_KEY')
+}
+
+export function getStripeSecretKey(): string {
+	return getSecret('STRIPE_SECRET_KEY')
+}
+
+export function getStripeWebhookSecret(): string {
+	return getSecret('STRIPE_WEBHOOK_SECRET')
 }

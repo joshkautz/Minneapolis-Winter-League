@@ -77,9 +77,15 @@ src/
 
 ### Environment Variables
 
-Required environment variables:
+Secrets (Firebase secrets in production, `.secret.local` under the emulator),
+each read only when code uses it and only by functions that declare it:
 
 - **`DROPBOX_SIGN_API_KEY`** - Dropbox Sign API key for waiver management
+- **`STRIPE_SECRET_KEY`** - Stripe API key
+- **`STRIPE_WEBHOOK_SECRET`** - Stripe webhook signing secret
+
+Other environment variables:
+
 - **`NODE_ENV`** - Environment (development/production)
 
 ### Constants

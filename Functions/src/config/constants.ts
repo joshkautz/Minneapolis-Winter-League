@@ -2,7 +2,12 @@
  * Application constants and configuration
  */
 
-import { getENV } from './environment.js'
+import {
+	getDropboxSignApiKey,
+	getENV,
+	getStripeSecretKey,
+	getStripeWebhookSecret,
+} from './environment.js'
 
 // Firebase Configuration (static - no env vars needed)
 export const FIREBASE_CONFIG = {
@@ -46,11 +51,14 @@ export function getDropboxSignConfig(): {
 	readonly TEMPLATE_ID: string
 	readonly TEST_MODE: boolean
 } {
-	const env = getENV()
 	return {
-		API_KEY: env.dropboxSignApiKey,
+		// A getter, so the secret is read (and its absence warned about) only
+		// by code that uses it.
+		get API_KEY(): string {
+			return getDropboxSignApiKey()
+		},
 		TEMPLATE_ID: '2ea9b881ec6798e7c6122ebaa51baf50689c573c',
-		TEST_MODE: !env.isProduction,
+		TEST_MODE: !getENV().isProduction,
 	} as const
 }
 
@@ -60,10 +68,15 @@ export function getStripeConfig(): {
 	readonly WEBHOOK_SECRET: string
 	readonly API_VERSION: '2026-08-26.dahlia'
 } {
-	const env = getENV()
 	return {
-		SECRET_KEY: env.stripeSecretKey,
-		WEBHOOK_SECRET: env.stripeWebhookSecret,
+		// Getters, so a function that declares only STRIPE_SECRET_KEY never
+		// reads, or warns about, the webhook secret it was not given.
+		get SECRET_KEY(): string {
+			return getStripeSecretKey()
+		},
+		get WEBHOOK_SECRET(): string {
+			return getStripeWebhookSecret()
+		},
 		API_VERSION: '2026-08-26.dahlia' as const,
 	} as const
 }
