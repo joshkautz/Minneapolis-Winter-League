@@ -282,6 +282,11 @@ export interface TeamContributionDocument extends DocumentData {
 	 * Null once the contribution reaches a terminal state, or when unknown.
 	 */
 	captureBefore: Timestamp | null
+	/**
+	 * What was first authorized, set when a partial capture or refund changes
+	 * `amountCents`. Absent while the two are the same.
+	 */
+	authorizedAmountCents?: number
 	createdAt: Timestamp
 	updatedAt: Timestamp
 }

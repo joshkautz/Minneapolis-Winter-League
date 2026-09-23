@@ -152,15 +152,28 @@ describe('contributionAmountError', () => {
 		expect(contributionAmountError(REMAINING, REMAINING)).toBeNull()
 	})
 
-	it('rejects one cent below the floor', () => {
-		expect(contributionAmountError(999, REMAINING)).toMatch(/at least \$10\.00/)
+	it('rejects one dollar below the floor', () => {
+		expect(contributionAmountError(900, REMAINING)).toMatch(/at least \$10\.00/)
 	})
 
-	it('rejects one cent over the balance', () => {
+	it('rejects one dollar over the balance', () => {
 		// Stops a single payer committing more than the team can use, which
 		// would be a hold settlement has to release.
-		expect(contributionAmountError(REMAINING + 1, REMAINING)).toMatch(
+		expect(contributionAmountError(REMAINING + 100, REMAINING)).toMatch(
 			/only needs \$600\.00/
+		)
+	})
+
+	it.each([
+		['a cent over a dollar amount', 25_001],
+		['fifty cents over', 25_050],
+		['under a dollar', 50],
+	])('rejects %s, because contributions are whole dollars', (_l, amount) => {
+		// A remainder under a dollar could fall below Stripe's 50-cent
+		// minimum, and settlement would then have to overcharge or write it
+		// off.
+		expect(contributionAmountError(amount, REMAINING)).toMatch(
+			/whole number of dollars/
 		)
 	})
 
@@ -168,7 +181,7 @@ describe('contributionAmountError', () => {
 		// A team $5 short has to be able to pay $5; otherwise it could never
 		// finish.
 		expect(contributionAmountError(500, 500)).toBeNull()
-		expect(contributionAmountError(499, 500)).toMatch(/at least \$5\.00/)
+		expect(contributionAmountError(400, 500)).toMatch(/at least \$5\.00/)
 	})
 
 	it.each([
