@@ -81,6 +81,25 @@ so `scripts/ci/check-functions-deploy.js` runs first and fails the deploy if
 it would do either. To delete or re-trigger a function on purpose, run
 `firebase functions:delete <name>` by hand, then let CI deploy.
 
+## Scheduled functions
+
+`onSchedule` functions live in `triggers/scheduled/`. The two there follow
+the same shape:
+
+- `region`, a `timeZone` of `America/Chicago`, and `maxInstances: 1`.
+- Honour the migration kill-switch like every trigger.
+- Do the work in a service that takes `now` as an option, so tests can move
+  the clock; test the scheduled wrapper with `.run({ scheduleTime })`.
+- A failed run is not retried by the scheduler; the next run is the retry.
+  Throw anyway, so the failure shows in the logs.
+
+**Deploying one needs Cloud Scheduler Admin** (`roles/cloudscheduler.admin`)
+on the account CI deploys as,
+`github-action-666139608@minnesota-winter-league.iam.gserviceaccount.com`.
+Without it the function deploys but its job does not, and the deploy fails
+with a 403 on `cloudscheduler.jobs.update`. The first scheduled functions hit
+exactly that.
+
 ## Stripe in tests
 
 Any integration suite that can reach settlement — which now includes the
