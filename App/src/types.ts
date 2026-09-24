@@ -62,6 +62,13 @@ export enum Collections {
 export const PLAYER_SEASONS_SUBCOLLECTION = 'playerSeasons'
 
 /**
+ * Subcollection name for a player's waiver signatures, living under
+ * `players/{uid}/waiverSignatures/{signatureId}`. Private to that player and
+ * admins, unlike the player document itself, which anyone can read.
+ */
+export const WAIVER_SIGNATURES_SUBCOLLECTION = 'waiverSignatures'
+
+/**
  * Subcollection name for per-team per-season state, living under
  * `teams/{teamId}/teamSeasons/{seasonId}`. Renamed from `seasons` to
  * disambiguate `collectionGroup()` queries from the player-side subcollection.
@@ -429,6 +436,50 @@ export interface GameDocument extends DocumentData {
 	season: DocumentReference<SeasonDocument>
 	/** Type of game: regular season or playoff */
 	type: GameType
+}
+
+/**
+ * One signature of the league waiver, for one season.
+ *
+ * Stored at `players/{uid}/waiverSignatures/{signatureId}` and written only
+ * by Functions — `signWaiver` when a player signs, `updatePlayerAdmin` when
+ * an admin records one (a paper waiver, say). Never edited or deleted: it is
+ * the evidence of what was agreed, so a correction is a new record.
+ *
+ * `players/{uid}/playerSeasons/{seasonId}.signed` is what registration reads;
+ * this is why it is true.
+ */
+export interface WaiverSignatureDocument extends DocumentData {
+	/** The season this signature registers the player for. */
+	seasonId: string
+	/** Which text was agreed to; see `Functions/src/waiver/versions.ts`. */
+	versionId: string
+	/** SHA-256 of that version, so the text can be proven unchanged. */
+	versionSha256: string
+	/** A player signed in the app, or an admin recorded a signature. */
+	method: 'player' | 'admin'
+	/** Who wrote the record: the player, or the admin who recorded it. */
+	recordedBy: string
+	signedAt: Timestamp
+	/** The participant's name on their profile when this was recorded. */
+	participantName: string
+	/** The typed signature: the participant, or a minor's parent or guardian. */
+	signerName: string | null
+	/** Whether the signer was the participant or signed for a minor. */
+	signerRole: 'participant' | 'guardian' | null
+	/** For a guardian: how they are related to the participant. */
+	guardianRelationship: string | null
+	/** `YYYY-MM-DD` */
+	dateOfBirth: string | null
+	mailingAddress: string | null
+	emergencyContacts: { name: string; relationship: string; phone: string }[]
+	/** The account's email at signing. */
+	email: string | null
+	/** Where the signature came from, as evidence of who made it. */
+	ipAddress: string | null
+	userAgent: string | null
+	/** Why an admin recorded it; null for a player's own signature. */
+	note: string | null
 }
 
 /**

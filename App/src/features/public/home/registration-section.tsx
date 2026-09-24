@@ -6,15 +6,15 @@ import {
 } from '@/shared/utils'
 
 /**
- * The steps to register, in the order they happen. A waiver is emailed when
- * a player joins a team, so joining comes before signing; what paying means
- * depends on whether the season is paid per player or per team.
+ * The steps to register, in the order they happen. The waiver is signed on
+ * the site and can be signed before joining a team, so it comes first; what
+ * paying means depends on whether the season is paid per player or per team.
  */
 const registrationSteps = (teamTotalCents: number | undefined): string[] => [
 	'Click on the "Log In" button to Log In or Sign Up.',
 	'Verify your email address by clicking the link in the email you receive.',
+	'Sign the Waiver and Release of Liability right here on the site. It takes a minute, and you can do it before you join a team.',
 	'Request to join an existing team, accept an invitation, or create your own team.',
-	'Electronically sign your Waiver of Liability, which is emailed to you when you join a team.',
 	teamTotalCents === undefined
 		? 'Visit your profile to submit secure electronic payment via Stripe.'
 		: `Chip in toward your team's ${formatDollars(teamTotalCents)} from My Team, split however your team likes. Your team registers once ${MIN_SIGNED_PLAYERS} players have signed and the total is committed.`,

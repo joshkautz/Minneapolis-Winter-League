@@ -59,6 +59,16 @@ export const ManageTeam = lazyImport(
 	() => import('@/features/player/team'),
 	'ManageTeam'
 )
+// The waiver feature's index also exports hooks, which lazyImport's
+// component-only module type refuses, so these load the page files.
+export const Waiver = lazyImport(
+	() => import('@/features/player/waiver/waiver-page'),
+	'WaiverPage'
+)
+export const WaiverCopy = lazyImport(
+	() => import('@/features/player/waiver/waiver-copy'),
+	'WaiverCopy'
+)
 
 // ==================== ADMIN ROUTES ====================
 // Require authentication + admin role

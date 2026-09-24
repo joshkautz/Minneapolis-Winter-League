@@ -127,6 +127,7 @@ export { getFileMetadata } from './functions/user/storage/getFileMetadata.js'
 export { rebuildPlayerRankings } from './functions/admin/rankings/rebuildPlayerRankings.js'
 
 // Waiver functions (user-accessible)
+export { signWaiver } from './functions/user/waivers/sign.js'
 export { sendWaiverReminder } from './functions/user/waivers/sendReminder.js'
 
 // Waiver management functions (admin-only)

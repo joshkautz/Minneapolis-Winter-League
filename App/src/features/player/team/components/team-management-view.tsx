@@ -7,6 +7,7 @@ import { ManageNonCaptainActions } from '../manage-non-captain-actions'
 import { ManageCaptainsOffersPanel } from '../manage-captains-offers-panel'
 import { ManageNonCaptainsOffersPanel } from '../manage-non-captains-offers-panel'
 import { TeamPaymentCard } from '../team-payment-card'
+import { WaiverPrompt } from '@/features/player/waiver'
 
 interface TeamManagementViewProps {
 	isLoading: boolean
@@ -32,6 +33,8 @@ export const TeamManagementView = ({
 				}
 				icon={Users}
 			/>
+
+			<WaiverPrompt />
 
 			<div className='flex flex-col lg:flex-row items-stretch gap-4 w-full'>
 				{/* Main content - appears first on mobile, left side on desktop */}

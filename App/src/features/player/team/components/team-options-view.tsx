@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { JoinTeam } from '@/features/public/join'
 import { CreateTeam } from '@/features/public/create/create-team'
 import { useTeamsContext } from '@/providers'
+import { WaiverPrompt } from '@/features/player/waiver'
 
 interface TeamOptionsViewProps {
 	isLoading: boolean
@@ -41,6 +42,8 @@ export const TeamOptionsView = ({ isLoading }: TeamOptionsViewProps) => {
 				}
 				icon={Users}
 			/>
+
+			<WaiverPrompt />
 
 			<Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
 				<div className='flex justify-center'>

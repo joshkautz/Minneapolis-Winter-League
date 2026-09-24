@@ -8,6 +8,7 @@
 
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '../app'
+import type { WaiverSubmission } from '@/shared/waiver'
 import type {
 	CreatePlayerRequest,
 	CreatePlayerResponse,
@@ -1075,6 +1076,33 @@ export const revokeBadgeViaFunction = async (
 		'revokeBadge'
 	)
 	const result = await revokeBadge(data)
+	return result.data
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// WAIVER SIGNING
+//////////////////////////////////////////////////////////////////////////////
+
+export interface SignWaiverResponse {
+	success: true
+	/** They had already signed for the season; nothing new was recorded. */
+	alreadySigned: boolean
+	seasonId: string
+}
+
+/**
+ * Signs the league waiver for the current season, as the signed-in player.
+ * The server applies the same rules as the form (`@/shared/waiver`) and is
+ * the only check that counts.
+ */
+export const signWaiverViaFunction = async (
+	data: WaiverSubmission
+): Promise<SignWaiverResponse> => {
+	const signWaiver = httpsCallable<WaiverSubmission, SignWaiverResponse>(
+		functions,
+		'signWaiver'
+	)
+	const result = await signWaiver(data)
 	return result.data
 }
 

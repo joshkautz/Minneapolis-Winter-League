@@ -51,7 +51,7 @@ export const NavigationBar = ({ onLoginClick }: NavigationBarProps) => {
 	}, [isMobile, isSettingsPopoverOpen, isAccountPopoverOpen])
 
 	return (
-		<header className='sticky top-0 z-50 w-full border-b supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur-sm'>
+		<header className='sticky top-0 z-50 w-full border-b supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur-sm print:hidden'>
 			<div className='container flex items-center h-14'>
 				{/* Desktop Navigation */}
 				<DesktopNavigation

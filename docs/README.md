@@ -14,7 +14,7 @@ Documentation for the Minneapolis Winter League application, grouped by area.
 
 Top-level documents: [Project Structure](./PROJECT_STRUCTURE.md),
 [Security Guidelines](./SECURITY.md), [Roadmap](./ROADMAP.md),
-[Team Payments](./TEAM_PAYMENTS.md) (design, not yet built).
+[Team Payments](./TEAM_PAYMENTS.md), [Waivers](./WAIVERS.md).
 
 ## Start here
 
@@ -30,7 +30,9 @@ and nothing else; all mutations go through callable Cloud Functions running on
 the Admin SDK, which enforce authorization themselves via
 `Functions/src/shared/auth.ts`. Admin status is a boolean field on the player
 document — this codebase does not use Firebase Auth custom claims. Per-user
-private data (`stripe/{uid}`, `dropbox/{uid}`) is readable only by its owner.
+private data (`stripe/{uid}`, `dropbox/{uid}`) is readable only by its owner,
+and waiver signatures (`players/{uid}/waiverSignatures`) by the owner and
+admins.
 
 ## Development URLs
 

@@ -30,7 +30,7 @@ import {
 	Ban,
 	UserCog,
 	Loader2,
-	Send,
+	FileText,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -48,8 +48,12 @@ import {
 import {
 	updatePlayerAdminViaFunction,
 	getPlayerAuthInfoViaFunction,
-	sendWaiverAdminViaFunction,
 } from '@/firebase/collections/functions'
+import {
+	signatureForSeason,
+	useWaiverSignatures,
+	type WaiverSignature,
+} from '@/features/player/waiver'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -118,6 +122,9 @@ export const PlayerManagement = () => {
 
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
+	const { signatures: waiverSignatures } = useWaiverSignatures(
+		selectedPlayerId ?? undefined
+	)
 	const [isSaving, setIsSaving] = useState(false)
 	const [isLoadingPlayerDetails, setIsLoadingPlayerDetails] = useState(false)
 	const [formData, setFormData] = useState<PlayerFormData | null>(null)
@@ -1018,6 +1025,10 @@ export const PlayerManagement = () => {
 											seasonData={seasonData}
 											seasons={seasons}
 											playerId={selectedPlayerId}
+											signature={signatureForSeason(
+												waiverSignatures,
+												seasonData.seasonId
+											)}
 											onFieldChange={handleSeasonFieldChange}
 										/>
 									))}
@@ -1055,6 +1066,8 @@ interface SeasonCardProps {
 	seasonData: SeasonFormData
 	seasons: (SeasonDocument & { id: string })[] | undefined
 	playerId: string
+	/** This season's waiver signature, if one is on record. */
+	signature: WaiverSignature | undefined
 	onFieldChange: (
 		seasonId: string,
 		field: keyof SeasonFormData,
@@ -1066,43 +1079,11 @@ const SeasonCard = ({
 	seasonData,
 	seasons,
 	playerId,
+	signature,
 	onFieldChange,
 }: SeasonCardProps) => {
-	const [isSendingWaiver, setIsSendingWaiver] = useState(false)
-
 	const season = seasons?.find((s) => s.id === seasonData.seasonId)
 	const seasonName = season?.name || 'Unknown Season'
-
-	// Offer a waiver to a player who has not signed and is either on a team
-	// (waivers go out on joining one, under either pricing model) or paid,
-	// which covers someone who paid cash before finding a team.
-	const showSendWaiverButton =
-		(seasonData.paid || seasonData.teamId !== null) && !seasonData.signed
-
-	const handleSendWaiver = async () => {
-		setIsSendingWaiver(true)
-		try {
-			const result = await sendWaiverAdminViaFunction({
-				playerId,
-				seasonId: seasonData.seasonId,
-			})
-			toast.success('Waiver sent successfully', {
-				description: result.message,
-			})
-		} catch (error) {
-			logger.error('Failed to send waiver:', {
-				component: 'SeasonCard',
-				playerId,
-				seasonId: seasonData.seasonId,
-				error: error instanceof Error ? error.message : 'Unknown error',
-			})
-			toast.error(
-				extractErrorMessage(error, 'Failed to send waiver. Please try again.')
-			)
-		} finally {
-			setIsSendingWaiver(false)
-		}
-	}
 
 	// Create season ref directly - no need to fetch the document just for the ref
 	const seasonRef = season
@@ -1204,26 +1185,16 @@ const SeasonCard = ({
 					</div>
 				</div>
 
-				{/* Send Waiver button - only shows when paid but not signed */}
-				{showSendWaiverButton && (
-					<Button
-						variant='outline'
-						size='sm'
-						onClick={handleSendWaiver}
-						disabled={isSendingWaiver}
-						className='w-full'
-					>
-						{isSendingWaiver ? (
-							<>
-								<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-								Sending Waiver...
-							</>
-						) : (
-							<>
-								<Send className='h-4 w-4 mr-2' />
-								Send Waiver Email
-							</>
-						)}
+				{/* The signature behind "Signed Waiver", once one is on record.
+				    Seasons signed through Dropbox Sign have none here. */}
+				{signature && (
+					<Button asChild variant='outline' size='sm' className='w-full'>
+						<Link to={`/waiver/copy/${playerId}/${signature.id}`}>
+							<FileText className='h-4 w-4' aria-hidden='true' />
+							{signature.method === 'admin'
+								? 'View waiver record (marked by an admin)'
+								: `View signed waiver${signature.signerRole === 'guardian' ? ' (signed by a guardian)' : ''}`}
+						</Link>
 					</Button>
 				)}
 
