@@ -41,7 +41,7 @@ export const LeagueDetailsSection = () => {
 					>
 						<CardHeader>
 							<CardTitle className={'text-2xl font-bold self-center'}>
-								2026 Spring Season
+								2026 Fall Season
 							</CardTitle>
 						</CardHeader>
 						<CardContent className={'flex flex-col gap-4'}>
@@ -51,7 +51,9 @@ export const LeagueDetailsSection = () => {
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>When:</p>
-								<span>{`February 14th, 28th. March 7th, 14th, 21st, 28th. April 4th.`}</span>
+								<span>
+									{`Saturdays, November 7th, 14th, 21st and December 5th, 12th, 19th. No games November 28th or December 26th.`}
+								</span>
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>Where:</p>
@@ -71,15 +73,21 @@ export const LeagueDetailsSection = () => {
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>Games:</p>
-								<span>{`Two 40-minute games every Saturday`}</span>
+								<span>
+									{`Two 40-minute games every Saturday, 5:30–9:00pm. Fields open at 5:30 for warm-ups; the first games start at 6:00pm.`}
+								</span>
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>Cost:</p>
-								<span>{`$100 for 7 weeks of games. 2 games a night.`}</span>
+								<span>
+									{`$1,000 per team for 6 weeks of games, split however your team likes.`}
+								</span>
 							</div>
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>What's New?</p>
-								<span>{`Badges and Discounts!`}</span>
+								<span>
+									{`Teams pay together: one team fee instead of paying per player.`}
+								</span>
 							</div>
 						</CardContent>
 					</Card>
@@ -89,7 +97,7 @@ export const LeagueDetailsSection = () => {
 						<div className={'flex flex-col gap-4'}>
 							<p className={'text-2xl font-bold'}>Individuals</p>
 							<p>
-								{`If you're a solo player looking for a team, don't worry! Send some requests out to existing teams and see where you end up! We'll happily refund players who don't end up on a team.`}
+								{`If you're a solo player looking for a team, don't worry! Send some requests out to existing teams and see where you end up. There's nothing to pay on your own: teams pay together, and each team decides how to split its fee.`}
 								{` `}
 								<Link to={'/#how-to-register'}>
 									<u>Learn more about registration below.</u>
@@ -102,14 +110,21 @@ export const LeagueDetailsSection = () => {
 								Minneapolis Winter League has room for <b>12 teams.</b> Be sure
 								to register your team before space fills up. There is a{' '}
 								<b>10-player minimum</b> requirement for teams, with{' '}
-								<u>no roster maximum.</u> The first twelve teams to meet this
-								requirement of ten fully registered players will be successfully
-								registered. All other players have the option to:
+								<u>no roster maximum.</u> A team registers once{' '}
+								<b>10 of its players have signed their waiver</b> and the team
+								has committed <b>$1,000</b>, split however it likes. The first
+								twelve teams to do both are registered. If your team does not
+								get one of the twelve spots:
 							</p>
 							<ul>
-								<li>1. Request a roster spot on an existing team.</li>
 								<li>
-									2. Do nothing, and be fully refunded when the league starts.
+									1. Your team&apos;s payment is returned in full. Payments are
+									held on the card until a team is confirmed, so usually it is
+									simply released and nobody is charged.
+								</li>
+								<li>
+									2. Your players can still request a roster spot on a
+									registered team.
 								</li>
 							</ul>
 							<p>
