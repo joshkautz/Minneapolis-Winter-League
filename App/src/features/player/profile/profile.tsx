@@ -18,6 +18,7 @@ export const Profile = () => {
 		isUserSnapshotLoading: authenticatedUserSnapshotLoading,
 		isEmailVerified: isVerified,
 		isBanned: isAuthenticatedUserBanned,
+		isRostered: isAuthenticatedUserRostered,
 	} = useUserStatus()
 	const { currentSeasonQueryDocumentSnapshot, seasonsQuerySnapshot } =
 		useSeasonsContext()
@@ -60,6 +61,7 @@ export const Profile = () => {
 						isAuthenticatedUserBanned={isAuthenticatedUserBanned}
 						isAuthenticatedUserPaid={isAuthenticatedUserPaid}
 						isAuthenticatedUserSigned={isAuthenticatedUserSigned}
+						isAuthenticatedUserRostered={isAuthenticatedUserRostered}
 						currentSeasonQueryDocumentSnapshot={
 							currentSeasonQueryDocumentSnapshot
 						}

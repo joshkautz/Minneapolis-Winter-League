@@ -21,7 +21,8 @@ interface WaiverSectionProps {
 	isAuthenticatedUserSigned: boolean | undefined
 	isLoading: boolean
 	isAuthenticatedUserAdmin: boolean | undefined
-	isAuthenticatedUserPaid: boolean | undefined
+	/** On a team this season. The waiver is sent when a player joins one. */
+	isAuthenticatedUserRostered: boolean | undefined
 	isAuthenticatedUserBanned: boolean
 	currentSeasonQueryDocumentSnapshot:
 		QueryDocumentSnapshot<SeasonDocument> | undefined
@@ -37,7 +38,7 @@ export const WaiverSection = ({
 	isAuthenticatedUserSigned,
 	isLoading,
 	isAuthenticatedUserAdmin,
-	isAuthenticatedUserPaid,
+	isAuthenticatedUserRostered,
 	isAuthenticatedUserBanned,
 	currentSeasonQueryDocumentSnapshot,
 }: WaiverSectionProps) => {
@@ -102,13 +103,15 @@ export const WaiverSection = ({
 	}, [currentSeasonQueryDocumentSnapshot])
 
 	const isUserBanned = isAuthenticatedUserBanned
-	const needsPayment = !isAuthenticatedUserPaid
+	// A waiver is sent when a player joins a roster, whichever way the season
+	// is paid for, so there is nothing to resend until they are on a team.
+	const needsTeam = !isAuthenticatedUserRostered
 	const isOnCooldown = cooldownRemaining > 0
 
 	// Compute whether the resend button should be disabled
 	const isResendDisabled =
 		isUserBanned ||
-		needsPayment ||
+		needsTeam ||
 		dropboxEmailLoading ||
 		isOnCooldown ||
 		(!isAuthenticatedUserAdmin &&
@@ -166,11 +169,11 @@ export const WaiverSection = ({
 								)}
 							</AlertDescription>
 						</Alert>
-					) : needsPayment ? (
+					) : needsTeam ? (
 						<Alert className='border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'>
 							<AlertCircle className='h-4 w-4 !text-slate-600 dark:!text-slate-400' />
 							<AlertDescription className='!text-slate-700 dark:!text-slate-300'>
-								Complete payment first to receive the waiver signing link.
+								Your waiver is emailed as soon as you join a team.
 							</AlertDescription>
 						</Alert>
 					) : (

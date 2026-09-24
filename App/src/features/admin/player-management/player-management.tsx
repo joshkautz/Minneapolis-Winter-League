@@ -1073,8 +1073,11 @@ const SeasonCard = ({
 	const season = seasons?.find((s) => s.id === seasonData.seasonId)
 	const seasonName = season?.name || 'Unknown Season'
 
-	// Show Send Waiver button when player is paid but hasn't signed
-	const showSendWaiverButton = seasonData.paid && !seasonData.signed
+	// Offer a waiver to a player who has not signed and is either on a team
+	// (waivers go out on joining one, under either pricing model) or paid,
+	// which covers someone who paid cash before finding a team.
+	const showSendWaiverButton =
+		(seasonData.paid || seasonData.teamId !== null) && !seasonData.signed
 
 	const handleSendWaiver = async () => {
 		setIsSendingWaiver(true)

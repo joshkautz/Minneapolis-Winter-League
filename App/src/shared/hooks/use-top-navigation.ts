@@ -5,7 +5,7 @@ import {
 	useOffersContext,
 	useSeasonsContext,
 } from '@/providers'
-import { logger } from '@/shared/utils'
+import { logger, usesTeamPayments } from '@/shared/utils'
 import { useResponsiveDrawer } from '@/shared/hooks'
 
 /**
@@ -86,8 +86,13 @@ export const useTopNavigation = () => {
 			count++
 		}
 
-		// Payment required
-		if (isAuthenticatedUserPaid === false) {
+		// Payment required — as a player's own task only under per-player
+		// pricing. Under team payments the money is the team's, and a player
+		// is registered by signing.
+		if (
+			isAuthenticatedUserPaid === false &&
+			!usesTeamPayments(currentSeasonQueryDocumentSnapshot.data())
+		) {
 			count++
 		}
 

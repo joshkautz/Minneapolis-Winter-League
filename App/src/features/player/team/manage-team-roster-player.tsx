@@ -17,7 +17,12 @@ import { DestructiveConfirmationDialog } from '@/shared/components'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
-import { logger, errorHandler, PlayerDocument } from '@/shared/utils'
+import {
+	logger,
+	errorHandler,
+	isPlayerRegisteredForSeason,
+	PlayerDocument,
+} from '@/shared/utils'
 import { playerSeasonRef } from '@/firebase/collections/players'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
@@ -74,14 +79,15 @@ export const ManageTeamRosterPlayer = ({
 		[playerSeasonSnapshot]
 	)
 
-	const isPlayerPaid = useMemo(
-		() => playerSeasonSnapshot?.data()?.paid === true,
-		[playerSeasonSnapshot]
-	)
-
-	const isPlayerSigned = useMemo(
-		() => playerSeasonSnapshot?.data()?.signed === true,
-		[playerSeasonSnapshot]
+	// Registered means signed, plus paid under per-player pricing; the
+	// season decides which.
+	const isPlayerRegistered = useMemo(
+		() =>
+			isPlayerRegisteredForSeason(
+				playerSeasonSnapshot?.data(),
+				currentSeasonQueryDocumentSnapshot?.data()
+			),
+		[playerSeasonSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
 	const demoteFromCaptainOnClickHandler = useCallback(async () => {
@@ -237,9 +243,9 @@ export const ManageTeamRosterPlayer = ({
 					<div className='flex items-center gap-3 flex-shrink-0'>
 						<Badge
 							className={'select-none hover:bg-initial text-xs'}
-							variant={isPlayerPaid && isPlayerSigned ? 'secondary' : 'outline'}
+							variant={isPlayerRegistered ? 'secondary' : 'outline'}
 						>
-							{isPlayerPaid && isPlayerSigned ? 'registered' : 'unregistered'}
+							{isPlayerRegistered ? 'registered' : 'unregistered'}
 						</Badge>
 						{isAuthenticatedUserCaptain && (
 							<DropdownMenu>
