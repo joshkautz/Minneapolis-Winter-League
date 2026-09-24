@@ -29,11 +29,7 @@
 		"deploy": "firebase deploy",
 		"deploy:hosting": "firebase deploy --only hosting",
 		"deploy:functions": "firebase deploy --only functions",
-		"deploy:firestore": "firebase deploy --only firestore",
-		"script:backup": "cd Functions && npm run script:backup --",
-		"script:restore": "cd Functions && npm run script:restore --",
-		"script:cleanup-migration": "cd Functions && npm run script:cleanup-migration --",
-		"script:migrate-stripe": "cd Functions && npm run script:migrate-stripe --"
+		"deploy:firestore": "firebase deploy --only firestore"
 	},
 	"devDependencies": {
 		"@firebase/rules-unit-testing": "^5.0.2",
