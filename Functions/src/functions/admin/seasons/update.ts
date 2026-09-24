@@ -3,10 +3,14 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { FieldValue, getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, SeasonDocument, SeasonFormat } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
+import {
+	seasonHoldsTeamMoney,
+	validateTeamRegistrationTotal,
+} from '../../../shared/seasonPricing.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
 interface UpdateSeasonRequest {
@@ -24,6 +28,12 @@ interface UpdateSeasonRequest {
 	}
 	/** Season format - 'traditional' or 'swiss'. Defaults to 'traditional' */
 	format?: SeasonFormat
+	/**
+	 * Team payments total in cents. Omitted: unchanged, so a form that does
+	 * not know about it cannot clear it. A number: team payments at that
+	 * total. Null: back to per-player pricing.
+	 */
+	teamRegistrationTotalCents?: number | null
 }
 
 interface UpdateSeasonResponse {
@@ -40,6 +50,8 @@ interface UpdateSeasonResponse {
  * - Season must exist
  * - Season name must be 3-100 characters
  * - All date fields are required
+ * - A team registration total must be whole dollars, and cannot be changed
+ *   or removed while any team in the season holds money
  */
 export const updateSeason = onCall<UpdateSeasonRequest>(
 	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
@@ -55,6 +67,7 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 			registrationEnd,
 			stripe,
 			format,
+			teamRegistrationTotalCents,
 		} = data
 
 		// Validate inputs
@@ -121,23 +134,53 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 					}
 				: undefined
 
+			// Pricing. Only touched when the request says something about it.
+			let pricingUpdate: Record<string, number | FieldValue> = {}
+			if (teamRegistrationTotalCents !== undefined) {
+				const next =
+					teamRegistrationTotalCents === null
+						? undefined
+						: validateTeamRegistrationTotal(teamRegistrationTotalCents)
+				const current = (seasonDoc.data() as SeasonDocument)
+					.teamRegistrationTotalCents
+				if (next !== current) {
+					if (await seasonHoldsTeamMoney(firestore, seasonId)) {
+						throw new HttpsError(
+							'failed-precondition',
+							'Teams in this season are holding money, so its pricing ' +
+								'cannot change. Release their contributions first.'
+						)
+					}
+					pricingUpdate = {
+						teamRegistrationTotalCents:
+							next === undefined ? FieldValue.delete() : next,
+					}
+				}
+			}
+
 			// Update the season document
-			const updateData: Partial<SeasonDocument> = {
+			const updateData: Record<string, unknown> = {
 				name: name.trim(),
 				dateStart: dateStartTimestamp,
 				dateEnd: dateEndTimestamp,
 				registrationStart: registrationStartTimestamp,
 				registrationEnd: registrationEndTimestamp,
 				...(stripeConfig && { stripe: stripeConfig }),
-				// Store format (undefined means traditional for backward compatibility)
-				format: format === SeasonFormat.SWISS ? SeasonFormat.SWISS : undefined,
+				// Traditional is stored as no format at all. Deleted rather than
+				// written as undefined, which Firestore rejects — and did, for
+				// every traditional season, until this was noticed.
+				format:
+					format === SeasonFormat.SWISS
+						? SeasonFormat.SWISS
+						: FieldValue.delete(),
+				...pricingUpdate,
 			}
 
 			await seasonRef.update(updateData)
 
 			logger.info(`Season updated: ${seasonId}`, {
 				seasonId,
-				name: updateData.name,
+				name: name.trim(),
 				updatedBy: auth?.uid,
 			})
 
