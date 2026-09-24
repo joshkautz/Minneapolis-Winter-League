@@ -6,6 +6,12 @@
 			"runtimeExecutable": "npm",
 			"runtimeArgs": ["run", "dev:emulators", "--workspace=App"],
 			"port": 5173
+		},
+		{
+			"name": "app",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": ["run", "dev", "--workspace=App"],
+			"port": 5173
 		}
 	]
 }
