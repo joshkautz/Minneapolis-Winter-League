@@ -133,6 +133,22 @@ once per instance if that secret is missing, and returns a placeholder so the
 function still loads. A warning names a secret some code actually tried to
 use — declare it on that function.
 
+**The emulator runs against production.** `.firebaserc` has one real project,
+and a secret missing from `Functions/.secret.local` is fetched from
+production Secret Manager with your own credentials. So under the emulator
+(`FUNCTIONS_EMULATOR=true`) `environment.ts` refuses two of them:
+
+- **Dropbox Sign is off** unless you set `MWL_EMULATOR_USE_DROPBOX_SIGN=true`.
+  Seeding creates hundreds of roster entries, and each one fires
+  `onRosterEntryCreated`, which emails a waiver request to that seed player's
+  real address. `requestWaiver` returns `disabled-in-emulator` instead. On 24
+  September 2026, before this guard, one seeding run sent ten.
+- **A live Stripe key (`sk_live_`, `rk_live_`) is never used.** Put a
+  test-mode key in `.secret.local` to exercise payments locally.
+
+Dropbox Sign's errors all read "HTTP request failed"; log them through
+`describeDropboxSignError`, which adds the status and Dropbox Sign's reason.
+
 Static settings — region, CORS origins, team registration thresholds, the
 Stripe API version — are in `config/constants.ts`.
 

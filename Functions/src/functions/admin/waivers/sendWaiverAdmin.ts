@@ -23,7 +23,10 @@ import {
 } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { requestWaiver } from '../../../shared/waivers.js'
+import {
+	describeDropboxSignError,
+	requestWaiver,
+} from '../../../shared/waivers.js'
 
 interface SendWaiverAdminRequest {
 	/** Player's Firebase Auth UID */
@@ -160,6 +163,12 @@ export const sendWaiverAdmin = onCall<SendWaiverAdminRequest>(
 					'Failed to create signature request - no ID returned from Dropbox Sign'
 				)
 			}
+			if (result.outcome === 'disabled-in-emulator') {
+				throw new HttpsError(
+					'failed-precondition',
+					'Dropbox Sign is turned off in the local emulator.'
+				)
+			}
 
 			logger.info('Admin sent waiver to player', {
 				adminId: auth?.uid,
@@ -182,9 +191,9 @@ export const sendWaiverAdmin = onCall<SendWaiverAdminRequest>(
 				throw error
 			}
 
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
+			// Otherwise, log and convert to HttpsError. An admin sees Dropbox
+			// Sign's own reason, which is what they need to act on.
+			const errorMessage = describeDropboxSignError(error)
 
 			logger.error('Error sending waiver:', {
 				adminId: auth?.uid,

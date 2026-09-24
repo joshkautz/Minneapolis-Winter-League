@@ -13,6 +13,10 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { SignatureRequestApi, SubSigningOptions } from '@dropbox/sign'
 import { EMAIL_CONFIG, getDropboxSignConfig } from '../config/constants.js'
+import {
+	EMULATOR_DROPBOX_SIGN_OPT_IN,
+	isDropboxSignDisabledInEmulator,
+} from '../config/environment.js'
 import { Collections, PlayerDocument } from '../types.js'
 
 /** What `requestWaiver` did, so callers can log it without re-deriving it. */
@@ -21,6 +25,25 @@ export type WaiverRequestOutcome =
 	| { outcome: 'already-requested' }
 	| { outcome: 'no-player' }
 	| { outcome: 'no-signature-request-id' }
+	| { outcome: 'disabled-in-emulator' }
+
+/**
+ * What Dropbox Sign said went wrong. The SDK's error message is only ever
+ * "HTTP request failed"; the status and Dropbox Sign's own reason are on the
+ * error, and without them a failure cannot be diagnosed from the logs.
+ */
+export function describeDropboxSignError(error: unknown): string {
+	if (!(error instanceof Error)) return 'Unknown error'
+	const { statusCode, body } = error as Error & {
+		statusCode?: number
+		body?: { error?: { errorName?: string; errorMsg?: string } }
+	}
+	const reason = body?.error
+	if (statusCode === undefined && !reason) return error.message
+	return [statusCode, reason?.errorName, reason?.errorMsg ?? error.message]
+		.filter((part) => part !== undefined && part !== '')
+		.join(' ')
+}
 
 /**
  * Sends a player their waiver for a season, unless they already have one.
@@ -66,6 +89,14 @@ export async function requestWaiver(
 			seasonId,
 		})
 		return { outcome: 'no-player' }
+	}
+
+	if (isDropboxSignDisabledInEmulator()) {
+		logger.info(
+			`Not requesting a waiver: Dropbox Sign is off under the emulator (${EMULATOR_DROPBOX_SIGN_OPT_IN})`,
+			{ playerId, seasonId }
+		)
+		return { outcome: 'disabled-in-emulator' }
 	}
 
 	const dropboxConfig = getDropboxSignConfig()

@@ -162,6 +162,12 @@ npx kill-port 5173 4000 8080 5001 9099 9199
 **The app shows no data.** There is no seed data. Run `npm run seed`, or
 `npm run seed:attach` if the emulators are already up.
 
+**Waiver and payment calls fail locally.** By design: the emulator refuses the
+Dropbox Sign key unless `MWL_EMULATOR_USE_DROPBOX_SIGN=true`, and never uses
+a live Stripe key, because it runs against the production project and would
+otherwise send real waiver emails to seed players. See
+`docs/functions/README.md`.
+
 **Seeding fails with `Cannot read properties of undefined (reading 'id')`.**
 `seed.js` builds players from existing Auth users, so `generate-accounts.js`
 must run first. `npm run seed` does both in order; running `node

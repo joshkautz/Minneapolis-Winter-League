@@ -18,7 +18,10 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
-import { requestWaiver } from '../../shared/waivers.js'
+import {
+	describeDropboxSignError,
+	requestWaiver,
+} from '../../shared/waivers.js'
 
 export const onRosterEntryCreated = onDocumentCreated(
 	{
@@ -60,7 +63,7 @@ export const onRosterEntryCreated = onDocumentCreated(
 				teamId,
 				seasonId,
 				playerId,
-				error: error instanceof Error ? error.message : 'Unknown error',
+				error: describeDropboxSignError(error),
 			})
 			throw error
 		}

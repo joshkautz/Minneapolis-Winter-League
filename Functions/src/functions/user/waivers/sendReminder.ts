@@ -5,11 +5,15 @@
  * This is the correct and performant way to remind users about pending signatures,
  * as opposed to creating a new signature request.
  *
+ * A rostered player with no waiver at all — `onRosterEntryCreated` gave up, or
+ * Dropbox Sign was unavailable when they joined — is sent one instead. Without
+ * that, a trigger whose retries ran out left the player no way to get a waiver.
+ *
  * Security validations performed:
  * - User must be authenticated and email verified
  * - User must not be banned for the current season
  * - User can only send reminders for their own signature requests
- * - Signature request ID must exist in the waivers collection
+ * - A new waiver is issued only to a player on a roster for the current season
  * - Waiver must belong to the authenticated user
  * - Registration must be open (between registrationStart and registrationEnd)
  *
@@ -33,8 +37,12 @@ import {
 	validateAuthentication,
 	validateNotBanned,
 } from '../../../shared/auth.js'
-import { getCurrentSeason } from '../../../shared/database.js'
+import { getCurrentSeason, playerSeasonRef } from '../../../shared/database.js'
 import { formatDateForUser } from '../../../shared/format.js'
+import {
+	describeDropboxSignError,
+	requestWaiver,
+} from '../../../shared/waivers.js'
 import {
 	SignatureRequestApi,
 	SignatureRequestRemindRequest,
@@ -119,12 +127,63 @@ export const sendWaiverReminder = onCall<SendWaiverReminderRequest>(
 				}
 			}
 
-			// Validate waiver exists
+			// No waiver yet: issue one if they are on a team, since joining a
+			// roster is what entitles a player to a waiver.
 			if (waiverQuery.empty) {
-				throw new HttpsError(
-					'not-found',
-					'No waiver found for this season. Please complete payment first.'
-				)
+				const playerSeason = await playerSeasonRef(
+					firestore,
+					userId,
+					seasonId
+				).get()
+				if (!playerSeason.data()?.team) {
+					throw new HttpsError(
+						'failed-precondition',
+						'Your waiver is emailed when you join a team for this season.'
+					)
+				}
+
+				let issued
+				try {
+					issued = await requestWaiver(firestore, {
+						playerId: userId,
+						seasonId,
+					})
+				} catch (dropboxError) {
+					logger.error('Dropbox Sign API error issuing a waiver', {
+						userId,
+						seasonId,
+						error: describeDropboxSignError(dropboxError),
+					})
+					throw new HttpsError(
+						'unavailable',
+						'We could not send your waiver right now. Please try again later.'
+					)
+				}
+
+				if (issued.outcome === 'disabled-in-emulator') {
+					throw new HttpsError(
+						'failed-precondition',
+						'Dropbox Sign is turned off in the local emulator.'
+					)
+				}
+				if (
+					issued.outcome !== 'sent' &&
+					issued.outcome !== 'already-requested'
+				) {
+					throw new HttpsError('internal', 'Unable to issue your waiver')
+				}
+
+				logger.info('Waiver issued from the resend button', {
+					userId,
+					seasonId,
+					outcome: issued.outcome,
+				})
+				return {
+					success: true,
+					message: 'Waiver email sent',
+					signatureRequestId:
+						issued.outcome === 'sent' ? issued.signatureRequestId : undefined,
+				}
 			}
 
 			const waiverData = waiverQuery.docs[0].data() as
@@ -167,12 +226,12 @@ export const sendWaiverReminder = onCall<SendWaiverReminderRequest>(
 				logger.error('Dropbox Sign API error', {
 					userId,
 					signatureRequestId,
-					error:
-						dropboxError instanceof Error
-							? dropboxError.message
-							: 'Unknown error',
+					error: describeDropboxSignError(dropboxError),
 				})
-				throw dropboxError
+				throw new HttpsError(
+					'unavailable',
+					'We could not resend your waiver right now. Please try again later.'
+				)
 			}
 
 			logger.info('Waiver reminder email sent', {

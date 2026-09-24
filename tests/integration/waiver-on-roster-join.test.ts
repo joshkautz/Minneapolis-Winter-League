@@ -211,6 +211,26 @@ describe('onRosterEntryCreated', () => {
 		await expect(onRosterEntryCreated.run(joinEvent())).rejects.toThrow()
 	})
 
+	it('does not call Dropbox Sign under the emulator unless opted in', async () => {
+		// Seeding the emulator creates hundreds of roster entries, each of
+		// which fired this trigger and emailed a real waiver request to the
+		// seed player's real address (24 September 2026).
+		vi.stubEnv('FUNCTIONS_EMULATOR', 'true')
+		try {
+			await onRosterEntryCreated.run(joinEvent())
+
+			expect(sendWithTemplate).not.toHaveBeenCalled()
+			expect(await readWaivers()).toHaveLength(0)
+
+			vi.stubEnv('MWL_EMULATOR_USE_DROPBOX_SIGN', 'true')
+			await onRosterEntryCreated.run(joinEvent())
+
+			expect(sendWithTemplate).toHaveBeenCalledTimes(1)
+		} finally {
+			vi.unstubAllEnvs()
+		}
+	})
+
 	it('does not run while a migration is in progress', async () => {
 		await firestore
 			.collection('system')

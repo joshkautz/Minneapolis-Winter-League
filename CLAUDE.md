@@ -88,6 +88,12 @@ already allowed.
 
 ## Gotchas
 
+- The Functions emulator runs against the **production** project and pulls
+  any secret missing from `Functions/.secret.local` from production Secret
+  Manager. `config/environment.ts` therefore turns Dropbox Sign off under the
+  emulator (opt in with `MWL_EMULATOR_USE_DROPBOX_SIGN=true`) and refuses a
+  live Stripe key. Seeding with the Functions emulator running used to email
+  real waiver requests to seed players' addresses.
 - The root `package.json` has an `overrides` entry pinning `re2`. npm will not
   move a transitive that already satisfies its parent's range, so a security
   bump to a nested package needs an override. Drop the entry once
