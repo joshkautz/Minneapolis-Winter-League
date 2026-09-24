@@ -62,6 +62,12 @@ interface TeamBadgesDialogProps {
 	teamId: string
 	teamName: string
 	teamRef: DocumentReference<TeamDocument>
+	/**
+	 * The season being viewed in Team Management. A badge records the season
+	 * it was won in; without this the server would use the current one, so a
+	 * past season's award landed on this season.
+	 */
+	seasonId: string
 }
 
 export const TeamBadgesDialog = ({
@@ -70,6 +76,7 @@ export const TeamBadgesDialog = ({
 	teamId,
 	teamName,
 	teamRef,
+	seasonId,
 }: TeamBadgesDialogProps) => {
 	// Fetch team's badges
 	const [teamBadgesSnapshot, teamBadgesLoading, teamBadgesError] =
@@ -201,6 +208,7 @@ export const TeamBadgesDialog = ({
 			const result = await awardBadgeViaFunction({
 				badgeId,
 				teamId,
+				seasonId,
 			})
 			toast.success(result.message)
 		} catch (error) {

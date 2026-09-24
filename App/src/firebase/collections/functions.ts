@@ -332,12 +332,12 @@ interface RosterChangesRequest {
  * Request interface for updating a team (admin)
  */
 interface UpdateTeamAdminRequest {
-	/** Team's Firestore document ID */
-	teamDocId: string
+	/** Canonical team id */
+	teamId: string
+	/** The season being edited; name and roster are per season */
+	seasonId: string
 	/** New team name (optional) */
 	name?: string
-	/** New teamId to link this team with another team's history (optional) */
-	linkToTeamId?: string
 	/** Roster changes (optional) */
 	rosterChanges?: RosterChangesRequest
 }
@@ -347,11 +347,11 @@ interface UpdateTeamAdminRequest {
  */
 interface UpdateTeamAdminResponse {
 	success: true
-	teamDocId: string
+	teamId: string
+	seasonId: string
 	message: string
 	changes: {
 		name?: { from: string; to: string }
-		teamId?: { from: string; to: string }
 		rosterAdded?: string[]
 		rosterRemoved?: string[]
 		captainChanges?: { playerId: string; from: boolean; to: boolean }[]
@@ -359,8 +359,8 @@ interface UpdateTeamAdminResponse {
 }
 
 /**
- * Updates a team via Firebase Function (Admin only)
- * Supports: name changes, team linking (teamId), roster management
+ * Updates a team's season via Firebase Function (Admin only): its name and
+ * its roster.
  */
 export const updateTeamAdminViaFunction = async (
 	data: UpdateTeamAdminRequest
@@ -740,7 +740,6 @@ interface CreateSeasonRequest {
 	dateEnd: Date
 	registrationStart: Date
 	registrationEnd: Date
-	teamIds?: string[]
 	stripe?: {
 		priceId: string
 		priceIdDev?: string
@@ -786,7 +785,6 @@ interface UpdateSeasonRequest {
 	dateEnd: Date
 	registrationStart: Date
 	registrationEnd: Date
-	teamIds?: string[]
 	stripe?: {
 		priceId: string
 		priceIdDev?: string
@@ -961,6 +959,8 @@ export const deleteBadgeViaFunction = async (
 export interface AwardBadgeRequest {
 	badgeId: string
 	teamId: string
+	/** The season the badge was won in; the server defaults to the current one. */
+	seasonId?: string
 }
 
 export interface AwardBadgeResponse {

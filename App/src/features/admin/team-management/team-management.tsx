@@ -151,7 +151,6 @@ export const TeamManagement = () => {
 	const [teamToEdit, setTeamToEdit] = useState<{
 		id: string
 		name: string
-		ref: DocumentReference<TeamDocument>
 		seasonId: string
 	} | null>(null)
 
@@ -246,7 +245,6 @@ export const TeamManagement = () => {
 		setTeamToEdit({
 			id: team.id,
 			name: team.name,
-			ref: team.ref,
 			seasonId: selectedSeasonId,
 		})
 	}
@@ -724,6 +722,7 @@ export const TeamManagement = () => {
 					teamId={teamForBadges.id}
 					teamName={teamForBadges.name}
 					teamRef={teamForBadges.ref}
+					seasonId={selectedSeasonId}
 				/>
 			)}
 
@@ -745,7 +744,6 @@ export const TeamManagement = () => {
 					onOpenChange={(open) => !open && setTeamToEdit(null)}
 					teamDocId={teamToEdit.id}
 					teamName={teamToEdit.name}
-					teamRef={teamToEdit.ref}
 					seasonId={teamToEdit.seasonId}
 				/>
 			)}

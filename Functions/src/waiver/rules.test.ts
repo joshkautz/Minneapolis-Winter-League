@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { FIREBASE_CONFIG } from '../config/constants.js'
 import {
+	LEAGUE_TIME_ZONE,
 	ageOn,
 	isIsoDate,
 	isMinorOn,
@@ -62,6 +64,12 @@ describe('ageOn', () => {
 	it('treats 18 as an adult and 17 as a minor', () => {
 		expect(isMinorOn('2008-10-01', '2026-10-01')).toBe(false)
 		expect(isMinorOn('2008-10-02', '2026-10-01')).toBe(true)
+	})
+})
+
+describe('LEAGUE_TIME_ZONE', () => {
+	it('matches the Functions config, which this file cannot import', () => {
+		expect(LEAGUE_TIME_ZONE).toBe(FIREBASE_CONFIG.TIME_ZONE)
 	})
 })
 

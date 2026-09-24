@@ -48,8 +48,12 @@ whole settlement lifecycle: capture on registration, release on the
 twelve-team lock and when registration closes, capture before expiry, an
 admin release, and a daily reconciliation with Stripe; the team payment card
 on My Team and the admin payments view, and cutover: 2026 Fall carries a
-$1,000 total and the home page describes it. Left: rehearsing the
-twelve-team race on the emulators before registration opens on 1 October.
+$1,000 total and the home page describes it. The twelve-team race was
+rehearsed on the emulators on 24 September 2026
+(`scripts/rehearse-registration-race.js`): fifteen simultaneous final
+signatures registered exactly twelve teams. Left: one real contribution on
+1 October, released from the admin payments dialog, to prove the live Stripe
+path.
 
 Three decisions carry it:
 

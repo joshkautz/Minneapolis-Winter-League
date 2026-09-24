@@ -729,7 +729,8 @@ Before setting `teamRegistrationTotalCents` on the new season:
 - **Set the total on the season.** The admin season form has a Pricing
   control — per player, or per team with a total in whole dollars. Once any
   team in the season holds money, the pricing cannot change.
-- **Rehearse the race** described under testing, on the emulators.
+- **Rehearse the race** described under testing, on the emulators. Done 24
+  September 2026 with `scripts/rehearse-registration-race.js`.
 
 Turn the flag on for the new season. The old rule stays available for any
 season still using it.
@@ -759,6 +760,14 @@ twelve register, that the other three are cancelled rather than refunded, and
 that no team ends up registered without the full amount. That rehearsal is
 worth more than any single test in the suite, because the failure it is
 looking for only appears under concurrency.
+
+`scripts/rehearse-registration-race.js` does it through the real callables
+and triggers: 150 players, fifteen teams with $1,000 committed each, nine
+waivers per team, then the tenth on all fifteen at once. Its header has the
+commands. The emulator cannot reach Stripe (a live key is refused there), so
+it proves the cap, not settlement: registered teams keep their holds
+authorized and the three losers stay in place, the path taken when a release
+fails. The first run, on 24 September 2026, registered exactly twelve.
 
 ## Migration
 

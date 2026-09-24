@@ -28,7 +28,6 @@ import {
 import { toast } from 'sonner'
 
 import { firestore } from '@/firebase/app'
-import { DocumentReference } from '@/firebase'
 import { logger } from '@/shared/utils'
 import {
 	getTeamRef,
@@ -60,7 +59,6 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { updateTeamAdminViaFunction } from '@/firebase/collections/functions'
 import {
-	TeamDocument,
 	PlayerDocument,
 	PlayerSeasonDocument,
 	Collections,
@@ -73,7 +71,6 @@ interface TeamEditDialogProps {
 	onOpenChange: (open: boolean) => void
 	teamDocId: string
 	teamName: string
-	teamRef: DocumentReference<TeamDocument>
 	seasonId: string
 }
 
@@ -82,10 +79,8 @@ export const TeamEditDialog = ({
 	onOpenChange,
 	teamDocId,
 	teamName: initialTeamName,
-	teamRef,
 	seasonId,
 }: TeamEditDialogProps) => {
-	void teamRef
 	// Fetch team season subdoc for real-time data
 	const [teamSeasonSnapshot, teamLoading, teamError] = useDocument(
 		open ? teamSeasonRef(teamDocId, seasonId) : null
@@ -173,8 +168,13 @@ export const TeamEditDialog = ({
 					where('captain', '==', true)
 				) as Query<PlayerSeasonDocument>
 				const snap = await getDocs(captainsQuery)
+				// The query spans every season this team has played, so keep only
+				// this one's: a player-season's id is its season id. Without this,
+				// last season's captain showed as a captain now.
 				const captainIds = new Set(
-					snap.docs.map((d) => canonicalPlayerIdFromPlayerSeasonDoc(d))
+					snap.docs
+						.filter((d) => d.id === seasonId)
+						.map((d) => canonicalPlayerIdFromPlayerSeasonDoc(d))
 				)
 				const map = Object.fromEntries(
 					currentRoster.map((r) => [r.player.id, captainIds.has(r.player.id)])
@@ -265,7 +265,8 @@ export const TeamEditDialog = ({
 		setIsSavingName(true)
 		try {
 			await updateTeamAdminViaFunction({
-				teamDocId,
+				teamId: teamDocId,
+				seasonId,
 				name: teamName.trim(),
 			})
 			toast.success('Team name updated')
@@ -277,7 +278,7 @@ export const TeamEditDialog = ({
 		} finally {
 			setIsSavingName(false)
 		}
-	}, [teamName, initialTeamName, teamDocId])
+	}, [teamName, initialTeamName, teamDocId, seasonId])
 
 	// Handle add player
 	const handleAddPlayer = useCallback(
@@ -285,7 +286,8 @@ export const TeamEditDialog = ({
 			setAddingPlayerId(playerId)
 			try {
 				await updateTeamAdminViaFunction({
-					teamDocId,
+					teamId: teamDocId,
+					seasonId,
 					rosterChanges: {
 						addPlayers: [{ playerId, captain: false }],
 					},
@@ -301,7 +303,7 @@ export const TeamEditDialog = ({
 				setAddingPlayerId(null)
 			}
 		},
-		[teamDocId]
+		[teamDocId, seasonId]
 	)
 
 	// Handle remove player
@@ -311,7 +313,8 @@ export const TeamEditDialog = ({
 		setIsRemovingPlayer(true)
 		try {
 			await updateTeamAdminViaFunction({
-				teamDocId,
+				teamId: teamDocId,
+				seasonId,
 				rosterChanges: {
 					removePlayers: [playerToRemove.playerId],
 				},
@@ -326,7 +329,7 @@ export const TeamEditDialog = ({
 		} finally {
 			setIsRemovingPlayer(false)
 		}
-	}, [playerToRemove, teamDocId])
+	}, [playerToRemove, teamDocId, seasonId])
 
 	// Handle captain toggle
 	const handleCaptainToggle = useCallback(
@@ -342,7 +345,8 @@ export const TeamEditDialog = ({
 			setCaptainChangeInProgress(playerId)
 			try {
 				await updateTeamAdminViaFunction({
-					teamDocId,
+					teamId: teamDocId,
+					seasonId,
 					rosterChanges: {
 						updateCaptainStatus: [{ playerId, captain: !currentCaptain }],
 					},
@@ -361,7 +365,7 @@ export const TeamEditDialog = ({
 				setCaptainChangeInProgress(null)
 			}
 		},
-		[teamDocId, captainCount]
+		[teamDocId, seasonId, captainCount]
 	)
 
 	const hasNameChanges = teamName.trim() !== initialTeamName
@@ -464,6 +468,11 @@ export const TeamEditDialog = ({
 																	? 'Remove captain status'
 																	: 'Promote to captain'
 															}
+															aria-label={`${
+																player.captain
+																	? 'Remove captain status from'
+																	: 'Promote to captain:'
+															} ${player.playerName}`}
 														>
 															{captainChangeInProgress === player.playerId ? (
 																<Loader2 className='h-4 w-4 animate-spin' />
@@ -485,6 +494,7 @@ export const TeamEditDialog = ({
 																})
 															}
 															title='Remove from team'
+															aria-label={`Remove ${player.playerName} from team`}
 														>
 															<Trash2 className='h-4 w-4' />
 														</Button>

@@ -7,6 +7,12 @@ import { getStripeSecretKey, getStripeWebhookSecret } from './environment.js'
 // Firebase Configuration (static - no env vars needed)
 export const FIREBASE_CONFIG = {
 	REGION: 'us-central1',
+	/**
+	 * The league plays in Minneapolis: schedules run on its clock, and dates
+	 * in messages are shown in it unless the caller sends its own zone.
+	 * `waiver/rules.ts` holds the same value, since that file cannot import.
+	 */
+	TIME_ZONE: 'America/Chicago',
 	CORS_ORIGINS: [
 		'https://mplswinterleague.com',
 		'https://www.mplswinterleague.com',

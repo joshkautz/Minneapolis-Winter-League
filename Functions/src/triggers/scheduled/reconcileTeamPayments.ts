@@ -20,7 +20,7 @@ import { reconcileTeamPayments } from '../../services/teamPaymentsReconciliation
 export const reconcileTeamPaymentsDaily = onSchedule(
 	{
 		schedule: 'every day 04:00',
-		timeZone: 'America/Chicago',
+		timeZone: FIREBASE_CONFIG.TIME_ZONE,
 		region: FIREBASE_CONFIG.REGION,
 		secrets: ['STRIPE_SECRET_KEY'],
 		timeoutSeconds: 540,
