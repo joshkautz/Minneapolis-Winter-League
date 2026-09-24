@@ -1,25 +1,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from 'react-router-dom'
+import { ShieldCheck } from 'lucide-react'
 import { Snowflake } from './snowflake'
 
 /**
  * LeagueDetailsSection Component
  *
- * Contains the league overview, season details card, and information
- * about individuals and teams. Extracted from main Home component.
+ * Contains the league overview, the season details card, and how teams
+ * register. Extracted from main Home component.
  */
 export const LeagueDetailsSection = () => {
 	return (
 		<div
 			className={
-				'w-full min-h-screen bg-background text-foreground dark:text-background dark:bg-foreground'
+				'w-full bg-background text-foreground dark:text-background dark:bg-foreground'
 			}
 		>
-			<section id='league-details' className={'container pb-40'}>
+			<section id='league-details' className={'container pb-32'}>
 				<div className='flex flex-row'>
 					<Snowflake className='-mt-32 max-w-[400px] flex-1 basis-[80px] shrink-0 fill-accent z-10 hidden lg:flex' />
 
-					<div className={'flex flex-col flex-2 items-end gap-2 pt-24'}>
+					<div className={'flex flex-col flex-2 items-end gap-2 pt-16'}>
 						<p className={'text-4xl font-bold max-w-[800px]'}>
 							Our league is about community, growth, competition, and a whole
 							lot of fun.
@@ -33,7 +34,11 @@ export const LeagueDetailsSection = () => {
 						</div>
 					</div>
 				</div>
-				<div className={'flex flex-wrap items-center gap-20 mt-32 w-full'}>
+				<div
+					className={
+						'flex flex-wrap items-center gap-12 lg:gap-20 mt-16 w-full'
+					}
+				>
 					<Card
 						className={
 							'flex flex-col flex-1 basis-[320px] shrink-0 rounded-2xl bg-section-invert text-section-invert-foreground border-off-white/20'
@@ -92,49 +97,37 @@ export const LeagueDetailsSection = () => {
 						</CardContent>
 					</Card>
 					<div
-						className={'flex flex-col flex-1 gap-12 p-8 basis-[320px] shrink-0'}
+						className={'flex flex-col flex-1 gap-6 p-8 basis-[320px] shrink-0'}
 					>
-						<div className={'flex flex-col gap-4'}>
-							<p className={'text-2xl font-bold'}>Individuals</p>
+						<p className={'text-2xl font-bold'}>Teams</p>
+						<p>
+							Minneapolis Winter League has room for <b>12 teams</b>, with a{' '}
+							<b>10-player minimum</b> and no roster maximum. A team registers
+							once <b>10 of its players have signed their waiver</b> and the
+							team has committed <b>$1,000</b>, split however it likes. The
+							first twelve teams to do both are in.
+						</p>
+						<div className='flex gap-3 rounded-xl border border-accent/60 bg-accent/15 p-4'>
+							<ShieldCheck
+								className='h-6 w-6 shrink-0 text-accent'
+								aria-hidden='true'
+							/>
 							<p>
-								{`If you're a solo player looking for a team, don't worry! Send some requests out to existing teams and see where you end up. There's nothing to pay on your own: teams pay together, and each team decides how to split its fee.`}
-								{` `}
-								<Link to={'/#how-to-register'}>
-									<u>Learn more about registration below.</u>
-								</Link>
+								<b>
+									Didn&apos;t get a spot? You&apos;re always fully refunded.
+								</b>{' '}
+								Payments are only held on the card until your team is confirmed,
+								so a team that misses out gets every dollar back, usually
+								without ever being charged.
 							</p>
 						</div>
-						<div className={'flex flex-col gap-4'}>
-							<p className={'text-2xl font-bold'}>Teams</p>
-							<p>
-								Minneapolis Winter League has room for <b>12 teams.</b> Be sure
-								to register your team before space fills up. There is a{' '}
-								<b>10-player minimum</b> requirement for teams, with{' '}
-								<u>no roster maximum.</u> A team registers once{' '}
-								<b>10 of its players have signed their waiver</b> and the team
-								has committed <b>$1,000</b>, split however it likes. The first
-								twelve teams to do both are registered. If your team does not
-								get one of the twelve spots:
-							</p>
-							<ul>
-								<li>
-									1. Your team&apos;s payment is returned in full. Payments are
-									held on the card until a team is confirmed, so usually it is
-									simply released and nobody is charged.
-								</li>
-								<li>
-									2. Your players can still request a roster spot on a
-									registered team.
-								</li>
-							</ul>
-							<p>
-								Visit the{' '}
-								<Link to={'/teams'}>
-									<u>Teams</u>
-								</Link>{' '}
-								page to see how many teams are currently fully registered.
-							</p>
-						</div>
+						<p>
+							Visit the{' '}
+							<Link to={'/teams'}>
+								<u>Teams</u>
+							</Link>{' '}
+							page to see how many teams are registered so far.
+						</p>
 					</div>
 				</div>
 			</section>

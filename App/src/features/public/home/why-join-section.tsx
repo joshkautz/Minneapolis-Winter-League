@@ -13,7 +13,7 @@ export const WhyJoinSection = () => {
 			<section
 				id='why-join'
 				className={
-					'relative bg-accent text-accent-foreground min-h-[600px] rounded-2xl max-w-[968px] mx-auto -mt-20 p-8 lg:py-16 lg:px-0'
+					'relative bg-accent text-accent-foreground rounded-2xl max-w-[968px] mx-auto -mt-20 p-8 lg:py-12 lg:px-0'
 				}
 			>
 				<div className={'flex flex-col gap-8 max-w-[800px] mx-auto'}>
@@ -49,7 +49,7 @@ export const WhyJoinSection = () => {
 							</div>
 						</div>
 					</div>
-					<div className={'mt-8 text-2xl font-light '}>
+					<div className={'mt-4 text-2xl font-light '}>
 						{`Whether you're perfecting your throws, working on your defense, or
 						just out to have a great time, `}
 						<span className={'font-bold'}>

@@ -43,7 +43,7 @@ export const RegistrationSection = () => {
 			<section
 				id='how-to-register'
 				className={
-					'my-32 flex justify-center md:items-stretch gap-8 flex-col md:flex-row items-center'
+					'my-20 flex justify-center md:items-stretch gap-8 flex-col md:flex-row items-center'
 				}
 			>
 				<div className='group flex items-center justify-center flex-1 rounded-lg overflow-hidden bg-section-invert/80 max-w-[500px] cursor-pointer'>
