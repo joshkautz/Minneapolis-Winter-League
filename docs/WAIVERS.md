@@ -39,7 +39,13 @@ it needs Node's crypto.
 
 Records are private to the player and admins (`firestore.rules`) because of
 the personal data, unlike the public player document they sit under. They are
-never edited or deleted; a correction is a new record.
+never edited or deleted; a correction is a new record. Deleting an account
+removes the player document and player-seasons but keeps these records, as
+it always kept the Dropbox Sign ones: a release matters most after someone
+has left.
+
+Seasons signed before September 2026 went through Dropbox Sign; their
+records are in `dropbox/{uid}/waivers`, kept read-only as history.
 
 A returning player's form is filled in from their last signature, except the
 signature itself, which is always typed again.

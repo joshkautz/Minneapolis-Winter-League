@@ -35,7 +35,7 @@ src/
 │       └── paymentCreated.ts # Payment processing
 ├── api/                      # HTTP endpoints and webhooks
 │   └── webhooks/
-│       └── dropboxSign.ts    # Dropbox Sign callback handler
+│       └── stripe.ts         # Stripe webhook handler
 ├── functions/                # Callable functions by domain
 │   ├── players/
 │   │   ├── create.ts         # Create player
@@ -77,7 +77,7 @@ src/
 **Pattern**: Request/response cycle
 **Organization**: By integration type
 
-- **Webhooks**: External service callbacks (Dropbox Sign, Stripe)
+- **Webhooks**: External service callbacks (Stripe)
 
 ### 3. Callable Functions (`functions/`)
 

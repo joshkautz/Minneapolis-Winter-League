@@ -19,11 +19,9 @@ export {
 	ErrorType,
 	extractErrorMessage,
 	isFirebaseFunctionsError,
-	isDropboxHttpError,
 } from './error-handler'
 export type {
 	AppError,
 	ErrorHandlerOptions,
 	FirebaseFunctionsError,
-	DropboxHttpError,
 } from './error-handler'

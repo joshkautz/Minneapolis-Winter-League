@@ -27,7 +27,7 @@
  * - Team management (CRUD operations)
  * - Offer management (invitation/request system)
  * - Storage management (file upload/download)
- * - Waiver management (reminder emails)
+ * - Waivers (signing in the app)
  * - Posts management (create/update posts and replies)
  *
  * This organization provides:
@@ -53,7 +53,6 @@ export { userDeleted } from './triggers/auth/userDeleted.js'
 export { onOfferUpdated } from './triggers/documents/offerUpdated.js'
 export { updateTeamRegistrationOnPlayerChange } from './triggers/documents/playerUpdated.js'
 export { updateTeamRegistrationOnRosterChange } from './triggers/documents/teamUpdated.js'
-export { onRosterEntryCreated } from './triggers/documents/rosterEntryCreated.js'
 export { updateTeamRegistrationOnContributionChange } from './triggers/documents/contributionWritten.js'
 export { onTeamRegistrationChange } from './triggers/documents/teamRegistrationLock.js'
 
@@ -69,7 +68,6 @@ export { reconcileTeamPaymentsDaily } from './triggers/scheduled/reconcileTeamPa
 //////////////////////////////////////////////////////////////////////////////
 
 // Webhooks
-export { dropboxSignWebhook } from './api/webhooks/dropboxSign.js'
 export { stripeWebhook } from './api/webhooks/stripe.js'
 
 //////////////////////////////////////////////////////////////////////////////
@@ -128,10 +126,6 @@ export { rebuildPlayerRankings } from './functions/admin/rankings/rebuildPlayerR
 
 // Waiver functions (user-accessible)
 export { signWaiver } from './functions/user/waivers/sign.js'
-export { sendWaiverReminder } from './functions/user/waivers/sendReminder.js'
-
-// Waiver management functions (admin-only)
-export { sendWaiverAdmin } from './functions/admin/waivers/sendWaiverAdmin.js'
 
 // Payment functions (user-accessible)
 export { createStripeCheckout } from './functions/user/payments/createStripeCheckout.js'

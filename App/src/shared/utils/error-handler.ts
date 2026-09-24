@@ -16,7 +16,6 @@ export enum ErrorType {
 	VALIDATION = 'validation',
 	NETWORK = 'network',
 	FIREBASE = 'firebase',
-	DROPBOX = 'dropbox',
 	UNEXPECTED = 'unexpected',
 }
 
@@ -25,17 +24,7 @@ export enum ErrorType {
  */
 export interface FirebaseFunctionsError {
 	code: string
-	details?: {
-		body?: { error?: { errorMsg?: string } }
-	}
 	message?: string
-}
-
-/**
- * Dropbox Sign HTTP error structure
- */
-export interface DropboxHttpError {
-	body?: { error?: { errorMsg?: string } }
 }
 
 /**
@@ -53,36 +42,14 @@ export function isFirebaseFunctionsError(
 }
 
 /**
- * Type guard to check if error is a Dropbox HTTP error
- */
-export function isDropboxHttpError(err: unknown): err is DropboxHttpError {
-	return (
-		typeof err === 'object' &&
-		err !== null &&
-		'body' in err &&
-		typeof (err as DropboxHttpError).body === 'object'
-	)
-}
-
-/**
  * Extract a user-friendly error message from various error types
  */
 export function extractErrorMessage(
 	error: unknown,
 	fallback = 'An unexpected error occurred'
 ): string {
-	if (isFirebaseFunctionsError(error)) {
-		// Try to get message from Dropbox error wrapped in Firebase
-		const dropboxMsg = error.details?.body?.error?.errorMsg
-		if (dropboxMsg) return dropboxMsg
-
-		// Fall back to Firebase error message
-		if (error.message) return error.message
-	}
-
-	if (isDropboxHttpError(error)) {
-		const dropboxMsg = error.body?.error?.errorMsg
-		if (dropboxMsg) return dropboxMsg
+	if (isFirebaseFunctionsError(error) && error.message) {
+		return error.message
 	}
 
 	if (error instanceof Error) {

@@ -22,8 +22,6 @@ const RETRIED = [
 	'updateTeamRegistrationOnContributionChange',
 	'updateTeamRegistrationOnPlayerChange',
 	'updateTeamRegistrationOnRosterChange',
-	// A lost waiver request leaves a player unable to register, silently.
-	'onRosterEntryCreated',
 	// Runs after a player has been charged.
 	'onPaymentCreated',
 	// Captures a registered team's money and releases everyone else's.

@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
 import { playerSeasonRef } from '../../Functions/src/shared/database.js'
@@ -6,27 +6,8 @@ import { playerSeasonRef } from '../../Functions/src/shared/database.js'
 /**
  * onPaymentCreated is the most consequential trigger in the codebase: it runs
  * after a player has actually been charged. If it fails, someone has paid and
- * has neither a paid flag nor a waiver to sign, and nothing surfaces that to
- * them or to an admin.
- *
- * Dropbox Sign is stubbed — these tests cover our logic around it, not their
- * API. The stub also lets the tests assert what we *send*, which is how the
- * webhook later finds the player: the signature request carries firebaseUID
- * and seasonId as metadata, and a wrong value there orphans the waiver.
+ * has no paid flag, and nothing surfaces that to them or to an admin.
  */
-
-const sendWithTemplate = vi.fn()
-
-// Partial mock: only SignatureRequestApi is replaced. The rest of the SDK
-// stays real because importing the deploy manifest also pulls in
-// dropboxSign.ts, which needs EventCallbackRequestEvent at module load.
-vi.mock('@dropbox/sign', async (importOriginal) => ({
-	...(await importOriginal<Record<string, unknown>>()),
-	SignatureRequestApi: class {
-		username = ''
-		signatureRequestSendWithTemplate = sendWithTemplate
-	},
-}))
 
 let firestore: Firestore
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,16 +41,10 @@ const seedPayment = async (
 		.set({ status, amount: 5000, created: Timestamp.now() })
 }
 
-const readWaivers = async (uid = UID) =>
-	(
-		await firestore.collection('dropbox').doc(uid).collection('waivers').get()
-	).docs.map((d) => d.data())
-
 const readPlayerSeason = async (seasonId = CURRENT_SEASON) =>
 	(await playerSeasonRef(firestore, UID, seasonId).get()).data()
 
 beforeAll(async () => {
-	process.env.DROPBOX_SIGN_API_KEY ??= 'test-dropbox-key'
 	firestore = initTestApp()
 	manifest = (await import('../../Functions/src/index.js')) as Record<
 		string,
@@ -79,10 +54,6 @@ beforeAll(async () => {
 
 beforeEach(async () => {
 	await resetFirestore(firestore)
-	vi.clearAllMocks()
-	sendWithTemplate.mockResolvedValue({
-		body: { signatureRequest: { signatureRequestId: 'sig-req-1' } },
-	})
 
 	// getCurrentSeason() picks the newest by dateStart.
 	await seasonRef(OLD_SEASON).set({
@@ -108,18 +79,6 @@ describe('onPaymentCreated', () => {
 		await fire()
 
 		expect((await readPlayerSeason())?.paid).toBe(true)
-	})
-
-	it('does not send a waiver', async () => {
-		// Waivers moved to onRosterEntryCreated. Tying one to a payment
-		// worked only while every player paid for themselves; under
-		// team-level payment one person can pay for everyone, and the rest
-		// would go without. See waiver-on-roster-join.test.ts.
-		await seedPayment('paid')
-		await fire()
-
-		expect(sendWithTemplate).not.toHaveBeenCalled()
-		expect(await readWaivers()).toHaveLength(0)
 	})
 
 	it('creates the season subdoc when a payment lands before one exists', async () => {
@@ -161,13 +120,12 @@ describe('onPaymentCreated', () => {
 			await fire()
 
 			expect(await readPlayerSeason()).toBeUndefined()
-			expect(sendWithTemplate).not.toHaveBeenCalled()
 		}
 	)
 
 	it('does nothing when the payment document is missing', async () => {
 		await fire()
-		expect(sendWithTemplate).not.toHaveBeenCalled()
+		expect(await readPlayerSeason()).toBeUndefined()
 	})
 
 	it('is a no-op when the player is already paid', async () => {
@@ -198,23 +156,11 @@ describe('onPaymentCreated', () => {
 		await expect(fire()).rejects.toThrow(/onPaymentCreated/)
 	})
 
-	it('records no waiver when Dropbox Sign returns no signature request id', async () => {
-		// The paid flag is already committed by then, so the player is marked
-		// paid and simply has no waiver yet rather than a broken record.
-		sendWithTemplate.mockResolvedValue({ body: {} })
-		await seedPayment('paid')
-		await fire()
-
-		expect((await readPlayerSeason())?.paid).toBe(true)
-		expect(await readWaivers()).toHaveLength(0)
-	})
-
 	it('early-returns while a migration is in progress', async () => {
 		await firestore.doc('system/maintenance').set({ migrationInProgress: true })
 		await seedPayment('paid')
 		await fire()
 
 		expect(await readPlayerSeason()).toBeUndefined()
-		expect(sendWithTemplate).not.toHaveBeenCalled()
 	})
 })

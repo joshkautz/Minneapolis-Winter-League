@@ -140,7 +140,7 @@ must never be committed.
 Firebase config per mode; `App/.env.test` holds fake values for Vitest. See
 [Environment Variables](./ENVIRONMENT_VARIABLES.md).
 
-Functions secrets (Stripe, Dropbox Sign) are managed with
+Functions secrets (Stripe) are managed with
 `firebase functions:secrets:set` and read through
 `Functions/src/config/environment.ts`. They are never committed.
 

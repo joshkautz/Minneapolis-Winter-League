@@ -22,7 +22,8 @@ Functions/src/
   triggers/auth/            Auth lifecycle triggers
   triggers/documents/       Firestore document triggers
   triggers/payments/        the per-player payment trigger
-  api/webhooks/             Stripe and Dropbox Sign HTTP endpoints
+  api/webhooks/             the Stripe HTTP endpoint
+  waiver/                   the waiver's text and signing rules, also imported by the App
   services/                 multi-step domain logic
   shared/                   helpers used across functions
   config/                   constants.ts (static) and environment.ts (secrets)
@@ -40,7 +41,7 @@ Functions/src/
 | Teams         | `createTeam`, `rolloverTeam`, `updateTeam`, `deleteTeam`, `updateTeamRoster` | `deleteUnregisteredTeam`, `updateTeamAdmin`, `mergeTeams`                             |
 | Offers        | `createOffer`, `updateOffer`                                                 |                                                                                       |
 | Payments      | `createStripeCheckout`, `createTeamContributionCheckout`                     | `releaseTeamContribution`                                                             |
-| Waivers       | `sendWaiverReminder`                                                         | `sendWaiverAdmin`                                                                     |
+| Waivers       | `signWaiver`                                                                 |                                                                                       |
 | Storage       | `getUploadUrl`, `getDownloadUrl`, `getFileMetadata`                          |                                                                                       |
 | Posts         | `createPost`, `updatePost`, `createReply`, `updateReply`                     | `deletePost`, `deleteReply`                                                           |
 | Seasons       |                                                                              | `createSeason`, `updateSeason`, `deleteSeason`, `setSwissSeeding`, `getSwissRankings` |
@@ -59,7 +60,6 @@ during account setup. Everything else requires a verified one.
 | -------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
 | `userDeleted`                                | Auth account deleted                                   | Removes the player from every roster and deletes their data                             |
 | `onOfferUpdated`                             | `offers/{offerId}` updated                             | On acceptance, adds the player to the roster and points their season record at the team |
-| `onRosterEntryCreated`                       | `teams/{t}/teamSeasons/{s}/roster/{p}` created         | Sends the player their waiver for that season                                           |
 | `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes the team's registration                                                      |
 | `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                 |
 | `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes, and settles a new hold             |
@@ -93,8 +93,6 @@ them and a forged request, and it runs before any read or write.
   `payment_intent.succeeded` and `charge.refunded` keep that ledger in step
   with changes made outside the code. Also mirrors Products and Prices into
   Firestore.
-- **`dropboxSignWebhook`** — marks a player's season signed when their waiver
-  is completed.
 
 ## Services and shared helpers
 
@@ -124,11 +122,10 @@ Secrets are Firebase secrets in production and `Functions/.secret.local` under
 the emulator:
 
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
-- `DROPBOX_SIGN_API_KEY`
 
 Firebase injects only the secrets a function lists in its `secrets` option.
 `config/environment.ts` therefore reads each secret when code first uses it
-(`getStripeConfig().SECRET_KEY`, `getDropboxSignConfig().API_KEY`), warns
+(`getStripeConfig().SECRET_KEY`), warns
 once per instance if that secret is missing, and returns a placeholder so the
 function still loads. A warning names a secret some code actually tried to
 use — declare it on that function.

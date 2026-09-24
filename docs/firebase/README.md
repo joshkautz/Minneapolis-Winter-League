@@ -158,7 +158,7 @@ data. Use the emulators for anything destructive.
 
 Standing up a real staging environment would mean creating the Firebase
 project, giving it its own Firestore, Auth config and secrets (Stripe test
-keys, a Dropbox Sign sandbox), pointing `.env.staging` at it, and adding a
+keys), pointing `.env.staging` at it, and adding a
 deploy job. See [Roadmap](../ROADMAP.md).
 
 ### Deployment Commands
