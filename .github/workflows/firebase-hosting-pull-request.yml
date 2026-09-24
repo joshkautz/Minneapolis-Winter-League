@@ -196,7 +196,12 @@ jobs:
           echo "$GCP_SA_KEY" > /opt/gcp_key.json
           export GOOGLE_APPLICATION_CREDENTIALS=/opt/gcp_key.json
 
-          firebase functions:list --json > /tmp/deployed-functions.json
+          # The listing is redirected to a file, so print it when the command
+          # fails; otherwise the job dies with nothing but an exit code.
+          if ! firebase functions:list --json > /tmp/deployed-functions.json; then
+            cat /tmp/deployed-functions.json
+            exit 1
+          fi
           node scripts/ci/check-functions-deploy.js /tmp/deployed-functions.json
 
   Rules:

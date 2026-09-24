@@ -124,7 +124,12 @@ jobs:
           # approves deleting functions missing from the source and changing
           # a function's trigger type, so the guard below fails the job if
           # this deploy would do either. See scripts/ci/check-functions-deploy.js.
-          firebase functions:list --json > /tmp/deployed-functions.json
+          # The listing is redirected to a file, so print it when the command
+          # fails; otherwise the job dies with nothing but an exit code.
+          if ! firebase functions:list --json > /tmp/deployed-functions.json; then
+            cat /tmp/deployed-functions.json
+            exit 1
+          fi
           node scripts/ci/check-functions-deploy.js /tmp/deployed-functions.json
 
           firebase deploy --only functions --force
