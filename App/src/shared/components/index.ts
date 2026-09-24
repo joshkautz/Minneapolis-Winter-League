@@ -17,6 +17,7 @@ export { DestructiveConfirmationDialog } from './destructive-confirmation-dialog
 export { SeasonSelect } from './season-select'
 export { NewBadge } from './new-badge'
 export { LoadingSpinner } from './loading-spinner'
+export { LoadingButton } from './loading-button'
 export { PageContainer } from './page-container'
 export { PageHeader } from './page-header'
 export { TeamContributionsList } from './team-contributions-list'

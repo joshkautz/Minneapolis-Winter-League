@@ -405,7 +405,10 @@ export const TeamBadgesDialog = ({
 			{/* Badge Removal Confirmation Dialog */}
 			<AlertDialog
 				open={!!badgeToRemove}
-				onOpenChange={(open) => !open && setBadgeToRemove(null)}
+				onOpenChange={(open) => {
+					// Stays open, spinner showing, until the request settles.
+					if (!open && !isRemoving) setBadgeToRemove(null)
+				}}
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
@@ -423,7 +426,11 @@ export const TeamBadgesDialog = ({
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={isRemoving}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							onClick={handleConfirmRemove}
+							onClick={(event) => {
+								// Radix closes on click; the handler closes it on success.
+								event.preventDefault()
+								void handleConfirmRemove()
+							}}
 							disabled={isRemoving}
 							className='bg-red-600 hover:bg-red-700'
 						>

@@ -71,6 +71,29 @@ The same applies to `playerSeasons`, via
 collection-group result's `id` is used to match against a document reference's
 `.id`, it has to come from one of these helpers.
 
+## Buttons that call the server
+
+Every button that starts a callable shows it is working, cannot fire twice,
+and is marked busy. Use the shared pieces rather than hand-rolling a spinner:
+
+- `LoadingButton` (`@/shared/components`) — `loading` and `loadingText`
+  ("Inviting..."). The spinner replaces a leading icon; it does not sit beside
+  it.
+- `usePendingAction` (`@/shared/hooks`) — `run(action)` guards double clicks
+  with a ref. Pass `reflected` when the result arrives through a Firestore
+  listener after the call returns, so the button goes from "Inviting..."
+  straight to "Invited" instead of flashing back to "Invite". An action
+  reports failure by resolving `false`, having already toasted why.
+- `DestructiveConfirmationDialog` awaits a promise from `onConfirm` and stays
+  open, busy and undismissable until it settles.
+
+Hand-built `AlertDialogAction`s: Radix closes the dialog on click, so an async
+handler needs `event.preventDefault()` and an `onOpenChange` that refuses to
+close while pending — otherwise the spinner is never seen.
+
+In a list, keep pending state per row (in the row component, or keyed by id).
+One shared flag makes every row's button spin at once.
+
 ## Providers
 
 `providers-wrapper.tsx` composes the full context stack and is mounted in

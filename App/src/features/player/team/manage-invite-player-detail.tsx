@@ -16,10 +16,11 @@ import {
 	OfferStatus,
 	logger,
 } from '@/shared/utils'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
+import { LoadingButton } from '@/shared/components'
+import { usePendingAction } from '@/shared/hooks/use-pending-action'
 
 export const ManageInvitePlayerDetail = ({
 	teamQueryDocumentSnapshot,
@@ -36,7 +37,7 @@ export const ManageInvitePlayerDetail = ({
 		playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
 		teamQueryDocumentSnapshot:
 			QueryDocumentSnapshot<TeamSeasonDocument> | undefined
-	) => void
+	) => Promise<boolean>
 }) => {
 	const [offersForPlayerByTeamQuerySnapshot, , offersError] = useCollection(
 		offersForPlayerByTeamQuery(
@@ -47,24 +48,24 @@ export const ManageInvitePlayerDetail = ({
 		)
 	)
 
+	const teamId = teamQueryDocumentSnapshot
+		? canonicalTeamIdFromTeamSeasonDoc(teamQueryDocumentSnapshot)
+		: undefined
+
 	// Log and notify on query errors
 	useEffect(() => {
 		if (offersError) {
 			logger.error('Failed to load offers:', {
 				component: 'ManageInvitePlayerDetail',
 				playerId: playerQueryDocumentSnapshot.id,
-				teamId: teamQueryDocumentSnapshot?.id,
+				teamId,
 				error: offersError.message,
 			})
 			toast.error('Failed to load offers', {
 				description: offersError.message,
 			})
 		}
-	}, [
-		offersError,
-		playerQueryDocumentSnapshot.id,
-		teamQueryDocumentSnapshot?.id,
-	])
+	}, [offersError, playerQueryDocumentSnapshot.id, teamId])
 
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
@@ -105,6 +106,9 @@ export const ManageInvitePlayerDetail = ({
 	)
 
 	const isInviteDisabled = (blockingOffers?.length ?? 0) > 0
+	// Stays pending until the new offer arrives through the listener above,
+	// so the button goes from "Inviting..." straight to "Invited".
+	const { pending: isInviting, run } = usePendingAction(isInviteDisabled)
 
 	// Determine the appropriate status message
 	let inviteStatus = 'Send invite'
@@ -163,22 +167,30 @@ export const ManageInvitePlayerDetail = ({
 
 				{/* Invite button */}
 				<div className='flex-shrink-0'>
-					<Button
+					<LoadingButton
 						disabled={isInviteDisabled}
+						loading={isInviting}
+						loadingText='Inviting...'
 						size='sm'
 						variant={isInviteDisabled ? 'outline' : 'default'}
 						className='text-xs font-medium min-w-[70px] sm:min-w-[80px]'
-						onClick={() => {
-							handleInvite(
-								playerQueryDocumentSnapshot,
-								teamQueryDocumentSnapshot
+						onClick={() =>
+							run(() =>
+								handleInvite(
+									playerQueryDocumentSnapshot,
+									teamQueryDocumentSnapshot
+								)
 							)
-						}}
+						}
 						title={inviteStatus}
-						aria-label={`${inviteStatus} for ${playerName}`}
+						aria-label={
+							isInviting
+								? `Inviting ${playerName}`
+								: `${inviteStatus} for ${playerName}`
+						}
 					>
 						{isInviteDisabled ? 'Invited' : 'Invite'}
-					</Button>
+					</LoadingButton>
 				</div>
 			</div>
 		</div>

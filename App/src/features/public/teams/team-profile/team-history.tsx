@@ -8,7 +8,8 @@ import { useSeasonsContext } from '@/providers'
 import {
 	GameDocument,
 	TeamSeasonDocument,
-	hasAssignedTeams,
+	sortBySeasonStartDesc,
+	teamRecordsBySeason,
 } from '@/shared/utils'
 
 // Format placement with ordinal suffix and medal emoji for top 3
@@ -62,67 +63,55 @@ export const TeamHistory = ({
 	// canonical team document.
 	const canonicalTeamId = teamDocumentSnapshot?.id
 
-	// Calculate this team's records per season from the team-scoped
-	// games snapshot. Each game involves THIS team on one side; we
-	// figure out which side and credit the right column.
-	const teamRecords = useMemo(() => {
-		const records: Record<string, { wins: number; losses: number }> = {}
-
-		if (!gamesQuerySnapshot?.docs || !canonicalTeamId) return records
-
-		gamesQuerySnapshot.docs.forEach((gameDoc) => {
-			const gameData = gameDoc.data()
-			if (!hasAssignedTeams(gameData)) return
-
-			const { homeScore, awayScore, season, home, away } = gameData
-			if (homeScore === null || awayScore === null) return
-			if (!season?.id) return
-
-			const isHome = home?.id === canonicalTeamId
-			const isAway = away?.id === canonicalTeamId
-			if (!isHome && !isAway) return
-
-			const ourScore = isHome ? homeScore : awayScore
-			const theirScore = isHome ? awayScore : homeScore
-
-			if (!records[season.id]) records[season.id] = { wins: 0, losses: 0 }
-			if (ourScore > theirScore) records[season.id].wins++
-			else if (theirScore > ourScore) records[season.id].losses++
-			// Ties (rare in ultimate but not impossible): no win/loss credit
-		})
-
-		return records
-	}, [gamesQuerySnapshot, canonicalTeamId])
+	// This team's record in each season, from the team-scoped games.
+	const teamRecords = useMemo(
+		() =>
+			gamesQuerySnapshot?.docs && canonicalTeamId
+				? teamRecordsBySeason(
+						gamesQuerySnapshot.docs.map((doc) => doc.data()),
+						canonicalTeamId
+					)
+				: {},
+		[gamesQuerySnapshot, canonicalTeamId]
+	)
 
 	// Process history entries with season data and records
 	const processedHistory = useMemo((): ProcessedHistoryEntry[] => {
 		if (!historyQuerySnapshot?.docs || !seasonsQuerySnapshot?.docs) return []
 
-		return historyQuerySnapshot.docs
-			.map((historyDoc) => {
-				const data = historyDoc.data()
-				const seasonDoc = seasonsQuerySnapshot.docs.find(
-					(s) => s.id === data.season.id
-				)
-				const canonicalTeamIdForRow =
-					canonicalTeamIdFromTeamSeasonDoc(historyDoc)
-				// Look up the record by seasonId — the games loop above
-				// already restricted itself to this team's games, so the
-				// records map is keyed only by season.
-				const record = teamRecords[data.season.id]
+		const entries = historyQuerySnapshot.docs.map((historyDoc) => {
+			const data = historyDoc.data()
+			const seasonDoc = seasonsQuerySnapshot.docs.find(
+				(s) => s.id === data.season.id
+			)
+			const canonicalTeamIdForRow = canonicalTeamIdFromTeamSeasonDoc(historyDoc)
+			// Look up the record by seasonId — the games loop above
+			// already restricted itself to this team's games, so the
+			// records map is keyed only by season.
+			const record = teamRecords[data.season.id]
 
-				return {
-					id: canonicalTeamIdForRow,
-					seasonId: data.season.id,
-					seasonName: seasonDoc?.data()?.name || 'Unknown Season',
-					teamName: data.name,
-					teamLogo: data.logo || null,
-					wins: record?.wins || 0,
-					losses: record?.losses || 0,
-					placement: data.placement ?? null,
-				}
-			})
-			.sort((a, b) => b.seasonName.localeCompare(a.seasonName))
+			return {
+				id: canonicalTeamIdForRow,
+				seasonId: data.season.id,
+				seasonName: seasonDoc?.data()?.name || 'Unknown Season',
+				teamName: data.name,
+				teamLogo: data.logo || null,
+				wins: record?.wins || 0,
+				losses: record?.losses || 0,
+				placement: data.placement ?? null,
+			}
+		})
+
+		// Newest first, by when the season starts.
+		const startById = new Map(
+			seasonsQuerySnapshot.docs.map((season) => [
+				season.id,
+				season.data().dateStart?.toMillis(),
+			])
+		)
+		return sortBySeasonStartDesc(entries, (entry) =>
+			startById.get(entry.seasonId)
+		)
 	}, [historyQuerySnapshot, seasonsQuerySnapshot, teamRecords])
 
 	return (
