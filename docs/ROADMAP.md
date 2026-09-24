@@ -98,12 +98,6 @@ signatures (`docs/WAIVERS.md`).
 
 Signed in the app since 2026 Fall: `docs/WAIVERS.md`. Left:
 
-- **Close the Dropbox Sign account**, then delete the `DROPBOX_SIGN_API_KEY`
-  secret. Its 357 signed PDFs were archived on 24 September 2026 to the
-  private `minnesota-winter-league-firestore-backups` bucket under
-  `waiver-archive/dropbox-sign/`, with a manifest — not the default bucket,
-  which `storage.rules` makes publicly readable. The
-  `dropbox/{uid}/waivers` records stay as history.
 - **Emergency contacts for game day.** They are collected with each waiver
   but only visible one player at a time; organizers would want them by team.
 - **A copy by email.** Players can print or save their copy; emailing one
@@ -112,25 +106,10 @@ Signed in the app since 2026 Fall: `docs/WAIVERS.md`. Left:
 
 ### Waiver review
 
-The text is the league's original, unchanged. Worth a Minnesota attorney's
-eye before it is revised — each change is a new version:
-
-- **Negligence.** _Justice v. Marvel_ (Minn. 2022) requires a release to
-  cover the released party's own negligence clearly and unequivocally. The
-  waiver does so in one hedged sentence ("To the extent that statute or case
-  law does not prohibit…") apart from the main release.
-- **Who is released.** Only Minneapolis Mallard and its people — not
-  Minneapolis Winter League by name, the facility or its owner, or other
-  participants.
-- **Minors.** Whether a parent's pre-injury release binds a minor in
-  Minnesota is unsettled.
-- **Bans.** The waiver promises a banned player written notice with reasons;
-  the app's ban sends none. "Without refund" also needs squaring with the
-  team-payments refund promise.
-- **The Activity** is never described as ultimate frisbee, and its specific
-  risks are not named.
-- **Typos:** "its officers employees"; "should find that any provision of this
-  agreement to be invalid".
+The league's attorney reviewed the waiver and the in-app signing in September
+2026 and found both sufficient as they stand. One promise in the text is
+operational rather than technical: a banned player is owed written notice
+with the reasons, and the app's ban sends none, so an admin sends it.
 
 ## Blocked dependency upgrades
 

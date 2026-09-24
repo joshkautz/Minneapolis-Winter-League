@@ -82,6 +82,19 @@ so `scripts/ci/check-functions-deploy.js` runs first and fails the deploy if
 it would do either. To delete or re-trigger a function on purpose, run
 `firebase functions:delete <name>` by hand, then let CI deploy.
 
+## Secrets
+
+A function reads only the secrets in its `secrets` option. Removing one from
+the option does **not** remove it from the deployed function: the CLI adds
+secret mounts but never takes them away, even on a by-name deploy. A mounted
+secret that is later deleted from Secret Manager breaks that function's next
+cold start. `onPaymentCreated` still had `DROPBOX_SIGN_API_KEY` mounted, long
+after it stopped using it, when the secret was due to be deleted.
+
+So before deleting a secret, list which deployed functions mount it
+(`serviceConfig.secretEnvironmentVariables` in the Cloud Functions API), and
+clear a stale mount by patching that field alone.
+
 ## Scheduled functions
 
 `onSchedule` functions live in `triggers/scheduled/`. The two there follow
