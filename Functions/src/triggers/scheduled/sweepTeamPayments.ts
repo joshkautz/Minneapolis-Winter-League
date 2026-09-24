@@ -22,7 +22,7 @@ import { sweepTeamPayments } from '../../services/teamPaymentsSweep.js'
 export const sweepTeamPaymentsHourly = onSchedule(
 	{
 		schedule: 'every 60 minutes',
-		timeZone: 'America/Chicago',
+		timeZone: FIREBASE_CONFIG.TIME_ZONE,
 		region: FIREBASE_CONFIG.REGION,
 		secrets: ['STRIPE_SECRET_KEY'],
 		// Settles teams one after another; a full season of holds can take a

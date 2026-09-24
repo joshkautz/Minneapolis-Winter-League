@@ -11,7 +11,11 @@
 /** Anyone younger signs through a parent or guardian. */
 export const ADULT_AGE = 18
 
-/** The league plays in Minneapolis, so "today" and ages are Central. */
+/**
+ * The league plays in Minneapolis, so "today" and ages are Central. The same
+ * value as `FIREBASE_CONFIG.TIME_ZONE`, repeated because this file cannot
+ * import; `rules.test.ts` keeps the two equal.
+ */
 export const LEAGUE_TIME_ZONE = 'America/Chicago'
 
 export const WAIVER_LIMITS = {
