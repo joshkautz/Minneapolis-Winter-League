@@ -126,6 +126,13 @@ the emulator:
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
 - `DROPBOX_SIGN_API_KEY`
 
+Firebase injects only the secrets a function lists in its `secrets` option.
+`config/environment.ts` therefore reads each secret when code first uses it
+(`getStripeConfig().SECRET_KEY`, `getDropboxSignConfig().API_KEY`), warns
+once per instance if that secret is missing, and returns a placeholder so the
+function still loads. A warning names a secret some code actually tried to
+use — declare it on that function.
+
 Static settings — region, CORS origins, team registration thresholds, the
 Stripe API version — are in `config/constants.ts`.
 
