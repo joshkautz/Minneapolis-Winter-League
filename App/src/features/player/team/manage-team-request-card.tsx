@@ -15,40 +15,41 @@ export const ManageTeamRequestCard = () => {
 		currentSeasonTeamsQuerySnapshotLoading,
 	} = useTeamsContext()
 
+	// Resolves to whether the request was sent; failures are toasted here.
 	const handleRequest = useCallback(
 		async (
 			authenticatedUserDocumentSnapshot:
 				DocumentSnapshot<PlayerDocument> | undefined,
 
 			teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument>
-		) => {
+		): Promise<boolean> => {
 			const canonicalTeamId = teamQueryDocumentSnapshot
 				? canonicalTeamIdFromTeamSeasonDoc(teamQueryDocumentSnapshot)
 				: undefined
 			if (!authenticatedUserDocumentSnapshot?.id || !canonicalTeamId) {
 				toast.error('Missing required data to send request')
-				return
+				return false
 			}
 
-			createOfferViaFunction({
-				playerId: authenticatedUserDocumentSnapshot.id,
-				teamId: canonicalTeamId,
-				type: OfferType.REQUEST,
-			})
-				.then(() => {
-					toast.success('Request sent', {
-						description: 'you requested to join',
-					})
+			try {
+				await createOfferViaFunction({
+					playerId: authenticatedUserDocumentSnapshot.id,
+					teamId: canonicalTeamId,
+					type: OfferType.REQUEST,
 				})
-				.catch((error: unknown) => {
-					// Firebase Functions errors have a message property
-					const firebaseError = error as { message?: string }
-					const errorMessage =
-						firebaseError?.message || 'Failed to send request'
-					toast.error('Unable to send request', {
-						description: errorMessage,
-					})
+				toast.success('Request sent', {
+					description: `A captain of ${teamQueryDocumentSnapshot.data().name} will review your request to join.`,
 				})
+				return true
+			} catch (error: unknown) {
+				// Firebase Functions errors have a message property
+				const firebaseError = error as { message?: string }
+				const errorMessage = firebaseError?.message || 'Failed to send request'
+				toast.error('Unable to send request', {
+					description: errorMessage,
+				})
+				return false
+			}
 		},
 		[]
 	)

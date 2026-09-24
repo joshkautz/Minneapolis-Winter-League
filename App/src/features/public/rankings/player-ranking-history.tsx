@@ -13,7 +13,7 @@ import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { collection, getDoc, Query } from 'firebase/firestore'
 
 import { firestore } from '@/firebase/app'
-import { logger, hasAssignedTeams } from '@/shared/utils'
+import { logger, teamRecordsBySeason, type SeasonRecord } from '@/shared/utils'
 import {
 	PlayerDocument,
 	PlayerSeasonDocument,
@@ -277,46 +277,28 @@ export const PlayerRankingHistory = ({
 		return playerHistory.sort((a, b) => a.timestamp - b.timestamp)
 	}, [rankingHistorySnapshot, playerId])
 
-	// Calculate team records from games
+	// Each team's record in each season, keyed `${teamId}::${seasonId}`.
+	// Per season: a team keeps its id when it rolls over, so tallying by team
+	// alone credited every season's games to each season's row.
 	const teamRecords = useMemo(() => {
-		const records: Record<string, { wins: number; losses: number }> = {}
+		const records: Record<string, SeasonRecord> = {}
+		if (!allGamesSnapshot?.docs || !playerSeasonsSnapshot?.docs) return records
 
-		if (!allGamesSnapshot?.docs) return records
-
-		allGamesSnapshot.docs.forEach((gameDoc) => {
-			const gameData = gameDoc.data()
-
-			// Skip games with null team references (placeholder games)
-			if (!hasAssignedTeams(gameData)) return
-
-			const { home, away, homeScore, awayScore } = gameData
-
-			// Skip games that haven't been played yet (null scores)
-			if (homeScore === null || awayScore === null) return
-
-			// Update home team record
-			if (!records[home.id]) {
-				records[home.id] = { wins: 0, losses: 0 }
+		const games = allGamesSnapshot.docs.map((gameDoc) => gameDoc.data())
+		const teamIds = new Set(
+			playerSeasonsSnapshot.docs
+				.map((psDoc) => (psDoc.data() as PlayerSeasonDocument).team?.id)
+				.filter((id): id is string => Boolean(id))
+		)
+		for (const teamId of teamIds) {
+			for (const [seasonId, record] of Object.entries(
+				teamRecordsBySeason(games, teamId)
+			)) {
+				records[`${teamId}::${seasonId}`] = record
 			}
-			if (homeScore > awayScore) {
-				records[home.id].wins++
-			} else if (homeScore < awayScore) {
-				records[home.id].losses++
-			}
-
-			// Update away team record
-			if (!records[away.id]) {
-				records[away.id] = { wins: 0, losses: 0 }
-			}
-			if (awayScore > homeScore) {
-				records[away.id].wins++
-			} else if (awayScore < homeScore) {
-				records[away.id].losses++
-			}
-		})
-
+		}
 		return records
-	}, [allGamesSnapshot])
+	}, [allGamesSnapshot, playerSeasonsSnapshot])
 
 	// Load each (canonicalTeamId, seasonId) team-season subdoc the player has
 	// participated in. Bounded by player history length (~5 docs typical).
@@ -416,7 +398,7 @@ export const PlayerRankingHistory = ({
 						placement = ts?.placement ?? null
 					}
 
-					const record = teamId ? teamRecords[teamId] : null
+					const record = teamId ? teamRecords[`${teamId}::${seasonId}`] : null
 
 					return {
 						seasonId,

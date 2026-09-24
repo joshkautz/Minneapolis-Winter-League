@@ -258,7 +258,13 @@ export const TeamManagement = () => {
 		try {
 			if (teamToDelete.isRegistered) {
 				// For registered teams, use the generic delete function
-				await deleteTeamViaFunction(teamToDelete.id)
+				// deleteTeam refuses registered teams and non-captains, so this
+				// path cannot succeed for an admin; see docs/ROADMAP.md.
+				await deleteTeamViaFunction({
+					teamId: teamToDelete.id,
+					seasonId: selectedSeasonId,
+					timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+				})
 				toast.success('Team deleted successfully', {
 					description: `${teamToDelete.name} has been permanently deleted`,
 				})
@@ -661,7 +667,10 @@ export const TeamManagement = () => {
 			{/* Delete Confirmation Dialog */}
 			<AlertDialog
 				open={!!teamToDelete}
-				onOpenChange={(open) => !open && setTeamToDelete(null)}
+				onOpenChange={(open) => {
+					// Stays open, spinner showing, until the request settles.
+					if (!open && !isDeleting) setTeamToDelete(null)
+				}}
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
@@ -683,7 +692,11 @@ export const TeamManagement = () => {
 					<AlertDialogFooter>
 						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
-							onClick={handleConfirmDelete}
+							onClick={(event) => {
+								// Radix closes on click; the handler closes it on success.
+								event.preventDefault()
+								void handleConfirmDelete()
+							}}
 							disabled={isDeleting}
 							className='bg-red-600 hover:bg-red-700'
 						>

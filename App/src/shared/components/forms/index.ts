@@ -6,4 +6,3 @@
 
 export { FormFieldWrapper } from './form-field-wrapper'
 export { FileUploadField } from './file-upload-field'
-export { FormSubmitButton } from './form-submit-button'

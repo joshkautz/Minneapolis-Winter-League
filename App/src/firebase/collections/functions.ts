@@ -492,6 +492,9 @@ export const rolloverTeamViaFunction = async (
 
 interface DeleteTeamRequest {
 	teamId: string
+	/** A team is deleted from one season; its other seasons are kept. */
+	seasonId: string
+	timezone?: string // User's browser timezone
 }
 
 interface DeleteTeamResponse {
@@ -503,13 +506,13 @@ interface DeleteTeamResponse {
  * Replaces the complex client-side deleteTeam function
  */
 export const deleteTeamViaFunction = async (
-	teamId: string
+	data: DeleteTeamRequest
 ): Promise<DeleteTeamResponse> => {
 	const deleteTeam = httpsCallable<DeleteTeamRequest, DeleteTeamResponse>(
 		functions,
 		'deleteTeam'
 	)
-	const result = await deleteTeam({ teamId })
+	const result = await deleteTeam(data)
 	return result.data
 }
 

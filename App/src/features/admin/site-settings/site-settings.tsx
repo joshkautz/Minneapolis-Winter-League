@@ -24,7 +24,7 @@ import { getSiteSettingsRef } from '@/firebase/collections/site-settings'
 import { updateSiteSettingsViaFunction } from '@/firebase/collections/functions'
 import { ThemeVariant } from '@/types'
 import { logger } from '@/shared/utils'
-import { PageContainer, PageHeader } from '@/shared/components'
+import { LoadingButton, PageContainer, PageHeader } from '@/shared/components'
 import {
 	Card,
 	CardContent,
@@ -37,7 +37,6 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
-import { Button } from '@/components/ui/button'
 import {
 	Tooltip,
 	TooltipContent,
@@ -627,17 +626,18 @@ export const SiteSettings = () => {
 										</p>
 									</div>
 									{showApplyButton && (
-										<Button
+										<LoadingButton
 											size='sm'
 											onClick={(e) => {
 												e.preventDefault()
 												applyTheme()
 											}}
-											disabled={isUpdating}
+											loading={isUpdating}
+											loadingText='Applying...'
 											className='shrink-0'
 										>
-											{isUpdating ? 'Applying...' : 'Apply'}
-										</Button>
+											Apply
+										</LoadingButton>
 									)}
 								</label>
 							)

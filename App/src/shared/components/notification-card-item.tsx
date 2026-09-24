@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { cn, OfferDocument, OfferDirection } from '@/shared/utils'
-import { Button } from '@/components/ui/button'
 import { DocumentReference } from '@/firebase'
 import { OfferDocumentWithUI } from '@/shared/hooks'
-import { LoadingSpinner } from '@/shared/components'
+import { usePendingAction } from '@/shared/hooks/use-pending-action'
+import { LoadingButton } from './loading-button'
 
 export interface NotificationCardItemProps {
 	type: OfferDirection
@@ -11,8 +12,11 @@ export interface NotificationCardItemProps {
 	message?: string
 	actionOptions: {
 		title: string
-		action: (offerDocumentReference: DocumentReference<OfferDocument>) => void
-		isLoading?: boolean
+		/** Shown on the button while its action runs, e.g. "Accepting...". */
+		pendingTitle: string
+		action: (
+			offerDocumentReference: DocumentReference<OfferDocument>
+		) => Promise<void>
 	}[]
 }
 
@@ -23,6 +27,11 @@ export const NotificationCardItem = ({
 	message,
 	actionOptions,
 }: NotificationCardItemProps) => {
+	// One action at a time per offer: accepting and rejecting the same offer
+	// at once can only fail. The spinner goes on the button that was pressed.
+	const { pending, run } = usePendingAction()
+	const [pendingTitle, setPendingTitle] = useState<string | null>(null)
+
 	return (
 		<div className='flex items-end gap-2 py-2'>
 			{statusColor && (
@@ -45,25 +54,21 @@ export const NotificationCardItem = ({
 				</p>
 			</div>
 			<div className='flex justify-end flex-1 gap-2'>
-				{actionOptions.map(({ title, action, isLoading }, index) => (
-					<Button
-						key={`action-${index}-${title}`}
+				{actionOptions.map((option, index) => (
+					<LoadingButton
+						key={`action-${index}-${option.title}`}
 						size={'sm'}
 						variant={'outline'}
-						disabled={isLoading || actionOptions.some((opt) => opt.isLoading)}
+						disabled={pending}
+						loading={pending && pendingTitle === option.title}
+						loadingText={option.pendingTitle}
 						onClick={() => {
-							action(data.ref)
+							setPendingTitle(option.title)
+							void run(() => option.action(data.ref))
 						}}
 					>
-						{isLoading ? (
-							<>
-								<LoadingSpinner size='sm' withMargin={false} />
-								<span className='ml-2'>Loading...</span>
-							</>
-						) : (
-							title
-						)}
-					</Button>
+						{option.title}
+					</LoadingButton>
 				))}
 			</div>
 		</div>

@@ -5,7 +5,7 @@ import {
 } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
 import { logger } from '@/shared/utils'
-import { useTeamsContext } from '@/providers'
+import { useSeasonsContext, useTeamsContext } from '@/providers'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 
@@ -16,6 +16,8 @@ import { useUserStatus } from '@/shared/hooks/use-user-status'
  */
 export const useManageCaptainActions = () => {
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
+	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const currentSeasonId = currentSeasonQueryDocumentSnapshot?.id
 	const { userSnapshot: authenticatedUserSnapshot, currentSeasonData } =
 		useUserStatus()
 
@@ -91,13 +93,17 @@ export const useManageCaptainActions = () => {
 
 	// Delete team handler
 	const deleteTeamOnClickHandler = useCallback(async () => {
-		if (!canonicalTeamId) {
+		if (!canonicalTeamId || !currentSeasonId) {
 			toast.error('Missing team data to delete team')
 			return
 		}
 
 		try {
-			await deleteTeamViaFunction(canonicalTeamId)
+			await deleteTeamViaFunction({
+				teamId: canonicalTeamId,
+				seasonId: currentSeasonId,
+				timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+			})
 
 			logger.userAction('team_deleted', 'useManageCaptainActions', {
 				teamId: canonicalTeamId,
@@ -130,7 +136,7 @@ export const useManageCaptainActions = () => {
 				description: errorMessage,
 			})
 		}
-	}, [authenticatedUserSnapshot, canonicalTeamId])
+	}, [authenticatedUserSnapshot, canonicalTeamId, currentSeasonId])
 
 	// Edit team handler
 	const handleEditTeamClick = useCallback(() => {

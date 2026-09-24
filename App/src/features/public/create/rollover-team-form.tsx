@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/shared/components'
 import {
 	Form,
 	FormField,
@@ -127,16 +127,16 @@ export const RolloverTeamForm = ({
 						/>
 
 						<div className='pt-2'>
-							<Button
+							<LoadingButton
 								type='submit'
-								disabled={isSubmitting || isTeamRegistrationFull}
+								disabled={isTeamRegistrationFull}
 								className='w-full h-11'
 								size='lg'
+								loading={isSubmitting}
+								loadingText='Rolling Over Team...'
 							>
-								{isSubmitting
-									? 'Rolling Over Team...'
-									: 'Rollover Existing Team'}
-							</Button>
+								Rollover Existing Team
+							</LoadingButton>
 						</div>
 					</form>
 				</Form>
