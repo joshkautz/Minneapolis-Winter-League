@@ -64,6 +64,8 @@ Per-season state hangs off subcollections rather than the parent document:
 
 - `players/{uid}/playerSeasons/{seasonId}` — paid, signed, captain, team
   (a ban is **not** season state — it lives on `players/{uid}.banned`)
+- `players/{uid}/waiverSignatures/{id}` — the evidence behind `signed`;
+  **private** to the player and admins (see `docs/WAIVERS.md`)
 - `teams/{teamId}/teamSeasons/{seasonId}` — per-season team participation
 - `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` — membership join
 - `teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}` —
@@ -88,6 +90,11 @@ already allowed.
 
 ## Gotchas
 
+- The waiver's text and signing rules live once, in `Functions/src/waiver/`,
+  and the App imports them (`App/src/shared/waiver.ts`); `App/tsconfig.json`
+  sets `rootDir` to the repo root to allow it. Keep `versions.ts` and
+  `rules.ts` import-free, and never edit a published waiver version — add a
+  new one (`versions.test.ts` pins each hash).
 - The root `package.json` has an `overrides` entry pinning `re2`. npm will not
   move a transitive that already satisfies its parent's range, so a security
   bump to a nested package needs an override. Drop the entry once

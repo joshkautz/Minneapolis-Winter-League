@@ -30,6 +30,12 @@ function as it is actually exported from `Functions/src/index.ts`.
 Per-user private data (`stripe/{uid}`, `dropbox/{uid}`) is gated on
 `request.auth.uid == uid` for reads and denied for writes.
 
+`players/{uid}/waiverSignatures` holds a date of birth, an address and
+emergency contacts, so although the player document above it is public, this
+subcollection is readable only by that player and admins. Never add a
+collection-group rule for it, and never copy those fields onto a public
+document.
+
 The catch-all `match /{document=**} { allow read, write: if false; }` at the
 bottom must stay last.
 
