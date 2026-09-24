@@ -7,10 +7,12 @@
  * cancelling a hold, capturing it and refunding it all need to know who paid
  * what, and how much of it is still live.
  *
- * `authorizedCents` and `capturedCents` on the team-season are denormalized
- * sums, kept in step with the ledger inside the same transaction that changes
- * it. Never write one without the other — the same rule the roster and
- * player-season pairing follows.
+ * The ledger is the only record of a team's money: there are no running
+ * totals anywhere else. That is deliberate. Team-season documents are public,
+ * and what a team has paid, and who paid it, is visible to its own roster and
+ * to admins only — `firestore.rules` enforces that on this subcollection.
+ * Anything that needs a total sums the ledger (`totalsFrom`,
+ * `committedCents`).
  */
 
 import { FieldValue, type Firestore } from 'firebase-admin/firestore'
@@ -60,7 +62,7 @@ export function teamContributionsCollection(
 }
 
 /**
- * Sums a set of contributions into the two totals the team-season carries.
+ * Sums a set of contributions into what is held and what has been taken.
  *
  * Pure, so the arithmetic can be tested without a database. `authorizedCents`
  * counts money that is committed but not yet taken; `capturedCents` counts
@@ -152,7 +154,7 @@ export function hasUnsettledMoney(
 }
 
 /**
- * Records a new contribution and updates the team's totals atomically.
+ * Records a new contribution.
  *
  * Keyed on the PaymentIntent id and **insert-only**: a contribution that is
  * already in the ledger is left exactly as it is. Stripe redelivers webhooks,
@@ -193,29 +195,10 @@ export async function recordContribution(
 			throw new TeamSeasonNotFoundError(teamId, seasonId)
 		}
 
-		const existing = await transaction.get(
-			teamContributionsCollection(firestore, teamId, seasonId)
-		)
-
-		if (existing.docs.some((doc) => doc.id === paymentIntentId)) {
+		const existing = await transaction.get(contributionRef)
+		if (existing.exists) {
 			return 'already-recorded' as const
 		}
-
-		const contributions = existing.docs.map(
-			(doc) => doc.data() as TeamContributionDocument
-		)
-
-		contributions.push({
-			player: firestore
-				.collection(Collections.PLAYERS)
-				.doc(params.playerId) as TeamContributionDocument['player'],
-			amountCents: params.amountCents,
-			status: params.status,
-			paymentIntentId,
-			captureBefore: params.captureBefore ?? null,
-		} as TeamContributionDocument)
-
-		const totals = totalsFrom(contributions)
 
 		transaction.create(contributionRef, {
 			player: firestore.collection(Collections.PLAYERS).doc(params.playerId),
@@ -226,7 +209,6 @@ export async function recordContribution(
 			createdAt: FieldValue.serverTimestamp(),
 			updatedAt: FieldValue.serverTimestamp(),
 		})
-		transaction.update(teamSeasonDocRef, totals)
 
 		return 'recorded' as const
 	})
@@ -243,8 +225,7 @@ export class ContributionNotFoundError extends Error {
 }
 
 /**
- * Changes a contribution's status, and optionally its amount, and updates
- * the totals in the same transaction.
+ * Changes a contribution's status, and optionally its amount.
  *
  * The amount changes when a hold is partly captured — $500 held, $400 taken,
  * the rest released — or partly refunded. The amount first authorized is
@@ -270,11 +251,6 @@ export async function setContributionStatus(
 	const { teamId, seasonId, paymentIntentId, status } = params
 
 	return firestore.runTransaction(async (transaction) => {
-		const teamSeasonDocRef = firestore
-			.collection(Collections.TEAMS)
-			.doc(teamId)
-			.collection(TEAM_SEASONS_SUBCOLLECTION)
-			.doc(seasonId)
 		const contributionRef = teamContributionsCollection(
 			firestore,
 			teamId,
@@ -292,17 +268,6 @@ export async function setContributionStatus(
 			return 'unchanged' as const
 		}
 
-		const all = await transaction.get(
-			teamContributionsCollection(firestore, teamId, seasonId)
-		)
-
-		const contributions = all.docs.map((doc) => {
-			const data = doc.data() as TeamContributionDocument
-			return doc.id === paymentIntentId
-				? { ...data, status, amountCents }
-				: data
-		})
-
 		transaction.update(contributionRef, {
 			status,
 			amountCents,
@@ -312,7 +277,6 @@ export async function setContributionStatus(
 				: {}),
 			updatedAt: FieldValue.serverTimestamp(),
 		})
-		transaction.update(teamSeasonDocRef, totalsFrom(contributions))
 
 		return 'updated' as const
 	})

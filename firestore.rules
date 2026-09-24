@@ -74,6 +74,19 @@ service cloud.firestore {
           allow read: if true;
           allow write: if false; // Functions only
         }
+
+        // Team payments: who paid what toward the registration total.
+        // Private to the team — its roster for this season, and admins —
+        // which is also why no totals are kept on the public team-season
+        // document above. There is deliberately no collection-group rule,
+        // so nobody can list every team's money at once.
+        match /contributions/{paymentIntentId} {
+          allow read: if isAuthenticated() && (
+            exists(/databases/$(database)/documents/teams/$(teamId)/teamSeasons/$(seasonId)/roster/$(request.auth.uid))
+            || isAdmin()
+          );
+          allow write: if false; // Functions only
+        }
       }
     }
 

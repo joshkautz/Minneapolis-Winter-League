@@ -26,7 +26,7 @@ import type Stripe from 'stripe'
 import type { TeamContributionDocument } from '../types.js'
 import { teamContributionsCollection } from '../shared/contributions.js'
 import { TEAM_CONTRIBUTION_KIND } from '../shared/stripe.js'
-import { findTeamsWithMoney } from './teamPaymentsSweep.js'
+import { findTeamsWithLiveMoney } from './teamPaymentsSweep.js'
 import {
 	recordContributionFromStripe,
 	type IntakeOutcome,
@@ -101,7 +101,7 @@ export async function reconcileTeamPayments(options: {
 	}
 
 	// Ledger → Stripe.
-	for (const { teamId, seasonId } of await findTeamsWithMoney(firestore)) {
+	for (const { teamId, seasonId } of await findTeamsWithLiveMoney(firestore)) {
 		const live = await teamContributionsCollection(firestore, teamId, seasonId)
 			.where('status', 'in', ['authorized', 'captured'])
 			.get()

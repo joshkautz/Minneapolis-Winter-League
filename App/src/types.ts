@@ -224,12 +224,6 @@ export interface TeamSeasonDocument extends DocumentData {
 	placement: number | null
 	/** Initial seed for Swiss-format seasons (nullable) */
 	swissSeed?: number | null
-	/**
-	 * Team payments only: sums over the contributions ledger, kept in step
-	 * with it in the same transaction. Absent until the first contribution.
-	 */
-	authorizedCents?: number
-	capturedCents?: number
 }
 
 /**
@@ -271,9 +265,9 @@ export type ContributionStatus =
  * The document id is the Stripe PaymentIntent id, so a webhook delivered twice
  * updates one document rather than creating a second.
  *
- * **DENORMALIZED**: `authorizedCents` and `capturedCents` on the parent
- * team-season are sums over this subcollection, written in the same
- * transaction. Never change one without the other — see `shared/contributions.ts`.
+ * **PRIVATE**: readable only by the team's roster for that season and by
+ * admins (`firestore.rules`). There are deliberately no totals on the public
+ * team-season document; sum this subcollection instead.
  */
 export interface TeamContributionDocument extends DocumentData {
 	/** The player who paid. Always someone on the roster for this season. */

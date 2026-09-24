@@ -88,6 +88,28 @@ beforeEach(async () => {
 		await setDoc(doc(db, 'stripe/user-1/payments/pay-1'), { amount: 100 })
 		await setDoc(doc(db, 'dropbox/user-1/waivers/w-1'), { status: 'signed' })
 		await setDoc(doc(db, 'system/maintenance'), { enabled: false })
+
+		// Team payments. user-1 is on team-1's roster for season-1 only.
+		await setDoc(
+			doc(db, 'teams/team-1/teamSeasons/season-1/contributions/pi_1'),
+			{ amountCents: 50_000, status: 'authorized' }
+		)
+		await setDoc(doc(db, 'teams/team-1/teamSeasons/season-2'), {
+			name: 'Test Team',
+			registered: false,
+		})
+		await setDoc(
+			doc(db, 'teams/team-1/teamSeasons/season-2/contributions/pi_2'),
+			{ amountCents: 50_000, status: 'authorized' }
+		)
+		await setDoc(doc(db, 'players/user-2'), {
+			admin: false,
+			email: 'b@example.com',
+		})
+		await setDoc(doc(db, 'players/admin-1'), {
+			admin: true,
+			email: 'admin@example.com',
+		})
 	})
 })
 
@@ -125,6 +147,7 @@ describe('client writes are denied everywhere', () => {
 		'teams/team-1',
 		'teams/team-1/teamSeasons/season-1',
 		'teams/team-1/teamSeasons/season-1/roster/user-1',
+		'teams/team-1/teamSeasons/season-1/contributions/pi_1',
 		'players/user-1',
 		'players/user-1/playerSeasons/season-1',
 		'games/game-1',
@@ -237,6 +260,60 @@ describe('system maintenance flag', () => {
 		await assertSucceeds(getDoc(doc(db, 'system/maintenance')))
 		await assertSucceeds(
 			setDoc(doc(db, 'system/maintenance'), { enabled: true })
+		)
+	})
+})
+
+describe('team payments', () => {
+	// What a team has paid, and who paid it, is its own business: visible to
+	// its roster and to admins, never publicly or to other teams.
+	const ledger = 'teams/team-1/teamSeasons/season-1/contributions'
+
+	it('are readable by a player on the team’s roster', async () => {
+		await assertSucceeds(getDoc(doc(verified('user-1'), `${ledger}/pi_1`)))
+		await assertSucceeds(getDocs(collection(verified('user-1'), ledger)))
+	})
+
+	it('are readable by an admin', async () => {
+		await assertSucceeds(getDoc(doc(verified('admin-1'), `${ledger}/pi_1`)))
+		await assertSucceeds(getDocs(collection(verified('admin-1'), ledger)))
+	})
+
+	it('are not readable by a player on another team', async () => {
+		await assertFails(getDoc(doc(verified('user-2'), `${ledger}/pi_1`)))
+		await assertFails(getDocs(collection(verified('user-2'), ledger)))
+	})
+
+	it('are not readable while signed out', async () => {
+		await assertFails(getDoc(doc(anonymous(), `${ledger}/pi_1`)))
+		await assertFails(getDocs(collection(anonymous(), ledger)))
+	})
+
+	it('follow the roster for that season, not the team in general', async () => {
+		// user-1 is on team-1 for season-1, not season-2.
+		await assertFails(
+			getDoc(
+				doc(
+					verified('user-1'),
+					'teams/team-1/teamSeasons/season-2/contributions/pi_2'
+				)
+			)
+		)
+	})
+
+	it('cannot be listed across teams, even by a rostered player', async () => {
+		await assertFails(
+			getDocs(collectionGroup(verified('user-1'), 'contributions'))
+		)
+		await assertFails(getDocs(collectionGroup(anonymous(), 'contributions')))
+	})
+
+	it('cannot be written, even by an admin', async () => {
+		await assertFails(
+			setDoc(doc(verified('admin-1'), `${ledger}/pi_1`), { status: 'captured' })
+		)
+		await assertFails(
+			setDoc(doc(verified('user-1'), `${ledger}/pi_new`), { amountCents: 1 })
 		)
 	})
 })
