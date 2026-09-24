@@ -45,7 +45,12 @@ it always kept the Dropbox Sign ones: a release matters most after someone
 has left.
 
 Seasons signed before September 2026 went through Dropbox Sign; their
-records are in `dropbox/{uid}/waivers`, kept read-only as history.
+records are in `dropbox/{uid}/waivers`, kept read-only as history. The 357
+signed PDFs were archived before the integration was removed, to the private
+`minnesota-winter-league-firestore-backups` bucket under
+`waiver-archive/dropbox-sign/`, with a manifest mapping each file to its
+player and season. Not the default bucket: `storage.rules` makes everything
+there publicly readable.
 
 A returning player's form is filled in from their last signature, except the
 signature itself, which is always typed again.
@@ -74,8 +79,8 @@ version, since they are what a signer actually clicks.
 
 ## Legal
 
-The text is the league's original, word for word. It has not been reviewed
-for this format; see the open items in `docs/ROADMAP.md` under
-"Waiver review". Minnesota's electronic-signature law (Minn. Stat. ch. 325L)
-gives a typed signature the same effect as a written one; what decides
-whether a release holds up is mostly its wording.
+The text is the league's original, word for word, and the league's attorney
+found it and the in-app signing sufficient in September 2026. Minnesota's
+electronic-signature law (Minn. Stat. ch. 325L) gives a typed signature the
+same effect as a written one. The waiver promises a banned player written
+notice with the reasons; the app does not send it, so an admin does.
