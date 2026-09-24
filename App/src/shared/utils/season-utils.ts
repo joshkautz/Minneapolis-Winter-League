@@ -81,3 +81,32 @@ export const didPlayerPayPreviousSeason = (
 		?.data()
 	return Boolean(previousPlayerSeason?.paid)
 }
+
+/**
+ * Which season to show a visitor when they arrive.
+ *
+ * A season the visitor picked themselves is remembered, but only until a
+ * newer season is created: someone who chose last season to look back at it
+ * should not still be shown it once the next one exists. Anything else —
+ * a first visit, a pick made before a newer season, a season since deleted —
+ * falls back to the newest.
+ *
+ * `pickedWhileNewestId` is the newest season at the moment of the pick. A
+ * stored pick without it predates this rule and is treated as stale.
+ */
+export const initialSelectedSeasonId = (params: {
+	pickedId: string | null
+	pickedWhileNewestId: string | null
+	newestId: string | undefined
+	seasonIds: string[]
+}): string | undefined => {
+	const { pickedId, pickedWhileNewestId, newestId, seasonIds } = params
+	if (
+		pickedId &&
+		pickedWhileNewestId === newestId &&
+		seasonIds.includes(pickedId)
+	) {
+		return pickedId
+	}
+	return newestId
+}

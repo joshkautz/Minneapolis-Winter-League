@@ -3,6 +3,7 @@ import type { QuerySnapshot, DocumentReference } from 'firebase/firestore'
 import type { PlayerSeasonDocument, SeasonDocument } from '@/types'
 import {
 	didPlayerPayPreviousSeason,
+	initialSelectedSeasonId,
 	isPlayerCaptainForSeason,
 	isPlayerPaidForSeason,
 	isPlayerSignedForSeason,
@@ -116,5 +117,82 @@ describe('didPlayerPayPreviousSeason', () => {
 			false
 		)
 		expect(didPlayerPayPreviousSeason(snap, undefined)).toBe(false)
+	})
+})
+
+describe('initialSelectedSeasonId', () => {
+	// Which season a visitor sees on arrival. Remembering the automatic
+	// default as though it were a choice once pinned every returning visitor
+	// to whichever season was newest on their first visit.
+	const seasonIds = ['fall-2026', 'spring-2026', 'fall-2025']
+	const newestId = 'fall-2026'
+
+	it('shows the newest season on a first visit', () => {
+		expect(
+			initialSelectedSeasonId({
+				pickedId: null,
+				pickedWhileNewestId: null,
+				newestId,
+				seasonIds,
+			})
+		).toBe('fall-2026')
+	})
+
+	it('keeps an older season the visitor picked while it is still the latest pick', () => {
+		expect(
+			initialSelectedSeasonId({
+				pickedId: 'fall-2025',
+				pickedWhileNewestId: 'fall-2026',
+				newestId,
+				seasonIds,
+			})
+		).toBe('fall-2025')
+	})
+
+	it('drops a pick once a newer season has been created', () => {
+		// Picked Spring while Spring was newest; Fall has since been added.
+		expect(
+			initialSelectedSeasonId({
+				pickedId: 'spring-2026',
+				pickedWhileNewestId: 'spring-2026',
+				newestId,
+				seasonIds,
+			})
+		).toBe('fall-2026')
+	})
+
+	it('treats a pick stored before this rule as stale', () => {
+		// Every visitor before the fix: a season id with no record of what
+		// was newest. They were pinned by the old default, not by choice.
+		expect(
+			initialSelectedSeasonId({
+				pickedId: 'spring-2026',
+				pickedWhileNewestId: null,
+				newestId,
+				seasonIds,
+			})
+		).toBe('fall-2026')
+	})
+
+	it('ignores a picked season that no longer exists', () => {
+		expect(
+			initialSelectedSeasonId({
+				pickedId: 'deleted-season',
+				pickedWhileNewestId: 'fall-2026',
+				newestId,
+				seasonIds,
+			})
+		).toBe('fall-2026')
+	})
+
+	it('has nothing to show before any season exists', () => {
+		expect(
+			initialSelectedSeasonId({
+				pickedId: null,
+				pickedWhileNewestId: null,
+				newestId: undefined,
+				seasonIds: [],
+			})
+		).toBeUndefined()
 	})
 })
