@@ -7,7 +7,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/shared/components'
 
 import { useCreateTeamForm } from '@/features/public/create/hooks'
 import type { TeamCreationData } from '@/features/public/create/hooks/use-team-creation'
@@ -98,14 +98,16 @@ export const CreateTeamForm = ({
 					</div>
 
 					<div className='pt-2'>
-						<Button
+						<LoadingButton
 							type='submit'
-							disabled={isSubmitting || isTeamRegistrationFull}
+							disabled={isTeamRegistrationFull}
 							className='w-full h-11'
 							size='lg'
+							loading={isSubmitting}
+							loadingText='Creating New Team...'
 						>
-							{isSubmitting ? 'Creating New Team...' : 'Create New Team'}
-						</Button>
+							Create New Team
+						</LoadingButton>
 					</div>
 				</form>
 			</Form>

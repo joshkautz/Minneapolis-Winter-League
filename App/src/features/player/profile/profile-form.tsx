@@ -1,5 +1,5 @@
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/shared/components'
 import {
 	Card,
 	CardContent,
@@ -145,12 +145,14 @@ export const ProfileForm = ({
 								</FormItem>
 							)}
 						/>
-						<Button
-							disabled={!form.formState.isDirty || isSubmitting}
+						<LoadingButton
+							disabled={!form.formState.isDirty}
 							type='submit'
+							loading={isSubmitting}
+							loadingText='Saving Changes...'
 						>
-							{isSubmitting ? 'Saving Changes...' : 'Save Changes'}
-						</Button>
+							Save Changes
+						</LoadingButton>
 					</form>
 				</Form>
 			</CardContent>

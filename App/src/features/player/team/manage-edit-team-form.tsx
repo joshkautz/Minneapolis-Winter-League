@@ -7,9 +7,8 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { LoadingSpinner } from '@/shared/components'
+import { LoadingSpinner, LoadingButton } from '@/shared/components'
 import { useManageEditTeamForm } from './hooks/use-manage-edit-team-form'
 import { useTeamManagement } from './hooks/use-team-management'
 
@@ -143,9 +142,14 @@ export const ManageEditTeamForm = ({
 					)}
 
 					<div className='pt-2'>
-						<Button type='submit' disabled={isSubmitting} className='w-full'>
-							{isSubmitting ? 'Updating Team...' : 'Save Changes'}
-						</Button>
+						<LoadingButton
+							type='submit'
+							className='w-full'
+							loading={isSubmitting}
+							loadingText='Updating Team...'
+						>
+							Save Changes
+						</LoadingButton>
 					</div>
 				</form>
 			</Form>
