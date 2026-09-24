@@ -11,7 +11,8 @@ import {
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/shared/components'
+import { usePendingAction } from '@/shared/hooks/use-pending-action'
 import {
 	PlayerDocument,
 	TeamSeasonDocument,
@@ -30,7 +31,7 @@ export const ManageTeamDetail = ({
 		authenticatedUserDocumentSnapshot:
 			DocumentSnapshot<PlayerDocument> | undefined,
 		teamQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument>
-	) => Promise<void> | undefined
+	) => Promise<boolean>
 	currentSeasonTeamsQueryDocumentSnapshot: QueryDocumentSnapshot<TeamSeasonDocument>
 	playerDocumentSnapshot: DocumentSnapshot<PlayerDocument> | undefined
 }) => {
@@ -41,19 +42,23 @@ export const ManageTeamDetail = ({
 		)
 	)
 
+	const teamId = canonicalTeamIdFromTeamSeasonDoc(
+		currentSeasonTeamsQueryDocumentSnapshot
+	)
+
 	// Log and notify on query errors
 	useEffect(() => {
 		if (offersError) {
 			logger.error('Failed to load offers:', {
 				component: 'ManageTeamDetail',
-				teamId: currentSeasonTeamsQueryDocumentSnapshot.id,
+				teamId,
 				error: offersError.message,
 			})
 			toast.error('Failed to load offers', {
 				description: offersError.message,
 			})
 		}
-	}, [offersError, currentSeasonTeamsQueryDocumentSnapshot.id])
+	}, [offersError, teamId])
 
 	// Check for offers that should block new requests
 	const blockingOffers = offersForPlayerByTeamQuerySnapshot?.docs.filter(
@@ -68,11 +73,13 @@ export const ManageTeamDetail = ({
 	)
 
 	const isRequestDisabled = (blockingOffers?.length ?? 0) > 0
+	// Stays pending until the new offer arrives through the listener above.
+	const { pending: isRequesting, run } = usePendingAction(isRequestDisabled)
 
 	return (
 		<div className='flex items-center gap-2 py-2'>
 			<Link
-				to={`/teams/${canonicalTeamIdFromTeamSeasonDoc(currentSeasonTeamsQueryDocumentSnapshot)}/${currentSeasonTeamsQueryDocumentSnapshot.id}`}
+				to={`/teams/${teamId}/${currentSeasonTeamsQueryDocumentSnapshot.id}`}
 			>
 				<Avatar>
 					<AvatarImage
@@ -88,26 +95,30 @@ export const ManageTeamDetail = ({
 				</Avatar>
 			</Link>
 			<Link
-				to={`/teams/${canonicalTeamIdFromTeamSeasonDoc(currentSeasonTeamsQueryDocumentSnapshot)}/${currentSeasonTeamsQueryDocumentSnapshot.id}`}
+				to={`/teams/${teamId}/${currentSeasonTeamsQueryDocumentSnapshot.id}`}
 			>
 				<div className='mr-2'>
 					<p>{currentSeasonTeamsQueryDocumentSnapshot.data().name}</p>
 				</div>
 			</Link>
 			<div className='flex justify-end flex-1 gap-2'>
-				<Button
+				<LoadingButton
 					size={'sm'}
-					variant={'default'}
+					variant={isRequestDisabled ? 'outline' : 'default'}
 					disabled={isRequestDisabled}
+					loading={isRequesting}
+					loadingText='Requesting...'
 					onClick={() =>
-						handleRequest(
-							playerDocumentSnapshot,
-							currentSeasonTeamsQueryDocumentSnapshot
+						run(() =>
+							handleRequest(
+								playerDocumentSnapshot,
+								currentSeasonTeamsQueryDocumentSnapshot
+							)
 						)
 					}
 				>
-					Request to join
-				</Button>
+					{isRequestDisabled ? 'Requested' : 'Request to join'}
+				</LoadingButton>
 			</div>
 		</div>
 	)

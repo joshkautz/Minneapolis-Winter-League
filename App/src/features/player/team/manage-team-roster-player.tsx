@@ -9,11 +9,15 @@ import {
 	DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
 import { DotsVerticalIcon, StarFilledIcon } from '@radix-ui/react-icons'
-import { useCallback, useMemo, useEffect } from 'react'
+import { useCallback, useMemo, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDocument } from 'react-firebase-hooks/firestore'
-import { DestructiveConfirmationDialog } from '@/shared/components'
+import {
+	DestructiveConfirmationDialog,
+	LoadingSpinner,
+} from '@/shared/components'
+import { usePendingAction } from '@/shared/hooks/use-pending-action'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
@@ -79,6 +83,17 @@ export const ManageTeamRosterPlayer = ({
 		[playerSeasonSnapshot]
 	)
 
+	// Promote and demote run from a menu that closes on click, so the menu's
+	// trigger is where this row shows the change is on its way. Waits for
+	// the captain flag to flip, so the star and the spinner change together.
+	const [captainChangeTarget, setCaptainChangeTarget] = useState<
+		boolean | null
+	>(null)
+	const { pending: isChangingCaptain, run: runCaptainChange } =
+		usePendingAction(
+			captainChangeTarget === null || isPlayerCaptain === captainChangeTarget
+		)
+
 	// Registered means signed, plus paid under per-player pricing; the
 	// season decides which.
 	const isPlayerRegistered = useMemo(
@@ -90,98 +105,104 @@ export const ManageTeamRosterPlayer = ({
 		[playerSeasonSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
 
-	const demoteFromCaptainOnClickHandler = useCallback(async () => {
-		if (!playerSnapshot?.id || !canonicalTeamId) {
-			toast.error('Missing required data to demote captain')
-			return
-		}
+	const demoteFromCaptainOnClickHandler =
+		useCallback(async (): Promise<boolean> => {
+			if (!playerSnapshot?.id || !canonicalTeamId) {
+				toast.error('Missing required data to demote captain')
+				return false
+			}
 
-		try {
-			await updateTeamRosterViaFunction({
-				teamId: canonicalTeamId,
-				playerId: playerSnapshot.id,
-				action: 'demote',
-			})
+			try {
+				await updateTeamRosterViaFunction({
+					teamId: canonicalTeamId,
+					playerId: playerSnapshot.id,
+					action: 'demote',
+				})
 
-			logger.userAction('captain_demoted', 'ManageTeamRosterPlayer', {
-				playerId: playerSnapshot?.id,
-				teamId: canonicalTeamId,
-				playerName: playerSnapshot?.data()?.firstname,
-			})
-			logger.firebase('demoteFromCaptain', 'teams', undefined, {
-				playerId: playerSnapshot?.id,
-				teamId: canonicalTeamId,
-			})
-			toast.success(
-				`${
-					playerSnapshot?.data()?.firstname ?? 'Player'
-				} is no longer a team captain`,
-				{
-					description:
-						'They are still on your roster. You may be promote them back at any time.',
-				}
-			)
-		} catch (error) {
-			logger.error(
-				'Demote captain failed',
-				error instanceof Error ? error : new Error(String(error)),
-				{
-					component: 'ManageTeamRosterPlayer',
-					action: 'demote_captain',
+				logger.userAction('captain_demoted', 'ManageTeamRosterPlayer', {
 					playerId: playerSnapshot?.id,
 					teamId: canonicalTeamId,
-				}
-			)
-			errorHandler.handleFirebase(error, 'demote_captain', 'teams', {
-				fallbackMessage: 'Unable to demote captain. Please try again.',
-			})
-		}
-	}, [canonicalTeamId, playerSnapshot])
-
-	const promoteToCaptainOnClickHandler = useCallback(async () => {
-		if (!playerSnapshot?.id || !canonicalTeamId) {
-			toast.error('Missing required data to promote captain')
-			return
-		}
-
-		try {
-			await updateTeamRosterViaFunction({
-				teamId: canonicalTeamId,
-				playerId: playerSnapshot.id,
-				action: 'promote',
-			})
-
-			logger.userAction('captain_promoted', 'ManageTeamRosterPlayer', {
-				playerId: playerSnapshot?.id,
-				teamId: canonicalTeamId,
-				playerName: playerSnapshot?.data()?.firstname,
-			})
-			logger.firebase('promoteToCaptain', 'teams', undefined, {
-				playerId: playerSnapshot?.id,
-				teamId: canonicalTeamId,
-			})
-			toast.success('Congratulations', {
-				description: `${
-					playerSnapshot?.data()?.firstname ?? 'Player'
-				} has been promoted to team captain.`,
-			})
-		} catch (error) {
-			logger.error(
-				'Promote captain failed',
-				error instanceof Error ? error : new Error(String(error)),
-				{
-					component: 'ManageTeamRosterPlayer',
-					action: 'promote_captain',
+					playerName: playerSnapshot?.data()?.firstname,
+				})
+				logger.firebase('demoteFromCaptain', 'teams', undefined, {
 					playerId: playerSnapshot?.id,
 					teamId: canonicalTeamId,
-				}
-			)
-			errorHandler.handleFirebase(error, 'promote_captain', 'teams', {
-				fallbackMessage:
-					'Unable to promote captain. Ensure your email is verified and try again.',
-			})
-		}
-	}, [canonicalTeamId, playerSnapshot])
+				})
+				toast.success(
+					`${
+						playerSnapshot?.data()?.firstname ?? 'Player'
+					} is no longer a team captain`,
+					{
+						description:
+							'They are still on your roster. You may be promote them back at any time.',
+					}
+				)
+				return true
+			} catch (error) {
+				logger.error(
+					'Demote captain failed',
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						component: 'ManageTeamRosterPlayer',
+						action: 'demote_captain',
+						playerId: playerSnapshot?.id,
+						teamId: canonicalTeamId,
+					}
+				)
+				errorHandler.handleFirebase(error, 'demote_captain', 'teams', {
+					fallbackMessage: 'Unable to demote captain. Please try again.',
+				})
+				return false
+			}
+		}, [canonicalTeamId, playerSnapshot])
+
+	const promoteToCaptainOnClickHandler =
+		useCallback(async (): Promise<boolean> => {
+			if (!playerSnapshot?.id || !canonicalTeamId) {
+				toast.error('Missing required data to promote captain')
+				return false
+			}
+
+			try {
+				await updateTeamRosterViaFunction({
+					teamId: canonicalTeamId,
+					playerId: playerSnapshot.id,
+					action: 'promote',
+				})
+
+				logger.userAction('captain_promoted', 'ManageTeamRosterPlayer', {
+					playerId: playerSnapshot?.id,
+					teamId: canonicalTeamId,
+					playerName: playerSnapshot?.data()?.firstname,
+				})
+				logger.firebase('promoteToCaptain', 'teams', undefined, {
+					playerId: playerSnapshot?.id,
+					teamId: canonicalTeamId,
+				})
+				toast.success('Congratulations', {
+					description: `${
+						playerSnapshot?.data()?.firstname ?? 'Player'
+					} has been promoted to team captain.`,
+				})
+				return true
+			} catch (error) {
+				logger.error(
+					'Promote captain failed',
+					error instanceof Error ? error : new Error(String(error)),
+					{
+						component: 'ManageTeamRosterPlayer',
+						action: 'promote_captain',
+						playerId: playerSnapshot?.id,
+						teamId: canonicalTeamId,
+					}
+				)
+				errorHandler.handleFirebase(error, 'promote_captain', 'teams', {
+					fallbackMessage:
+						'Unable to promote captain. Ensure your email is verified and try again.',
+				})
+				return false
+			}
+		}, [canonicalTeamId, playerSnapshot])
 
 	const removeFromTeamOnClickHandler = useCallback(async () => {
 		if (!playerSnapshot?.id || !canonicalTeamId) {
@@ -254,22 +275,38 @@ export const ManageTeamRosterPlayer = ({
 										size={'sm'}
 										variant={'ghost'}
 										className='h-8 w-8'
-										aria-label={`Manage ${playerSnapshot.data()?.firstname} ${playerSnapshot.data()?.lastname}`}
+										disabled={isChangingCaptain}
+										aria-busy={isChangingCaptain}
+										aria-label={
+											isChangingCaptain
+												? `Updating ${playerSnapshot.data()?.firstname} ${playerSnapshot.data()?.lastname}`
+												: `Manage ${playerSnapshot.data()?.firstname} ${playerSnapshot.data()?.lastname}`
+										}
 									>
-										<DotsVerticalIcon className='h-4 w-4' />
+										{isChangingCaptain ? (
+											<LoadingSpinner size='sm' withMargin={false} />
+										) : (
+											<DotsVerticalIcon className='h-4 w-4' />
+										)}
 									</Button>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent className={'w-56'} align='end'>
 									<DropdownMenuGroup>
 										<DropdownMenuItem
 											disabled={!isPlayerCaptain}
-											onClick={demoteFromCaptainOnClickHandler}
+											onClick={() => {
+												setCaptainChangeTarget(false)
+												void runCaptainChange(demoteFromCaptainOnClickHandler)
+											}}
 										>
 											Demote from captain
 										</DropdownMenuItem>
 										<DropdownMenuItem
 											disabled={isPlayerCaptain}
-											onClick={promoteToCaptainOnClickHandler}
+											onClick={() => {
+												setCaptainChangeTarget(true)
+												void runCaptainChange(promoteToCaptainOnClickHandler)
+											}}
 										>
 											Promote to captain
 										</DropdownMenuItem>
