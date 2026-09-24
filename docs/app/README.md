@@ -65,7 +65,7 @@ App/src/
 - Individual statistics
 - Team history
 - Payment status
-- Waiver management
+- Waiver signing, with a printable copy
 
 ## 🔒 Security Features
 

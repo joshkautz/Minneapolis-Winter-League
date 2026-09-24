@@ -96,9 +96,10 @@ src/
 **Pattern**: Stateless utility functions
 **Organization**: By business domain
 
-- **Waiver Service**: Signature request management
-- **Team Registration**: Registration status logic
-- **Notification Service**: Communication handling
+- **Team Registration** (`teamRegistrationService.ts`): whether a team qualifies, and the twelve-spot race
+- **Team Payments** (`teamContributionIntake.ts`, `teamSettlementService.ts`, `teamPaymentsSweep.ts`, `teamPaymentsReconciliation.ts`): contributions, capture and release
+- **Team Deletion** (`teamDeletionService.ts`): removing a team's season with its roster, offers and logo
+- **Rankings** (`playerRankings/`, `swissRankings/`): the TrueSkill rebuild and Swiss standings
 
 ### 5. Shared Utilities (`shared/`)
 

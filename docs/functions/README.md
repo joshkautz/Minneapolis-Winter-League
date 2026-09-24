@@ -32,12 +32,12 @@ Functions/src/
 
 ## Callables
 
-48 in total, every one covered by the authorization sweep in
+46 in total, every one covered by the authorization sweep in
 `tests/integration/callables-authorization.test.ts`.
 
 | Domain        | User                                                                         | Admin                                                                                 |
 | ------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Players       | `createPlayer`, `updatePlayer`, `deletePlayer`                               | `updatePlayerEmail`, `updatePlayerAdmin`, `getPlayerAuthInfo`                         |
+| Players       | `createPlayer`, `updatePlayer`, `deletePlayer`                               | `updatePlayerAdmin`, `getPlayerAuthInfo`                                              |
 | Teams         | `createTeam`, `rolloverTeam`, `updateTeam`, `deleteTeam`, `updateTeamRoster` | `deleteUnregisteredTeam`, `updateTeamAdmin`, `mergeTeams`                             |
 | Offers        | `createOffer`, `updateOffer`                                                 |                                                                                       |
 | Payments      | `createStripeCheckout`, `createTeamContributionCheckout`                     | `releaseTeamContribution`                                                             |
