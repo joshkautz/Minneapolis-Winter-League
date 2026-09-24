@@ -46,8 +46,10 @@ contribution ledger and its no-orphan guards, the registration rule, and
 taking money (`createTeamContributionCheckout` plus the webhook), and the
 whole settlement lifecycle: capture on registration, release on the
 twelve-team lock and when registration closes, capture before expiry, an
-admin release, and a daily reconciliation with Stripe. Left: the team payment
-UI and cutover. No season opts in, so none of it touches money yet.
+admin release, and a daily reconciliation with Stripe; the team payment card
+on My Team and the admin payments view. Left: cutover — the season's home
+page copy, setting the total, and rehearsing the race. No season opts in, so
+none of it touches money yet.
 
 Three decisions carry it:
 

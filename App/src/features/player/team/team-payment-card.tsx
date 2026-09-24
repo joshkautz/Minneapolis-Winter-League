@@ -1,0 +1,334 @@
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCollection } from 'react-firebase-hooks/firestore'
+import { Timestamp } from 'firebase/firestore'
+import { toast } from 'sonner'
+import { CheckCircle, CreditCard, Info } from 'lucide-react'
+import { useSeasonsContext, useTeamsContext } from '@/providers'
+import { useUserStatus } from '@/shared/hooks/use-user-status'
+import {
+	LoadingSpinner,
+	NotificationCard,
+	TeamContributionsList,
+} from '@/shared/components'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Progress } from '@/components/ui/progress'
+import { startTeamContribution } from '@/firebase'
+import {
+	canonicalTeamIdFromTeamSeasonDoc,
+	teamContributionsQuery,
+} from '@/firebase/collections/teams'
+import { playerSeasonsOnTeamQuery } from '@/firebase/collections/players'
+import {
+	CENTS_PER_DOLLAR,
+	committedCents,
+	contributionAmountError,
+	formatDollars,
+	formatTimestamp,
+	MIN_SIGNED_PLAYERS,
+	REGISTRATION_SPOTS,
+	suggestedContributionsCents,
+	usesTeamPayments,
+} from '@/shared/utils'
+
+/**
+ * Shown above the pay button. A card hold looks like a charge on a
+ * statement, so the payer is told up front what it is and when it becomes
+ * one. The same wording is on Stripe's page.
+ */
+const HOLD_EXPLANATION =
+	`Your card is authorized now and charged only when your team is ` +
+	`confirmed. If your team does not get one of the ${REGISTRATION_SPOTS} ` +
+	`spots, the authorization is released and you are never charged.`
+
+/** Tells the payer how Checkout went, once, when Stripe sends them back. */
+const usePaymentReturnToast = (): void => {
+	useEffect(() => {
+		const params = new URLSearchParams(window.location.search)
+		const status = params.get('payment')
+		if (status !== 'success' && status !== 'cancel') return
+
+		if (status === 'success') {
+			toast.success('Card authorized', {
+				description:
+					'Your contribution will appear here in a moment. You are only ' +
+					'charged once your team is confirmed.',
+			})
+		} else {
+			toast.info('Payment cancelled', {
+				description: 'Nothing was charged. You can try again when ready.',
+			})
+		}
+		params.delete('payment')
+		const query = params.toString()
+		window.history.replaceState(
+			{},
+			'',
+			window.location.pathname + (query ? `?${query}` : '')
+		)
+	}, [])
+}
+
+const ContributeForm = ({ remainingCents }: { remainingCents: number }) => {
+	const suggestions = useMemo(
+		() => suggestedContributionsCents(remainingCents),
+		[remainingCents]
+	)
+	const [dollars, setDollars] = useState(
+		String((suggestions[0] ?? 0) / CENTS_PER_DOLLAR)
+	)
+	const [submitting, setSubmitting] = useState(false)
+
+	const amountCents = Math.round(Number(dollars) * CENTS_PER_DOLLAR)
+	const error =
+		dollars.trim() === ''
+			? 'Enter an amount in dollars.'
+			: contributionAmountError(amountCents, remainingCents)
+
+	const submit = async () => {
+		if (error) return
+		setSubmitting(true)
+		const failure = await startTeamContribution(amountCents)
+		if (failure) {
+			setSubmitting(false)
+			toast.error('Could not start the payment', { description: failure })
+		}
+	}
+
+	return (
+		<div className='space-y-3'>
+			<div className='flex flex-wrap gap-2'>
+				{suggestions.map((cents) => (
+					<Button
+						key={cents}
+						type='button'
+						size='sm'
+						variant={amountCents === cents ? 'default' : 'outline'}
+						onClick={() => setDollars(String(cents / CENTS_PER_DOLLAR))}
+					>
+						{cents === remainingCents
+							? `All ${formatDollars(cents)}`
+							: formatDollars(cents)}
+					</Button>
+				))}
+			</div>
+
+			<div className='space-y-1'>
+				<Label htmlFor='contribution-amount'>Amount (dollars)</Label>
+				<Input
+					id='contribution-amount'
+					inputMode='numeric'
+					type='number'
+					min={1}
+					step={1}
+					value={dollars}
+					onChange={(event) => setDollars(event.target.value)}
+					aria-invalid={Boolean(error)}
+					aria-describedby='contribution-amount-error'
+				/>
+				{error && (
+					<p
+						id='contribution-amount-error'
+						className='text-sm text-destructive'
+					>
+						{error}
+					</p>
+				)}
+			</div>
+
+			<p className='text-sm text-muted-foreground'>{HOLD_EXPLANATION}</p>
+
+			<Button
+				onClick={submit}
+				disabled={Boolean(error) || submitting}
+				className='w-full'
+			>
+				{submitting ? (
+					<LoadingSpinner size='sm' className='mr-2' />
+				) : (
+					<CreditCard className='mr-2 h-4 w-4' />
+				)}
+				{submitting
+					? 'Opening Stripe...'
+					: error
+						? 'Contribute'
+						: `Contribute ${formatDollars(amountCents)}`}
+			</Button>
+		</div>
+	)
+}
+
+/**
+ * The team's registration payment: what is committed, what is left, who
+ * paid, and a way to contribute. Only for seasons on team payments, and
+ * only readable by the team's own roster.
+ */
+export const TeamPaymentCard = () => {
+	usePaymentReturnToast()
+
+	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
+	const { currentSeasonData, isBanned } = useUserStatus()
+
+	const season = currentSeasonQueryDocumentSnapshot?.data()
+	const seasonId = currentSeasonQueryDocumentSnapshot?.id
+	const teamRef = currentSeasonData?.team ?? undefined
+	const teamId = teamRef?.id
+	const teamPayments = usesTeamPayments(season)
+
+	const teamSeason = useMemo(
+		() =>
+			currentSeasonTeamsQuerySnapshot?.docs
+				.find((doc) => canonicalTeamIdFromTeamSeasonDoc(doc) === teamId)
+				?.data(),
+		[currentSeasonTeamsQuerySnapshot, teamId]
+	)
+
+	const [contributionsSnapshot, contributionsLoading, contributionsError] =
+		useCollection(
+			teamPayments && teamId && seasonId
+				? teamContributionsQuery(teamId, seasonId)
+				: undefined
+		)
+	const [playerSeasonsSnapshot] = useCollection(
+		teamPayments ? playerSeasonsOnTeamQuery(teamRef) : undefined
+	)
+
+	// A player-season's id is its season id, so `doc.id` here is the season —
+	// which is what this filters on — not the player.
+	const signedPlayers = useMemo(
+		() =>
+			playerSeasonsSnapshot?.docs.filter(
+				(doc) => doc.id === seasonId && doc.data().signed
+			).length ?? 0,
+		[playerSeasonsSnapshot, seasonId]
+	)
+
+	useEffect(() => {
+		if (contributionsError) {
+			toast.error('Could not load your team’s payments', {
+				description: contributionsError.message,
+			})
+		}
+	}, [contributionsError])
+
+	if (!teamPayments || !season) return null
+
+	const totalCents = season.teamRegistrationTotalCents
+	const contributions = contributionsSnapshot?.docs ?? []
+	const committed = committedCents(contributions.map((doc) => doc.data()))
+	const remainingCents = Math.max(0, totalCents - committed)
+	const registered = teamSeason?.registered === true
+
+	const now = Timestamp.now()
+	const notOpenYet = now < season.registrationStart
+	const closed = now > season.registrationEnd
+	const full = (season.registeredTeamCount ?? 0) >= REGISTRATION_SPOTS
+
+	let status: ReactNode
+	if (registered) {
+		status = (
+			<Alert className='border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'>
+				<CheckCircle className='h-4 w-4 !text-green-600 dark:!text-green-400' />
+				<AlertDescription className='!text-green-800 dark:!text-green-200'>
+					Your team is registered for {season.name}.
+				</AlertDescription>
+			</Alert>
+		)
+	} else if (full || closed) {
+		status = (
+			<Alert>
+				<Info className='h-4 w-4' />
+				<AlertDescription>
+					{full
+						? `All ${REGISTRATION_SPOTS} spots have been taken.`
+						: `Registration closed on ${formatTimestamp(season.registrationEnd)}.`}{' '}
+					Any money your team committed is released automatically: holds are
+					cancelled and nobody is charged.
+				</AlertDescription>
+			</Alert>
+		)
+	} else if (notOpenYet) {
+		status = (
+			<Alert>
+				<Info className='h-4 w-4' />
+				<AlertDescription>
+					Contributions open with registration on{' '}
+					{formatTimestamp(season.registrationStart)}.
+				</AlertDescription>
+			</Alert>
+		)
+	} else if (remainingCents === 0) {
+		status = (
+			<Alert>
+				<Info className='h-4 w-4' />
+				<AlertDescription>
+					Your team has committed the full amount. It registers as soon as{' '}
+					{MIN_SIGNED_PLAYERS} players have signed their waiver.
+				</AlertDescription>
+			</Alert>
+		)
+	} else if (isBanned) {
+		status = null
+	} else {
+		status = <ContributeForm remainingCents={remainingCents} />
+	}
+
+	return (
+		<NotificationCard
+			title='Team Registration'
+			description={`Your team registers once ${MIN_SIGNED_PLAYERS} players have signed their waiver and ${formatDollars(totalCents)} has been committed, split however you like. Only your teammates can see this.`}
+			className='max-w-none'
+		>
+			{contributionsLoading ? (
+				<LoadingSpinner size='sm' />
+			) : (
+				<div className='space-y-5'>
+					<div className='space-y-3'>
+						<div className='space-y-1'>
+							<div className='flex justify-between text-sm'>
+								<span>Committed</span>
+								<span className='tabular-nums'>
+									{formatDollars(Math.min(committed, totalCents))} of{' '}
+									{formatDollars(totalCents)}
+								</span>
+							</div>
+							<Progress
+								value={Math.min(100, (committed / totalCents) * 100)}
+								aria-label='Money committed'
+							/>
+						</div>
+						<div className='space-y-1'>
+							<div className='flex justify-between text-sm'>
+								<span>Players signed</span>
+								<span className='tabular-nums'>
+									{Math.min(signedPlayers, MIN_SIGNED_PLAYERS)} of{' '}
+									{MIN_SIGNED_PLAYERS}
+								</span>
+							</div>
+							<Progress
+								value={Math.min(
+									100,
+									(signedPlayers / MIN_SIGNED_PLAYERS) * 100
+								)}
+								aria-label='Players signed'
+							/>
+						</div>
+					</div>
+
+					{status}
+
+					<div className='space-y-2'>
+						<h4 className='text-sm font-medium'>Contributions</h4>
+						<TeamContributionsList
+							contributions={contributions}
+							emptyMessage='Nobody has contributed yet.'
+						/>
+					</div>
+				</div>
+			)}
+		</NotificationCard>
+	)
+}

@@ -698,11 +698,39 @@ a read rule for the roster and admins. The hourly sweep now finds teams by
 their live holds, and past seasons whose money is all settled cost a query
 per team and nothing more.
 
-**4b. Left:** the team payment page — balance, remaining, contribute, and each
-contribution's state — and the admin view of a team's ledger with the manual
-release.
+**4b. Registration status. — done.** Under team payments a player registers
+by signing, but the App assumed paid-and-signed everywhere: roster badges,
+the profile's task count and payment section, the waiver section's
+precondition, and the admin waiver button, as did `sendWaiverAdmin`. All now
+follow the season's rule through `App/src/shared/utils/team-payments.ts`,
+which mirrors the server's rules for the page to explain itself.
+
+**4c. The payment page. — done.** A card on My Team, for seasons on team
+payments only: money committed and players signed against what is needed,
+each contribution with its state (a partial capture shows what was first
+held), and a whole-dollar contribution form with the hold explained above
+the button. It says plainly when the team is registered, when the season has
+filled, and when registration has closed, and in the last two that any money
+is released automatically. The profile points players there instead of
+offering an individual payment.
+
+Admins get a Payments dialog per team on the team management page, with the
+manual release behind a required reason and a warning that a registered team
+will be left short.
+
+The home page's "How to Register" steps were reordered to match what now
+happens in every season — join a team, then sign the waiver it triggers —
+with the payment step worded for the season's pricing.
 
 ### Phase 5 — cutover
+
+Before setting `teamRegistrationTotalCents` on the new season:
+
+- **Rewrite the home page's season copy.** It is hardcoded for the last
+  per-player season — "$100 for 7 weeks", refunds for players who do not find
+  a team, "ten fully registered players". Under team payments those are wrong.
+- **Set the total in whole dollars.** Checkout refuses a total that is not.
+- **Rehearse the race** described under testing, on the emulators.
 
 Turn the flag on for the new season. The old rule stays available for any
 season still using it.
