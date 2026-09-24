@@ -4,7 +4,7 @@
  * Allows admin users to create, edit, and delete seasons
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { getDocs } from 'firebase/firestore'
@@ -16,7 +16,6 @@ import {
 	Edit,
 	Trash2,
 	Loader2,
-	X,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -33,10 +32,7 @@ import {
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
-import {
-	canonicalTeamIdFromTeamSeasonDoc,
-	teamsInSeasonQuery,
-} from '@/firebase/collections/teams'
+import { teamsInSeasonQuery } from '@/firebase/collections/teams'
 import {
 	createSeasonViaFunction,
 	updateSeasonViaFunction,
@@ -75,7 +71,6 @@ interface ProcessedSeason {
 	dateEnd: Date
 	registrationStart: Date
 	registrationEnd: Date
-	teamIds: string[]
 	teamCount: number
 	stripe?: {
 		priceId: string
@@ -128,7 +123,6 @@ export const SeasonManagement = () => {
 	const [formDateEnd, setFormDateEnd] = useState('')
 	const [formRegistrationStart, setFormRegistrationStart] = useState('')
 	const [formRegistrationEnd, setFormRegistrationEnd] = useState('')
-	const [formTeamIds, setFormTeamIds] = useState<string[]>([])
 
 	// Stripe configuration form state
 	const [formStripePriceId, setFormStripePriceId] = useState('')
@@ -144,12 +138,6 @@ export const SeasonManagement = () => {
 	const [formFormat, setFormFormat] = useState<SeasonFormat>(
 		SeasonFormat.TRADITIONAL
 	)
-
-	// Team selection state
-	const [availableTeams, setAvailableTeams] = useState<
-		{ id: string; name: string }[]
-	>([])
-	const [selectedTeamId, setSelectedTeamId] = useState('')
 
 	// Delete confirmation state
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -174,19 +162,10 @@ export const SeasonManagement = () => {
 					const seasonId = seasonDoc.id
 
 					try {
-						// Teams in this season come from the team-side season
-						// subcollection (collection-group `seasons` filtered by
-						// season ref). The canonical team id is the grandparent
-						// doc id. Filter out player season subdocs which share
-						// the same `seasons` collection name.
+						// A season's teams are the teamSeasons documents that point
+						// at it.
 						const teamsQuery = teamsInSeasonQuery(seasonDoc.ref)
-						const teamIds: string[] = []
-						if (teamsQuery) {
-							const snap = await getDocs(teamsQuery)
-							snap.docs.forEach((d) => {
-								teamIds.push(canonicalTeamIdFromTeamSeasonDoc(d))
-							})
-						}
+						const teamCount = teamsQuery ? (await getDocs(teamsQuery)).size : 0
 
 						return {
 							id: seasonId,
@@ -195,8 +174,7 @@ export const SeasonManagement = () => {
 							dateEnd: seasonData.dateEnd.toDate(),
 							registrationStart: seasonData.registrationStart.toDate(),
 							registrationEnd: seasonData.registrationEnd.toDate(),
-							teamIds,
-							teamCount: teamIds.length,
+							teamCount,
 							stripe: seasonData.stripe,
 							format: seasonData.format,
 							teamRegistrationTotalCents: usesTeamPayments(seasonData)
@@ -216,36 +194,6 @@ export const SeasonManagement = () => {
 			return validSeasons
 		}
 	)
-
-	// Load available teams when editing a season
-	useEffect(() => {
-		if (dialogMode === 'edit' && selectedSeasonId) {
-			const loadTeams = async () => {
-				try {
-					const seasonDoc = seasonsSnapshot?.docs.find(
-						(doc) => doc.id === selectedSeasonId
-					)
-					if (!seasonDoc) return
-
-					const seasonRef = seasonDoc.ref
-					const teamsQuery = teamsInSeasonQuery(seasonRef)
-
-					if (teamsQuery) {
-						const teamsSnapshot = await getDocs(teamsQuery)
-						const teams = teamsSnapshot.docs.map((d) => ({
-							id: canonicalTeamIdFromTeamSeasonDoc(d),
-							name: d.data().name,
-						}))
-						setAvailableTeams(teams)
-					}
-				} catch (error) {
-					logger.error('Error loading teams:', error)
-				}
-			}
-
-			loadTeams()
-		}
-	}, [dialogMode, selectedSeasonId, seasonsSnapshot])
 
 	const formatDateTime = (date: Date) => {
 		return format(date, 'MMM dd, yyyy h:mm a')
@@ -269,8 +217,6 @@ export const SeasonManagement = () => {
 		setFormDateEnd('')
 		setFormRegistrationStart('')
 		setFormRegistrationEnd('')
-		setFormTeamIds([])
-		setAvailableTeams([])
 		// Reset Stripe fields
 		setFormStripePriceId('')
 		setFormStripePriceIdDev('')
@@ -290,7 +236,6 @@ export const SeasonManagement = () => {
 		setFormDateEnd(formatDateForInput(season.dateEnd))
 		setFormRegistrationStart(formatDateForInput(season.registrationStart))
 		setFormRegistrationEnd(formatDateForInput(season.registrationEnd))
-		setFormTeamIds(season.teamIds)
 		// Populate Stripe fields from existing data
 		setFormStripePriceId(season.stripe?.priceId || '')
 		setFormStripePriceIdDev(season.stripe?.priceIdDev || '')
@@ -316,9 +261,6 @@ export const SeasonManagement = () => {
 		setFormDateEnd('')
 		setFormRegistrationStart('')
 		setFormRegistrationEnd('')
-		setFormTeamIds([])
-		setAvailableTeams([])
-		setSelectedTeamId('')
 		// Reset Stripe fields
 		setFormStripePriceId('')
 		setFormStripePriceIdDev('')
@@ -328,17 +270,6 @@ export const SeasonManagement = () => {
 		setFormFormat(SeasonFormat.TRADITIONAL)
 		setFormPricing('player')
 		setFormTeamTotalDollars('')
-	}
-
-	const handleAddTeam = () => {
-		if (selectedTeamId && !formTeamIds.includes(selectedTeamId)) {
-			setFormTeamIds([...formTeamIds, selectedTeamId])
-			setSelectedTeamId('')
-		}
-	}
-
-	const handleRemoveTeam = (teamId: string) => {
-		setFormTeamIds(formTeamIds.filter((id) => id !== teamId))
 	}
 
 	const handleSubmit = async () => {
@@ -401,7 +332,6 @@ export const SeasonManagement = () => {
 				dateEnd: new Date(formDateEnd),
 				registrationStart: new Date(formRegistrationStart),
 				registrationEnd: new Date(formRegistrationEnd),
-				teamIds: formTeamIds,
 				// Per-team seasons do not use a Stripe price.
 				stripe: formPricing === 'player' ? stripeConfig : undefined,
 				format: formFormat,
@@ -821,62 +751,6 @@ export const SeasonManagement = () => {
 								/>
 							</div>
 						</div>
-
-						{/* Team Selection (Edit Mode Only) */}
-						{dialogMode === 'edit' && (
-							<div className='space-y-2'>
-								<Label>Associated Teams</Label>
-								<div className='flex gap-2'>
-									<select
-										className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-										value={selectedTeamId}
-										onChange={(e) => setSelectedTeamId(e.target.value)}
-									>
-										<option value=''>Select a team to add...</option>
-										{availableTeams
-											.filter((team) => !formTeamIds.includes(team.id))
-											.map((team) => (
-												<option key={team.id} value={team.id}>
-													{team.name}
-												</option>
-											))}
-									</select>
-									<Button
-										type='button'
-										onClick={handleAddTeam}
-										disabled={!selectedTeamId}
-									>
-										<Plus className='h-4 w-4' />
-									</Button>
-								</div>
-								{formTeamIds.length > 0 && (
-									<div className='flex flex-wrap gap-2 mt-2'>
-										{formTeamIds.map((teamId) => {
-											const team = availableTeams.find((t) => t.id === teamId)
-											return (
-												<Badge
-													key={teamId}
-													variant='secondary'
-													className='flex items-center gap-1'
-												>
-													{team?.name || teamId}
-													<button
-														type='button'
-														onClick={() => handleRemoveTeam(teamId)}
-														className='ml-1 hover:text-destructive'
-													>
-														<X className='h-3 w-3' />
-													</button>
-												</Badge>
-											)
-										})}
-									</div>
-								)}
-								<p className='text-xs text-muted-foreground'>
-									{formTeamIds.length} team(s) selected
-								</p>
-							</div>
-						)}
 
 						{/* Stripe Configuration (per-player pricing only) */}
 						{formPricing === 'player' && (
