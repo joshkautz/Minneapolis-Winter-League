@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useAuthContext, useSeasonsContext } from '@/providers'
+import { usesTeamPayments } from '@/shared/utils/team-payments'
 
 /**
  * Comprehensive user status hook that combines authentication state,
@@ -89,9 +90,14 @@ export const useUserStatus = () => {
 		[authStateUser, authenticatedUserSnapshot]
 	)
 
+	// Under team payments paying is not a player's own task: the money is the
+	// team's, and a player registers by signing.
 	const hasRequiredTasks = useMemo(
-		() => !hasPaid || !hasSignedWaiver,
-		[hasPaid, hasSignedWaiver]
+		() =>
+			(!hasPaid &&
+				!usesTeamPayments(currentSeasonQueryDocumentSnapshot?.data())) ||
+			!hasSignedWaiver,
+		[hasPaid, hasSignedWaiver, currentSeasonQueryDocumentSnapshot]
 	)
 
 	const canCreateTeam = useMemo(

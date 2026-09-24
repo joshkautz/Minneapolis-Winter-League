@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { LoadingSpinner } from '@/shared/components'
+import { Link } from 'react-router-dom'
 import {
 	CheckCircle,
 	CreditCard,
 	AlertCircle,
 	Calendar,
 	Tag,
+	Users,
 } from 'lucide-react'
 import { stripeRegistration, QueryDocumentSnapshot } from '@/firebase'
 import {
@@ -19,6 +21,9 @@ import {
 	PlayerSeasonDocument,
 	SeasonDocument,
 	didPlayerPayPreviousSeason,
+	formatDollars,
+	MIN_SIGNED_PLAYERS,
+	usesTeamPayments,
 } from '@/shared/utils'
 import { getSeasonPriceId, getSeasonCouponId } from '@/firebase/stripe'
 
@@ -28,6 +33,8 @@ interface PaymentSectionProps {
 	isAuthenticatedUserAdmin: boolean
 	isAuthenticatedUserBanned: boolean
 	isAuthenticatedUserPaid: boolean
+	/** On a team this season; under team payments that is where paying happens. */
+	isAuthenticatedUserRostered: boolean
 	currentSeasonQueryDocumentSnapshot:
 		QueryDocumentSnapshot<SeasonDocument> | undefined
 	/** The authenticated user's per-season subdocs (for the returning-discount check). */
@@ -49,6 +56,7 @@ export const PaymentSection = ({
 	isAuthenticatedUserAdmin,
 	isAuthenticatedUserBanned,
 	isAuthenticatedUserPaid,
+	isAuthenticatedUserRostered,
 	currentSeasonQueryDocumentSnapshot,
 	authenticatedUserSeasonsSnapshot,
 	seasonsQuerySnapshot,
@@ -185,6 +193,37 @@ export const PaymentSection = ({
 		!isAuthenticatedUserAdmin &&
 		(isRegistrationNotStarted || isRegistrationEnded)
 	const isUserBanned = isAuthenticatedUserBanned
+
+	const currentSeason = currentSeasonQueryDocumentSnapshot?.data()
+	if (usesTeamPayments(currentSeason)) {
+		// Teams pay together: there is no individual payment to make here.
+		return (
+			<div className='space-y-3'>
+				<h3 className='font-medium text-sm'>Registration Payment</h3>
+				<Alert className='border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'>
+					<Users className='h-4 w-4 !text-slate-600 dark:!text-slate-400' />
+					<AlertDescription className='!text-slate-700 dark:!text-slate-300'>
+						Teams pay together this season. A team registers once{' '}
+						{MIN_SIGNED_PLAYERS} of its players have signed their waiver and{' '}
+						{formatDollars(currentSeason.teamRegistrationTotalCents)} has been
+						committed, split however the team likes.
+					</AlertDescription>
+				</Alert>
+				{isAuthenticatedUserRostered ? (
+					<Button asChild className='w-full'>
+						<Link to='/manage'>
+							<CreditCard className='mr-2 h-4 w-4' />
+							Contribute from My Team
+						</Link>
+					</Button>
+				) : (
+					<p className='text-sm text-muted-foreground'>
+						Join or create a team to contribute toward its registration.
+					</p>
+				)}
+			</div>
+		)
+	}
 
 	return (
 		<div className='space-y-3'>

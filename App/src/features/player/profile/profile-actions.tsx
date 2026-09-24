@@ -21,6 +21,8 @@ interface ProfileActionsProps {
 	isAuthenticatedUserBanned: boolean
 	isAuthenticatedUserPaid: boolean
 	isAuthenticatedUserSigned: boolean
+	/** On a team this season: the waiver is sent on joining one. */
+	isAuthenticatedUserRostered: boolean
 	currentSeasonQueryDocumentSnapshot:
 		QueryDocumentSnapshot<SeasonDocument> | undefined
 	/** The authenticated user's per-season subdocs (for the returning-discount check). */
@@ -44,6 +46,7 @@ export const ProfileActions = ({
 	isAuthenticatedUserBanned,
 	isAuthenticatedUserPaid,
 	isAuthenticatedUserSigned,
+	isAuthenticatedUserRostered,
 	currentSeasonQueryDocumentSnapshot,
 	authenticatedUserSeasonsSnapshot,
 	seasonsQuerySnapshot,
@@ -71,6 +74,7 @@ export const ProfileActions = ({
 						<PaymentSection
 							authStateUser={authStateUser}
 							isAuthenticatedUserPaid={isAuthenticatedUserPaid}
+							isAuthenticatedUserRostered={isAuthenticatedUserRostered}
 							isLoading={isLoading}
 							isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
 							isAuthenticatedUserBanned={isAuthenticatedUserBanned}
@@ -89,7 +93,7 @@ export const ProfileActions = ({
 							isAuthenticatedUserSigned={isAuthenticatedUserSigned}
 							isLoading={isLoading}
 							isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
-							isAuthenticatedUserPaid={isAuthenticatedUserPaid}
+							isAuthenticatedUserRostered={isAuthenticatedUserRostered}
 							isAuthenticatedUserBanned={isAuthenticatedUserBanned}
 							currentSeasonQueryDocumentSnapshot={
 								currentSeasonQueryDocumentSnapshot

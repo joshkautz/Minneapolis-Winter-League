@@ -4,7 +4,13 @@ import { useCollection } from 'react-firebase-hooks/firestore'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
 import { NotificationCard } from '@/shared/components'
 import { ManageTeamRosterPlayer } from './manage-team-roster-player'
-import { formatTimestamp, TeamRosterDocument } from '@/shared/utils'
+import {
+	formatDollars,
+	formatTimestamp,
+	MIN_SIGNED_PLAYERS,
+	TeamRosterDocument,
+	usesTeamPayments,
+} from '@/shared/utils'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
@@ -49,7 +55,9 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 			<p className='text-sm text-muted-foreground'>Loading...</p>
 		) : !team?.data().registered ? (
 			<p className={'text-sm text-muted-foreground'}>
-				You need 10 registered players in order to meet the minimum requirement.
+				{usesTeamPayments(currentSeasonQueryDocumentSnapshot?.data())
+					? `Your team registers once ${MIN_SIGNED_PLAYERS} players have signed their waiver and ${formatDollars(currentSeasonQueryDocumentSnapshot?.data().teamRegistrationTotalCents ?? 0)} has been committed.`
+					: `You need ${MIN_SIGNED_PLAYERS} registered players in order to meet the minimum requirement.`}{' '}
 				Registration ends on{' '}
 				{formatTimestamp(
 					currentSeasonQueryDocumentSnapshot?.data().registrationEnd

@@ -1,15 +1,14 @@
 /**
  * Send waiver (admin) callable function
  *
- * Allows admins to manually send a waiver signature request to a player.
- * This is useful when a player pays with cash and needs to receive
- * a waiver without going through the Stripe payment flow.
+ * Allows admins to manually send a waiver signature request to a player —
+ * one whose automatic waiver went astray, or who paid cash.
  *
  * Security validations:
  * - User must be authenticated with verified email
  * - User must have admin privileges
  * - Target player must exist
- * - Player must be marked as paid for the specified season
+ * - Player must be on a team for the season, or marked as paid for it
  * - A waiver must not already exist for this player/season
  */
 
@@ -115,7 +114,10 @@ export const sendWaiverAdmin = onCall<SendWaiverAdminRequest>(
 				seasonDocument = seasonsSnapshot.docs[0].data() as SeasonDocument
 			}
 
-			// Check if player is paid for this season via the player season subdoc.
+			// A waiver is for a player taking part in the season: on a team —
+			// waivers go out on joining one, under either pricing model, and
+			// under team payments nobody is individually paid — or paid, which
+			// covers someone who paid cash before finding a team.
 			const playerSeasonSnap = await firestore
 				.collection(Collections.PLAYERS)
 				.doc(playerId)
@@ -124,11 +126,12 @@ export const sendWaiverAdmin = onCall<SendWaiverAdminRequest>(
 				.get()
 			const playerSeasonData = playerSeasonSnap.data()
 
-			if (!playerSeasonData?.paid) {
+			if (!playerSeasonData?.team && !playerSeasonData?.paid) {
 				throw new HttpsError(
 					'failed-precondition',
-					`Player is not marked as paid for season "${seasonDocument?.name || seasonId}". ` +
-						'Please mark the player as paid before sending a waiver.'
+					`Player is neither on a team nor marked as paid for season ` +
+						`"${seasonDocument?.name || seasonId}". Add them to a team or ` +
+						'mark them as paid before sending a waiver.'
 				)
 			}
 

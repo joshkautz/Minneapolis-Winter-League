@@ -7,8 +7,14 @@ import { StarFilledIcon } from '@radix-ui/react-icons'
 import { DocumentReference } from '@/firebase'
 import { playerSeasonRef } from '@/firebase/collections/players'
 import { Skeleton } from '@/components/ui/skeleton'
-import { PlayerDocument, SeasonDocument, logger } from '@/shared/utils'
+import {
+	PlayerDocument,
+	SeasonDocument,
+	isPlayerRegisteredForSeason,
+	logger,
+} from '@/shared/utils'
 import { Badge } from '@/components/ui/badge'
+import { useSeasonsContext } from '@/providers'
 
 export const TeamRosterPlayer = ({
 	playerRef,
@@ -42,13 +48,18 @@ export const TeamRosterPlayer = ({
 		() => playerSeasonData?.captain === true,
 		[playerSeasonData]
 	)
-	const isPlayerPaid = useMemo(
-		() => playerSeasonData?.paid === true,
-		[playerSeasonData]
-	)
-	const isPlayerSigned = useMemo(
-		() => playerSeasonData?.signed === true,
-		[playerSeasonData]
+	// Registered means signed, plus paid under per-player pricing; the
+	// season decides which.
+	const { seasonsQuerySnapshot } = useSeasonsContext()
+	const isPlayerRegistered = useMemo(
+		() =>
+			isPlayerRegisteredForSeason(
+				playerSeasonData,
+				seasonsQuerySnapshot?.docs
+					.find((doc) => doc.id === seasonRef?.id)
+					?.data()
+			),
+		[playerSeasonData, seasonsQuerySnapshot, seasonRef]
 	)
 
 	return (
@@ -69,11 +80,9 @@ export const TeamRosterPlayer = ({
 						<div className='flex items-center'>
 							<Badge
 								className={'select-none hover:bg-initial'}
-								variant={
-									isPlayerPaid && isPlayerSigned ? 'secondary' : 'outline'
-								}
+								variant={isPlayerRegistered ? 'secondary' : 'outline'}
 							>
-								{isPlayerPaid && isPlayerSigned ? 'registered' : 'unregistered'}
+								{isPlayerRegistered ? 'registered' : 'unregistered'}
 							</Badge>
 						</div>
 					</div>
