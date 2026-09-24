@@ -27,6 +27,10 @@ import {
 	PlayerSeasonDocument,
 	SeasonDocument,
 } from '@/shared/utils'
+import {
+	WAIVER_SIGNATURES_SUBCOLLECTION,
+	type WaiverSignatureDocument,
+} from '@/types'
 
 /**
  * Gets a player document snapshot by reference
@@ -51,6 +55,39 @@ export const getPlayerRef = (
 		Collections.PLAYERS,
 		authValue.uid
 	) as DocumentReference<PlayerDocument>
+}
+
+// ---- Waiver signatures -----------------------------------------------------
+
+/**
+ * A player's waiver signatures, every season. Readable only by that player
+ * and admins, so only ever query your own or, as an admin, anyone's.
+ */
+export const waiverSignaturesQuery = (
+	playerId: string | undefined
+): CollectionReference<WaiverSignatureDocument> | undefined => {
+	if (!playerId) return undefined
+	return collection(
+		firestore,
+		Collections.PLAYERS,
+		playerId,
+		WAIVER_SIGNATURES_SUBCOLLECTION
+	) as CollectionReference<WaiverSignatureDocument>
+}
+
+/** One waiver signature, for its printable copy. */
+export const waiverSignatureRef = (
+	playerId: string | undefined,
+	signatureId: string | undefined
+): DocumentReference<WaiverSignatureDocument> | undefined => {
+	if (!playerId || !signatureId) return undefined
+	return doc(
+		firestore,
+		Collections.PLAYERS,
+		playerId,
+		WAIVER_SIGNATURES_SUBCOLLECTION,
+		signatureId
+	) as DocumentReference<WaiverSignatureDocument>
 }
 
 // ---- Per-player season subcollection -------------------------------------

@@ -90,10 +90,9 @@ export const ProfileActions = ({
 
 					<div className='border-t pt-6'>
 						<WaiverSection
+							playerId={authStateUser?.uid}
 							isAuthenticatedUserSigned={isAuthenticatedUserSigned}
 							isLoading={isLoading}
-							isAuthenticatedUserAdmin={isAuthenticatedUserAdmin}
-							isAuthenticatedUserRostered={isAuthenticatedUserRostered}
 							isAuthenticatedUserBanned={isAuthenticatedUserBanned}
 							currentSeasonQueryDocumentSnapshot={
 								currentSeasonQueryDocumentSnapshot

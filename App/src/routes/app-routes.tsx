@@ -27,6 +27,8 @@ import {
 	SiteSettings,
 	Profile,
 	ManageTeam,
+	Waiver,
+	WaiverCopy,
 	NotFound,
 } from './route-components'
 
@@ -167,6 +169,26 @@ export const AppRoutes = () => {
 						<AuthenticatedRoute>
 							<ErrorBoundary>
 								<ManageTeam />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/waiver'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<Waiver />
+							</ErrorBoundary>
+						</AuthenticatedRoute>
+					}
+				/>
+				<Route
+					path='/waiver/copy/:playerId/:signatureId'
+					element={
+						<AuthenticatedRoute>
+							<ErrorBoundary>
+								<WaiverCopy />
 							</ErrorBoundary>
 						</AuthenticatedRoute>
 					}

@@ -73,7 +73,7 @@ export const PaymentSection = ({
 		if (paymentStatus === 'success') {
 			toast.success('Payment Successful', {
 				description:
-					'Your registration payment has been processed. Please check your email for the waiver.',
+					'Your registration payment has been processed. If you have not signed the waiver yet, sign it from your profile.',
 			})
 			// Clean up URL
 			urlParams.delete('payment')

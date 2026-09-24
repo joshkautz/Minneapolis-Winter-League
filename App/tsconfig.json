@@ -7,6 +7,12 @@
 		"skipLibCheck": true,
 
 		"outDir": "dist",
+		// The repository root rather than App/, because the waiver's text and
+		// signing rules are imported from Functions/src/waiver/ so the two
+		// workspaces cannot word the waiver differently (see
+		// src/shared/waiver.ts). Nothing is emitted (noEmit), so this only
+		// widens what type-checking may include.
+		"rootDir": "..",
 
 		/* Bundler mode */
 		"moduleResolution": "bundler",
