@@ -18,6 +18,7 @@ import {
 	SeasonFormat,
 } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
+import { validateTeamRegistrationTotal } from '../../../shared/seasonPricing.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 
 interface CreateSeasonRequest {
@@ -33,6 +34,12 @@ interface CreateSeasonRequest {
 		returningPlayerCouponIdDev?: string
 	}
 	format?: SeasonFormat
+	/**
+	 * Puts the season on team payments: each team registers on this much,
+	 * in cents, committed by its roster in any split. Omit for per-player
+	 * pricing.
+	 */
+	teamRegistrationTotalCents?: number
 }
 
 interface CreateSeasonResponse {
@@ -54,6 +61,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			registrationEnd,
 			stripe,
 			format,
+			teamRegistrationTotalCents,
 		} = data
 
 		if (
@@ -79,6 +87,12 @@ export const createSeason = onCall<CreateSeasonRequest>(
 		try {
 			const firestore = getFirestore()
 			await validateAdminUser(auth, firestore)
+
+			const teamTotalCents =
+				teamRegistrationTotalCents === undefined ||
+				teamRegistrationTotalCents === null
+					? undefined
+					: validateTeamRegistrationTotal(teamRegistrationTotalCents)
 
 			const dateStartTimestamp = Timestamp.fromDate(new Date(dateStart))
 			const dateEndTimestamp = Timestamp.fromDate(new Date(dateEnd))
@@ -110,6 +124,12 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				registrationEnd: registrationEndTimestamp,
 				...(stripeConfig && { stripe: stripeConfig }),
 				...(format === SeasonFormat.SWISS && { format: SeasonFormat.SWISS }),
+				// Set explicitly so the twelve-spot claim never reads a missing
+				// counter as its own default.
+				registeredTeamCount: 0,
+				...(teamTotalCents !== undefined && {
+					teamRegistrationTotalCents: teamTotalCents,
+				}),
 			}
 
 			const seasonRef = (await firestore

@@ -729,7 +729,9 @@ Before setting `teamRegistrationTotalCents` on the new season:
 - **Rewrite the home page's season copy.** It is hardcoded for the last
   per-player season — "$100 for 7 weeks", refunds for players who do not find
   a team, "ten fully registered players". Under team payments those are wrong.
-- **Set the total in whole dollars.** Checkout refuses a total that is not.
+- **Set the total on the season.** The admin season form has a Pricing
+  control — per player, or per team with a total in whole dollars. Once any
+  team in the season holds money, the pricing cannot change.
 - **Rehearse the race** described under testing, on the emulators.
 
 Turn the flag on for the new season. The old rule stays available for any

@@ -23,7 +23,13 @@ import { toast } from 'sonner'
 import { format } from 'date-fns'
 
 import { auth } from '@/firebase/auth'
-import { logger } from '@/shared/utils'
+import {
+	CENTS_PER_DOLLAR,
+	formatDollars,
+	logger,
+	MIN_SIGNED_PLAYERS,
+	usesTeamPayments,
+} from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
@@ -78,7 +84,10 @@ interface ProcessedSeason {
 		returningPlayerCouponIdDev?: string
 	}
 	format?: SeasonFormat
+	teamRegistrationTotalCents?: number
 }
+
+type Pricing = 'player' | 'team'
 
 type DialogMode = 'create' | 'edit' | null
 
@@ -128,6 +137,10 @@ export const SeasonManagement = () => {
 	const [formStripeCouponIdDev, setFormStripeCouponIdDev] = useState('')
 
 	// Season format state
+	// Pricing: per player through a Stripe price, or per team on a total.
+	const [formPricing, setFormPricing] = useState<Pricing>('player')
+	const [formTeamTotalDollars, setFormTeamTotalDollars] = useState('')
+
 	const [formFormat, setFormFormat] = useState<SeasonFormat>(
 		SeasonFormat.TRADITIONAL
 	)
@@ -186,6 +199,9 @@ export const SeasonManagement = () => {
 							teamCount: teamIds.length,
 							stripe: seasonData.stripe,
 							format: seasonData.format,
+							teamRegistrationTotalCents: usesTeamPayments(seasonData)
+								? seasonData.teamRegistrationTotalCents
+								: undefined,
 						} as ProcessedSeason
 					} catch (error) {
 						logger.error('Error processing season', error, { seasonId })
@@ -262,6 +278,8 @@ export const SeasonManagement = () => {
 		setFormStripeCouponIdDev('')
 		// Reset format to default
 		setFormFormat(SeasonFormat.TRADITIONAL)
+		setFormPricing('player')
+		setFormTeamTotalDollars('')
 	}
 
 	const openEditDialog = (season: ProcessedSeason) => {
@@ -280,6 +298,14 @@ export const SeasonManagement = () => {
 		setFormStripeCouponIdDev(season.stripe?.returningPlayerCouponIdDev || '')
 		// Populate format
 		setFormFormat(season.format || SeasonFormat.TRADITIONAL)
+		setFormPricing(
+			season.teamRegistrationTotalCents === undefined ? 'player' : 'team'
+		)
+		setFormTeamTotalDollars(
+			season.teamRegistrationTotalCents === undefined
+				? ''
+				: String(season.teamRegistrationTotalCents / CENTS_PER_DOLLAR)
+		)
 	}
 
 	const closeDialog = () => {
@@ -300,6 +326,8 @@ export const SeasonManagement = () => {
 		setFormStripeCouponIdDev('')
 		// Reset format
 		setFormFormat(SeasonFormat.TRADITIONAL)
+		setFormPricing('player')
+		setFormTeamTotalDollars('')
 	}
 
 	const handleAddTeam = () => {
@@ -335,6 +363,21 @@ export const SeasonManagement = () => {
 			return
 		}
 
+		// The server checks this too; this is to say so before the round trip.
+		const teamTotalCents =
+			formPricing === 'team'
+				? Math.round(Number(formTeamTotalDollars) * CENTS_PER_DOLLAR)
+				: undefined
+		if (
+			teamTotalCents !== undefined &&
+			(!Number.isSafeInteger(teamTotalCents) ||
+				teamTotalCents <= 0 ||
+				teamTotalCents % CENTS_PER_DOLLAR !== 0)
+		) {
+			toast.error('Team total must be a whole number of dollars above $0')
+			return
+		}
+
 		setIsSubmitting(true)
 
 		try {
@@ -359,17 +402,23 @@ export const SeasonManagement = () => {
 				registrationStart: new Date(formRegistrationStart),
 				registrationEnd: new Date(formRegistrationEnd),
 				teamIds: formTeamIds,
-				stripe: stripeConfig,
+				// Per-team seasons do not use a Stripe price.
+				stripe: formPricing === 'player' ? stripeConfig : undefined,
 				format: formFormat,
 			}
 
 			if (dialogMode === 'create') {
-				const result = await createSeasonViaFunction(data)
+				const result = await createSeasonViaFunction({
+					...data,
+					teamRegistrationTotalCents: teamTotalCents,
+				})
 				toast.success(result.message)
 			} else if (dialogMode === 'edit' && selectedSeasonId) {
 				const result = await updateSeasonViaFunction({
 					seasonId: selectedSeasonId,
 					...data,
+					// Null returns the season to per-player pricing.
+					teamRegistrationTotalCents: teamTotalCents ?? null,
 				})
 				toast.success(result.message)
 			}
@@ -522,6 +571,12 @@ export const SeasonManagement = () => {
 															Swiss
 														</Badge>
 													)}
+													{season.teamRegistrationTotalCents !== undefined && (
+														<Badge variant='outline' className='text-xs'>
+															{formatDollars(season.teamRegistrationTotalCents)}{' '}
+															per team
+														</Badge>
+													)}
 												</div>
 											</TableCell>
 											<TableCell>
@@ -661,6 +716,61 @@ export const SeasonManagement = () => {
 							</p>
 						</div>
 
+						{/* Pricing */}
+						<div className='space-y-2'>
+							<Label>Pricing</Label>
+							<RadioGroup
+								value={formPricing}
+								onValueChange={(value) => setFormPricing(value as Pricing)}
+								className='flex gap-6'
+							>
+								<div className='flex items-center space-x-2'>
+									<RadioGroupItem value='player' id='pricing-player' />
+									<Label
+										htmlFor='pricing-player'
+										className='font-normal cursor-pointer'
+									>
+										Per player
+									</Label>
+								</div>
+								<div className='flex items-center space-x-2'>
+									<RadioGroupItem value='team' id='pricing-team' />
+									<Label
+										htmlFor='pricing-team'
+										className='font-normal cursor-pointer'
+									>
+										Per team
+									</Label>
+								</div>
+							</RadioGroup>
+							{formPricing === 'team' ? (
+								<div className='space-y-1'>
+									<Label htmlFor='teamTotal'>
+										Team total (dollars) <span className='text-red-500'>*</span>
+									</Label>
+									<Input
+										id='teamTotal'
+										type='number'
+										inputMode='numeric'
+										min={1}
+										step={1}
+										placeholder='1000'
+										value={formTeamTotalDollars}
+										onChange={(e) => setFormTeamTotalDollars(e.target.value)}
+									/>
+									<p className='text-xs text-muted-foreground'>
+										A team registers once {MIN_SIGNED_PLAYERS} players have
+										signed and its roster has committed this much, in any split.
+										It cannot be changed once any team is holding money.
+									</p>
+								</div>
+							) : (
+								<p className='text-xs text-muted-foreground'>
+									Each player pays the Stripe price below.
+								</p>
+							)}
+						</div>
+
 						{/* Date Fields */}
 						<div className='grid grid-cols-2 gap-4'>
 							<div className='space-y-2'>
@@ -768,79 +878,81 @@ export const SeasonManagement = () => {
 							</div>
 						)}
 
-						{/* Stripe Configuration */}
-						<div className='space-y-4 border-t pt-4 mt-4'>
-							<h4 className='font-medium text-sm'>
-								Stripe Payment Configuration
-							</h4>
-							<p className='text-xs text-muted-foreground'>
-								Configure Stripe price and coupon IDs for this season. Players
-								cannot pay until this is configured.
-							</p>
+						{/* Stripe Configuration (per-player pricing only) */}
+						{formPricing === 'player' && (
+							<div className='space-y-4 border-t pt-4 mt-4'>
+								<h4 className='font-medium text-sm'>
+									Stripe Payment Configuration
+								</h4>
+								<p className='text-xs text-muted-foreground'>
+									Configure Stripe price and coupon IDs for this season. Players
+									cannot pay until this is configured.
+								</p>
 
-							<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-								<div className='space-y-2'>
-									<Label htmlFor='stripePriceId'>
-										Price ID (Production){' '}
-										<span className='text-red-500'>*</span>
-									</Label>
-									<Input
-										id='stripePriceId'
-										placeholder='price_...'
-										value={formStripePriceId}
-										onChange={(e) => setFormStripePriceId(e.target.value)}
-									/>
-									<p className='text-xs text-muted-foreground'>
-										From Stripe Dashboard → Products
-									</p>
+								<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+									<div className='space-y-2'>
+										<Label htmlFor='stripePriceId'>
+											Price ID (Production){' '}
+											<span className='text-red-500'>*</span>
+										</Label>
+										<Input
+											id='stripePriceId'
+											placeholder='price_...'
+											value={formStripePriceId}
+											onChange={(e) => setFormStripePriceId(e.target.value)}
+										/>
+										<p className='text-xs text-muted-foreground'>
+											From Stripe Dashboard → Products
+										</p>
+									</div>
+									<div className='space-y-2'>
+										<Label htmlFor='stripePriceIdDev'>
+											Price ID (Development)
+										</Label>
+										<Input
+											id='stripePriceIdDev'
+											placeholder='price_...'
+											value={formStripePriceIdDev}
+											onChange={(e) => setFormStripePriceIdDev(e.target.value)}
+										/>
+										<p className='text-xs text-muted-foreground'>
+											Used when running locally
+										</p>
+									</div>
 								</div>
-								<div className='space-y-2'>
-									<Label htmlFor='stripePriceIdDev'>
-										Price ID (Development)
-									</Label>
-									<Input
-										id='stripePriceIdDev'
-										placeholder='price_...'
-										value={formStripePriceIdDev}
-										onChange={(e) => setFormStripePriceIdDev(e.target.value)}
-									/>
-									<p className='text-xs text-muted-foreground'>
-										Used when running locally
-									</p>
+
+								<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+									<div className='space-y-2'>
+										<Label htmlFor='stripeCouponId'>
+											Returning Player Coupon ID (Production)
+										</Label>
+										<Input
+											id='stripeCouponId'
+											placeholder='e.g., returning_player_2025'
+											value={formStripeCouponId}
+											onChange={(e) => setFormStripeCouponId(e.target.value)}
+										/>
+										<p className='text-xs text-muted-foreground'>
+											Auto-applied for players who paid last season
+										</p>
+									</div>
+									<div className='space-y-2'>
+										<Label htmlFor='stripeCouponIdDev'>
+											Returning Player Coupon ID (Development)
+										</Label>
+										<Input
+											id='stripeCouponIdDev'
+											placeholder='e.g., returning_player_dev'
+											value={formStripeCouponIdDev}
+											onChange={(e) => setFormStripeCouponIdDev(e.target.value)}
+										/>
+										<p className='text-xs text-muted-foreground'>
+											Used when running locally
+										</p>
+									</div>
 								</div>
 							</div>
-
-							<div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-								<div className='space-y-2'>
-									<Label htmlFor='stripeCouponId'>
-										Returning Player Coupon ID (Production)
-									</Label>
-									<Input
-										id='stripeCouponId'
-										placeholder='e.g., returning_player_2025'
-										value={formStripeCouponId}
-										onChange={(e) => setFormStripeCouponId(e.target.value)}
-									/>
-									<p className='text-xs text-muted-foreground'>
-										Auto-applied for players who paid last season
-									</p>
-								</div>
-								<div className='space-y-2'>
-									<Label htmlFor='stripeCouponIdDev'>
-										Returning Player Coupon ID (Development)
-									</Label>
-									<Input
-										id='stripeCouponIdDev'
-										placeholder='e.g., returning_player_dev'
-										value={formStripeCouponIdDev}
-										onChange={(e) => setFormStripeCouponIdDev(e.target.value)}
-									/>
-									<p className='text-xs text-muted-foreground'>
-										Used when running locally
-									</p>
-								</div>
-							</div>
-						</div>
+						)}
 					</div>
 
 					<DialogFooter>
