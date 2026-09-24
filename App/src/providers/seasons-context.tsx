@@ -14,7 +14,30 @@ import {
 	FirestoreError,
 	QueryDocumentSnapshot,
 } from '@/firebase'
-import { SeasonDocument, logger } from '@/shared/utils'
+import { SeasonDocument, initialSelectedSeasonId, logger } from '@/shared/utils'
+
+/** The season the visitor last picked in a season selector. */
+const PICKED_SEASON_KEY = 'season'
+/** The newest season at the time of that pick; see initialSelectedSeasonId. */
+const PICKED_WHILE_NEWEST_KEY = 'seasonPickedWhileNewest'
+
+/** Storage can be unavailable (private browsing, blocked site data). */
+const readStorage = (key: string): string | null => {
+	try {
+		return localStorage.getItem(key)
+	} catch {
+		return null
+	}
+}
+
+const writeStorage = (key: string, value: string | null): void => {
+	try {
+		if (value === null) localStorage.removeItem(key)
+		else localStorage.setItem(key, value)
+	} catch {
+		// Only the preference is lost; the selection still applies this visit.
+	}
+}
 
 interface SeasonsContextValue {
 	currentSeasonQueryDocumentSnapshot:
@@ -74,19 +97,6 @@ export const SeasonsContextProvider = ({
 		setSelectedSeasonQueryDocumentSnapshotState,
 	] = useState<QueryDocumentSnapshot<SeasonDocument> | undefined>()
 
-	// Wrapper to persist selected season to localStorage
-	const setSelectedSeasonQueryDocumentSnapshot = useCallback(
-		(value: QueryDocumentSnapshot<SeasonDocument> | undefined) => {
-			if (value) {
-				localStorage.setItem('season', value.id)
-			} else {
-				localStorage.removeItem('season')
-			}
-			setSelectedSeasonQueryDocumentSnapshotState(value)
-		},
-		[]
-	)
-
 	const [
 		currentSeasonQueryDocumentSnapshot,
 		setCurrentSeasonQueryDocumentSnapshot,
@@ -99,39 +109,42 @@ export const SeasonsContextProvider = ({
 			?.find((season) => season)
 	}, [seasonsQuerySnapshot])
 
-	// Initialize selected season from localStorage or fall back to most recent
+	// A season the visitor picks: remembered, along with which season was
+	// newest at the time, so the pick lapses once a newer season exists.
+	const setSelectedSeasonQueryDocumentSnapshot = useCallback(
+		(value: QueryDocumentSnapshot<SeasonDocument> | undefined) => {
+			writeStorage(PICKED_SEASON_KEY, value?.id ?? null)
+			writeStorage(
+				PICKED_WHILE_NEWEST_KEY,
+				value ? (getMostRecentSeason()?.id ?? null) : null
+			)
+			setSelectedSeasonQueryDocumentSnapshotState(value)
+		},
+		[getMostRecentSeason]
+	)
+
+	// Initialize the selection. Deliberately does not go through the setter
+	// above: a default is not a pick, and remembering it pinned every visitor
+	// to whichever season was newest on their first visit.
 	const [hasInitialized, setHasInitialized] = useState(false)
 	useEffect(() => {
 		if (!seasonsQuerySnapshot || hasInitialized) return
 
-		const storedSeasonId = localStorage.getItem('season')
+		const selectedId = initialSelectedSeasonId({
+			pickedId: readStorage(PICKED_SEASON_KEY),
+			pickedWhileNewestId: readStorage(PICKED_WHILE_NEWEST_KEY),
+			newestId: getMostRecentSeason()?.id,
+			seasonIds: seasonsQuerySnapshot.docs.map((doc) => doc.id),
+		})
 
-		if (storedSeasonId) {
-			// Try to find the stored season in the current seasons
-			const storedSeason = seasonsQuerySnapshot.docs.find(
-				(doc) => doc.id === storedSeasonId
-			)
-			if (storedSeason) {
-				const timer = setTimeout(() => {
-					setSelectedSeasonQueryDocumentSnapshot(storedSeason)
-					setHasInitialized(true)
-				}, 0)
-				return () => clearTimeout(timer)
-			}
-		}
-
-		// If no stored season or it doesn't exist, use the most recent season
 		const timer = setTimeout(() => {
-			setSelectedSeasonQueryDocumentSnapshot(getMostRecentSeason())
+			setSelectedSeasonQueryDocumentSnapshotState(
+				seasonsQuerySnapshot.docs.find((doc) => doc.id === selectedId)
+			)
 			setHasInitialized(true)
 		}, 0)
 		return () => clearTimeout(timer)
-	}, [
-		seasonsQuerySnapshot,
-		getMostRecentSeason,
-		hasInitialized,
-		setSelectedSeasonQueryDocumentSnapshot,
-	])
+	}, [seasonsQuerySnapshot, getMostRecentSeason, hasInitialized])
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
