@@ -66,6 +66,9 @@ Per-season state hangs off subcollections rather than the parent document:
   (a ban is **not** season state — it lives on `players/{uid}.banned`)
 - `teams/{teamId}/teamSeasons/{seasonId}` — per-season team participation
 - `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` — membership join
+- `teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}` —
+  team payments; **private** to that roster and admins, so no totals live on
+  the public team-season (see `docs/TEAM_PAYMENTS.md`)
 
 Collection-group queries over these need their own explicit
 `match /{path=**}/...` block in `firestore.rules`, even when the direct path is
@@ -108,7 +111,7 @@ already allowed.
 
 ## Tests
 
-Four suites (~1,110 tests), all run by `npm run verify`:
+Four suites (~1,135 tests), all run by `npm run verify`:
 
 | Suite           | Location                      | Covers                                                  |
 | --------------- | ----------------------------- | ------------------------------------------------------- |

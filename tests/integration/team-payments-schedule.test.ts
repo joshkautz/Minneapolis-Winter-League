@@ -6,6 +6,7 @@ import {
 	initTestApp,
 	resetFirestore,
 	type Callable,
+	ledgerTotals,
 } from './helpers.js'
 import {
 	addHold,
@@ -219,6 +220,44 @@ describe('the hourly sweep', () => {
 		expect(stripeCalls()).toEqual(['cancel pi_late'])
 	})
 
+	it('refunds an unregistered team whose only money the expiry net took', async () => {
+		// No holds left to find it by: the captured money is the only sign.
+		await seedTeam('team-a')
+		await hold('pi_a', 60_000, 'team-a')
+		await setContributionStatus(firestore, {
+			teamId: 'team-a',
+			seasonId: SEASON,
+			paymentIntentId: 'pi_a',
+			status: 'captured',
+		})
+		const pi = fakeStripe.intents.get('pi_a')!
+		pi.status = 'succeeded'
+		pi.amount_received = 60_000
+		pi.amount_capturable = 0
+
+		const result = await sweepTeamPayments({
+			now: new Date(REGISTRATION_END + 1000),
+		})
+
+		expect(stripeCalls()).toEqual(['refund pi_a 60000'])
+		expect(result.teamsChecked).toBe(1)
+	})
+
+	it('passes over a registered team whose money is all captured', async () => {
+		// Nothing left to settle, so past seasons cost a query per team and
+		// no settlement.
+		await seedTeam('team-a', true)
+		await hold('pi_a', TOTAL, 'team-a')
+		await setContributionStatus(firestore, {
+			teamId: 'team-a',
+			seasonId: SEASON,
+			paymentIntentId: 'pi_a',
+			status: 'captured',
+		})
+
+		expect((await sweepTeamPayments()).teamsChecked).toBe(0)
+	})
+
 	it('skips teams that hold no money', async () => {
 		await seedTeam('team-a')
 		await seedTeam('team-b')
@@ -383,10 +422,9 @@ describe('the daily reconciliation', () => {
 			{ teamId: 'team-a', seasonId: SEASON, paymentIntentId: 'pi_a' },
 		])
 		expect((await entry('team-a', 'pi_a'))?.status).toBe('canceled')
-		const teamSeason = (
-			await teamSeasonRef(firestore, 'team-a', SEASON).get()
-		).data()
-		expect(teamSeason?.authorizedCents).toBe(0)
+		expect(
+			(await ledgerTotals(firestore, 'team-a', SEASON)).authorizedCents
+		).toBe(0)
 	})
 
 	it('corrects a refund issued in the Dashboard', async () => {

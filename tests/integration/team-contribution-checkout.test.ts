@@ -8,6 +8,7 @@ import {
 	resetFirestore,
 	seedAuthUser,
 	type Callable,
+	ledgerTotals,
 } from './helpers.js'
 import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import {
@@ -160,13 +161,7 @@ const sentSession = () => {
 const ledger = async (teamId = TEAM) =>
 	(await teamContributionsCollection(firestore, teamId, SEASON).get()).docs
 
-const totals = async (teamId = TEAM) => {
-	const data = (await teamSeasonRef(firestore, teamId, SEASON).get()).data()
-	return {
-		authorizedCents: data?.authorizedCents,
-		capturedCents: data?.capturedCents,
-	}
-}
+const totals = (teamId = TEAM) => ledgerTotals(firestore, teamId, SEASON)
 
 beforeAll(async () => {
 	process.env.STRIPE_SECRET_KEY ??= 'sk_test_integration'

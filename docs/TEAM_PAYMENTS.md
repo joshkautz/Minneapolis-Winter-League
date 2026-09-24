@@ -219,23 +219,29 @@ total is not enough: cancellation and capture both need to know who paid what.
 
 ```
 teams/{teamId}/teamSeasons/{seasonId}
-  authorizedCents: number        // sum of holds not yet captured or released
-  capturedCents: number          // money actually taken
-  registered: boolean            // recomputed from the rule above
+  registered: boolean            // public, like the rest of the team-season
 
 teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}
   player: DocumentReference<PlayerDocument>
-  amountCents: number
+  amountCents: number            // held, or taken after a partial capture
+  authorizedAmountCents?: number // what was first held, once they differ
   status: 'authorized' | 'captured' | 'refunded' | 'canceled'
   paymentIntentId: string
   captureBefore: Timestamp       // from the charge; capture before this
+  releasedBy?, releaseReason?, releasedAt?   // an admin's manual release
   createdAt: Timestamp
 ```
 
-The contributions subcollection is the source of truth; the two totals are
-denormalized and recomputed in the same transaction that writes a
-contribution. That mirrors the roster and player-season pairing already in the
-codebase, and the same rule applies — never write one side without the other.
+The contributions subcollection is the only record of a team's money. **It is
+private**: `firestore.rules` lets the team's roster for that season and
+admins read it, and nobody else — not other teams, not the public, and not
+anyone through a collection-group query.
+
+That is why there are no totals on the team-season. Team-season documents are
+world-readable, so a running total there would publish every team's balance.
+An earlier version kept `authorizedCents` and `capturedCents` there, in step
+with the ledger; they were removed before any season used team payments.
+Anything that needs a total sums the ledger.
 
 Note that the registration test uses **authorized**, not captured: a team
 secures its spot when the money is committed, and capture follows.
@@ -533,10 +539,10 @@ is code to retrofit.
 ### Phase 1 — the ledger, still no money
 
 **1a. The ledger itself. — done.** `shared/contributions.ts` records a
-contribution keyed on its PaymentIntent id and keeps `authorizedCents` and
-`capturedCents` on the team-season in step with it, in one transaction. The
-arithmetic — what is committed, what is still live — is pure and tested
-without a database.
+contribution keyed on its PaymentIntent id. The arithmetic — what is
+committed, what is still live — is pure and tested without a database. (It
+first also kept running totals on the team-season; see the data model for
+why they went.)
 
 **1b. The registration rule. — done.** A season opts in by setting
 `teamRegistrationTotalCents`; its presence selects the model and carries the
@@ -686,8 +692,15 @@ Phase 3 is complete.
 
 ### Phase 4 — UI
 
-Team payment page: balance, remaining, contribute, and each contribution's
-state. Admin view of a team's ledger.
+**4a. Privacy first. — done.** The team-season totals were public, which would
+have shown every team's balance to anyone; they are gone, and the ledger has
+a read rule for the roster and admins. The hourly sweep now finds teams by
+their live holds, and past seasons whose money is all settled cost a query
+per team and nothing more.
+
+**4b. Left:** the team payment page — balance, remaining, contribute, and each
+contribution's state — and the admin view of a team's ledger with the manual
+release.
 
 ### Phase 5 — cutover
 

@@ -6,6 +6,7 @@ import {
 	errorCodeFrom,
 	initTestApp,
 	resetFirestore,
+	ledgerTotals,
 } from './helpers.js'
 import {
 	recordContribution,
@@ -70,13 +71,7 @@ const add = (
 		status,
 	})
 
-const totals = async (teamId = TEAM) => {
-	const data = (await teamSeasonRef(firestore, teamId, SEASON).get()).data()
-	return {
-		authorizedCents: data?.authorizedCents,
-		capturedCents: data?.capturedCents,
-	}
-}
+const totals = (teamId = TEAM) => ledgerTotals(firestore, teamId, SEASON)
 
 const ledgerSize = async (teamId = TEAM) =>
 	(await teamContributionsCollection(firestore, teamId, SEASON).get()).size
@@ -93,7 +88,36 @@ beforeEach(async () => {
 })
 
 describe('recording a contribution', () => {
-	it('writes the ledger entry and the totals together', async () => {
+	it('keeps the money off the public team-season document', async () => {
+		// Team-season documents are world-readable. What a team has paid is
+		// visible to its roster and admins only, so nothing about it may be
+		// written where anyone can read it.
+		await add('pi_1', 60_000)
+		await setContributionStatus(firestore, {
+			teamId: TEAM,
+			seasonId: SEASON,
+			paymentIntentId: 'pi_1',
+			status: 'captured',
+			amountCents: 40_000,
+		})
+
+		const teamSeason = (
+			await teamSeasonRef(firestore, TEAM, SEASON).get()
+		).data()
+		expect(Object.keys(teamSeason ?? {}).sort()).toEqual(
+			[
+				'logo',
+				'name',
+				'placement',
+				'registered',
+				'registeredDate',
+				'season',
+				'storagePath',
+			].sort()
+		)
+	})
+
+	it('writes the ledger entry', async () => {
 		await add('pi_1', 100_000)
 
 		expect(await ledgerSize()).toBe(1)

@@ -12,7 +12,8 @@
  *
  * Both are just settlement, run on a schedule: `settleTeamSeason` already
  * decides from the current time what a team's money should be doing. So the
- * sweep only has to find the teams holding money and settle each one.
+ * sweep only has to find the teams whose money settlement might act on, by
+ * looking in their ledgers, and settle each one.
  */
 
 import { getFirestore, type Firestore } from 'firebase-admin/firestore'
@@ -21,9 +22,11 @@ import type Stripe from 'stripe'
 import {
 	Collections,
 	TEAM_SEASONS_SUBCOLLECTION,
+	type ContributionStatus,
 	type SeasonDocument,
 	type TeamSeasonDocument,
 } from '../types.js'
+import { CONTRIBUTIONS_SUBCOLLECTION } from '../shared/contributions.js'
 import { canonicalTeamIdFromTeamSeasonDoc } from '../shared/database.js'
 import { settleTeamSeason } from './teamSettlementService.js'
 
@@ -32,19 +35,19 @@ export interface TeamWithMoney {
 	seasonId: string
 }
 
+type TeamSeasonVisit = TeamWithMoney & {
+	registered: boolean
+	contributions: FirebaseFirestore.CollectionReference
+}
+
 /**
- * Every team-season, in every season on team payments, that holds money.
- *
- * Seasons are few, so they are filtered in memory rather than queried by a
- * field that would need its own index. A team-season with no contributions
- * has neither total and is skipped; a registered team that is fully
- * captured is included, because a late hold or an excess capture may still
- * need settling, and settling it when there is nothing to do costs three
- * reads.
+ * Every team-season in every season on team payments. Seasons are few, so
+ * they are filtered in memory rather than queried by a field that would need
+ * its own index.
  */
-export async function findTeamsWithMoney(
+async function teamSeasonsOnTeamPayments(
 	firestore: Firestore
-): Promise<TeamWithMoney[]> {
+): Promise<TeamSeasonVisit[]> {
 	const seasonsSnap = await firestore.collection(Collections.SEASONS).get()
 	const teamPaymentSeasons = seasonsSnap.docs.filter(
 		(doc) =>
@@ -52,7 +55,7 @@ export async function findTeamsWithMoney(
 			'number'
 	)
 
-	const teams: TeamWithMoney[] = []
+	const visits: TeamSeasonVisit[] = []
 	for (const seasonDoc of teamPaymentSeasons) {
 		const teamSeasonsSnap = await firestore
 			.collectionGroup(TEAM_SEASONS_SUBCOLLECTION)
@@ -60,15 +63,71 @@ export async function findTeamsWithMoney(
 			.get()
 
 		for (const teamSeasonDoc of teamSeasonsSnap.docs) {
-			const data = teamSeasonDoc.data() as TeamSeasonDocument
-			if ((data.authorizedCents ?? 0) > 0 || (data.capturedCents ?? 0) > 0) {
-				teams.push({
-					teamId: canonicalTeamIdFromTeamSeasonDoc(
-						teamSeasonDoc as FirebaseFirestore.QueryDocumentSnapshot<TeamSeasonDocument>
-					),
-					seasonId: seasonDoc.id,
-				})
-			}
+			visits.push({
+				teamId: canonicalTeamIdFromTeamSeasonDoc(
+					teamSeasonDoc as FirebaseFirestore.QueryDocumentSnapshot<TeamSeasonDocument>
+				),
+				seasonId: seasonDoc.id,
+				registered: (teamSeasonDoc.data() as TeamSeasonDocument).registered,
+				contributions: teamSeasonDoc.ref.collection(
+					CONTRIBUTIONS_SUBCOLLECTION
+				),
+			})
+		}
+	}
+	return visits
+}
+
+async function hasContributionWithStatus(
+	contributions: FirebaseFirestore.CollectionReference,
+	statuses: ContributionStatus[]
+): Promise<boolean> {
+	const snap = await contributions
+		.where('status', 'in', statuses)
+		.limit(1)
+		.get()
+	return !snap.empty
+}
+
+/**
+ * The teams settlement might have something to do for.
+ *
+ * Any team holding a live authorization, since a hold is what gets
+ * captured, released or left to expire. And any unregistered team with
+ * captured money, which the expiry net took and which has to be refunded if
+ * the team misses out. A registered team whose money is all captured has
+ * nothing left to settle, so past seasons cost a query per team and no more.
+ */
+export async function findTeamsToSettle(
+	firestore: Firestore
+): Promise<TeamWithMoney[]> {
+	const teams: TeamWithMoney[] = []
+	for (const visit of await teamSeasonsOnTeamPayments(firestore)) {
+		const include =
+			(await hasContributionWithStatus(visit.contributions, ['authorized'])) ||
+			(!visit.registered &&
+				(await hasContributionWithStatus(visit.contributions, ['captured'])))
+		if (include) teams.push({ teamId: visit.teamId, seasonId: visit.seasonId })
+	}
+	return teams
+}
+
+/**
+ * Every team holding money that is still live — held or captured — which is
+ * what the reconciliation checks against Stripe.
+ */
+export async function findTeamsWithLiveMoney(
+	firestore: Firestore
+): Promise<TeamWithMoney[]> {
+	const teams: TeamWithMoney[] = []
+	for (const visit of await teamSeasonsOnTeamPayments(firestore)) {
+		if (
+			await hasContributionWithStatus(visit.contributions, [
+				'authorized',
+				'captured',
+			])
+		) {
+			teams.push({ teamId: visit.teamId, seasonId: visit.seasonId })
 		}
 	}
 	return teams
@@ -91,7 +150,7 @@ export async function sweepTeamPayments(
 	options: { now?: Date; stripe?: Stripe; firestore?: Firestore } = {}
 ): Promise<SweepResult> {
 	const firestore = options.firestore ?? getFirestore()
-	const teams = await findTeamsWithMoney(firestore)
+	const teams = await findTeamsToSettle(firestore)
 
 	let teamsActedOn = 0
 	const failures: SweepResult['failures'] = []

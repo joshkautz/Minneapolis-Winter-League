@@ -116,8 +116,6 @@ beforeEach(async () => {
 		name: 'Test Team',
 		registered: false,
 		registeredDate: null,
-		authorizedCents: 0,
-		capturedCents: 0,
 	})
 })
 

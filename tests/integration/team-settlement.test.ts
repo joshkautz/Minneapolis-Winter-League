@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import type { Request, Response } from 'firebase-functions/v2/https'
-import { initTestApp, resetFirestore } from './helpers.js'
+import { initTestApp, resetFirestore, ledgerTotals } from './helpers.js'
 import {
 	addHold,
 	failNext,
@@ -70,8 +70,6 @@ const seedTeam = async (teamId: string, registered: boolean) => {
 		placement: null,
 		registered,
 		registeredDate: registered ? Timestamp.now() : null,
-		authorizedCents: 0,
-		capturedCents: 0,
 	} as never)
 }
 
@@ -117,13 +115,7 @@ const ledger = async (teamId = TEAM) => {
 	return Object.fromEntries(snap.docs.map((d) => [d.id, d.data()]))
 }
 
-const totals = async (teamId = TEAM) => {
-	const data = (await teamSeasonRef(firestore, teamId, SEASON).get()).data()
-	return {
-		authorizedCents: data?.authorizedCents,
-		capturedCents: data?.capturedCents,
-	}
-}
+const totals = (teamId = TEAM) => ledgerTotals(firestore, teamId, SEASON)
 
 const stripeCalls = () =>
 	fakeStripe.calls.map((c) =>
