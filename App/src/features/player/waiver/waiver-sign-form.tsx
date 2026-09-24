@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { LoadingSpinner } from '@/shared/components'
+import { LoadingButton } from '@/shared/components'
 import {
 	WAIVER_LIMITS,
 	fillParticipant,
@@ -350,20 +350,15 @@ export const WaiverSignForm = ({
 							)}
 						</div>
 
-						<Button
+						<LoadingButton
 							type='submit'
 							size='lg'
 							className='w-full sm:w-auto'
-							disabled={submitting}
-							aria-busy={submitting}
+							loading={submitting}
+							loadingText='Signing…'
 						>
-							{submitting && (
-								<span aria-hidden='true' className='inline-flex'>
-									<LoadingSpinner size='sm' withMargin={false} />
-								</span>
-							)}
-							{submitting ? 'Signing…' : 'Sign waiver'}
-						</Button>
+							Sign waiver
+						</LoadingButton>
 					</CardContent>
 				</Card>
 			</form>

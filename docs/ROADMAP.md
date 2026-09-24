@@ -236,7 +236,7 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-632 tests across four suites, all run by `npm run verify`. Every callable is
+About 1,300 tests across four suites, all run by `npm run verify`. Every callable is
 covered for authorization, **all six triggers** have suites, and the emulator
 suites are mutation-tested. The conventions that keep them worth having —
 mutation testing, the emulator's missing batch limit, and pinning behaviour
