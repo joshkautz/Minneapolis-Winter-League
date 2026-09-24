@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/shared/components'
 import { Card, CardContent } from '@/components/ui/card'
 import {
 	Form,
@@ -143,9 +144,14 @@ export const SignupForm = ({ onSuccess, onNameAppeal }: SignupFormProps) => {
 								</ul>
 							</div>
 						)}
-						<Button type='submit' className='w-full' disabled={isLoading}>
-							{isLoading ? 'Signing Up...' : 'Sign Up'}
-						</Button>
+						<LoadingButton
+							type='submit'
+							className='w-full'
+							loading={isLoading}
+							loadingText='Signing Up...'
+						>
+							Sign Up
+						</LoadingButton>
 						{error && (
 							<p className='text-sm text-red-500 text-center'>
 								{error.message || 'An error occurred during signup'}

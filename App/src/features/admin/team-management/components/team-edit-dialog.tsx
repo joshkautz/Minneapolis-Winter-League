@@ -121,7 +121,9 @@ export const TeamEditDialog = ({
 
 	// Roster state
 	const [playerSearchQuery, setPlayerSearchQuery] = useState('')
-	const [isAddingPlayer, setIsAddingPlayer] = useState(false)
+	// The player being added, so only that row's button spins.
+	const [addingPlayerId, setAddingPlayerId] = useState<string | null>(null)
+	const isAddingPlayer = addingPlayerId !== null
 	const [playerToRemove, setPlayerToRemove] = useState<{
 		playerId: string
 		playerName: string
@@ -280,7 +282,7 @@ export const TeamEditDialog = ({
 	// Handle add player
 	const handleAddPlayer = useCallback(
 		async (playerId: string, playerName: string) => {
-			setIsAddingPlayer(true)
+			setAddingPlayerId(playerId)
 			try {
 				await updateTeamAdminViaFunction({
 					teamDocId,
@@ -296,7 +298,7 @@ export const TeamEditDialog = ({
 					description: error instanceof Error ? error.message : 'Unknown error',
 				})
 			} finally {
-				setIsAddingPlayer(false)
+				setAddingPlayerId(null)
 			}
 		},
 		[teamDocId]
@@ -526,7 +528,7 @@ export const TeamEditDialog = ({
 														}
 														disabled={isAddingPlayer}
 													>
-														{isAddingPlayer ? (
+														{addingPlayerId === player.playerId ? (
 															<Loader2 className='h-4 w-4 animate-spin' />
 														) : (
 															<>
@@ -556,7 +558,10 @@ export const TeamEditDialog = ({
 			{/* Remove Player Confirmation Dialog */}
 			<AlertDialog
 				open={!!playerToRemove}
-				onOpenChange={() => setPlayerToRemove(null)}
+				onOpenChange={(open) => {
+					// Stays open, spinner showing, until the removal settles.
+					if (!open && !isRemovingPlayer) setPlayerToRemove(null)
+				}}
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
@@ -577,7 +582,11 @@ export const TeamEditDialog = ({
 							Cancel
 						</AlertDialogCancel>
 						<AlertDialogAction
-							onClick={handleRemovePlayer}
+							onClick={(event) => {
+								// Radix closes on click; the handler closes it on success.
+								event.preventDefault()
+								void handleRemovePlayer()
+							}}
 							disabled={
 								isRemovingPlayer ||
 								(playerToRemove?.isCaptain && captainCount <= 1)

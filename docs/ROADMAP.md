@@ -37,7 +37,7 @@ Badges already implemented are marked `x`. The rest are designed but not built.
 
 ## Team-level payment ($1,000 collective)
 
-Part-built, not yet switched on: `docs/TEAM_PAYMENTS.md`. A team registers
+Live from 2026 Fall: `docs/TEAM_PAYMENTS.md`. A team registers
 when it has ten signed players **and** its players have collectively
 committed $1,000, in any split, replacing ten individual $100 payments.
 
@@ -47,9 +47,9 @@ taking money (`createTeamContributionCheckout` plus the webhook), and the
 whole settlement lifecycle: capture on registration, release on the
 twelve-team lock and when registration closes, capture before expiry, an
 admin release, and a daily reconciliation with Stripe; the team payment card
-on My Team and the admin payments view. Left: cutover — the season's home
-page copy, setting the total, and rehearsing the race. No season opts in, so
-none of it touches money yet.
+on My Team and the admin payments view, and cutover: 2026 Fall carries a
+$1,000 total and the home page describes it. Left: rehearsing the
+twelve-team race on the emulators before registration opens on 1 October.
 
 Three decisions carry it:
 
@@ -68,6 +68,19 @@ Three decisions carry it:
 
 Also retires the per-player returning discount, which does not map onto a team
 total.
+
+## Admins cannot delete a registered team
+
+Team Management offers **Delete Team** on registered teams, and it calls
+`deleteTeam` — which refuses registered teams and anyone who is not that
+team's captain, so it fails for every admin. `deleteUnregisteredTeam`, the
+admin path, refuses registered teams too. No server path exists.
+
+It needs a decision before code: a registered team has captured team
+payments (or, before 2026 Fall, ten paid players), so deleting one means
+deciding what happens to that money — refund it, keep it, or require it be
+released first through the payments dialog. Until then the button should
+probably be hidden for registered teams rather than fail.
 
 ## Waivers
 
@@ -211,6 +224,13 @@ Still uncovered, in rough priority order:
 - **App components.** Only the shell is mounted. The admin screens carry the
   most complex state and have no tests.
 - **End-to-end.** No test drives a browser against the emulators.
+- **App-to-callable payloads.** Nothing checks what a wrapper in
+  `App/src/firebase/collections/functions.ts` sends against the request type
+  the callable reads; the two are declared separately. `deleteTeam` gained a
+  required `seasonId` and the App kept sending only `teamId`, so a captain's
+  Delete team failed every time until it was caught by hand
+  (`use-manage-captain-actions.test.ts` now pins it). Sharing the request
+  types between the workspaces would make the compiler catch the next one.
 
 ### Writing trigger tests
 

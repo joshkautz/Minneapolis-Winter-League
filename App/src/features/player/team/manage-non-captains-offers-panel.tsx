@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { toast } from 'sonner'
 import {
 	OfferDocument,
@@ -25,8 +24,6 @@ export const ManageNonCaptainsOffersPanel = () => {
 		incomingOffersQuerySnapshotLoading,
 	} = useOffersContext()
 
-	const [loadingOfferId, setLoadingOfferId] = useState<string | null>(null)
-
 	const { offers: outgoingRequests, offersLoading: outgoingRequestsLoading } =
 		useOffer(outgoingOffersQuerySnapshot, currentSeasonTeamsQuerySnapshot)
 	const { offers: incomingInvites, offersLoading: incomingInvitesLoading } =
@@ -35,7 +32,6 @@ export const ManageNonCaptainsOffersPanel = () => {
 	const handleReject = async (
 		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
-		setLoadingOfferId(offerDocumentReference.id)
 		try {
 			await updateOfferViaFunction({
 				offerId: offerDocumentReference.id,
@@ -52,15 +48,12 @@ export const ManageNonCaptainsOffersPanel = () => {
 			toast.error('Failure', {
 				description: errorMessage,
 			})
-		} finally {
-			setLoadingOfferId(null)
 		}
 	}
 
 	const handleAccept = async (
 		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
-		setLoadingOfferId(offerDocumentReference.id)
 		try {
 			await updateOfferViaFunction({
 				offerId: offerDocumentReference.id,
@@ -77,15 +70,12 @@ export const ManageNonCaptainsOffersPanel = () => {
 			toast.error('Failure', {
 				description: errorMessage,
 			})
-		} finally {
-			setLoadingOfferId(null)
 		}
 	}
 
 	const handleCancel = async (
 		offerDocumentReference: DocumentReference<OfferDocument>
 	) => {
-		setLoadingOfferId(offerDocumentReference.id)
 		try {
 			await updateOfferViaFunction({
 				offerId: offerDocumentReference.id,
@@ -102,8 +92,6 @@ export const ManageNonCaptainsOffersPanel = () => {
 			toast.error('Failure', {
 				description: errorMessage,
 			})
-		} finally {
-			setLoadingOfferId(null)
 		}
 	}
 
@@ -132,7 +120,6 @@ export const ManageNonCaptainsOffersPanel = () => {
 					</div>
 				) : (
 					incomingInvites?.map((incomingInvite: OfferDocumentWithUI) => {
-						const isLoading = loadingOfferId === incomingInvite.ref.id
 						return (
 							<NotificationCardItem
 								key={`incomingInvite-row-${incomingInvite.ref.id}`}
@@ -143,13 +130,13 @@ export const ManageNonCaptainsOffersPanel = () => {
 								actionOptions={[
 									{
 										title: 'Accept',
+										pendingTitle: 'Accepting...',
 										action: handleAccept,
-										isLoading: isLoading,
 									},
 									{
 										title: 'Reject',
+										pendingTitle: 'Rejecting...',
 										action: handleReject,
-										isLoading: isLoading,
 									},
 								]}
 							/>
@@ -180,7 +167,6 @@ export const ManageNonCaptainsOffersPanel = () => {
 					</div>
 				) : (
 					outgoingRequests?.map((outgoingRequest: OfferDocumentWithUI) => {
-						const isLoading = loadingOfferId === outgoingRequest.ref.id
 						return (
 							<NotificationCardItem
 								key={`outgoingRequest-row-${outgoingRequest.ref.id}`}
@@ -191,8 +177,8 @@ export const ManageNonCaptainsOffersPanel = () => {
 								actionOptions={[
 									{
 										title: 'Cancel',
+										pendingTitle: 'Canceling...',
 										action: handleCancel,
-										isLoading: isLoading,
 									},
 								]}
 							/>

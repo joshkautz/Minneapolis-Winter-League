@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/shared/components'
 import {
 	Card,
 	CardContent,
@@ -61,9 +62,14 @@ export const ResetPasswordForm = ({
 							)}
 						/>
 						<div className='space-y-2'>
-							<Button type='submit' className='w-full' disabled={isLoading}>
-								{isLoading ? 'Sending...' : 'Send reset email'}
-							</Button>
+							<LoadingButton
+								type='submit'
+								className='w-full'
+								loading={isLoading}
+								loadingText='Sending...'
+							>
+								Send reset email
+							</LoadingButton>
 							{error && (
 								<p className='text-sm text-red-500 text-center'>
 									{error.message ||
