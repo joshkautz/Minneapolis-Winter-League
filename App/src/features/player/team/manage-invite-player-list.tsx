@@ -34,38 +34,40 @@ export const ManageInvitePlayerList = () => {
 		[currentSeasonTeamsQuerySnapshot, currentSeasonData]
 	)
 
+	// Resolves to whether the invite was sent; failures are toasted here.
 	const handleInvite = useCallback(
-		(
+		async (
 			playerQueryDocumentSnapshot: QueryDocumentSnapshot<PlayerDocument>,
 			teamQueryDocumentSnapshot:
 				QueryDocumentSnapshot<TeamSeasonDocument> | undefined
-		) => {
+		): Promise<boolean> => {
 			const canonicalTeamId = teamQueryDocumentSnapshot
 				? canonicalTeamIdFromTeamSeasonDoc(teamQueryDocumentSnapshot)
 				: undefined
 			if (!playerQueryDocumentSnapshot?.id || !canonicalTeamId) {
 				toast.error('Missing required data to send invite')
-				return
+				return false
 			}
 
-			createOfferViaFunction({
-				playerId: playerQueryDocumentSnapshot.id,
-				teamId: canonicalTeamId,
-				type: OfferType.INVITATION,
-			})
-				.then(() => {
-					toast.success('Invite sent', {
-						description: `${playerQueryDocumentSnapshot.data().firstname} ${playerQueryDocumentSnapshot.data().lastname} has been invited to join ${teamQueryDocumentSnapshot?.data().name}.`,
-					})
+			try {
+				await createOfferViaFunction({
+					playerId: playerQueryDocumentSnapshot.id,
+					teamId: canonicalTeamId,
+					type: OfferType.INVITATION,
 				})
-				.catch((error: unknown) => {
-					// Firebase Functions errors have a message property
-					const firebaseError = error as { message?: string }
-					const errorMessage = firebaseError?.message || 'Failed to send invite'
-					toast.error('Invite failed', {
-						description: errorMessage,
-					})
+				toast.success('Invite sent', {
+					description: `${playerQueryDocumentSnapshot.data().firstname} ${playerQueryDocumentSnapshot.data().lastname} has been invited to join ${teamQueryDocumentSnapshot?.data().name}.`,
 				})
+				return true
+			} catch (error: unknown) {
+				// Firebase Functions errors have a message property
+				const firebaseError = error as { message?: string }
+				const errorMessage = firebaseError?.message || 'Failed to send invite'
+				toast.error('Invite failed', {
+					description: errorMessage,
+				})
+				return false
+			}
 		},
 		[]
 	)

@@ -22,7 +22,12 @@ import {
 } from '../../../shared/membership.js'
 import { formatDateForUser } from '../../../shared/format.js'
 import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../../config/constants.js'
-import { Collections } from '../../../types.js'
+import {
+	Collections,
+	type PlayerSeasonDocument,
+	type SeasonDocument,
+} from '../../../types.js'
+import { countsTowardRegistration } from '../../../services/teamRegistrationService.js'
 
 interface UpdateTeamRosterRequest {
 	teamId: string
@@ -219,16 +224,17 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 					if (teamSeasonData?.registered) {
 						const minPlayersRequired = TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
 						const remainingRegistered = rosterPlayerSeasonSnaps.filter(
-							(snap, i) => {
-								if (rosterSnap.docs[i].id === playerId) return false
-								const data = snap.data()
-								return Boolean(data?.paid && data?.signed)
-							}
+							(snap, i) =>
+								rosterSnap.docs[i].id !== playerId &&
+								countsTowardRegistration(
+									snap.data() as PlayerSeasonDocument | undefined,
+									seasonData as SeasonDocument
+								)
 						).length
 						if (remainingRegistered < minPlayersRequired) {
 							throw new HttpsError(
 								'failed-precondition',
-								`You cannot leave your team at this time. Your departure would cause the team to lose its registered status. The team needs at least ${minPlayersRequired} fully registered players (paid and signed waiver), but would only have ${remainingRegistered} after your departure.`
+								`You cannot leave your team at this time. Your departure would cause the team to lose its registered status. The team needs at least ${minPlayersRequired} registered players, but would only have ${remainingRegistered} after your departure.`
 							)
 						}
 					}

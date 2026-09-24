@@ -56,6 +56,8 @@ interface ProcessedOffer {
 	createdAt: Date
 	createdByName: string
 	seasonName: string
+	/** For ordering by season: names sort "2026 Spring" after "2026 Fall". */
+	seasonStartMillis: number
 }
 
 type SortColumn =
@@ -230,6 +232,7 @@ export const OfferManagement = () => {
 							createdAt: offerData.createdAt.toDate(),
 							createdByName,
 							seasonName,
+							seasonStartMillis: seasonData?.dateStart?.toMillis() ?? 0,
 						} as ProcessedOffer
 					} catch (error) {
 						logger.error(
@@ -265,7 +268,7 @@ export const OfferManagement = () => {
 					comparison = a.teamName.localeCompare(b.teamName)
 					break
 				case 'season':
-					comparison = a.seasonName.localeCompare(b.seasonName)
+					comparison = a.seasonStartMillis - b.seasonStartMillis
 					break
 				case 'createdBy':
 					comparison = a.createdByName.localeCompare(b.createdByName)

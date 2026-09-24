@@ -1,6 +1,5 @@
-import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { LoadingSpinner } from '@/shared/components'
+import { LoadingButton } from '@/shared/components'
 import { CheckCircle, Mail } from 'lucide-react'
 import { useEmailVerification } from './use-email-verification'
 
@@ -51,25 +50,20 @@ export const EmailVerificationSection = ({
 						</AlertDescription>
 					</Alert>
 
-					<Button
+					<LoadingButton
 						variant='outline'
 						size='sm'
 						onClick={handleSendVerification}
-						disabled={
-							verificationEmailSent ||
-							verificationEmailLoading ||
-							isAuthenticatedUserBanned
-						}
+						disabled={verificationEmailSent || isAuthenticatedUserBanned}
+						loading={verificationEmailLoading}
+						loadingText='Sending...'
 						className='w-full'
 					>
-						{verificationEmailLoading && (
-							<LoadingSpinner size='sm' className='mr-2' />
-						)}
-						<Mail className='mr-2 h-3 w-3' />
+						<Mail className='h-3 w-3' />
 						{verificationEmailSent
 							? 'Verification Email Sent!'
 							: 'Send Verification Email'}
-					</Button>
+					</LoadingButton>
 
 					{verificationEmailSent && (
 						<p className='text-xs text-muted-foreground text-center'>

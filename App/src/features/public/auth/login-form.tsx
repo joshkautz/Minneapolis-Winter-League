@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/shared/components'
 import { Card, CardContent } from '@/components/ui/card'
 import {
 	Form,
@@ -56,9 +57,14 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
 								</FormItem>
 							)}
 						/>
-						<Button type='submit' className='w-full' disabled={isLoading}>
-							{isLoading ? 'Logging In...' : 'Log In'}
-						</Button>
+						<LoadingButton
+							type='submit'
+							className='w-full'
+							loading={isLoading}
+							loadingText='Logging In...'
+						>
+							Log In
+						</LoadingButton>
 						{error && (
 							<p className='text-sm text-red-500 text-center'>
 								{error.message || 'An error occurred during login'}
