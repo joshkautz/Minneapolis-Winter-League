@@ -130,6 +130,13 @@ once per instance if that secret is missing, and returns a placeholder so the
 function still loads. A warning names a secret some code actually tried to
 use — declare it on that function.
 
+**The emulator runs against production.** `.firebaserc` has one real project,
+and a secret missing from `Functions/.secret.local` is fetched from
+production Secret Manager with your own credentials. So under the emulator
+(`FUNCTIONS_EMULATOR=true`) a live Stripe key (`sk_live_`, `rk_live_`) is
+refused and the placeholder returned; put a test-mode key in `.secret.local`
+to exercise payments locally.
+
 Static settings — region, CORS origins, team registration thresholds, the
 Stripe API version — are in `config/constants.ts`.
 

@@ -27,6 +27,7 @@ beforeEach(() => {
 	for (const name of SECRET_NAMES) {
 		vi.stubEnv(name, undefined)
 	}
+	vi.stubEnv('FUNCTIONS_EMULATOR', undefined)
 })
 
 afterEach(() => {
@@ -98,5 +99,65 @@ describe('getSecret', () => {
 
 		expect(getStripeWebhookSecret()).toBe('whsec_set_after_import')
 		expect(warn).not.toHaveBeenCalled()
+	})
+})
+
+/**
+ * The emulator runs against the production project and fetches any secret
+ * missing from Functions/.secret.local from production Secret Manager, so a
+ * developer's emulator could be handed the live Stripe key without anyone
+ * choosing it.
+ */
+describe('getSecret under the emulator', () => {
+	beforeEach(() => {
+		vi.stubEnv('FUNCTIONS_EMULATOR', 'true')
+	})
+
+	it.each(['sk_live_abc', 'rk_live_abc'])(
+		'never uses a live Stripe key (%s)',
+		async (liveKey) => {
+			vi.stubEnv('STRIPE_SECRET_KEY', liveKey)
+			const { getStripeSecretKey } = await loadEnvironment()
+
+			expect(getStripeSecretKey()).toBe('DEVELOPMENT_PLACEHOLDER_STRIPE')
+			expect(warn).toHaveBeenCalledWith(
+				expect.stringContaining('live Stripe key')
+			)
+		}
+	)
+
+	it('uses a test-mode Stripe key', async () => {
+		vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_abc')
+		const { getStripeSecretKey } = await loadEnvironment()
+
+		expect(getStripeSecretKey()).toBe('sk_test_abc')
+		expect(warn).not.toHaveBeenCalled()
+	})
+
+	it('warns about the refusal once, not on every read', async () => {
+		vi.stubEnv('STRIPE_SECRET_KEY', 'sk_live_abc')
+		const { getStripeSecretKey } = await loadEnvironment()
+
+		getStripeSecretKey()
+		getStripeSecretKey()
+
+		expect(warn).toHaveBeenCalledTimes(1)
+	})
+
+	it('leaves the webhook secret alone', async () => {
+		// Only verifies signatures; it cannot move money.
+		vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_live')
+		const { getStripeWebhookSecret } = await loadEnvironment()
+
+		expect(getStripeWebhookSecret()).toBe('whsec_live')
+	})
+})
+
+describe('getSecret when deployed', () => {
+	it('uses the live Stripe key', async () => {
+		vi.stubEnv('STRIPE_SECRET_KEY', 'sk_live_abc')
+		const { getStripeSecretKey } = await loadEnvironment()
+
+		expect(getStripeSecretKey()).toBe('sk_live_abc')
 	})
 })

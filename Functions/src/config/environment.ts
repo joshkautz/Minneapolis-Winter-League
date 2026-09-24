@@ -16,6 +16,15 @@ const SECRET_PLACEHOLDERS: Record<SecretName, string> = {
 }
 
 const warnedMissingSecrets = new Set<SecretName>()
+let warnedLiveStripeKey = false
+
+/** The Functions emulator sets this; a deployed function never sees it. */
+export function isRunningInEmulator(): boolean {
+	return process.env.FUNCTIONS_EMULATOR === 'true'
+}
+
+const isLiveStripeKey = (value: string): boolean =>
+	value.startsWith('sk_live_') || value.startsWith('rk_live_')
 
 /**
  * Reads one secret at the moment it is needed.
@@ -27,10 +36,28 @@ const warnedMissingSecrets = new Set<SecretName>()
  * actually tried to use. It is logged once per instance, not per read.
  *
  * In production the value is a Firebase secret; under the emulator it comes
- * from `Functions/.secret.local`.
+ * from `Functions/.secret.local` — or, when it is not there, from production
+ * Secret Manager with the developer's own credentials, since the emulator
+ * runs against the production project. That is how a seeded emulator once
+ * sent real Dropbox Sign emails. So the emulator never uses a live Stripe
+ * key: put a test-mode key in `.secret.local` to exercise payments locally.
  */
 export function getSecret(name: SecretName): string {
 	const value = process.env[name]
+	if (
+		value &&
+		name === 'STRIPE_SECRET_KEY' &&
+		isLiveStripeKey(value) &&
+		isRunningInEmulator()
+	) {
+		if (!warnedLiveStripeKey) {
+			warnedLiveStripeKey = true
+			logger.warn(
+				'STRIPE_SECRET_KEY refused: a live Stripe key is never used under the emulator. Put a test-mode key in Functions/.secret.local.'
+			)
+		}
+		return SECRET_PLACEHOLDERS[name]
+	}
 	if (value) {
 		return value
 	}
