@@ -802,6 +802,8 @@ interface CreateSeasonRequest {
 	}
 	/** Season format - 'traditional' or 'swiss'. Defaults to 'traditional' */
 	format?: SeasonFormat
+	/** Team payments total in cents; omit for per-player pricing. */
+	teamRegistrationTotalCents?: number
 }
 
 interface CreateSeasonResponse {
@@ -846,6 +848,11 @@ interface UpdateSeasonRequest {
 	}
 	/** Season format - 'traditional' or 'swiss'. Defaults to 'traditional' */
 	format?: SeasonFormat
+	/**
+	 * Team payments total in cents. Omitted: unchanged. Null: back to
+	 * per-player pricing.
+	 */
+	teamRegistrationTotalCents?: number | null
 }
 
 interface UpdateSeasonResponse {
