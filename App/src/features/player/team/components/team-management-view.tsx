@@ -31,23 +31,22 @@ export const TeamManagementView = ({
 						: 'Manage your team roster, invitations, and settings'
 				}
 				icon={Users}
-				showSeasonIndicator
 			/>
 
 			<div className='flex flex-col lg:flex-row items-stretch gap-4 w-full'>
 				{/* Main content - appears first on mobile, left side on desktop */}
-				<div className='w-full lg:flex-1'>
+				<div className='w-full lg:flex-1 space-y-4 min-w-0'>
 					<ManageTeamRosterCard
 						actions={
 							isCaptain ? <ManageCaptainActions /> : <ManageNonCaptainActions />
 						}
 					/>
+					{/* Renders nothing unless the season uses team payments. */}
+					<TeamPaymentCard />
 				</div>
 
 				{/* Offers panel - appears second on mobile, right side on desktop */}
 				<div className='w-full lg:flex-1 space-y-4 min-w-0'>
-					{/* Renders nothing unless the season uses team payments. */}
-					<TeamPaymentCard />
 					{isCaptain ? (
 						<ManageCaptainsOffersPanel />
 					) : (
