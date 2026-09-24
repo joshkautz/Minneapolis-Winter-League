@@ -258,6 +258,99 @@ describe('updateTeamRoster', () => {
 	})
 })
 
+describe('updateTeamRoster on a registered team', () => {
+	/**
+	 * A registered team cannot drop below ten qualifying players. Under
+	 * team-total pricing nobody pays individually, and this check counted
+	 * only paid-and-signed players — so it counted zero, and nobody on a
+	 * registered 2026 Fall team could leave or be removed.
+	 */
+	const TEAM = 'registered-team'
+
+	/** A registered team: PLAYER captains it, `members` more have signed. */
+	const seedRegisteredTeam = async (
+		members: number,
+		opts: { paid: boolean }
+	): Promise<string[]> => {
+		await firestore
+			.collection('teams')
+			.doc(TEAM)
+			.set({ createdAt: Timestamp.now(), createdBy: null })
+		await firestore
+			.collection('teams')
+			.doc(TEAM)
+			.collection('teamSeasons')
+			.doc(SEASON)
+			.set({
+				season: firestore.collection('seasons').doc(SEASON),
+				name: 'Registered Team',
+				registered: true,
+				registeredDate: Timestamp.now(),
+			})
+		const playerIds = [
+			PLAYER,
+			...Array.from({ length: members }, (_, i) => `member-${i}`),
+		]
+		for (const playerId of playerIds) {
+			if (playerId !== PLAYER) await seedPlayer(playerId)
+			await teamRosterEntryRef(firestore, TEAM, SEASON, playerId).set({
+				player: firestore.collection('players').doc(playerId),
+				dateJoined: Timestamp.now(),
+			})
+			await playerSeasonRef(firestore, playerId, SEASON).set({
+				season: firestore.collection('seasons').doc(SEASON),
+				team: firestore.collection('teams').doc(TEAM),
+				captain: playerId === PLAYER,
+				paid: opts.paid,
+				signed: true,
+			})
+		}
+		return playerIds
+	}
+
+	const removeMember = (): Promise<string | null> =>
+		errorCodeFrom(fn('updateTeamRoster'), {
+			auth: authed(PLAYER),
+			data: { teamId: TEAM, playerId: 'member-0', action: 'remove' },
+		})
+
+	describe('under team-total pricing', () => {
+		beforeEach(async () => {
+			await seedSeason({ teamRegistrationTotalCents: 100_000 })
+		})
+
+		it('lets a player go when ten signed players remain, paid or not', async () => {
+			await seedRegisteredTeam(10, { paid: false })
+
+			expect(await removeMember()).toBeNull()
+			expect(
+				(await teamRosterEntryRef(firestore, TEAM, SEASON, 'member-0').get())
+					.exists
+			).toBe(false)
+		})
+
+		it('still refuses a departure that would leave nine', async () => {
+			await seedRegisteredTeam(9, { paid: false })
+
+			expect(await removeMember()).toBe('failed-precondition')
+		})
+	})
+
+	describe('under per-player pricing', () => {
+		it('does not count signed players who have not paid', async () => {
+			await seedRegisteredTeam(10, { paid: false })
+
+			expect(await removeMember()).toBe('failed-precondition')
+		})
+
+		it('lets a player go when ten paid, signed players remain', async () => {
+			await seedRegisteredTeam(10, { paid: true })
+
+			expect(await removeMember()).toBeNull()
+		})
+	})
+})
+
 describe('createOffer', () => {
 	let teamId: string
 

@@ -23,6 +23,7 @@ import { logger } from 'firebase-functions/v2'
 import { TEAM_CONFIG } from '../config/constants.js'
 import {
 	Collections,
+	type PlayerSeasonDocument,
 	type SeasonDocument,
 	type TeamContributionDocument,
 } from '../types.js'
@@ -31,6 +32,27 @@ import {
 	teamContributionsCollection,
 } from '../shared/contributions.js'
 import { playerSeasonRef, teamSeasonRef } from '../shared/database.js'
+
+/**
+ * Whether a player counts toward their team's ten, under whichever rule the
+ * season uses. The one definition, so the registration check and the check
+ * that a departure would not break a registered team cannot disagree — they
+ * did, and under team-total pricing nobody on a registered team could leave.
+ *
+ * Checked by type rather than presence, so a total cleared to null falls
+ * back to the per-player rule instead of a $0 team total.
+ */
+export function countsTowardRegistration(
+	playerSeason: Pick<PlayerSeasonDocument, 'paid' | 'signed'> | undefined,
+	season: Pick<SeasonDocument, 'teamRegistrationTotalCents'> | undefined
+): boolean {
+	if (!playerSeason?.signed) return false
+	// Under team-total pricing the money is the team's; a player qualifies by
+	// signing. Per-player pricing also needs their own payment.
+	return typeof season?.teamRegistrationTotalCents === 'number'
+		? true
+		: Boolean(playerSeason.paid)
+}
 
 /**
  * Recompute the registration status of a team for a specific season.
@@ -164,13 +186,14 @@ async function claimSpotIfQualified(
 		// Payment is the team's business, not theirs: one person can cover the
 		// whole roster, which would leave everyone else unpaid and the team
 		// permanently unable to register under the original rule.
-		const qualifyingPlayers = playerSeasons.filter((snap) => {
-			if (!snap.exists) return false
-			const data = snap.data()
-			return teamTotalCents === undefined
-				? Boolean(data?.paid && data?.signed)
-				: Boolean(data?.signed)
-		}).length
+		const qualifyingPlayers = playerSeasons.filter(
+			(snap) =>
+				snap.exists &&
+				countsTowardRegistration(
+					snap.data() as PlayerSeasonDocument | undefined,
+					seasonData
+				)
+		).length
 
 		if (qualifyingPlayers < TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION) {
 			return { outcome: 'not-qualified', qualifyingPlayers }
