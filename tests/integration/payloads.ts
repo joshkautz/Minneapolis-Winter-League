@@ -53,7 +53,6 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 
 	// --- admin: players ----------------------------------------------------
 	getPlayerAuthInfo: { playerId: 'player-1' },
-	updatePlayerEmail: { playerId: 'player-1', newEmail: 'new@example.com' },
 	updatePlayerAdmin: { playerId: 'player-1', firstname: 'Renamed' },
 
 	// --- admin: posts ------------------------------------------------------

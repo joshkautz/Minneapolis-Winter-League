@@ -80,7 +80,6 @@ export { updatePlayer } from './functions/user/players/update.js'
 export { deletePlayer } from './functions/user/players/delete.js'
 
 // Player management functions (admin-only)
-export { updatePlayerEmail } from './functions/admin/players/updateEmail.js'
 export { updatePlayerAdmin } from './functions/admin/players/updatePlayerAdmin.js'
 export { getPlayerAuthInfo } from './functions/admin/players/getPlayerAuthInfo.js'
 

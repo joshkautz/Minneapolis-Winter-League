@@ -14,8 +14,6 @@ import type {
 	CreatePlayerResponse,
 	UpdatePlayerRequest,
 	UpdatePlayerResponse,
-	DeletePlayerRequest,
-	DeletePlayerResponse,
 } from './player-types'
 
 /**
@@ -60,61 +58,6 @@ export const updatePlayerViaFunction = async (
 		'updatePlayer'
 	)
 	const result = await updatePlayer(data)
-	return result.data
-}
-
-/**
- * Deletes a player profile via Firebase Function
- *
- * Security features:
- * - Users can only delete their own profile (unless admin)
- * - Admins can delete any player with adminOverride flag
- * - Checks for team associations before deletion
- * - Provides audit logging and warnings
- */
-export const deletePlayerViaFunction = async (
-	data: DeletePlayerRequest = {}
-): Promise<DeletePlayerResponse> => {
-	const deletePlayer = httpsCallable<DeletePlayerRequest, DeletePlayerResponse>(
-		functions,
-		'deletePlayer'
-	)
-	const result = await deletePlayer(data)
-	return result.data
-}
-
-interface UpdatePlayerEmailRequest {
-	/** User ID whose email should be updated */
-	playerId: string
-	/** New email address */
-	newEmail: string
-}
-
-interface UpdatePlayerEmailResponse {
-	success: true
-	playerId: string
-	newEmail: string
-	message: string
-}
-
-/**
- * Updates a player's email address via Firebase Function
- *
- * Security features:
- * - Only admins can call this function
- * - Validates email format and availability
- * - Updates both Firebase Authentication and Firestore
- * - Automatically marks email as verified
- * - Comprehensive error handling and logging
- */
-export const updatePlayerEmailViaFunction = async (
-	data: UpdatePlayerEmailRequest
-): Promise<UpdatePlayerEmailResponse> => {
-	const updatePlayerEmail = httpsCallable<
-		UpdatePlayerEmailRequest,
-		UpdatePlayerEmailResponse
-	>(functions, 'updatePlayerEmail')
-	const result = await updatePlayerEmail(data)
 	return result.data
 }
 

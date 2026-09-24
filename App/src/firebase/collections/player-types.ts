@@ -46,23 +46,3 @@ export interface UpdatePlayerResponse {
 	playerId: string
 	message: string
 }
-
-/**
- * Request interface for deleting a player
- * Must match Functions/src/functions/players/delete.ts DeletePlayerRequest exactly
- */
-export interface DeletePlayerRequest {
-	playerId?: string // Optional - defaults to authenticated user
-	adminOverride?: boolean // Allow admin to force delete
-}
-
-/**
- * Response interface for deleting a player
- * Must match Functions/src/functions/players/delete.ts success response exactly
- */
-export interface DeletePlayerResponse {
-	success: boolean
-	playerId: string
-	message: string
-	warnings?: string[]
-}
