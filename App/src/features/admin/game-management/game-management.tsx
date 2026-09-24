@@ -65,7 +65,12 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { PageContainer, PageHeader, QueryError } from '@/shared/components'
+import {
+	LoadingButton,
+	PageContainer,
+	PageHeader,
+	QueryError,
+} from '@/shared/components'
 import { logger } from '@/shared/utils'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import {
@@ -137,6 +142,7 @@ export const GameManagement = () => {
 	const [formData, setFormData] = useState<GameFormData>(INITIAL_FORM_DATA)
 	const [editingGameId, setEditingGameId] = useState<string | null>(null)
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+	const [isDeleting, setIsDeleting] = useState(false)
 	const [gameToDelete, setGameToDelete] = useState<
 		(GameDocument & { id: string }) | null
 	>(null)
@@ -468,14 +474,25 @@ export const GameManagement = () => {
 		setFormDialogOpen(true)
 	}
 
+	// A game's team as the admin knows it: the denormalized name, then the
+	// team's current name, then its id, which is all a deleted team leaves.
+	const teamLabel = (game: GameDocument, side: 'home' | 'away'): string => {
+		const name = side === 'home' ? game.homeName : game.awayName
+		const ref = side === 'home' ? game.home : game.away
+		if (name) return name
+		if (!ref?.id) return 'TBD'
+		return teams?.find((team) => team.id === ref.id)?.name || ref.id
+	}
+
 	const handleDeleteClick = (game: GameDocument & { id: string }) => {
 		setGameToDelete(game)
 		setDeleteDialogOpen(true)
 	}
 
 	const handleConfirmDelete = async () => {
-		if (!gameToDelete) return
+		if (!gameToDelete || isDeleting) return
 
+		setIsDeleting(true)
 		try {
 			await deleteGameViaFunction({ gameId: gameToDelete.id })
 
@@ -495,10 +512,13 @@ export const GameManagement = () => {
 				description:
 					error instanceof Error ? error.message : 'Failed to delete game',
 			})
+		} finally {
+			setIsDeleting(false)
 		}
 	}
 
 	const handleCancelDelete = () => {
+		if (isDeleting) return
 		setDeleteDialogOpen(false)
 		setGameToDelete(null)
 	}
@@ -719,20 +739,8 @@ export const GameManagement = () => {
 											<TableCell>{formatDate(game.date)}</TableCell>
 											<TableCell>{formatTime(game.date)}</TableCell>
 											<TableCell>Field {game.field}</TableCell>
-											<TableCell>
-												{game.homeName ??
-													(game.home?.id
-														? teams?.find((t) => t.id === game.home?.id)
-																?.name || game.home.id
-														: 'TBD')}
-											</TableCell>
-											<TableCell>
-												{game.awayName ??
-													(game.away?.id
-														? teams?.find((t) => t.id === game.away?.id)
-																?.name || game.away.id
-														: 'TBD')}
-											</TableCell>
+											<TableCell>{teamLabel(game, 'home')}</TableCell>
+											<TableCell>{teamLabel(game, 'away')}</TableCell>
 											<TableCell>
 												{game.homeScore !== null && game.awayScore !== null ? (
 													`${game.homeScore} - ${game.awayScore}`
@@ -994,7 +1002,12 @@ export const GameManagement = () => {
 				</DialogContent>
 			</Dialog>
 
-			<Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+			<Dialog
+				open={deleteDialogOpen}
+				onOpenChange={(open) => {
+					if (!open) handleCancelDelete()
+				}}
+			>
 				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>Delete Game</DialogTitle>
@@ -1013,8 +1026,8 @@ export const GameManagement = () => {
 								<strong>Field:</strong> {gameToDelete.field}
 							</p>
 							<p className='text-sm text-muted-foreground'>
-								<strong>Teams:</strong> {gameToDelete.home?.id || 'TBD'} vs{' '}
-								{gameToDelete.away?.id || 'TBD'}
+								<strong>Teams:</strong> {teamLabel(gameToDelete, 'home')} vs{' '}
+								{teamLabel(gameToDelete, 'away')}
 							</p>
 							{gameToDelete.homeScore !== null &&
 								gameToDelete.awayScore !== null && (
@@ -1026,12 +1039,21 @@ export const GameManagement = () => {
 						</div>
 					)}
 					<DialogFooter>
-						<Button variant='outline' onClick={handleCancelDelete}>
+						<Button
+							variant='outline'
+							onClick={handleCancelDelete}
+							disabled={isDeleting}
+						>
 							Cancel
 						</Button>
-						<Button variant='destructive' onClick={handleConfirmDelete}>
+						<LoadingButton
+							variant='destructive'
+							onClick={handleConfirmDelete}
+							loading={isDeleting}
+							loadingText='Deleting...'
+						>
 							Delete Game
-						</Button>
+						</LoadingButton>
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
