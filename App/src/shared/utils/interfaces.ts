@@ -8,7 +8,6 @@ export type {
 	SeasonDocument,
 	OfferDocument,
 	GameDocument,
-	WaiverDocument,
 	DocumentData,
 	Timestamp,
 } from '../../types'

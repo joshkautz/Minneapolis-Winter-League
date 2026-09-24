@@ -95,7 +95,6 @@
 		]
 	},
 	"devDependencies": {
-		"@dropbox/sign": "^1.10.0",
 		"@tailwindcss/postcss": "^4.2.2",
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/react": "^16.3.2",

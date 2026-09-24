@@ -30,6 +30,11 @@ export type Timestamp = AdminTimestamp
 
 export enum Collections {
 	BADGES = 'badges',
+	/**
+	 * `dropbox/{uid}/waivers` — records of waivers signed through Dropbox Sign
+	 * before September 2026. Kept, read-only, as history; nothing writes them.
+	 * Current signatures are `players/{uid}/waiverSignatures`.
+	 */
 	DROPBOX = 'dropbox',
 	GAMES = 'games',
 	POSTS = 'posts',
@@ -480,33 +485,6 @@ export interface WaiverSignatureDocument extends DocumentData {
 	userAgent: string | null
 	/** Why an admin recorded it; null for a player's own signature. */
 	note: string | null
-}
-
-/**
- * Waiver status enum
- * - pending: Waiver has been sent, awaiting signature
- * - signed: Waiver has been signed
- * - declined: Signer declined to sign
- * - canceled: Signature request was canceled
- */
-export type WaiverStatus = 'pending' | 'signed' | 'declined' | 'canceled'
-
-/**
- * Waiver document structure
- * Stored at: dropbox/{uid}/waivers/{waiverId}
- * The player ID is implicit from the parent document path
- */
-export interface WaiverDocument extends DocumentData {
-	/** Season ID this waiver belongs to */
-	seasonId: string
-	/** Dropbox Sign signature request ID */
-	signatureRequestId: string
-	/** Current status of the waiver */
-	status: WaiverStatus
-	/** Timestamp when the waiver was created/sent */
-	createdAt: Timestamp
-	/** Timestamp when the waiver was signed (only set when status is 'signed') */
-	signedAt?: Timestamp
 }
 
 /**

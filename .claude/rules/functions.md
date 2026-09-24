@@ -15,8 +15,9 @@ Functions/src/
   functions/user/<domain>/    callables available to signed-in players
   triggers/{auth,documents,payments}/   Firestore and lifecycle triggers
   triggers/scheduled/   onSchedule functions (the team payments sweep and reconciliation)
-  api/webhooks/         Stripe and Dropbox Sign HTTP endpoints
+  api/webhooks/         the Stripe HTTP endpoint
   services/             multi-step domain logic (playerRankings, swissRankings)
+  waiver/               the waiver's text and signing rules, also imported by the App
   shared/               auth, database, errors, format, offers, storage, stripe,
                         returnUrls, contributions (team payment ledger) helpers
   config/               constants.ts (static) and environment.ts (secrets)

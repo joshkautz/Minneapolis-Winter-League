@@ -2,12 +2,7 @@
  * Application constants and configuration
  */
 
-import {
-	getDropboxSignApiKey,
-	getENV,
-	getStripeSecretKey,
-	getStripeWebhookSecret,
-} from './environment.js'
+import { getStripeSecretKey, getStripeWebhookSecret } from './environment.js'
 
 // Firebase Configuration (static - no env vars needed)
 export const FIREBASE_CONFIG = {
@@ -45,23 +40,6 @@ export const BADGE_CONFIG = {
 	MAX_IMAGE_SIZE_BYTES: 5 * 1024 * 1024, // 5MB
 } as const
 
-// Dropbox Sign Configuration (lazy-loaded)
-export function getDropboxSignConfig(): {
-	readonly API_KEY: string
-	readonly TEMPLATE_ID: string
-	readonly TEST_MODE: boolean
-} {
-	return {
-		// A getter, so the secret is read (and its absence warned about) only
-		// by code that uses it.
-		get API_KEY(): string {
-			return getDropboxSignApiKey()
-		},
-		TEMPLATE_ID: '2ea9b881ec6798e7c6122ebaa51baf50689c573c',
-		TEST_MODE: !getENV().isProduction,
-	} as const
-}
-
 // Stripe Configuration (lazy-loaded)
 export function getStripeConfig(): {
 	readonly SECRET_KEY: string
@@ -80,12 +58,3 @@ export function getStripeConfig(): {
 		API_VERSION: '2026-08-26.dahlia' as const,
 	} as const
 }
-
-// Email Configuration
-export const EMAIL_CONFIG = {
-	WAIVER_SUBJECT: 'Minneapolis Winter League - Release of Liability',
-	WAIVER_MESSAGE:
-		"We're so excited you decided to join Minneapolis Winter League. " +
-		'Please make sure to sign this Release of Liability to finalize ' +
-		'your participation. Looking forward to seeing you!',
-} as const

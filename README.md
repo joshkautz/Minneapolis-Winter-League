@@ -38,7 +38,7 @@ for day-to-day development.
 - **Backend**: Firebase Cloud Functions Gen 2 on Node 22
 - **Data**: Cloud Firestore, Firebase Auth, Cloud Storage, Firebase Hosting
 - **Payments**: Stripe (custom integration, not the Firebase extension)
-- **Waivers**: Dropbox Sign
+- **Waivers**: signed in the app (see `docs/WAIVERS.md`)
 - **Testing**: Vitest + Testing Library
 
 ## Repository layout

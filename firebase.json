@@ -28,13 +28,6 @@
 		],
 		"rewrites": [
 			{
-				"source": "/dropboxSignWebhook",
-				"function": {
-					"functionId": "dropboxSignWebhook",
-					"region": "us-central1"
-				}
-			},
-			{
 				"source": "/stripeWebhook",
 				"function": {
 					"functionId": "stripeWebhook",

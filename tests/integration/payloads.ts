@@ -88,7 +88,6 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	mergeTeams: { winningTeamId: 'team-1', losingTeamId: 'team-2' },
 	deleteUnregisteredTeam: { teamId: 'team-1' },
 	updateTeamAdmin: { teamId: 'team-1', seasonId: 'season-1', name: 'Renamed' },
-	sendWaiverAdmin: { playerId: 'player-1', seasonId: 'season-1' },
 
 	// --- user: offers ------------------------------------------------------
 	createOffer: { playerId: 'player-1', teamId: 'team-1', type: 'invitation' },
@@ -153,7 +152,6 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	},
 	getDownloadUrl: { filePath: 'team-logos/logo.png' },
 	getFileMetadata: { filePath: 'team-logos/logo.png' },
-	sendWaiverReminder: {},
 	signWaiver: {
 		versionId: '2026-09-original',
 		dateOfBirth: '1990-05-17',

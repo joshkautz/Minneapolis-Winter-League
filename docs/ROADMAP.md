@@ -62,9 +62,9 @@ Three decisions carry it:
   free to resolve too. A hold is never allowed to lapse — it is captured
   shortly before the 7-day authorization would expire, so nobody is ever
   asked to pay again.
-- **Waivers issue on joining a roster**, not on paying — otherwise a team
-  whose captain pays for everyone can never reach ten signed players. Done:
-  `onRosterEntryCreated`.
+- **Waivers are the player's own step**, not tied to paying — otherwise a
+  team whose captain pays for everyone can never reach ten signed players.
+  Done: players sign in the app (`docs/WAIVERS.md`).
 
 Also retires the per-player returning discount, which does not map onto a team
 total.
@@ -73,12 +73,9 @@ total.
 
 Signed in the app since 2026 Fall: `docs/WAIVERS.md`. Left:
 
-- **Remove Dropbox Sign.** `dropboxSignWebhook`, `onRosterEntryCreated`,
-  `sendWaiverReminder` and `sendWaiverAdmin`, the `/dropboxSignWebhook`
-  rewrite, the `@dropbox/sign` SDK in both workspaces and both lockfiles, and
-  the `DROPBOX_SIGN_API_KEY` secret. First archive the signed PDFs of past
-  seasons into private Cloud Storage; the `dropbox/{uid}/waivers` records stay
-  as history.
+- **Archive the Dropbox Sign PDFs** of past seasons into private Cloud
+  Storage before the account closes, then delete the `DROPBOX_SIGN_API_KEY`
+  secret. The `dropbox/{uid}/waivers` records stay as history.
 - **Emergency contacts for game day.** They are collected with each waiver
   but only visible one player at a time; organizers would want them by team.
 - **A copy by email.** Players can print or save their copy; emailing one
@@ -212,8 +209,8 @@ To stand one up:
 1. Create the `minnesota-winter-league-staging` Firebase project.
 2. Enable Firestore, Auth and Storage; deploy `firestore.rules` and the
    indexes to it.
-3. Give it its own secrets: Stripe **test** keys, a Dropbox Sign sandbox
-   account, and its own webhook endpoints.
+3. Give it its own secrets — Stripe **test** keys — and its own webhook
+   endpoint.
 4. Point `App/.env.staging` at it.
 5. Add a deploy job (`firebase deploy --project staging`), and repoint the PR
    preview channel at staging so previews stop touching production.

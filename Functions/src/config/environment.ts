@@ -1,49 +1,16 @@
 /**
- * Environment variable configuration and validation
+ * Secrets, read at the moment code needs them.
  */
 
 import { logger } from 'firebase-functions/v2'
 
-interface EnvironmentConfig {
-	nodeEnv: string
-	isProduction: boolean
-	isDevelopment: boolean
-}
-
-/**
- * Loads the non-secret runtime environment.
- * This should be called only when needed, not at module load time
- */
-export function getEnvironmentConfig(): EnvironmentConfig {
-	const nodeEnv = process.env.NODE_ENV || 'development'
-	return {
-		nodeEnv,
-		isProduction: nodeEnv === 'production',
-		isDevelopment: nodeEnv === 'development',
-	}
-}
-
-let _envConfig: EnvironmentConfig | null = null
-
-/**
- * Global environment configuration instance (lazy-loaded)
- */
-export function getENV(): EnvironmentConfig {
-	if (!_envConfig) {
-		_envConfig = getEnvironmentConfig()
-	}
-	return _envConfig
-}
-
-export type SecretName =
-	'DROPBOX_SIGN_API_KEY' | 'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET'
+export type SecretName = 'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET'
 
 /**
  * Returned in place of a missing secret so functions still load without one.
  * A function that uses the placeholder fails at the provider instead.
  */
 const SECRET_PLACEHOLDERS: Record<SecretName, string> = {
-	DROPBOX_SIGN_API_KEY: 'DEVELOPMENT_PLACEHOLDER_DROPBOX',
 	STRIPE_SECRET_KEY: 'DEVELOPMENT_PLACEHOLDER_STRIPE',
 	STRIPE_WEBHOOK_SECRET: 'DEVELOPMENT_PLACEHOLDER_STRIPE_WEBHOOK',
 }
@@ -74,10 +41,6 @@ export function getSecret(name: SecretName): string {
 		)
 	}
 	return SECRET_PLACEHOLDERS[name]
-}
-
-export function getDropboxSignApiKey(): string {
-	return getSecret('DROPBOX_SIGN_API_KEY')
 }
 
 export function getStripeSecretKey(): string {

@@ -30,17 +30,17 @@ service cloud.firestore {
     }
 
     //////////////////////////////////////////////////////////////////////////////
-    // DROPBOX SIGN - Waiver signature tracking
+    // DROPBOX SIGN - historical waiver records (before September 2026)
     //////////////////////////////////////////////////////////////////////////////
 
-    // DROPBOX: Per-user waiver documents
+    // Kept as history and written by nothing. Current waiver signatures are
+    // players/{playerId}/waiverSignatures, below.
     match /dropbox/{uid} {
       allow read: if isAuthenticated() && request.auth.uid == uid;
 
-      // Waivers: Read-only for users (created by onPaymentCreated, updated by webhook)
       match /waivers/{id} {
         allow read: if isAuthenticated() && request.auth.uid == uid;
-        allow write: if false; // Functions only (onPaymentCreated, dropboxSignWebhook)
+        allow write: if false;
       }
     }
 

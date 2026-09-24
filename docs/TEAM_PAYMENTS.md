@@ -519,13 +519,10 @@ that did not make it — but stops being the thing that decides.
 This is a prerequisite, not a follow-up. Do it first, on its own, while it is
 still cheap to get wrong.
 
-**0b. Move waiver issuance to roster join. — done.**
-`onRosterEntryCreated` fires on
-`teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` and issues the
-waiver, which catches every route onto a roster because they all write that
-document. `onPaymentCreated` now only marks a player paid. The send itself
-lives in `shared/waivers.ts`, shared with the admin sender, and is idempotent
-on (player, season) so a retry or a team merge cannot double-send.
+**0b. Decouple waivers from payment. — done.** `onPaymentCreated` now only
+marks a player paid. Waivers were first issued through Dropbox Sign when a
+player joined a roster; since September 2026 players sign them in the app,
+before or after joining a team (`docs/WAIVERS.md`).
 
 **0c. Give `deleteTeamSeasonWithCleanup` the no-orphan invariant. — done.**
 A team-season with unsettled contributions cannot be deleted, which covers
@@ -701,7 +698,7 @@ per team and nothing more.
 **4b. Registration status. — done.** Under team payments a player registers
 by signing, but the App assumed paid-and-signed everywhere: roster badges,
 the profile's task count and payment section, the waiver section's
-precondition, and the admin waiver button, as did `sendWaiverAdmin`. All now
+precondition, and the admin waiver button. All now
 follow the season's rule through `App/src/shared/utils/team-payments.ts`,
 which mirrors the server's rules for the page to explain itself.
 
@@ -749,7 +746,7 @@ for how much is a pure function. Written that way it can be tested
 exhaustively against the emulator — the overpayment race, partial capture,
 expiry ordering, a team that fails after capture — with no payment processor
 in sight. The Stripe layer on top is then thin enough to cover by mocking the
-SDK, the way `payment-trigger.test.ts` already mocks Dropbox Sign.
+SDK.
 
 Reserve Stripe test mode for a small set of manual checks that the API shapes
 are right: that a manual-capture session really does produce

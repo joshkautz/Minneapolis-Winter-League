@@ -33,12 +33,11 @@ src/
 
 #### Payment & Waiver Triggers (`triggers/paymentTriggers.ts`)
 
-- **`onPaymentCreated`** - Processes successful payments and creates waiver requests
-- **`dropboxSignWebhook`** - Handles Dropbox Sign webhook events for waiver signing
+- **`onPaymentCreated`** - Marks a player paid when a per-player payment lands
 
-#### Dropbox Sign Functions
+#### Waivers
 
-- **`dropboxSignSendReminderEmail`** - Sends reminder email for existing signature requests
+- **`signWaiver`** - Records a player's waiver signature for the current season; see `docs/WAIVERS.md`
 
 #### Team Registration Triggers (`triggers/teamTriggers.ts`)
 
@@ -80,19 +79,14 @@ src/
 Secrets (Firebase secrets in production, `.secret.local` under the emulator),
 each read only when code uses it and only by functions that declare it:
 
-- **`DROPBOX_SIGN_API_KEY`** - Dropbox Sign API key for waiver management
 - **`STRIPE_SECRET_KEY`** - Stripe API key
 - **`STRIPE_WEBHOOK_SECRET`** - Stripe webhook signing secret
-
-Other environment variables:
-
-- **`NODE_ENV`** - Environment (development/production)
 
 ### Constants
 
 Key configuration constants are defined in `config/constants.ts`:
 
-- Dropbox Sign settings (API key, template ID, test mode)
+- Stripe settings (API key, webhook secret, API version)
 - Firebase settings (region, CORS origins)
 - Business logic settings (minimum players for team registration)
 - Email templates

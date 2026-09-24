@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 /**
  * Webhook guard tests.
  *
- * Both webhooks are `invoker: 'public'` — anyone on the internet can POST to
- * them. The signature check is therefore the only thing separating a real
- * Stripe/Dropbox Sign event from a forged one, and it must happen *before*
+ * The Stripe webhook is `invoker: 'public'` — anyone on the internet can POST
+ * to it. The signature check is therefore the only thing separating a real
+ * Stripe event from a forged one, and it must happen *before*
  * any Firestore write. These tests pin that ordering: a request that fails a
  * guard must return the right status and must not touch the database.
  */
@@ -14,7 +14,6 @@ import type { Request, Response } from 'firebase-functions/v2/https'
 
 const constructEvent = vi.fn()
 const firestoreCollection = vi.fn()
-const isValid = vi.fn()
 
 vi.mock('firebase-functions/v2/https', () => ({
 	// onRequest normally wraps the handler for the Functions runtime; here it
@@ -39,27 +38,11 @@ vi.mock('../../config/constants.js', () => ({
 		WEBHOOK_SECRET: 'whsec_x',
 		API_VERSION: '2026-08-26.dahlia',
 	}),
-	getDropboxSignConfig: () => ({ API_KEY: 'dbx_test_key' }),
 }))
 
 vi.mock('stripe', () => ({
 	default: class {
 		webhooks = { constructEvent }
-	},
-}))
-
-vi.mock('@dropbox/sign', () => ({
-	EventCallbackRequest: { init: (d: unknown) => d },
-	EventCallbackHelper: { isValid },
-	// dropboxSign.ts destructures EventTypeEnum from this at module load.
-	EventCallbackRequestEvent: {
-		EventTypeEnum: {
-			SignatureRequestSigned: 'signature_request_signed',
-			SignatureRequestAllSigned: 'signature_request_all_signed',
-			SignatureRequestSent: 'signature_request_sent',
-			SignatureRequestDeclined: 'signature_request_declined',
-			SignatureRequestCanceled: 'signature_request_canceled',
-		},
 	},
 }))
 
@@ -161,62 +144,5 @@ describe('stripeWebhook', () => {
 			't=1,v1=good',
 			'whsec_x'
 		)
-	})
-})
-
-describe('dropboxSignWebhook', () => {
-	const load = async (): Promise<
-		(req: Request, resp: Response) => Promise<void>
-	> => {
-		const mod = await import('./dropboxSign.js')
-		return mod.dropboxSignWebhook as unknown as (
-			req: Request,
-			resp: Response
-		) => Promise<void>
-	}
-
-	it('rejects a body containing no JSON payload with 400', async () => {
-		const handler = await load()
-		const resp = makeResponse()
-		await handler({ body: Buffer.from('not-a-payload') } as Request, resp)
-
-		expect(resp.statusCode).toBe(400)
-		expect(isValid).not.toHaveBeenCalled()
-		expect(firestoreCollection).not.toHaveBeenCalled()
-	})
-
-	it('rejects an invalid signature with 401 and writes nothing', async () => {
-		isValid.mockReturnValue(false)
-		const handler = await load()
-		const resp = makeResponse()
-		await handler(
-			{
-				body: Buffer.from(
-					'{"event":{"event_type":"signature_request_signed"}}'
-				),
-			} as Request,
-			resp
-		)
-
-		expect(resp.statusCode).toBe(401)
-		expect(firestoreCollection).not.toHaveBeenCalled()
-	})
-
-	it('checks the signature before reading the event payload', async () => {
-		isValid.mockReturnValue(false)
-		const handler = await load()
-		const resp = makeResponse()
-		await handler(
-			{
-				body: Buffer.from(
-					'{"signature_request":{"signature_request_id":"abc","metadata":{"firebaseUID":"attacker"}}}'
-				),
-			} as Request,
-			resp
-		)
-
-		expect(isValid).toHaveBeenCalledWith('dbx_test_key', expect.anything())
-		expect(resp.statusCode).toBe(401)
-		expect(firestoreCollection).not.toHaveBeenCalled()
 	})
 })

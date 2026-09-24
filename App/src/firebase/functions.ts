@@ -3,21 +3,10 @@ import {
 	httpsCallable,
 	HttpsCallableResult,
 } from 'firebase/functions'
-import type { returnTypeT, SignatureRequestGetResponse } from '@dropbox/sign'
 
 import { app } from './app'
 
 const functions = getFunctions(app)
-
-const sendWaiverReminderEmail = async (): Promise<
-	HttpsCallableResult<returnTypeT<SignatureRequestGetResponse>>
-> => {
-	const sendWaiverReminder = httpsCallable<
-		unknown,
-		returnTypeT<SignatureRequestGetResponse>
-	>(functions, 'sendWaiverReminder')
-	return sendWaiverReminder()
-}
 
 interface CreateStripeCheckoutRequest {
 	priceId: string
@@ -67,11 +56,7 @@ const createTeamContributionCheckoutSession = async (
 	return createTeamContributionCheckout(request)
 }
 
-export {
-	sendWaiverReminderEmail,
-	createStripeCheckoutSession,
-	createTeamContributionCheckoutSession,
-}
+export { createStripeCheckoutSession, createTeamContributionCheckoutSession }
 export type {
 	CreateStripeCheckoutRequest,
 	CreateStripeCheckoutResponse,
