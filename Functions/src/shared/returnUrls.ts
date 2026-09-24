@@ -11,6 +11,7 @@
  */
 
 import { FIREBASE_CONFIG } from '../config/constants.js'
+import { isRunningInEmulator } from '../config/environment.js'
 
 const PROJECT_ID = 'minnesota-winter-league'
 
@@ -72,8 +73,4 @@ export function isAllowedReturnUrl(
 		ALLOWED_ORIGINS.has(url.origin) ||
 		(url.port === '' && PREVIEW_CHANNEL_HOST.test(url.hostname))
 	)
-}
-
-function isRunningInEmulator(): boolean {
-	return process.env.FUNCTIONS_EMULATOR === 'true'
 }

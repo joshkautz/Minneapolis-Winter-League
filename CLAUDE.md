@@ -90,6 +90,11 @@ already allowed.
 
 ## Gotchas
 
+- The Functions emulator runs against the **production** project and pulls
+  any secret missing from `Functions/.secret.local` from production Secret
+  Manager, so `config/environment.ts` refuses a live Stripe key under the
+  emulator. It once handed the emulator the real Dropbox Sign key, and
+  seeding with Functions running emailed seed players.
 - The waiver's text and signing rules live once, in `Functions/src/waiver/`,
   and the App imports them (`App/src/shared/waiver.ts`); `App/tsconfig.json`
   sets `rootDir` to the repo root to allow it. Keep `versions.ts` and
