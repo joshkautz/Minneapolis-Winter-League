@@ -19,7 +19,7 @@
  */
 
 import { getAuth } from 'firebase-admin/auth'
-import { getFirestore } from 'firebase-admin/firestore'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
@@ -34,10 +34,14 @@ import {
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	Collections,
+	WAIVER_SIGNATURES_SUBCOLLECTION,
 	type DocumentReference,
 	type PlayerDocument,
 	type SeasonDocument,
+	type WaiverSignatureDocument,
 } from '../../../types.js'
+import { currentWaiverVersion } from '../../../waiver/versions.js'
+import { waiverFingerprint } from '../../../waiver/fingerprint.js'
 
 interface SeasonUpdate {
 	seasonId: string
@@ -541,6 +545,39 @@ export const updatePlayerAdmin = onCall<
 							paid: seasonUpdate.paid,
 							signed: seasonUpdate.signed,
 						})
+
+						// 3. An admin marking someone signed — a paper waiver, a
+						// correction — leaves the same kind of record a player's own
+						// signature does, so every `signed: true` has one behind it.
+						if (seasonUpdate.signed && currentPlayerSeason.signed !== true) {
+							const version = currentWaiverVersion()
+							const record: Omit<WaiverSignatureDocument, 'signedAt'> & {
+								signedAt: FieldValue
+							} = {
+								seasonId: seasonUpdate.seasonId,
+								versionId: version.id,
+								versionSha256: waiverFingerprint(version),
+								method: 'admin',
+								recordedBy: auth?.uid ?? '',
+								signedAt: FieldValue.serverTimestamp(),
+								participantName:
+									`${playerData?.firstname ?? ''} ${playerData?.lastname ?? ''}`.trim(),
+								signerName: null,
+								signerRole: null,
+								guardianRelationship: null,
+								dateOfBirth: null,
+								mailingAddress: null,
+								emergencyContacts: [],
+								email: playerData?.email ?? null,
+								ipAddress: null,
+								userAgent: null,
+								note: 'Marked signed by an admin in Player Management.',
+							}
+							txn.create(
+								playerDocRef.collection(WAIVER_SIGNATURES_SUBCOLLECTION).doc(),
+								record
+							)
+						}
 						return Promise.resolve()
 					})
 

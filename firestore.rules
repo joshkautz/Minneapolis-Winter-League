@@ -101,6 +101,16 @@ service cloud.firestore {
         allow read: if true;
         allow write: if false; // Functions only
       }
+
+      // Waiver signatures: date of birth, mailing address and emergency
+      // contacts, so private to that player and admins — unlike the player
+      // document above, which anyone can read. Written only by signWaiver and
+      // updatePlayerAdmin, and never changed afterwards.
+      match /waiverSignatures/{signatureId} {
+        allow read: if isAuthenticated()
+          && (request.auth.uid == playerId || isAdmin());
+        allow write: if false; // Functions only
+      }
     }
     
     match /offers/{offerId} {

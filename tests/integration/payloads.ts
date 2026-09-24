@@ -154,4 +154,14 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	getDownloadUrl: { filePath: 'team-logos/logo.png' },
 	getFileMetadata: { filePath: 'team-logos/logo.png' },
 	sendWaiverReminder: {},
+	signWaiver: {
+		versionId: '2026-09-original',
+		dateOfBirth: '1990-05-17',
+		mailingAddress: '123 Main St, Minneapolis, MN 55401',
+		emergencyContacts: [
+			{ name: 'Sam Doe', relationship: 'Partner', phone: '6125550100' },
+		],
+		signerName: 'Test Player',
+		agreed: true,
+	},
 }

@@ -87,6 +87,11 @@ beforeEach(async () => {
 		await setDoc(doc(db, 'stripe/user-1'), { stripeId: 'cus_1' })
 		await setDoc(doc(db, 'stripe/user-1/payments/pay-1'), { amount: 100 })
 		await setDoc(doc(db, 'dropbox/user-1/waivers/w-1'), { status: 'signed' })
+		await setDoc(doc(db, 'players/user-1/waiverSignatures/sig-1'), {
+			seasonId: 'season-1',
+			dateOfBirth: '1990-05-17',
+			mailingAddress: '123 Main St',
+		})
 		await setDoc(doc(db, 'system/maintenance'), { enabled: false })
 
 		// Team payments. user-1 is on team-1's roster for season-1 only.
@@ -216,6 +221,51 @@ describe('per-user private data', () => {
 
 	it('denies reading private data while signed out', async () => {
 		await assertFails(getDoc(doc(anonymous(), 'stripe/user-1')))
+	})
+})
+
+describe('waiver signatures', () => {
+	// A signature holds a date of birth, an address and emergency contacts,
+	// so unlike the public player document it sits under, only the player
+	// and admins may read it — and nobody may write it from the client.
+	const signature = 'players/user-1/waiverSignatures/sig-1'
+	const signatures = 'players/user-1/waiverSignatures'
+
+	it('are readable by the player they belong to', async () => {
+		await assertSucceeds(getDoc(doc(verified('user-1'), signature)))
+		await assertSucceeds(getDocs(collection(verified('user-1'), signatures)))
+	})
+
+	it('are readable by an admin', async () => {
+		await assertSucceeds(getDoc(doc(verified('admin-1'), signature)))
+		await assertSucceeds(getDocs(collection(verified('admin-1'), signatures)))
+	})
+
+	it('are not readable by another player', async () => {
+		await assertFails(getDoc(doc(verified('user-2'), signature)))
+		await assertFails(getDocs(collection(verified('user-2'), signatures)))
+	})
+
+	it('are not readable while signed out', async () => {
+		await assertFails(getDoc(doc(anonymous(), signature)))
+	})
+
+	it('cannot be listed across players', async () => {
+		await assertFails(
+			getDocs(collectionGroup(verified('admin-1'), 'waiverSignatures'))
+		)
+	})
+
+	it('cannot be written, even by the player or an admin', async () => {
+		await assertFails(
+			setDoc(doc(verified('user-1'), `${signatures}/forged`), {
+				seasonId: 'season-1',
+			})
+		)
+		await assertFails(
+			setDoc(doc(verified('admin-1'), signature), { seasonId: 'season-2' })
+		)
+		await assertFails(deleteDoc(doc(verified('user-1'), signature)))
 	})
 })
 
