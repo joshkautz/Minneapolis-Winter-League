@@ -19,11 +19,12 @@ import {
 	Award,
 	Pencil,
 	Combine,
+	Wallet,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
-import { logger } from '@/shared/utils'
+import { logger, usesTeamPayments } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
@@ -70,6 +71,7 @@ import { useQueryErrorHandler } from '@/shared/hooks'
 import { TeamBadgesDialog } from './components/team-badges-dialog'
 import { TeamEditDialog } from './components/team-edit-dialog'
 import { MergeTeamsDialog } from './components/merge-teams-dialog'
+import { TeamPaymentsDialog } from './components/team-payments-dialog'
 import { DocumentReference } from '@/firebase'
 
 export const TeamManagement = () => {
@@ -152,6 +154,16 @@ export const TeamManagement = () => {
 		ref: DocumentReference<TeamDocument>
 		seasonId: string
 	} | null>(null)
+
+	// State for the team payments dialog. Only offered for a season on team
+	// payments; the ledger it shows is readable by admins and the team.
+	const [teamForPayments, setTeamForPayments] = useState<{
+		id: string
+		name: string
+	} | null>(null)
+	const selectedSeasonUsesTeamPayments = usesTeamPayments(
+		selectedSeasonSnapshot?.data()
+	)
 
 	// State for merge dialog (keyed by the winning team)
 	const [teamToMergeInto, setTeamToMergeInto] = useState<{
@@ -474,6 +486,21 @@ export const TeamManagement = () => {
 														<Award className='h-4 w-4 mr-2' />
 														Badges
 													</Button>
+													{selectedSeasonUsesTeamPayments && (
+														<Button
+															variant='outline'
+															size='sm'
+															onClick={() =>
+																setTeamForPayments({
+																	id: team.id,
+																	name: team.name,
+																})
+															}
+														>
+															<Wallet className='h-4 w-4 mr-2' />
+															Payments
+														</Button>
+													)}
 													<Button
 														variant='outline'
 														size='sm'
@@ -589,6 +616,21 @@ export const TeamManagement = () => {
 														<Award className='h-4 w-4 mr-2' />
 														Badges
 													</Button>
+													{selectedSeasonUsesTeamPayments && (
+														<Button
+															variant='outline'
+															size='sm'
+															onClick={() =>
+																setTeamForPayments({
+																	id: team.id,
+																	name: team.name,
+																})
+															}
+														>
+															<Wallet className='h-4 w-4 mr-2' />
+															Payments
+														</Button>
+													)}
 													<Button
 														variant='outline'
 														size='sm'
@@ -669,6 +711,17 @@ export const TeamManagement = () => {
 					teamId={teamForBadges.id}
 					teamName={teamForBadges.name}
 					teamRef={teamForBadges.ref}
+				/>
+			)}
+
+			{/* Team Payments Dialog */}
+			{teamForPayments && selectedSeasonId && (
+				<TeamPaymentsDialog
+					open={!!teamForPayments}
+					onOpenChange={(open) => !open && setTeamForPayments(null)}
+					teamId={teamForPayments.id}
+					teamName={teamForPayments.name}
+					seasonId={selectedSeasonId}
 				/>
 			)}
 

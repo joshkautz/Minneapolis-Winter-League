@@ -18,6 +18,7 @@ import {
 	collectionGroup,
 	doc,
 	documentId,
+	orderBy,
 	query,
 	where,
 	type CollectionReference,
@@ -36,6 +37,7 @@ import {
 	TeamRosterDocument,
 	TeamSeasonDocument,
 } from '@/shared/utils'
+import type { TeamContributionDocument } from '@/types'
 
 // ---- Canonical team document ---------------------------------------------
 
@@ -175,3 +177,28 @@ export const teamRosterSubcollection = (
 		'roster'
 	) as CollectionReference<TeamRosterDocument>
 }
+
+// ---- Contributions subcollection -----------------------------------------
+
+/**
+ * A team's payments toward its registration total for a season, oldest
+ * first — the order in which settlement charges them.
+ *
+ * Readable only by that team's roster for the season and by admins; for
+ * anyone else the query is denied, not merely empty.
+ */
+export const teamContributionsQuery = (
+	teamId: string,
+	seasonId: string
+): Query<TeamContributionDocument> =>
+	query(
+		collection(
+			firestore,
+			Collections.TEAMS,
+			teamId,
+			TEAM_SEASONS_SUBCOLLECTION,
+			seasonId,
+			'contributions'
+		) as CollectionReference<TeamContributionDocument>,
+		orderBy('createdAt', 'asc')
+	)

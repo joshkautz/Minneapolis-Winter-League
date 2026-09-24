@@ -50,7 +50,10 @@ export { seasonsQuery } from './collections/seasons'
 export { newsQueryBySeason, allNewsQueryBySeason } from './collections/news'
 
 // Payment operations
-export { stripeRegistration } from './collections/payments'
+export {
+	stripeRegistration,
+	startTeamContribution,
+} from './collections/payments'
 
 // Re-export Firebase types for convenience
 export type { DocumentData, Timestamp } from '@/shared/utils'

@@ -6,6 +6,7 @@ import { ManageCaptainActions } from '../manage-captain-actions'
 import { ManageNonCaptainActions } from '../manage-non-captain-actions'
 import { ManageCaptainsOffersPanel } from '../manage-captains-offers-panel'
 import { ManageNonCaptainsOffersPanel } from '../manage-non-captains-offers-panel'
+import { TeamPaymentCard } from '../team-payment-card'
 
 interface TeamManagementViewProps {
 	isLoading: boolean
@@ -45,6 +46,8 @@ export const TeamManagementView = ({
 
 				{/* Offers panel - appears second on mobile, right side on desktop */}
 				<div className='w-full lg:flex-1 space-y-4 min-w-0'>
+					{/* Renders nothing unless the season uses team payments. */}
+					<TeamPaymentCard />
 					{isCaptain ? (
 						<ManageCaptainsOffersPanel />
 					) : (

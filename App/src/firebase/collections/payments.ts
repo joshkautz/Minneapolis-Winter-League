@@ -7,7 +7,10 @@
  */
 
 import { User } from '../auth'
-import { createStripeCheckoutSession } from '../functions'
+import {
+	createStripeCheckoutSession,
+	createTeamContributionCheckoutSession,
+} from '../functions'
 
 /**
  * Builds a URL with payment status query parameter
@@ -75,5 +78,32 @@ export const stripeRegistration = async (
 		}
 
 		setStripeError(errorMessage)
+	}
+}
+
+/**
+ * Opens Stripe Checkout for a contribution to the signed-in player's team,
+ * and redirects to it. The server decides which team from the player's
+ * roster, and checks the amount against what the team still owes.
+ *
+ * Resolves to null once the browser is on its way to Stripe, or to a
+ * message fit to show the payer if Checkout could not be opened.
+ */
+export const startTeamContribution = async (
+	amountCents: number
+): Promise<string | null> => {
+	try {
+		const result = await createTeamContributionCheckoutSession({
+			amountCents,
+			successUrl: buildPaymentReturnUrl('success'),
+			cancelUrl: buildPaymentReturnUrl('cancel'),
+			timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+		})
+		window.location.assign(result.data.url)
+		return null
+	} catch (error) {
+		return error instanceof Error
+			? error.message
+			: 'Could not start the payment. Please try again.'
 	}
 }

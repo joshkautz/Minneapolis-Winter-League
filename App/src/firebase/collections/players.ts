@@ -103,6 +103,23 @@ export const playerSeasonsInSeasonQuery = (
 	) as Query<PlayerSeasonDocument>
 }
 
+/**
+ * Every player-season subdoc pointing at a team, across all its seasons.
+ *
+ * Filter to one season client-side (a player-season's id is its season id):
+ * the single-field collection-group index on `team` serves this, where adding
+ * `season` to the query would need a composite index of its own.
+ */
+export const playerSeasonsOnTeamQuery = (
+	teamRef: DocumentReference | undefined
+): Query<PlayerSeasonDocument> | undefined => {
+	if (!teamRef) return undefined
+	return query(
+		collectionGroup(firestore, PLAYER_SEASONS_SUBCOLLECTION),
+		where('team', '==', teamRef)
+	) as Query<PlayerSeasonDocument>
+}
+
 // ---- Canonical derivation from player season doc snapshots ---------------
 
 /**

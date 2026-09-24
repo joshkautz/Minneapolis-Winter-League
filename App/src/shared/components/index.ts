@@ -19,6 +19,7 @@ export { NewBadge } from './new-badge'
 export { LoadingSpinner } from './loading-spinner'
 export { PageContainer } from './page-container'
 export { PageHeader } from './page-header'
+export { TeamContributionsList } from './team-contributions-list'
 
 // Form components
 export * from './forms'
