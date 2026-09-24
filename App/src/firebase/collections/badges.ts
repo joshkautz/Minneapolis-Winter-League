@@ -5,10 +5,7 @@
 import {
 	query,
 	collection,
-	collectionGroup,
 	orderBy,
-	where,
-	doc,
 	type Query,
 	type DocumentReference,
 	type CollectionReference,
@@ -21,22 +18,6 @@ import {
 	TeamDocument,
 	Collections,
 } from '@/types'
-
-/**
- * Gets a reference to a specific badge document
- *
- * @param badgeId - The badge ID
- */
-export const getBadgeRef = (
-	badgeId: string | undefined
-): DocumentReference<BadgeDocument> | undefined => {
-	if (!badgeId) return undefined
-	return doc(
-		firestore,
-		Collections.BADGES,
-		badgeId
-	) as DocumentReference<BadgeDocument>
-}
 
 /**
  * Creates a query for all badges
@@ -54,7 +35,7 @@ export const allBadgesQuery = (): Query<BadgeDocument> => {
  *
  * @param teamRef - Reference to the team document
  */
-export const getTeamBadgesCollectionRef = (
+const getTeamBadgesCollectionRef = (
 	teamRef: DocumentReference<TeamDocument> | undefined
 ): CollectionReference<TeamBadgeDocument> | undefined => {
 	if (!teamRef) return undefined
@@ -80,39 +61,5 @@ export const teamBadgesQuery = (
 	return query(
 		badgesCollection,
 		orderBy('awardedAt', 'desc')
-	) as Query<TeamBadgeDocument>
-}
-
-/**
- * Gets a reference to a specific team badge document
- *
- * @param teamRef - Reference to the team document
- * @param badgeId - The badge ID
- */
-export const getTeamBadgeRef = (
-	teamRef: DocumentReference<TeamDocument> | undefined,
-	badgeId: string | undefined
-): DocumentReference<TeamBadgeDocument> | undefined => {
-	if (!teamRef || !badgeId) return undefined
-	return doc(
-		teamRef,
-		Collections.BADGES,
-		badgeId
-	) as DocumentReference<TeamBadgeDocument>
-}
-
-/**
- * Creates a query for all teams that have been awarded a specific badge
- * Uses collectionGroup to query across all team badge subcollections
- *
- * @param badgeRef - Reference to the badge document
- */
-export const teamsWithBadgeQuery = (
-	badgeRef: DocumentReference<BadgeDocument> | undefined
-): Query<TeamBadgeDocument> | undefined => {
-	if (!badgeRef) return undefined
-	return query(
-		collectionGroup(firestore, Collections.BADGES),
-		where('badge', '==', badgeRef)
 	) as Query<TeamBadgeDocument>
 }

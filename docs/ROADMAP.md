@@ -82,13 +82,24 @@ deciding what happens to that money — refund it, keep it, or require it be
 released first through the payments dialog. Until then the button should
 probably be hidden for registered teams rather than fail.
 
+## Account deletion has no screen
+
+`deletePlayer` lets a player delete their own profile (and an admin anyone's
+with `adminOverride`), but nothing in the App calls it, so a player who wants
+their account gone has to ask. Either add a "Delete my account" action to the
+profile or retire the callable. Deleting an account keeps its waiver
+signatures (`docs/WAIVERS.md`).
+
 ## Waivers
 
 Signed in the app since 2026 Fall: `docs/WAIVERS.md`. Left:
 
-- **Archive the Dropbox Sign PDFs** of past seasons into private Cloud
-  Storage before the account closes, then delete the `DROPBOX_SIGN_API_KEY`
-  secret. The `dropbox/{uid}/waivers` records stay as history.
+- **Close the Dropbox Sign account**, then delete the `DROPBOX_SIGN_API_KEY`
+  secret. Its 357 signed PDFs were archived on 24 September 2026 to the
+  private `minnesota-winter-league-firestore-backups` bucket under
+  `waiver-archive/dropbox-sign/`, with a manifest — not the default bucket,
+  which `storage.rules` makes publicly readable. The
+  `dropbox/{uid}/waivers` records stay as history.
 - **Emergency contacts for game day.** They are collected with each waiver
   but only visible one player at a time; organizers would want them by team.
 - **A copy by email.** Players can print or save their copy; emailing one
@@ -241,7 +252,7 @@ that is deliberately not fixed — are in `CLAUDE.md`.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 49.
+- **Deeper callable behaviour.** The authorization sweep covers all 46.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
   `updatePlayerAdmin`, `rolloverTeam` and the three game callables have
   behavioural tests. The rest are covered only at the gate; `deletePlayer`,
