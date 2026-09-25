@@ -126,6 +126,7 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 		paymentIntentId: 'pi_1',
 		reason: 'Payer left the team before it registered.',
 	},
+	cancelTeamContributionCheckout: {},
 	createTeamContributionCheckout: {
 		amountCents: 25_000,
 		successUrl: 'https://mplswinterleague.com/teams/team-1?payment=success',

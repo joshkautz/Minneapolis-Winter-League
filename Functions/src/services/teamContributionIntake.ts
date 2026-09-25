@@ -20,12 +20,14 @@ import {
 	TeamSeasonNotFoundError,
 } from '../shared/contributions.js'
 import { contributionStateFromPaymentIntent } from '../shared/settlement.js'
+import { removeReservation } from '../shared/checkoutReservations.js'
 
 export type IntakeOutcome =
 	'recorded' | 'already-recorded' | 'not-paid' | 'refunded-unattributable'
 
 /**
- * Records a team contribution from its PaymentIntent, or refunds it.
+ * Records a team contribution from its PaymentIntent, or refunds it, and
+ * ends the reservation its checkout held.
  *
  * `metadata` is what our own callable set when it created the Checkout
  * session; nothing in it comes from the payer. The amount is read from the
@@ -33,6 +35,25 @@ export type IntakeOutcome =
  * `expand: ['latest_charge']` so any refund is netted out.
  */
 export async function recordContributionFromStripe(
+	firestore: Firestore,
+	stripe: Stripe,
+	params: {
+		paymentIntent: Stripe.PaymentIntent
+		metadata: Record<string, string> | null | undefined
+	}
+): Promise<IntakeOutcome> {
+	const outcome = await takeIn(firestore, stripe, params)
+
+	// Whatever became of the money, the checkout that reserved it is over.
+	// After the ledger write, so the amount is never counted by neither.
+	const { teamId, seasonId, reservationId } = params.metadata ?? {}
+	if (teamId && seasonId && reservationId) {
+		await removeReservation(firestore, { teamId, seasonId, reservationId })
+	}
+	return outcome
+}
+
+async function takeIn(
 	firestore: Firestore,
 	stripe: Stripe,
 	params: {

@@ -308,6 +308,38 @@ export interface TeamContributionDocument extends DocumentData {
 }
 
 /**
+ * A contribution someone is paying right now: the amount set aside for them
+ * while their Checkout session is open, so a teammate cannot pay the same
+ * dollars at the same time.
+ */
+export interface CheckoutReservation {
+	player: DocumentReference<PlayerDocument>
+	amountCents: number
+	/** The Stripe Checkout session, once it has been created. */
+	sessionId: string | null
+	/**
+	 * When the session closes. After this the reservation is checked against
+	 * Stripe rather than trusted: counted if the session completed, removed if
+	 * it expired.
+	 */
+	expiresAt: Timestamp
+	createdAt: Timestamp
+}
+
+/**
+ * Every open reservation for a team-season, on one document so a checkout
+ * can read and claim against all of them in a single transaction.
+ *
+ * Stored at `teams/{teamId}/teamSeasons/{seasonId}/checkouts/open`.
+ * **PRIVATE** like the contribution ledger: readable by the team's roster for
+ * the season and by admins.
+ */
+export interface OpenCheckoutsDocument extends DocumentData {
+	/** By reservation id. A reservation is deleted once it has ended. */
+	reservations: Record<string, CheckoutReservation>
+}
+
+/**
  * Stripe payment configuration for a season
  */
 export interface SeasonStripeConfig {

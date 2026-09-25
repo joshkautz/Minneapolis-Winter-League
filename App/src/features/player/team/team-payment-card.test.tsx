@@ -10,14 +10,17 @@ import { Timestamp } from 'firebase/firestore'
  * explains it honestly and never offers what the server would refuse.
  */
 
-const { startTeamContribution, toastError } = vi.hoisted(() => ({
-	startTeamContribution: vi.fn(),
-	toastError: vi.fn(),
-}))
+const { startTeamContribution, cancelTeamContribution, toastError } =
+	vi.hoisted(() => ({
+		startTeamContribution: vi.fn(),
+		cancelTeamContribution: vi.fn(),
+		toastError: vi.fn(),
+	}))
 
 vi.mock('@/firebase', async (importOriginal) => ({
 	...(await importOriginal<typeof import('@/firebase')>()),
 	startTeamContribution,
+	cancelTeamContribution,
 }))
 
 vi.mock('sonner', () => ({
@@ -39,6 +42,9 @@ let teamSeason: Record<string, unknown>
 let contributions: Contribution[]
 let signedCount: number
 let userStatus: { isAdmin: boolean; isBanned: boolean }
+/** Checkouts open on Stripe's page right now: payer and amount. */
+let reservations: { payer: string; amountCents: number; expiresIn?: number }[]
+const ME = 'payer-0'
 
 vi.mock('@/providers', () => ({
 	useSeasonsContext: () => ({
@@ -56,6 +62,7 @@ vi.mock('@/providers', () => ({
 vi.mock('@/shared/hooks/use-user-status', () => ({
 	useUserStatus: () => ({
 		currentSeasonData: { team: { id: TEAM } },
+		authStateUser: { uid: ME },
 		...userStatus,
 	}),
 }))
@@ -63,6 +70,7 @@ vi.mock('@/shared/hooks/use-user-status', () => ({
 vi.mock('@/firebase/collections/teams', async (importOriginal) => ({
 	...(await importOriginal<typeof import('@/firebase/collections/teams')>()),
 	teamContributionsQuery: () => ({ kind: 'contributions' }),
+	teamOpenCheckoutsRef: () => ({ kind: 'openCheckouts' }),
 }))
 
 vi.mock('@/firebase/collections/players', async (importOriginal) => ({
@@ -106,11 +114,33 @@ vi.mock('react-firebase-hooks/firestore', () => ({
 		}
 		return [undefined, false, undefined]
 	},
-	useDocument: () => [
-		{ data: () => ({ firstname: 'Pat', lastname: 'Lee' }) },
-		false,
-		undefined,
-	],
+	useDocument: (ref: { kind?: string } | undefined) =>
+		ref?.kind === 'openCheckouts'
+			? [
+					{
+						data: () => ({
+							reservations: Object.fromEntries(
+								reservations.map((r, i) => [
+									`r_${i}`,
+									{
+										player: { id: r.payer },
+										amountCents: r.amountCents,
+										expiresAt: Timestamp.fromMillis(
+											Date.now() + (r.expiresIn ?? 20 * 60_000)
+										),
+									},
+								])
+							),
+						}),
+					},
+					false,
+					undefined,
+				]
+			: [
+					{ data: () => ({ firstname: 'Pat', lastname: 'Lee' }) },
+					false,
+					undefined,
+				],
 }))
 
 const { TeamPaymentCard } = await import('./team-payment-card')
@@ -140,7 +170,9 @@ beforeEach(() => {
 	contributions = []
 	signedCount = 0
 	userStatus = { isAdmin: false, isBanned: false }
+	reservations = []
 	startTeamContribution.mockResolvedValue(null)
+	window.history.replaceState({}, '', '/manage')
 })
 
 describe('TeamPaymentCard', () => {
@@ -280,6 +312,72 @@ describe('TeamPaymentCard', () => {
 			})
 
 			await waitFor(() => expect(contributeButton()).toBeEnabled())
+		})
+	})
+
+	describe('teammates paying at the same time', () => {
+		it('offers only what a teammate is not already paying', () => {
+			contributions = [{ amountCents: 50_000, status: 'paid' }]
+			reservations = [{ payer: 'payer-3', amountCents: 20_000 }]
+			render(<TeamPaymentCard />)
+
+			expect(
+				screen.getByText(
+					'A teammate is paying $200 right now, so $300 is left for everyone else.'
+				)
+			).toBeInTheDocument()
+			expect(
+				screen.getByRole('button', { name: 'All $300' })
+			).toBeInTheDocument()
+		})
+
+		it('says when a teammate is paying the whole rest', () => {
+			reservations = [{ payer: 'payer-3', amountCents: TOTAL }]
+			render(<TeamPaymentCard />)
+
+			expect(
+				screen.getByText(/A teammate is paying the rest of the team’s total/)
+			).toBeInTheDocument()
+			expect(
+				screen.queryByLabelText('Amount (dollars)')
+			).not.toBeInTheDocument()
+		})
+
+		it('does not count the payer’s own open checkout against them', () => {
+			// Opening another replaces it, so they may still pay the rest.
+			reservations = [{ payer: ME, amountCents: 30_000 }]
+			render(<TeamPaymentCard />)
+
+			expect(
+				screen.getByRole('button', { name: 'All $1,000' })
+			).toBeInTheDocument()
+			expect(screen.queryByText(/A teammate is paying/)).not.toBeInTheDocument()
+		})
+
+		it('does not count a checkout past its time', () => {
+			reservations = [
+				{ payer: 'payer-3', amountCents: TOTAL, expiresIn: -60_000 },
+			]
+			render(<TeamPaymentCard />)
+
+			expect(
+				screen.getByRole('button', { name: 'All $1,000' })
+			).toBeInTheDocument()
+		})
+
+		it('frees the payer’s reservation when they come back without paying', () => {
+			window.history.replaceState({}, '', '/manage?payment=cancel')
+			render(<TeamPaymentCard />)
+
+			expect(cancelTeamContribution).toHaveBeenCalledTimes(1)
+			expect(window.location.search).toBe('')
+		})
+
+		it('frees nothing when the payment went through', () => {
+			window.history.replaceState({}, '', '/manage?payment=success')
+			render(<TeamPaymentCard />)
+
+			expect(cancelTeamContribution).not.toHaveBeenCalled()
 		})
 	})
 

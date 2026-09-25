@@ -13,6 +13,7 @@
  * - a Checkout session only takes money once the payer completes it
  *   (`completeCheckout`), and the payment carries the session's
  *   PaymentIntent metadata and amount, as Stripe's does
+ * - only an open session can be completed or expired
  *
  * Use it as the SDK's default export:
  *
@@ -33,7 +34,7 @@ export interface FakePaymentIntent {
 	}
 }
 
-type Method = 'retrieve' | 'refund'
+type Method = 'retrieve' | 'refund' | 'expire'
 
 interface FakeState {
 	intents: Map<string, FakePaymentIntent>
@@ -81,9 +82,19 @@ interface CheckoutSessionParams {
 export interface FakeCheckoutSession {
 	id: string
 	url: string
+	status: 'open' | 'complete' | 'expired'
 	params: CheckoutSessionParams
 	paymentIntentId: string | null
 }
+
+/** A session as the API returns it, as far as the code reads one. */
+const sessionView = (session: FakeCheckoutSession) => ({
+	id: session.id,
+	url: session.url,
+	status: session.status,
+	payment_intent: session.paymentIntentId,
+	metadata: copy(session.params.metadata),
+})
 
 export const fakeStripe: FakeState = {
 	intents: new Map(),
@@ -122,6 +133,10 @@ export function completeCheckout(sessionId: string): unknown {
 	if (session.params.payment_intent_data.capture_method !== undefined) {
 		throw new Error('The fake only models Checkout that charges immediately')
 	}
+	if (session.status !== 'open') {
+		throw new Error(`Checkout session ${sessionId} is ${session.status}`)
+	}
+	session.status = 'complete'
 	const paymentIntentId = `pi_${sessionId.slice('cs_'.length)}`
 	addPayment(
 		paymentIntentId,
@@ -209,6 +224,22 @@ function maybeFail(method: Method, paymentIntentId: string): void {
 	throw new Error(failure.message)
 }
 
+function checkoutSession(id: string): FakeCheckoutSession {
+	const found = fakeStripe.sessions.get(id)
+	if (!found) {
+		throw new StripeInvalidRequestError(
+			'resource_missing',
+			`No such checkout.session: '${id}'`
+		)
+	}
+	return found
+}
+
+/** A session the payer abandoned, closed by Stripe when its time ran out. */
+export function timeOutCheckout(sessionId: string): void {
+	checkoutSession(sessionId).status = 'expired'
+}
+
 function intent(id: string): FakePaymentIntent {
 	const found = fakeStripe.intents.get(id)
 	if (!found) {
@@ -242,12 +273,28 @@ export class FakeStripe {
 					const session: FakeCheckoutSession = {
 						id,
 						url: `https://checkout.stripe.com/c/pay/${id}`,
+						status: 'open',
 						params: copy(params),
 						paymentIntentId: null,
 					}
 					fakeStripe.sessions.set(id, session)
 					return { id, url: session.url }
 				}),
+
+			retrieve: async (id: string) => sessionView(checkoutSession(id)),
+
+			expire: async (id: string) => {
+				const session = checkoutSession(id)
+				if (session.status !== 'open') {
+					throw new StripeInvalidRequestError(
+						'checkout_session_not_open',
+						`Only Checkout Sessions with a status of open can be expired. This one is ${session.status}.`
+					)
+				}
+				session.status = 'expired'
+				fakeStripe.calls.push({ method: 'expire', paymentIntentId: id })
+				return sessionView(session)
+			},
 		},
 	}
 

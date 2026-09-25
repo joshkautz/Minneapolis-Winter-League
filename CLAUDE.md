@@ -71,6 +71,9 @@ Per-season state hangs off subcollections rather than the parent document:
 - `teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}` —
   team payments; **private** to that roster and admins, so no totals live on
   the public team-season (see `docs/TEAM_PAYMENTS.md`)
+- `teams/{teamId}/teamSeasons/{seasonId}/checkouts/open` — amounts reserved by
+  checkouts open right now, so teammates cannot pay the same dollars; private
+  like the contributions
 
 Collection-group queries over these need their own explicit
 `match /{path=**}/...` block in `firestore.rules`, even when the direct path is

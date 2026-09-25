@@ -19,6 +19,7 @@ import {
 	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
+import { openCheckoutsRef } from '../../Functions/src/shared/checkoutReservations.js'
 import {
 	SettlementIncompleteError,
 	settleTeamSeason,
@@ -116,7 +117,9 @@ const ledger = async (teamId = TEAM) => {
 const held = (teamId = TEAM) => ledgerPaidCents(firestore, teamId, SEASON)
 
 const stripeCalls = () =>
-	fakeStripe.calls.map((c) => `${c.method} ${c.paymentIntentId} ${c.amount}`)
+	fakeStripe.calls
+		.filter((c) => c.method === 'refund')
+		.map((c) => `${c.method} ${c.paymentIntentId} ${c.amount}`)
 
 /** What Stripe still holds across every payment, less refunds. */
 const stripeHolds = () =>
@@ -362,6 +365,41 @@ describe('onTeamRegistrationChange', () => {
 			expect(
 				(await teamSeasonRef(firestore, 'loser-b', SEASON).get()).exists
 			).toBe(false)
+		})
+
+		it('closes a checkout still open on a team that missed out', async () => {
+			// Otherwise its payer could pay for a team that is out, and be
+			// refunded at the cost of the fee.
+			fakeStripe.sessions.set('cs_open', {
+				id: 'cs_open',
+				url: 'https://checkout.stripe.com/c/pay/cs_open',
+				status: 'open',
+				params: {
+					line_items: [{ price_data: { unit_amount: 20_000 } }],
+					payment_intent_data: { metadata: metadataFor('loser-b') },
+					metadata: metadataFor('loser-b'),
+				},
+				paymentIntentId: null,
+			})
+			await openCheckoutsRef(firestore, 'loser-b', SEASON).set({
+				reservations: {
+					r_open: {
+						player: firestore.collection('players').doc('payer'),
+						amountCents: 20_000,
+						sessionId: 'cs_open',
+						expiresAt: Timestamp.fromMillis(Date.now() + 20 * 60_000),
+						createdAt: Timestamp.now(),
+					},
+				},
+			})
+
+			await fire(TEAM)
+
+			expect(fakeStripe.sessions.get('cs_open')?.status).toBe('expired')
+			expect(
+				(await openCheckoutsRef(firestore, 'loser-b', SEASON).get()).data()
+					?.reservations
+			).toEqual({})
 		})
 
 		it('keeps the record of what was refunded after the team is gone', async () => {

@@ -91,10 +91,14 @@ then refunds whatever the league should not keep:
 | ----------------------------------------- | --------------------------------------------- |
 | Team registers having paid exactly $1,000 | Nothing                                       |
 | Team registers having paid more           | The excess is refunded, latest payments first |
-| Team misses the twelve-spot cut           | Everything is refunded                        |
-| Registration closes without the team      | Everything is refunded, within the hour       |
-| A payer leaves before the team registers  | That payer is refunded                        |
-| A payer leaves after the team registers   | Nothing: registration is final                |
+
+The second row is a safety net rather than a flow: checkout stops a team
+paying more than its total (see "Two teammates cannot pay the same
+dollars"), so it only happens if a payment is recorded late.
+| Team misses the twelve-spot cut | Everything is refunded |
+| Registration closes without the team | Everything is refunded, within the hour |
+| A payer leaves before the team registers | That payer is refunded |
+| A payer leaves after the team registers | Nothing: registration is final |
 
 **Stripe keeps its processing fee on a refund** — about $29.30 on $1,000 at
 the standard 2.9% + 30¢ — and the league bears it.
@@ -125,25 +129,52 @@ have saved. The saving was also smaller than it looked: most teams that miss
 out lose the race for the twelfth spot, and would have been refunded anyway
 by the time a slow week had passed.
 
-### The overpayment race costs a fee
+### Two teammates cannot pay the same dollars
 
-Two players both see "$200 remaining" and both pay $200. The team has paid
-$1,200, and the later $200 is refunded, its fee lost. Preventing it would
-need a reservation held for as long as a Checkout session stays open (31
-minutes), to save a few dollars on a rare race, so it is allowed.
+A Checkout session stays open for at least thirty minutes, so the balance a
+contribution was checked against goes stale while the payer is on Stripe's
+page. Two players who both see "$200 remaining" could both pay it, and the
+later $200 would be refunded with its fee lost.
 
-Which payment is the excess is decided when the team registers, oldest
-first: whoever paid earliest keeps their payment. A payer who has left is
-kept last, after everyone still on the team.
+So opening a checkout **reserves** its amount
+(`services/teamCheckoutReservations.ts`). What anyone else may pay is the
+total, less what the roster has paid, less what teammates have reserved.
+Every reservation for a team-season is on one document,
+`teams/{t}/teamSeasons/{s}/checkouts/open`, so claiming one is a
+single-document transaction that Firestore serialises: of two teammates
+racing for the last $200, exactly one gets it, and the other is told a
+teammate is paying it.
+
+A reservation ends when:
+
+- its payment is recorded, by the checkout webhook or the reconciliation;
+- its payer comes back from Stripe without paying — the App calls
+  `cancelTeamContributionCheckout`, which also closes the session at Stripe;
+- its payer opens another checkout, which closes the first: one open
+  checkout per payer, so their own never blocks them;
+- its payer leaves the team, or the season fills without the team — the
+  session is closed, so nobody pays for a team they are not playing on;
+- its session expires. Expiry is not taken on trust: a reservation past its
+  time is checked against Stripe before it stops counting, and if its
+  session completed but the webhook has not arrived, the payment is taken
+  in on the spot.
+
+The cost is that someone who opens Checkout and walks away holds their
+amount until the session expires, half an hour at most. The team's payment
+card shows what teammates are paying right now, and when a held amount
+frees up.
+
+If money beyond the total ever is recorded, which of it is the excess is
+decided when the team registers, oldest first: whoever paid earliest keeps
+their payment, and a payer who has left is kept last.
 
 ### What the UI actually has to say
 
 Shown above the pay button and on Stripe's page:
 
 > Your card is charged now. If you leave the team before it registers, or it
-> does not get one of the 12 spots, you are refunded in full. If your team
-> pays more than its total, the extra is refunded, latest payments first.
-> Refunds take 5 to 10 business days to reach your card.
+> does not get one of the 12 spots, you are refunded in full. Refunds take 5
+> to 10 business days to reach your card.
 
 A payer should know before paying when they get their money back, and a
 charge nobody expected is the one that gets disputed.
@@ -173,6 +204,11 @@ teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}
   paymentIntentId: string
   refundedBy?, refundReason?, refundedAt?   // an admin's manual refund
   createdAt: Timestamp
+
+teams/{teamId}/teamSeasons/{seasonId}/checkouts/open
+  reservations: {                // checkouts open on Stripe right now
+    [reservationId]: { player, amountCents, sessionId, expiresAt, createdAt }
+  }
 ```
 
 The contributions subcollection is the only record of a team's money. **It is

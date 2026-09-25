@@ -20,6 +20,7 @@ import {
 	resetTeamRegistrationProductCache,
 	TEAM_REGISTRATION_PRODUCT_ID,
 } from '../../Functions/src/shared/stripe.js'
+import { openCheckoutsRef } from '../../Functions/src/shared/checkoutReservations.js'
 import {
 	playerSeasonRef,
 	teamRosterEntryRef,
@@ -42,13 +43,21 @@ const customersRetrieve = vi.fn()
 const customersCreate = vi.fn()
 const productsRetrieve = vi.fn()
 const productsCreate = vi.fn()
+const sessionsRetrieve = vi.fn()
+const sessionsExpire = vi.fn()
 const paymentIntentsRetrieve = vi.fn()
 const refundsCreate = vi.fn()
 const constructEvent = vi.fn()
 
 vi.mock('stripe', () => ({
 	default: class {
-		checkout = { sessions: { create: sessionsCreate } }
+		checkout = {
+			sessions: {
+				create: sessionsCreate,
+				retrieve: sessionsRetrieve,
+				expire: sessionsExpire,
+			},
+		}
 		customers = { retrieve: customersRetrieve, create: customersCreate }
 		products = { retrieve: productsRetrieve, create: productsCreate }
 		paymentIntents = { retrieve: paymentIntentsRetrieve }
@@ -179,6 +188,14 @@ beforeEach(async () => {
 		id: 'cs_test_1',
 		url: 'https://checkout.stripe.com/c/pay/cs_test_1',
 	})
+	sessionsRetrieve.mockImplementation(async (id: string) => ({
+		id,
+		status: 'open',
+	}))
+	sessionsExpire.mockImplementation(async (id: string) => ({
+		id,
+		status: 'expired',
+	}))
 
 	await seedSeason()
 	await seedTeam(TEAM)
@@ -217,11 +234,15 @@ describe('createTeamContributionCheckout', () => {
 				firebaseUID: PAYER,
 				teamId: TEAM,
 				seasonId: SEASON,
+				// Which reservation the webhook ends when the payment lands.
+				reservationId: expect.any(String),
 			}
 			// On both objects: the session for the completion webhook, the
 			// PaymentIntent for the refund events and reconciliation after it.
 			expect(sentSession().metadata).toEqual(expected)
-			expect(sentSession().payment_intent_data.metadata).toEqual(expected)
+			expect(sentSession().payment_intent_data.metadata).toEqual(
+				sentSession().metadata
+			)
 		})
 
 		it('ignores a team named in the request', async () => {
@@ -273,11 +294,12 @@ describe('createTeamContributionCheckout', () => {
 			})
 		})
 
-		it('uses an idempotency key scoped to payer, team and amount', async () => {
+		it('uses an idempotency key scoped to its reservation', async () => {
+			// A retry of the same request gets the same session back.
 			await run({ amountCents: 25_000 })
 			const options = sessionsCreate.mock.calls[0][1]
-			expect(options.idempotencyKey).toMatch(
-				new RegExp(`^team_contribution_${PAYER}_${TEAM}_${SEASON}_25000_\\d+$`)
+			expect(options.idempotencyKey).toBe(
+				`team_contribution_${sentSession().metadata.reservationId}`
 			)
 		})
 	})
@@ -589,6 +611,249 @@ describe('createTeamContributionCheckout', () => {
 	})
 })
 
+describe('reserving the amount while the payer is on Stripe’s page', () => {
+	// A Checkout session stays open for half an hour. Without a reservation
+	// two teammates who both see $300 left could both pay it, and one would
+	// be refunded at the cost of its fee.
+
+	const reservations = async () =>
+		((await openCheckoutsRef(firestore, TEAM, SEASON).get()).data()
+			?.reservations ?? {}) as Record<
+			string,
+			{
+				amountCents: number
+				sessionId: string | null
+				player: { id: string }
+				expiresAt: Timestamp
+			}
+		>
+
+	/** A teammate's checkout, open on Stripe right now unless told otherwise. */
+	const teammateReserves = async (
+		amountCents: number,
+		options: { sessionId?: string; expiresAt?: number } = {}
+	) =>
+		openCheckoutsRef(firestore, TEAM, SEASON).set(
+			{
+				reservations: {
+					r_teammate: {
+						player: firestore.collection('players').doc('someone-else'),
+						amountCents,
+						sessionId: options.sessionId ?? 'cs_teammate',
+						expiresAt: Timestamp.fromMillis(
+							options.expiresAt ?? Date.now() + 20 * 60_000
+						),
+						createdAt: Timestamp.now(),
+					},
+				},
+			},
+			{ merge: true }
+		)
+
+	it('sets the amount aside, against the session, until it closes', async () => {
+		await run({ amountCents: 25_000 })
+
+		const [[id, reservation]] = Object.entries(await reservations())
+		expect(id).toBe(sentSession().metadata.reservationId)
+		expect(reservation).toMatchObject({
+			amountCents: 25_000,
+			sessionId: 'cs_test_1',
+			player: { id: PAYER },
+		})
+		expect(reservation.expiresAt.toMillis()).toBe(
+			sentSession().expires_at * 1000
+		)
+	})
+
+	it('offers only what a teammate is not already paying', async () => {
+		await teammateReserves(75_000)
+
+		expect(await codeOf({ amountCents: 30_000 })).toBe('invalid-argument')
+		await expect(run({ amountCents: 30_000 })).rejects.toThrow(
+			/only needs \$250\.00 more while a teammate finishes paying \$750\.00/
+		)
+		expect(sessionsCreate).not.toHaveBeenCalled()
+
+		await run({ amountCents: 25_000 })
+		expect(sentSession().line_items[0].price_data.unit_amount).toBe(25_000)
+	})
+
+	it('refuses anything while a teammate pays the whole rest', async () => {
+		await teammateReserves(TOTAL)
+
+		await expect(run({ amountCents: 1_000 })).rejects.toThrow(
+			/A teammate is paying the rest of your team’s total right now/
+		)
+		expect(await codeOf({ amountCents: 1_000 })).toBe('failed-precondition')
+	})
+
+	it('frees a teammate’s amount once Stripe says their session expired', async () => {
+		await teammateReserves(TOTAL, {
+			sessionId: 'cs_abandoned',
+			expiresAt: Date.now() - 1_000,
+		})
+		sessionsRetrieve.mockImplementation(async (id: string) => ({
+			id,
+			status: id === 'cs_abandoned' ? 'expired' : 'open',
+		}))
+
+		await run({ amountCents: TOTAL })
+
+		expect(Object.keys(await reservations())).toEqual([
+			sentSession().metadata.reservationId,
+		])
+	})
+
+	it('keeps counting a teammate’s time-out that Stripe says is still open', async () => {
+		// Stripe's clock is the one that closes the session.
+		await teammateReserves(TOTAL, { expiresAt: Date.now() - 1_000 })
+
+		expect(await codeOf({ amountCents: 1_000 })).toBe('failed-precondition')
+	})
+
+	it('takes in a teammate’s payment whose webhook has not arrived', async () => {
+		// Their session completed, so the amount is paid, not free.
+		await teammateReserves(75_000, {
+			sessionId: 'cs_paid',
+			expiresAt: Date.now() - 1_000,
+		})
+		sessionsRetrieve.mockImplementation(async (id: string) => ({
+			id,
+			status: id === 'cs_paid' ? 'complete' : 'open',
+			payment_intent: 'pi_paid',
+			metadata: {
+				kind: 'team_contribution',
+				firebaseUID: 'someone-else',
+				teamId: TEAM,
+				seasonId: SEASON,
+				reservationId: 'r_teammate',
+			},
+		}))
+		paymentIntentsRetrieve.mockResolvedValue({
+			id: 'pi_paid',
+			status: 'succeeded',
+			amount_received: 75_000,
+			latest_charge: { id: 'ch_paid', amount_refunded: 0 },
+		})
+
+		await expect(run({ amountCents: 30_000 })).rejects.toThrow(
+			/^Your team only needs \$250\.00 more\.$/
+		)
+		expect(await held()).toBe(75_000)
+		expect(await reservations()).toEqual({})
+	})
+
+	it('closes the payer’s own earlier checkout when they open another', async () => {
+		// One open checkout per payer, so their own earlier one never blocks
+		// them, and cannot be paid as well.
+		await run({ amountCents: 25_000 })
+		sessionsCreate.mockResolvedValue({
+			id: 'cs_test_2',
+			url: 'https://checkout.stripe.com/c/pay/cs_test_2',
+		})
+
+		await run({ amountCents: 40_000 })
+
+		expect(sessionsExpire).toHaveBeenCalledWith('cs_test_1')
+		const open = Object.values(await reservations())
+		expect(open).toHaveLength(1)
+		expect(open[0]).toMatchObject({
+			amountCents: 40_000,
+			sessionId: 'cs_test_2',
+		})
+	})
+
+	it('gives up a session whose reservation ended while it was opening', async () => {
+		// A double click: the second request closed the first one's
+		// reservation before its session existed. Nothing may be paid
+		// against a session nothing is reserved for.
+		sessionsCreate.mockImplementation(async () => {
+			await openCheckoutsRef(firestore, TEAM, SEASON).set({ reservations: {} })
+			return {
+				id: 'cs_orphan',
+				url: 'https://checkout.stripe.com/c/pay/cs_orphan',
+			}
+		})
+
+		expect(await codeOf()).toBe('aborted')
+		expect(sessionsExpire).toHaveBeenCalledWith('cs_orphan')
+		expect(await reservations()).toEqual({})
+	})
+
+	it('reserves nothing when Stripe fails', async () => {
+		sessionsCreate.mockRejectedValue(new Error('Stripe unavailable'))
+
+		expect(await codeOf()).toBe('internal')
+		expect(await reservations()).toEqual({})
+	})
+
+	it('gives the last $300 to exactly one of two teammates asking at once', async () => {
+		await recordContribution(firestore, {
+			teamId: TEAM,
+			seasonId: SEASON,
+			playerId: 'someone-else',
+			paymentIntentId: 'pi_existing',
+			amountCents: 70_000,
+		})
+		await seedAuthUser('teammate', true)
+		await seedMember('teammate', TEAM)
+		let sessions = 0
+		sessionsCreate.mockImplementation(async () => {
+			sessions += 1
+			return {
+				id: `cs_race_${sessions}`,
+				url: `https://checkout.stripe.com/c/pay/cs_race_${sessions}`,
+			}
+		})
+
+		const results = await Promise.allSettled([
+			run({ amountCents: 30_000 }, PAYER),
+			run({ amountCents: 30_000 }, 'teammate'),
+		])
+
+		expect(results.map((r) => r.status).sort()).toEqual([
+			'fulfilled',
+			'rejected',
+		])
+		expect(sessionsCreate).toHaveBeenCalledTimes(1)
+		expect(Object.values(await reservations())).toHaveLength(1)
+	})
+})
+
+describe('cancelTeamContributionCheckout', () => {
+	const cancel = (uid = PAYER) =>
+		manifest.cancelTeamContributionCheckout.run({
+			auth: authed(uid),
+			data: {},
+		}) as Promise<{ closed: number }>
+
+	it('closes the payer’s open checkout and frees its amount at once', async () => {
+		await run({ amountCents: 25_000 })
+
+		await expect(cancel()).resolves.toMatchObject({ closed: 1 })
+
+		expect(sessionsExpire).toHaveBeenCalledWith('cs_test_1')
+		expect(
+			(await openCheckoutsRef(firestore, TEAM, SEASON).get()).data()
+				?.reservations
+		).toEqual({})
+	})
+
+	it('leaves a teammate’s checkout alone', async () => {
+		await run({ amountCents: 25_000 })
+		await seedAuthUser('teammate', true)
+		await seedMember('teammate', TEAM)
+
+		await expect(cancel('teammate')).resolves.toMatchObject({ closed: 0 })
+		expect(sessionsExpire).not.toHaveBeenCalled()
+	})
+
+	it('does nothing for a player with no team', async () => {
+		await seedAuthUser('loner', true)
+		await expect(cancel('loner')).resolves.toMatchObject({ closed: 0 })
+	})
+})
+
 describe('stripeWebhook: a completed team contribution', () => {
 	const PI = 'pi_test_1'
 
@@ -680,6 +945,37 @@ describe('stripeWebhook: a completed team contribution', () => {
 		})
 		expect(docs[0].data().player.path).toBe(`players/${PAYER}`)
 		expect(await held()).toBe(25_000)
+	})
+
+	it('ends the reservation its checkout held', async () => {
+		// Now the payment counts, the amount set aside for it must not.
+		await openCheckoutsRef(firestore, TEAM, SEASON).set({
+			reservations: {
+				r_1: { amountCents: 25_000, sessionId: 'cs_test_1' },
+				r_other: { amountCents: 10_000, sessionId: 'cs_other' },
+			},
+		})
+
+		await deliver(session({ reservationId: 'r_1' }))
+
+		const open = (await openCheckoutsRef(firestore, TEAM, SEASON).get()).data()
+		expect(Object.keys(open?.reservations ?? {})).toEqual(['r_other'])
+	})
+
+	it('ends the reservation of a payment it refunds', async () => {
+		await openCheckoutsRef(firestore, TEAM, SEASON).set({
+			reservations: { r_1: { amountCents: 25_000, sessionId: 'cs_test_1' } },
+		})
+		await firestore.recursiveDelete(
+			teamSeasonRef(firestore, TEAM, SEASON).collection('roster')
+		)
+		await teamSeasonRef(firestore, TEAM, SEASON).delete()
+
+		await deliver(session({ reservationId: 'r_1' }))
+
+		expect(refundsCreate).toHaveBeenCalledTimes(1)
+		const open = (await openCheckoutsRef(firestore, TEAM, SEASON).get()).data()
+		expect(open?.reservations).toEqual({})
 	})
 
 	it('takes the amount from Stripe, not the session', async () => {

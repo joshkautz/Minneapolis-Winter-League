@@ -37,7 +37,7 @@ import {
 	TeamRosterDocument,
 	TeamSeasonDocument,
 } from '@/shared/utils'
-import type { TeamContributionDocument } from '@/types'
+import type { OpenCheckoutsDocument, TeamContributionDocument } from '@/types'
 
 // ---- Canonical team document ---------------------------------------------
 
@@ -202,3 +202,21 @@ export const teamContributionsQuery = (
 		) as CollectionReference<TeamContributionDocument>,
 		orderBy('createdAt', 'asc')
 	)
+
+/**
+ * What teammates are paying right now: each open checkout's reserved
+ * amount. Same privacy as the contributions.
+ */
+export const teamOpenCheckoutsRef = (
+	teamId: string,
+	seasonId: string
+): DocumentReference<OpenCheckoutsDocument> =>
+	doc(
+		firestore,
+		Collections.TEAMS,
+		teamId,
+		TEAM_SEASONS_SUBCOLLECTION,
+		seasonId,
+		'checkouts',
+		'open'
+	) as DocumentReference<OpenCheckoutsDocument>
