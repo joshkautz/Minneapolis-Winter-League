@@ -89,18 +89,9 @@ export const stripeWebhook = onRequest(
 					break
 				}
 
-				// A team contribution's PaymentIntent changed outside this
-				// code — refunded or cancelled in the Dashboard, or a hold that
-				// lapsed. Settlement updates the ledger itself; these keep it
-				// honest about everything else.
-				case 'payment_intent.canceled':
-				case 'payment_intent.succeeded':
-					await handleTeamPaymentIntentChange(
-						stripe,
-						(event.data.object as Stripe.PaymentIntent).id
-					)
-					break
-
+				// A team contribution was refunded outside this code — in the
+				// Dashboard, say. Settlement updates the ledger for its own
+				// refunds; this keeps it honest about everyone else's.
 				case 'charge.refunded': {
 					const charge = event.data.object as Stripe.Charge
 					const paymentIntentId =
@@ -199,8 +190,8 @@ async function handleCheckoutSessionCompleted(
 /**
  * Handle a completed team contribution checkout.
  *
- * Records the hold in the team's ledger, which in turn recomputes the team's
- * registration — or releases it, if it cannot be attributed. See
+ * Records the payment in the team's ledger, which in turn recomputes the
+ * team's registration — or refunds it, if it cannot be attributed. See
  * services/teamContributionIntake.ts.
  */
 async function handleTeamContributionCompleted(

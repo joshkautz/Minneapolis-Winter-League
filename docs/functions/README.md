@@ -40,7 +40,7 @@ Functions/src/
 | Players       | `createPlayer`, `updatePlayer`, `deletePlayer`                               | `updatePlayerAdmin`, `getPlayerAuthInfo`                                              |
 | Teams         | `createTeam`, `rolloverTeam`, `updateTeam`, `deleteTeam`, `updateTeamRoster` | `deleteUnregisteredTeam`, `updateTeamAdmin`, `mergeTeams`                             |
 | Offers        | `createOffer`, `updateOffer`                                                 |                                                                                       |
-| Payments      | `createStripeCheckout`, `createTeamContributionCheckout`                     | `releaseTeamContribution`                                                             |
+| Payments      | `createStripeCheckout`, `createTeamContributionCheckout`                     | `refundTeamContribution`                                                              |
 | Waivers       | `signWaiver`                                                                 |                                                                                       |
 | Storage       | `getUploadUrl`, `getDownloadUrl`, `getFileMetadata`                          |                                                                                       |
 | Posts         | `createPost`, `updatePost`, `createReply`, `updateReply`                     | `deletePost`, `deleteReply`                                                           |
@@ -60,10 +60,10 @@ during account setup. Everything else requires a verified one.
 | -------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
 | `userDeleted`                                | Auth account deleted                                   | Deletes the player's data, keeping waivers; see [Account deletion](#account-deletion)   |
 | `onOfferUpdated`                             | `offers/{offerId}` updated                             | On acceptance, adds the player to the roster and points their season record at the team |
-| `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes registration; releases a leaver's money on an unregistered team              |
+| `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes registration; refunds a leaver's money on an unregistered team               |
 | `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                 |
-| `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes, and settles a new hold             |
-| `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Captures the new team's money; at twelve, releases and removes the unregistered ones    |
+| `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes, and settles a new payment          |
+| `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Refunds the new team's excess; at twelve, refunds and removes the unregistered ones     |
 | `onPaymentCreated`                           | `stripe/{uid}/payments/{id}` created                   | Marks a per-player registration paid                                                    |
 
 Every trigger honours the migration kill-switch,
@@ -90,10 +90,10 @@ as from a former player.
 
 ## Scheduled functions
 
-| Function                     | Runs                  | Does                                                                                                |
-| ---------------------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
-| `sweepTeamPaymentsHourly`    | every hour            | Settles every team holding money: releases after registration closes, captures holds nearing expiry |
-| `reconcileTeamPaymentsDaily` | 04:00 America/Chicago | Repairs any disagreement between Stripe and the contribution ledger                                 |
+| Function                     | Runs                  | Does                                                                   |
+| ---------------------------- | --------------------- | ---------------------------------------------------------------------- |
+| `sweepTeamPaymentsHourly`    | every hour            | Refunds every unregistered team holding money once registration closes |
+| `reconcileTeamPaymentsDaily` | 04:00 America/Chicago | Repairs any disagreement between Stripe and the contribution ledger    |
 
 Both honour the kill-switch too. A failed run is not retried by the
 scheduler; the next run is the retry.
@@ -106,10 +106,9 @@ them and a forged request, and it runs before any read or write.
 - **`stripeWebhook`** — `checkout.session.completed`. A per-player checkout
   writes `stripe/{uid}/payments/{sessionId}`, which fires `onPaymentCreated`.
   A team contribution is recorded in the team's contribution ledger instead;
-  see [TEAM_PAYMENTS.md](../TEAM_PAYMENTS.md). `payment_intent.canceled`,
-  `payment_intent.succeeded` and `charge.refunded` keep that ledger in step
-  with changes made outside the code. Also mirrors Products and Prices into
-  Firestore.
+  see [TEAM_PAYMENTS.md](../TEAM_PAYMENTS.md). `charge.refunded` keeps that
+  ledger in step with refunds made outside the code. Also mirrors Products
+  and Prices into Firestore.
 
 ## Services and shared helpers
 
@@ -117,17 +116,17 @@ them and a forged request, and it runs before any read or write.
 | ------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `services/accountDeletionService`     | What deleting an account removes, and what it keeps; shared by `deletePlayer` and `userDeleted` |
 | `services/teamRegistrationService`    | The registration rule and the transactional twelve-team cap                                     |
-| `services/teamDeletionService`        | Deleting a team-season, refusing while it holds unsettled money                                 |
-| `services/teamSettlementService`      | Capturing, releasing and reconciling a team's money with Stripe                                 |
-| `services/teamContributionIntake`     | Taking a PaymentIntent into the ledger, or releasing it if it cannot be attributed              |
-| `services/teamPaymentsSweep`          | Finding and settling every team holding money                                                   |
+| `services/teamDeletionService`        | Deleting a team-season, refusing while it holds money                                           |
+| `services/teamSettlementService`      | Refunding and reconciling a team's money with Stripe                                            |
+| `services/teamContributionIntake`     | Taking a PaymentIntent into the ledger, or refunding it if it cannot be attributed              |
+| `services/teamPaymentsSweep`          | Finding and settling every unregistered team holding money                                      |
 | `services/teamPaymentsReconciliation` | Checking Stripe and the ledger against each other                                               |
 | `services/playerRankings`             | The TrueSkill rankings rebuild — see [PLAYER_RANKING_ALGORITHM.md](PLAYER_RANKING_ALGORITHM.md) |
 | `services/swissRankings`              | Swiss-format standings                                                                          |
 | `shared/auth`                         | `validateAuthentication`, `validateAdminUser`, `validateNotBanned` and friends                  |
 | `shared/membership`                   | Writing both sides of the player↔team relationship atomically                                   |
 | `shared/contributions`                | The team contribution ledger and its arithmetic                                                 |
-| `shared/settlement`                   | Pure decisions about a team's money: what to capture, cancel or refund                          |
+| `shared/settlement`                   | Pure decisions about a team's money: what to keep and what to refund                            |
 | `shared/stripe`                       | Stripe client, customer lookup, the team registration Product                                   |
 | `shared/returnUrls`                   | The allowlist for Checkout return URLs                                                          |
 | `shared/seasonPricing`                | Validating a season's team registration total, which cannot change once money depends on it     |

@@ -206,7 +206,7 @@ export const PaymentSection = ({
 						Teams pay together this season. A team registers once{' '}
 						{MIN_SIGNED_PLAYERS} of its players have signed their waiver and{' '}
 						{formatDollars(currentSeason.teamRegistrationTotalCents)} has been
-						committed, split however the team likes.
+						paid, split however the team likes.
 					</AlertDescription>
 				</Alert>
 				{isAuthenticatedUserRostered ? (

@@ -12,15 +12,15 @@
  * exists to make fast — would never register at all: the money would arrive
  * last, and nothing would notice.
  *
- * Only the committed total can change the outcome, so a write that leaves the
- * status alone (a metadata update, say) is skipped.
+ * Only the paid total can change the outcome, so a write that leaves the
+ * status and amount alone (a metadata update, say) is skipped.
  *
- * It then settles the team whenever a live hold is involved. A hold can land
+ * It then settles the team whenever a new payment lands. A payment can land
  * where it is no longer wanted: on a team that registered while the payer
  * was on the Checkout page, in a season that filled up, after registration
- * closed. Settlement captures it, releases it or leaves it, by the same rules
- * as everywhere else. Changes settlement makes itself — captured, cancelled,
- * refunded — do not settle again.
+ * closed, from a payer who left the team mid-checkout. Settlement refunds it
+ * or keeps it, by the same rules as everywhere else. Refunds settlement makes
+ * itself do not settle again.
  */
 
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
@@ -60,7 +60,8 @@ export const updateTeamRegistrationOnContributionChange = onDocumentWritten(
 		try {
 			await updateTeamRegistrationStatus(teamId, seasonId)
 
-			if (after?.status === 'authorized') {
+			const newPayment = after?.status === 'paid' && before === undefined
+			if (newPayment) {
 				await settleTeamSeason(teamId, seasonId)
 			}
 		} catch (error) {

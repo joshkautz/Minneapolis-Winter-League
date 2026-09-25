@@ -3,17 +3,17 @@
  *
  * Fires when a team's per-season registration flag flips from false → true.
  *
- * 1. Settles that team's money. Under team payments this is where holds are
- *    captured: exactly the season's total, oldest first, with any excess
- *    released.
- * 2. When the threshold (12 registered teams) is reached, releases every
+ * 1. Settles that team's money. Under team payments this is where a team
+ *    that paid more than its total is refunded the excess, latest payments
+ *    first.
+ * 2. When the threshold (12 registered teams) is reached, refunds every
  *    unregistered team's money and then deletes those team-seasons. The
- *    release has to come first — deletion refuses a team still holding
- *    money — and a team whose release fails is left in place for the retry
+ *    refund has to come first — deletion refuses a team still holding
+ *    money — and a team whose refund fails is left in place for the retry
  *    rather than deleted with its money unaccounted for.
  *
  * Retried on failure. Both steps are idempotent: settlement reads Stripe
- * before acting, and the cascade only ever finds the teams a previous
+ * before refunding, and the cascade only ever finds the teams a previous
  * attempt did not finish.
  */
 
@@ -155,14 +155,14 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 
 			if (settlementFailures.length > 0) {
 				throw new Error(
-					`Could not release the money of ${settlementFailures.length} ` +
+					`Could not refund the money of ${settlementFailures.length} ` +
 						`unregistered team(s): ` +
 						settlementFailures.map((f) => `${f.teamId} (${f.error})`).join('; ')
 				)
 			}
 		} catch (error) {
-			// Rethrown so the platform retries. Money left held against a team
-			// that is out of the season is exactly what this must not do.
+			// Rethrown so the platform retries. Money kept from a team that is
+			// out of the season is exactly what this must not do.
 			logger.error('Error processing team registration lock:', {
 				teamId,
 				seasonId,

@@ -1,17 +1,17 @@
 /**
- * Release a single team contribution (Admin only)
+ * Refund a single team contribution (Admin only)
  *
- * Cancels the contribution if it is still a hold, refunds it if it was
- * captured, and records who did it and why. For cases the settlement rules
- * do not cover — a dispute, a payer who left the team before it registered.
+ * Refunds the payment in full and records who did it and why. For cases the
+ * settlement rules do not cover — a dispute, a test payment, a payer who
+ * should not have been charged.
  *
  * Security validations:
  * - Caller must be an admin (player document's `admin` flag)
  * - Team, season and PaymentIntent ids must be non-empty strings
  * - A reason is required and bounded, because it is the audit trail
- * - Only a contribution that exists and still holds money can be released
+ * - Only a contribution that exists and is still paid can be refunded
  *
- * The team's registration is not touched; it is irreversible. Releasing
+ * The team's registration is not touched; it is irreversible. Refunding
  * money from a registered team leaves it short of its total, which
  * settlement then reports.
  */
@@ -24,18 +24,17 @@ import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { Collections } from '../../../types.js'
 import { teamContributionsCollection } from '../../../shared/contributions.js'
 import { createStripeClient } from '../../../shared/stripe.js'
-import { releaseContribution } from '../../../services/teamSettlementService.js'
+import { refundContribution } from '../../../services/teamSettlementService.js'
 
-interface ReleaseTeamContributionRequest {
+interface RefundTeamContributionRequest {
 	teamId: string
 	seasonId: string
 	paymentIntentId: string
 	reason: string
 }
 
-interface ReleaseTeamContributionResponse {
+interface RefundTeamContributionResponse {
 	success: true
-	status: 'canceled' | 'refunded'
 }
 
 const MAX_REASON_LENGTH = 500
@@ -43,9 +42,9 @@ const MAX_REASON_LENGTH = 500
 const isNonEmptyString = (value: unknown): value is string =>
 	typeof value === 'string' && value.trim().length > 0
 
-export const releaseTeamContribution = onCall<
-	ReleaseTeamContributionRequest,
-	Promise<ReleaseTeamContributionResponse>
+export const refundTeamContribution = onCall<
+	RefundTeamContributionRequest,
+	Promise<RefundTeamContributionResponse>
 >(
 	{ region: FIREBASE_CONFIG.REGION, secrets: ['STRIPE_SECRET_KEY'] },
 	async (request) => {
@@ -72,29 +71,29 @@ export const releaseTeamContribution = onCall<
 
 		let result
 		try {
-			result = await releaseContribution(firestore, createStripeClient(), {
+			result = await refundContribution(firestore, createStripeClient(), {
 				teamId,
 				seasonId,
 				paymentIntentId,
 			})
 		} catch (error) {
-			logger.error('Failed to release a team contribution', {
+			logger.error('Failed to refund a team contribution', {
 				adminId,
 				teamId,
 				seasonId,
 				paymentIntentId,
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
-			throw new HttpsError('internal', 'Stripe could not release this payment')
+			throw new HttpsError('internal', 'Stripe could not refund this payment')
 		}
 
 		switch (result.outcome) {
 			case 'not-found':
 				throw new HttpsError('not-found', 'No such contribution')
-			case 'already-settled':
+			case 'already-refunded':
 				throw new HttpsError(
 					'failed-precondition',
-					`This contribution is already ${result.status}`
+					'This contribution has already been refunded'
 				)
 			case 'stripe-disagreed':
 				throw new HttpsError(
@@ -102,28 +101,27 @@ export const releaseTeamContribution = onCall<
 					`Stripe reports this payment as ${result.stripeStatus}; the record ` +
 						'has been corrected to match. Check it and try again.'
 				)
-			case 'released':
+			case 'refunded':
 				break
 		}
 
-		// The audit trail. Written after the release, so a release that
-		// failed leaves no claim that it happened.
+		// The audit trail. Written after the refund, so a refund that failed
+		// leaves no claim that it happened.
 		await teamContributionsCollection(firestore, teamId, seasonId)
 			.doc(paymentIntentId)
 			.update({
-				releasedBy: firestore.collection(Collections.PLAYERS).doc(adminId),
-				releaseReason: reason.trim(),
-				releasedAt: FieldValue.serverTimestamp(),
+				refundedBy: firestore.collection(Collections.PLAYERS).doc(adminId),
+				refundReason: reason.trim(),
+				refundedAt: FieldValue.serverTimestamp(),
 			})
 
-		logger.info('Released a team contribution', {
+		logger.info('Refunded a team contribution', {
 			adminId,
 			teamId,
 			seasonId,
 			paymentIntentId,
-			status: result.status,
 		})
 
-		return { success: true, status: result.status }
+		return { success: true }
 	}
 )

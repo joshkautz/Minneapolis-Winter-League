@@ -1,8 +1,14 @@
 # Team-level payment design
 
-A proposal, not yet built. It covers how a team reaches a **$1,000 collective
-total** paid by any combination of its players, replacing the current rule
-that ten individual players must each pay $100.
+Live since 2026 Fall. It covers how a team reaches a **$1,000 collective
+total** paid by any combination of its players, replacing the old rule that
+ten individual players must each pay $100.
+
+It began as a proposal, and parts of it read as one; the implementation
+order at the end records how it was built. One decision changed after it was
+built: contributions were first held on the card and charged only when the
+team registered, and since September 2026 they are charged immediately — see
+"Charging on contribution".
 
 ## Why
 
@@ -17,8 +23,9 @@ one of the twelve spots.
 Three decisions carry the design:
 
 1. **Inline pricing**, so the server decides the amount rather than the payer.
-2. **Manual capture** for every contribution, so money is only ever _taken_
-   from a team that is actually going to play.
+2. **Charge on contribution, refund what is not kept**, so every payer
+   follows one rule: you pay now, and you get it back if your team does not
+   play.
 3. **Waivers issue on joining a roster**, not on paying.
 
 The rest follows from those.
@@ -75,152 +82,84 @@ with `adjustable_quantity` would let someone buy "5 player slots" for $500.
 Tidy, but it forces every contribution to be a multiple of $100 and rules out
 the "twenty players at $50" case.
 
-## Not losing money on cancellations
+## Charging on contribution
 
-This is the part worth getting right, and Stripe gives a clean answer.
+Every contribution is charged when the payer completes Checkout. Settlement
+then refunds whatever the league should not keep:
 
-**Stripe does not return the processing fee on a refund**, but **cancelling an
-uncaptured authorization is free**. Stripe
-[recommends manual capture explicitly](https://docs.stripe.com/refunds#cost-optimization)
-for businesses that refund close to the time of transaction, which is exactly
-this.
+| Outcome                                   | What happens                                  |
+| ----------------------------------------- | --------------------------------------------- |
+| Team registers having paid exactly $1,000 | Nothing                                       |
+| Team registers having paid more           | The excess is refunded, latest payments first |
+| Team misses the twelve-spot cut           | Everything is refunded                        |
+| Registration closes without the team      | Everything is refunded, within the hour       |
+| A payer leaves before the team registers  | That payer is refunded                        |
+| A payer leaves after the team registers   | Nothing: registration is final                |
 
-### Authorize everything; capture only a team that is going to play
+**Stripe keeps its processing fee on a refund** — about $29.30 on $1,000 at
+the standard 2.9% + 30¢ — and the league bears it.
 
-Every contribution is created with
-`payment_intent_data.capture_method = 'manual'`. That places a hold instead of
-taking the money. Capture happens when, and only when, the team is complete:
+### Why not card holds
 
-```ts
-const complete =
-	signedPlayerCount >= TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION &&
-	authorizedCents >= TEAM_CONFIG.REGISTRATION_TOTAL_CENTS
-```
+The first version held every contribution on the card
+(`capture_method: 'manual'`) and charged only a team that registered, because
+cancelling an uncaptured hold is free where a refund is not. It was built,
+tested and deployed, and replaced before any real money moved, for two
+reasons.
 
-At that moment, capture every outstanding hold for the team. Until then, no
-money has left anyone's account and every exit is free:
+- **A hold lasts about a week; registration lasts a month.** Visa,
+  Mastercard, Amex and Discover all allow 7 days for an online payment. A
+  team still recruiting after that had to be charged early rather than let
+  the hold lapse, and refunded if it then missed out — so payers were
+  charged at different times for reasons they could not see, which is
+  exactly the confusion a hold was meant to avoid.
+- **Extended holds do not cover every card.** Stripe can extend a hold to
+  about 30 days, but for a business like ours only on Visa and Mastercard —
+  Amex and Discover limit it to travel and lodging
+  ([online](https://docs.stripe.com/payments/extended-authorization),
+  [in person](https://docs.stripe.com/terminal/features/extended-authorizations))
+  — and only on IC+ pricing or by request.
 
-| Outcome                         | Action                        | Cost                  |
-| ------------------------------- | ----------------------------- | --------------------- |
-| Team completes                  | Capture all holds             | Normal processing fee |
-| Team never completes            | Cancel all holds              | **Nothing**           |
-| Team misses the twelve-spot cut | Cancel all holds              | **Nothing**           |
-| Team overpays through a race    | Capture part, cancel the rest | **Nothing extra**     |
+The league chose one rule every payer can follow over the fees a hold would
+have saved. The saving was also smaller than it looked: most teams that miss
+out lose the race for the twelfth spot, and would have been refunded anyway
+by the time a slow week had passed.
 
-For the common case this is invisible. One person pays $1,000 for a team that
-already has ten signed players, and the capture happens in the same second —
-it behaves exactly like a normal payment.
+### The overpayment race costs a fee
 
-### It also makes the overpayment race free
+Two players both see "$200 remaining" and both pay $200. The team has paid
+$1,200, and the later $200 is refunded, its fee lost. Preventing it would
+need a reservation held for as long as a Checkout session stays open (31
+minutes), to save a few dollars on a rare race, so it is allowed.
 
-Two players both see "$200 remaining" and both pay $200. The team is now
-holding $1,200 in authorizations.
-
-Capture supports
-[capturing less than the authorized amount](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method#capture-funds)
-via `amount_to_capture`, and a partial capture automatically releases the
-rest. So: capture $200 from the first and cancel the second, or capture $100
-from each. Either way nobody is overcharged and no refund is issued.
-
-Had the contributions been captured on arrival, the same race would cost a
-$200 refund and its unrecoverable fee. This is the strongest argument for
-manual capture — it turns an inevitable, recurring cost into nothing.
-
-### A hold must never be allowed to expire
-
-A card authorization lasts **7 days** for online payments, and registration
-windows have run **15 to 31 days**. A hold can therefore outlive its
-usefulness before the team resolves.
-
-The wrong answer is to let it lapse and ask the contributor to pay again.
-Re-authorization means emailing someone that the $1,000 they already paid has
-silently come back, and asking them to do it again while their team is still
-in the running. That is not a burden to put on a volunteer who has already
-collected money from nineteen teammates, and it invites exactly the "did this
-league just take my money twice?" reaction that produces disputes.
-
-So: **capture before the authorization expires**, rather than letting it go.
-
-```
-Contribution authorized
-        │
-        ├── team registers            → capture now            (normal fee)
-        ├── team loses the 12th spot  → cancel now             (free)
-        └── neither, and expiry nears → capture at ~6h before  (normal fee)
-                                          │
-                                          └── team later fails → refund (fee lost)
-```
-
-Every path ends in the team either being charged properly or released cleanly.
-Nobody is ever asked to pay twice.
-
-Stripe can do the last branch natively.
-[`capture_method: 'automatic_delayed'`](https://docs.stripe.com/payments/place-a-hold-on-a-payment-method#automatic-delayed-capture)
-with `capture_by: 'auth_expiry'` captures roughly six hours before the
-authorization would lapse, and you can still capture or cancel manually before
-then. It is in private preview, so it needs requesting — but if granted it
-removes the need to build and operate a scheduled sweep, which is the only
-fiddly part of this design. Ask for it.
-
-Without it, the same thing is a scheduled function reading `capture_before`
-off each charge and capturing anything inside its last day.
-
-### Why not simply capture on arrival
-
-Capturing immediately is simpler: no capture step, no expiry handling, no hold
-states in the ledger. It is a reasonable thing to want, and the reason to
-resist it is that it gives up free cancellation in exactly the case that
-happens most.
-
-The common failure is not a team that dithers for a fortnight. It is a team
-that pays and **loses the race**, which resolves in seconds or minutes: twelve
-other teams were already complete. Under holds that is a cancellation costing
-nothing. Under immediate capture it is a $1,000 refund whose fee — around $29
-— is gone for good, on a team that never played.
-
-With roughly fifteen teams chasing twelve spots, that is a few hundred dollars
-a season converted from nothing into a real cost, for a simplification worth
-maybe a day of work.
-
-The expiry safety net above is what removes the objection to holds. It is not
-much more code than plain manual capture, and it means the seven-day window
-never reaches a contributor at all.
+Which payment is the excess is decided when the team registers, oldest
+first: whoever paid earliest keeps their payment. A payer who has left is
+kept last, after everyone still on the team.
 
 ### What the UI actually has to say
 
-Once holds never expire, the seven days stop being a deadline anyone has to
-act on, but they still decide when some cards are charged, so the
-explanation has to say so:
+Shown above the pay button and on Stripe's page:
 
-> Your card is authorized now and charged when your team registers. An
-> authorization lasts about a week, so if your team has not registered by
-> then it is charged early rather than allowed to lapse. If your team does
-> not get one of the 12 spots, the authorization is released, or the charge
-> refunded in full.
+> Your card is charged now. If you leave the team before it registers, or it
+> does not get one of the 12 spots, you are refunded in full. If your team
+> pays more than its total, the extra is refunded, latest payments first.
+> Refunds take 5 to 10 business days to reach your card.
 
-An earlier version promised "you are never charged" if the team missed out.
-That was untrue for anyone whose hold the expiry net had already captured —
-they are charged and then refunded — and a charge the payer was told would
-never happen is the one they dispute. No countdown, no expiry date, no
-instruction: the contributor still has nothing to do.
-
-It is still worth showing, on the team page, that a contribution is
-`authorized` rather than `paid` — a captain chasing the last two signatures
-should be able to see the money is real. But that is information, not a task.
+A payer should know before paying when they get their money back, and a
+charge nobody expected is the one that gets disputed.
 
 ### Statement descriptors matter more than usual
 
-A hold appears on a statement much like a charge. Someone who does not
-recognise a $1,000 line disputes it, and a dispute costs the fee _and_ the
-amount. Set a clear
+A $1,000 line nobody recognises becomes a dispute, which costs the fee _and_
+the amount. The account's
 [statement descriptor](https://docs.stripe.com/get-started/account/statement-descriptors)
-and use Checkout's `custom_text` to say plainly that this is an authorization
-for a team registration that will be released if the team does not complete.
+reads "MINNEAPOLIS MALLARD".
 
 ## Data model
 
 Money becomes a team-season concern, so it needs a ledger. A single running
-total is not enough: cancellation and capture both need to know who paid what.
+total is not enough: refunding a team, or one payer, needs to know who paid
+what.
 
 ```
 teams/{teamId}/teamSeasons/{seasonId}
@@ -228,12 +167,11 @@ teams/{teamId}/teamSeasons/{seasonId}
 
 teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}
   player: DocumentReference<PlayerDocument>
-  amountCents: number            // held, or taken after a partial capture
-  authorizedAmountCents?: number // what was first held, once they differ
-  status: 'authorized' | 'captured' | 'refunded' | 'canceled'
+  amountCents: number            // still held; what was paid, once refunded
+  paidAmountCents?: number       // what was first paid, after a partial refund
+  status: 'paid' | 'refunded'
   paymentIntentId: string
-  captureBefore: Timestamp       // from the charge; capture before this
-  releasedBy?, releaseReason?, releasedAt?   // an admin's manual release
+  refundedBy?, refundReason?, refundedAt?   // an admin's manual refund
   createdAt: Timestamp
 ```
 
@@ -244,12 +182,13 @@ anyone through a collection-group query.
 
 That is why there are no totals on the team-season. Team-season documents are
 world-readable, so a running total there would publish every team's balance.
-An earlier version kept `authorizedCents` and `capturedCents` there, in step
-with the ledger; they were removed before any season used team payments.
-Anything that needs a total sums the ledger.
+An earlier version kept running totals there, in step with the ledger; they
+were removed before any season used team payments. Anything that needs a
+total sums the ledger.
 
-Note that the registration test uses **authorized**, not captured: a team
-secures its spot when the money is committed, and capture follows.
+The registration test counts money **paid by people still on the roster**:
+a payer who has left is being refunded, and must not register a team they
+are not on.
 
 ### The registration rule, stated exactly
 
@@ -258,13 +197,13 @@ Two independent conditions, both on the team:
 ```ts
 const registered =
 	signedPlayerCount >= 10 && // roster members who have signed a waiver
-	authorizedCents >= 100_000 // committed by anyone on the roster
+	paidByRosterCents >= 100_000 // paid by people still on the roster
 ```
 
 - **A player is registered when they sign their waiver.** Nothing else — not
   payment, not merely being on a roster.
 - **A team is registered when it has ten registered players and $1,000
-  committed**, in any split, from any of its rostered players.
+  paid**, in any split, by any of its rostered players.
 
 The two conditions need not be satisfied by the same people. A team of eleven
 where the captain pays the whole $1,000 and has not yet signed, while the
@@ -285,7 +224,7 @@ flip back if the roster later drops below ten signed players, so
 `updateTeamRegistrationStatus` must lose its ability to set it to `false`.
 
 Only an admin can reverse it, deliberately, and that path settles the money —
-there is no way to un-register a team and leave $1,000 captured against it.
+there is no way to un-register a team and leave $1,000 kept against it.
 
 ## Returning money that should not be kept
 
@@ -297,26 +236,18 @@ any team holding contributions that has not registered:
 2. **The registration window closes.** Anything still unregistered is
    settled.
 3. **A payer leaves a team that has not registered** — on their own, or
-   removed by a captain. Their money is released the moment they go (the
-   roster trigger settles the team), and it stops counting toward the total
-   at once, so a team can never register on the money of someone not on
-   it. It also stops reducing what their former teammates may put in.
+   removed by a captain. They are refunded the moment they go (the roster
+   trigger settles the team), and their money stops counting toward the
+   total at once, so a team can never register on the money of someone not
+   on it. It also stops reducing what their former teammates may put in.
 
 Once a team has registered, registration is final, and a payer who leaves
 afterwards stays charged: their money helped secure the spot. Settlement
-charges the people still on the team first and a leaver only for any gap,
-so a leaver whose hold was never needed is released rather than charged.
+keeps the money of the people still on the team first and a leaver's only
+for any gap, so a leaver whose payment was never needed is refunded.
 
-"Settle" is one operation with two branches, decided per contribution:
-
-| Contribution state | Action                   | Cost               |
-| ------------------ | ------------------------ | ------------------ |
-| `authorized`       | Cancel the PaymentIntent | Nothing            |
-| `captured`         | Refund it                | Fee, unrecoverable |
-
-Most will be `authorized` and cost nothing. A contribution is only ever
-`captured` while unregistered if the expiry safety net reached it first — a
-team that took more than seven days and then did not make it.
+Settling is always a refund, in full or in part, and Stripe keeps its
+processing fee on each.
 
 ### Orphaned money has to be impossible, not merely avoided
 
@@ -332,32 +263,27 @@ Rather than remember to settle in each, make it structural:
 
 - **`deleteTeamSeasonWithCleanup` settles first, or refuses.** It is already
   the single chokepoint for three of the four paths. Give it the invariant:
-  a team-season with unsettled contributions cannot be deleted. Everything
+  a team-season still holding money cannot be deleted. Everything
   upstream then inherits it.
 - **`mergeTeams` moves contributions to the winning team**, the way it
   already moves roster entries and badges — or refuses when the losing team
-  has unsettled money, which is simpler and almost certainly rare enough.
-- **A reconciliation job** lists PaymentIntents in `requires_capture` with no
-  matching live contribution, and reports them. A backstop, not a mechanism:
-  if it ever finds something, the invariant above has a hole.
+  holds money, which is simpler and almost certainly rare enough.
+- **A reconciliation job** lists recent paid team PaymentIntents with no
+  matching ledger entry, and takes them in or refunds them. A backstop, not a
+  mechanism: if it ever finds something, an event was lost.
 
 Both deletion paths need a test that a team with outstanding money cannot be
 deleted, because this is exactly the kind of guarantee that decays when
 someone adds a fifth path.
 
-### This needs scheduled functions, which the codebase has never used
+### This needs scheduled functions
 
-Two of these run on a clock rather than in response to a write:
-
-- Settling unregistered teams when the registration window closes.
-- Capturing a hold before it expires, if Stripe does not grant
-  `automatic_delayed` capture.
-
-There are no `onSchedule` functions in `Functions/src` today, so this is a new
-capability rather than a new instance of an existing pattern. It needs the
-same care as the triggers: pinned region, idempotent by construction (settling
-an already-settled contribution is a no-op), and honouring the migration
-kill-switch.
+Refunding unregistered teams when the registration window closes runs on a
+clock rather than in response to a write, and so does the daily
+reconciliation. They were the codebase's first `onSchedule` functions, and
+take the same care as the triggers: pinned region, idempotent by
+construction (settling an already-settled team is a no-op), and honouring the
+migration kill-switch.
 
 ## Two consequences that are easy to miss
 
@@ -368,8 +294,7 @@ have signed their waiver**. Money moves entirely to the team level, and
 `playerSeasons.paid` stops being part of the registration test.
 
 Suggested: keep `paid` as a record of whether that person contributed money —
-useful for a captain chasing their team, and for knowing who to talk to if a
-hold needs re-taking — but remove it from every gate.
+useful for a captain chasing their team — but remove it from every gate.
 
 ### The waiver trigger has to move
 
@@ -402,16 +327,12 @@ The amount is now attacker-controlled input, which it was not before.
 - **Authorization**: only a player rostered on that team for that season may
   contribute to it. Captains are not special; any rostered player can pay.
 
-### Use a restricted key
+### Use a restricted key — done
 
-The integration currently uses `STRIPE_SECRET_KEY`, which can do anything the
-account can. Stripe's guidance is to use a
+`STRIPE_SECRET_KEY` is a
 [restricted API key](https://docs.stripe.com/keys/restricted-api-keys) scoped
-to what the Functions actually need — Checkout Sessions, PaymentIntents,
-Customers and Refunds, write; everything else off.
-
-Worth doing as its own change, independent of this one. It reduces the blast
-radius of the existing integration, not just the new code.
+to what the Functions actually call, listed in `.claude/rules/functions.md`.
+A new kind of Stripe call needs its permission added in the Dashboard.
 
 ## Decided
 
@@ -422,17 +343,15 @@ radius of the existing integration, not just the new code.
   wants it.
 - **The balance is visible to rostered players only.** Not to other teams and
   not publicly — what a team paid, and who paid it, is their business.
-- **A team with the money but not the players is not registered.** It holds
-  its authorizations and keeps recruiting. If it reaches ten signed players
-  before twelve other teams complete, it locks in automatically; if twelve
-  others get there first, its holds are released and it does not field a
-  team.
+- **A team with the money but not the players is not registered.** It keeps
+  its money and keeps recruiting. If it reaches ten signed players before
+  twelve other teams complete, it locks in automatically; if twelve others
+  get there first, it is refunded and does not field a team.
 
 - **Registration is irreversible.** Once a team is in, it is in for the
   season; only an admin can reverse it, and that path settles the money.
-- **Any unregistered team holding money is settled** when twelve teams
-  register or the window closes — cancelled if still authorized, refunded if
-  the expiry net captured it.
+- **Any unregistered team holding money is refunded** when twelve teams
+  register or the window closes.
 
 That last one about recruiting settles the ordering: **teams are ranked by when they satisfy
 both conditions**, not by when their money arrived. Paying first buys nothing
@@ -453,51 +372,34 @@ decide a race for money, all pinned in
   never be authoritative about who was twelfth.
 
 Today that costs a team a spot it thought it had. Under this design it means a
-thirteenth team is holding authorized funds that should never have been
-committed. **The cap must be enforced in the same transaction that registers a
+thirteenth team is holding money that should never have been taken. **The cap must be enforced in the same transaction that registers a
 team**, before any of this ships. See the roadmap entry.
 
 ## Resolved: holds and the seven-day window
 
-A team can authorize $1,000 and still be hunting its tenth signed player a
-week later. Rather than let the hold lapse and ask for payment again, the
-authorization is captured shortly before it would expire, and refunded if the
-team ultimately does not play. See "A hold must never be allowed to expire".
-
-That trades a rare refund fee for never burdening a contributor, which is the
-right way round. The free cancellation still applies to the failure that
-actually happens most — losing the race for the twelfth spot, which resolves
-in minutes.
+Contributions are no longer holds; see "Why not card holds".
 
 ## Account setup
 
 What the Stripe account needed, and where each item stands.
 
-- **Webhook events — done.** The endpoint receives
-  `checkout.session.completed`, `payment_intent.canceled`,
-  `payment_intent.succeeded` and `charge.refunded`, plus the product and
-  price events. It is on API version `2026-08-26.dahlia`, the SDK's, since
+- **Webhook events — done.** The team flow needs
+  `checkout.session.completed` and `charge.refunded`; the product and price
+  events mirror the catalog. The endpoint also still receives
+  `payment_intent.canceled` and `payment_intent.succeeded`, from the hold
+  design, which the handler now ignores. It is on API version `2026-08-26.dahlia`, the SDK's, since
   September 2026; see "Changing the Stripe API version" in
   `.claude/rules/functions.md`.
 - **The "Team Registration" Product — not needed.** The callable creates it
   on first use under the fixed id `mwl_team_registration`.
-- **`automatic_delayed` capture — no longer needed.** It would have captured
-  a hold about six hours before it lapsed. The hourly sweep does the same
-  job, a day ahead, so there is nothing to request.
-- **Extended authorizations — not requested.** They would stretch a hold to
-  about 30 days, so the expiry net would rarely have to charge early. Only
-  Visa and Mastercard allow it for a business like ours (Amex and Discover
-  limit it to travel and lodging), Visa adds 0.08%, and an account on
-  standard pricing has to ask Stripe support. If granted, set
-  `payment_method_options.card.request_extended_authorization:
-'if_available'` on the Checkout session; the sweep already reads each
-  hold's real `capture_before`.
+- **`automatic_delayed` capture and extended authorizations — not needed.**
+  Both would only have kept holds alive longer; contributions are no longer
+  holds.
 - **A restricted API key — done, September 2026.** `STRIPE_SECRET_KEY` is a
   restricted key; the account's standard secret key was rolled. Its
   permissions are listed in `.claude/rules/functions.md`.
-- **The statement descriptor — worth a look.** A $1,000 hold nobody
-  recognises becomes a dispute, which costs the fee _and_ the amount. It
-  should read as the league.
+- **The statement descriptor — done.** It reads "MINNEAPOLIS MALLARD"; a
+  charge nobody recognises becomes a dispute.
 
 The two design questions this section once listed — whether registration can
 be reversed, and what deleting a team does to its money — are settled:
@@ -507,6 +409,12 @@ registration is irreversible, and a team holding money cannot be deleted.
 
 Each phase is shippable and leaves the system working. Nothing before phase 3
 touches money.
+
+This is the record of how it was built, and phases 2 to 4 describe the hold
+design: authorize, capture on registration, capture before expiry. That was
+replaced in September 2026 by charging on contribution, which kept the
+ledger, the triggers, the sweep and the reconciliation and reduced
+settlement to refunds.
 
 ### Phase 0 — prerequisites
 
@@ -589,11 +497,10 @@ Decisions made while building it:
   caller's player-season and confirms it against the roster entry; a
   request carrying a `teamId` has it ignored.
 - **Admins may pay before the window opens, never after it closes.** An
-  admin can try the whole flow with a real card ahead of opening day.
-  Their early money is an ordinary hold, so a test must be released from
-  the Payments dialog within six days, before the sweep captures it. Money
-  that arrives after the window can only be sent back, so the close applies
-  to everyone. (The per-player checkout lets admins pay at any time.)
+  admin can try the whole flow with a real card ahead of opening day, and
+  refund it from the Payments dialog; Stripe keeps its fee. Money that
+  arrives after the window can only be sent back, so the close applies to
+  everyone. (The per-player checkout lets admins pay at any time.)
 - **Cards only.** Every card network supports manual capture, and the
   hold's expiry is read from the card details on the charge.
 - **Sessions expire after 31 minutes**, just over Stripe's floor. The
@@ -770,41 +677,39 @@ that way. Hitting Stripe's sandbox from CI means network, keys and rate
 limits, for tests that would still not be deterministic.
 
 **Keep the money decisions out of the Stripe-calling code.** Given a team's
-contributions and its roster, deciding what to capture, what to cancel and
-for how much is a pure function. Written that way it can be tested
-exhaustively against the emulator — the overpayment race, partial capture,
-expiry ordering, a team that fails after capture — with no payment processor
-in sight. The Stripe layer on top is then thin enough to cover by mocking the
+contributions and its roster, deciding what to keep, what to refund and
+how much is a pure function. Written that way it can be tested exhaustively
+— the overpayment race, a partial refund, a payer who left, a team that
+misses out — with no payment processor in sight. The Stripe layer on top is then thin enough to cover by mocking the
 SDK.
 
-Reserve Stripe test mode for a small set of manual checks that the API shapes
-are right: that a manual-capture session really does produce
-`requires_capture`, that `capture_before` is populated, that a partial capture
-releases the rest.
+Reserve a real payment for the few checks that the API shapes are right: that
+a completed session produces a `succeeded` PaymentIntent carrying the
+metadata, and that a refund nets out of the charge. An admin can make one
+before registration opens, and refund it from the admin payments dialog.
 
 **Rehearse the race before registration day.** Seed the emulator with fifteen
 teams completing within a few seconds of each other and confirm that exactly
-twelve register, that the other three are cancelled rather than refunded, and
-that no team ends up registered without the full amount. That rehearsal is
+twelve register, that the other three are refunded in full, and that no team
+ends up registered without the full amount. That rehearsal is
 worth more than any single test in the suite, because the failure it is
 looking for only appears under concurrency.
 
 `scripts/rehearse-registration-race.js` does it through the real callables
-and triggers: 150 players, fifteen teams with $1,000 committed each, nine
-waivers per team, then the tenth on all fifteen at once. Its header has the
-commands. The emulator cannot reach Stripe (a live key is refused there), so
-it proves the cap, not settlement: registered teams keep their holds
-authorized and the three losers stay in place, the path taken when a release
-fails. The first run, on 24 September 2026, registered exactly twelve.
+and triggers: 150 players, fifteen teams with $1,000 paid each, nine waivers
+per team, then the tenth on all fifteen at once. Its header has the commands.
+The emulator cannot reach Stripe (a live key is refused there), so it proves
+the cap, not settlement: the three losers keep their money and stay in
+place, the path taken when a refund fails. The first run, on 24 September 2026, registered exactly twelve.
 
 **Drive the whole flow, not just its pieces.**
 `tests/integration/team-collective-payment.test.ts` does what players do —
 open Checkout, finish on Stripe's page, sign, leave — through the real
 callables and webhook, and fires every trigger production would until
 nothing changes. It covers several payers funding one team, the
-overpayment race, a partial capture, and leaving before and after
+overpayment race, a partial refund, and leaving before and after
 registration. The fake Stripe it runs on models Checkout, so a completed
-session produces the hold Stripe would.
+session produces the payment Stripe would.
 
 ## Migration
 

@@ -148,7 +148,7 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 						throw new HttpsError(
 							'failed-precondition',
 							'Teams in this season are holding money, so its pricing ' +
-								'cannot change. Release their contributions first.'
+								'cannot change. Refund their contributions first.'
 						)
 					}
 					pricingUpdate = {

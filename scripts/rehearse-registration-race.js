@@ -1,14 +1,15 @@
 /**
  * Rehearses the registration race on throwaway emulators: 15 teams of ten,
- * each with its $1,000 committed, and the tenth waiver on all fifteen signed
+ * each with its $1,000 paid, and the tenth waiver on all fifteen signed
  * at the same instant. Exactly 12 may register.
  *
  * Everything goes through the real callables over HTTP, as the App would, so
- * the triggers run in the Functions emulator as deployed. Settlement cannot
- * reach Stripe from the emulator, so registered teams' holds stay
- * authorized and the three losing teams stay in place; that is the path the
- * code takes when a release fails. Stripe settlement itself is covered by the
- * fake-Stripe integration tests.
+ * the triggers run in the Functions emulator as deployed. Each team paid
+ * exactly its total, so the twelve that register need no refund. Settlement
+ * cannot reach Stripe from the emulator, so the three that miss out keep
+ * their money and stay in place; that is the path the code takes when a
+ * refund fails. Stripe settlement itself is covered by the fake-Stripe
+ * integration tests.
  *
  * Run against empty emulators, never with --import:
  *   npm run build --workspace=Functions
@@ -184,8 +185,8 @@ await inParallel(teams, 5, async (team) => {
 })
 stamp('15 teams of 10')
 
-// 4. Each team's $1,000, committed as one authorized hold. Written as the
-//    Stripe webhook would; no Stripe is involved.
+// 4. Each team's $1,000, paid in one payment. Written as the Stripe webhook
+//    would; no Stripe is involved.
 for (const team of teams) {
 	const id = `pi_rehearsal_${team.name.toLowerCase()}`
 	await db
@@ -193,9 +194,8 @@ for (const team of teams) {
 		.set({
 			player: db.doc(`players/${team.captain.uid}`),
 			amountCents: 100_000,
-			status: 'authorized',
+			status: 'paid',
 			paymentIntentId: id,
-			captureBefore: Timestamp.fromMillis(now + 6 * DAY),
 			createdAt: Timestamp.now(),
 			updatedAt: Timestamp.now(),
 		})

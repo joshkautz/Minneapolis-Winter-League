@@ -339,8 +339,8 @@ export const TeamManagement = () => {
 							status, and deletes its open offers.
 						</li>
 						<li>
-							A registered team cannot be deleted. To refund one, release its
-							money from Payments; to combine two, use Merge.
+							A registered team cannot be deleted. To give its money back,
+							refund it from Payments; to combine two, use Merge.
 						</li>
 					</ul>
 				</AlertDescription>

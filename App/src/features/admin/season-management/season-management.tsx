@@ -690,8 +690,8 @@ export const SeasonManagement = () => {
 									/>
 									<p className='text-xs text-muted-foreground'>
 										A team registers once {MIN_SIGNED_PLAYERS} players have
-										signed and its roster has committed this much, in any split.
-										It cannot be changed once any team is holding money.
+										signed and its roster has paid this much, in any split. It
+										cannot be changed once any team is holding money.
 									</p>
 								</div>
 							) : (

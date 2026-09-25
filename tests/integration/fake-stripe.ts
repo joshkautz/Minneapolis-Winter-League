@@ -1,20 +1,18 @@
 /**
- * An in-memory Stripe for settlement tests.
+ * An in-memory Stripe for payment tests.
  *
- * A call-recording mock can say "capture was called"; it cannot say whether
- * capturing a hold that another settlement already cancelled fails, or what
- * a PaymentIntent looks like after a partial capture. Settlement depends on
+ * A call-recording mock can say "refund was called"; it cannot say whether
+ * refunding a payment another settlement already refunded fails, or what a
+ * PaymentIntent looks like after a partial refund. Settlement depends on
  * exactly those behaviours — it reads Stripe before acting and records what
  * Stripe reports afterwards — so this models the state, with the rules the
  * real API enforces:
  *
- * - capture and cancel only from `requires_capture`
- * - a capture of less than the hold releases the rest
  * - refunds only from `succeeded`, never more than is left
  * - an idempotency key replays its first result, whatever has happened since
- * - a Checkout session only holds money once the payer completes it
- *   (`completeCheckout`), and the hold carries the session's PaymentIntent
- *   metadata and amount, as Stripe's does
+ * - a Checkout session only takes money once the payer completes it
+ *   (`completeCheckout`), and the payment carries the session's
+ *   PaymentIntent metadata and amount, as Stripe's does
  *
  * Use it as the SDK's default export:
  *
@@ -25,19 +23,17 @@
 
 export interface FakePaymentIntent {
 	id: string
-	status: 'requires_capture' | 'succeeded' | 'canceled'
+	status: 'succeeded'
 	amount: number
-	amount_capturable: number
 	amount_received: number
 	metadata: Record<string, string>
 	latest_charge: {
 		id: string
 		amount_refunded: number
-		payment_method_details: { card: { capture_before: number } }
 	}
 }
 
-type Method = 'retrieve' | 'capture' | 'cancel' | 'refund'
+type Method = 'retrieve' | 'refund'
 
 interface FakeState {
 	intents: Map<string, FakePaymentIntent>
@@ -76,7 +72,7 @@ interface CheckoutSessionParams {
 	customer?: string
 	line_items: { price_data: { unit_amount: number } }[]
 	payment_intent_data: {
-		capture_method: string
+		capture_method?: string
 		metadata: Record<string, string>
 	}
 	metadata: Record<string, string>
@@ -116,26 +112,21 @@ export function resetFakeStripe(): void {
 }
 
 /**
- * The payer finishes on Stripe's page: the session's card is authorized for
- * its amount, and the `checkout.session.completed` event Stripe would send
- * is returned for the test to deliver. Only manual-capture sessions exist in
- * this codebase's team flow, so the result is always a hold.
+ * The payer finishes on Stripe's page: the session's card is charged its
+ * amount, and the `checkout.session.completed` event Stripe would send is
+ * returned for the test to deliver.
  */
-export function completeCheckout(
-	sessionId: string,
-	options: { captureBeforeSeconds?: number } = {}
-): unknown {
+export function completeCheckout(sessionId: string): unknown {
 	const session = fakeStripe.sessions.get(sessionId)
 	if (!session) throw new Error(`No such checkout session: ${sessionId}`)
-	if (session.params.payment_intent_data.capture_method !== 'manual') {
-		throw new Error('The fake only models manual-capture Checkout')
+	if (session.params.payment_intent_data.capture_method !== undefined) {
+		throw new Error('The fake only models Checkout that charges immediately')
 	}
 	const paymentIntentId = `pi_${sessionId.slice('cs_'.length)}`
-	addHold(
+	addPayment(
 		paymentIntentId,
 		session.params.line_items[0].price_data.unit_amount,
-		session.params.payment_intent_data.metadata,
-		options.captureBeforeSeconds
+		session.params.payment_intent_data.metadata
 	)
 	session.paymentIntentId = paymentIntentId
 	return {
@@ -145,8 +136,7 @@ export function completeCheckout(
 			object: {
 				id: sessionId,
 				object: 'checkout.session',
-				// A manual-capture session completes unpaid: the money is held.
-				payment_status: 'unpaid',
+				payment_status: 'paid',
 				payment_intent: paymentIntentId,
 				metadata: session.params.metadata,
 				customer: session.params.customer ?? null,
@@ -172,27 +162,19 @@ async function passGate(paymentIntentId: string): Promise<void> {
 	})
 }
 
-/** A hold as Checkout leaves it: authorized, nothing captured. */
-export function addHold(
+/** A payment as Checkout leaves it: charged in full, nothing refunded. */
+export function addPayment(
 	id: string,
 	amount: number,
-	metadata: Record<string, string>,
-	captureBeforeSeconds = Math.floor(Date.now() / 1000) + 7 * 86_400
+	metadata: Record<string, string>
 ): FakePaymentIntent {
 	const intent: FakePaymentIntent = {
 		id,
-		status: 'requires_capture',
+		status: 'succeeded',
 		amount,
-		amount_capturable: amount,
-		amount_received: 0,
+		amount_received: amount,
 		metadata,
-		latest_charge: {
-			id: `ch_${id}`,
-			amount_refunded: 0,
-			payment_method_details: {
-				card: { capture_before: captureBeforeSeconds },
-			},
-		},
+		latest_charge: { id: `ch_${id}`, amount_refunded: 0 },
 	}
 	fakeStripe.intents.set(id, intent)
 	return intent
@@ -314,75 +296,20 @@ export class FakeStripe {
 		},
 
 		/**
-		 * Stands in for the one search the code runs: live team holds. The
-		 * query is recorded so a test can assert it; results are every
-		 * uncaptured PaymentIntent tagged as a team contribution, which is
-		 * what that query means.
+		 * Stands in for the one search the code runs: recent team payments.
+		 * The query is recorded so a test can assert it; results are every
+		 * payment tagged as a team contribution, which is what that query
+		 * means within its lookback.
 		 */
 		search: (params: { query: string }): AsyncIterable<FakePaymentIntent> => {
 			fakeStripe.searches.push(params.query)
 			const matches = [...fakeStripe.intents.values()].filter(
 				(pi) =>
-					pi.status === 'requires_capture' &&
-					pi.metadata.kind === 'team_contribution'
+					pi.status === 'succeeded' && pi.metadata.kind === 'team_contribution'
 			)
 			return (async function* () {
 				for (const pi of matches) yield copy(pi)
 			})()
-		},
-
-		capture: async (
-			id: string,
-			params: { amount_to_capture?: number } = {},
-			options: { idempotencyKey?: string } = {}
-		): Promise<FakePaymentIntent> => {
-			maybeFail('capture', id)
-			return idempotent(options.idempotencyKey, () => {
-				const pi = intent(id)
-				if (pi.status !== 'requires_capture') {
-					throw new StripeInvalidRequestError(
-						'payment_intent_unexpected_state',
-						`This PaymentIntent could not be captured because it has a status of ${pi.status}.`
-					)
-				}
-				const amount = params.amount_to_capture ?? pi.amount_capturable
-				if (amount > pi.amount_capturable) {
-					throw new StripeInvalidRequestError(
-						'amount_too_large',
-						'amount_to_capture exceeds the capturable amount'
-					)
-				}
-				fakeStripe.calls.push({
-					method: 'capture',
-					paymentIntentId: id,
-					amount,
-				})
-				pi.status = 'succeeded'
-				pi.amount_received = amount
-				pi.amount_capturable = 0
-				return copy(pi)
-			})
-		},
-
-		cancel: async (
-			id: string,
-			_params: unknown = {},
-			options: { idempotencyKey?: string } = {}
-		): Promise<FakePaymentIntent> => {
-			maybeFail('cancel', id)
-			return idempotent(options.idempotencyKey, () => {
-				const pi = intent(id)
-				if (pi.status !== 'requires_capture') {
-					throw new StripeInvalidRequestError(
-						'payment_intent_unexpected_state',
-						`You cannot cancel this PaymentIntent because it has a status of ${pi.status}.`
-					)
-				}
-				fakeStripe.calls.push({ method: 'cancel', paymentIntentId: id })
-				pi.status = 'canceled'
-				pi.amount_capturable = 0
-				return copy(pi)
-			})
 		},
 	}
 
@@ -397,7 +324,7 @@ export class FakeStripe {
 				if (pi.status !== 'succeeded') {
 					throw new StripeInvalidRequestError(
 						'charge_not_refundable',
-						'This PaymentIntent has not been captured.'
+						'This PaymentIntent has not been paid.'
 					)
 				}
 				const refundable = pi.amount_received - pi.latest_charge.amount_refunded

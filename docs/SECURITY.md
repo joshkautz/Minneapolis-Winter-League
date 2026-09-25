@@ -46,7 +46,7 @@ This application implements a **Functions-First Security Model** for maximum pro
   given, so both checkout callables accept only the league's own origins
   (`Functions/src/shared/returnUrls.ts`).
 - **The webhook trusts only signed events and server-set metadata**, and
-  releases any hold it cannot attribute to a team rather than keeping it.
+  refunds any payment it cannot attribute to a team rather than keeping it.
 
 See `docs/TEAM_PAYMENTS.md` for the full design.
 

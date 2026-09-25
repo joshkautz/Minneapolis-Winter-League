@@ -2,18 +2,15 @@
  * The clock-driven half of settlement.
  *
  * Triggers settle a team when something happens to it — it registers, the
- * twelfth team registers, a hold lands. Two outcomes happen because time
- * passes instead, with no write to trigger on:
+ * twelfth team registers, a payment lands, a payer leaves. One outcome
+ * happens because time passes instead, with no write to trigger on:
+ * **registration closes**, and every team still unregistered is refunded.
  *
- * - **Registration closes.** Every team still unregistered is released.
- * - **A hold nears expiry.** An authorization lasts about seven days and a
- *   registration window runs for weeks, so a hold on a team still in the
- *   running is captured in its last day rather than allowed to lapse.
- *
- * Both are just settlement, run on a schedule: `settleTeamSeason` already
+ * That is just settlement, run on a schedule: `settleTeamSeason` already
  * decides from the current time what a team's money should be doing. So the
- * sweep only has to find the teams whose money settlement might act on, by
- * looking in their ledgers, and settle each one.
+ * sweep only has to find the teams settlement might act on, by looking in
+ * their ledgers, and settle each one. It also catches anything a trigger
+ * left undone after exhausting its retries.
  */
 
 import { getFirestore, type Firestore } from 'firebase-admin/firestore'
@@ -78,55 +75,43 @@ async function teamSeasonsOnTeamPayments(
 	return visits
 }
 
-async function hasContributionWithStatus(
-	contributions: FirebaseFirestore.CollectionReference,
-	statuses: ContributionStatus[]
+async function holdsPaidMoney(
+	contributions: FirebaseFirestore.CollectionReference
 ): Promise<boolean> {
-	const snap = await contributions
-		.where('status', 'in', statuses)
-		.limit(1)
-		.get()
+	const status: ContributionStatus = 'paid'
+	const snap = await contributions.where('status', '==', status).limit(1).get()
 	return !snap.empty
 }
 
 /**
- * The teams settlement might have something to do for.
- *
- * Any team holding a live authorization, since a hold is what gets
- * captured, released or left to expire. And any unregistered team with
- * captured money, which the expiry net took and which has to be refunded if
- * the team misses out. A registered team whose money is all captured has
- * nothing left to settle, so past seasons cost a query per team and no more.
+ * The teams time can change anything for: unregistered teams holding money,
+ * which are refunded if registration closes without them. A registered
+ * team's money is settled when it registers, and again whenever a payment
+ * lands on it, so past seasons cost a query per team and no more.
  */
 export async function findTeamsToSettle(
 	firestore: Firestore
 ): Promise<TeamWithMoney[]> {
 	const teams: TeamWithMoney[] = []
 	for (const visit of await teamSeasonsOnTeamPayments(firestore)) {
-		const include =
-			(await hasContributionWithStatus(visit.contributions, ['authorized'])) ||
-			(!visit.registered &&
-				(await hasContributionWithStatus(visit.contributions, ['captured'])))
-		if (include) teams.push({ teamId: visit.teamId, seasonId: visit.seasonId })
+		if (visit.registered) continue
+		if (await holdsPaidMoney(visit.contributions)) {
+			teams.push({ teamId: visit.teamId, seasonId: visit.seasonId })
+		}
 	}
 	return teams
 }
 
 /**
- * Every team holding money that is still live — held or captured — which is
- * what the reconciliation checks against Stripe.
+ * Every team holding money, which is what the reconciliation checks
+ * against Stripe.
  */
 export async function findTeamsWithLiveMoney(
 	firestore: Firestore
 ): Promise<TeamWithMoney[]> {
 	const teams: TeamWithMoney[] = []
 	for (const visit of await teamSeasonsOnTeamPayments(firestore)) {
-		if (
-			await hasContributionWithStatus(visit.contributions, [
-				'authorized',
-				'captured',
-			])
-		) {
+		if (await holdsPaidMoney(visit.contributions)) {
 			teams.push({ teamId: visit.teamId, seasonId: visit.seasonId })
 		}
 	}
@@ -140,7 +125,7 @@ export interface SweepResult {
 }
 
 /**
- * Settles every team holding money, as of `now`.
+ * Settles every unregistered team holding money, as of `now`.
  *
  * One team's failure does not stop the others. The caller decides what to
  * do with the failures; the scheduled function reports them and lets the

@@ -10,7 +10,7 @@ import { usesTeamPayments } from '@/shared/utils'
  * season has no team payments.
  *
  * Mirrors settlement: before the team registers, a leaver's money is
- * released; after, registration is final and it stays with the team.
+ * refunded; after, registration is final and it stays with the team.
  */
 export const useDeparturePaymentNote = (
 	/** The person leaving, or null for the signed-in player themselves. */
@@ -38,6 +38,6 @@ export const useDeparturePaymentNote = (
 		return `The team has registered, so anything ${payer} paid toward it stays with the team.`
 	}
 	return otherPlayerName
-		? `Anything ${otherPlayerName} paid toward the team's registration is released or refunded in full.`
-		: `Anything you paid toward the team's registration is released or refunded in full.`
+		? `Anything ${otherPlayerName} paid toward the team's registration is refunded in full.`
+		: `Anything you paid toward the team's registration is refunded in full.`
 }

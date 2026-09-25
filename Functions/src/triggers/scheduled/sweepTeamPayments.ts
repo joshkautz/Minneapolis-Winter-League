@@ -1,15 +1,13 @@
 /**
  * Hourly settlement sweep
  *
- * Settles every team holding money, so the outcomes that come from time
- * passing happen without anyone doing anything: an unregistered team is
- * released once registration closes, and a hold on a team still in the
- * running is captured in the last day before it would expire. See
- * services/teamPaymentsSweep.ts.
+ * Settles every unregistered team holding money, so what comes from time
+ * passing happens without anyone doing anything: a team that has not
+ * registered when registration closes is refunded, within the hour. It also
+ * finishes anything a trigger left undone. See services/teamPaymentsSweep.ts.
  *
- * Hourly gives a hold about two dozen chances to be captured inside its
- * last day. A failed run is not retried by the scheduler — the next hourly
- * run is the retry — but it throws, so the failure shows in the logs.
+ * A failed run is not retried by the scheduler — the next hourly run is the
+ * retry — but it throws, so the failure shows in the logs.
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler'
@@ -25,7 +23,7 @@ export const sweepTeamPaymentsHourly = onSchedule(
 		timeZone: FIREBASE_CONFIG.TIME_ZONE,
 		region: FIREBASE_CONFIG.REGION,
 		secrets: ['STRIPE_SECRET_KEY'],
-		// Settles teams one after another; a full season of holds can take a
+		// Settles teams one after another; refunding a full season can take a
 		// while against Stripe, and a cut-off run just finishes next hour.
 		timeoutSeconds: 540,
 		// One sweep at a time. Overlapping runs would be safe — settlement is

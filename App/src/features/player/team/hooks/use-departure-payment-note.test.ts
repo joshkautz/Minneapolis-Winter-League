@@ -40,13 +40,13 @@ describe('useDeparturePaymentNote', () => {
 	it('tells a leaver their money comes back before the team registers', () => {
 		const { result } = renderHook(() => useDeparturePaymentNote())
 		expect(result.current).toBe(
-			"Anything you paid toward the team's registration is released or refunded in full."
+			"Anything you paid toward the team's registration is refunded in full."
 		)
 	})
 
 	it('names the player a captain is removing', () => {
 		const { result } = renderHook(() => useDeparturePaymentNote('Pat'))
-		expect(result.current).toMatch(/^Anything Pat paid .* released/)
+		expect(result.current).toMatch(/^Anything Pat paid .* refunded in full/)
 	})
 
 	it('says the money stays once the team has registered', () => {

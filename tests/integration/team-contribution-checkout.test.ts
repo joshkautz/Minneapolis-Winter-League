@@ -8,7 +8,7 @@ import {
 	resetFirestore,
 	seedAuthUser,
 	type Callable,
-	ledgerTotals,
+	ledgerPaidCents,
 } from './helpers.js'
 import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import {
@@ -28,13 +28,13 @@ import {
 
 /**
  * Taking a team contribution: the callable that opens a Checkout session,
- * and the webhook that records the hold once the payer finishes.
+ * and the webhook that records the payment once the payer finishes.
  *
  * Stripe is stubbed at the SDK boundary. What is under test is our side —
  * which team the money is attributed to, what the server lets a payer
- * commit, and that no path leaves money held against nothing. The stub also
- * lets the tests assert exactly what is sent to Stripe, which is where a
- * wrong capture method or a missing piece of metadata would cost real money.
+ * pay, and that no path leaves money paid toward nothing. The stub also lets
+ * the tests assert exactly what is sent to Stripe, which is where a missing
+ * piece of metadata would cost real money.
  */
 
 const sessionsCreate = vi.fn()
@@ -43,8 +43,6 @@ const customersCreate = vi.fn()
 const productsRetrieve = vi.fn()
 const productsCreate = vi.fn()
 const paymentIntentsRetrieve = vi.fn()
-const paymentIntentsCancel = vi.fn()
-const paymentIntentsCapture = vi.fn()
 const refundsCreate = vi.fn()
 const constructEvent = vi.fn()
 
@@ -53,11 +51,7 @@ vi.mock('stripe', () => ({
 		checkout = { sessions: { create: sessionsCreate } }
 		customers = { retrieve: customersRetrieve, create: customersCreate }
 		products = { retrieve: productsRetrieve, create: productsCreate }
-		paymentIntents = {
-			retrieve: paymentIntentsRetrieve,
-			cancel: paymentIntentsCancel,
-			capture: paymentIntentsCapture,
-		}
+		paymentIntents = { retrieve: paymentIntentsRetrieve }
 		refunds = { create: refundsCreate }
 		webhooks = { constructEvent }
 	},
@@ -161,7 +155,7 @@ const sentSession = () => {
 const ledger = async (teamId = TEAM) =>
 	(await teamContributionsCollection(firestore, teamId, SEASON).get()).docs
 
-const totals = (teamId = TEAM) => ledgerTotals(firestore, teamId, SEASON)
+const held = (teamId = TEAM) => ledgerPaidCents(firestore, teamId, SEASON)
 
 beforeAll(async () => {
 	process.env.STRIPE_SECRET_KEY ??= 'sk_test_integration'
@@ -195,12 +189,11 @@ beforeEach(async () => {
 
 describe('createTeamContributionCheckout', () => {
 	describe('the session it creates', () => {
-		it('places a hold rather than taking the money', async () => {
-			// The whole cost model rests on this. A captured payment for a team
-			// that misses the cut can only be refunded, and the refund keeps
-			// the fee; a hold is released for nothing.
+		it('charges the card when the payer completes Checkout', async () => {
+			// No hold: a card hold lasts a week, registration a month. Money
+			// that should not be kept is refunded instead.
 			await run()
-			expect(sentSession().payment_intent_data.capture_method).toBe('manual')
+			expect(sentSession().payment_intent_data.capture_method).toBeUndefined()
 		})
 
 		it('charges the amount the payer chose, against the fixed product', async () => {
@@ -226,7 +219,7 @@ describe('createTeamContributionCheckout', () => {
 				seasonId: SEASON,
 			}
 			// On both objects: the session for the completion webhook, the
-			// PaymentIntent for the capture and cancellation events after it.
+			// PaymentIntent for the refund events and reconciliation after it.
 			expect(sentSession().metadata).toEqual(expected)
 			expect(sentSession().payment_intent_data.metadata).toEqual(expected)
 		})
@@ -244,11 +237,12 @@ describe('createTeamContributionCheckout', () => {
 			expect(sentSession().payment_method_types).toEqual(['card'])
 		})
 
-		it('tells the payer the charge is a hold', async () => {
+		it('tells the payer when they would be refunded', async () => {
 			await run()
-			expect(sentSession().custom_text.submit.message).toMatch(
-				/authorized now and charged when your team registers\. An authorization lasts about a week/
-			)
+			const message = sentSession().custom_text.submit.message
+			expect(message).toMatch(/^Your card is charged now\./)
+			expect(message).toMatch(/you are refunded in full/)
+			expect(message).not.toMatch(/authoriz|hold/i)
 		})
 
 		it('expires the session just over Stripe’s thirty-minute floor', async () => {
@@ -296,7 +290,6 @@ describe('createTeamContributionCheckout', () => {
 				playerId: 'someone-else',
 				paymentIntentId: 'pi_existing',
 				amountCents: 70_000,
-				status: 'authorized',
 			})
 
 			// Whole dollars, so only the balance can be what refuses it.
@@ -307,21 +300,9 @@ describe('createTeamContributionCheckout', () => {
 			expect(sentSession().line_items[0].price_data.unit_amount).toBe(30_000)
 		})
 
-		it('counts captured money as committed', async () => {
-			await recordContribution(firestore, {
-				teamId: TEAM,
-				seasonId: SEASON,
-				playerId: 'someone-else',
-				paymentIntentId: 'pi_existing',
-				amountCents: 90_000,
-				status: 'captured',
-			})
-			expect(await codeOf({ amountCents: 10_100 })).toBe('invalid-argument')
-		})
-
-		it('does not count a released hold', async () => {
+		it('does not count a refunded payment', async () => {
 			// Money that has gone back is no longer the team's; the balance
-			// has to reopen, or a team whose hold was cancelled could never
+			// has to reopen, or a team refunded by an admin could never
 			// finish.
 			await recordContribution(firestore, {
 				teamId: TEAM,
@@ -329,13 +310,12 @@ describe('createTeamContributionCheckout', () => {
 				playerId: 'someone-else',
 				paymentIntentId: 'pi_existing',
 				amountCents: 70_000,
-				status: 'authorized',
 			})
 			await setContributionStatus(firestore, {
 				teamId: TEAM,
 				seasonId: SEASON,
 				paymentIntentId: 'pi_existing',
-				status: 'canceled',
+				status: 'refunded',
 			})
 
 			await run({ amountCents: TOTAL })
@@ -343,7 +323,7 @@ describe('createTeamContributionCheckout', () => {
 		})
 
 		it('does not count a teammate who has left', async () => {
-			// Their hold is being released, so it must not shrink what the rest
+			// They are being refunded, so it must not shrink what the rest
 			// of the team may put in.
 			await recordContribution(firestore, {
 				teamId: TEAM,
@@ -351,7 +331,6 @@ describe('createTeamContributionCheckout', () => {
 				playerId: 'departed',
 				paymentIntentId: 'pi_departed',
 				amountCents: 70_000,
-				status: 'authorized',
 			})
 
 			await run({ amountCents: TOTAL })
@@ -365,7 +344,6 @@ describe('createTeamContributionCheckout', () => {
 				playerId: 'someone-else',
 				paymentIntentId: 'pi_other',
 				amountCents: TOTAL,
-				status: 'authorized',
 			})
 			await run({ amountCents: TOTAL })
 			expect(sessionsCreate).toHaveBeenCalledTimes(1)
@@ -390,7 +368,6 @@ describe('createTeamContributionCheckout', () => {
 				playerId: 'someone-else',
 				paymentIntentId: 'pi_existing',
 				amountCents: TOTAL,
-				status: 'authorized',
 			})
 			expect(await codeOf()).toBe('failed-precondition')
 		})
@@ -479,8 +456,8 @@ describe('createTeamContributionCheckout', () => {
 			await expect(run()).resolves.toMatchObject({
 				url: 'https://checkout.stripe.com/c/pay/cs_test_1',
 			})
-			// The same hold as anyone's: nothing about it is marked as a test.
-			expect(sentSession().payment_intent_data.capture_method).toBe('manual')
+			// An ordinary payment: nothing about it is marked as a test.
+			expect(sentSession().payment_intent_data.capture_method).toBeUndefined()
 		})
 
 		it('holds an early admin to every other rule', async () => {
@@ -614,13 +591,12 @@ describe('createTeamContributionCheckout', () => {
 
 describe('stripeWebhook: a completed team contribution', () => {
 	const PI = 'pi_test_1'
-	const CAPTURE_BEFORE_SECONDS = Math.floor(Date.now() / 1000) + 7 * 86_400
 
 	const session = (metadata: Record<string, string> | null = {}) => ({
 		id: 'cs_test_1',
 		object: 'checkout.session',
 		payment_intent: PI,
-		payment_status: 'unpaid',
+		payment_status: 'paid',
 		amount_total: 25_000,
 		currency: 'usd',
 		// Stripe sends these as null rather than omitting them.
@@ -639,19 +615,12 @@ describe('stripeWebhook: a completed team contribution', () => {
 					},
 	})
 
-	const heldIntent = (overrides: Record<string, unknown> = {}) => ({
+	const paidIntent = (overrides: Record<string, unknown> = {}) => ({
 		id: PI,
-		status: 'requires_capture',
+		status: 'succeeded',
 		amount: 25_000,
-		amount_capturable: 25_000,
-		amount_received: 0,
-		latest_charge: {
-			id: 'ch_1',
-			amount_refunded: 0,
-			payment_method_details: {
-				card: { capture_before: CAPTURE_BEFORE_SECONDS },
-			},
-		},
+		amount_received: 25_000,
+		latest_charge: { id: 'ch_1', amount_refunded: 0 },
 		...overrides,
 	})
 
@@ -694,11 +663,11 @@ describe('stripeWebhook: a completed team contribution', () => {
 		).size
 
 	beforeEach(() => {
-		paymentIntentsRetrieve.mockResolvedValue(heldIntent())
-		paymentIntentsCancel.mockResolvedValue({ id: PI, status: 'canceled' })
+		paymentIntentsRetrieve.mockResolvedValue(paidIntent())
+		refundsCreate.mockResolvedValue({ id: 're_1' })
 	})
 
-	it('records the hold against the team', async () => {
+	it('records the payment against the team', async () => {
 		expect(await deliver(session())).toBe(200)
 
 		const docs = await ledger()
@@ -706,28 +675,18 @@ describe('stripeWebhook: a completed team contribution', () => {
 		expect(docs[0].id).toBe(PI)
 		expect(docs[0].data()).toMatchObject({
 			amountCents: 25_000,
-			status: 'authorized',
+			status: 'paid',
 			paymentIntentId: PI,
 		})
 		expect(docs[0].data().player.path).toBe(`players/${PAYER}`)
-		expect(await totals()).toEqual({
-			authorizedCents: 25_000,
-			capturedCents: 0,
-		})
-	})
-
-	it('records when the hold expires', async () => {
-		// Settlement has to capture before this or lose the money.
-		await deliver(session())
-		const captureBefore = (await ledger())[0].data().captureBefore
-		expect(captureBefore.toMillis()).toBe(CAPTURE_BEFORE_SECONDS * 1000)
+		expect(await held()).toBe(25_000)
 	})
 
 	it('takes the amount from Stripe, not the session', async () => {
 		// The session's amount_total is what was asked for; the
-		// PaymentIntent's capturable amount is what is actually held.
+		// PaymentIntent's is what was actually received.
 		paymentIntentsRetrieve.mockResolvedValue(
-			heldIntent({ amount_capturable: 20_000 })
+			paidIntent({ amount_received: 20_000 })
 		)
 		await deliver(session())
 		expect((await ledger())[0].data().amountCents).toBe(20_000)
@@ -754,78 +713,54 @@ describe('stripeWebhook: a completed team contribution', () => {
 		expect(await deliver(session())).toBe(200)
 
 		expect(await ledger()).toHaveLength(1)
-		expect((await totals()).authorizedCents).toBe(25_000)
+		expect(await held()).toBe(25_000)
 	})
 
-	it('does not undo a capture when the event is redelivered', async () => {
-		// Stripe can redeliver hours later. By then the hold may have been
-		// captured, and winding it back to "authorized" would have
-		// settlement try to capture it again.
+	it('does not undo a refund when the event is redelivered', async () => {
+		// Stripe can redeliver hours later. By then the payment may have been
+		// refunded, and winding it back to "paid" would count it again.
 		await deliver(session())
 		await setContributionStatus(firestore, {
 			teamId: TEAM,
 			seasonId: SEASON,
 			paymentIntentId: PI,
-			status: 'captured',
+			status: 'refunded',
 		})
 
 		await deliver(session())
 
-		expect((await ledger())[0].data().status).toBe('captured')
-		expect(await totals()).toEqual({
-			authorizedCents: 0,
-			capturedCents: 25_000,
-		})
+		expect((await ledger())[0].data().status).toBe('refunded')
+		expect(await held()).toBe(0)
 	})
 
-	it('records nothing when the PaymentIntent holds no money', async () => {
+	it('records nothing when the PaymentIntent was not paid', async () => {
 		paymentIntentsRetrieve.mockResolvedValue(
-			heldIntent({ status: 'canceled', amount_capturable: 0 })
+			paidIntent({ status: 'requires_payment_method', amount_received: 0 })
 		)
 		expect(await deliver(session())).toBe(200)
 		expect(await ledger()).toHaveLength(0)
-		expect(paymentIntentsCancel).not.toHaveBeenCalled()
+		expect(refundsCreate).not.toHaveBeenCalled()
 	})
 
-	describe('money that cannot be attributed is released, not held', () => {
-		it('cancels the hold when the team was deleted mid-checkout', async () => {
+	describe('money that cannot be attributed is refunded, not kept', () => {
+		it('refunds the payment when the team was deleted mid-checkout', async () => {
 			// Deletion refuses a team with money in its ledger, but a checkout
 			// still on Stripe's page is not in the ledger yet.
 			await firestore.recursiveDelete(firestore.collection('teams').doc(TEAM))
 
 			expect(await deliver(session())).toBe(200)
 
-			expect(paymentIntentsCancel).toHaveBeenCalledWith(
-				PI,
-				{ cancellation_reason: 'abandoned' },
-				{ idempotencyKey: `release_${PI}` }
-			)
-			expect(await ledger()).toHaveLength(0)
-		})
-
-		it('cancels the hold when the metadata is incomplete', async () => {
-			expect(await deliver(session({ teamId: '' }))).toBe(200)
-			expect(paymentIntentsCancel).toHaveBeenCalledTimes(1)
-			expect(await ledger()).toHaveLength(0)
-		})
-
-		it('refunds captured money for a team that is gone', async () => {
-			await firestore.recursiveDelete(firestore.collection('teams').doc(TEAM))
-			paymentIntentsRetrieve.mockResolvedValue(
-				heldIntent({
-					status: 'succeeded',
-					amount_capturable: 0,
-					amount_received: 25_000,
-				})
-			)
-
-			await deliver(session())
-
 			expect(refundsCreate).toHaveBeenCalledWith(
 				{ payment_intent: PI },
 				{ idempotencyKey: `refund_unattributable_${PI}` }
 			)
-			expect(paymentIntentsCancel).not.toHaveBeenCalled()
+			expect(await ledger()).toHaveLength(0)
+		})
+
+		it('refunds the payment when the metadata is incomplete', async () => {
+			expect(await deliver(session({ teamId: '' }))).toBe(200)
+			expect(refundsCreate).toHaveBeenCalledTimes(1)
+			expect(await ledger()).toHaveLength(0)
 		})
 
 		it('does not refund money that has already been refunded', async () => {
@@ -833,12 +768,7 @@ describe('stripeWebhook: a completed team contribution', () => {
 			// out the refunded amount, a late redelivery would refund twice.
 			await firestore.recursiveDelete(firestore.collection('teams').doc(TEAM))
 			paymentIntentsRetrieve.mockResolvedValue(
-				heldIntent({
-					status: 'succeeded',
-					amount_capturable: 0,
-					amount_received: 25_000,
-					latest_charge: { id: 'ch_1', amount_refunded: 25_000 },
-				})
+				paidIntent({ latest_charge: { id: 'ch_1', amount_refunded: 25_000 } })
 			)
 
 			expect(await deliver(session())).toBe(200)
@@ -849,7 +779,7 @@ describe('stripeWebhook: a completed team contribution', () => {
 	it('fails the delivery, so Stripe retries, when recording fails otherwise', async () => {
 		paymentIntentsRetrieve.mockRejectedValue(new Error('Stripe unavailable'))
 		expect(await deliver(session())).toBe(500)
-		expect(paymentIntentsCancel).not.toHaveBeenCalled()
+		expect(refundsCreate).not.toHaveBeenCalled()
 	})
 
 	it('leaves the per-player checkout on its original path', async () => {
@@ -874,7 +804,7 @@ describe('stripeWebhook: a completed team contribution', () => {
 			await seedMember(`signed-${i}`, TEAM, { signed: true })
 		}
 		paymentIntentsRetrieve.mockResolvedValue(
-			heldIntent({ amount: TOTAL, amount_capturable: TOTAL })
+			paidIntent({ amount: TOTAL, amount_received: TOTAL })
 		)
 
 		await deliver(session())
@@ -892,12 +822,9 @@ describe('stripeWebhook: a completed team contribution', () => {
 		).data()
 		expect(teamSeason?.registered).toBe(true)
 		expect((await seasonRef().get()).data()?.registeredTeamCount).toBe(1)
-		// Registering settles the team: the hold is taken in full.
-		expect(paymentIntentsCapture).toHaveBeenCalledWith(
-			PI,
-			{ amount_to_capture: TOTAL },
-			{ idempotencyKey: `settle_capture_${PI}_${TOTAL}` }
-		)
+		// It paid exactly its total, so settling it refunds nothing.
+		expect(refundsCreate).not.toHaveBeenCalled()
+		expect((await ledger())[0].data().status).toBe('paid')
 	})
 })
 

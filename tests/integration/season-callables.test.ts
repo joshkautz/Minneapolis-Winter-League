@@ -197,26 +197,23 @@ describe('updateSeason pricing', () => {
 		)
 	})
 
-	it.each(['authorized', 'captured'])(
-		'refuses to change the total while a team holds %s money',
-		async (status) => {
-			await update({ teamRegistrationTotalCents: 100_000 })
-			await holdMoney(status)
+	it('refuses to change the total while a team holds money', async () => {
+		await update({ teamRegistrationTotalCents: 100_000 })
+		await holdMoney('paid')
 
-			expect(await updateCode({ teamRegistrationTotalCents: 80_000 })).toBe(
-				'failed-precondition'
-			)
-			expect(await updateCode({ teamRegistrationTotalCents: null })).toBe(
-				'failed-precondition'
-			)
-			expect((await seasonData())?.teamRegistrationTotalCents).toBe(100_000)
-		}
-	)
+		expect(await updateCode({ teamRegistrationTotalCents: 80_000 })).toBe(
+			'failed-precondition'
+		)
+		expect(await updateCode({ teamRegistrationTotalCents: null })).toBe(
+			'failed-precondition'
+		)
+		expect((await seasonData())?.teamRegistrationTotalCents).toBe(100_000)
+	})
 
 	it('still saves the rest of the season while money is held', async () => {
 		// Resending the same total is not a change.
 		await update({ teamRegistrationTotalCents: 100_000 })
-		await holdMoney('authorized')
+		await holdMoney('paid')
 
 		expect(
 			await updateCode({ teamRegistrationTotalCents: 100_000, name: 'Renamed' })
@@ -224,9 +221,9 @@ describe('updateSeason pricing', () => {
 		expect((await seasonData())?.name).toBe('Renamed')
 	})
 
-	it('allows a change once every contribution is settled', async () => {
+	it('allows a change once every contribution is refunded', async () => {
 		await update({ teamRegistrationTotalCents: 100_000 })
-		await holdMoney('canceled')
+		await holdMoney('refunded')
 
 		await update({ teamRegistrationTotalCents: 80_000 })
 		expect((await seasonData())?.teamRegistrationTotalCents).toBe(80_000)

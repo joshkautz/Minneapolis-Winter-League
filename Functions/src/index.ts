@@ -131,7 +131,7 @@ export { createStripeCheckout } from './functions/user/payments/createStripeChec
 export { createTeamContributionCheckout } from './functions/user/payments/createTeamContributionCheckout.js'
 
 // Payment management functions (admin-only)
-export { releaseTeamContribution } from './functions/admin/payments/releaseTeamContribution.js'
+export { refundTeamContribution } from './functions/admin/payments/refundTeamContribution.js'
 
 // Game management functions (admin-only)
 export { createGame } from './functions/admin/games/create.js'

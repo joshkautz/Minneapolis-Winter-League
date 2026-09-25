@@ -43,7 +43,7 @@ const ADMIN_CALLABLES = [
 	'getSwissRankings',
 	'mergeTeams',
 	'rebuildPlayerRankings',
-	'releaseTeamContribution',
+	'refundTeamContribution',
 	'revokeBadge',
 	'setSwissSeeding',
 	'updateBadge',

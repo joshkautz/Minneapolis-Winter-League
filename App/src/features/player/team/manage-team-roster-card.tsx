@@ -56,7 +56,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 		) : !team?.data().registered ? (
 			<p className={'text-sm text-muted-foreground'}>
 				{usesTeamPayments(currentSeasonQueryDocumentSnapshot?.data())
-					? `Your team registers once ${MIN_SIGNED_PLAYERS} players have signed their waiver and ${formatDollars(currentSeasonQueryDocumentSnapshot?.data().teamRegistrationTotalCents ?? 0)} has been committed.`
+					? `Your team registers once ${MIN_SIGNED_PLAYERS} players have signed their waiver and ${formatDollars(currentSeasonQueryDocumentSnapshot?.data().teamRegistrationTotalCents ?? 0)} has been paid.`
 					: `You need ${MIN_SIGNED_PLAYERS} registered players in order to meet the minimum requirement.`}{' '}
 				Registration ends on{' '}
 				{formatTimestamp(

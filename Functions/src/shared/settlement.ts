@@ -1,13 +1,15 @@
 /**
  * Deciding what to do with a team's money.
  *
- * Pure, and kept apart from the code that calls Stripe, so every decision
- * about capturing, cancelling and refunding can be tested exhaustively
- * without a payment processor. `services/teamSettlementService.ts` applies a
- * plan; nothing here has side effects.
+ * Every contribution is charged when the payer completes Checkout, so the
+ * only thing settlement ever does is refund: a team that misses out, the part
+ * of a team's money beyond its total, a payer who left before the team
+ * registered. Deciding which is pure, and kept apart from the code that calls
+ * Stripe, so every decision can be tested exhaustively without a payment
+ * processor. `services/teamSettlementService.ts` applies a plan; nothing here
+ * has side effects.
  *
- * See docs/TEAM_PAYMENTS.md, "Returning money that should not be kept" and
- * "A hold must never be allowed to expire".
+ * See docs/TEAM_PAYMENTS.md, "Returning money that should not be kept".
  */
 
 import type { ContributionStatus } from '../types.js'
@@ -15,14 +17,14 @@ import type { ContributionStatus } from '../types.js'
 /**
  * What should happen to a team's money as a whole.
  *
- * - `keep`: the team is registered. Take exactly the season's total, oldest
- *   contributions first, and release everything beyond it.
- * - `release`: the team is not going to play — the season filled without it,
- *   or registration closed. Give everything back.
- * - `hold`: still in the running. Leave the holds alone, except any about to
- *   expire, which are captured rather than allowed to lapse.
+ * - `keep`: the team is registered. Keep exactly the season's total and
+ *   refund anything beyond it.
+ * - `refund`: the team is not going to play — the season filled without it,
+ *   or registration closed. Refund everything.
+ * - `pending`: still in the running. Keep it, except what a payer who has
+ *   left put in.
  */
-export type SettlementDisposition = 'keep' | 'release' | 'hold'
+export type SettlementDisposition = 'keep' | 'refund' | 'pending'
 
 export function decideDisposition(state: {
 	registered: boolean
@@ -32,71 +34,47 @@ export function decideDisposition(state: {
 }): SettlementDisposition {
 	if (state.registered) return 'keep'
 	if (state.spotsClaimed >= state.spotsAvailable || state.registrationClosed) {
-		return 'release'
+		return 'refund'
 	}
-	return 'hold'
+	return 'pending'
 }
 
 /** A contribution as the planner sees it. */
 export interface PlannedContribution {
 	paymentIntentId: string
 	status: ContributionStatus
+	/** What the team still holds of it. */
 	amountCents: number
-	/** When it was recorded; decides who is charged first. */
+	/** When it was recorded; decides whose money a team keeps. */
 	createdAtMillis: number
-	/** When the authorization lapses, from the charge. Null if unknown. */
-	captureBeforeMillis: number | null
 	/**
 	 * Whether the payer is still on the team's roster. An unregistered team
-	 * releases a leaver's money; a registered team charges it only if the
-	 * people still on the team do not cover the total.
+	 * refunds a leaver; a registered team keeps a leaver's money only if the
+	 * people still on it do not cover the total.
 	 */
 	payerOnRoster: boolean
 }
 
-export type SettlementAction =
-	| { type: 'capture'; paymentIntentId: string; amountCents: number }
-	| { type: 'cancel'; paymentIntentId: string }
-	| { type: 'refund'; paymentIntentId: string; amountCents: number }
+export interface SettlementAction {
+	type: 'refund'
+	paymentIntentId: string
+	amountCents: number
+}
 
 export interface SettlementPlan {
 	actions: SettlementAction[]
 	/**
-	 * How far a kept team falls short of the total after the plan. Non-zero
-	 * only when a registered team's money was released out from under it —
-	 * a hold cancelled by the bank, say — which needs a person to resolve.
+	 * How far a registered team falls short of its total after the plan.
+	 * Non-zero only when money was refunded out from under it — by an admin,
+	 * or in the Stripe Dashboard — which needs a person to resolve.
 	 */
 	shortfallCents: number
 }
 
-/** Stripe will not charge less than this in USD. */
-export const STRIPE_MINIMUM_CHARGE_CENTS = 50
-
-/**
- * How long a card authorization lasts when the charge does not say. Seven
- * days is the online-payment window for the major networks; treating an
- * unknown expiry as that keeps it from being assumed to last forever.
- */
-export const DEFAULT_AUTHORIZATION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
-
-/**
- * How close to expiry a hold on a team still in the running is captured.
- * A day, so an hourly sweep gets two dozen chances before it lapses.
- */
-export const EXPIRY_CAPTURE_MARGIN_MS = 24 * 60 * 60 * 1000
-
-/** When a hold lapses, using the default window if Stripe did not say. */
-export function expiresAtMillis(contribution: PlannedContribution): number {
-	return (
-		contribution.captureBeforeMillis ??
-		contribution.createdAtMillis + DEFAULT_AUTHORIZATION_WINDOW_MS
-	)
-}
-
 /**
  * Oldest first, with the PaymentIntent id breaking ties so the order is
- * total. Every planner decision that depends on order uses this one, which
- * is what makes two concurrent settlements of the same team agree.
+ * total. Every decision that depends on order uses this, which is what makes
+ * two concurrent settlements of the same team agree.
  */
 function inCommitOrder(
 	contributions: PlannedContribution[]
@@ -109,15 +87,15 @@ function inCommitOrder(
 }
 
 /**
- * The order a registered team is charged in: the people still on it, oldest
+ * The order a registered team keeps money in: the people still on it, oldest
  * first, then anyone who has left, oldest first.
  *
  * Registration counts only the current roster's money, so a payer who left
- * before the team registered is never needed and their hold is released. One
- * who left after it registered was part of what secured the spot; their hold
- * is charged only for whatever the rest of the team does not cover.
+ * before the team registered is never needed and is refunded. One who left
+ * after it registered was part of what secured the spot; their money is kept
+ * only for whatever the rest of the team does not cover.
  */
-function inChargeOrder(
+function inKeepOrder(
 	contributions: PlannedContribution[]
 ): PlannedContribution[] {
 	return [
@@ -126,153 +104,77 @@ function inChargeOrder(
 	]
 }
 
+const paidOnly = (
+	contributions: PlannedContribution[]
+): PlannedContribution[] =>
+	contributions.filter((c) => c.status === 'paid' && c.amountCents > 0)
+
 /**
- * Keep exactly `totalCents`: capture holds oldest first until the total is
- * reached — the last one partially if it straddles the line — and cancel
- * the rest. Payers still on the team come before any who left
- * (`inChargeOrder`). Money already captured counts first; if more than the total was
- * somehow captured, the excess is refunded newest first.
+ * Keep exactly `totalCents`, in keep order, and refund the rest — the
+ * payment that crosses the total partly.
  *
- * Oldest first is the fairness rule: whoever committed earliest is charged,
- * and whoever piled on after the team was already covered is released.
+ * Oldest first is the fairness rule: whoever paid earliest keeps their
+ * payment, and whoever paid after the team was already covered is refunded.
  */
 function planKeep(
 	contributions: PlannedContribution[],
 	totalCents: number
 ): SettlementPlan {
-	const ordered = inChargeOrder(contributions)
 	const actions: SettlementAction[] = []
+	let neededCents = totalCents
 
-	const captured = ordered.filter((c) => c.status === 'captured')
-	const capturedCents = captured.reduce((sum, c) => sum + c.amountCents, 0)
-
-	let excessCents = capturedCents - totalCents
-	for (const contribution of [...captured].reverse()) {
-		if (excessCents <= 0) break
-		const refundCents = Math.min(contribution.amountCents, excessCents)
-		actions.push({
-			type: 'refund',
-			paymentIntentId: contribution.paymentIntentId,
-			amountCents: refundCents,
-		})
-		excessCents -= refundCents
-	}
-
-	let neededCents = Math.max(0, totalCents - capturedCents)
-	for (const contribution of ordered) {
-		if (contribution.status !== 'authorized') continue
-
-		const takeCents = Math.min(contribution.amountCents, neededCents)
-		if (takeCents < STRIPE_MINIMUM_CHARGE_CENTS) {
-			// Nothing left to take, or less than Stripe will charge. Contributions
-			// are whole dollars, so the second only arises from a total that is
-			// not; the remainder is written off rather than overcharged.
-			actions.push({
-				type: 'cancel',
-				paymentIntentId: contribution.paymentIntentId,
-			})
-			continue
-		}
-
-		actions.push({
-			type: 'capture',
-			paymentIntentId: contribution.paymentIntentId,
-			amountCents: takeCents,
-		})
-		neededCents -= takeCents
-	}
-
-	return {
-		actions,
-		shortfallCents:
-			neededCents >= STRIPE_MINIMUM_CHARGE_CENTS ? neededCents : 0,
-	}
-}
-
-/** Give everything back: cancel every hold, refund every capture. */
-function planRelease(contributions: PlannedContribution[]): SettlementPlan {
-	const actions: SettlementAction[] = []
-	for (const contribution of inCommitOrder(contributions)) {
-		if (contribution.status === 'authorized') {
-			actions.push({
-				type: 'cancel',
-				paymentIntentId: contribution.paymentIntentId,
-			})
-		} else if (contribution.status === 'captured') {
+	for (const contribution of inKeepOrder(paidOnly(contributions))) {
+		const keptCents = Math.min(contribution.amountCents, neededCents)
+		neededCents -= keptCents
+		const refundCents = contribution.amountCents - keptCents
+		if (refundCents > 0) {
 			actions.push({
 				type: 'refund',
 				paymentIntentId: contribution.paymentIntentId,
-				amountCents: contribution.amountCents,
+				amountCents: refundCents,
 			})
 		}
 	}
-	return { actions, shortfallCents: 0 }
+
+	return { actions, shortfallCents: neededCents }
 }
 
-/**
- * For a team still in the running: do to each expiring hold what `keep`
- * would, and leave everything else alone.
- *
- * Planning as `keep` and filtering, rather than capturing every expiring
- * hold outright, means an overpaid team captures only what it would owe and
- * releases the excess, exactly as it would on registering.
- */
-function planHold(
-	contributions: PlannedContribution[],
-	totalCents: number,
-	nowMillis: number
-): SettlementPlan {
-	const expiring = new Set(
-		contributions
-			.filter(
-				(c) =>
-					c.status === 'authorized' &&
-					expiresAtMillis(c) <= nowMillis + EXPIRY_CAPTURE_MARGIN_MS
-			)
-			.map((c) => c.paymentIntentId)
-	)
-	// Only holds are ever expiring, and `keep` only refunds captures, so this
-	// filter also keeps a team still in the running from being refunded.
-	const { actions } = planKeep(contributions, totalCents)
-	return {
-		actions: actions.filter((action) => expiring.has(action.paymentIntentId)),
-		shortfallCents: 0,
-	}
+/** Refund everything the team holds. */
+function planRefundAll(
+	contributions: PlannedContribution[]
+): SettlementAction[] {
+	return inCommitOrder(paidOnly(contributions)).map((contribution) => ({
+		type: 'refund',
+		paymentIntentId: contribution.paymentIntentId,
+		amountCents: contribution.amountCents,
+	}))
 }
 
 /**
  * Plans what to do with a team's money.
  *
- * Before a team registers, a payer who has left is given back everything
- * they put in: they are not charged for a team they are no longer on, and
- * registration has already stopped counting it. Once it has registered,
- * registration is final, so their money is charged last rather than
- * released (see `inChargeOrder`).
+ * Before a team registers, a payer who has left is refunded in full: they
+ * are not charged for a team they are no longer on, and registration has
+ * already stopped counting it. Once it has registered, registration is
+ * final, so their money is kept last rather than refunded outright (see
+ * `inKeepOrder`).
  */
 export function planSettlement(params: {
 	contributions: PlannedContribution[]
 	disposition: SettlementDisposition
 	totalCents: number
-	nowMillis: number
 }): SettlementPlan {
-	const { contributions, disposition, totalCents, nowMillis } = params
+	const { contributions, disposition, totalCents } = params
 	switch (disposition) {
 		case 'keep':
 			return planKeep(contributions, totalCents)
-		case 'release':
-			return planRelease(contributions)
-		case 'hold': {
-			const leavers = contributions.filter((c) => !c.payerOnRoster)
-			const plan = planHold(
-				contributions.filter((c) => c.payerOnRoster),
-				totalCents,
-				nowMillis
-			)
+		case 'refund':
+			return { actions: planRefundAll(contributions), shortfallCents: 0 }
+		case 'pending':
 			return {
-				actions: [...planRelease(leavers).actions, ...plan.actions],
+				actions: planRefundAll(contributions.filter((c) => !c.payerOnRoster)),
 				shortfallCents: 0,
 			}
-		}
 	}
 }
 
@@ -282,7 +184,6 @@ export function planSettlement(params: {
  */
 export interface PaymentIntentState {
 	status: string
-	amount_capturable: number
 	amount_received: number
 	/** Expanded charge, when retrieved with `expand: ['latest_charge']`. */
 	latest_charge?: string | { amount_refunded?: number } | null
@@ -290,33 +191,21 @@ export interface PaymentIntentState {
 
 /**
  * What the ledger should say about a PaymentIntent, read from Stripe's own
- * state rather than from what we asked it to do. Null for states that hold
- * no settled outcome yet (still being confirmed, say), which the ledger
- * leaves alone.
+ * state rather than from what we asked it to do. Null for a PaymentIntent
+ * that has not been paid, which the ledger leaves alone.
  */
 export function contributionStateFromPaymentIntent(
 	paymentIntent: PaymentIntentState
-): { status: ContributionStatus; amountCents?: number } | null {
-	switch (paymentIntent.status) {
-		case 'requires_capture':
-			return {
-				status: 'authorized',
-				amountCents: paymentIntent.amount_capturable,
-			}
-		case 'succeeded': {
-			const charge =
-				typeof paymentIntent.latest_charge === 'object'
-					? paymentIntent.latest_charge
-					: null
-			const refundedCents = charge?.amount_refunded ?? 0
-			const netCents = paymentIntent.amount_received - refundedCents
-			return netCents > 0
-				? { status: 'captured', amountCents: netCents }
-				: { status: 'refunded', amountCents: paymentIntent.amount_received }
-		}
-		case 'canceled':
-			return { status: 'canceled' }
-		default:
-			return null
-	}
+): { status: ContributionStatus; amountCents: number } | null {
+	if (paymentIntent.status !== 'succeeded') return null
+
+	const charge =
+		typeof paymentIntent.latest_charge === 'object'
+			? paymentIntent.latest_charge
+			: null
+	const refundedCents = charge?.amount_refunded ?? 0
+	const netCents = paymentIntent.amount_received - refundedCents
+	return netCents > 0
+		? { status: 'paid', amountCents: netCents }
+		: { status: 'refunded', amountCents: paymentIntent.amount_received }
 }

@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
-	committedByRosterCents,
-	committedCents,
+	paidByRosterCents,
+	paidCents,
 	contributionAmountError,
 	formatDollars,
 	isPlayerRegisteredForSeason,
 	suggestedContributionsCents,
-	totalsFrom,
 	usesTeamPayments,
 } from './team-payments'
 
@@ -71,45 +70,27 @@ describe('isPlayerRegisteredForSeason', () => {
 })
 
 describe('totals', () => {
-	const ledger = [
-		{ status: 'authorized' as const, amountCents: 40_000 },
-		{ status: 'captured' as const, amountCents: 30_000 },
-		{ status: 'canceled' as const, amountCents: 20_000 },
-		{ status: 'refunded' as const, amountCents: 10_000 },
-	]
-
-	it('separates what is held from what is taken', () => {
-		expect(totalsFrom(ledger)).toEqual({
-			authorizedCents: 40_000,
-			capturedCents: 30_000,
-		})
-	})
-
-	it('counts held and taken money as committed, and nothing released', () => {
-		expect(committedCents(ledger)).toBe(70_000)
+	it('counts what is paid, and nothing refunded', () => {
+		expect(
+			paidCents([
+				{ status: 'paid', amountCents: 40_000 },
+				{ status: 'paid', amountCents: 30_000 },
+				{ status: 'refunded', amountCents: 10_000 },
+			])
+		).toBe(70_000)
 	})
 
 	it('counts only the current roster’s money toward the total', () => {
 		const byPayer = [
+			{ status: 'paid' as const, amountCents: 40_000, player: { id: 'on' } },
+			{ status: 'paid' as const, amountCents: 30_000, player: { id: 'left' } },
 			{
-				status: 'authorized' as const,
-				amountCents: 40_000,
-				player: { id: 'on' },
-			},
-			{
-				status: 'captured' as const,
-				amountCents: 30_000,
-				player: { id: 'left' },
-			},
-			{
-				status: 'canceled' as const,
+				status: 'refunded' as const,
 				amountCents: 20_000,
 				player: { id: 'on' },
 			},
 		]
-		expect(committedByRosterCents(byPayer as never, new Set(['on']))).toBe(
-			40_000
-		)
+		expect(paidByRosterCents(byPayer as never, new Set(['on']))).toBe(40_000)
 	})
 })
 

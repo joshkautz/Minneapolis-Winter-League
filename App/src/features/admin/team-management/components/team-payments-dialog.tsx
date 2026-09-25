@@ -14,14 +14,18 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { LoadingSpinner, TeamContributionsList } from '@/shared/components'
+import {
+	LoadingButton,
+	LoadingSpinner,
+	TeamContributionsList,
+} from '@/shared/components'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { teamContributionsQuery } from '@/firebase/collections/teams'
-import { releaseTeamContributionViaFunction } from '@/firebase/collections/functions'
-import { formatDollars, totalsFrom } from '@/shared/utils'
+import { refundTeamContributionViaFunction } from '@/firebase/collections/functions'
+import { formatDollars, paidCents } from '@/shared/utils'
 import type { TeamContributionDocument } from '@/types'
 
-/** Longest release reason the callable accepts. */
+/** Longest refund reason the callable accepts. */
 const MAX_REASON_LENGTH = 500
 
 interface TeamPaymentsDialogProps {
@@ -33,10 +37,10 @@ interface TeamPaymentsDialogProps {
 }
 
 /**
- * An admin's view of one team's payments, with a manual release for the
- * cases the settlement rules do not cover — a dispute, a payer who left the
- * team. Releasing cancels a hold or refunds a capture; it never changes the
- * team's registration.
+ * An admin's view of one team's payments, with a manual refund for the cases
+ * the settlement rules do not cover — a dispute, a test payment, a payer who
+ * should not have been charged. A refund never changes the team's
+ * registration.
  */
 export const TeamPaymentsDialog = ({
 	open,
@@ -54,15 +58,13 @@ export const TeamPaymentsDialog = ({
 		errorLabel: 'team payments',
 	})
 
-	const [releasing, setReleasing] =
+	const [refunding, setRefunding] =
 		useState<QueryDocumentSnapshot<TeamContributionDocument> | null>(null)
 	const [reason, setReason] = useState('')
 	const [submitting, setSubmitting] = useState(false)
 
 	const contributions = snapshot?.docs ?? []
-	const { authorizedCents, capturedCents } = totalsFrom(
-		contributions.map((doc) => doc.data())
-	)
+	const heldCents = paidCents(contributions.map((doc) => doc.data()))
 
 	const trimmedReason = reason.trim()
 	const reasonError =
@@ -72,33 +74,33 @@ export const TeamPaymentsDialog = ({
 				? `Keep it under ${MAX_REASON_LENGTH} characters.`
 				: null
 
-	const closeRelease = () => {
-		setReleasing(null)
+	const closeRefund = () => {
+		// Stays open, spinner showing, until the refund settles.
+		if (submitting) return
+		setRefunding(null)
 		setReason('')
 	}
 
-	const release = async () => {
-		if (!releasing || reasonError) return
+	const refund = async () => {
+		if (!refunding || reasonError || submitting) return
 		setSubmitting(true)
 		try {
-			const result = await releaseTeamContributionViaFunction({
+			await refundTeamContributionViaFunction({
 				teamId,
 				seasonId,
-				paymentIntentId: releasing.id,
+				paymentIntentId: refunding.id,
 				reason: trimmedReason,
 			})
-			toast.success(
-				result.status === 'canceled' ? 'Hold released' : 'Payment refunded',
-				{
-					description: `${formatDollars(releasing.data().amountCents)} to the payer.`,
-				}
-			)
-			closeRelease()
-		} catch (releaseError) {
-			toast.error('Could not release this payment', {
+			toast.success('Payment refunded', {
+				description: `${formatDollars(refunding.data().amountCents)} back to the payer.`,
+			})
+			setRefunding(null)
+			setReason('')
+		} catch (refundError) {
+			toast.error('Could not refund this payment', {
 				description:
-					releaseError instanceof Error
-						? releaseError.message
+					refundError instanceof Error
+						? refundError.message
 						: 'Please try again.',
 			})
 		} finally {
@@ -113,9 +115,7 @@ export const TeamPaymentsDialog = ({
 					<DialogHeader>
 						<DialogTitle>{teamName} payments</DialogTitle>
 						<DialogDescription>
-							{formatDollars(capturedCents)} charged,{' '}
-							{formatDollars(authorizedCents)} held on cards and not yet
-							charged.
+							{formatDollars(heldCents)} paid and not refunded.
 						</DialogDescription>
 					</DialogHeader>
 					{loading ? (
@@ -124,54 +124,45 @@ export const TeamPaymentsDialog = ({
 						<TeamContributionsList
 							contributions={contributions}
 							emptyMessage='This team has no payments this season.'
-							renderAction={(contribution) => {
-								const status = contribution.data().status
-								if (status !== 'authorized' && status !== 'captured') {
-									return null
-								}
-								return (
+							renderAction={(contribution) =>
+								contribution.data().status === 'paid' ? (
 									<Button
 										size='sm'
 										variant='outline'
-										onClick={() => setReleasing(contribution)}
+										onClick={() => setRefunding(contribution)}
 									>
-										<Undo2 className='mr-2 h-4 w-4' />
-										{status === 'authorized' ? 'Release' : 'Refund'}
+										<Undo2 className='mr-2 h-4 w-4' aria-hidden='true' />
+										Refund
 									</Button>
-								)
-							}}
+								) : null
+							}
 						/>
 					)}
 				</DialogContent>
 			</Dialog>
 
 			<Dialog
-				open={releasing !== null}
-				onOpenChange={(isOpen) => !isOpen && closeRelease()}
+				open={refunding !== null}
+				onOpenChange={(isOpen) => !isOpen && closeRefund()}
 			>
-				<DialogContent>
+				<DialogContent aria-busy={submitting}>
 					<DialogHeader>
-						<DialogTitle>
-							{releasing?.data().status === 'authorized'
-								? 'Release this hold?'
-								: 'Refund this payment?'}
-						</DialogTitle>
+						<DialogTitle>Refund this payment?</DialogTitle>
 						<DialogDescription>
-							{releasing &&
-								(releasing.data().status === 'authorized'
-									? `Cancels the ${formatDollars(releasing.data().amountCents)} hold. The payer is never charged.`
-									: `Refunds ${formatDollars(releasing.data().amountCents)}. Stripe keeps its processing fee.`)}{' '}
+							{refunding &&
+								`Refunds ${formatDollars(refunding.data().amountCents)} to the payer. Stripe keeps its processing fee.`}{' '}
 							The team’s registration does not change; if it is registered, it
 							will be short of its total.
 						</DialogDescription>
 					</DialogHeader>
 					<div className='space-y-1'>
-						<Label htmlFor='release-reason'>Reason</Label>
+						<Label htmlFor='refund-reason'>Reason</Label>
 						<Textarea
-							id='release-reason'
+							id='refund-reason'
 							value={reason}
 							onChange={(event) => setReason(event.target.value)}
-							placeholder='For example: payer left the team before it registered.'
+							placeholder='For example: test payment by an admin.'
+							disabled={submitting}
 							aria-invalid={reason.length > 0 && Boolean(reasonError)}
 						/>
 						{reason.length > 0 && reasonError && (
@@ -179,19 +170,22 @@ export const TeamPaymentsDialog = ({
 						)}
 					</div>
 					<DialogFooter>
-						<Button variant='outline' onClick={closeRelease}>
+						<Button
+							variant='outline'
+							onClick={closeRefund}
+							disabled={submitting}
+						>
 							Cancel
 						</Button>
-						<Button
+						<LoadingButton
 							variant='destructive'
-							onClick={release}
-							disabled={Boolean(reasonError) || submitting}
+							onClick={refund}
+							disabled={Boolean(reasonError)}
+							loading={submitting}
+							loadingText='Refunding...'
 						>
-							{submitting && <LoadingSpinner size='sm' className='mr-2' />}
-							{releasing?.data().status === 'authorized'
-								? 'Release hold'
-								: 'Refund'}
-						</Button>
+							Refund
+						</LoadingButton>
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
