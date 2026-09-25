@@ -266,7 +266,10 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 				error: errorMessage,
 			})
 
-			throw new HttpsError('internal', errorMessage)
+			throw new HttpsError(
+				'internal',
+				'The invitation or request could not be answered. Please try again.'
+			)
 		}
 	}
 )

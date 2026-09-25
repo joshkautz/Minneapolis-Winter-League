@@ -155,7 +155,7 @@ export const deleteBadge = onCall<DeleteBadgeRequest>(
 
 			throw new HttpsError(
 				'internal',
-				`Failed to delete badge: ${errorMessage}`
+				'The badge could not be deleted. Please try again.'
 			)
 		}
 	}

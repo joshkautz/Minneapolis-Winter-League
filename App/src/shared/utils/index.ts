@@ -13,16 +13,6 @@ export * from './team-payments'
 export * from './environment'
 export * from './game-utils'
 export * from './file-encoding'
+export { errorCode, errorMessage, LEAGUE_CONTACT } from './error-message'
 export { lazyImport } from './lazy-import'
 export { logger } from './logger'
-export {
-	errorHandler,
-	ErrorType,
-	extractErrorMessage,
-	isFirebaseFunctionsError,
-} from './error-handler'
-export type {
-	AppError,
-	ErrorHandlerOptions,
-	FirebaseFunctionsError,
-} from './error-handler'

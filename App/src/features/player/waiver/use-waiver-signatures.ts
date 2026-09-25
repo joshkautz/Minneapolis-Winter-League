@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { waiverSignaturesQuery } from '@/firebase/collections/players'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 import type { WaiverSignatureDocument } from '@/types'
 
 export type WaiverSignature = WaiverSignatureDocument & { id: string }
@@ -25,7 +25,9 @@ export const useWaiverSignatures = (playerId: string | undefined) => {
 		logger.error('Failed to load waiver signatures', error, {
 			component: 'useWaiverSignatures',
 		})
-		toast.error('Could not load your waiver', { description: error.message })
+		toast.error('Could not load your waiver', {
+			description: errorMessage(error, 'Please reload the page to try again.'),
+		})
 	}, [error])
 
 	const signatures = useMemo(

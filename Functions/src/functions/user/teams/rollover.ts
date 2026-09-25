@@ -257,7 +257,7 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 			})
 			throw new HttpsError(
 				'internal',
-				error instanceof Error ? error.message : 'Failed to rollover team'
+				'Your team could not be rolled over. Please try again.'
 			)
 		}
 	}

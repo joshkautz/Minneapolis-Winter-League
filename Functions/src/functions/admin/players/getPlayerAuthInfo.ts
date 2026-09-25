@@ -115,9 +115,7 @@ export const getPlayerAuthInfo = onCall<
 
 			throw new HttpsError(
 				'internal',
-				error instanceof Error
-					? error.message
-					: 'Failed to get player auth info.'
+				'This player’s sign-in details could not be loaded. Please try again.'
 			)
 		}
 	}

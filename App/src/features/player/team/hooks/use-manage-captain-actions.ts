@@ -4,7 +4,7 @@ import {
 	updateTeamRosterViaFunction,
 } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
@@ -71,22 +71,17 @@ export const useManageCaptainActions = () => {
 			// Close the confirmation dialog
 			setLeaveTeamDialogOpen(false)
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error)
+			const description = errorMessage(error, 'Please try again.')
 
-			logger.error(
-				'Leave team failed',
-				error instanceof Error ? error : new Error(errorMessage),
-				{
-					component: 'useManageCaptainActions',
-					action: 'leave_team',
-					teamId: canonicalTeamId,
-				}
-			)
+			logger.error('Leave team failed', error, {
+				component: 'useManageCaptainActions',
+				action: 'leave_team',
+				teamId: canonicalTeamId,
+			})
 
 			// Show the specific error message from Firebase function
 			toast.error('Failed to leave team', {
-				description: errorMessage,
+				description,
 			})
 		}
 	}, [authenticatedUserSnapshot, canonicalTeamId])
@@ -118,22 +113,17 @@ export const useManageCaptainActions = () => {
 			// Close the confirmation dialog
 			setDeleteTeamDialogOpen(false)
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : String(error)
+			const description = errorMessage(error, 'Please try again.')
 
-			logger.error(
-				'Delete team failed',
-				error instanceof Error ? error : new Error(errorMessage),
-				{
-					component: 'useManageCaptainActions',
-					action: 'delete_team',
-					teamId: canonicalTeamId,
-				}
-			)
+			logger.error('Delete team failed', error, {
+				component: 'useManageCaptainActions',
+				action: 'delete_team',
+				teamId: canonicalTeamId,
+			})
 
 			// Show the specific error message from Firebase function
 			toast.error('Failed to delete team', {
-				description: errorMessage,
+				description,
 			})
 		}
 	}, [authenticatedUserSnapshot, canonicalTeamId, currentSeasonId])

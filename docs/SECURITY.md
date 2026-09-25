@@ -6,7 +6,10 @@ Only `main`, which is what production runs.
 
 ## Reporting a vulnerability
 
-Open an issue on GitHub. Expect a reply within a week.
+Report it privately: open the repository's **Security** tab on GitHub and
+choose **Report a vulnerability**. Please do not open a public issue, which
+would show everyone the problem before it is fixed. Expect a reply within a
+week.
 
 ## The model
 
@@ -51,10 +54,13 @@ why they are a separate, private subcollection (`docs/WAIVERS.md`).
 ## Files
 
 Storage holds public images: team logos and badges. Clients never upload.
-The team and badge callables take the image as base64, check its content
-type, write it with the Admin SDK and make it public. Badge images are capped
-at 5 MB; team logos are bounded only by the callable request limit (see
-`docs/ROADMAP.md`).
+The team and badge callables take the image as base64, check it against
+`Functions/src/shared/imageRules.ts` — PNG, JPEG, GIF or WebP, at most 5 MB;
+SVG is refused because it can carry script — then write it with the Admin
+SDK and make it public. The client never names a file: `updateTeam` used to
+accept a Storage path, which let a captain point their team at another
+team's file and then delete it with their own team. Team deletion also only
+removes files under `teams/` that no other season of the team still uses.
 
 ## Payments
 

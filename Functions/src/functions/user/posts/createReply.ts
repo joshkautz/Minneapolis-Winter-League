@@ -162,7 +162,7 @@ export const createReply = onCall<
 
 			throw new HttpsError(
 				'internal',
-				`Failed to create reply: ${errorMessage}`
+				'Your reply could not be posted. Please try again.'
 			)
 		}
 	}

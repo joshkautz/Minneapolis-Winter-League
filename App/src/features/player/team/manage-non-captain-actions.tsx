@@ -12,7 +12,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useTeamsContext } from '@/providers'
-import { logger, errorHandler } from '@/shared/utils'
+import { errorMessage, logger } from '@/shared/utils'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 import { useDeparturePaymentNote } from './hooks/use-departure-payment-note'
@@ -71,8 +71,11 @@ export const ManageNonCaptainActions = () => {
 					userId: authenticatedUserSnapshot?.id,
 				}
 			)
-			errorHandler.handleFirebase(error, 'leave_team', 'teams', {
-				fallbackMessage: 'Unable to leave team. Please try again.',
+			toast.error('Could not leave the team', {
+				description: errorMessage(
+					error,
+					'Unable to leave team. Please try again.'
+				),
 			})
 		}
 	}, [authenticatedUserSnapshot, canonicalTeamId])

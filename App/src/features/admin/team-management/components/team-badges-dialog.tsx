@@ -6,7 +6,7 @@ import { Award, Trash2, Loader2, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 import { useBadgesContext } from '@/providers'
 import { Button } from '@/components/ui/button'
 import {
@@ -206,11 +206,12 @@ export const TeamBadgesDialog = ({
 			toast.success(result.message)
 		} catch (error) {
 			logger.error('Error awarding badge', error as Error)
-			let errorMessage = 'Failed to award badge'
-			if (error && typeof error === 'object' && 'message' in error) {
-				errorMessage = String(error.message)
-			}
-			toast.error(errorMessage)
+			toast.error('Badge not awarded', {
+				description: errorMessage(
+					error,
+					'The badge could not be awarded. Please try again.'
+				),
+			})
 		} finally {
 			setAwardingBadgeId(null)
 		}
@@ -235,11 +236,12 @@ export const TeamBadgesDialog = ({
 			setBadgeToRemove(null)
 		} catch (error) {
 			logger.error('Error revoking badge', error as Error)
-			let errorMessage = 'Failed to remove badge'
-			if (error && typeof error === 'object' && 'message' in error) {
-				errorMessage = String(error.message)
-			}
-			toast.error(errorMessage)
+			toast.error('Badge not removed', {
+				description: errorMessage(
+					error,
+					'The badge could not be taken back. Please try again.'
+				),
+			})
 		} finally {
 			setIsRemoving(false)
 		}

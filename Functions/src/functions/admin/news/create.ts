@@ -138,7 +138,7 @@ export const createNews = onCall<CreateNewsRequest>(
 
 			throw new HttpsError(
 				'internal',
-				`Failed to create news post: ${errorMessage}`
+				'The news post could not be published. Please try again.'
 			)
 		}
 	}

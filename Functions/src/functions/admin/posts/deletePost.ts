@@ -121,7 +121,10 @@ export const deletePost = onCall<
 				error: errorMessage,
 			})
 
-			throw new HttpsError('internal', `Failed to delete post: ${errorMessage}`)
+			throw new HttpsError(
+				'internal',
+				'The post could not be deleted. Please try again.'
+			)
 		}
 	}
 )

@@ -74,4 +74,17 @@ describe('useQueryErrorHandler', () => {
 			description: 'second',
 		})
 	})
+
+	it('shows Firestore errors in words, not Firestore’s own text', () => {
+		const error = Object.assign(
+			new Error('Missing or insufficient permissions.'),
+			{ code: 'permission-denied' }
+		)
+		renderHook(() =>
+			useQueryErrorHandler({ error, component: 'Roster', errorLabel: 'teams' })
+		)
+		expect(toastError).toHaveBeenCalledWith('Failed to load teams', {
+			description: 'You do not have access to this.',
+		})
+	})
 })

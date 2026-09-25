@@ -168,7 +168,10 @@ export const createStripeCheckout = onCall<
 			)
 
 			if (!stripeSession.url) {
-				throw new HttpsError('internal', 'Failed to create checkout URL')
+				throw new HttpsError(
+					'internal',
+					'Checkout could not be opened. Please try again.'
+				)
 			}
 
 			logger.info(`Created Stripe checkout session for user: ${userId}`, {
@@ -193,9 +196,7 @@ export const createStripeCheckout = onCall<
 
 			throw new HttpsError(
 				'internal',
-				error instanceof Error
-					? error.message
-					: 'Failed to create checkout session'
+				'Checkout could not be opened. Please try again.'
 			)
 		}
 	}

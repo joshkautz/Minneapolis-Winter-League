@@ -207,7 +207,7 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 
 			throw new HttpsError(
 				'internal',
-				`Failed to update season: ${errorMessage}`
+				'The season could not be saved. Please try again.'
 			)
 		}
 	}

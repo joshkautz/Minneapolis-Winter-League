@@ -51,6 +51,12 @@ an effect:
   snapshot, without a stale resolve overwriting a newer one.
 - `usePaginatedFeed` — an infinitely scrolling, season-scoped feed.
 
+**Show errors through `errorMessage(error, fallback)`** (`@/shared/utils`),
+never `error.message`. It passes a callable's refusal through as written,
+translates Auth, Firestore and network errors, and otherwise shows the
+fallback, so make the fallback a sentence saying what failed. Pick images
+with `ImageField`, which applies the server's upload rules before sending.
+
 **Writes go through callables**, never the client SDK. `firestore.rules` denies
 all client writes. Add the call to `App/src/firebase/collections/functions.ts`.
 

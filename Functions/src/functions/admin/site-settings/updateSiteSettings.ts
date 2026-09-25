@@ -88,7 +88,7 @@ export const updateSiteSettings = onCall<UpdateSiteSettingsRequest>(
 
 			throw new HttpsError(
 				'internal',
-				`Failed to update site settings: ${errorMessage}`
+				'The site settings could not be saved. Please try again.'
 			)
 		}
 	}

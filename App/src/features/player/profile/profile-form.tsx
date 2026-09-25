@@ -21,7 +21,7 @@ import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useEffect, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { updatePlayerViaFunction, DocumentSnapshot } from '@/firebase'
-import { PlayerDocument } from '@/shared/utils'
+import { PlayerDocument, errorMessage } from '@/shared/utils'
 import { useAuthContext } from '@/providers'
 import {
 	profileFormSchema,
@@ -76,8 +76,10 @@ export const ProfileForm = ({
 			})
 		} catch (err) {
 			toast.error('Failure', {
-				description:
-					err instanceof Error ? err.message : 'Failed to update profile',
+				description: errorMessage(
+					err,
+					'Your profile could not be saved. Please try again.'
+				),
 			})
 		} finally {
 			setIsSubmitting(false)

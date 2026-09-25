@@ -67,7 +67,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { NewsDocument, PlayerDocument, SeasonDocument } from '@/types'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 
 interface ProcessedNews {
@@ -298,7 +298,10 @@ export const NewsManagement = () => {
 				{ component: 'NewsManagement', action: 'saveNews' }
 			)
 			toast.error(
-				error instanceof Error ? error.message : 'Failed to save news post'
+				errorMessage(
+					error,
+					'The news post could not be saved. Please try again.'
+				)
 			)
 		} finally {
 			setIsSubmitting(false)
@@ -322,7 +325,10 @@ export const NewsManagement = () => {
 				{ component: 'NewsManagement', action: 'deleteNews' }
 			)
 			toast.error(
-				error instanceof Error ? error.message : 'Failed to delete news post'
+				errorMessage(
+					error,
+					'The news post could not be deleted. Please try again.'
+				)
 			)
 		} finally {
 			setIsDeleting(false)

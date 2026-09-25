@@ -22,7 +22,7 @@ import {
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { teamContributionsQuery } from '@/firebase/collections/teams'
 import { refundTeamContributionViaFunction } from '@/firebase/collections/functions'
-import { formatDollars, paidCents } from '@/shared/utils'
+import { formatDollars, paidCents, errorMessage } from '@/shared/utils'
 import type { TeamContributionDocument } from '@/types'
 
 /** Longest refund reason the callable accepts. */
@@ -98,10 +98,7 @@ export const TeamPaymentsDialog = ({
 			setReason('')
 		} catch (refundError) {
 			toast.error('Could not refund this payment', {
-				description:
-					refundError instanceof Error
-						? refundError.message
-						: 'Please try again.',
+				description: errorMessage(refundError, 'Please try again.'),
 			})
 		} finally {
 			setSubmitting(false)

@@ -23,9 +23,9 @@ import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
 import {
 	logger,
-	errorHandler,
 	isPlayerRegisteredForSeason,
 	PlayerDocument,
+	errorMessage,
 } from '@/shared/utils'
 import { playerSeasonRef } from '@/firebase/collections/players'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
@@ -148,8 +148,11 @@ export const ManageTeamRosterPlayer = ({
 						teamId: canonicalTeamId,
 					}
 				)
-				errorHandler.handleFirebase(error, 'demote_captain', 'teams', {
-					fallbackMessage: 'Unable to demote captain. Please try again.',
+				toast.error('Captain not demoted', {
+					description: errorMessage(
+						error,
+						'Unable to demote captain. Please try again.'
+					),
 				})
 				return false
 			}
@@ -195,9 +198,11 @@ export const ManageTeamRosterPlayer = ({
 						teamId: canonicalTeamId,
 					}
 				)
-				errorHandler.handleFirebase(error, 'promote_captain', 'teams', {
-					fallbackMessage:
-						'Unable to promote captain. Ensure your email is verified and try again.',
+				toast.error('Captain not promoted', {
+					description: errorMessage(
+						error,
+						'Unable to promote captain. Ensure your email is verified and try again.'
+					),
 				})
 				return false
 			}
@@ -233,8 +238,11 @@ export const ManageTeamRosterPlayer = ({
 					teamId: canonicalTeamId,
 				}
 			)
-			errorHandler.handleFirebase(error, 'remove_player', 'teams', {
-				fallbackMessage: 'Unable to remove player. Please try again.',
+			toast.error('Player not removed', {
+				description: errorMessage(
+					error,
+					'Unable to remove player. Please try again.'
+				),
 			})
 		}
 	}, [canonicalTeamId, playerSnapshot])

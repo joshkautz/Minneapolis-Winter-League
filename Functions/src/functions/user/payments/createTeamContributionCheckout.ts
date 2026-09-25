@@ -389,7 +389,10 @@ export const createTeamContributionCheckout = onCall<
 			)
 
 			if (!stripeSession.url) {
-				throw new HttpsError('internal', 'Failed to create checkout URL')
+				throw new HttpsError(
+					'internal',
+					'Checkout could not be opened. Please try again.'
+				)
 			}
 
 			const attached = await attachSession(firestore, {
@@ -456,7 +459,10 @@ export const createTeamContributionCheckout = onCall<
 				error: error instanceof Error ? error.message : 'Unknown error',
 			})
 
-			throw new HttpsError('internal', 'Failed to create checkout session')
+			throw new HttpsError(
+				'internal',
+				'Checkout could not be opened. Please try again.'
+			)
 		}
 	}
 )

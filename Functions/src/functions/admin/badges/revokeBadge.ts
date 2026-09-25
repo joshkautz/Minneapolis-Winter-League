@@ -109,7 +109,7 @@ export const revokeBadge = onCall<RevokeBadgeRequest>(
 			})
 			throw new HttpsError(
 				'internal',
-				`Failed to revoke badge: ${errorMessage}`
+				'The badge could not be taken back from the team. Please try again.'
 			)
 		}
 	}

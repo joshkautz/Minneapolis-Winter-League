@@ -71,7 +71,7 @@ import {
 	PageHeader,
 	QueryError,
 } from '@/shared/components'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import {
 	GameDocument,
@@ -442,8 +442,10 @@ export const GameManagement = () => {
 				{ component: 'GameManagement', action: 'saveGame' }
 			)
 			toast.error('Error', {
-				description:
-					error instanceof Error ? error.message : 'Failed to save game',
+				description: errorMessage(
+					error,
+					'The game could not be saved. Please try again.'
+				),
 			})
 		} finally {
 			setIsSubmitting(false)
@@ -505,8 +507,10 @@ export const GameManagement = () => {
 				{ component: 'GameManagement', action: 'deleteGame' }
 			)
 			toast.error('Error', {
-				description:
-					error instanceof Error ? error.message : 'Failed to delete game',
+				description: errorMessage(
+					error,
+					'The game could not be deleted. Please try again.'
+				),
 			})
 		} finally {
 			setIsDeleting(false)

@@ -156,7 +156,7 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 
 			throw new HttpsError(
 				'internal',
-				error instanceof Error ? error.message : 'Failed to create player'
+				'Your player profile could not be created. Please try again.'
 			)
 		}
 	}

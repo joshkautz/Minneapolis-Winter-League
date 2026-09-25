@@ -4,6 +4,7 @@ import {
 	OfferDirection,
 	OfferStatus,
 	logger,
+	errorMessage,
 } from '@/shared/utils'
 import {
 	NotificationCard,
@@ -41,15 +42,13 @@ export const ManageCaptainsOffersPanel = () => {
 				description: 'Request rejected',
 			})
 		} catch (error: unknown) {
-			// Firebase Functions errors have a message property
-			const firebaseError = error as { message?: string; code?: string }
-			const errorMessage =
-				firebaseError?.message ||
-				firebaseError?.code ||
-				'Failed to reject request'
+			const description = errorMessage(
+				error,
+				'The request could not be rejected. Please try again.'
+			)
 			logger.error('Failed to reject offer', error)
 			toast.error('Failure', {
-				description: errorMessage,
+				description,
 			})
 		}
 	}
@@ -66,15 +65,13 @@ export const ManageCaptainsOffersPanel = () => {
 				description: 'Request accepted',
 			})
 		} catch (error: unknown) {
-			// Firebase Functions errors have a message property
-			const firebaseError = error as { message?: string; code?: string }
-			const errorMessage =
-				firebaseError?.message ||
-				firebaseError?.code ||
-				'Failed to accept request'
+			const description = errorMessage(
+				error,
+				'The request could not be accepted. Please try again.'
+			)
 			logger.error('Failed to accept offer', error)
 			toast.error('Failure', {
-				description: errorMessage,
+				description,
 			})
 		}
 	}
@@ -91,15 +88,13 @@ export const ManageCaptainsOffersPanel = () => {
 				description: 'Invite canceled',
 			})
 		} catch (error: unknown) {
-			// Firebase Functions errors have a message property
-			const firebaseError = error as { message?: string; code?: string }
-			const errorMessage =
-				firebaseError?.message ||
-				firebaseError?.code ||
-				'Failed to cancel invite'
+			const description = errorMessage(
+				error,
+				'The invite could not be canceled. Please try again.'
+			)
 			logger.error('Failed to cancel offer', error)
 			toast.error('Failure', {
-				description: errorMessage,
+				description,
 			})
 		}
 	}

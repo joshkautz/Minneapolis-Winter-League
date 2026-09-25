@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { getDocs } from 'firebase/firestore'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 import { useResolvedSnapshot } from '@/shared/hooks'
 import {
 	RolloverTeamFormData,
@@ -217,29 +217,14 @@ export const useRolloverTeamForm = ({
 					}
 				)
 
-				let errorMessage = 'Failed to rollover team. Please try again.'
-				let errorTitle = 'Team rollover failed'
-
-				if (error && typeof error === 'object' && 'message' in error) {
-					errorMessage = error.message as string
-				} else if (error instanceof Error) {
-					errorMessage = error.message
-				}
-
-				if (errorMessage.includes('registration is not currently open')) {
-					errorTitle = 'Registration Closed'
-				} else if (errorMessage.includes('already on a team')) {
-					errorTitle = 'Already on Team'
-				} else if (errorMessage.includes('already been rolled over')) {
-					errorTitle = 'Already Rolled Over'
-				} else if (errorMessage.includes('Only captains')) {
-					errorTitle = 'Permission Denied'
-				}
-
+				// The server's message says what went wrong; the title is fixed.
 				handleResult({
 					success: false,
-					title: errorTitle,
-					description: errorMessage,
+					title: 'Team rollover failed',
+					description: errorMessage(
+						error,
+						'Your team could not be rolled over. Please try again.'
+					),
 					navigation: false,
 				})
 			} finally {

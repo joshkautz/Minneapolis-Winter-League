@@ -20,7 +20,7 @@ import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { auth } from '@/firebase/auth'
-import { logger, cn } from '@/shared/utils'
+import { logger, cn, errorMessage } from '@/shared/utils'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
@@ -160,11 +160,7 @@ export const SwissRankings = () => {
 				}
 			} catch (error) {
 				logger.error('Error loading Swiss rankings', error)
-				toast.error(
-					error instanceof Error
-						? error.message
-						: 'Failed to load Swiss rankings'
-				)
+				toast.error(errorMessage(error, 'Failed to load Swiss rankings'))
 			} finally {
 				setIsLoadingRankings(false)
 			}
@@ -188,7 +184,7 @@ export const SwissRankings = () => {
 		} catch (error) {
 			logger.error('Error saving seeding', error)
 			toast.error(
-				error instanceof Error ? error.message : 'Failed to save seeding'
+				errorMessage(error, 'The seeding could not be saved. Please try again.')
 			)
 		} finally {
 			setIsSavingSeeding(false)

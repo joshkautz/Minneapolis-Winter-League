@@ -259,15 +259,6 @@ eventually hit a word still on the list. Two things cover that:
 
 If a real name is reported as blocked, add it to the list in **both** files.
 
-## Team logo size
-
-`createTeam` and `updateTeam` check that a logo is an image but not how large
-it is, unlike the badge callables, which cap images at 5 MB. The only bound
-is the callable's request size, so a large phone photo fails with an opaque
-error instead of a message, and a logo can be far larger than it is ever
-shown. Decide a limit, or resize in the browser before upload, and check it
-on the server either way.
-
 ## Swiss-format season
 
 Outstanding items carried over from the original plan — details and suggested

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 
 interface UseEmailVerificationProps {
 	isAuthenticatedUserBanned: boolean
@@ -102,8 +102,10 @@ export const useEmailVerification = ({
 	useEffect(() => {
 		if (sendEmailVerificationError) {
 			toast.error('Failed to send verification email', {
-				description:
-					sendEmailVerificationError.message || 'Please try again later.',
+				description: errorMessage(
+					sendEmailVerificationError,
+					'The verification email could not be sent. Please try again later.'
+				),
 			})
 			const timer = setTimeout(() => {
 				setVerificationEmailSent(false)

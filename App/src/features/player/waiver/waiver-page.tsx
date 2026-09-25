@@ -9,11 +9,7 @@ import { signWaiverViaFunction } from '@/firebase/collections/functions'
 import { useSeasonsContext } from '@/providers'
 import { LoadingSpinner, PageContainer, PageHeader } from '@/shared/components'
 import { useUserStatus } from '@/shared/hooks'
-import {
-	extractErrorMessage,
-	formatTimestampWithTime,
-	logger,
-} from '@/shared/utils'
+import { errorMessage, formatTimestampWithTime, logger } from '@/shared/utils'
 import {
 	CURRENT_WAIVER_VERSION_ID,
 	currentWaiverVersion,
@@ -92,7 +88,7 @@ export const WaiverPage = () => {
 				component: 'WaiverPage',
 			})
 			toast.error('Could not sign the waiver', {
-				description: extractErrorMessage(error, 'Please try again.'),
+				description: errorMessage(error, 'Please try again.'),
 			})
 		}
 	}

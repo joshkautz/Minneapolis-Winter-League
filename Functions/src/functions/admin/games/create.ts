@@ -266,9 +266,7 @@ export const createGame = onCall<
 			// Wrap other errors
 			throw new HttpsError(
 				'internal',
-				error instanceof Error
-					? error.message
-					: 'Failed to create game. Please try again.'
+				'The game could not be created. Please try again.'
 			)
 		}
 	}

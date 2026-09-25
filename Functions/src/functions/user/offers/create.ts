@@ -245,7 +245,10 @@ export const createOffer = onCall<CreateOfferRequest>(
 				error: errorMessage,
 			})
 
-			throw new HttpsError('internal', errorMessage)
+			throw new HttpsError(
+				'internal',
+				'The invitation or request could not be sent. Please try again.'
+			)
 		}
 	}
 )

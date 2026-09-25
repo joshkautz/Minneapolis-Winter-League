@@ -13,7 +13,7 @@ import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { Combine, Loader2, AlertTriangle } from 'lucide-react'
 
-import { logger, TeamSeasonDocument } from '@/shared/utils'
+import { logger, TeamSeasonDocument, errorMessage } from '@/shared/utils'
 import {
 	allTeamsQuery,
 	canonicalTeamIdFromTeamSeasonDoc,
@@ -160,11 +160,12 @@ export const MergeTeamsDialog = ({
 			onOpenChange(false)
 		} catch (error) {
 			logger.error('Failed to merge teams', error)
-			let errorMessage = 'Failed to merge teams. Please try again.'
-			if (error && typeof error === 'object' && 'message' in error) {
-				errorMessage = (error as { message: string }).message
-			}
-			toast.error('Merge failed', { description: errorMessage })
+			toast.error('Merge failed', {
+				description: errorMessage(
+					error,
+					'The teams could not be merged. Please try again.'
+				),
+			})
 		} finally {
 			setIsMerging(false)
 		}
