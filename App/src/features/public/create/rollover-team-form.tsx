@@ -14,46 +14,25 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import type { TeamCreationData } from '@/features/public/create/hooks/use-team-creation'
-import { useRolloverTeamForm } from '@/features/public/create/hooks'
+import type { TeamCreationResult } from './hooks/use-team-creation'
+import { useRolloverTeamForm } from './hooks'
 
 interface RolloverTeamFormProps {
-	setNewTeamDocument: React.Dispatch<
-		React.SetStateAction<TeamCreationData | undefined>
-	>
-	handleResult: ({
-		success,
-		title,
-		description,
-		navigation,
-	}: {
-		success: boolean
-		title: string
-		description: string
-		navigation: boolean
-	}) => void
+	handleResult: (result: TeamCreationResult) => void
 	seasonId: string
 	isTeamRegistrationFull?: boolean
 }
 
 export const RolloverTeamForm = ({
-	setNewTeamDocument,
 	handleResult,
 	seasonId,
 	isTeamRegistrationFull = false,
 }: RolloverTeamFormProps) => {
-	const {
-		form,
-		onSubmit,
-		handleTeamChange,
-		availableTeams,
-		hasCaptainTeams,
-		isSubmitting,
-	} = useRolloverTeamForm({
-		setNewTeamDocument,
-		handleResult,
-		seasonId,
-	})
+	const { form, onSubmit, availableTeams, hasCaptainTeams, isSubmitting } =
+		useRolloverTeamForm({
+			handleResult,
+			seasonId,
+		})
 
 	return (
 		<div className='w-full'>
@@ -84,10 +63,7 @@ export const RolloverTeamForm = ({
 									<FormControl>
 										<Select
 											value={field.value}
-											onValueChange={(value) => {
-												field.onChange(value)
-												handleTeamChange(value)
-											}}
+											onValueChange={field.onChange}
 											disabled={isTeamRegistrationFull}
 										>
 											<SelectTrigger

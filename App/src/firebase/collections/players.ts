@@ -157,6 +157,40 @@ export const playerSeasonsOnTeamQuery = (
 	) as Query<PlayerSeasonDocument>
 }
 
+/** Every player document, for the admin screens and the rankings history picker. */
+export const allPlayersQuery = (): Query<PlayerDocument> =>
+	collection(firestore, Collections.PLAYERS) as Query<PlayerDocument>
+
+/**
+ * The player-seasons in a season that count towards registration: paid and
+ * signed. Served by the `playerSeasons` (season, paid, signed) index.
+ */
+export const registeredPlayerSeasonsQuery = (
+	seasonRef: DocumentReference<SeasonDocument>
+): Query<PlayerSeasonDocument> =>
+	query(
+		collectionGroup(firestore, PLAYER_SEASONS_SUBCOLLECTION),
+		where('season', '==', seasonRef),
+		where('paid', '==', true),
+		where('signed', '==', true)
+	) as Query<PlayerSeasonDocument>
+
+/**
+ * The captain player-seasons of a team, across every season it has played:
+ * filter to one season client-side, since a player-season's id is its season
+ * id. Served by the `playerSeasons` (team, captain) index.
+ */
+export const teamCaptainSeasonsQuery = (
+	teamRef: DocumentReference | undefined
+): Query<PlayerSeasonDocument> | undefined => {
+	if (!teamRef) return undefined
+	return query(
+		collectionGroup(firestore, PLAYER_SEASONS_SUBCOLLECTION),
+		where('team', '==', teamRef),
+		where('captain', '==', true)
+	) as Query<PlayerSeasonDocument>
+}
+
 // ---- Canonical derivation from player season doc snapshots ---------------
 
 /**
@@ -254,4 +288,65 @@ export const getPlayersQuery = (
 			)
 		) as Query<PlayerDocument>
 	}
+}
+
+/**
+ * The admin player search: by email when the term contains an `@`, by first
+ * and last name when it contains a space, and otherwise by either name.
+ */
+export const adminPlayerSearchQuery = (
+	search: string
+): Query<PlayerDocument> | undefined => {
+	if (search === '') {
+		return undefined
+	}
+
+	const trimmed = search.trim()
+	const searchLower = trimmed.toLowerCase()
+
+	// Check if it looks like an email (contains @)
+	if (trimmed.includes('@')) {
+		// Search by email only
+		return query(
+			collection(firestore, Collections.PLAYERS),
+			where('email', '>=', searchLower),
+			where('email', '<=', searchLower + '\uf8ff')
+		) as Query<PlayerDocument>
+	}
+
+	// Check if searching by full name (contains space)
+	if (trimmed.includes(' ')) {
+		const [firstname, lastname] = trimmed.split(' ', 2)
+		const firstCapitalized =
+			firstname.charAt(0).toUpperCase() + firstname.slice(1).toLowerCase()
+		const lastCapitalized =
+			lastname.charAt(0).toUpperCase() + lastname.slice(1).toLowerCase()
+
+		// Search by firstname AND lastname
+		return query(
+			collection(firestore, Collections.PLAYERS),
+			where('firstname', '>=', firstCapitalized),
+			where('firstname', '<=', firstCapitalized + '\uf8ff'),
+			where('lastname', '>=', lastCapitalized),
+			where('lastname', '<=', lastCapitalized + '\uf8ff')
+		) as Query<PlayerDocument>
+	}
+
+	// Search by firstname OR lastname
+	const searchCapitalized =
+		trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
+
+	return query(
+		collection(firestore, Collections.PLAYERS),
+		or(
+			and(
+				where('firstname', '>=', searchCapitalized),
+				where('firstname', '<=', searchCapitalized + '\uf8ff')
+			),
+			and(
+				where('lastname', '>=', searchCapitalized),
+				where('lastname', '<=', searchCapitalized + '\uf8ff')
+			)
+		)
+	) as Query<PlayerDocument>
 }

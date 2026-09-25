@@ -13,7 +13,8 @@ import {
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
-import { FIREBASE_CONFIG, GAME_CONFIG } from '../../../config/constants.js'
+import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { isGameField, parseGameKickoff } from '../../../shared/gameSchedule.js'
 import {
 	Collections,
 	GameType,
@@ -134,10 +135,7 @@ export const updateGame = onCall<
 			)
 		}
 
-		if (
-			field !== undefined &&
-			!(GAME_CONFIG.ALLOWED_FIELDS as readonly number[]).includes(field)
-		) {
+		if (field !== undefined && !isGameField(field)) {
 			logger.warn('Invalid field provided', { field })
 			throw new HttpsError('invalid-argument', 'Field must be 1, 2, or 3')
 		}
@@ -172,89 +170,11 @@ export const updateGame = onCall<
 					)
 				}
 
-				gameDate = new Date(timestamp)
-				if (isNaN(gameDate.getTime())) {
-					throw new HttpsError(
-						'invalid-argument',
-						'Invalid timestamp format. Must be a valid ISO 8601 string'
-					)
-				}
-
-				// Extract date components from ISO string to avoid timezone issues
-				// ISO format: YYYY-MM-DDTHH:MM:SS.sss±HH:MM
-				const dateMatch = timestamp.match(/^(\d{4})-(\d{2})-(\d{2})T/)
-				if (!dateMatch) {
-					throw new HttpsError(
-						'invalid-argument',
-						'Invalid timestamp format: could not extract date'
-					)
-				}
-				const year = parseInt(dateMatch[1], 10)
-				const month = parseInt(dateMatch[2], 10) // 1-indexed in ISO string
-				const dayOfMonth = parseInt(dateMatch[3], 10)
-
-				// Validate business logic: Saturday only
-				// Calculate day of week from the date components (in the intended timezone)
-				// Using Zeller's congruence algorithm
-				const adjustedMonth = month < 3 ? month + 12 : month
-				const adjustedYear = month < 3 ? year - 1 : year
-				const dayOfWeek =
-					(dayOfMonth +
-						Math.floor((13 * (adjustedMonth + 1)) / 5) +
-						adjustedYear +
-						Math.floor(adjustedYear / 4) -
-						Math.floor(adjustedYear / 100) +
-						Math.floor(adjustedYear / 400)) %
-					7
-				// Zeller's returns 0=Saturday, 1=Sunday, ..., 6=Friday
-				if (dayOfWeek !== 0) {
-					throw new HttpsError(
-						'invalid-argument',
-						`Games can only be scheduled on Saturdays (received day: ${dayOfWeek})`
-					)
-				}
-
-				// Validate business logic: allowed time slots
-				// Extract the local time directly from the ISO string to avoid timezone conversion issues
-				// ISO format: YYYY-MM-DDTHH:MM:SS.sss±HH:MM
-				const timeMatch = timestamp.match(/T(\d{2}):(\d{2})/)
-				if (!timeMatch) {
-					throw new HttpsError(
-						'invalid-argument',
-						'Invalid timestamp format: could not extract time'
-					)
-				}
-				const hours = parseInt(timeMatch[1], 10)
-				const minutes = parseInt(timeMatch[2], 10)
-				const timeString = `${hours}:${minutes.toString().padStart(2, '0')}`
-
-				if (
-					!(GAME_CONFIG.ALLOWED_TIME_SLOTS as readonly string[]).includes(
-						timeString
-					)
-				) {
-					throw new HttpsError(
-						'invalid-argument',
-						`Games can only be scheduled at 6:00pm, 6:45pm, 7:30pm, or 8:15pm CT (received: ${timeString})`
-					)
-				}
-
-				// Log for debugging DST transitions
-				logger.info('Game time validation passed', {
-					gameId,
-					timestamp,
-					localHours: hours,
-					localMinutes: minutes,
-					timeString,
-					dayOfWeek,
-					month,
-					year,
-					dayOfMonth,
-					utcOffset: gameDate.getTimezoneOffset(),
-				})
-
+				gameDate = parseGameKickoff(timestamp)
 				updateData.date = Timestamp.fromDate(gameDate)
-			} // Add other fields to update
+			}
+
+			// Add other fields to update
 			if (homeScore !== undefined) {
 				updateData.homeScore = homeScore
 			}

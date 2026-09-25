@@ -243,7 +243,8 @@ export interface TeamSeasonDocument extends DocumentData {
  *
  * Stored at `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}`. The
  * doc id is the player's UID. Carries no status fields —
- * captain/paid/signed/banned all live on the player's season subdoc.
+ * captain, paid and signed live on the player's season subdoc, and a ban on
+ * the player document.
  *
  * **DENORMALIZED**: this entry encodes the same player↔team relationship as
  * `players/{uid}/playerSeasons/{seasonId}.team` (see `PlayerSeasonDocument`).

@@ -1,15 +1,14 @@
 // React
-import { PropsWithChildren, createContext, useContext, useEffect } from 'react'
+import { PropsWithChildren, createContext, useContext } from 'react'
 
 // Firebase Hooks
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { toast } from 'sonner'
 
 // Winter League
 import { FirestoreError, QuerySnapshot } from '@/firebase'
 import { allBadgesQuery } from '@/firebase/collections/badges'
 import { BadgeDocument } from '@/types'
-import { logger } from '@/shared/utils'
+import { useQueryErrorHandler } from '@/shared/hooks/use-query-error-handler'
 
 interface BadgeProps {
 	allBadgesQuerySnapshot: QuerySnapshot<BadgeDocument> | undefined
@@ -34,18 +33,11 @@ export const BadgesContextProvider = ({ children }: PropsWithChildren) => {
 		allBadgesQuerySnapshotError,
 	] = useCollection(allBadgesQuery())
 
-	// Log and notify on badges query errors
-	useEffect(() => {
-		if (allBadgesQuerySnapshotError) {
-			logger.error('Failed to load badges:', {
-				component: 'BadgesContextProvider',
-				error: allBadgesQuerySnapshotError.message,
-			})
-			toast.error('Failed to load badges', {
-				description: allBadgesQuerySnapshotError.message,
-			})
-		}
-	}, [allBadgesQuerySnapshotError])
+	useQueryErrorHandler({
+		error: allBadgesQuerySnapshotError,
+		component: 'BadgesContextProvider',
+		errorLabel: 'badges',
+	})
 
 	return (
 		<BadgesContext.Provider

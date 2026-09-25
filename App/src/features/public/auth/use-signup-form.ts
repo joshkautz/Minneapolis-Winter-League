@@ -117,7 +117,7 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 					)
 					// Don't throw here - account was created successfully even if player doc failed
 					// The user can still use their account, and this can be retried later
-					logger.error('Player document creation failed:', playerCreationError)
+					logger.error('Player document creation failed', playerCreationError)
 				}
 
 				// Log successful completion of entire signup process
@@ -132,7 +132,7 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 				false,
 				error instanceof Error ? error : new Error(String(error))
 			)
-			logger.error('Signup error:', error)
+			logger.error('Signup error', error)
 			toast.error('Failed to create account. Please try again.')
 		}
 	}

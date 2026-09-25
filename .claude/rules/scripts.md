@@ -12,10 +12,10 @@ workspace** — dependencies resolve from the hoisted root `node_modules`, so
 
 ## The two data paths
 
-| Script                      | Source          | Needs prod access | Use for                        |
-| --------------------------- | --------------- | ----------------- | ------------------------------ |
-| `seed-emulator.sh`          | generated       | no                | everyday local development     |
-| `refresh-emulator-data.sh`  | production      | yes (gcloud ADC)  | reproducing a production issue |
+| Script                     | Source     | Needs prod access | Use for                        |
+| -------------------------- | ---------- | ----------------- | ------------------------------ |
+| `seed-emulator.sh`         | generated  | no                | everyday local development     |
+| `refresh-emulator-data.sh` | production | yes (gcloud ADC)  | reproducing a production issue |
 
 Prefer the synthetic path. `data:refresh` writes real user data to
 `.emulator/` and `scripts/production/data/`, both gitignored.
@@ -46,7 +46,10 @@ emulators first. Never hardcode absolute filesystem paths — resolve relative t
 the repository root:
 
 ```js
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const repoRoot = path.resolve(
+	path.dirname(fileURLToPath(import.meta.url)),
+	'..'
+)
 ```
 
 ## CI scripts

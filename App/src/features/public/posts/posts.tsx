@@ -1,16 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useCollection } from 'react-firebase-hooks/firestore'
-import { toast } from 'sonner'
-import { getDocs, type DocumentSnapshot } from 'firebase/firestore'
 import { Users } from 'lucide-react'
 import { useSeasonsContext, useAuthContext } from '@/providers'
 import { postsQueryBySeason } from '@/firebase/collections/posts'
-import { PostDocument } from '@/types'
+import type { PostDocument } from '@/types'
 import { PageContainer, PageHeader, LoadingSpinner } from '@/shared/components'
-import { logger } from '@/shared/utils'
 import { PostCard } from './post-card'
 import { PostsEmptyState } from './posts-empty-state'
 import { CreatePostDialog } from './create-post-dialog'
+import { usePaginatedFeed } from '@/shared/hooks'
 
 const PAGE_SIZE = 10
 
@@ -21,133 +17,22 @@ const PAGE_SIZE = 10
 export const Posts = () => {
 	const { selectedSeasonQueryDocumentSnapshot } = useSeasonsContext()
 	const { authStateUser } = useAuthContext()
-	const [allPosts, setAllPosts] = useState<
-		Array<{ id: string; data: PostDocument }>
-	>([])
-	const [lastDoc, setLastDoc] = useState<
-		DocumentSnapshot<PostDocument> | undefined
-	>(undefined)
-	const [hasMore, setHasMore] = useState(true)
-	const [isLoadingMore, setIsLoadingMore] = useState(false)
-	const observerTarget = useRef<HTMLDivElement>(null)
-
-	// Initial query for first page
-	const initialQuery = selectedSeasonQueryDocumentSnapshot
-		? postsQueryBySeason(selectedSeasonQueryDocumentSnapshot.ref, PAGE_SIZE)
-		: null
-
-	const [snapshot, loading, error] = useCollection(initialQuery)
-
-	// Log and notify on query errors
-	useEffect(() => {
-		if (error) {
-			logger.error('Failed to load posts:', {
-				component: 'Posts',
-				error: error.message,
-			})
-			toast.error('Failed to load posts', {
-				description: error.message,
-			})
-		}
-	}, [error])
-
-	// Initialize posts from first query
-	useEffect(() => {
-		if (snapshot && !loading) {
-			const posts = snapshot.docs.map((doc) => ({
-				id: doc.id,
-				data: doc.data(),
-			}))
-			setAllPosts(posts)
-
-			// Set last document for pagination
-			if (snapshot.docs.length > 0) {
-				setLastDoc(snapshot.docs[snapshot.docs.length - 1])
-			}
-
-			// Check if there might be more posts
-			setHasMore(snapshot.docs.length === PAGE_SIZE)
-		}
-	}, [snapshot, loading])
-
-	// Load more posts
-	const loadMore = useCallback(async () => {
-		if (
-			!selectedSeasonQueryDocumentSnapshot ||
-			!lastDoc ||
-			!hasMore ||
-			isLoadingMore
-		) {
-			return
-		}
-
-		setIsLoadingMore(true)
-
-		try {
-			const nextQuery = postsQueryBySeason(
-				selectedSeasonQueryDocumentSnapshot.ref,
-				PAGE_SIZE,
-				lastDoc
-			)
-			const nextSnapshot = await getDocs(nextQuery)
-
-			if (nextSnapshot.docs.length > 0) {
-				const newPosts = nextSnapshot.docs.map((doc) => ({
-					id: doc.id,
-					data: doc.data(),
-				}))
-
-				setAllPosts((prev) => [...prev, ...newPosts])
-				setLastDoc(nextSnapshot.docs[nextSnapshot.docs.length - 1])
-				setHasMore(nextSnapshot.docs.length === PAGE_SIZE)
-			} else {
-				setHasMore(false)
-			}
-		} catch (err) {
-			logger.error('Error loading more posts:', err)
-		} finally {
-			setIsLoadingMore(false)
-		}
-	}, [selectedSeasonQueryDocumentSnapshot, lastDoc, hasMore, isLoadingMore])
-
-	// Intersection Observer for infinite scroll
-	useEffect(() => {
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-					loadMore()
-				}
-			},
-			{ threshold: 0.1 }
-		)
-
-		const currentTarget = observerTarget.current
-		if (currentTarget) {
-			observer.observe(currentTarget)
-		}
-
-		return () => {
-			if (currentTarget) {
-				observer.unobserve(currentTarget)
-			}
-		}
-	}, [hasMore, isLoadingMore, loadMore])
-
-	// Reset pagination when the season changes.
-	//
-	// Adjusted during render rather than in an effect: React re-runs this
-	// component immediately with the cleared state and never commits the
-	// stale list, so the previous season's posts never flash on screen.
-	// https://react.dev/learn/you-might-not-need-an-effect
-	const seasonId = selectedSeasonQueryDocumentSnapshot?.id
-	const [renderedSeasonId, setRenderedSeasonId] = useState(seasonId)
-	if (seasonId !== renderedSeasonId) {
-		setRenderedSeasonId(seasonId)
-		setAllPosts([])
-		setLastDoc(undefined)
-		setHasMore(true)
-		setIsLoadingMore(false)
-	}
+	const seasonRef = selectedSeasonQueryDocumentSnapshot?.ref
+	const {
+		items: allPosts,
+		loading,
+		error,
+		hasMore,
+		isLoadingMore,
+		sentinelRef,
+	} = usePaginatedFeed<PostDocument>({
+		pageQuery: seasonRef
+			? (after) => postsQueryBySeason(seasonRef, PAGE_SIZE, after)
+			: null,
+		pageSize: PAGE_SIZE,
+		component: 'Posts',
+		errorLabel: 'posts',
+	})
 
 	// Check if user can post (authenticated with verified email)
 	const canPost = authStateUser?.emailVerified === true
@@ -224,7 +109,7 @@ export const Posts = () => {
 					))}
 
 					{/* Intersection observer target */}
-					<div ref={observerTarget} className='h-4' />
+					<div ref={sentinelRef} className='h-4' />
 
 					{/* Loading indicator for pagination */}
 					{isLoadingMore && (

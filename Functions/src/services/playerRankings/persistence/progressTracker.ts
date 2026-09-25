@@ -1,27 +1,6 @@
 import { updateCalculationState } from './calculationState.js'
 
 /**
- * Updates progress for a calculation
- */
-export async function updateProgress(
-	calculationId: string,
-	currentStep: string,
-	percentComplete?: number,
-	additionalUpdates?: Record<string, unknown>
-): Promise<void> {
-	const updates: Record<string, unknown> = {
-		'progress.currentStep': currentStep,
-		...additionalUpdates,
-	}
-
-	if (percentComplete !== undefined) {
-		updates['progress.percentComplete'] = percentComplete
-	}
-
-	await updateCalculationState(calculationId, updates)
-}
-
-/**
  * Updates seasonal progress for a calculation
  */
 export async function updateSeasonalProgress(

@@ -32,8 +32,9 @@ error, then narrow.
 2. **No seed data.** A fresh clone or worktree has no `.emulator/`. The app
    renders empty rather than erroring. Fix with `npm run seed`.
 3. **Seeding order.** `seed.js` builds players from existing Auth users, so
-   `generate-accounts.js` must run first. `Cannot read properties of undefined
-   (reading 'id')` while creating teams is this.
+   `generate-accounts.js` must run first. This is the cause when team
+   creation fails with
+   `Cannot read properties of undefined (reading 'id')`.
 4. **Port already held** by an emulator from a previous run that did not shut
    down cleanly. Find the listener with `lsof -nP -iTCP:<port> -sTCP:LISTEN`.
 5. **Rules not reloaded.** `firestore.rules` and indexes are read at startup

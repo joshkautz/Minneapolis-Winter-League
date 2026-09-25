@@ -53,7 +53,7 @@ export const DeleteTeamDialog = ({
 			})
 			onClose()
 		} catch (error) {
-			logger.error('Error deleting team:', error)
+			logger.error('Error deleting team', error)
 			toast.error(
 				extractErrorMessage(error, 'Failed to delete team. Please try again.')
 			)

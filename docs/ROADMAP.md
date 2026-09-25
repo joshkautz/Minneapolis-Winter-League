@@ -119,43 +119,22 @@ only change needed when the linter catches up.
 
 ### Known advisories
 
-`npm audit` reports 8 moderate advisories, all transitive dependencies of
-`firebase-tools` (`re2`, `stream-json`, `csv-parse`, `uuid`,
-`@opentelemetry/core`). `firebase-tools` is a dev-only CLI and none of this
-reaches the deployed App or Functions. npm's suggested "fix" is a downgrade to
-firebase-tools 10.1.1, which is not one. Recheck when firebase-tools updates
-its own dependencies.
+`npm audit` reports moderate advisories in two places, none reachable:
 
-## React effect cleanup
+- **Dev tooling:** `uuid` via `gaxios`, and `@opentelemetry/core` via
+  `@google-cloud/pubsub`, all under `firebase-tools`. It is a dev-only CLI,
+  and npm's suggested "fix" is a downgrade from firebase-tools 15 to 14.23.0.
+- **The deployed Functions:** `uuid` 9 via `gaxios` 6, which
+  `@google-cloud/storage` (under `firebase-admin`) still pins. The advisory
+  is a missing bounds check in uuid's v3, v5 and v6 when a caller passes a
+  buffer; gaxios calls only `v4()`, with no buffer.
 
-`eslint-plugin-react-hooks` 7.1 promoted `react-hooks/set-state-in-effect` to
-an error. Seventeen of the original twenty-three call sites are fixed; the
-rule is still a warning in `App/eslint.config.js` until the last six are done,
-then it should be restored to `error`.
-
-Fixed so far: the season selectors derive their default instead of seeding it
-in an effect, the reset-on-change effects adjust state during render, the
-snapshot-resolution effects moved to `useResolvedSnapshot` (which also fixes a
-race where a slow resolve could overwrite newer rows), pure derivations became
-`useMemo`, and `use-mobile` uses `useSyncExternalStore`.
-
-Remaining, all deliberately left because they could not be exercised against
-the current seed data and the change is behavioral rather than mechanical:
-
-| Site                                                               | Why it is still open                                                                                                                                                                                                                              |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `components/ui/carousel.tsx`                                       | shadcn-generated; notifies a parent setter from an effect. Revisit when the component is regenerated.                                                                                                                                             |
-| `features/public/news/news.tsx`, `features/public/posts/posts.tsx` | The first page is seeded from a snapshot and then extended by `loadMore`. Fixing it properly means deriving the first page and keeping only the extra pages in state. The seeder creates no news or posts, so there is nothing to verify against. |
-| `features/admin/swiss-rankings/swiss-rankings.tsx`                 | Loads teams for the selected Swiss season; the seeder creates no Swiss-format seasons.                                                                                                                                                            |
-| `features/public/create/hooks/use-rollover-team-form.ts` (x2)      | Needs a signed-in captain with a rolled-over team from a prior season.                                                                                                                                                                            |
-
-Seeder fixtures for news, posts, Swiss seasons and rollover-eligible captains
-would make all six verifiable, and are worth adding first.
+Recheck when firebase-tools or `@google-cloud/storage` move to gaxios 7.
 
 ## Seeder gaps
 
 `scripts/seed.js` was migrated to the subcollection data model (teams,
-teamSeasons, roster, playerSeasons) but two gaps remain:
+teamSeasons, roster, playerSeasons) but three gaps remain:
 
 - **No championship week.** `updateTeamPlacements` runs and finds no Week 7
   games, so every `teamSeasons.placement` stays `null`. The placement logic
@@ -164,21 +143,10 @@ teamSeasons, roster, playerSeasons) but two gaps remain:
 - **No rankings.** The Players page reads the `rankings` collection, which is
   produced by the `rebuildPlayerRankings` admin callable rather than the
   seeder, so it is empty locally until that function is run.
-
-## Firestore index drift
-
-Resolved: Firestore holds 17 composite indexes and `firestore.indexes.json`
-declares the same 17. `scripts/production/prune-firestore-indexes.js` derives
-the difference and deletes anything present only in Firestore; run
-`--mode=plan` after any index change to confirm the file is still the truth.
-
-It can drift again, because CI deploys indexes without `--force` and so never
-deletes. That is deliberate — an accidental deletion breaks live queries —
-but it means removals have to be made on purpose with that script.
-
-**The emulator does not enforce composite indexes**, so a query that needs a
-missing one passes locally and fails only in production. Neither the test
-suites nor local development will catch it.
+- **No news, posts, Swiss-format seasons or rollover-eligible captains.** The
+  pages that read them are covered by hook tests
+  (`use-paginated-feed.test.ts`, `use-rollover-team-form.test.ts`) but cannot
+  be tried by hand against seeded data.
 
 ## A real staging environment
 
@@ -207,7 +175,7 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-About 1,340 tests across four suites, all run by `npm run verify`. Every callable is
+About 1,370 tests across four suites, all run by `npm run verify`. Every callable is
 covered for authorization, **every trigger** has a suite, and the emulator
 suites are mutation-tested. The conventions that keep them worth having —
 mutation testing, the emulator's missing batch limit, and pinning behaviour
@@ -215,7 +183,7 @@ that is deliberately not fixed — are in `CLAUDE.md`.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 47.
+- **Deeper callable behaviour.** The authorization sweep covers all 44.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
   `updatePlayerAdmin`, `rolloverTeam` and the three game callables have
   behavioural tests. The rest are covered only at the gate; `deletePlayer`,
@@ -291,19 +259,24 @@ eventually hit a word still on the list. Two things cover that:
 
 If a real name is reported as blocked, add it to the list in **both** files.
 
-## Registration window enforcement
+## Player emails are public
 
-Reviewed and implemented; recorded here because the boundaries are easy to get
-wrong when touching these functions.
+`players/{uid}` is readable by anyone, signed in or not, and carries the
+player's `email`. Only the admin screens show it, but the rules do not know
+that: anyone can list every player's address with the web SDK and the
+public config. Moving `email` to a private subdocument (readable by that
+player and admins, like `waiverSignatures`) would close it. It touches
+`createPlayer`, `updatePlayerAdmin`, the admin search by email, the
+registration export and the Stripe customer lookup.
 
-| Function      | File                     | Behavior                                                         |
-| ------------- | ------------------------ | ---------------------------------------------------------------- |
-| Team create   | `create.ts`              | Allowed before registration opens, blocked after it ends         |
-| Team rollover | `rollover.ts`            | Allowed before registration opens, blocked after it ends         |
-| Team delete   | `delete.ts`              | Blocked after registration ends (previously: after season start) |
-| Manage player | `managePlayer.ts`        | Blocked after registration ends (previously: after season start) |
-| Create offer  | `offers/create.ts`       | Blocked after registration ends (previously: after season start) |
-| Update offer  | `offers/updateStatus.ts` | Blocked after registration ends (previously: after season start) |
+## Team logo size
+
+`createTeam` and `updateTeam` check that a logo is an image but not how large
+it is, unlike the badge callables, which cap images at 5 MB. The only bound
+is the callable's request size, so a large phone photo fails with an opaque
+error instead of a message, and a logo can be far larger than it is ever
+shown. Decide a limit, or resize in the browser before upload, and check it
+on the server either way.
 
 ## Swiss-format season
 

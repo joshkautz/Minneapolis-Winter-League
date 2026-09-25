@@ -1,168 +1,116 @@
-# App Documentation
+# The App
 
-This directory contains documentation specific to the React application in `/App/`.
+The React front end in `App/`: React 19, TypeScript, Vite, Tailwind v4 with
+shadcn/ui, React Router 7, react-hook-form with Zod, and the modular Firebase
+SDK read through `react-firebase-hooks`.
 
-## 📚 Documents
+The conventions for writing code here — where files go, path aliases, how to
+query Firestore, busy buttons, providers — are in
+[`.claude/rules/app.md`](../../.claude/rules/app.md). This page is the tour.
 
-### Performance & Optimization
-
-- **[Bundle Optimization](./BUNDLE_OPTIMIZATION.md)** - Performance optimization strategies, code splitting, and bundle analysis
-
-## 🏗️ App Architecture
-
-The React application follows a modern, feature-based architecture:
+## Layout
 
 ```
 App/src/
-├── components/ui/          # shadcn/ui components
-├── features/              # Feature-based modules
-│   ├── auth/             # Authentication flows
-│   ├── home/             # Landing page & public views
-│   ├── profile/          # User profile management
-│   ├── teams/            # Team management
-│   ├── schedule/         # Game scheduling
-│   └── standings/        # Season standings
-├── firebase/             # Firebase SDK integration
-├── shared/              # Shared utilities & components
-└── providers/           # React context providers
+  main.tsx, App.tsx     entry point; App mounts the global error boundary and routes
+  routes/               the route table, route wrappers, lazy route components
+  features/public/      pages anyone can open: home, schedule, standings, teams,
+                        rankings, news, message board, sign-in, join, create
+  features/player/      signed-in pages: profile, manage team, waiver
+  features/admin/       one directory per admin screen
+  providers/            auth, seasons, teams, offers, games, badges, site settings, theme
+  firebase/             SDK setup and typed query builders per collection
+  shared/               components, hooks and utils used by more than one feature
+  components/ui/        shadcn/ui primitives
+  types.ts              Collections enum and document shapes, mirrored in Functions
 ```
 
-## 🛠️ Tech Stack
+Each feature directory exports its public pieces through an `index.ts`; the
+route table imports from there.
 
-- **Framework**: React 19 with TypeScript
-- **Build Tool**: Vite with Hot Module Replacement
-- **Styling**: Tailwind CSS + shadcn/ui components
-- **State Management**: React Query + Context API
-- **Routing**: React Router v6
-- **Forms**: React Hook Form + Zod validation
-- **Firebase**: Firebase SDK v9 (modular)
+## Reading and writing data
 
-## 🎯 Key Features
+The App reads Firestore directly and writes nothing: `firestore.rules` denies
+every client write, and every change goes through a callable in
+`firebase/collections/functions.ts`.
 
-### Authentication
+Reads use the query builders in `firebase/collections/<domain>.ts` with
+`useCollection` / `useDocument`. A few shared hooks cover the patterns that
+recur:
 
-- Firebase Auth integration
-- Email verification required
-- Role-based UI (Player/Captain/Admin)
-- Persistent login state
+| Hook                        | For                                                                  |
+| --------------------------- | -------------------------------------------------------------------- |
+| `useQueryErrorHandler`      | Logging a failed query and toasting it, once per error               |
+| `useResolvedSnapshot`       | Following references on each document of a snapshot, without races   |
+| `usePaginatedFeed`          | An infinitely scrolling feed: a live first page, later pages fetched |
+| `usePendingAction`          | A button that calls the server: busy state and no double submits     |
+| `useIsTeamRegistrationFull` | Whether every registration spot this season is taken                 |
 
-### Team Management
+## Routing, code splitting and errors
 
-- Team creation and editing
-- Roster management with drag-and-drop
-- Captain promotion/demotion
-- Team invitation system
+`routes/route-components.ts` lazy-loads every page with `lazyImport`, so each
+route is its own chunk. `routes/app-routes.tsx` renders each through
+`PublicRoute` or `AuthenticatedRoute` (`routes/route-wrappers.tsx`), which add
+the Suspense fallback and an `ErrorBoundary`. A page that throws shows an
+error card while the navigation keeps working; `GlobalErrorBoundary` in
+`App.tsx` catches anything outside a route.
 
-### Game Scheduling
+After a release, a tab still running the previous build can ask for a chunk
+that no longer exists. The route boundary recognises that
+(`shared/utils/stale-deployment.ts`) and offers a refresh instead of
+reporting a fault.
 
-- Automated schedule generation
-- Game result entry
-- Real-time updates
-- Mobile-responsive interface
+Heavy, optional code loads on first use. The particle animation behind the
+home hero and the "Coming Soon" card is the largest: `shared/components/
+sparkles.tsx` lazy-loads it, which keeps tsparticles (about 200 KB) out of the
+entry chunk.
 
-### Player Profiles
+## Feature notes
 
-- Individual statistics
-- Team history
-- Payment status
-- Waiver signing, with a printable copy
+**News** (`features/public/news`, `features/admin/news-management`). Admins
+post announcements for a season with `createNews`, `updateNews` and
+`deleteNews`; the page lists the selected season's newest first, ten at a
+time, through `usePaginatedFeed`.
 
-## 🔒 Security Features
+**Message board** (`features/public/posts`, `features/admin/posts-management`).
+Any player with a verified email who is not banned can post and reply;
+admins can delete either.
+`replyCount` is kept on the post so the list needs no count query.
 
-### Client-Side Security
+**Games** (`features/admin/game-management`). Games are played on Saturdays at
+6:00, 6:45, 7:30 or 8:15pm Central, on fields 1 to 3, one game per field per
+slot. The form sends the kickoff with the admin's UTC offset, and
+`createGame` / `updateGame` check the wall-clock day and time in that string
+(`Functions/src/shared/gameSchedule.ts`), so a slot stays the same slot across
+the November DST change. A game's teams can be left empty as a placeholder;
+the team names are copied onto the game (`homeName`, `awayName`) so the
+schedule renders without a join.
 
-- All write operations via Firebase Functions only
-- Input validation with Zod schemas
-- Role-based UI rendering
-- Secure authentication flows
+**Team payments and waivers** have their own documents:
+[TEAM_PAYMENTS.md](../TEAM_PAYMENTS.md) and [WAIVERS.md](../WAIVERS.md).
 
-### Data Protection
+## Commands
 
-- No sensitive data stored in client state
-- Automatic token refresh
-- Secure API calls to Functions
-- CORS protection
-
-## 📱 Mobile & Accessibility
-
-### Responsive Design
-
-- Mobile-first CSS approach
-- Touch-friendly interfaces
-- Responsive navigation
-- Optimized for all screen sizes
-
-### Accessibility
-
-- ARIA labels and roles
-- Keyboard navigation support
-- Screen reader compatibility
-- High contrast support
-
-## 🚀 Development
-
-### Local Development
+From the repository root:
 
 ```bash
-cd App
-npm run dev:emulators    # Start with Firebase emulators
-npm run dev             # Start with production Firebase
+npm run dev             # emulators + Functions watch + Vite
+npm test                # Vitest for App and Functions
+npm run build           # type-checks and builds both workspaces
 ```
 
-### Building
+Inside `App/`, `npm run dev` points Vite at production Firebase and
+`npm run dev:emulators` at the local emulators; `npm run test:watch` runs
+Vitest in watch mode.
 
-```bash
-npm run build           # Production build
-npm run build:staging   # Loads .env.staging (which currently points at production)
-npm run preview         # Preview production build
-```
+Configuration is the `VITE_FIREBASE_*` web config, `VITE_USE_EMULATORS` and
+`VITE_LOG_LEVEL`; see
+[ENVIRONMENT_VARIABLES.md](../setup/ENVIRONMENT_VARIABLES.md).
 
-### Testing
+## Tests
 
-```bash
-npm run test            # Run tests
-npm test   # Run with coverage
-npm run test:watch         # Visual test runner
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-See `docs/setup/ENVIRONMENT_VARIABLES.md` for complete configuration.
-
-Key app-specific variables:
-
-- `VITE_FIREBASE_CONFIG` - Firebase project configuration
-- `VITE_APP_ENV` - Application environment
-
-### Build Configuration
-
-- **Vite Config**: `vite.config.ts` - Build optimization and dev server
-- **TypeScript**: `tsconfig.json` - Strict type checking enabled
-- **Tailwind**: `tailwind.config.js` - Design system configuration
-- **ESLint**: `eslint.config.js` - Code quality rules
-
-## 📊 Performance Monitoring
-
-### Metrics Tracked
-
-- Bundle size and performance
-- Core Web Vitals
-- User interaction metrics
-- Error rates and types
-
-### Optimization Strategies
-
-- Code splitting by route
-- Dynamic imports for heavy components
-- Image optimization
-- Lazy loading for non-critical content
-
-## 🔮 Upcoming Features
-
-- Progressive Web App (PWA) support
-- Offline functionality
-- Push notifications
-- Enhanced mobile experience
-- Advanced team analytics
+Vitest with Testing Library in jsdom. `src/test/setup.ts` registers the
+jest-dom matchers, stubs the browser APIs jsdom lacks and silences
+Firestore's own logger; `App/.env.test` supplies a fake Firebase config,
+without which `firebase/app.ts` throws at import. Components that mount
+routed UI need `ProvidersWrapper` and a router, as `src/App.test.tsx` does.

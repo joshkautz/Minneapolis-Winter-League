@@ -355,7 +355,7 @@ export const SeasonManagement = () => {
 
 			closeDialog()
 		} catch (error) {
-			logger.error('Error submitting season:', error)
+			logger.error('Error submitting season', error)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to save season'
 			)
@@ -380,7 +380,7 @@ export const SeasonManagement = () => {
 			setDeleteDialogOpen(false)
 			setSeasonToDelete(null)
 		} catch (error) {
-			logger.error('Error deleting season:', error)
+			logger.error('Error deleting season', error)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to delete season'
 			)

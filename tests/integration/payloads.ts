@@ -144,14 +144,7 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	},
 	rolloverTeam: { originalTeamId: 'team-1', seasonId: 'season-1' },
 
-	// --- user: storage / waivers -------------------------------------------
-	getUploadUrl: {
-		fileName: 'logo.png',
-		contentType: 'image/png',
-		filePath: 'team-logos/logo.png',
-	},
-	getDownloadUrl: { filePath: 'team-logos/logo.png' },
-	getFileMetadata: { filePath: 'team-logos/logo.png' },
+	// --- user: waivers -----------------------------------------------------
 	signWaiver: {
 		versionId: '2026-09-original',
 		dateOfBirth: '1990-05-17',

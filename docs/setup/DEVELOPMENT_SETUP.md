@@ -89,7 +89,7 @@ npm run dev             # the full local stack
 npm run seed:attach     # reseed emulators that are already running
 npm run emulators:clean # throw away local data and start empty
 
-npm run verify          # format + lint + typecheck + test + build
+npm run verify          # format, lint, typecheck, all four test suites, build
 npm test                # Vitest, single run
 npm run test:watch      # Vitest in watch mode
 npm run typecheck       # tsc --noEmit, both workspaces

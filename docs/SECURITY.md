@@ -1,80 +1,77 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| main    | :white_check_mark: |
+Only `main`, which is what production runs.
 
-## Security Architecture
+## Reporting a vulnerability
 
-This application implements a **Functions-First Security Model** for maximum protection:
+Open an issue on GitHub. Expect a reply within a week.
 
-### Firebase Functions (Server-Side Logic)
+## The model
 
-- **All write operations** (create, update, delete) go through Firebase Functions
-- **Server-side validation** ensures data integrity and business rule enforcement
-- **Authenticated and authorized** operations only
-- **Centralized security** logic prevents client-side tampering
+**Clients read; Cloud Functions write.** `firestore.rules` and
+`storage.rules` deny every client write, so the callables are the only way
+into the database, and each one authorizes its caller itself with the
+validators in `Functions/src/shared/auth.ts`:
 
-### Firestore Security Rules
+- a signed-in user with a **verified email** for nearly everything
+  (`createPlayer` alone accepts an unverified one, since it runs at sign-up);
+- `admin: true` on the caller's player document for the admin callables —
+  there are no Auth custom claims;
+- not `banned`, for anything that joins, pays or posts.
 
-- **Public read access** for league information (games, teams, standings, seasons)
-- **Restricted read access** for sensitive data (offers limited to involved parties)
-- **All writes denied** at client level - forces use of secure Functions
-- **Helper functions** for maintainable and readable rules
+Validation in the App is for the reader's benefit only. Any signed-in user
+can call a callable directly, so every input is checked again on the server,
+and multi-document changes run in transactions so they cannot half-apply.
+`tests/integration/callables-authorization.test.ts` checks that every
+callable rejects a caller it should, and fails if a new callable is added
+without being listed.
 
-### Firebase Storage Security
+## What clients can read
 
-- **Public read access** for uploaded images
-- **All uploads through Functions** using signed URLs
-- **File validation**: Only images, 5MB limit, authenticated users with verified emails
-- **No client-side uploads** - prevents malicious file uploads
+Most league data is public: players' names, teams and rosters, seasons,
+games, offers, news, posts, badges and rankings. The exceptions, each pinned
+by `tests/rules/firestore.test.ts`:
 
-### Authentication Requirements
+| Data                                         | Readable by                        |
+| -------------------------------------------- | ---------------------------------- |
+| `stripe/{uid}` — checkouts and payments      | that player                        |
+| `dropbox/{uid}` — pre-2026 waiver records    | that player                        |
+| `players/{uid}/waiverSignatures`             | that player and admins             |
+| a team-season's `contributions`, `checkouts` | that season's roster and admins    |
+| `system/maintenance` — the kill-switch       | admins, and no client may write it |
 
-- **Email verification required** for all write operations
-- **User authentication required** for all sensitive operations
-- **Role-based permissions** (captains, admins) enforced server-side
+A player's email is on their public player document. Waiver signatures carry
+the sensitive fields — date of birth, address, emergency contacts — which is
+why they are a separate, private subcollection (`docs/WAIVERS.md`).
 
-### Payments
+## Files
 
-- **The server decides what is charged.** A team contribution's amount is
-  checked against the team's live remaining balance, with a floor, and the
-  team is read from the payer's own roster rather than the request.
-- **Return URLs are allowlisted.** Checkout redirects to whatever it is
-  given, so both checkout callables accept only the league's own origins
-  (`Functions/src/shared/returnUrls.ts`).
+Storage holds public images: team logos and badges. Clients never upload.
+The team and badge callables take the image as base64, check its content
+type, write it with the Admin SDK and make it public. Badge images are capped
+at 5 MB; team logos are bounded only by the callable request limit (see
+`docs/ROADMAP.md`).
+
+## Payments
+
+- **The server decides what is charged.** A contribution is checked against
+  the team's remaining balance, less what teammates have reserved at
+  checkout, and the team comes from the payer's own roster rather than the
+  request.
+- **Return URLs are allowlisted** (`Functions/src/shared/returnUrls.ts`), so
+  Checkout cannot be used as an open redirect.
 - **The webhook trusts only signed events and server-set metadata**, and
   refunds any payment it cannot attribute to a team rather than keeping it.
+- **The Stripe key is restricted** to the calls the code makes (see
+  `.claude/rules/functions.md`), and the emulator refuses a live key.
 
 See `docs/TEAM_PAYMENTS.md` for the full design.
 
-### Data Protection
+## Secrets
 
-- **Input validation** on all Function parameters
-- **SQL injection prevention** through Firestore's NoSQL structure
-- **XSS prevention** through proper data sanitization
-- **File upload restrictions** prevent executable uploads
-
-## Migration Status
-
-✅ **Firestore Security**: Complete (Functions-first architecture)  
-✅ **Storage Security**: Complete (Functions-first architecture)  
-🔄 **Authentication**: Enhanced with email verification requirements  
-⏳ **Additional Features**: Function deployments pending TypeScript fixes
-
-## Reporting a Vulnerability
-
-To report a vulnerability, create an **Issue** on GitHub.
-
-You can expect to get an update within a week of a reported vulnerability.
-
-## Security Best Practices Implemented
-
-1. **Principle of Least Privilege**: Users can only access what they need
-2. **Defense in Depth**: Multiple layers of validation (client, rules, functions)
-3. **Server-Side Validation**: All business logic handled securely on the server
-4. **Audit Trail**: All operations logged through Firebase Functions
-5. **Input Sanitization**: All user inputs validated and sanitized
-6. **Secure File Uploads**: Signed URLs with strict validation
+Stripe's key and webhook secret are Firebase secrets, mounted only on the
+functions that declare them. Nothing secret is committed: the App's
+`VITE_FIREBASE_*` values are the public web config, and
+`Functions/.secret.local` is gitignored.

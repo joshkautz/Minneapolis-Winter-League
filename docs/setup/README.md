@@ -25,13 +25,15 @@ App at <http://localhost:5173>, Emulator UI at <http://localhost:4000>.
 Before opening a pull request:
 
 ```bash
-npm run verify   # format + lint + typecheck + test + build
+npm run verify   # format, lint, typecheck, all four test suites, build
 ```
 
 ## Deployment
 
 Merging to `main` deploys Hosting and Functions via GitHub Actions. Pull
-requests get a Hosting preview channel, posted as a PR comment.
+requests get a Hosting preview channel, posted as a PR comment. The preview
+runs against production data — there is no staging project — so try anything
+that writes against the emulators instead.
 
 Firestore rules and indexes deploy from CI as well, gated on the rules test
 suite. To deploy them out of band:
@@ -44,5 +46,5 @@ firebase deploy --only firestore
 
 - [Project Structure](../PROJECT_STRUCTURE.md)
 - [Security Guidelines](../SECURITY.md)
-- [Bundle Optimization](../app/BUNDLE_OPTIMIZATION.md)
+- [App overview](../app/README.md)
 - Historical migration notes: [`../historical/`](../historical/)

@@ -41,12 +41,22 @@ Import Firebase from `firebase/firestore`, never `@firebase/firestore` — the
 two resolve to separate SDK instances and refs from one fail the other's type
 checks.
 
+Shared hooks cover the patterns that recur, so reach for them before writing
+an effect:
+
+- `useQueryErrorHandler` — log and toast a failed query, once per error.
+  `logger.error(message, error, context)` takes the error second; passing a
+  context object there logs it as `[object Object]`.
+- `useResolvedSnapshot` — follow the references on each document of a
+  snapshot, without a stale resolve overwriting a newer one.
+- `usePaginatedFeed` — an infinitely scrolling, season-scoped feed.
+
 **Writes go through callables**, never the client SDK. `firestore.rules` denies
 all client writes. Add the call to `App/src/firebase/collections/functions.ts`.
 
 ## Collection-group queries: never use `doc.id`
 
-`teamsInSeasonQuery` / `teamsBySeasonQuery` are collection-group queries over
+`teamsInSeasonQuery` is a collection-group query over
 `teamSeasons`, and those subdocs are keyed by **season id**. So every result
 of a single-season query has the _same_ `doc.id`, and it is not the team's id.
 

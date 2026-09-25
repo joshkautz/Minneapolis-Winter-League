@@ -87,7 +87,7 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 					setAuthorName(DELETED_AUTHOR_NAME)
 				}
 			} catch (error) {
-				logger.error('Error fetching author:', error)
+				logger.error('Error fetching author', error)
 				setAuthorName('Unknown')
 			}
 		}
@@ -120,7 +120,7 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 			toast.success('Post updated')
 			setIsEditing(false)
 		} catch (error) {
-			logger.error('Failed to update post:', error)
+			logger.error('Failed to update post', error)
 			toast.error('Failed to update post', {
 				description:
 					error instanceof Error ? error.message : 'Please try again',
@@ -149,7 +149,7 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 			toast.success('Reply posted')
 			setReplyContent('')
 		} catch (error) {
-			logger.error('Failed to post reply:', error)
+			logger.error('Failed to post reply', error)
 			toast.error('Failed to post reply', {
 				description:
 					error instanceof Error ? error.message : 'Please try again',
@@ -376,7 +376,7 @@ const ReplyItem = ({
 					setAuthorName(DELETED_AUTHOR_NAME)
 				}
 			} catch (error) {
-				logger.error('Error fetching reply author:', error)
+				logger.error('Error fetching reply author', error)
 				setAuthorName('Unknown')
 			}
 		}
@@ -412,7 +412,7 @@ const ReplyItem = ({
 			toast.success('Reply updated')
 			setIsEditing(false)
 		} catch (error) {
-			logger.error('Failed to update reply:', error)
+			logger.error('Failed to update reply', error)
 			toast.error('Failed to update reply', {
 				description:
 					error instanceof Error ? error.message : 'Please try again',

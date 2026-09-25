@@ -1,17 +1,16 @@
 /**
  * Payment-related operations (Stripe integration)
  *
- * Uses a callable Firebase function to create Stripe checkout sessions.
- * This provides better security, simpler error handling, and aligns with
- * the established patterns in the codebase.
+ * Sends a payer to Stripe Checkout and back. The callables that create the
+ * sessions are wrapped in `./functions`.
  */
 
 import { User } from '../auth'
 import {
-	cancelTeamContributionCheckoutSession,
-	createStripeCheckoutSession,
-	createTeamContributionCheckoutSession,
-} from '../functions'
+	cancelTeamContributionCheckoutViaFunction,
+	createStripeCheckoutViaFunction,
+	createTeamContributionCheckoutViaFunction,
+} from './functions'
 import { logger } from '@/shared/utils'
 
 /**
@@ -60,7 +59,7 @@ export const stripeRegistration = async (
 	setStripeError(undefined)
 
 	try {
-		const result = await createStripeCheckoutSession({
+		const result = await createStripeCheckoutViaFunction({
 			priceId: options.priceId,
 			couponId: options.couponId,
 			successUrl: buildPaymentReturnUrl('success'),
@@ -68,7 +67,7 @@ export const stripeRegistration = async (
 		})
 
 		// Redirect to Stripe checkout
-		window.location.assign(result.data.url)
+		window.location.assign(result.url)
 	} catch (error) {
 		setStripeLoading(false)
 
@@ -95,13 +94,13 @@ export const startTeamContribution = async (
 	amountCents: number
 ): Promise<string | null> => {
 	try {
-		const result = await createTeamContributionCheckoutSession({
+		const result = await createTeamContributionCheckoutViaFunction({
 			amountCents,
 			successUrl: buildPaymentReturnUrl('success'),
 			cancelUrl: buildPaymentReturnUrl('cancel'),
 			timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 		})
-		window.location.assign(result.data.url)
+		window.location.assign(result.url)
 		return null
 	} catch (error) {
 		return error instanceof Error
@@ -117,7 +116,7 @@ export const startTeamContribution = async (
  */
 export const cancelTeamContribution = async (): Promise<void> => {
 	try {
-		await cancelTeamContributionCheckoutSession()
+		await cancelTeamContributionCheckoutViaFunction()
 	} catch (error) {
 		logger.error('Could not release a cancelled team checkout', error)
 	}

@@ -63,25 +63,48 @@ failure is silent.
 
 ## 3. Wire up the client
 
-Add the wrapper to `App/src/firebase/collections/functions.ts`:
+Add the wrapper to `App/src/firebase/collections/functions.ts`, named
+`<operation>ViaFunction` and returning the response data:
 
 ```ts
-const doThing = async (
-	request: DoThingRequest
-): Promise<HttpsCallableResult<DoThingResponse>> =>
-	httpsCallable<DoThingRequest, DoThingResponse>(functions, 'doThing')(request)
+export const doThingViaFunction = async (
+	data: DoThingRequest
+): Promise<DoThingResponse> => {
+	const doThing = httpsCallable<DoThingRequest, DoThingResponse>(
+		functions,
+		'doThing'
+	)
+	const result = await doThing(data)
+	return result.data
+}
 ```
+
+A button that calls it uses `LoadingButton` and `usePendingAction` (see
+`.claude/rules/app.md`).
 
 Keep the request/response interfaces in step with the Functions side; they are
 declared separately in the two packages and nothing enforces agreement.
 
 ## 4. Rules, only if needed
 
-A new *collection* that the client must read needs a read rule and explicit
+A new _collection_ that the client must read needs a read rule and explicit
 denials for all four write verbs. A collection-group query needs its own
 `match /{path=**}/...` block. Writes stay denied.
 
-## 5. Verify
+## 5. Test it
+
+- Add the name to `ADMIN_CALLABLES` or `USER_CALLABLES` in
+  `tests/integration/callables-authorization.test.ts`, and a valid payload
+  to `tests/integration/payloads.ts`. The sweep compares its lists with
+  `Functions/src/index.ts` and fails until you do; the payload has to be
+  valid, or the sweep proves nothing past input validation.
+- Add behavioural tests in `tests/integration/` for anything that writes more
+  than one document, and mutation-test them (break the rule, watch the test
+  fail).
+- If it calls Stripe, mock the SDK with `tests/integration/fake-stripe.ts`,
+  and add any new kind of Stripe call to the restricted key's permissions.
+
+## 6. Verify
 
 ```bash
 npm run build --workspace=Functions   # catches missing .js extensions

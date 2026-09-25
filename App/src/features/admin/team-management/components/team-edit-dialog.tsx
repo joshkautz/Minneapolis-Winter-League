@@ -8,14 +8,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import {
-	collection,
-	collectionGroup,
-	query,
-	where,
-	getDocs,
-	Query,
-} from 'firebase/firestore'
+import { getDocs } from 'firebase/firestore'
 import {
 	Pencil,
 	Users,
@@ -27,14 +20,17 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { firestore } from '@/firebase/app'
 import { logger } from '@/shared/utils'
 import {
 	getTeamRef,
 	teamRosterSubcollection,
 	teamSeasonRef,
 } from '@/firebase/collections/teams'
-import { canonicalPlayerIdFromPlayerSeasonDoc } from '@/firebase/collections/players'
+import {
+	canonicalPlayerIdFromPlayerSeasonDoc,
+	allPlayersQuery,
+	teamCaptainSeasonsQuery,
+} from '@/firebase/collections/players'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -58,13 +54,8 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { updateTeamAdminViaFunction } from '@/firebase/collections/functions'
-import {
-	PlayerDocument,
-	PlayerSeasonDocument,
-	Collections,
-	PLAYER_SEASONS_SUBCOLLECTION,
-	TeamRosterDocument,
-} from '@/types'
+import { TeamRosterDocument } from '@/types'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 interface TeamEditDialogProps {
 	open: boolean
@@ -90,25 +81,14 @@ export const TeamEditDialog = ({
 	)
 
 	// Fetch all players
-	const [allPlayersSnapshot] = useCollection(
-		open
-			? (collection(firestore, Collections.PLAYERS) as Query<PlayerDocument>)
-			: null
-	)
+	const [allPlayersSnapshot] = useCollection(open ? allPlayersQuery() : null)
 
-	// Log errors
-	useEffect(() => {
-		if (teamError) {
-			logger.error('Failed to load team:', {
-				component: 'TeamEditDialog',
-				teamDocId,
-				error: teamError.message,
-			})
-			toast.error('Failed to load team data', {
-				description: teamError.message,
-			})
-		}
-	}, [teamError, teamDocId])
+	useQueryErrorHandler({
+		error: teamError,
+		component: 'TeamEditDialog',
+		errorLabel: 'team data',
+		context: { teamDocId },
+	})
 
 	// Form state
 	const [teamName, setTeamName] = useState(initialTeamName)
@@ -156,17 +136,12 @@ export const TeamEditDialog = ({
 	useEffect(() => {
 		let cancelled = false
 		const fetchCaptains = async () => {
-			if (!open || currentRoster.length === 0) {
+			const captainsQuery = teamCaptainSeasonsQuery(getTeamRef(teamDocId))
+			if (!open || currentRoster.length === 0 || !captainsQuery) {
 				if (!cancelled) setCaptainMap({})
 				return
 			}
 			try {
-				const canonicalTeamRef = getTeamRef(teamDocId)
-				const captainsQuery = query(
-					collectionGroup(firestore, PLAYER_SEASONS_SUBCOLLECTION),
-					where('team', '==', canonicalTeamRef),
-					where('captain', '==', true)
-				) as Query<PlayerSeasonDocument>
 				const snap = await getDocs(captainsQuery)
 				// The query spans every season this team has played, so keep only
 				// this one's: a player-season's id is its season id. Without this,
@@ -181,7 +156,7 @@ export const TeamEditDialog = ({
 				)
 				if (!cancelled) setCaptainMap(map)
 			} catch (error) {
-				logger.error('Failed to load captain status:', error)
+				logger.error('Failed to load captain status', error)
 				if (!cancelled) {
 					setCaptainMap(
 						Object.fromEntries(currentRoster.map((r) => [r.player.id, false]))
@@ -271,7 +246,7 @@ export const TeamEditDialog = ({
 			})
 			toast.success('Team name updated')
 		} catch (error) {
-			logger.error('Failed to update team name:', error)
+			logger.error('Failed to update team name', error)
 			toast.error('Failed to update team name', {
 				description: error instanceof Error ? error.message : 'Unknown error',
 			})
@@ -295,7 +270,7 @@ export const TeamEditDialog = ({
 				toast.success(`${playerName} added to team`)
 				setPlayerSearchQuery('')
 			} catch (error) {
-				logger.error('Failed to add player:', error)
+				logger.error('Failed to add player', error)
 				toast.error('Failed to add player', {
 					description: error instanceof Error ? error.message : 'Unknown error',
 				})
@@ -322,7 +297,7 @@ export const TeamEditDialog = ({
 			toast.success(`${playerToRemove.playerName} removed from team`)
 			setPlayerToRemove(null)
 		} catch (error) {
-			logger.error('Failed to remove player:', error)
+			logger.error('Failed to remove player', error)
 			toast.error('Failed to remove player', {
 				description: error instanceof Error ? error.message : 'Unknown error',
 			})
@@ -357,7 +332,7 @@ export const TeamEditDialog = ({
 						: 'Player promoted to captain'
 				)
 			} catch (error) {
-				logger.error('Failed to update captain status:', error)
+				logger.error('Failed to update captain status', error)
 				toast.error('Failed to update captain status', {
 					description: error instanceof Error ? error.message : 'Unknown error',
 				})

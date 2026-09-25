@@ -31,5 +31,3 @@ export const isMigrationInProgress = async (
 		return false
 	}
 }
-
-export const MAINTENANCE_FLAG_PATH = MAINTENANCE_DOC_PATH

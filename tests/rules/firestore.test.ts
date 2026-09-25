@@ -301,7 +301,7 @@ describe('system maintenance flag', () => {
 		await assertFails(getDoc(doc(anonymous(), 'system/maintenance')))
 	})
 
-	it('allows an admin to read and write', async () => {
+	it('allows an admin to read it but never to write it', async () => {
 		await testEnv.withSecurityRulesDisabled(async (ctx) => {
 			const db = ctx.firestore() as unknown as Firestore
 			await setDoc(doc(db, 'players/admin-1'), {
@@ -311,9 +311,7 @@ describe('system maintenance flag', () => {
 		})
 		const db = verified('admin-1')
 		await assertSucceeds(getDoc(doc(db, 'system/maintenance')))
-		await assertSucceeds(
-			setDoc(doc(db, 'system/maintenance'), { enabled: true })
-		)
+		await assertFails(setDoc(doc(db, 'system/maintenance'), { enabled: true }))
 	})
 })
 

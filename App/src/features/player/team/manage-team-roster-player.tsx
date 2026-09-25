@@ -9,7 +9,7 @@ import {
 	DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
 import { DotsVerticalIcon, StarFilledIcon } from '@radix-ui/react-icons'
-import { useCallback, useMemo, useEffect, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDocument } from 'react-firebase-hooks/firestore'
@@ -31,6 +31,7 @@ import { playerSeasonRef } from '@/firebase/collections/players'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 import { useDeparturePaymentNote } from './hooks/use-departure-payment-note'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 export const ManageTeamRosterPlayer = ({
 	playerRef,
@@ -53,19 +54,12 @@ export const ManageTeamRosterPlayer = ({
 		playerSeasonRef(playerRef.id, currentSeasonQueryDocumentSnapshot?.id)
 	)
 
-	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'ManageTeamRosterPlayer',
-				playerId: playerRef.id,
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', {
-				description: playerError.message,
-			})
-		}
-	}, [playerError, playerRef.id])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'ManageTeamRosterPlayer',
+		errorLabel: 'player',
+		context: { playerId: playerRef.id },
+	})
 
 	const team = useMemo(
 		() =>

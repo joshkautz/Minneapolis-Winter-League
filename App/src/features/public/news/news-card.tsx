@@ -40,7 +40,7 @@ export const NewsCard = ({ post }: NewsCardProps) => {
 					setAuthorName('Minneapolis Winter League')
 				}
 			} catch (error) {
-				logger.error('Error fetching author:', error)
+				logger.error('Error fetching author', error)
 				setAuthorName('Unknown Author')
 			}
 		}

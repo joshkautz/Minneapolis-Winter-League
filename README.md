@@ -56,17 +56,19 @@ for day-to-day development.
 
 Run from the repository root.
 
-| Command                   | What it does                                                   |
-| ------------------------- | -------------------------------------------------------------- |
-| `npm run dev`             | Emulators, Functions watch and Vite, together                  |
-| `npm run seed`            | Populate the emulators with synthetic data                     |
-| `npm run seed:attach`     | Reseed emulators that are already running                      |
-| `npm run emulators:clean` | Discard local emulator data and start empty                    |
-| `npm run data:refresh`    | Clone production into the emulators (needs gcloud credentials) |
-| `npm run verify`          | format + lint + typecheck + test + build                       |
-| `npm test`                | Vitest, single run                                             |
-| `npm run build`           | Production build of both workspaces                            |
-| `npm run deploy`          | Deploy everything via the Firebase CLI                         |
+| Command                    | What it does                                                      |
+| -------------------------- | ----------------------------------------------------------------- |
+| `npm run dev`              | Emulators, Functions watch and Vite, together                     |
+| `npm run seed`             | Populate the emulators with synthetic data                        |
+| `npm run seed:attach`      | Reseed emulators that are already running                         |
+| `npm run emulators:clean`  | Discard local emulator data and start empty                       |
+| `npm run data:refresh`     | Clone production into the emulators (needs gcloud credentials)    |
+| `npm run verify`           | format, lint, typecheck, unit, rules and integration tests, build |
+| `npm test`                 | Unit tests for both workspaces, single run                        |
+| `npm run test:rules`       | Firestore rules tests (boots the emulator itself)                 |
+| `npm run test:integration` | Functions against the emulators                                   |
+| `npm run build`            | Production build of both workspaces                               |
+| `npm run deploy`           | Deploy everything via the Firebase CLI                            |
 
 ## Architecture
 
@@ -100,7 +102,8 @@ subcollection under the latter.
 | Security           | [Security Guidelines](./docs/SECURITY.md) · [Authentication](./docs/firebase/AUTHENTICATION_SYSTEM.md)                  |
 | Firestore          | [Collections](./docs/firebase/FIREBASE_COLLECTIONS_README.md) · [Indexes](./docs/firebase/FIRESTORE_INDEXES.md)         |
 | Functions          | [Functions overview](./docs/functions/README.md) · [Player rankings](./docs/functions/PLAYER_RANKING_ALGORITHM.md)      |
-| Front end          | [App overview](./docs/app/README.md) · [Bundle optimization](./docs/app/BUNDLE_OPTIMIZATION.md)                         |
+| Front end          | [App overview](./docs/app/README.md)                                                                                    |
+| Payments, waivers  | [Team payments](./docs/TEAM_PAYMENTS.md) · [Waivers](./docs/WAIVERS.md)                                                 |
 | Planned work       | [Roadmap](./docs/ROADMAP.md)                                                                                            |
 
 Working in this repo with Claude Code? [`CLAUDE.md`](./CLAUDE.md) carries the
@@ -109,7 +112,13 @@ conventions, with path-scoped detail in `.claude/rules/`.
 ## Deployment
 
 On merge to `main`, GitHub Actions deploys Hosting and Functions. Pull requests
-get a Firebase Hosting preview channel, commented on the PR.
+get a Firebase Hosting preview channel, commented on the PR. There is only one
+Firebase project, so a preview serves the new front end against production
+data: use the emulators for anything that writes.
+
+Prefer CI to `npm run deploy`. CI refuses a deploy that would delete a
+function; a local deploy does not, and it leaves a `Functions/node_modules`
+that breaks the emulator tests until deleted.
 
 Firestore rules and indexes deploy from CI too, in a job gated on the rules
 test suite. To deploy them out of band:

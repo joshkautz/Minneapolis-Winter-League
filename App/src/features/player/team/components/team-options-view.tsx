@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Users, UserPlus, AlertCircle } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { JoinTeam } from '@/features/public/join'
-import { CreateTeam } from '@/features/public/create/create-team'
-import { useTeamsContext } from '@/providers'
+import { CreateTeam } from '@/features/public/create'
+import { useIsTeamRegistrationFull } from '@/shared/hooks'
 import { WaiverPrompt } from '@/features/player/waiver'
 
 interface TeamOptionsViewProps {
@@ -18,18 +18,7 @@ interface TeamOptionsViewProps {
  */
 export const TeamOptionsView = ({ isLoading }: TeamOptionsViewProps) => {
 	const [activeTab, setActiveTab] = useState('join')
-	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
-
-	const isTeamRegistrationFull = useMemo(() => {
-		if (!currentSeasonTeamsQuerySnapshot) return false
-
-		// Count teams that are fully registered
-		const registeredTeamsCount = currentSeasonTeamsQuerySnapshot.docs.filter(
-			(teamDoc) => teamDoc.data().registered === true
-		).length
-
-		return registeredTeamsCount >= 12
-	}, [currentSeasonTeamsQuerySnapshot])
+	const isTeamRegistrationFull = useIsTeamRegistrationFull()
 
 	return (
 		<PageContainer withSpacing withGap>

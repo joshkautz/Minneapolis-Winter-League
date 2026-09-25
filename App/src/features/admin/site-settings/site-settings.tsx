@@ -501,7 +501,7 @@ export const SiteSettings = () => {
 			await updateSiteSettingsViaFunction({ themeVariant: previewVariant })
 			toast.success(`${previewedTheme?.label ?? 'Theme'} activated!`)
 		} catch (error) {
-			logger.error('Failed to update theme variant:', error)
+			logger.error('Failed to update theme variant', error)
 			toast.error('Failed to update theme', {
 				description: 'Please try again later.',
 			})

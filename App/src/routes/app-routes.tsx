@@ -1,6 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from '@/shared/components'
-import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { PublicRoute, AuthenticatedRoute } from './route-wrappers'
 import {
 	Home,
@@ -40,11 +39,9 @@ import {
  * - Protected routes (require authentication)
  * - Error routes (404, etc.)
  *
- * Error Boundaries: Critical routes are wrapped with ErrorBoundary components
- * to provide graceful error handling. The ErrorBoundary component automatically
- * logs errors with route context, so no additional onError props are needed.
- *
- * For route-specific error handling, consider using RouteErrorBoundary instead.
+ * Every route renders through `PublicRoute` or `AuthenticatedRoute`, which
+ * lazy-load it inside its own error boundary: a page that throws, or whose
+ * chunk fails to load, shows an error card while the navigation still works.
  */
 export const AppRoutes = () => {
 	return (
@@ -56,9 +53,7 @@ export const AppRoutes = () => {
 					index
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<Home />
-							</ErrorBoundary>
+							<Home />
 						</PublicRoute>
 					}
 				/>
@@ -66,9 +61,7 @@ export const AppRoutes = () => {
 					path='/schedule'
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<Schedule />
-							</ErrorBoundary>
+							<Schedule />
 						</PublicRoute>
 					}
 				/>
@@ -76,9 +69,7 @@ export const AppRoutes = () => {
 					path='/standings'
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<Standings />
-							</ErrorBoundary>
+							<Standings />
 						</PublicRoute>
 					}
 				/>
@@ -86,9 +77,7 @@ export const AppRoutes = () => {
 					path='/teams'
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<Teams />
-							</ErrorBoundary>
+							<Teams />
 						</PublicRoute>
 					}
 				/>
@@ -96,9 +85,7 @@ export const AppRoutes = () => {
 					path='/teams/:id'
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<TeamProfile />
-							</ErrorBoundary>
+							<TeamProfile />
 						</PublicRoute>
 					}
 				/>
@@ -106,9 +93,7 @@ export const AppRoutes = () => {
 					path='/teams/:id/:seasonId'
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<TeamProfile />
-							</ErrorBoundary>
+							<TeamProfile />
 						</PublicRoute>
 					}
 				/>
@@ -116,9 +101,7 @@ export const AppRoutes = () => {
 					path='/players'
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<PlayerRankings />
-							</ErrorBoundary>
+							<PlayerRankings />
 						</PublicRoute>
 					}
 				/>
@@ -126,9 +109,7 @@ export const AppRoutes = () => {
 					path='/players/:playerId'
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<PlayerRankingHistory />
-							</ErrorBoundary>
+							<PlayerRankingHistory />
 						</PublicRoute>
 					}
 				/>
@@ -136,9 +117,7 @@ export const AppRoutes = () => {
 					path='/news'
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<News />
-							</ErrorBoundary>
+							<News />
 						</PublicRoute>
 					}
 				/>
@@ -146,9 +125,7 @@ export const AppRoutes = () => {
 					path='/posts'
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<Posts />
-							</ErrorBoundary>
+							<Posts />
 						</PublicRoute>
 					}
 				/>
@@ -157,9 +134,7 @@ export const AppRoutes = () => {
 					path='/profile'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<Profile />
-							</ErrorBoundary>
+							<Profile />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -167,9 +142,7 @@ export const AppRoutes = () => {
 					path='/manage'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<ManageTeam />
-							</ErrorBoundary>
+							<ManageTeam />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -177,9 +150,7 @@ export const AppRoutes = () => {
 					path='/waiver'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<Waiver />
-							</ErrorBoundary>
+							<Waiver />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -187,9 +158,7 @@ export const AppRoutes = () => {
 					path='/waiver/copy/:playerId/:signatureId'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<WaiverCopy />
-							</ErrorBoundary>
+							<WaiverCopy />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -197,9 +166,7 @@ export const AppRoutes = () => {
 					path='/admin'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<AdminDashboard />
-							</ErrorBoundary>
+							<AdminDashboard />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -207,9 +174,7 @@ export const AppRoutes = () => {
 					path='/admin/player-management'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<PlayerManagement />
-							</ErrorBoundary>
+							<PlayerManagement />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -217,9 +182,7 @@ export const AppRoutes = () => {
 					path='/admin/offer-management'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<OfferManagement />
-							</ErrorBoundary>
+							<OfferManagement />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -227,9 +190,7 @@ export const AppRoutes = () => {
 					path='/admin/team-management'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<TeamManagement />
-							</ErrorBoundary>
+							<TeamManagement />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -237,9 +198,7 @@ export const AppRoutes = () => {
 					path='/admin/news-management'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<NewsManagement />
-							</ErrorBoundary>
+							<NewsManagement />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -247,9 +206,7 @@ export const AppRoutes = () => {
 					path='/admin/posts-management'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<PostsManagement />
-							</ErrorBoundary>
+							<PostsManagement />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -257,9 +214,7 @@ export const AppRoutes = () => {
 					path='/admin/season-management'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<SeasonManagement />
-							</ErrorBoundary>
+							<SeasonManagement />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -267,9 +222,7 @@ export const AppRoutes = () => {
 					path='/admin/swiss-rankings'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<SwissRankings />
-							</ErrorBoundary>
+							<SwissRankings />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -277,9 +230,7 @@ export const AppRoutes = () => {
 					path='/admin/game-management'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<GameManagement />
-							</ErrorBoundary>
+							<GameManagement />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -287,9 +238,7 @@ export const AppRoutes = () => {
 					path='/admin/rankings-management'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<PlayerRankingManagement />
-							</ErrorBoundary>
+							<PlayerRankingManagement />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -297,9 +246,7 @@ export const AppRoutes = () => {
 					path='/admin/registration-management'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<RegistrationManagement />
-							</ErrorBoundary>
+							<RegistrationManagement />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -307,9 +254,7 @@ export const AppRoutes = () => {
 					path='/admin/badge-management'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<BadgeManagement />
-							</ErrorBoundary>
+							<BadgeManagement />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -317,9 +262,7 @@ export const AppRoutes = () => {
 					path='/admin/site-settings'
 					element={
 						<AuthenticatedRoute>
-							<ErrorBoundary>
-								<SiteSettings />
-							</ErrorBoundary>
+							<SiteSettings />
 						</AuthenticatedRoute>
 					}
 				/>
@@ -328,9 +271,7 @@ export const AppRoutes = () => {
 					path='*'
 					element={
 						<PublicRoute>
-							<ErrorBoundary>
-								<NotFound />
-							</ErrorBoundary>
+							<NotFound />
 						</PublicRoute>
 					}
 				/>

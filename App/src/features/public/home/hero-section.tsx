@@ -1,13 +1,8 @@
-import { lazy, Suspense } from 'react'
 import { useAnchorScroll } from '@/shared/hooks'
 import { useSiteSettings } from '@/providers'
+import { Sparkles } from '@/shared/components/sparkles'
 import { CitySvg } from './city-svg'
 import { RegistrationCountdown } from './registration-countdown'
-
-// Lazy-load the particles library to reduce initial bundle size
-const SparklesCore = lazy(() =>
-	import('./particles').then((module) => ({ default: module.SparklesCore }))
-)
 
 export const HeroSection = () => {
 	useAnchorScroll()
@@ -44,16 +39,14 @@ export const HeroSection = () => {
 				</div>
 			</div>
 			<div className='absolute inset-0 w-full pointer-events-none z-0'>
-				<Suspense fallback={null}>
-					<SparklesCore
-						background='transparent'
-						minSize={particleConfig.minSize}
-						maxSize={particleConfig.maxSize}
-						particleDensity={particleConfig.density}
-						className='w-full h-full'
-						variant={particleConfig.variant}
-					/>
-				</Suspense>
+				<Sparkles
+					background='transparent'
+					minSize={particleConfig.minSize}
+					maxSize={particleConfig.maxSize}
+					particleDensity={particleConfig.density}
+					className='w-full h-full'
+					variant={particleConfig.variant}
+				/>
 			</div>
 			<div
 				className='absolute inset-x-0 bottom-0 w-full -z-10'

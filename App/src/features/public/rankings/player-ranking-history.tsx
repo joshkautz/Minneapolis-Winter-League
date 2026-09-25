@@ -8,20 +8,15 @@
 import { useMemo, useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { toast } from 'sonner'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { collection, getDoc, Query } from 'firebase/firestore'
+import { getDoc } from 'firebase/firestore'
 
-import { firestore } from '@/firebase/app'
 import { logger, teamRecordsBySeason, type SeasonRecord } from '@/shared/utils'
+import { PlayerSeasonDocument, TeamSeasonDocument } from '@/types'
 import {
-	PlayerDocument,
-	PlayerSeasonDocument,
-	TeamSeasonDocument,
-	Collections,
-	RankingHistoryDocument,
-} from '@/types'
-import { playerSeasonsSubcollection } from '@/firebase/collections/players'
+	playerSeasonsSubcollection,
+	allPlayersQuery,
+} from '@/firebase/collections/players'
 import { teamSeasonRef } from '@/firebase/collections/teams'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -43,6 +38,8 @@ import {
 } from '@/components/ui/select'
 import { Trophy, ArrowLeft, Users, Shield } from 'lucide-react'
 import { useSeasonsContext, useGamesContext } from '@/providers'
+import { useQueryErrorHandler } from '@/shared/hooks'
+import { rankingsHistoryQuery } from '@/firebase/collections/player-rankings'
 
 interface PlayerRankingHistoryProps {
 	/** Optional class name for styling */
@@ -123,53 +120,34 @@ export const PlayerRankingHistory = ({
 
 	useEffect(() => {
 		if (playerSeasonsError) {
-			logger.error('Failed to load player seasons:', {
+			logger.error('Failed to load player seasons', playerSeasonsError, {
 				component: 'PlayerRankingHistory',
 				playerId,
-				error: playerSeasonsError.message,
 			})
 		}
 	}, [playerSeasonsError, playerId])
 
 	// Fetch all players for the dropdown
 	const [allPlayersSnapshot, allPlayersLoading, allPlayersError] =
-		useCollection(
-			collection(firestore, Collections.PLAYERS) as Query<PlayerDocument>
-		)
+		useCollection(allPlayersQuery())
 
 	// Fetch all rankings history data from rankings-history collection
 	const [rankingHistorySnapshot, historyLoading, error] = useCollection(
-		collection(
-			firestore,
-			Collections.RANKINGS_HISTORY
-		) as Query<RankingHistoryDocument>
+		rankingsHistoryQuery()
 	)
 
-	// Log and notify on query errors
-	useEffect(() => {
-		if (allPlayersError) {
-			logger.error('Failed to load players:', {
-				component: 'PlayerRankingHistory',
-				error: allPlayersError.message,
-			})
-			toast.error('Failed to load players', {
-				description: allPlayersError.message,
-			})
-		}
-	}, [allPlayersError])
+	useQueryErrorHandler({
+		error: allPlayersError,
+		component: 'PlayerRankingHistory',
+		errorLabel: 'players',
+	})
 
-	useEffect(() => {
-		if (error) {
-			logger.error('Failed to load ranking history:', {
-				component: 'PlayerRankingHistory',
-				playerId,
-				error: error.message,
-			})
-			toast.error('Failed to load ranking history', {
-				description: error.message,
-			})
-		}
-	}, [error, playerId])
+	useQueryErrorHandler({
+		error,
+		component: 'PlayerRankingHistory',
+		errorLabel: 'ranking history',
+		context: { playerId },
+	})
 
 	const loading = historyLoading || allPlayersLoading
 
@@ -329,11 +307,10 @@ export const PlayerRankingHistory = ({
 						const key = `${canonicalTeamId}::${seasonId}`
 						return [key, tsSnap.data() as TeamSeasonDocument] as const
 					} catch (err) {
-						logger.error('Failed to load team season for history row', {
+						logger.error('Failed to load team season for history row', err, {
 							component: 'PlayerRankingHistory',
 							canonicalTeamId,
 							seasonId,
-							error: err instanceof Error ? err.message : String(err),
 						})
 						return null
 					}

@@ -1,7 +1,6 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useDocument } from 'react-firebase-hooks/firestore'
-import { toast } from 'sonner'
 import { StarFilledIcon } from '@radix-ui/react-icons'
 
 import { DocumentReference } from '@/firebase'
@@ -11,10 +10,10 @@ import {
 	PlayerDocument,
 	SeasonDocument,
 	isPlayerRegisteredForSeason,
-	logger,
 } from '@/shared/utils'
 import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext } from '@/providers'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 export const TeamRosterPlayer = ({
 	playerRef,
@@ -28,19 +27,12 @@ export const TeamRosterPlayer = ({
 		playerSeasonRef(playerRef.id, seasonRef?.id)
 	)
 
-	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'TeamRosterPlayer',
-				playerId: playerRef.id,
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', {
-				description: playerError.message,
-			})
-		}
-	}, [playerError, playerRef.id])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'TeamRosterPlayer',
+		errorLabel: 'player',
+		context: { playerId: playerRef.id },
+	})
 
 	const playerSeasonData = playerSeasonSnapshot?.data()
 

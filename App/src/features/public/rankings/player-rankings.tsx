@@ -5,10 +5,9 @@
  * Currently uses TrueSkill (v5.0), a Bayesian rating algorithm.
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { toast } from 'sonner'
 import { InlineMath, BlockMath } from 'react-katex'
 import 'katex/dist/katex.min.css'
 
@@ -52,9 +51,10 @@ import {
 	User,
 	Search,
 } from 'lucide-react'
-import { cn, logger } from '@/shared/utils'
+import { cn } from '@/shared/utils'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { Input } from '@/components/ui/input'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 interface PlayerRankingsProps {
 	showAdminControls?: boolean
@@ -923,18 +923,11 @@ export const PlayerRankings = ({
 		currentPlayerRankingsQuery()
 	)
 
-	// Log and notify on query errors
-	useEffect(() => {
-		if (error) {
-			logger.error('Failed to load players:', {
-				component: 'PlayerRankings',
-				error: error.message,
-			})
-			toast.error('Failed to load players', {
-				description: error.message,
-			})
-		}
-	}, [error])
+	useQueryErrorHandler({
+		error,
+		component: 'PlayerRankings',
+		errorLabel: 'players',
+	})
 
 	// Type guard to validate ranking document has required properties
 	const isValidRankingDoc = (

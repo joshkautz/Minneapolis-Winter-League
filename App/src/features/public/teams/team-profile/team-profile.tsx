@@ -4,7 +4,6 @@ import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from 'firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { Award, Lock, Loader2, Calendar, Trophy } from 'lucide-react'
-import { toast } from 'sonner'
 import { NotificationCard } from '@/shared/components'
 import {
 	gamesByTeamQuery,
@@ -46,7 +45,7 @@ import {
 	DrawerTitle,
 	DrawerDescription,
 } from '@/components/ui/drawer'
-import { useIsMobile } from '@/shared/hooks/use-mobile'
+import { useIsMobile, useQueryErrorHandler } from '@/shared/hooks'
 
 const RESULT = {
 	VS: 'vs',
@@ -149,82 +148,49 @@ export const TeamProfile = () => {
 		teamBadgesQuery(teamDocumentSnapshot?.ref)
 	)
 
-	// Log and notify on query errors
-	useEffect(() => {
-		if (teamError) {
-			logger.error('Failed to load team:', {
-				component: 'TeamProfile',
-				teamId: id,
-				error: teamError.message,
-			})
-			toast.error('Failed to load team', {
-				description: teamError.message,
-			})
-		}
-	}, [teamError, id])
+	useQueryErrorHandler({
+		error: teamError,
+		component: 'TeamProfile',
+		errorLabel: 'team',
+		context: { teamId: id },
+	})
 
-	useEffect(() => {
-		if (historyError) {
-			logger.error('Failed to load team history:', {
-				component: 'TeamProfile',
-				error: historyError.message,
-			})
-			toast.error('Failed to load team history', {
-				description: historyError.message,
-			})
-		}
-	}, [historyError])
+	useQueryErrorHandler({
+		error: historyError,
+		component: 'TeamProfile',
+		errorLabel: 'team history',
+	})
 
-	useEffect(() => {
-		if (teamsError) {
-			logger.error('Failed to load season teams:', {
-				component: 'TeamProfile',
-				error: teamsError.message,
-			})
-			toast.error('Failed to load season teams', {
-				description: teamsError.message,
-			})
-		}
-	}, [teamsError])
+	useQueryErrorHandler({
+		error: teamsError,
+		component: 'TeamProfile',
+		errorLabel: 'season teams',
+	})
 
-	useEffect(() => {
-		if (gamesError) {
-			logger.error('Failed to load games:', {
-				component: 'TeamProfile',
-				error: gamesError.message,
-			})
-			toast.error('Failed to load games', {
-				description: gamesError.message,
-			})
-		}
-	}, [gamesError])
+	useQueryErrorHandler({
+		error: gamesError,
+		component: 'TeamProfile',
+		errorLabel: 'games',
+	})
 
-	useEffect(() => {
-		if (teamBadgesError) {
-			logger.error('Failed to load team badges:', {
-				component: 'TeamProfile',
-				error: teamBadgesError.message,
-			})
-			toast.error('Failed to load team badges', {
-				description: teamBadgesError.message,
-			})
-		}
-	}, [teamBadgesError])
+	useQueryErrorHandler({
+		error: teamBadgesError,
+		component: 'TeamProfile',
+		errorLabel: 'team badges',
+	})
 
 	useEffect(() => {
 		if (teamSeasonError) {
-			logger.error('Failed to load team season:', {
+			logger.error('Failed to load team season', teamSeasonError, {
 				component: 'TeamProfile',
-				error: teamSeasonError.message,
 			})
 		}
 	}, [teamSeasonError])
 
 	useEffect(() => {
 		if (rosterError) {
-			logger.error('Failed to load roster:', {
+			logger.error('Failed to load roster', rosterError, {
 				component: 'TeamProfile',
-				error: rosterError.message,
 			})
 		}
 	}, [rosterError])

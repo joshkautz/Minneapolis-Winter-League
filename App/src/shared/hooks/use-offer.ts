@@ -102,7 +102,7 @@ export const useOffer = (
 						}
 					} catch (error) {
 						// Log error but continue with fallback names
-						logger.error('Failed to fetch player data for offer:', { error })
+						logger.error('Failed to fetch player data for offer', error)
 					}
 
 					return {
@@ -130,7 +130,7 @@ export const useOffer = (
 			})
 			.catch((error) => {
 				// Handle any unexpected errors in the mapping process
-				logger.error('Failed to enrich offers:', { error })
+				logger.error('Failed to enrich offers', error)
 				toast.error('Failed to load offer details', {
 					description:
 						'Some offer information may be incomplete. Please refresh to try again.',

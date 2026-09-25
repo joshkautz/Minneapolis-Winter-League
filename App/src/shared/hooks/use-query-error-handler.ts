@@ -5,7 +5,7 @@
  * and displaying toast notifications to users.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { logger } from '@/shared/utils'
 
@@ -21,7 +21,11 @@ interface UseQueryErrorHandlerOptions {
 }
 
 /**
- * Hook that logs query errors and shows toast notifications
+ * Hook that logs query errors and shows toast notifications, once per error.
+ *
+ * Only `error` decides when it fires. The other options are read through a
+ * ref, so a `context` object built inline on every render does not toast
+ * the same error again on each re-render.
  *
  * @example
  * ```tsx
@@ -33,22 +37,24 @@ interface UseQueryErrorHandlerOptions {
  * })
  * ```
  */
-export function useQueryErrorHandler({
-	error,
-	component,
-	errorLabel,
-	context,
-}: UseQueryErrorHandlerOptions): void {
+export function useQueryErrorHandler(
+	options: UseQueryErrorHandlerOptions
+): void {
+	const optionsRef = useRef(options)
 	useEffect(() => {
-		if (error) {
-			logger.error(`Failed to load ${errorLabel}:`, {
-				component,
-				error: error.message,
-				...context,
-			})
-			toast.error(`Failed to load ${errorLabel}`, {
-				description: error.message,
-			})
-		}
-	}, [error, component, errorLabel, context])
+		optionsRef.current = options
+	})
+
+	const { error } = options
+	useEffect(() => {
+		if (!error) return
+		const { component, errorLabel, context } = optionsRef.current
+		logger.error(`Failed to load ${errorLabel}`, error, {
+			component,
+			...context,
+		})
+		toast.error(`Failed to load ${errorLabel}`, {
+			description: error.message,
+		})
+	}, [error])
 }

@@ -1461,3 +1461,79 @@ export const refundTeamContributionViaFunction = async (
 	const result = await refundTeamContribution(data)
 	return result.data
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// Payments
+//////////////////////////////////////////////////////////////////////////////
+
+export interface CreateStripeCheckoutRequest {
+	priceId: string
+	couponId?: string
+	successUrl: string
+	cancelUrl: string
+}
+
+/** What both checkout callables return: where to send the payer. */
+export interface CreateStripeCheckoutResponse {
+	success: true
+	url: string
+	sessionId: string
+}
+
+/**
+ * Creates a Stripe Checkout session for a player's own registration fee.
+ */
+export const createStripeCheckoutViaFunction = async (
+	data: CreateStripeCheckoutRequest
+): Promise<CreateStripeCheckoutResponse> => {
+	const createStripeCheckout = httpsCallable<
+		CreateStripeCheckoutRequest,
+		CreateStripeCheckoutResponse
+	>(functions, 'createStripeCheckout')
+	const result = await createStripeCheckout(data)
+	return result.data
+}
+
+export interface CreateTeamContributionCheckoutRequest {
+	/** Proposed amount in cents; the server checks it against the balance. */
+	amountCents: number
+	successUrl: string
+	cancelUrl: string
+	timezone?: string
+}
+
+/**
+ * Creates a Checkout session for a contribution to the caller's own team.
+ * The team is decided by the server from the caller's roster, not passed in.
+ */
+export const createTeamContributionCheckoutViaFunction = async (
+	data: CreateTeamContributionCheckoutRequest
+): Promise<CreateStripeCheckoutResponse> => {
+	const createTeamContributionCheckout = httpsCallable<
+		CreateTeamContributionCheckoutRequest,
+		CreateStripeCheckoutResponse
+	>(functions, 'createTeamContributionCheckout')
+	const result = await createTeamContributionCheckout(data)
+	return result.data
+}
+
+export interface CancelTeamContributionCheckoutResponse {
+	success: true
+	/** How many open checkouts were closed. */
+	closed: number
+}
+
+/**
+ * Closes the caller's open team contribution checkout, so the amount it
+ * reserved is free for teammates again straight away. Called when the payer
+ * comes back from Stripe without paying.
+ */
+export const cancelTeamContributionCheckoutViaFunction =
+	async (): Promise<CancelTeamContributionCheckoutResponse> => {
+		const cancelTeamContributionCheckout = httpsCallable<
+			Record<string, never>,
+			CancelTeamContributionCheckoutResponse
+		>(functions, 'cancelTeamContributionCheckout')
+		const result = await cancelTeamContributionCheckout({})
+		return result.data
+	}

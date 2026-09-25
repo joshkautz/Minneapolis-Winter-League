@@ -64,12 +64,19 @@ neither should ever be committed.
 
 ## What reloads and what does not
 
-| Change                        | Effect                                      |
-| ----------------------------- | ------------------------------------------- |
-| `App/src/**`                  | Vite HMR, instant                           |
-| `Functions/src/**`            | tsc watch recompiles, emulator reloads      |
-| `firestore.rules`, indexes    | **restart the emulators**                   |
-| `firebase.json`               | **restart the emulators**                   |
+| Change                     | Effect                                 |
+| -------------------------- | -------------------------------------- |
+| `App/src/**`               | Vite HMR, instant                      |
+| `Functions/src/**`         | tsc watch recompiles, emulator reloads |
+| `firestore.rules`, indexes | **restart the emulators**              |
+| `firebase.json`            | **restart the emulators**              |
+
+## The Functions emulator is not isolated
+
+It runs against the production project id, and any secret missing from
+`Functions/.secret.local` is fetched from production Secret Manager with your
+credentials. `config/environment.ts` refuses a live Stripe key under the
+emulator, so put a Stripe test key in `.secret.local` to exercise payments.
 
 ## When it misbehaves
 

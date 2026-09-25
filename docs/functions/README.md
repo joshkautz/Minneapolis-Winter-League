@@ -32,7 +32,7 @@ Functions/src/
 
 ## Callables
 
-47 in total, every one covered by the authorization sweep in
+44 in total, every one covered by the authorization sweep in
 `tests/integration/callables-authorization.test.ts`.
 
 | Domain        | User                                                                                       | Admin                                                                                 |
@@ -42,7 +42,6 @@ Functions/src/
 | Offers        | `createOffer`, `updateOffer`                                                               |                                                                                       |
 | Payments      | `createStripeCheckout`, `createTeamContributionCheckout`, `cancelTeamContributionCheckout` | `refundTeamContribution`                                                              |
 | Waivers       | `signWaiver`                                                                               |                                                                                       |
-| Storage       | `getUploadUrl`, `getDownloadUrl`, `getFileMetadata`                                        |                                                                                       |
 | Posts         | `createPost`, `updatePost`, `createReply`, `updateReply`                                   | `deletePost`, `deleteReply`                                                           |
 | Seasons       |                                                                                            | `createSeason`, `updateSeason`, `deleteSeason`, `setSwissSeeding`, `getSwissRankings` |
 | Games         |                                                                                            | `createGame`, `updateGame`, `deleteGame`                                              |
@@ -87,6 +86,24 @@ offers, their leaderboard entry and the site's copy of their Stripe records.
 It keeps their waiver signatures ([WAIVERS.md](../WAIVERS.md)), their team
 contributions, which are the team's ledger, and their posts, which then show
 as from a former player.
+
+## Registration windows
+
+Roster changes close when registration does. Each of these refuses a request
+after the season's `registrationEnd` with `failed-precondition`, and none is
+blocked before registration opens. Admins are exempt, except from
+`deleteTeam`'s check; they delete with `deleteUnregisteredTeam` instead.
+
+| Callable                     | File                                   |
+| ---------------------------- | -------------------------------------- |
+| `createTeam`                 | `functions/user/teams/create.ts`       |
+| `rolloverTeam`               | `functions/user/teams/rollover.ts`     |
+| `deleteTeam`                 | `functions/user/teams/delete.ts`       |
+| `updateTeamRoster`           | `functions/user/teams/updateRoster.ts` |
+| `createOffer`, `updateOffer` | `functions/user/offers/`               |
+
+Paying is different: only admins may pay before registration opens (see
+[TEAM_PAYMENTS.md](../TEAM_PAYMENTS.md)).
 
 ## Scheduled functions
 
@@ -133,6 +150,7 @@ them and a forged request, and it runs before any read or write.
 | `shared/seasonPricing`                | Validating a season's team registration total, which cannot change once money depends on it     |
 | `shared/names`                        | Player name validation, mirroring the App's schema                                              |
 | `shared/database`                     | Document reference builders and the current-season lookup                                       |
+| `shared/gameSchedule`                 | The Saturday time slots and fields a game may be scheduled in                                   |
 
 ## Configuration
 

@@ -5,11 +5,10 @@
  * Only full rebuilds are supported to ensure accurate sigma (uncertainty) tracking.
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
 
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
@@ -49,6 +48,7 @@ import {
 	ArrowLeft,
 	AlertTriangle,
 } from 'lucide-react'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 export const PlayerRankingManagement = () => {
 	const [user] = useAuthState(auth)
@@ -67,30 +67,17 @@ export const PlayerRankingManagement = () => {
 		playerRankingsCalculationsQuery()
 	)
 
-	// Log and notify on query errors
-	useEffect(() => {
-		if (playerError) {
-			logger.error('Failed to load player:', {
-				component: 'PlayerRankingManagement',
-				error: playerError.message,
-			})
-			toast.error('Failed to load player', {
-				description: playerError.message,
-			})
-		}
-	}, [playerError])
+	useQueryErrorHandler({
+		error: playerError,
+		component: 'PlayerRankingManagement',
+		errorLabel: 'player',
+	})
 
-	useEffect(() => {
-		if (error) {
-			logger.error('Failed to load calculations:', {
-				component: 'PlayerRankingManagement',
-				error: error.message,
-			})
-			toast.error('Failed to load calculations', {
-				description: error.message,
-			})
-		}
-	}, [error])
+	useQueryErrorHandler({
+		error,
+		component: 'PlayerRankingManagement',
+		errorLabel: 'calculations',
+	})
 
 	const calculations = calculationsSnapshot?.docs.map((doc) => ({
 		id: doc.id,

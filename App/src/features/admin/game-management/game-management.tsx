@@ -23,7 +23,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { auth } from '@/firebase/auth'
 import { getPlayerRef } from '@/firebase/collections/players'
 import {
-	teamsBySeasonQuery,
+	teamsInSeasonQuery,
 	canonicalTeamIdFromTeamSeasonDoc,
 } from '@/firebase/collections/teams'
 import { useSeasonsContext, useGamesContext } from '@/providers'
@@ -185,18 +185,14 @@ export const GameManagement = () => {
 
 	// Query teams for the selected season (for form dropdowns)
 	const [teamsSnapshot, , teamsError] = useCollection(
-		teamsBySeasonQuery(selectedSeasonRef?.ref)
+		teamsInSeasonQuery(selectedSeasonRef?.ref)
 	)
 
-	useEffect(() => {
-		if (teamsError) {
-			logger.error('Failed to load teams:', {
-				component: 'GameManagement',
-				error: teamsError.message,
-			})
-			toast.error('Failed to load teams', { description: teamsError.message })
-		}
-	}, [teamsError])
+	useQueryErrorHandler({
+		error: teamsError,
+		component: 'GameManagement',
+		errorLabel: 'teams',
+	})
 
 	// `teamsSnapshot` is a collectionGroup('teamSeasons') query — each doc's
 	// `.id` is the seasonId, so derive the canonical team id here so the

@@ -1,128 +1,75 @@
-# Firebase Collections Guide
+# Firestore Collections
 
-**⚠️ IMPORTANT: This directory structure is now DEPRECATED in favor of secure Firebase Functions.**
+The data model. Document shapes are the `*Document` interfaces in
+`App/src/types.ts`, mirrored in `Functions/src/types.ts`; collection names are
+the `Collections` enum in both.
 
-## Migration Status: ✅ Complete
+Nothing here is written by the client. `firestore.rules` denies every client
+write, and each collection is written by the callables and triggers named
+below. The "Read" column is what `firestore.rules` allows a client.
 
-All write operations have been migrated from client-side Firestore operations to secure Firebase Functions. This guide documents the old structure and shows the new Function-based approach.
+## Top-level collections
 
-## Old Structure (Pre-Migration)
+| Collection              | Holds                                                 | Read        | Written by                                          |
+| ----------------------- | ----------------------------------------------------- | ----------- | --------------------------------------------------- |
+| `players`               | Name, email, `admin`, `banned`                        | anyone      | `createPlayer`, `updatePlayer`, `updatePlayerAdmin` |
+| `teams`                 | A team across seasons; its name lives per season      | anyone      | `createTeam`, `rolloverTeam`, the team callables    |
+| `seasons`               | Dates, format, pricing (`teamRegistrationTotalCents`) | anyone      | `createSeason`, `updateSeason`, `deleteSeason`      |
+| `offers`                | Invitations and requests between players and teams    | anyone      | `createOffer`, `updateOffer`, `onOfferUpdated`      |
+| `games`                 | Kickoff, field, teams, scores                         | anyone      | `createGame`, `updateGame`, `deleteGame`            |
+| `news`                  | Admin announcements for a season                      | anyone      | `createNews`, `updateNews`, `deleteNews`            |
+| `posts`                 | Message board posts, with `replies` beneath           | anyone      | the post and reply callables                        |
+| `badges`                | Badge definitions                                     | anyone      | `createBadge`, `updateBadge`, `deleteBadge`         |
+| `rankings`              | Each player's current TrueSkill rating                | anyone      | `rebuildPlayerRankings`                             |
+| `rankings-history`      | Rating snapshots over time                            | anyone      | `rebuildPlayerRankings`                             |
+| `rankings-calculations` | Progress of a rankings rebuild                        | anyone      | `rebuildPlayerRankings`                             |
+| `siteSettings`          | The site theme                                        | anyone      | `updateSiteSettings`                                |
+| `stripe/{uid}`          | A player's Checkout sessions and payments             | that player | `createStripeCheckout`, `stripeWebhook`             |
+| `dropbox/{uid}`         | Waivers signed through Dropbox Sign before Sep 2026   | that player | nothing; kept as history                            |
+| `system/maintenance`    | The migration kill-switch triggers honour             | admins      | `scripts/production/set-maintenance.js`, by hand    |
 
-### `/collections/` - **DEPRECATED**
+## Per-season subcollections
 
-Previously contained domain-specific Firestore operations that are now security vulnerabilities:
+Per-season state hangs off subcollections rather than the parent document:
 
-#### `players.ts` - **DEPRECATED** ❌
+| Path                                                    | Holds                                             | Read                |
+| ------------------------------------------------------- | ------------------------------------------------- | ------------------- |
+| `players/{uid}/playerSeasons/{seasonId}`                | `team`, `captain`, `paid`, `signed`               | anyone              |
+| `players/{uid}/waiverSignatures/{id}`                   | The evidence behind `signed`                      | that player, admins |
+| `teams/{teamId}/teamSeasons/{seasonId}`                 | Name, logo, `registered`, placement               | anyone              |
+| `teams/{teamId}/teamSeasons/{seasonId}/roster/{uid}`    | Membership, and nothing else                      | anyone              |
+| `teams/{teamId}/teamSeasons/{seasonId}/contributions/…` | Team payments, keyed by PaymentIntent id          | that roster, admins |
+| `teams/{teamId}/teamSeasons/{seasonId}/checkouts/open`  | Contributions reserved while payers are on Stripe | that roster, admins |
+| `teams/{teamId}/badges/{badgeId}`                       | Badges awarded to a team                          | anyone              |
 
-Old player operations (now handled by Functions):
+A ban is account-wide and lives on `players/{uid}.banned`, not on a
+player-season.
 
-- ~~`createPlayer`~~ → `createPlayerViaFunction`
-- ~~`updatePlayer`~~ → `updatePlayerViaFunction`
-- ~~`promoteToCaptain`~~ → `manageTeamPlayerViaFunction({ action: 'promote' })`
-- ~~`demoteFromCaptain`~~ → `manageTeamPlayerViaFunction({ action: 'demote' })`
-- ~~`removeFromTeam`~~ → `manageTeamPlayerViaFunction({ action: 'remove' })`
+The player↔team relationship is stored twice — `playerSeasons.team` and the
+`roster` entry — because Firestore has no joins and both directions are read.
+`Functions/src/shared/membership.ts` writes both in one transaction; nothing
+else may write either.
 
-**Still valid** (read operations):
+`teamSeasons` and `playerSeasons` are keyed by **season id**, so every result
+of a collection-group query over one season has the same `doc.id`. Take the
+team or player id from the parent with `canonicalTeamIdFromTeamSeasonDoc` or
+`canonicalPlayerIdFromPlayerSeasonDoc`.
 
-- `getPlayerSnapshot` - Gets a player document snapshot by reference
-- `getPlayerRef` - Gets a player document reference from authenticated user
-- `getPlayersQuery` - Creates a query to search for players by name
+## Collection-group queries
 
-#### `teams.ts` - **DEPRECATED** ❌
+A `collectionGroup()` query needs its own `match /{path=**}/...` block in
+`firestore.rules`, even where the direct path is already readable. There are
+blocks for `teamSeasons`, `playerSeasons` and `badges`. There is deliberately
+none for `contributions` or `checkouts`, so no one can list every team's
+money at once.
 
-Old team operations (now handled by Functions):
+## Reading from the App
 
-- ~~`createTeam`~~ → `createTeamViaFunction`
-- ~~`editTeam`~~ → `editTeamViaFunction`
-- ~~`deleteTeam`~~ → `deleteTeamViaFunction`
+Query builders live in `App/src/firebase/collections/<domain>.ts` — for
+example `teamsInSeasonQuery`, `playerSeasonRef`, `teamContributionsQuery` —
+and are read with `react-firebase-hooks`. Never build a path inline in a
+component. Callable wrappers live in `App/src/firebase/collections/functions.ts`.
 
-**Still valid** (read operations):
-
-- `getTeamById` - Gets a team document reference by ID
-- `teamsQuery` - Creates a query for multiple teams by their references
-- `teamsHistoryQuery` - Creates a query for teams with the same team ID
-- `currentSeasonTeamsQuery` - Creates a query for all teams in a specific season
-- `teamsBySeasonQuery` - Creates a query for teams by season reference
-
-#### `offers.ts` - **DEPRECATED** ❌
-
-Old offer operations (now handled by Functions):
-
-- ~~`acceptOffer`~~ → `updateOfferStatusViaFunction({ status: 'accepted' })`
-- ~~`rejectOffer`~~ → `updateOfferStatusViaFunction({ status: 'rejected' })`
-- ~~`invitePlayer`~~ → `createOfferViaFunction({ type: 'invitation' })`
-- ~~`requestToJoinTeam`~~ → `createOfferViaFunction({ type: 'request' })`
-
-**Still valid** (read operations):
-
-- `outgoingOffersQuery` - Creates a query for outgoing offers
-- `incomingOffersQuery` - Creates a query for incoming offers
-- `offersForPlayerByTeamQuery` - Creates a query for offers between specific player and team
-
-#### `games.ts`
-
-Game-related operations:
-
-- `currentSeasonRegularGamesQuery` - Creates a query for regular season games
-- `currentSeasonPlayoffGamesQuery` - Creates a query for playoff games
-- `currentSeasonGamesQuery` - Creates a query for all games in a season
-- `gamesByTeamQuery` - Creates a query for all games involving a specific team
-
-#### `seasons.ts`
-
-Season-related operations:
-
-- `seasonsQuery` - Creates a query for all seasons
-
-#### `payments.ts`
-
-Payment-related operations (Stripe integration):
-
-- `stripeRegistration` - Creates a Stripe checkout session for registration
-
-### `types.ts`
-
-Re-exported Firebase types for consistent usage across the application.
-
-### `index.ts`
-
-Main entry point that re-exports all functions from the collections for convenience and backward compatibility.
-
-## Usage
-
-### Recommended (New Structure)
-
-```typescript
-// Import specific domain functions
-import { createPlayer, getPlayerRef } from '@/firebase/collections/players'
-import { createTeam, deleteTeam } from '@/firebase/collections/teams'
-import { acceptOffer, rejectOffer } from '@/firebase/collections/offers'
-
-// Or import from main index
-import { createPlayer, createTeam, acceptOffer } from '@/firebase'
-```
-
-### Legacy (Backward Compatibility)
-
-```typescript
-// Still works, but deprecated
-import { createPlayer, createTeam, acceptOffer } from '@/firebase/firestore'
-```
-
-## Benefits
-
-1. **Single Responsibility**: Each file has a clear, focused purpose
-2. **Better Organization**: Easy to find functions related to specific entities
-3. **Improved Testing**: Test individual domains in isolation
-4. **Reduced Import Overhead**: Import only what you need
-5. **Clearer Dependencies**: Obvious which functions depend on which data types
-6. **Better Code Reviews**: Smaller, focused files are easier to review
-7. **Enhanced Collaboration**: Multiple developers can work on different domains simultaneously
-
-## Migration
-
-The original `firestore.ts` file is kept for backward compatibility and will continue to work. However, new code should use the organized structure, and existing code should be gradually migrated.
-
-## Auditing Notes
-
-Functions marked with "Audited: [Date]" in comments have been reviewed and verified for correctness. When modifying these functions, please update the audit date.
+Indexes are described in [FIRESTORE_INDEXES.md](./FIRESTORE_INDEXES.md);
+team payments in [TEAM_PAYMENTS.md](../TEAM_PAYMENTS.md) and waivers in
+[WAIVERS.md](../WAIVERS.md).

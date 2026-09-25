@@ -81,6 +81,8 @@ export const useUserStatus = () => {
 
 	const isEmailVerified = useMemo(
 		() => Boolean(authStateUser?.emailVerified),
+		// userRefreshCount is not read: it changes when AuthContext reloads the
+		// user, which updates emailVerified on the same User object in place.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[authStateUser, userRefreshCount]
 	)

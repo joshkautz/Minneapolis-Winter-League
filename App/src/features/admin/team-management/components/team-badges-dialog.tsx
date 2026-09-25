@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react'
-import { useResolvedSnapshot } from '@/shared/hooks'
+import { useState, useMemo } from 'react'
+import { useResolvedSnapshot, useQueryErrorHandler } from '@/shared/hooks'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
 import { Award, Trash2, Loader2, CheckCircle } from 'lucide-react'
@@ -88,19 +88,12 @@ export const TeamBadgesDialog = ({
 		allBadgesQuerySnapshotLoading: allBadgesLoading,
 	} = useBadgesContext()
 
-	// Log and notify on query errors
-	useEffect(() => {
-		if (teamBadgesError) {
-			logger.error('Failed to load team badges:', {
-				component: 'TeamBadgesDialog',
-				teamId,
-				error: teamBadgesError.message,
-			})
-			toast.error('Failed to load team badges', {
-				description: teamBadgesError.message,
-			})
-		}
-	}, [teamBadgesError, teamId])
+	useQueryErrorHandler({
+		error: teamBadgesError,
+		component: 'TeamBadgesDialog',
+		errorLabel: 'team badges',
+		context: { teamId },
+	})
 
 	// Processed team badges
 
@@ -155,7 +148,7 @@ export const TeamBadgesDialog = ({
 						} as ProcessedTeamBadge
 					} catch (error) {
 						logger.error(
-							`Error processing team badge ${badgeId}:`,
+							`Error processing team badge ${badgeId}`,
 							error as Error
 						)
 						return null
@@ -212,7 +205,7 @@ export const TeamBadgesDialog = ({
 			})
 			toast.success(result.message)
 		} catch (error) {
-			logger.error('Error awarding badge:', error as Error)
+			logger.error('Error awarding badge', error as Error)
 			let errorMessage = 'Failed to award badge'
 			if (error && typeof error === 'object' && 'message' in error) {
 				errorMessage = String(error.message)
@@ -241,7 +234,7 @@ export const TeamBadgesDialog = ({
 			toast.success(result.message)
 			setBadgeToRemove(null)
 		} catch (error) {
-			logger.error('Error revoking badge:', error as Error)
+			logger.error('Error revoking badge', error as Error)
 			let errorMessage = 'Failed to remove badge'
 			if (error && typeof error === 'object' && 'message' in error) {
 				errorMessage = String(error.message)

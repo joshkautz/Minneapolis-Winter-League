@@ -47,7 +47,7 @@ export const ManageCaptainsOffersPanel = () => {
 				firebaseError?.message ||
 				firebaseError?.code ||
 				'Failed to reject request'
-			logger.error('Failed to reject offer:', error)
+			logger.error('Failed to reject offer', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -72,7 +72,7 @@ export const ManageCaptainsOffersPanel = () => {
 				firebaseError?.message ||
 				firebaseError?.code ||
 				'Failed to accept request'
-			logger.error('Failed to accept offer:', error)
+			logger.error('Failed to accept offer', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -97,7 +97,7 @@ export const ManageCaptainsOffersPanel = () => {
 				firebaseError?.message ||
 				firebaseError?.code ||
 				'Failed to cancel invite'
-			logger.error('Failed to cancel offer:', error)
+			logger.error('Failed to cancel offer', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
