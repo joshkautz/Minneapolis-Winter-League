@@ -37,6 +37,12 @@ import {
 } from '@/firebase/collections/functions'
 import { logger } from '@/shared/utils'
 
+/**
+ * Posts outlive the account that wrote them, so a deleted player's posts and
+ * replies stay up under this name; see services/accountDeletionService.ts.
+ */
+const DELETED_AUTHOR_NAME = 'Former player'
+
 interface PostCardProps {
 	post: PostDocument
 	postId: string
@@ -78,7 +84,7 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 					const authorData = authorDoc.data() as PlayerDocument
 					setAuthorName(`${authorData.firstname} ${authorData.lastname}`)
 				} else {
-					setAuthorName('Unknown')
+					setAuthorName(DELETED_AUTHOR_NAME)
 				}
 			} catch (error) {
 				logger.error('Error fetching author:', error)
@@ -367,7 +373,7 @@ const ReplyItem = ({
 					const authorData = authorDoc.data() as PlayerDocument
 					setAuthorName(`${authorData.firstname} ${authorData.lastname}`)
 				} else {
-					setAuthorName('Unknown')
+					setAuthorName(DELETED_AUTHOR_NAME)
 				}
 			} catch (error) {
 				logger.error('Error fetching reply author:', error)

@@ -1,134 +1,111 @@
 /**
- * Delete player callable function
+ * Delete player callable function: a player deletes their own account.
+ *
+ * Removes their data (`deletePlayerAccountData`) and then their sign-in, so
+ * the account is gone rather than left able to sign in to nothing. Their
+ * waiver signatures are kept as a legal record; see docs/WAIVERS.md.
+ *
+ * Security validations performed:
+ * - Caller must be authenticated. An unverified email is allowed: deleting
+ *   an account should not depend on first verifying it.
+ * - A player deletes only their own account; there is no target parameter.
+ * - Caller must have signed in within RECENT_SIGN_IN_SECONDS, as Firebase
+ *   requires for deleting an account from the client. The App re-enters the
+ *   password first, so a left-open session cannot delete the account.
+ * - Not while on a team for the current season: leaving first keeps a
+ *   deletion from quietly breaking that team's ten signatures.
+ * - Not the league's last admin.
+ * - Not a banned player. The ban lives on the player document, so deleting
+ *   it would let them sign up again, unbanned, with the same email. An admin
+ *   can still delete the account from the Firebase console.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
+import { getAuth } from 'firebase-admin/auth'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import {
-	Collections,
-	PLAYER_SEASONS_SUBCOLLECTION,
-	PlayerDocument,
-} from '../../../types.js'
-import {
-	validateAuthentication,
-	validateAdminUser,
-} from '../../../shared/auth.js'
+import { Collections, type SeasonDocument } from '../../../types.js'
+import { validateBasicAuthentication } from '../../../shared/auth.js'
+import { getCurrentSeason, playerSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { deletePlayerAccountData } from '../../../services/accountDeletionService.js'
 
-/**
- * Request interface for deleting a player
- */
-interface DeletePlayerRequest {
-	playerId?: string // Optional - defaults to authenticated user
-	adminOverride?: boolean // Allow admin to force delete
+/** How recently the caller must have signed in to delete their account. */
+export const RECENT_SIGN_IN_SECONDS = 5 * 60
+
+export interface DeletePlayerResponse {
+	success: true
+	message: string
 }
 
-/**
- * Deletes a player document from Firestore
- *
- * Security validations:
- * - User must be authenticated
- * - Users can only delete their own profile (unless admin)
- * - Admins can delete any player with adminOverride flag
- * - Checks for team associations and warns about cleanup
- * - Provides audit logging for deletions
- */
-export const deletePlayer = onCall<DeletePlayerRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
-	async (request) => {
-		const { data, auth } = request
+export const deletePlayer = onCall(
+	{ region: FIREBASE_CONFIG.REGION },
+	async (request): Promise<DeletePlayerResponse> => {
+		validateBasicAuthentication(request.auth)
+		const uid = request.auth.uid
+		const firestore = getFirestore()
 
-		// Validate authentication
-		validateAuthentication(auth)
-
-		const { playerId, adminOverride } = data
-		const userId = auth?.uid ?? ''
-
-		// Determine target player ID (defaults to authenticated user)
-		const targetPlayerId = playerId || userId
-
-		// Check if user is trying to delete someone else's profile
-		if (targetPlayerId !== userId) {
-			// Only admins can delete other players
-			if (!adminOverride) {
-				throw new HttpsError(
-					'permission-denied',
-					'Admin override required to delete other players'
-				)
-			}
-
-			const firestore = getFirestore()
-			await validateAdminUser(auth, firestore)
+		const signedInAt = Number(request.auth.token.auth_time)
+		if (
+			!Number.isFinite(signedInAt) ||
+			Date.now() / 1000 - signedInAt > RECENT_SIGN_IN_SECONDS
+		) {
+			throw new HttpsError(
+				'failed-precondition',
+				'For your security, confirm your password again to delete your account.'
+			)
 		}
 
-		try {
-			const firestore = getFirestore()
-			const playerRef = firestore
-				.collection(Collections.PLAYERS)
-				.doc(targetPlayerId)
-
-			// Read player parent doc + check for any team associations via the
-			// player's seasons subcollection.
-			const playerDoc = await playerRef.get()
-			if (!playerDoc.exists) {
-				throw new HttpsError('not-found', 'Player not found')
-			}
-			const playerDocument = playerDoc.data() as PlayerDocument | undefined
-			if (!playerDocument) {
-				throw new HttpsError('not-found', 'Unable to retrieve player data')
-			}
-
-			const playerSeasonsSnap = await playerRef
-				.collection(PLAYER_SEASONS_SUBCOLLECTION)
-				.get()
-			const hasTeamAssociations = playerSeasonsSnap.docs.some(
-				(d) => d.data()?.team
-			)
-			if (hasTeamAssociations && !adminOverride) {
+		const season = (await getCurrentSeason()) as
+			(SeasonDocument & { id: string }) | null
+		if (season) {
+			const current = await playerSeasonRef(firestore, uid, season.id).get()
+			if (current.data()?.team) {
 				throw new HttpsError(
 					'failed-precondition',
-					'Player has team associations. Admin override required for deletion. ' +
-						'Note: This will remove the player from all teams and delete all offers.'
+					`Leave your team for ${season.name} before deleting your account.`
 				)
 			}
+		}
 
-			// Delete the player document. The userDeleted trigger walks the
-			// player's seasons subcollection + collection-group roster query and
-			// performs the cascade cleanup.
-			await playerRef.delete()
-
-			logger.info(`Successfully deleted player: ${targetPlayerId}`, {
-				deletedBy: userId,
-				playerDocument: {
-					email: playerDocument?.email,
-					name: `${playerDocument?.firstname} ${playerDocument?.lastname}`,
-				},
-				adminOverride,
-			})
-
-			return {
-				success: true,
-				playerId: targetPlayerId,
-				message: 'Player deleted successfully',
-			}
-		} catch (error) {
-			logger.error('Error deleting player:', {
-				targetPlayerId,
-				deletedBy: userId,
-				error: error instanceof Error ? error.message : 'Unknown error',
-			})
-
-			// Re-throw HttpsError as-is
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Wrap other errors
+		const player = (
+			await firestore.collection(Collections.PLAYERS).doc(uid).get()
+		).data()
+		if (player?.banned === true) {
 			throw new HttpsError(
-				'internal',
-				error instanceof Error ? error.message : 'Failed to delete player'
+				'failed-precondition',
+				'Your account is banned, so it can only be deleted by the league. Email leadership@mplsmallard.com.'
 			)
 		}
+		if (player?.admin === true) {
+			const admins = await firestore
+				.collection(Collections.PLAYERS)
+				.where('admin', '==', true)
+				.limit(2)
+				.get()
+			if (admins.size <= 1) {
+				throw new HttpsError(
+					'failed-precondition',
+					'You are the only admin. Make someone else an admin before deleting your account.'
+				)
+			}
+		}
+
+		// Data first, then the sign-in: if the cleanup fails part way the
+		// player can still sign in and try again, and every step is safe to
+		// repeat. Deleting the sign-in fires userDeleted, which finds nothing
+		// left.
+		const summary = await deletePlayerAccountData(firestore, uid)
+		try {
+			await getAuth().deleteUser(uid)
+		} catch (error) {
+			// Already gone — a retry after the sign-in was deleted.
+			if ((error as { code?: string }).code !== 'auth/user-not-found') {
+				throw error
+			}
+		}
+
+		logger.info('Player deleted their account', { uid, ...summary })
+		return { success: true, message: 'Your account has been deleted.' }
 	}
 )

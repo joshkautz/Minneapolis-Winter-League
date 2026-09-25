@@ -80,10 +80,15 @@ const USER_CALLABLES = [
 ] as const
 
 /**
- * Callables that deliberately accept an unverified email, because they run
- * before or during account setup. Both use validateBasicAuthentication.
+ * Callables that deliberately accept an unverified email: two run before or
+ * during account setup, and deleting an account should not depend on first
+ * verifying it. All use validateBasicAuthentication.
  */
-const ALLOWS_UNVERIFIED_EMAIL = new Set(['createPlayer', 'updatePlayer'])
+const ALLOWS_UNVERIFIED_EMAIL = new Set([
+	'createPlayer',
+	'updatePlayer',
+	'deletePlayer',
+])
 
 /** Triggers, webhooks and schedules: not callables, excluded from the sweep. */
 const NON_CALLABLES = new Set([

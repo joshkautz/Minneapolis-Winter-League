@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { ProfileForm } from './profile-form'
 import { ProfileActions } from './profile-actions'
+import { DeleteAccountSection } from './delete-account-section'
 import { User } from 'lucide-react'
 import { useUserStatus } from '@/shared/hooks'
 import { useSeasonsContext } from '@/providers'
@@ -70,6 +71,12 @@ export const Profile = () => {
 					/>
 				</div>
 			</div>
+
+			<DeleteAccountSection
+				isRostered={isAuthenticatedUserRostered}
+				isBanned={isAuthenticatedUserBanned}
+				currentSeasonName={currentSeasonQueryDocumentSnapshot?.data()?.name}
+			/>
 		</PageContainer>
 	)
 }

@@ -35,7 +35,9 @@ export const NewsCard = ({ post }: NewsCardProps) => {
 					const authorData = authorDoc.data() as PlayerDocument
 					setAuthorName(`${authorData.firstname} ${authorData.lastname}`)
 				} else {
-					setAuthorName('Unknown Author')
+					// News is the league's; an admin who wrote it may since have
+					// deleted their account.
+					setAuthorName('Minneapolis Winter League')
 				}
 			} catch (error) {
 				logger.error('Error fetching author:', error)

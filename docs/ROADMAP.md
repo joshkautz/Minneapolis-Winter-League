@@ -86,14 +86,6 @@ deciding what happens to that money — refund it, keep it, or require it be
 released first through the payments dialog. Until then the button should
 probably be hidden for registered teams rather than fail.
 
-## Account deletion has no screen
-
-`deletePlayer` lets a player delete their own profile (and an admin anyone's
-with `adminOverride`), but nothing in the App calls it, so a player who wants
-their account gone has to ask. Either add a "Delete my account" action to the
-profile or retire the callable. Deleting an account keeps its waiver
-signatures (`docs/WAIVERS.md`).
-
 ## Waivers
 
 Signed in the app since 2026 Fall: `docs/WAIVERS.md`. Left:
@@ -103,6 +95,10 @@ Signed in the app since 2026 Fall: `docs/WAIVERS.md`. Left:
 - **A copy by email.** Players can print or save their copy; emailing one
   needs an email provider the project does not have.
 - **Captains reminding teammates** who have not signed.
+- **How long to keep signatures.** They outlive a deleted account and are
+  kept indefinitely until the attorney says how long they must be; for a
+  minor the clock starts at eighteen. Then either a scheduled deletion or a
+  written policy.
 
 ### Waiver review
 
