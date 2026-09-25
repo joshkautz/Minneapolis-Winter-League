@@ -475,20 +475,26 @@ What the Stripe account needed, and where each item stands.
 
 - **Webhook events — done.** The endpoint receives
   `checkout.session.completed`, `payment_intent.canceled`,
-  `payment_intent.succeeded` and `charge.refunded`.
+  `payment_intent.succeeded` and `charge.refunded`, plus the product and
+  price events. It is on API version `2026-08-26.dahlia`, the SDK's, since
+  September 2026; see "Changing the Stripe API version" in
+  `.claude/rules/functions.md`.
 - **The "Team Registration" Product — not needed.** The callable creates it
   on first use under the fixed id `mwl_team_registration`.
 - **`automatic_delayed` capture — no longer needed.** It would have captured
   a hold about six hours before it lapsed. The hourly sweep does the same
   job, a day ahead, so there is nothing to request.
-- **Extended authorizations — not worth asking for.** They need IC+ pricing
-  and add 0.08% on Visa, to solve a problem the sweep already solves.
-- **A restricted API key — optional, recommended.** The Functions use the
-  account's full secret key. A key scoped to Checkout Sessions,
-  PaymentIntents, Customers, Products and Refunds (write) shrinks the blast
-  radius of a leaked key. Stripe does not let keys be created through its
-  API, so this is a Dashboard step; swapping it in is then one
-  `firebase functions:secrets:set STRIPE_SECRET_KEY`.
+- **Extended authorizations — not requested.** They would stretch a hold to
+  about 30 days, so the expiry net would rarely have to charge early. Only
+  Visa and Mastercard allow it for a business like ours (Amex and Discover
+  limit it to travel and lodging), Visa adds 0.08%, and an account on
+  standard pricing has to ask Stripe support. If granted, set
+  `payment_method_options.card.request_extended_authorization:
+'if_available'` on the Checkout session; the sweep already reads each
+  hold's real `capture_before`.
+- **A restricted API key — done, September 2026.** `STRIPE_SECRET_KEY` is a
+  restricted key; the account's standard secret key was rolled. Its
+  permissions are listed in `.claude/rules/functions.md`.
 - **The statement descriptor — worth a look.** A $1,000 hold nobody
   recognises becomes a dispute, which costs the fee _and_ the amount. It
   should read as the league.
