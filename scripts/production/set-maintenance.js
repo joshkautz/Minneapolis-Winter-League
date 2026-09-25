@@ -5,8 +5,8 @@
  *
  * Usage:
  *   FIRESTORE_EMULATOR_HOST=localhost:8080 GCLOUD_PROJECT=minnesota-winter-league \
- *     node scripts/migrations/2026-teams-v2/set-maintenance.js on
- *   node scripts/migrations/2026-teams-v2/set-maintenance.js off
+ *     node scripts/production/set-maintenance.js on
+ *   node scripts/production/set-maintenance.js off
  *
  * Against production, omit FIRESTORE_EMULATOR_HOST. The script uses ADC.
  */

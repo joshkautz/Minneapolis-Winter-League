@@ -5,7 +5,7 @@
  * - Team name (per season)
  * - Roster management (add/remove players, change captain status)
  *
- * Captain status, paid, signed, banned all live on the player season subdoc.
+ * Captain status, paid and signed live on the player season subdoc.
  * The team's roster subcollection is the pure membership join.
  */
 
