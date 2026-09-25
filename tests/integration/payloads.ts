@@ -120,7 +120,7 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 		successUrl: 'https://mplswinterleague.com/profile?payment=success',
 		cancelUrl: 'https://mplswinterleague.com/profile?payment=cancel',
 	},
-	releaseTeamContribution: {
+	refundTeamContribution: {
 		teamId: 'team-1',
 		seasonId: 'season-1',
 		paymentIntentId: 'pi_1',

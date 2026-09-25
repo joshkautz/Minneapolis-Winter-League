@@ -24,7 +24,7 @@ import {
 } from '../shared/database.js'
 import {
 	CONTRIBUTIONS_SUBCOLLECTION,
-	hasUnsettledMoney,
+	holdsMoney,
 } from '../shared/contributions.js'
 
 export interface TeamDeletionResult {
@@ -102,7 +102,7 @@ export async function deleteTeamSeasonWithCleanup(
 			(doc) => doc.data() as TeamContributionDocument
 		)
 
-		if (hasUnsettledMoney(contributions)) {
+		if (holdsMoney(contributions)) {
 			return {
 				teamId,
 				seasonId,
@@ -112,8 +112,8 @@ export async function deleteTeamSeasonWithCleanup(
 				offersDeleted: 0,
 				logoDeleted: false,
 				error:
-					'Cannot delete a team with money still committed to it. ' +
-					'Cancel or refund its contributions first.',
+					'Cannot delete a team that still holds money. ' +
+					'Refund its contributions first.',
 			}
 		}
 

@@ -27,8 +27,8 @@ import {
 } from '@/firebase/collections/players'
 import {
 	CENTS_PER_DOLLAR,
-	committedByRosterCents,
-	committedCents,
+	paidByRosterCents,
+	paidCents,
 	contributionAmountError,
 	formatDollars,
 	formatTimestamp,
@@ -39,18 +39,16 @@ import {
 } from '@/shared/utils'
 
 /**
- * Shown above the pay button. A card hold looks like a charge on a
- * statement, so the payer is told up front what it is and when it becomes
- * one — including the early charge the hourly sweep makes rather than let
- * a week-old hold lapse. The same wording is on Stripe's page
+ * Shown above the pay button, so a payer knows before paying when they get
+ * their money back. The same wording is on Stripe's page
  * (`createTeamContributionCheckout`).
  */
-const HOLD_EXPLANATION =
-	`Your card is authorized now and charged when your team registers. ` +
-	`An authorization lasts about a week, so if your team has not registered ` +
-	`by then it is charged early rather than allowed to lapse. If your team ` +
-	`does not get one of the ${REGISTRATION_SPOTS} spots, the authorization ` +
-	`is released, or the charge refunded in full.`
+const PAYMENT_EXPLANATION =
+	`Your card is charged now. If you leave the team before it registers, or ` +
+	`it does not get one of the ${REGISTRATION_SPOTS} spots, you are refunded ` +
+	`in full. If your team pays more than its total, the extra is refunded, ` +
+	`latest payments first. Refunds take 5 to 10 business days to reach your ` +
+	`card.`
 
 /** Tells the payer how Checkout went, once, when Stripe sends them back. */
 const usePaymentReturnToast = (): void => {
@@ -60,10 +58,9 @@ const usePaymentReturnToast = (): void => {
 		if (status !== 'success' && status !== 'cancel') return
 
 		if (status === 'success') {
-			toast.success('Card authorized', {
+			toast.success('Payment received', {
 				description:
-					'Your contribution will appear here in a moment. It is held on ' +
-					'your card until your team registers.',
+					'Your contribution will appear here in a moment. Thank you!',
 			})
 		} else {
 			toast.info('Payment cancelled', {
@@ -158,7 +155,7 @@ const ContributeForm = ({ remainingCents }: { remainingCents: number }) => {
 				)}
 			</div>
 
-			<p className='text-sm text-muted-foreground'>{HOLD_EXPLANATION}</p>
+			<p className='text-sm text-muted-foreground'>{PAYMENT_EXPLANATION}</p>
 
 			<LoadingButton
 				onClick={submit}
@@ -175,7 +172,7 @@ const ContributeForm = ({ remainingCents }: { remainingCents: number }) => {
 }
 
 /**
- * The team's registration payment: what is committed, what is left, who
+ * The team's registration payment: what is paid, what is left, who
  * paid, and a way to contribute. Only for seasons on team payments, and
  * only readable by the team's own roster.
  */
@@ -239,13 +236,13 @@ export const TeamPaymentCard = () => {
 	const registered = teamSeason?.registered === true
 	// Before registering, only the current roster's money counts, as on the
 	// server. After, all of it is the team's: registration is final.
-	const committed = registered
-		? committedCents(contributions.map((doc) => doc.data()))
-		: committedByRosterCents(
+	const paid = registered
+		? paidCents(contributions.map((doc) => doc.data()))
+		: paidByRosterCents(
 				contributions.map((doc) => doc.data()),
 				rosterPlayerIds
 			)
-	const remainingCents = Math.max(0, totalCents - committed)
+	const remainingCents = Math.max(0, totalCents - paid)
 
 	const now = Timestamp.now()
 	const notOpenYet = now < season.registrationStart
@@ -270,8 +267,8 @@ export const TeamPaymentCard = () => {
 					{full
 						? `All ${REGISTRATION_SPOTS} spots have been taken.`
 						: `Registration closed on ${formatTimestamp(season.registrationEnd)}.`}{' '}
-					Any money your team committed is released automatically: holds are
-					cancelled, and anything already charged is refunded in full.
+					Everything your team paid is refunded in full, automatically. Refunds
+					take 5 to 10 business days to reach each card.
 				</AlertDescription>
 			</Alert>
 		)
@@ -290,7 +287,7 @@ export const TeamPaymentCard = () => {
 			<Alert>
 				<Info className='h-4 w-4' />
 				<AlertDescription>
-					Your team has committed the full amount. It registers as soon as{' '}
+					Your team has paid the full amount. It registers as soon as{' '}
 					{MIN_SIGNED_PLAYERS} players have signed their waiver.
 				</AlertDescription>
 			</Alert>
@@ -307,9 +304,9 @@ export const TeamPaymentCard = () => {
 						<Info className='h-4 w-4 !text-amber-600 dark:!text-amber-400' />
 						<AlertDescription className='!text-amber-800 dark:!text-amber-200'>
 							Registration opens {formatTimestamp(season.registrationStart)}. As
-							an admin you can contribute early to test. It is a real
-							authorization on your card: release it from Team Management,
-							Payments, within six days, or it is charged.
+							an admin you can contribute early to test. It is a real charge on
+							your card: refund it from Team Management, Payments. Stripe keeps
+							its processing fee.
 						</AlertDescription>
 					</Alert>
 				)}
@@ -321,7 +318,7 @@ export const TeamPaymentCard = () => {
 	return (
 		<NotificationCard
 			title='Team Registration'
-			description={`Your team registers once ${MIN_SIGNED_PLAYERS} players have signed their waiver and ${formatDollars(totalCents)} has been committed, split however you like. Only your teammates can see this.`}
+			description={`Your team registers once ${MIN_SIGNED_PLAYERS} players have signed their waiver and ${formatDollars(totalCents)} has been paid, split however you like. Only your teammates can see this.`}
 			className='max-w-none'
 		>
 			{contributionsLoading || playerSeasonsLoading ? (
@@ -331,15 +328,15 @@ export const TeamPaymentCard = () => {
 					<div className='space-y-3'>
 						<div className='space-y-1'>
 							<div className='flex justify-between text-sm'>
-								<span>Committed</span>
+								<span>Paid</span>
 								<span className='tabular-nums'>
-									{formatDollars(Math.min(committed, totalCents))} of{' '}
+									{formatDollars(Math.min(paid, totalCents))} of{' '}
 									{formatDollars(totalCents)}
 								</span>
 							</div>
 							<Progress
-								value={Math.min(100, (committed / totalCents) * 100)}
-								aria-label='Money committed'
+								value={Math.min(100, (paid / totalCents) * 100)}
+								aria-label='Money paid'
 							/>
 						</div>
 						<div className='space-y-1'>

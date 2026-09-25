@@ -9,16 +9,15 @@
  * this are retried on failure, several can settle the same team at once, and
  * Stripe redelivers webhooks.
  *
- * - **Stripe is read before it is written.** Each action starts by
- *   retrieving the PaymentIntent, and does nothing unless it is still in the
- *   state the action needs. A hold someone else already captured is not
- *   captured again.
- * - **Every write carries an idempotency key** derived from the PaymentIntent
- *   and the amount, so two settlements racing on the same hold send Stripe
- *   the same request, and Stripe performs it once.
+ * - **Stripe is read before it is written.** Each refund starts by
+ *   retrieving the PaymentIntent, and refunds no more than it still holds. A
+ *   payment someone else already refunded is not refunded again.
+ * - **Every refund carries an idempotency key** derived from the
+ *   PaymentIntent and the amounts, so two settlements racing on the same
+ *   payment send Stripe the same request, and Stripe performs it once.
  * - **The ledger records what Stripe says happened**, re-read after each
- *   action, never what was asked for. If Stripe and the ledger disagree —
- *   a hold cancelled in the Dashboard, say — the ledger is corrected on the
+ *   refund, never what was asked for. If Stripe and the ledger disagree —
+ *   a refund issued in the Dashboard, say — the ledger is corrected on the
  *   next settlement.
  */
 
@@ -75,16 +74,16 @@ export class SettlementIncompleteError extends Error {
 }
 
 /**
- * Brings a team's money into line with where the team stands: captured if it
- * registered, released if it is out, held if it is still in the running —
- * except that a payer who has left an unregistered team is released
- * whatever the team is doing.
+ * Brings a team's money into line with where the team stands: exactly the
+ * total kept if it registered, everything refunded if it is out, and
+ * otherwise kept — except that a payer who has left an unregistered team is
+ * refunded whatever the team is doing.
  *
  * Idempotent, and cheap when there is nothing to do — it reads the season,
  * the team-season and the ledger, and returns.
  *
  * @throws SettlementIncompleteError if any action failed. Every other action
- *   is still attempted first, so one bad card does not hold up the rest.
+ *   is still attempted first, so one failed refund does not hold up the rest.
  */
 export async function settleTeamSeason(
 	teamId: string,
@@ -130,7 +129,6 @@ export async function settleTeamSeason(
 		),
 		disposition,
 		totalCents,
-		nowMillis: now.getTime(),
 	})
 
 	if (plan.shortfallCents > 0) {
@@ -155,8 +153,8 @@ export async function settleTeamSeason(
 	const failures: { paymentIntentId: string; message: string }[] = []
 	let actionsApplied = 0
 
-	// One at a time, in plan order. Captures come oldest first, and running
-	// them in parallel would buy little for a team with a handful of holds.
+	// One at a time, in plan order. Running them in parallel would buy little
+	// for a team with a handful of payments.
 	for (const action of plan.actions) {
 		try {
 			const paymentIntent = await applyAction(stripe, action)
@@ -207,7 +205,6 @@ function toPlanned(
 		// A server timestamp is always set by the time a contribution can be
 		// read back; zero only sorts a malformed one first.
 		createdAtMillis: data.createdAt?.toMillis?.() ?? 0,
-		captureBeforeMillis: data.captureBefore?.toMillis?.() ?? null,
 		payerOnRoster: rosterPlayerIds.has(data.player.id),
 	}
 }
@@ -222,8 +219,8 @@ async function retrieveWithCharge(
 }
 
 /**
- * Applies one action, if Stripe's current state still calls for it, and
- * returns the PaymentIntent as it stands afterwards.
+ * Refunds what an action asks for, or as much of it as Stripe still holds,
+ * and returns the PaymentIntent as it stands afterwards.
  */
 async function applyAction(
 	stripe: Stripe,
@@ -232,46 +229,19 @@ async function applyAction(
 	const { paymentIntentId } = action
 	const before = await retrieveWithCharge(stripe, paymentIntentId)
 
-	switch (action.type) {
-		case 'capture':
-			if (before.status !== 'requires_capture') return before
-			await stripe.paymentIntents.capture(
-				paymentIntentId,
-				{ amount_to_capture: action.amountCents },
-				{
-					idempotencyKey: `settle_capture_${paymentIntentId}_${action.amountCents}`,
-				}
-			)
-			break
+	const state = contributionStateFromPaymentIntent(before)
+	const refundableCents = state?.status === 'paid' ? state.amountCents : 0
+	const refundCents = Math.min(action.amountCents, refundableCents)
+	if (refundCents <= 0) return before
 
-		case 'cancel':
-			if (before.status !== 'requires_capture') return before
-			await stripe.paymentIntents.cancel(
-				paymentIntentId,
-				{ cancellation_reason: 'abandoned' },
-				{ idempotencyKey: `settle_cancel_${paymentIntentId}` }
-			)
-			break
-
-		case 'refund': {
-			if (before.status !== 'succeeded') return before
-			const state = contributionStateFromPaymentIntent(before)
-			const refundableCents =
-				state?.status === 'captured' ? (state.amountCents ?? 0) : 0
-			const refundCents = Math.min(action.amountCents, refundableCents)
-			if (refundCents <= 0) return before
-			await stripe.refunds.create(
-				{ payment_intent: paymentIntentId, amount: refundCents },
-				{
-					// The refundable balance is part of the key so two separate
-					// refunds of the same amount stay distinct requests.
-					idempotencyKey: `settle_refund_${paymentIntentId}_${refundableCents}_${refundCents}`,
-				}
-			)
-			break
+	await stripe.refunds.create(
+		{ payment_intent: paymentIntentId, amount: refundCents },
+		{
+			// The refundable balance is part of the key so two separate refunds
+			// of the same amount stay distinct requests.
+			idempotencyKey: `settle_refund_${paymentIntentId}_${refundableCents}_${refundCents}`,
 		}
-	}
-
+	)
 	return retrieveWithCharge(stripe, paymentIntentId)
 }
 
@@ -313,35 +283,35 @@ export async function reconcileContribution(
 	}
 }
 
-export type ReleaseOutcome =
-	| { outcome: 'released'; status: 'canceled' | 'refunded' }
+export type RefundOutcome =
+	| { outcome: 'refunded' }
 	| { outcome: 'not-found' }
-	| { outcome: 'already-settled'; status: TeamContributionDocument['status'] }
+	| { outcome: 'already-refunded' }
 	/**
-	 * Stripe was not in the state the ledger claimed, so nothing was
-	 * released; the ledger now matches Stripe and the release can be retried.
+	 * Stripe did not hold what the ledger claimed — it was refunded in the
+	 * Dashboard, say — so nothing was refunded; the ledger now matches Stripe
+	 * and the refund can be retried.
 	 */
 	| { outcome: 'stripe-disagreed'; stripeStatus: string }
 
 /**
- * Gives back one contribution by hand: cancels it if it is still a hold,
- * refunds it if it was captured.
+ * Refunds one contribution in full, by hand.
  *
  * For an admin resolving something the rules do not cover — a dispute, a
- * payer who left the team before it registered. It does not touch the
- * team's registration, which is irreversible; releasing money from a
+ * test payment, a payer who should not have been charged. It does not touch
+ * the team's registration, which is irreversible; refunding money from a
  * registered team leaves it short, and settlement then reports the
  * shortfall.
  *
- * Goes through the same retrieve-then-act and reconcile as settlement, so a
- * contribution already settled in Stripe is recorded rather than acted on
+ * Goes through the same retrieve-then-refund and reconcile as settlement, so
+ * a payment already refunded in Stripe is recorded rather than refunded
  * twice.
  */
-export async function releaseContribution(
+export async function refundContribution(
 	firestore: Firestore,
 	stripe: Stripe,
 	params: { teamId: string; seasonId: string; paymentIntentId: string }
-): Promise<ReleaseOutcome> {
+): Promise<RefundOutcome> {
 	const { teamId, seasonId, paymentIntentId } = params
 	const snap = await teamContributionsCollection(firestore, teamId, seasonId)
 		.doc(paymentIntentId)
@@ -349,19 +319,16 @@ export async function releaseContribution(
 	if (!snap.exists) return { outcome: 'not-found' }
 
 	const contribution = snap.data() as TeamContributionDocument
-	if (
-		contribution.status !== 'authorized' &&
-		contribution.status !== 'captured'
-	) {
-		return { outcome: 'already-settled', status: contribution.status }
-	}
+	if (contribution.status !== 'paid') return { outcome: 'already-refunded' }
 
-	// Stripe first. If the money is not where the ledger says — a hold the
-	// bank already let go — nothing is released by this call, and the admin
-	// should see that rather than be recorded as having done it.
+	// Stripe first. If it does not hold what the ledger says, nothing is
+	// refunded by this call, and the admin should see that rather than be
+	// recorded as having done it.
 	const current = await retrieveWithCharge(stripe, paymentIntentId)
+	const before = contributionStateFromPaymentIntent(current)
 	if (
-		contributionStateFromPaymentIntent(current)?.status !== contribution.status
+		before?.status !== 'paid' ||
+		before.amountCents !== contribution.amountCents
 	) {
 		await reconcileContribution(firestore, {
 			teamId,
@@ -371,21 +338,15 @@ export async function releaseContribution(
 		return { outcome: 'stripe-disagreed', stripeStatus: current.status }
 	}
 
-	const action: SettlementAction =
-		contribution.status === 'authorized'
-			? { type: 'cancel', paymentIntentId }
-			: {
-					type: 'refund',
-					paymentIntentId,
-					amountCents: contribution.amountCents,
-				}
-
-	const paymentIntent = await applyAction(stripe, action)
+	const paymentIntent = await applyAction(stripe, {
+		type: 'refund',
+		paymentIntentId,
+		amountCents: contribution.amountCents,
+	})
 	await reconcileContribution(firestore, { teamId, seasonId, paymentIntent })
 
-	const state = contributionStateFromPaymentIntent(paymentIntent)
-	if (state?.status === 'canceled' || state?.status === 'refunded') {
-		return { outcome: 'released', status: state.status }
-	}
-	return { outcome: 'stripe-disagreed', stripeStatus: paymentIntent.status }
+	return contributionStateFromPaymentIntent(paymentIntent)?.status ===
+		'refunded'
+		? { outcome: 'refunded' }
+		: { outcome: 'stripe-disagreed', stripeStatus: paymentIntent.status }
 }

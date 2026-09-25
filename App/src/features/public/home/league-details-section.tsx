@@ -104,8 +104,8 @@ export const LeagueDetailsSection = () => {
 							Minneapolis Winter League has room for <b>12 teams</b>, with a{' '}
 							<b>10-player minimum</b> and no roster maximum. A team registers
 							once <b>10 of its players have signed their waiver</b> and the
-							team has committed <b>$1,000</b>, split however it likes. The
-							first twelve teams to do both are in.
+							team has paid <b>$1,000</b>, split however it likes. The first
+							twelve teams to do both are in.
 						</p>
 						<div className='flex gap-3 rounded-xl border border-accent/60 bg-accent/15 p-4'>
 							<ShieldCheck
@@ -116,9 +116,8 @@ export const LeagueDetailsSection = () => {
 								<b>
 									Didn&apos;t get a spot? You&apos;re always fully refunded.
 								</b>{' '}
-								Payments are only held on the card until your team is confirmed,
-								so a team that misses out gets every dollar back, usually
-								without ever being charged.
+								If your team misses out, or you leave it before it registers,
+								every dollar you paid comes back to your card automatically.
 							</p>
 						</div>
 						<p>

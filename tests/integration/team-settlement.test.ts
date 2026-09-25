@@ -1,9 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import type { Request, Response } from 'firebase-functions/v2/https'
-import { initTestApp, resetFirestore, ledgerTotals } from './helpers.js'
+import { initTestApp, resetFirestore, ledgerPaidCents } from './helpers.js'
 import {
-	addHold,
+	addPayment,
 	failNext,
 	fakeStripe,
 	gateRetrieves,
@@ -12,6 +12,7 @@ import {
 import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import {
 	recordContribution,
+	setContributionStatus,
 	teamContributionsCollection,
 } from '../../Functions/src/shared/contributions.js'
 import {
@@ -22,17 +23,15 @@ import {
 	SettlementIncompleteError,
 	settleTeamSeason,
 } from '../../Functions/src/services/teamSettlementService.js'
-import { EXPIRY_CAPTURE_MARGIN_MS } from '../../Functions/src/shared/settlement.js'
 
 /**
  * Settlement against a Stripe that keeps state.
  *
  * `settlement.test.ts` covers every decision; this covers carrying them out.
- * The fake enforces what the real API does — a cancelled hold cannot be
- * captured, a refund cannot exceed what was taken, a repeated idempotency
- * key replays — so these tests catch the executor acting on stale state,
- * double-charging under concurrency, or recording what it asked for instead
- * of what happened.
+ * The fake enforces what the real API does — a refund cannot exceed what is
+ * left, a repeated idempotency key replays — so these tests catch the
+ * executor acting on stale state, refunding twice under concurrency, or
+ * recording what it asked for instead of what happened.
  */
 
 vi.mock('stripe', async () => ({
@@ -83,21 +82,15 @@ const metadataFor = (teamId: string) => ({
 	seasonId: SEASON,
 })
 
-/** A hold in Stripe and in the ledger, as the checkout webhook leaves it. */
-const hold = async (
+/** A payment in Stripe and in the ledger, as the checkout webhook leaves it. */
+const pay = async (
 	paymentIntentId: string,
 	amountCents: number,
-	teamId = TEAM,
-	captureBeforeSeconds?: number
+	teamId = TEAM
 ) => {
-	const intent = addHold(
-		paymentIntentId,
-		amountCents,
-		metadataFor(teamId),
-		captureBeforeSeconds
-	)
-	// The payer is on the team: money from someone who has left is
-	// released, which the leaver tests cover.
+	addPayment(paymentIntentId, amountCents, metadataFor(teamId))
+	// The payer is on the team: money from someone who has left is refunded,
+	// which the leaver tests cover.
 	await teamRosterEntryRef(firestore, teamId, SEASON, 'payer').set({
 		player: firestore.collection('players').doc('payer'),
 		dateJoined: Timestamp.now(),
@@ -108,10 +101,6 @@ const hold = async (
 		playerId: 'payer',
 		paymentIntentId,
 		amountCents,
-		status: 'authorized',
-		captureBefore: Timestamp.fromMillis(
-			intent.latest_charge.payment_method_details.card.capture_before * 1000
-		),
 	})
 }
 
@@ -124,13 +113,16 @@ const ledger = async (teamId = TEAM) => {
 	return Object.fromEntries(snap.docs.map((d) => [d.id, d.data()]))
 }
 
-const totals = (teamId = TEAM) => ledgerTotals(firestore, teamId, SEASON)
+const held = (teamId = TEAM) => ledgerPaidCents(firestore, teamId, SEASON)
 
 const stripeCalls = () =>
-	fakeStripe.calls.map((c) =>
-		c.amount === undefined
-			? `${c.method} ${c.paymentIntentId}`
-			: `${c.method} ${c.paymentIntentId} ${c.amount}`
+	fakeStripe.calls.map((c) => `${c.method} ${c.paymentIntentId} ${c.amount}`)
+
+/** What Stripe still holds across every payment, less refunds. */
+const stripeHolds = () =>
+	[...fakeStripe.intents.values()].reduce(
+		(sum, pi) => sum + pi.amount_received - pi.latest_charge.amount_refunded,
+		0
 	)
 
 const settle = (teamId = TEAM, now?: Date) =>
@@ -158,46 +150,38 @@ describe('a registered team', () => {
 		await seasonRef().update({ registeredTeamCount: 1 })
 	})
 
-	it('has its hold captured in full', async () => {
-		await hold('pi_1', TOTAL)
+	it('keeps exactly its total', async () => {
+		await pay('pi_1', TOTAL)
 
-		await settle()
-
-		expect(stripeCalls()).toEqual(['capture pi_1 100000'])
-		expect((await ledger()).pi_1).toMatchObject({
-			status: 'captured',
-			amountCents: TOTAL,
-		})
-		expect(await totals()).toEqual({ authorizedCents: 0, capturedCents: TOTAL })
+		await expect(settle()).resolves.toMatchObject({ actionsApplied: 0 })
+		expect(stripeCalls()).toEqual([])
+		expect(await held()).toBe(TOTAL)
 	})
 
-	it('is charged exactly the total when it overpaid', async () => {
+	it('is refunded what it paid over the total, latest payments first', async () => {
 		// Three teammates raced for the last few hundred dollars.
-		await hold('pi_1', 60_000)
-		await hold('pi_2', 50_000)
-		await hold('pi_3', 20_000)
+		await pay('pi_1', 60_000)
+		await pay('pi_2', 50_000)
+		await pay('pi_3', 20_000)
 
 		await settle()
 
-		expect(stripeCalls()).toEqual([
-			'capture pi_1 60000',
-			'capture pi_2 40000',
-			'cancel pi_3',
-		])
+		expect(stripeCalls()).toEqual(['refund pi_2 10000', 'refund pi_3 20000'])
 		const entries = await ledger()
 		expect(entries.pi_2).toMatchObject({
-			status: 'captured',
+			status: 'paid',
 			amountCents: 40_000,
-			// What the payer committed is still on record.
-			authorizedAmountCents: 50_000,
+			// What the payer put in is still on record.
+			paidAmountCents: 50_000,
 		})
-		expect(entries.pi_3.status).toBe('canceled')
-		expect(await totals()).toEqual({ authorizedCents: 0, capturedCents: TOTAL })
+		expect(entries.pi_3.status).toBe('refunded')
+		expect(await held()).toBe(TOTAL)
+		expect(stripeHolds()).toBe(TOTAL)
 	})
 
 	it('changes nothing when settled again', async () => {
-		await hold('pi_1', 60_000)
-		await hold('pi_2', 50_000)
+		await pay('pi_1', 60_000)
+		await pay('pi_2', 50_000)
 		await settle()
 		const after = stripeCalls()
 
@@ -205,16 +189,16 @@ describe('a registered team', () => {
 		expect(stripeCalls()).toEqual(after)
 	})
 
-	it('is not double-charged when two settlements race', async () => {
+	it('is not refunded twice when two settlements race', async () => {
 		// The registration trigger and the contribution trigger can both
 		// settle the same team at the same moment.
-		await hold('pi_1', 60_000)
-		await hold('pi_2', 50_000)
+		await pay('pi_1', 60_000)
+		await pay('pi_2', 50_000)
 
 		// Every one succeeds: the idempotency keys make the losers of the
-		// race replay the winner's capture instead of failing on it. The
-		// gate makes all three read the hold before any captures it.
-		gateRetrieves('pi_1', 3)
+		// race replay the winner's refund instead of issuing another. The
+		// gate makes all three read the payment before any refunds it.
+		gateRetrieves('pi_2', 3)
 		const results = await Promise.allSettled([settle(), settle(), settle()])
 		expect(results.map((r) => r.status)).toEqual([
 			'fulfilled',
@@ -222,48 +206,54 @@ describe('a registered team', () => {
 			'fulfilled',
 		])
 
-		const captured = [...fakeStripe.intents.values()].reduce(
-			(sum, pi) => sum + pi.amount_received,
-			0
-		)
-		expect(captured).toBe(TOTAL)
-		expect(await totals()).toEqual({ authorizedCents: 0, capturedCents: TOTAL })
+		expect(stripeHolds()).toBe(TOTAL)
+		expect(await held()).toBe(TOTAL)
 	})
 
 	it('finishes on retry after Stripe fails part-way', async () => {
-		await hold('pi_1', 40_000)
-		await hold('pi_2', 40_000)
-		await hold('pi_3', 40_000)
-		failNext('capture', 'pi_2')
+		await pay('pi_1', 70_000)
+		await pay('pi_2', 40_000)
+		await pay('pi_3', 30_000)
+		failNext('refund', 'pi_2')
 
 		const error = await settle().catch((e: unknown) => e)
 		expect(error).toBeInstanceOf(SettlementIncompleteError)
 		// The failure did not stop the rest.
-		expect(stripeCalls()).toEqual(['capture pi_1 40000', 'capture pi_3 20000'])
+		expect(stripeCalls()).toEqual(['refund pi_3 30000'])
 
 		await settle()
 
-		const entries = await ledger()
-		expect(entries.pi_2).toMatchObject({
-			status: 'captured',
-			amountCents: 40_000,
-		})
-		expect(await totals()).toEqual({ authorizedCents: 0, capturedCents: TOTAL })
+		expect(stripeCalls()).toEqual(['refund pi_3 30000', 'refund pi_2 10000'])
+		expect(await held()).toBe(TOTAL)
 	})
 
-	it('records a hold cancelled outside this code instead of acting on it', async () => {
-		// Released by the bank or in the Dashboard. Settlement must not try
-		// to capture it, and the ledger has to stop counting it.
-		await hold('pi_1', TOTAL)
-		fakeStripe.intents.get('pi_1')!.status = 'canceled'
+	it('records a refund issued outside this code instead of repeating it', async () => {
+		// Refunded in the Dashboard before settlement ran. Settlement must not
+		// refund it again, and the ledger has to stop counting it.
+		await pay('pi_1', TOTAL)
+		await pay('pi_2', 20_000)
+		fakeStripe.intents.get('pi_2')!.latest_charge.amount_refunded = 20_000
 
-		const outcome = await settle()
+		await settle()
 
 		expect(stripeCalls()).toEqual([])
-		expect((await ledger()).pi_1.status).toBe('canceled')
-		expect(outcome).toMatchObject({ shortfallCents: 0 })
-		// The next settlement sees the shortfall that left behind.
+		expect((await ledger()).pi_2.status).toBe('refunded')
+		expect(await held()).toBe(TOTAL)
+	})
+
+	it('reports a shortfall when its money was refunded out from under it', async () => {
+		// Refunded in the Dashboard; the refund webhook records it.
+		await pay('pi_1', TOTAL)
+		await setContributionStatus(firestore, {
+			teamId: TEAM,
+			seasonId: SEASON,
+			paymentIntentId: 'pi_1',
+			status: 'refunded',
+		})
+
+		// Registration stands; the shortfall is for a person to chase.
 		await expect(settle()).resolves.toMatchObject({ shortfallCents: TOTAL })
+		expect(stripeCalls()).toEqual([])
 	})
 })
 
@@ -272,80 +262,49 @@ describe('an unregistered team', () => {
 		await seedTeam(TEAM, false)
 	})
 
-	it('keeps its holds while it is still in the running', async () => {
-		await hold('pi_1', 60_000)
+	it('keeps its money while it is still in the running', async () => {
+		await pay('pi_1', 60_000)
 
-		await expect(settle()).resolves.toMatchObject({ disposition: 'hold' })
+		await expect(settle()).resolves.toMatchObject({ disposition: 'pending' })
 		expect(stripeCalls()).toEqual([])
 	})
 
-	it('has a hold captured before it expires, rather than let it lapse', async () => {
-		const expiresAt = Date.now() + 3 * DAY_MS
-		await hold('pi_1', 60_000, TEAM, Math.floor(expiresAt / 1000))
-
-		await settle(TEAM, new Date(expiresAt - EXPIRY_CAPTURE_MARGIN_MS / 2))
-
-		expect(stripeCalls()).toEqual(['capture pi_1 60000'])
-	})
-
-	it('is released for free once every spot is taken', async () => {
+	it('is refunded in full once every spot is taken', async () => {
 		await seasonRef().update({ registeredTeamCount: LOCK })
-		await hold('pi_1', 60_000)
-		await hold('pi_2', 40_000)
+		await pay('pi_1', 60_000)
+		await pay('pi_2', 40_000)
 
 		await settle()
 
-		expect(stripeCalls()).toEqual(['cancel pi_1', 'cancel pi_2'])
-		expect(await totals()).toEqual({ authorizedCents: 0, capturedCents: 0 })
+		expect(stripeCalls()).toEqual(['refund pi_1 60000', 'refund pi_2 40000'])
+		expect(await held()).toBe(0)
+		expect(stripeHolds()).toBe(0)
 	})
 
-	it('records a hold the bank already released instead of cancelling it', async () => {
-		await seasonRef().update({ registeredTeamCount: LOCK })
-		await hold('pi_1', 60_000)
-		await hold('pi_2', 40_000)
-		fakeStripe.intents.get('pi_1')!.status = 'canceled'
-
-		await settle()
-
-		// Cancelling an already-cancelled PaymentIntent is an error in Stripe.
-		expect(stripeCalls()).toEqual(['cancel pi_2'])
-		expect((await ledger()).pi_1.status).toBe('canceled')
-		expect(await totals()).toEqual({ authorizedCents: 0, capturedCents: 0 })
-	})
-
-	it('is released once registration closes', async () => {
-		await hold('pi_1', 60_000)
+	it('is refunded once registration closes', async () => {
+		await pay('pi_1', 60_000)
 
 		await settle(TEAM, new Date(Date.now() + 11 * DAY_MS))
 
-		expect(stripeCalls()).toEqual(['cancel pi_1'])
+		expect(stripeCalls()).toEqual(['refund pi_1 60000'])
 	})
 
-	it('is refunded what the expiry net captured when it misses out', async () => {
-		const expiresAt = Date.now() + 3 * DAY_MS
-		await hold('pi_1', 60_000, TEAM, Math.floor(expiresAt / 1000))
-		await hold('pi_2', 40_000)
-		await settle(TEAM, new Date(expiresAt - 1000))
-		expect((await ledger()).pi_1.status).toBe('captured')
-
+	it('is refunded only what is left of a payment partly refunded already', async () => {
 		await seasonRef().update({ registeredTeamCount: LOCK })
+		await pay('pi_1', 60_000)
+		fakeStripe.intents.get('pi_1')!.latest_charge.amount_refunded = 20_000
+
 		await settle()
 
-		expect(stripeCalls()).toEqual([
-			'capture pi_1 60000',
-			'refund pi_1 60000',
-			'cancel pi_2',
-		])
-		const entries = await ledger()
-		expect(entries.pi_1.status).toBe('refunded')
-		expect(await totals()).toEqual({ authorizedCents: 0, capturedCents: 0 })
+		expect(stripeCalls()).toEqual(['refund pi_1 40000'])
+		expect((await ledger()).pi_1.status).toBe('refunded')
 	})
 })
 
 it('leaves a season on per-player pricing alone', async () => {
 	await seedSeason({ teamRegistrationTotalCents: null })
 	await seedTeam(TEAM, true)
-	await hold('pi_1', TOTAL)
+	await pay('pi_1', TOTAL)
 
 	await expect(settle()).resolves.toEqual({ outcome: 'not-team-payments' })
 	expect(stripeCalls()).toEqual([])
@@ -362,14 +321,15 @@ describe('onTeamRegistrationChange', () => {
 			},
 		})
 
-	it('captures the money of the team that just registered', async () => {
+	it('refunds what the team that just registered paid over its total', async () => {
 		await seedTeam(TEAM, true)
 		await seasonRef().update({ registeredTeamCount: 1 })
-		await hold('pi_1', TOTAL)
+		await pay('pi_1', TOTAL)
+		await pay('pi_2', 30_000)
 
 		await fire(TEAM)
 
-		expect(stripeCalls()).toEqual(['capture pi_1 100000'])
+		expect(stripeCalls()).toEqual(['refund pi_2 30000'])
 	})
 
 	describe('the twelfth registration', () => {
@@ -377,24 +337,23 @@ describe('onTeamRegistrationChange', () => {
 			for (let i = 1; i < LOCK; i++) await seedTeam(`reg-${i}`, true)
 			await seedTeam(TEAM, true)
 			await seasonRef().update({ registeredTeamCount: LOCK })
-			await hold('pi_winner', TOTAL)
+			await pay('pi_winner', TOTAL)
 
 			await seedTeam('loser-a', false)
 			await seedTeam('loser-b', false)
-			await hold('pi_a1', 60_000, 'loser-a')
-			await hold('pi_a2', 40_000, 'loser-a')
-			await hold('pi_b1', 30_000, 'loser-b')
+			await pay('pi_a1', 60_000, 'loser-a')
+			await pay('pi_a2', 40_000, 'loser-a')
+			await pay('pi_b1', 30_000, 'loser-b')
 		})
 
-		it('releases every team that missed out, then removes it', async () => {
+		it('refunds every team that missed out, then removes it', async () => {
 			await fire(TEAM)
 
 			expect(stripeCalls().sort()).toEqual(
 				[
-					'capture pi_winner 100000',
-					'cancel pi_a1',
-					'cancel pi_a2',
-					'cancel pi_b1',
+					'refund pi_a1 60000',
+					'refund pi_a2 40000',
+					'refund pi_b1 30000',
 				].sort()
 			)
 			expect(
@@ -405,17 +364,17 @@ describe('onTeamRegistrationChange', () => {
 			).toBe(false)
 		})
 
-		it('keeps the record of what was released after the team is gone', async () => {
+		it('keeps the record of what was refunded after the team is gone', async () => {
 			await fire(TEAM)
 
 			const entries = await ledger('loser-a')
-			expect(entries.pi_a1.status).toBe('canceled')
-			expect(entries.pi_a2.status).toBe('canceled')
+			expect(entries.pi_a1.status).toBe('refunded')
+			expect(entries.pi_a2.status).toBe('refunded')
 		})
 
-		it('keeps a team whose money could not be released, and retries', async () => {
-			// Deleting it would lose track of a live hold.
-			failNext('cancel', 'pi_b1')
+		it('keeps a team whose money could not be refunded, and retries', async () => {
+			// Deleting it would lose track of money it still holds.
+			failNext('refund', 'pi_b1')
 
 			await expect(fire(TEAM)).rejects.toThrow(/loser-b/)
 			expect(
@@ -430,73 +389,74 @@ describe('onTeamRegistrationChange', () => {
 			expect(
 				(await teamSeasonRef(firestore, 'loser-b', SEASON).get()).exists
 			).toBe(false)
-			expect((await ledger('loser-b')).pi_b1.status).toBe('canceled')
+			expect((await ledger('loser-b')).pi_b1.status).toBe('refunded')
 		})
 	})
 })
 
 describe('updateTeamRegistrationOnContributionChange', () => {
-	const fire = (paymentIntentId: string, teamId = TEAM) =>
-		ledger(teamId).then((entries) =>
+	const fire = (
+		paymentIntentId: string,
+		before: Record<string, unknown> | undefined = undefined
+	) =>
+		ledger(TEAM).then((entries) =>
 			manifest.updateTeamRegistrationOnContributionChange.run({
 				id: 'evt-1',
-				params: { teamId, seasonId: SEASON, paymentIntentId },
+				params: { teamId: TEAM, seasonId: SEASON, paymentIntentId },
 				data: {
-					before: { exists: false, data: () => undefined },
+					before: { exists: before !== undefined, data: () => before },
 					after: { exists: true, data: () => entries[paymentIntentId] },
 				},
 			})
 		)
 
-	it('releases a hold that lands after its team was covered', async () => {
-		// A teammate paid while the capture was under way.
+	it('refunds a payment that lands after its team was covered', async () => {
+		// A teammate paid while the team was registering.
 		await seedTeam(TEAM, true)
 		await seasonRef().update({ registeredTeamCount: 1 })
-		await hold('pi_1', TOTAL)
-		await settle()
+		await pay('pi_1', TOTAL)
+		await pay('pi_late', 20_000)
 
-		await hold('pi_late', 20_000)
 		await fire('pi_late')
 
-		expect(stripeCalls()).toEqual(['capture pi_1 100000', 'cancel pi_late'])
+		expect(stripeCalls()).toEqual(['refund pi_late 20000'])
 	})
 
-	it('releases a hold that lands after the season filled', async () => {
+	it('refunds a payment that lands after the season filled', async () => {
 		await seedTeam(TEAM, false)
 		await seasonRef().update({ registeredTeamCount: LOCK })
-		await hold('pi_1', 50_000)
+		await pay('pi_1', 50_000)
 
 		await fire('pi_1')
 
-		expect(stripeCalls()).toEqual(['cancel pi_1'])
+		expect(stripeCalls()).toEqual(['refund pi_1 50000'])
 	})
 
-	it('leaves a fresh hold alone on a team still in the running', async () => {
+	it('leaves a fresh payment alone on a team still in the running', async () => {
 		await seedTeam(TEAM, false)
-		await hold('pi_1', 50_000)
+		await pay('pi_1', 50_000)
 
 		await fire('pi_1')
 
 		expect(stripeCalls()).toEqual([])
 	})
 
-	it('does not settle again for a change settlement made itself', async () => {
+	it('does not settle again for a refund settlement made itself', async () => {
 		await seedTeam(TEAM, true)
 		await seasonRef().update({ registeredTeamCount: LOCK })
-		await hold('pi_1', TOTAL)
-		await settle()
+		await pay('pi_1', TOTAL)
 		// Something a settlement would act on, were it to run.
-		await hold('pi_late', 20_000)
-		fakeStripe.calls.length = 0
+		await pay('pi_late', 20_000)
 
-		// pi_1's change to captured fires the trigger; it must not settle.
-		await fire('pi_1')
+		// pi_1's amount changing fires the trigger; only a new payment
+		// settles.
+		await fire('pi_1', { status: 'paid', amountCents: TOTAL + 1 })
 
 		expect(stripeCalls()).toEqual([])
 	})
 })
 
-describe('stripeWebhook reconciles changes made outside settlement', () => {
+describe('stripeWebhook reconciles refunds made outside settlement', () => {
 	const deliver = async (event: unknown) => {
 		fakeStripe.nextEvent = event
 		const res: Record<string, unknown> = {}
@@ -522,88 +482,75 @@ describe('stripeWebhook reconciles changes made outside settlement', () => {
 		return res.statusCode ?? 200
 	}
 
+	const refundedInDashboard = (
+		paymentIntentId: string,
+		amountCents: number
+	) => {
+		fakeStripe.intents.get(paymentIntentId)!.latest_charge.amount_refunded =
+			amountCents
+		return {
+			id: `evt_${paymentIntentId}_${amountCents}`,
+			type: 'charge.refunded',
+			data: {
+				object: {
+					id: `ch_${paymentIntentId}`,
+					payment_intent: paymentIntentId,
+				},
+			},
+		}
+	}
+
 	beforeEach(async () => {
 		await seedTeam(TEAM, false)
 	})
 
-	it('records a hold cancelled in the Dashboard', async () => {
-		await hold('pi_1', 60_000)
-		fakeStripe.intents.get('pi_1')!.status = 'canceled'
-
-		expect(
-			await deliver({
-				id: 'evt_1',
-				type: 'payment_intent.canceled',
-				data: { object: { id: 'pi_1' } },
-			})
-		).toBe(200)
-
-		expect((await ledger()).pi_1.status).toBe('canceled')
-		expect(await totals()).toEqual({ authorizedCents: 0, capturedCents: 0 })
-	})
-
 	it('records a refund issued in the Dashboard', async () => {
-		await hold('pi_1', 60_000)
-		const pi = fakeStripe.intents.get('pi_1')!
-		pi.status = 'succeeded'
-		pi.amount_received = 60_000
-		pi.amount_capturable = 0
-		pi.latest_charge.amount_refunded = 60_000
+		await pay('pi_1', 60_000)
 
-		await deliver({
-			id: 'evt_2',
-			type: 'charge.refunded',
-			data: { object: { id: 'ch_pi_1', payment_intent: 'pi_1' } },
-		})
+		expect(await deliver(refundedInDashboard('pi_1', 60_000))).toBe(200)
 
 		expect((await ledger()).pi_1.status).toBe('refunded')
+		expect(await held()).toBe(0)
 	})
 
-	it('records a partial refund as a smaller capture', async () => {
-		await hold('pi_1', 60_000)
-		const pi = fakeStripe.intents.get('pi_1')!
-		pi.status = 'succeeded'
-		pi.amount_received = 60_000
-		pi.amount_capturable = 0
-		pi.latest_charge.amount_refunded = 10_000
+	it('records a partial refund as a smaller payment', async () => {
+		await pay('pi_1', 60_000)
 
-		await deliver({
-			id: 'evt_3',
-			type: 'charge.refunded',
-			data: { object: { id: 'ch_pi_1', payment_intent: 'pi_1' } },
-		})
+		await deliver(refundedInDashboard('pi_1', 10_000))
 
 		expect((await ledger()).pi_1).toMatchObject({
-			status: 'captured',
+			status: 'paid',
 			amountCents: 50_000,
+			paidAmountCents: 60_000,
 		})
 	})
 
 	it('ignores a per-player payment', async () => {
-		addHold('pi_player', 10_000, { firebaseUID: 'someone' })
+		addPayment('pi_player', 10_000, { firebaseUID: 'someone' })
 
-		expect(
-			await deliver({
-				id: 'evt_4',
-				type: 'payment_intent.succeeded',
-				data: { object: { id: 'pi_player' } },
-			})
-		).toBe(200)
+		expect(await deliver(refundedInDashboard('pi_player', 10_000))).toBe(200)
 		expect(await ledger()).toEqual({})
 	})
 
-	it('acknowledges an event for a contribution not yet recorded', async () => {
-		// The PaymentIntent event outran the checkout completion. That
-		// completion reads Stripe fresh, so nothing is lost by skipping.
-		addHold('pi_early', 10_000, metadataFor(TEAM))
+	it('acknowledges a refund of a contribution not yet recorded', async () => {
+		// The refund event outran the checkout completion. That completion
+		// reads Stripe fresh, so nothing is lost by skipping.
+		addPayment('pi_early', 10_000, metadataFor(TEAM))
+
+		expect(await deliver(refundedInDashboard('pi_early', 10_000))).toBe(200)
+		expect(await ledger()).toEqual({})
+	})
+
+	it('ignores PaymentIntent events, which the payment flow does not need', async () => {
+		await pay('pi_1', 60_000)
 
 		expect(
 			await deliver({
-				id: 'evt_5',
-				type: 'payment_intent.canceled',
-				data: { object: { id: 'pi_early' } },
+				id: 'evt_pi',
+				type: 'payment_intent.succeeded',
+				data: { object: { id: 'pi_1' } },
 			})
 		).toBe(200)
-		expect(await ledger()).toEqual({})
+		expect((await ledger()).pi_1.status).toBe('paid')
 	})
 })

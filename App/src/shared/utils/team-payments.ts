@@ -52,44 +52,28 @@ export const isPlayerRegisteredForSeason = (
 	return usesTeamPayments(season) ? true : Boolean(playerSeason.paid)
 }
 
-/** What a set of contributions holds and has taken. */
-export const totalsFrom = (
+/** What a team holds: every payment, less what has been refunded. */
+export const paidCents = (
 	contributions: Pick<TeamContributionDocument, 'status' | 'amountCents'>[]
-): { authorizedCents: number; capturedCents: number } => {
-	let authorizedCents = 0
-	let capturedCents = 0
-	for (const contribution of contributions) {
-		if (contribution.status === 'authorized') {
-			authorizedCents += contribution.amountCents
-		} else if (contribution.status === 'captured') {
-			capturedCents += contribution.amountCents
-		}
-	}
-	return { authorizedCents, capturedCents }
-}
-
-/** Money committed toward the total: held or taken. */
-export const committedCents = (
-	contributions: Pick<TeamContributionDocument, 'status' | 'amountCents'>[]
-): number => {
-	const { authorizedCents, capturedCents } = totalsFrom(contributions)
-	return authorizedCents + capturedCents
-}
+): number =>
+	contributions
+		.filter((contribution) => contribution.status === 'paid')
+		.reduce((sum, contribution) => sum + contribution.amountCents, 0)
 
 /**
- * What the team's current roster has committed: the figure the server
- * registers on and takes the remaining balance from
- * (`committedByRosterCents` in Functions). A teammate who left is being
- * released, so their money no longer counts.
+ * What the team's current roster has paid: the figure the server registers
+ * on and takes the remaining balance from (`paidByRosterCents` in
+ * Functions). A teammate who left is being refunded, so their money no
+ * longer counts.
  */
-export const committedByRosterCents = (
+export const paidByRosterCents = (
 	contributions: Pick<
 		TeamContributionDocument,
 		'status' | 'amountCents' | 'player'
 	>[],
 	rosterPlayerIds: ReadonlySet<string>
 ): number =>
-	committedCents(
+	paidCents(
 		contributions.filter((contribution) =>
 			rosterPlayerIds.has(contribution.player.id)
 		)
@@ -153,8 +137,6 @@ export const formatDollars = (cents: number): string => {
 
 /** How each state of a contribution reads to the team. */
 export const CONTRIBUTION_STATUS_LABELS: Record<ContributionStatus, string> = {
-	authorized: 'Authorized',
-	captured: 'Paid',
-	canceled: 'Released',
+	paid: 'Paid',
 	refunded: 'Refunded',
 }

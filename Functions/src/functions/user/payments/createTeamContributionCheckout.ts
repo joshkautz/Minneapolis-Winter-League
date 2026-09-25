@@ -1,11 +1,13 @@
 /**
  * Create a Stripe Checkout session for a contribution to the caller's team.
  *
- * Under team-level pricing a team registers once its roster has committed the
- * season's total, in any split. Each contribution is a card **authorization**
- * (`capture_method: 'manual'`), not a charge: a team that misses one of the
- * limited spots has its holds cancelled, which costs nothing, where a refund
- * would forfeit the processing fee. See docs/TEAM_PAYMENTS.md.
+ * Under team-level pricing a team registers once its roster has paid the
+ * season's total, in any split. Each contribution is charged when the payer
+ * completes Checkout; a team that misses one of the limited spots, a payer
+ * who leaves before the team registers, and any money beyond the total are
+ * refunded, and the league bears the processing fee. A card hold would have
+ * avoided the fee, but lasts only a week on most cards, against a month of
+ * registration. See docs/TEAM_PAYMENTS.md.
  *
  * Security validations:
  * - User must be authenticated and email verified
@@ -41,7 +43,7 @@ import {
 } from '../../../shared/database.js'
 import {
 	CENTS_PER_DOLLAR,
-	committedByRosterCents,
+	paidByRosterCents,
 	contributionAmountError,
 	teamContributionsCollection,
 } from '../../../shared/contributions.js'
@@ -95,15 +97,15 @@ const IDEMPOTENCY_WINDOW_MS = 60_000
 const CURRENCY = 'usd'
 
 /**
- * Shown above the pay button. A hold looks like a charge on a statement, and
- * a $1,000 line nobody recognises becomes a dispute.
+ * Shown above the pay button, so a payer knows before paying when they get
+ * their money back. The same wording is on the team payment card in the App.
  */
-const HOLD_EXPLANATION =
-	`Your card is authorized now and charged when your team registers. ` +
-	`An authorization lasts about a week, so if your team has not registered ` +
-	`by then it is charged early rather than allowed to lapse. If your team ` +
-	`does not get one of the ${TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK} spots, ` +
-	`the authorization is released, or the charge refunded in full.`
+const PAYMENT_EXPLANATION =
+	`Your card is charged now. If you leave the team before it registers, or ` +
+	`it does not get one of the ${TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK} ` +
+	`spots, you are refunded in full. If your team pays more than its total, ` +
+	`the extra is refunded, latest payments first. Refunds take 5 to 10 ` +
+	`business days to reach your card.`
 
 type CheckoutSessionCreateParams = Parameters<
 	Stripe['checkout']['sessions']['create']
@@ -179,9 +181,8 @@ export const createTeamContributionCheckout = onCall<
 		const now = new Date()
 		const registrationStart = currentSeason.registrationStart.toDate()
 		const registrationEnd = currentSeason.registrationEnd.toDate()
-		// Only the start is waived for admins. Their early money is held like
-		// anyone's, so the hourly sweep captures it in its last day; an admin
-		// testing releases it from Team Management > Payments before then.
+		// Only the start is waived for admins. Their early money is an ordinary
+		// payment; an admin testing refunds it from Team Management > Payments.
 		if (now < registrationStart && !isAdmin) {
 			throw new HttpsError(
 				'failed-precondition',
@@ -251,25 +252,25 @@ export const createTeamContributionCheckout = onCall<
 		}
 
 		// What the team still needs, from the people on it now. A teammate
-		// who left is being released, and does not reduce anyone's share.
-		const committed = committedByRosterCents(
+		// who left is being refunded, and does not reduce anyone's share.
+		const paid = paidByRosterCents(
 			contributionsSnap.docs.map(
 				(doc) => doc.data() as TeamContributionDocument
 			),
 			rosterPlayerIds
 		)
-		const remainingCents = teamTotalCents - committed
+		const remainingCents = teamTotalCents - paid
 		if (remainingCents <= 0) {
 			throw new HttpsError(
 				'failed-precondition',
-				'Your team has already committed the full amount'
+				'Your team has already paid the full amount'
 			)
 		}
 
-		// Two teammates who both see $200 remaining can both pay it. That is
-		// deliberate: the excess is a hold, and settlement captures only what
-		// the team needs and releases the rest at no cost. Refusing here
-		// would need a reservation system for a race that costs nothing.
+		// Two teammates who both see $200 remaining can both pay it, and the
+		// later payment is refunded, at the cost of its processing fee.
+		// Refusing it here would need a reservation system, held for as long
+		// as a Checkout session stays open, to save a fee on a rare race.
 		const amountError = contributionAmountError(amountCents, remainingCents)
 		if (amountError) {
 			throw new HttpsError('invalid-argument', amountError)
@@ -300,8 +301,9 @@ export const createTeamContributionCheckout = onCall<
 			const sessionParams: CheckoutSessionCreateParams = {
 				customer,
 				mode: 'payment',
-				// Card only: every card network supports manual capture, and
-				// the hold's expiry is read from the card details on the charge.
+				// Card only, wallets included: a card payment succeeds when
+				// Checkout completes, so the contribution is paid the moment it
+				// is recorded. Bank debits would take days to settle.
 				payment_method_types: ['card'],
 				line_items: [
 					{
@@ -314,16 +316,15 @@ export const createTeamContributionCheckout = onCall<
 					},
 				],
 				payment_intent_data: {
-					capture_method: 'manual',
 					description: `Team registration: ${teamSeason.name}, ${currentSeason.name}`,
-					// Repeated on the PaymentIntent so capture, cancellation and
-					// refund events can find their contribution without the
-					// session.
+					// Repeated on the PaymentIntent so refund events, and the
+					// reconciliation's search, can find their contribution
+					// without the session.
 					metadata,
 				},
 				metadata,
 				custom_text: {
-					submit: { message: HOLD_EXPLANATION },
+					submit: { message: PAYMENT_EXPLANATION },
 				},
 				expires_at:
 					Math.floor(Date.now() / 1000) + CHECKOUT_SESSION_LIFETIME_SECONDS,
@@ -332,7 +333,7 @@ export const createTeamContributionCheckout = onCall<
 			}
 
 			// Same caller, team, amount and minute: a double-click or a retry
-			// gets the same session back rather than a second hold.
+			// gets the same session back rather than a second payment.
 			const timeWindow = Math.floor(Date.now() / IDEMPOTENCY_WINDOW_MS)
 			const idempotencyKey = `team_contribution_${userId}_${teamId}_${seasonId}_${validAmountCents}_${timeWindow}`
 

@@ -252,9 +252,7 @@ const ledgerByPayer = async (): Promise<Record<string, string>> => {
 		snap.docs.map((doc) => {
 			const c = doc.data()
 			const held =
-				c.authorizedAmountCents === undefined
-					? ''
-					: ` of ${c.authorizedAmountCents}`
+				c.paidAmountCents === undefined ? '' : ` of ${c.paidAmountCents}`
 			return [c.player.id, `${c.status} ${c.amountCents}${held}`]
 		})
 	)
@@ -349,15 +347,13 @@ describe('a team paying collectively', () => {
 
 		expect(await isRegistered()).toBe(true)
 		expect((await seasonRef().get()).data()?.registeredTeamCount).toBe(1)
-		expect(stripeCallsByPayer()).toEqual([
-			`capture ${ALEX} 40000`,
-			`capture ${BLAIR} 35000`,
-			`capture ${CASEY} 25000`,
-		])
+		// Everyone was charged as they paid, and it came to exactly the
+		// total, so nothing is refunded.
+		expect(stripeCallsByPayer()).toEqual([])
 		expect(await ledgerByPayer()).toEqual({
-			[ALEX]: 'captured 40000',
-			[BLAIR]: 'captured 35000',
-			[CASEY]: 'captured 25000',
+			[ALEX]: 'paid 40000',
+			[BLAIR]: 'paid 35000',
+			[CASEY]: 'paid 25000',
 		})
 	})
 
@@ -369,15 +365,13 @@ describe('a team paying collectively', () => {
 		await contribute(BLAIR, 400)
 
 		expect(await isRegistered()).toBe(true)
-		expect(stripeCallsByPayer()).toEqual([
-			`capture ${ALEX} 60000`,
-			`capture ${BLAIR} 40000`,
-		])
+		expect(stripeCallsByPayer()).toEqual([])
 	})
 
-	it('charges the earliest payers when teammates pay over the total at once', async () => {
-		// Both see $500 left and both pay it: allowed, because the excess is
-		// only a hold, and releasing a hold is free.
+	it('refunds the latest payer when teammates pay over the total at once', async () => {
+		// Both see $500 left and both pay it. The later payment is refunded;
+		// preventing the race would need a reservation held for as long as
+		// a Checkout session stays open.
 		await signWaivers(PLAYERS.slice(0, 10))
 		await contribute(ALEX, 500)
 		const blairSession = await openCheckout(BLAIR, 500)
@@ -387,19 +381,15 @@ describe('a team paying collectively', () => {
 		await finishCheckout(caseySession)
 
 		expect(await isRegistered()).toBe(true)
-		expect(stripeCallsByPayer()).toEqual([
-			`capture ${ALEX} 50000`,
-			`capture ${BLAIR} 50000`,
-			`cancel ${CASEY}`,
-		])
+		expect(stripeCallsByPayer()).toEqual([`refund ${CASEY} 50000`])
 		expect(await ledgerByPayer()).toEqual({
-			[ALEX]: 'captured 50000',
-			[BLAIR]: 'captured 50000',
-			[CASEY]: 'canceled 50000',
+			[ALEX]: 'paid 50000',
+			[BLAIR]: 'paid 50000',
+			[CASEY]: 'refunded 50000',
 		})
 	})
 
-	it('releases the late hold when two teammates race for the last $300', async () => {
+	it('refunds the later payment when two teammates race for the last $300', async () => {
 		await signWaivers(PLAYERS.slice(0, 10))
 		await contribute(ALEX, 700)
 		const blairSession = await openCheckout(BLAIR, 300)
@@ -408,40 +398,34 @@ describe('a team paying collectively', () => {
 		await finishCheckout(caseySession)
 		await finishCheckout(blairSession)
 
-		// Casey's arrived first, so it covers the $300; Blair's is released.
-		expect(stripeCallsByPayer()).toEqual([
-			`capture ${ALEX} 70000`,
-			`capture ${CASEY} 30000`,
-			`cancel ${BLAIR}`,
-		])
+		// Casey's arrived first, so it covers the $300; Blair's is refunded.
+		expect(stripeCallsByPayer()).toEqual([`refund ${BLAIR} 30000`])
 	})
 
-	it('captures only part of a hold that straddles the total', async () => {
+	it('refunds only the part of a payment that crosses the total', async () => {
 		await signWaivers(PLAYERS.slice(0, 10))
 		// Blair opens Checkout for $500 while the whole $1,000 is open…
 		const blairSession = await openCheckout(BLAIR, 500)
-		// …and Alex commits $700 before Blair finishes.
+		// …and Alex pays $700 before Blair finishes.
 		await contribute(ALEX, 700)
 
 		await finishCheckout(blairSession)
 
-		// Alex's landed first, so Blair is charged only the $300 still owed
-		// and the other $200 of the hold is released.
-		expect(stripeCallsByPayer()).toEqual([
-			`capture ${ALEX} 70000`,
-			`capture ${BLAIR} 30000`,
-		])
+		// Alex's landed first, so Blair keeps paying only the $300 still
+		// owed and is refunded the other $200.
+		expect(stripeCallsByPayer()).toEqual([`refund ${BLAIR} 20000`])
 		expect(await ledgerByPayer()).toEqual({
-			[ALEX]: 'captured 70000',
-			[BLAIR]: 'captured 30000 of 50000',
+			[ALEX]: 'paid 70000',
+			[BLAIR]: 'paid 30000 of 50000',
 		})
 	})
 
-	it('keeps Stripe’s page, the hold and the ledger in agreement', async () => {
+	it('keeps Stripe’s page, the payment and the ledger in agreement', async () => {
 		const sessionId = await openCheckout(ALEX, 250)
 		const session = fakeStripe.sessions.get(sessionId)
 
-		expect(session?.params.payment_intent_data.capture_method).toBe('manual')
+		// Charged on completion: no hold.
+		expect(session?.params.payment_intent_data.capture_method).toBeUndefined()
 		expect(session?.params.payment_intent_data.metadata).toEqual({
 			kind: 'team_contribution',
 			firebaseUID: ALEX,
@@ -455,10 +439,9 @@ describe('a team paying collectively', () => {
 				.doc(paymentIntentId)
 				.get()
 		).data()
-		expect(entry?.status).toBe('authorized')
+		expect(entry?.status).toBe('paid')
 		expect(entry?.amountCents).toBe(25_000)
-		// The hold's expiry comes from the charge, so the sweep can act on it.
-		expect(entry?.captureBefore).toBeInstanceOf(Timestamp)
+		expect(entry?.player.id).toBe(ALEX)
 	})
 
 	it('shows what is left to the next payer', async () => {
@@ -472,13 +455,13 @@ describe('a team paying collectively', () => {
 })
 
 describe('a payer who leaves the team', () => {
-	it('is released straight away, and stops counting, before the team registers', async () => {
+	it('is refunded straight away, and stops counting, before the team registers', async () => {
 		await contribute(ALEX, 600)
 
 		await leaveTeam(ALEX)
 
-		expect(stripeCallsByPayer()).toEqual([`cancel ${ALEX}`])
-		expect(await ledgerByPayer()).toEqual({ [ALEX]: 'canceled 60000' })
+		expect(stripeCallsByPayer()).toEqual([`refund ${ALEX} 60000`])
+		expect(await ledgerByPayer()).toEqual({ [ALEX]: 'refunded 60000' })
 		// The whole total is open again to the people still on the team.
 		await expect(openCheckout(BLAIR, 1000)).resolves.toMatch(/^cs_/)
 	})
@@ -491,10 +474,7 @@ describe('a payer who leaves the team', () => {
 		await contribute(BLAIR, 1000)
 
 		expect(await isRegistered()).toBe(true)
-		expect(stripeCallsByPayer()).toEqual([
-			`cancel ${ALEX}`,
-			`capture ${BLAIR} 100000`,
-		])
+		expect(stripeCallsByPayer()).toEqual([`refund ${ALEX} 60000`])
 	})
 
 	it('does not register the team on money that left with them', async () => {
@@ -508,8 +488,8 @@ describe('a payer who leaves the team', () => {
 		// team's.
 		expect(await isRegistered()).toBe(false)
 		expect(await ledgerByPayer()).toEqual({
-			[ALEX]: 'canceled 60000',
-			[BLAIR]: 'authorized 40000',
+			[ALEX]: 'refunded 60000',
+			[BLAIR]: 'paid 40000',
 		})
 	})
 
@@ -522,18 +502,18 @@ describe('a payer who leaves the team', () => {
 		await leaveTeam(ALEX)
 
 		expect(await isRegistered()).toBe(true)
-		expect(stripeCallsByPayer()).toEqual([`capture ${ALEX} 100000`])
-		expect(await ledgerByPayer()).toEqual({ [ALEX]: 'captured 100000' })
+		expect(stripeCallsByPayer()).toEqual([])
+		expect(await ledgerByPayer()).toEqual({ [ALEX]: 'paid 100000' })
 	})
 
-	it('has a hold that lands after they left released, not counted', async () => {
+	it('is refunded a payment that lands after they left', async () => {
 		// Left while still on Stripe's page.
 		const sessionId = await openCheckout(DREW, 500)
 		await leaveTeam(DREW)
 
 		await finishCheckout(sessionId)
 
-		expect(stripeCallsByPayer()).toEqual([`cancel ${DREW}`])
-		expect(await ledgerByPayer()).toEqual({ [DREW]: 'canceled 50000' })
+		expect(stripeCallsByPayer()).toEqual([`refund ${DREW} 50000`])
+		expect(await ledgerByPayer()).toEqual({ [DREW]: 'refunded 50000' })
 	})
 })

@@ -1,7 +1,7 @@
 /**
  * Daily reconciliation of team payments with Stripe
  *
- * Finds holds in Stripe the ledger does not have, and ledger entries Stripe
+ * Finds payments in Stripe the ledger does not have, and ledger entries Stripe
  * disagrees with, and repairs both. Anything it finds means an event was
  * lost somewhere, so each is logged as an error for a person to look into.
  * See services/teamPaymentsReconciliation.ts.

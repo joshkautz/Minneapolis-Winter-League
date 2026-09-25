@@ -4,15 +4,15 @@
  * Under team-level pricing a team registers on a collective total rather than
  * ten individual payments, so the money is a property of the team-season and
  * not of any one player. It needs a ledger rather than a running total:
- * cancelling a hold, capturing it and refunding it all need to know who paid
- * what, and how much of it is still live.
+ * refunding a team, or one payer, needs to know who paid what and how much of
+ * it the team still holds.
  *
  * The ledger is the only record of a team's money: there are no running
  * totals anywhere else. That is deliberate. Team-season documents are public,
  * and what a team has paid, and who paid it, is visible to its own roster and
  * to admins only — `firestore.rules` enforces that on this subcollection.
- * Anything that needs a total sums the ledger (`totalsFrom`,
- * `committedCents`).
+ * Anything that needs a total sums the ledger (`paidCents`,
+ * `paidByRosterCents`).
  */
 
 import { FieldValue, type Firestore } from 'firebase-admin/firestore'
@@ -29,14 +29,11 @@ export const CONTRIBUTIONS_SUBCOLLECTION = 'contributions'
 /** Contributions and team totals are whole dollars. */
 export const CENTS_PER_DOLLAR = 100
 
-/** Statuses whose money is still committed to the team. */
-const LIVE_STATUSES: ContributionStatus[] = ['authorized', 'captured']
-
 /**
  * Thrown when a contribution arrives for a team-season that no longer exists.
  *
  * Distinct from other failures because the caller has to act on it: the
- * money is held against a team that is gone, and it must be released rather
+ * money was paid toward a team that is gone, and it must be refunded rather
  * than retried.
  */
 export class TeamSeasonNotFoundError extends Error {
@@ -62,58 +59,28 @@ export function teamContributionsCollection(
 }
 
 /**
- * Sums a set of contributions into what is held and what has been taken.
- *
- * Pure, so the arithmetic can be tested without a database. `authorizedCents`
- * counts money that is committed but not yet taken; `capturedCents` counts
- * money actually taken. A contribution that has been cancelled or refunded
- * counts toward neither.
+ * What a team holds: every payment, less what has been refunded. Pure, so the
+ * arithmetic can be tested without a database.
  */
-export function totalsFrom(contributions: TeamContributionDocument[]): {
-	authorizedCents: number
-	capturedCents: number
-} {
-	let authorizedCents = 0
-	let capturedCents = 0
-
-	for (const contribution of contributions) {
-		if (contribution.status === 'authorized') {
-			authorizedCents += contribution.amountCents
-		} else if (contribution.status === 'captured') {
-			capturedCents += contribution.amountCents
-		}
-	}
-
-	return { authorizedCents, capturedCents }
+export function paidCents(contributions: TeamContributionDocument[]): number {
+	return contributions
+		.filter((contribution) => contribution.status === 'paid')
+		.reduce((sum, contribution) => sum + contribution.amountCents, 0)
 }
 
 /**
- * What a team has committed toward its registration total.
+ * What a team's **current** roster has paid toward its total — the figure
+ * registration and the checkout's remaining balance both use.
  *
- * Registration tests **committed**, not captured: a team secures its spot
- * when the money is promised, and capture follows. Both statuses count,
- * because capturing a hold must not make a registered team look unfunded.
- */
-export function committedCents(
-	contributions: TeamContributionDocument[]
-): number {
-	const { authorizedCents, capturedCents } = totalsFrom(contributions)
-	return authorizedCents + capturedCents
-}
-
-/**
- * What a team's **current** roster has committed toward its total — the
- * figure registration and the checkout's remaining balance both use.
- *
- * A payer who has left the team no longer counts: their money is released
+ * A payer who has left the team no longer counts: their money is refunded
  * (see `shared/settlement.ts`), and until it is, counting it could register
- * a team on the money of someone who is not on it, and charge them for it.
+ * a team on the money of someone who is not on it.
  */
-export function committedByRosterCents(
+export function paidByRosterCents(
 	contributions: TeamContributionDocument[],
 	rosterPlayerIds: ReadonlySet<string>
 ): number {
-	return committedCents(
+	return paidCents(
 		contributions.filter((contribution) =>
 			rosterPlayerIds.has(contribution.player.id)
 		)
@@ -142,9 +109,8 @@ export function contributionAmountError(
 		return 'Contribution must be a whole number of cents greater than zero.'
 	}
 
-	// Whole dollars keep every capture above Stripe's 50-cent minimum: a
-	// remainder can never be smaller than a dollar, so settlement never has
-	// to choose between overcharging and writing money off.
+	// Whole dollars keep the remaining balance whole dollars too, so nobody
+	// is ever asked for a remainder of cents.
 	if (amountCents % CENTS_PER_DOLLAR !== 0) {
 		return 'Contribution must be a whole number of dollars.'
 	}
@@ -165,21 +131,19 @@ function formatDollars(cents: number): string {
 	return `$${(cents / 100).toFixed(2)}`
 }
 
-/** Whether any of a team's money is still outstanding and unsettled. */
-export function hasUnsettledMoney(
-	contributions: TeamContributionDocument[]
-): boolean {
-	return contributions.some((c) => LIVE_STATUSES.includes(c.status))
+/** Whether a team still holds any money, which must be refunded first. */
+export function holdsMoney(contributions: TeamContributionDocument[]): boolean {
+	return contributions.some((c) => c.status === 'paid')
 }
 
 /**
- * Records a new contribution.
+ * Records a new payment.
  *
  * Keyed on the PaymentIntent id and **insert-only**: a contribution that is
  * already in the ledger is left exactly as it is. Stripe redelivers webhooks,
- * sometimes long after the fact, and a redelivered "authorized" arriving
- * after the hold was captured or cancelled must not wind its status back.
- * Every later change goes through `setContributionStatus`.
+ * sometimes long after the fact, and a redelivered payment arriving after it
+ * was refunded must not wind its status back. Every later change goes
+ * through `setContributionStatus`.
  *
  * @throws TeamSeasonNotFoundError if the team-season does not exist
  */
@@ -191,8 +155,6 @@ export async function recordContribution(
 		playerId: string
 		paymentIntentId: string
 		amountCents: number
-		status: ContributionStatus
-		captureBefore?: FirebaseFirestore.Timestamp | null
 	}
 ): Promise<'recorded' | 'already-recorded'> {
 	const { teamId, seasonId, paymentIntentId } = params
@@ -222,9 +184,8 @@ export async function recordContribution(
 		transaction.create(contributionRef, {
 			player: firestore.collection(Collections.PLAYERS).doc(params.playerId),
 			amountCents: params.amountCents,
-			status: params.status,
+			status: 'paid' satisfies ContributionStatus,
 			paymentIntentId,
-			captureBefore: params.captureBefore ?? null,
 			createdAt: FieldValue.serverTimestamp(),
 			updatedAt: FieldValue.serverTimestamp(),
 		})
@@ -246,10 +207,9 @@ export class ContributionNotFoundError extends Error {
 /**
  * Changes a contribution's status, and optionally its amount.
  *
- * The amount changes when a hold is partly captured — $500 held, $400 taken,
- * the rest released — or partly refunded. The amount first authorized is
- * kept as `authorizedAmountCents` so the record still shows what the payer
- * committed.
+ * The amount changes when a payment is partly refunded — $500 paid, $200
+ * back. What was first paid is kept as `paidAmountCents`, so the record still
+ * shows what the payer put in.
  *
  * A change to what is already recorded is a no-op and writes nothing, so a
  * settlement that re-reads Stripe and finds nothing new does not fire the
@@ -291,8 +251,8 @@ export async function setContributionStatus(
 			status,
 			amountCents,
 			...(amountCents !== current.amountCents &&
-			current.authorizedAmountCents === undefined
-				? { authorizedAmountCents: current.amountCents }
+			current.paidAmountCents === undefined
+				? { paidAmountCents: current.amountCents }
 				: {}),
 			updatedAt: FieldValue.serverTimestamp(),
 		})

@@ -4,8 +4,8 @@
  * Fires when a roster entry is created or deleted under a team's season
  * subcollection. Recomputes the team's registration status for that season,
  * and when someone leaves, settles the team's money: a payer who leaves a
- * team that has not registered has their hold released straight away,
- * rather than at the next hourly sweep. See `planSettlement`.
+ * team that has not registered is refunded straight away, rather than at
+ * the next hourly sweep. See `planSettlement`.
  */
 
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'

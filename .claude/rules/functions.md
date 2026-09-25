@@ -106,8 +106,9 @@ retired revisions too; what matters is the revision serving traffic
 
 `STRIPE_SECRET_KEY` is a **restricted** key, created in the Dashboard, with:
 
-- **Write:** Checkout Sessions, Customers, PaymentIntents, Products, Refunds
-- **Read:** Charges (for `expand: ['latest_charge']`), Prices
+- **Write:** Checkout Sessions, Customers, Products, Refunds
+- **Read:** PaymentIntents (retrieve and search), Charges (for
+  `expand: ['latest_charge']`), Prices
 - **None:** everything else, including webhook endpoints
 
 A call outside that list fails in production with `StripePermissionError`
@@ -165,9 +166,10 @@ vi.mock('stripe', async () => ({
 }))
 ```
 
-`tests/integration/fake-stripe.ts` enforces what Stripe does — no capturing
-a cancelled hold, no refunding more than was taken, idempotency keys replay
-— and `gateRetrieves` forces concurrent settlements to genuinely race.
+`tests/integration/fake-stripe.ts` enforces what Stripe does — no refunding
+more than is left, idempotency keys replay, a Checkout session pays only
+when completed (`completeCheckout`) — and `gateRetrieves` forces concurrent
+settlements to genuinely race.
 
 ## Rosters
 

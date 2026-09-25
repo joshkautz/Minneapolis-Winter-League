@@ -39,33 +39,34 @@ Badges already implemented are marked `x`. The rest are designed but not built.
 
 Live from 2026 Fall: `docs/TEAM_PAYMENTS.md`. A team registers
 when it has ten signed players **and** its players have collectively
-committed $1,000, in any split, replacing ten individual $100 payments.
+paid $1,000, in any split, replacing ten individual $100 payments.
 
 Done: the transactional twelve-team cap, waivers on roster join, the
 contribution ledger and its no-orphan guards, the registration rule, and
 taking money (`createTeamContributionCheckout` plus the webhook), and the
-whole settlement lifecycle: capture on registration, release on the
-twelve-team lock and when registration closes, capture before expiry, an
-admin release, and a daily reconciliation with Stripe; the team payment card
+whole settlement lifecycle: refunding any excess on registration, refunding
+the teams that miss the twelve-team lock and those unregistered when
+registration closes, refunding a payer who leaves, an admin refund, and a
+daily reconciliation with Stripe; the team payment card
 on My Team and the admin payments view, and cutover: 2026 Fall carries a
 $1,000 total and the home page describes it. The twelve-team race was
 rehearsed on the emulators on 24 September 2026
 (`scripts/rehearse-registration-race.js`): fifteen simultaneous final
-signatures registered exactly twelve teams. Left: one real contribution on
-1 October, released from the admin payments dialog, to prove the live Stripe
-path.
+signatures registered exactly twelve teams. Left: one real admin
+contribution before 1 October, refunded from the admin payments dialog, to
+prove the live Stripe path.
 
 Three decisions carry it:
 
 - **Inline pricing**, so the server decides the amount rather than the payer.
   Stripe's pay-what-you-want feature cannot express "at most what this team
   still owes", and hands us the amount only after the money has moved.
-- **Manual capture on every contribution.** Money is held, never taken, until
-  the team is going to play. Cancelling a hold is free where a refund never
-  returns the processing fee, and it makes the concurrent-overpayment race
-  free to resolve too. A hold is never allowed to lapse — it is captured
-  shortly before the 7-day authorization would expire, so nobody is ever
-  asked to pay again.
+- **Charge immediately, refund what is not kept.** Every contribution is
+  charged when it is made. A card hold would have made refunds free, but a
+  hold lasts a week on most cards against a month of registration, and
+  extended holds cover only Visa and Mastercard for a league. So the league
+  bears the processing fee on refunds, for one rule every payer can follow:
+  you pay, and you get it back if your team does not play.
 - **Waivers are the player's own step**, not tied to paying — otherwise a
   team whose captain pays for everyone can never reach ten signed players.
   Done: players sign in the app (`docs/WAIVERS.md`).

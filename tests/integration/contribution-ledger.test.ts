@@ -6,7 +6,7 @@ import {
 	errorCodeFrom,
 	initTestApp,
 	resetFirestore,
-	ledgerTotals,
+	ledgerPaidCents,
 } from './helpers.js'
 import {
 	recordContribution,
@@ -21,8 +21,8 @@ import { teamSeasonRef } from '../../Functions/src/shared/database.js'
  * The ledger, and the invariant that keeps money from being lost.
  *
  * A team's contributions are the record of who is owed what. Deleting a
- * team-season that still holds money loses that record, and a hold nobody
- * knows about is never cancelled — so every route that deletes one has to
+ * team-season that still holds money loses that record, and a payment nobody
+ * knows about is never refunded — so every route that deletes one has to
  * settle first. Rather than remember that at each call site, the check lives
  * at the chokepoint three of the four routes already share.
  */
@@ -56,22 +56,31 @@ const seedPlayer = async (playerId: string, admin = false) => {
 		.set({ admin, banned: false, email: `${playerId}@example.com` })
 }
 
-const add = (
+const add = async (
 	paymentIntentId: string,
 	amountCents: number,
-	status: 'authorized' | 'captured' | 'canceled' | 'refunded' = 'authorized',
+	status: 'paid' | 'refunded' = 'paid',
 	teamId = TEAM
-) =>
-	recordContribution(firestore, {
+) => {
+	const outcome = await recordContribution(firestore, {
 		teamId,
 		seasonId: SEASON,
 		playerId: 'payer',
 		paymentIntentId,
 		amountCents,
-		status,
 	})
+	if (status === 'refunded') {
+		await setContributionStatus(firestore, {
+			teamId,
+			seasonId: SEASON,
+			paymentIntentId,
+			status,
+		})
+	}
+	return outcome
+}
 
-const totals = (teamId = TEAM) => ledgerTotals(firestore, teamId, SEASON)
+const held = (teamId = TEAM) => ledgerPaidCents(firestore, teamId, SEASON)
 
 const ledgerSize = async (teamId = TEAM) =>
 	(await teamContributionsCollection(firestore, teamId, SEASON).get()).size
@@ -97,7 +106,7 @@ describe('recording a contribution', () => {
 			teamId: TEAM,
 			seasonId: SEASON,
 			paymentIntentId: 'pi_1',
-			status: 'captured',
+			status: 'paid',
 			amountCents: 40_000,
 		})
 
@@ -121,44 +130,32 @@ describe('recording a contribution', () => {
 		await add('pi_1', 100_000)
 
 		expect(await ledgerSize()).toBe(1)
-		expect(await totals()).toEqual({
-			authorizedCents: 100_000,
-			capturedCents: 0,
-		})
+		expect(await held()).toBe(100_000)
 	})
 
 	it('keys on the PaymentIntent so a redelivered webhook writes once', async () => {
 		// Stripe retries. A second document would double the team's total and
-		// register it on money that was never committed twice.
+		// register it on money that was only paid once.
 		await add('pi_1', 100_000)
 		await add('pi_1', 100_000)
 
 		expect(await ledgerSize()).toBe(1)
-		expect((await totals()).authorizedCents).toBe(100_000)
+		expect(await held()).toBe(100_000)
 	})
 
 	it('never rewrites a contribution already in the ledger', async () => {
-		// Insert-only. A webhook redelivered after the hold was captured must
-		// not wind it back to authorized; status changes go through
+		// Insert-only. A webhook redelivered after the payment was refunded
+		// must not wind it back to paid; status changes go through
 		// setContributionStatus and nothing else.
-		await add('pi_1', 100_000)
-		await setContributionStatus(firestore, {
-			teamId: TEAM,
-			seasonId: SEASON,
-			paymentIntentId: 'pi_1',
-			status: 'captured',
-		})
+		await add('pi_1', 100_000, 'refunded')
 
 		await expect(add('pi_1', 100_000)).resolves.toBe('already-recorded')
 
 		const doc = await teamContributionsCollection(firestore, TEAM, SEASON)
 			.doc('pi_1')
 			.get()
-		expect(doc.data()?.status).toBe('captured')
-		expect(await totals()).toEqual({
-			authorizedCents: 0,
-			capturedCents: 100_000,
-		})
+		expect(doc.data()?.status).toBe('refunded')
+		expect(await held()).toBe(0)
 	})
 
 	it('accumulates contributions from several payers', async () => {
@@ -166,7 +163,7 @@ describe('recording a contribution', () => {
 		await add('pi_2', 30_000)
 		await add('pi_3', 20_000)
 
-		expect((await totals()).authorizedCents).toBe(100_000)
+		expect(await held()).toBe(100_000)
 	})
 
 	it('refuses a contribution to a team-season that does not exist', async () => {
@@ -177,7 +174,6 @@ describe('recording a contribution', () => {
 				playerId: 'payer',
 				paymentIntentId: 'pi_1',
 				amountCents: 10_000,
-				status: 'authorized',
 			})
 		).rejects.toThrow(/no team season/i)
 	})
@@ -192,47 +188,13 @@ describe('recording a contribution', () => {
 	})
 })
 
-describe('moving a contribution through its lifecycle', () => {
+describe('refunding a contribution', () => {
 	beforeEach(async () => {
 		await add('pi_1', 60_000)
 		await add('pi_2', 40_000)
 	})
 
-	it('moves money from authorized to captured', async () => {
-		await setContributionStatus(firestore, {
-			teamId: TEAM,
-			seasonId: SEASON,
-			paymentIntentId: 'pi_1',
-			status: 'captured',
-		})
-
-		expect(await totals()).toEqual({
-			authorizedCents: 40_000,
-			capturedCents: 60_000,
-		})
-	})
-
-	it('drops a cancelled hold from both totals', async () => {
-		await setContributionStatus(firestore, {
-			teamId: TEAM,
-			seasonId: SEASON,
-			paymentIntentId: 'pi_1',
-			status: 'canceled',
-		})
-
-		expect(await totals()).toEqual({
-			authorizedCents: 40_000,
-			capturedCents: 0,
-		})
-	})
-
-	it('drops a refund from both totals', async () => {
-		await setContributionStatus(firestore, {
-			teamId: TEAM,
-			seasonId: SEASON,
-			paymentIntentId: 'pi_1',
-			status: 'captured',
-		})
+	it('drops a refund from what the team holds', async () => {
 		await setContributionStatus(firestore, {
 			teamId: TEAM,
 			seasonId: SEASON,
@@ -240,19 +202,51 @@ describe('moving a contribution through its lifecycle', () => {
 			status: 'refunded',
 		})
 
-		expect(await totals()).toEqual({
-			authorizedCents: 40_000,
-			capturedCents: 0,
-		})
+		expect(await held()).toBe(40_000)
 	})
 
-	it('is a no-op when the status is already set', async () => {
+	it('records a partial refund and keeps what was first paid', async () => {
 		await setContributionStatus(firestore, {
 			teamId: TEAM,
 			seasonId: SEASON,
 			paymentIntentId: 'pi_1',
-			status: 'captured',
+			status: 'paid',
+			amountCents: 40_000,
 		})
+
+		const doc = (
+			await teamContributionsCollection(firestore, TEAM, SEASON)
+				.doc('pi_1')
+				.get()
+		).data()
+		expect(doc).toMatchObject({
+			status: 'paid',
+			amountCents: 40_000,
+			paidAmountCents: 60_000,
+		})
+		expect(await held()).toBe(80_000)
+	})
+
+	it('keeps the first amount paid through a second refund', async () => {
+		for (const amountCents of [40_000, 20_000]) {
+			await setContributionStatus(firestore, {
+				teamId: TEAM,
+				seasonId: SEASON,
+				paymentIntentId: 'pi_1',
+				status: 'paid',
+				amountCents,
+			})
+		}
+
+		const doc = (
+			await teamContributionsCollection(firestore, TEAM, SEASON)
+				.doc('pi_1')
+				.get()
+		).data()
+		expect(doc?.paidAmountCents).toBe(60_000)
+	})
+
+	it('is a no-op when nothing has changed', async () => {
 		const updatedAt = (
 			await teamContributionsCollection(firestore, TEAM, SEASON)
 				.doc('pi_1')
@@ -264,11 +258,11 @@ describe('moving a contribution through its lifecycle', () => {
 				teamId: TEAM,
 				seasonId: SEASON,
 				paymentIntentId: 'pi_1',
-				status: 'captured',
+				status: 'paid',
+				amountCents: 60_000,
 			})
 		).resolves.toBe('unchanged')
 
-		expect((await totals()).capturedCents).toBe(60_000)
 		// Nothing was written, so the contribution trigger does not fire for
 		// a settlement that found nothing new.
 		const after = (
@@ -279,73 +273,43 @@ describe('moving a contribution through its lifecycle', () => {
 		expect(after?.isEqual(updatedAt)).toBe(true)
 	})
 
-	it('records a partial capture and keeps what was first authorized', async () => {
-		await setContributionStatus(firestore, {
-			teamId: TEAM,
-			seasonId: SEASON,
-			paymentIntentId: 'pi_1',
-			status: 'captured',
-			amountCents: 40_000,
-		})
-
-		const doc = (
-			await teamContributionsCollection(firestore, TEAM, SEASON)
-				.doc('pi_1')
-				.get()
-		).data()
-		expect(doc).toMatchObject({
-			status: 'captured',
-			amountCents: 40_000,
-			authorizedAmountCents: 60_000,
-		})
-		expect((await totals()).capturedCents).toBe(40_000)
-	})
-
 	it('refuses to update a contribution that was never recorded', async () => {
 		await expect(
 			setContributionStatus(firestore, {
 				teamId: TEAM,
 				seasonId: SEASON,
 				paymentIntentId: 'pi_nope',
-				status: 'captured',
+				status: 'refunded',
 			})
 		).rejects.toThrow(/does not exist/i)
 	})
 })
 
 describe('a team holding money cannot be deleted', () => {
-	it('refuses while a hold is outstanding', async () => {
+	it('refuses while it holds a payment', async () => {
 		await add('pi_1', 100_000)
 
 		const result = await deleteTeamSeasonWithCleanup(firestore, TEAM, SEASON)
 
 		expect(result.success).toBe(false)
-		expect(result.error).toMatch(/money still committed/i)
+		expect(result.error).toMatch(/still holds money/i)
 		expect((await teamSeasonRef(firestore, TEAM, SEASON).get()).exists).toBe(
 			true
 		)
 	})
 
-	it('refuses while money has been captured', async () => {
-		await add('pi_1', 100_000, 'captured')
-
-		const result = await deleteTeamSeasonWithCleanup(firestore, TEAM, SEASON)
-
-		expect(result.success).toBe(false)
-	})
-
-	it('refuses when one of several contributions is still live', async () => {
-		await add('pi_1', 50_000, 'canceled')
+	it('refuses when one of several contributions is still paid', async () => {
+		await add('pi_1', 50_000, 'refunded')
 		await add('pi_2', 50_000, 'refunded')
-		await add('pi_3', 1_000, 'authorized')
+		await add('pi_3', 1_000)
 
 		expect(
 			(await deleteTeamSeasonWithCleanup(firestore, TEAM, SEASON)).success
 		).toBe(false)
 	})
 
-	it('allows deletion once everything is settled', async () => {
-		await add('pi_1', 50_000, 'canceled')
+	it('allows deletion once everything is refunded', async () => {
+		await add('pi_1', 50_000, 'refunded')
 		await add('pi_2', 50_000, 'refunded')
 
 		const result = await deleteTeamSeasonWithCleanup(firestore, TEAM, SEASON)
@@ -375,7 +339,7 @@ describe('merging a team holding money', () => {
 		})
 	})
 
-	it('is refused while the losing team has unsettled money', async () => {
+	it('is refused while the losing team holds money', async () => {
 		// mergeTeams recursively deletes the losing team, which would take
 		// its contributions with it. It is the one deletion path that does
 		// not go through deleteTeamSeasonWithCleanup.
@@ -390,7 +354,7 @@ describe('merging a team holding money', () => {
 		expect(await ledgerSize()).toBe(1)
 	})
 
-	it('is allowed once that money is settled', async () => {
+	it('is allowed once that money is refunded', async () => {
 		await add('pi_1', 100_000, 'refunded')
 
 		await mergeTeams.run({

@@ -5,7 +5,7 @@ import { Timestamp } from 'firebase/firestore'
 
 /**
  * What a player sees when their team pays collectively: how much is
- * committed, what they may put in, and what the hold on their card means.
+ * paid, what they may put in, and when they would get their money back.
  * The server decides everything that matters; this pins that the page
  * explains it honestly and never offers what the server would refuse.
  */
@@ -144,13 +144,12 @@ beforeEach(() => {
 })
 
 describe('TeamPaymentCard', () => {
-	describe('what the team has committed', () => {
-		it('counts holds and captures, and not money given back', () => {
+	describe('what the team has paid', () => {
+		it('counts payments, and not money given back', () => {
 			contributions = [
-				{ amountCents: 40_000, status: 'authorized' },
-				{ amountCents: 20_000, status: 'captured' },
-				{ amountCents: 30_000, status: 'canceled' },
-				{ amountCents: 10_000, status: 'refunded' },
+				{ amountCents: 40_000, status: 'paid' },
+				{ amountCents: 20_000, status: 'paid' },
+				{ amountCents: 30_000, status: 'refunded' },
 			]
 			render(<TeamPaymentCard />)
 
@@ -162,10 +161,10 @@ describe('TeamPaymentCard', () => {
 		})
 
 		it('does not count a teammate who has left', () => {
-			// Their hold is being released, as on the server.
+			// They are being refunded, as on the server.
 			contributions = [
-				{ amountCents: 60_000, status: 'authorized', payer: 'departed' },
-				{ amountCents: 30_000, status: 'authorized' },
+				{ amountCents: 60_000, status: 'paid', payer: 'departed' },
+				{ amountCents: 30_000, status: 'paid' },
 			]
 			render(<TeamPaymentCard />)
 
@@ -178,8 +177,8 @@ describe('TeamPaymentCard', () => {
 		it('counts all of a registered team’s money, since that is final', () => {
 			teamSeason = { name: 'Frostbite', registered: true }
 			contributions = [
-				{ amountCents: 40_000, status: 'captured', payer: 'departed' },
-				{ amountCents: 60_000, status: 'captured' },
+				{ amountCents: 40_000, status: 'paid', payer: 'departed' },
+				{ amountCents: 60_000, status: 'paid' },
 			]
 			render(<TeamPaymentCard />)
 
@@ -194,12 +193,12 @@ describe('TeamPaymentCard', () => {
 		})
 
 		it('lists every contribution with its payer', () => {
-			contributions = [{ amountCents: 25_000, status: 'authorized' }]
+			contributions = [{ amountCents: 25_000, status: 'paid' }]
 			render(<TeamPaymentCard />)
 
 			const row = screen.getByText('Pat Lee').closest('li')
 			expect(row).toHaveTextContent('$250')
-			expect(row).toHaveTextContent('Authorized')
+			expect(row).toHaveTextContent('Paid')
 		})
 	})
 
@@ -215,7 +214,7 @@ describe('TeamPaymentCard', () => {
 		})
 
 		it('refuses more than the team still needs before asking the server', async () => {
-			contributions = [{ amountCents: 90_000, status: 'authorized' }]
+			contributions = [{ amountCents: 90_000, status: 'paid' }]
 			const user = userEvent.setup()
 			render(<TeamPaymentCard />)
 
@@ -284,17 +283,16 @@ describe('TeamPaymentCard', () => {
 		})
 	})
 
-	describe('what the payer is told about the hold', () => {
-		it('says the card may be charged early, and never promises no charge', () => {
+	describe('what the payer is told about being charged', () => {
+		it('says the card is charged now, and when it is refunded', () => {
 			render(<TeamPaymentCard />)
 
-			expect(
-				screen.getByText(/charged when your team registers/)
-			).toBeInTheDocument()
-			expect(
-				screen.getByText(/charged early rather than allowed to lapse/)
-			).toBeInTheDocument()
-			expect(screen.queryByText(/never charged/)).not.toBeInTheDocument()
+			const explanation = screen.getByText(/^Your card is charged now\./)
+			expect(explanation).toHaveTextContent(
+				/If you leave the team before it registers, or it does not get one of the 12 spots, you are refunded in full/
+			)
+			expect(explanation).toHaveTextContent(/5 to 10 business days/)
+			expect(screen.queryByText(/authoriz|hold/i)).not.toBeInTheDocument()
 		})
 
 		it('says money is refunded once the season fills', () => {
@@ -305,7 +303,7 @@ describe('TeamPaymentCard', () => {
 				screen.getByText(/All 12 spots have been taken/)
 			).toBeInTheDocument()
 			expect(
-				screen.getByText(/anything already charged is refunded in full/)
+				screen.getByText(/Everything your team paid is refunded in full/)
 			).toBeInTheDocument()
 			expect(
 				screen.queryByLabelText('Amount (dollars)')
@@ -330,7 +328,7 @@ describe('TeamPaymentCard', () => {
 			expect(screen.queryByText(/As an admin/)).not.toBeInTheDocument()
 		})
 
-		it('lets an admin contribute early, warning that it is a real hold', async () => {
+		it('lets an admin contribute early, warning that it is a real charge', async () => {
 			userStatus = { isAdmin: true, isBanned: false }
 			const user = userEvent.setup()
 			render(<TeamPaymentCard />)
@@ -339,7 +337,9 @@ describe('TeamPaymentCard', () => {
 				screen.getByText(/As an admin you can contribute early to test/)
 			).toBeInTheDocument()
 			expect(
-				screen.getByText(/within six days, or it is charged/)
+				screen.getByText(
+					/real charge on your card: refund it from Team Management/
+				)
 			).toBeInTheDocument()
 
 			await user.clear(amountInput())
@@ -369,11 +369,11 @@ describe('TeamPaymentCard', () => {
 	})
 
 	it('tells a fully funded team what is left', () => {
-		contributions = [{ amountCents: TOTAL, status: 'authorized' }]
+		contributions = [{ amountCents: TOTAL, status: 'paid' }]
 		render(<TeamPaymentCard />)
 
 		expect(
-			screen.getByText(/committed the full amount. It registers as soon as 10/)
+			screen.getByText(/paid the full amount. It registers as soon as 10/)
 		).toBeInTheDocument()
 	})
 

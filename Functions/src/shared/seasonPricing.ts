@@ -45,14 +45,14 @@ export function validateTeamRegistrationTotal(value: unknown): number {
 	return value
 }
 
-const LIVE_STATUSES: ContributionStatus[] = ['authorized', 'captured']
+const PAID: ContributionStatus = 'paid'
 
 /**
- * Whether any team in the season holds money — a hold, or a capture.
+ * Whether any team in the season holds money.
  *
  * Changing or removing the total then would strand it: settlement decides
- * what to capture from the total, and a season with no total is not settled
- * at all.
+ * what to keep and refund from the total, and a season with no total is not
+ * settled at all.
  */
 export async function seasonHoldsTeamMoney(
 	firestore: Firestore,
@@ -67,7 +67,7 @@ export async function seasonHoldsTeamMoney(
 	for (const teamSeason of teamSeasons.docs) {
 		const live = await teamSeason.ref
 			.collection(CONTRIBUTIONS_SUBCOLLECTION)
-			.where('status', 'in', LIVE_STATUSES)
+			.where('status', '==', PAID)
 			.limit(1)
 			.get()
 		if (!live.empty) return true

@@ -17,7 +17,7 @@ const registrationSteps = (teamTotalCents: number | undefined): string[] => [
 	'Request to join an existing team, accept an invitation, or create your own team.',
 	teamTotalCents === undefined
 		? 'Visit your profile to submit secure electronic payment via Stripe.'
-		: `Chip in toward your team's ${formatDollars(teamTotalCents)} from My Team, split however your team likes. Your team registers once ${MIN_SIGNED_PLAYERS} players have signed and the total is committed.`,
+		: `Chip in toward your team's ${formatDollars(teamTotalCents)} from My Team, split however your team likes. Your team registers once ${MIN_SIGNED_PLAYERS} players have signed and the total is paid.`,
 	'Receive confirmation and league updates via email.',
 ]
 

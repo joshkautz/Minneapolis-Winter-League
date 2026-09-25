@@ -19,17 +19,13 @@ const STATUS_VARIANTS: Record<
 	ContributionStatus,
 	'default' | 'secondary' | 'outline'
 > = {
-	authorized: 'outline',
-	captured: 'secondary',
-	canceled: 'outline',
+	paid: 'secondary',
 	refunded: 'outline',
 }
 
 const STATUS_HINTS: Record<ContributionStatus, string> = {
-	authorized: 'Held on the card, charged when the team registers',
-	captured: 'Charged',
-	canceled: 'Hold released; never charged',
-	refunded: 'Charged and refunded',
+	paid: 'Charged toward the team’s total',
+	refunded: 'Charged and refunded in full',
 }
 
 const PayerName = ({
@@ -52,7 +48,7 @@ export const TeamContributionsList = ({
 	emptyMessage = 'No contributions yet.',
 }: {
 	contributions: QueryDocumentSnapshot<TeamContributionDocument>[]
-	/** Extra control per row — the admin's release button. */
+	/** Extra control per row — the admin's refund button. */
 	renderAction?: (
 		contribution: QueryDocumentSnapshot<TeamContributionDocument>
 	) => ReactNode
@@ -66,12 +62,10 @@ export const TeamContributionsList = ({
 		<ul className='divide-y'>
 			{contributions.map((snapshot) => {
 				const contribution = snapshot.data()
-				const isLive =
-					contribution.status === 'authorized' ||
-					contribution.status === 'captured'
-				const heldMore =
-					contribution.authorizedAmountCents !== undefined &&
-					contribution.authorizedAmountCents !== contribution.amountCents
+				const isLive = contribution.status === 'paid'
+				const partlyRefunded =
+					contribution.paidAmountCents !== undefined &&
+					contribution.paidAmountCents !== contribution.amountCents
 				return (
 					<li
 						key={snapshot.id}
@@ -81,8 +75,8 @@ export const TeamContributionsList = ({
 							<PayerName contribution={contribution} />
 							<p className='text-xs text-muted-foreground'>
 								{formatTimestamp(contribution.createdAt)}
-								{contribution.releaseReason &&
-									` · Released by an admin: ${contribution.releaseReason}`}
+								{contribution.refundReason &&
+									` · Refunded by an admin: ${contribution.refundReason}`}
 							</p>
 						</div>
 						<div className='text-right'>
@@ -95,10 +89,10 @@ export const TeamContributionsList = ({
 							>
 								{formatDollars(contribution.amountCents)}
 							</p>
-							{heldMore && (
+							{isLive && partlyRefunded && (
 								<p className='text-xs text-muted-foreground'>
-									of {formatDollars(contribution.authorizedAmountCents ?? 0)}{' '}
-									held
+									of {formatDollars(contribution.paidAmountCents ?? 0)} paid;
+									the rest refunded
 								</p>
 							)}
 						</div>

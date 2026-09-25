@@ -93,22 +93,22 @@ export async function seedAuthUser(
 }
 
 /**
- * What a team's ledger holds and has taken, summed the way the Functions do.
- * The ledger is the only record of a team's money; nothing keeps a total.
+ * What a team's ledger still holds, summed the way the Functions do. The
+ * ledger is the only record of a team's money; nothing keeps a total.
  */
-export async function ledgerTotals(
+export async function ledgerPaidCents(
 	firestore: Firestore,
 	teamId: string,
 	seasonId: string
-): Promise<{ authorizedCents: number; capturedCents: number }> {
-	const { teamContributionsCollection, totalsFrom } =
+): Promise<number> {
+	const { teamContributionsCollection, paidCents } =
 		await import('../../Functions/src/shared/contributions.js')
 	const snap = await teamContributionsCollection(
 		firestore,
 		teamId,
 		seasonId
 	).get()
-	return totalsFrom(
-		snap.docs.map((d) => d.data() as Parameters<typeof totalsFrom>[0][number])
+	return paidCents(
+		snap.docs.map((d) => d.data() as Parameters<typeof paidCents>[0][number])
 	)
 }

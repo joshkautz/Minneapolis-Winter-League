@@ -6,10 +6,10 @@ import {
 	initTestApp,
 	resetFirestore,
 	type Callable,
-	ledgerTotals,
+	ledgerPaidCents,
 } from './helpers.js'
 import {
-	addHold,
+	addPayment,
 	failNext,
 	FakeStripe,
 	fakeStripe,
@@ -18,7 +18,6 @@ import {
 import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import {
 	recordContribution,
-	setContributionStatus,
 	teamContributionsCollection,
 } from '../../Functions/src/shared/contributions.js'
 import {
@@ -27,19 +26,19 @@ import {
 } from '../../Functions/src/shared/database.js'
 import { sweepTeamPayments } from '../../Functions/src/services/teamPaymentsSweep.js'
 import {
-	LIVE_TEAM_HOLDS_QUERY,
+	RECONCILIATION_LOOKBACK_DAYS,
 	reconcileTeamPayments,
+	recentTeamPaymentsQuery,
 } from '../../Functions/src/services/teamPaymentsReconciliation.js'
-import { EXPIRY_CAPTURE_MARGIN_MS } from '../../Functions/src/shared/settlement.js'
 
 /**
  * The parts of settlement that run on a clock, and the admin's manual
- * release.
+ * refund.
  *
  * Triggers settle a team when something happens to it. These cover what
- * happens because time passes — registration closing, a hold nearing expiry
- * — and what catches an event that was lost: the daily reconciliation
- * between Stripe and the ledger.
+ * happens because time passes — registration closing — and what catches an
+ * event that was lost: the daily reconciliation between Stripe and the
+ * ledger.
  */
 
 vi.mock('stripe', async () => ({
@@ -51,6 +50,7 @@ const LOCK = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
 const SEASON = 'season-1'
 const DAY_MS = 24 * 60 * 60 * 1000
 const REGISTRATION_END = Date.now() + 10 * DAY_MS
+const AFTER_CLOSE = new Date(REGISTRATION_END + 1000)
 
 let firestore: Firestore
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,24 +97,17 @@ const metadataFor = (teamId: string, seasonId = SEASON) => ({
 	seasonId,
 })
 
-/** A hold in Stripe and, unless told otherwise, in the ledger. */
-const hold = async (
+/** A payment in Stripe and, unless told otherwise, in the ledger. */
+const pay = async (
 	paymentIntentId: string,
 	amountCents: number,
 	teamId: string,
-	options: { expiresAt?: number; inLedger?: boolean; seasonId?: string } = {}
+	options: { inLedger?: boolean; seasonId?: string } = {}
 ) => {
 	const seasonId = options.seasonId ?? SEASON
-	const intent = addHold(
-		paymentIntentId,
-		amountCents,
-		metadataFor(teamId, seasonId),
-		options.expiresAt === undefined
-			? undefined
-			: Math.floor(options.expiresAt / 1000)
-	)
+	addPayment(paymentIntentId, amountCents, metadataFor(teamId, seasonId))
 	if (options.inLedger === false) return
-	// The payer is on the team: money from someone who has left is released.
+	// The payer is on the team: money from someone who has left is refunded.
 	await teamRosterEntryRef(firestore, teamId, seasonId, 'payer').set({
 		player: firestore.collection('players').doc('payer'),
 		dateJoined: Timestamp.now(),
@@ -125,11 +118,12 @@ const hold = async (
 		playerId: 'payer',
 		paymentIntentId,
 		amountCents,
-		status: 'authorized',
-		captureBefore: Timestamp.fromMillis(
-			intent.latest_charge.payment_method_details.card.capture_before * 1000
-		),
 	})
+}
+
+const refundedInDashboard = (paymentIntentId: string, amountCents: number) => {
+	fakeStripe.intents.get(paymentIntentId)!.latest_charge.amount_refunded =
+		amountCents
 }
 
 const entry = async (teamId: string, paymentIntentId: string) =>
@@ -140,11 +134,7 @@ const entry = async (teamId: string, paymentIntentId: string) =>
 	).data()
 
 const stripeCalls = () =>
-	fakeStripe.calls.map((c) =>
-		c.amount === undefined
-			? `${c.method} ${c.paymentIntentId}`
-			: `${c.method} ${c.paymentIntentId} ${c.amount}`
-	)
+	fakeStripe.calls.map((c) => `${c.method} ${c.paymentIntentId} ${c.amount}`)
 
 beforeAll(async () => {
 	process.env.STRIPE_SECRET_KEY ??= 'sk_test_integration'
@@ -162,115 +152,51 @@ beforeEach(async () => {
 })
 
 describe('the hourly sweep', () => {
-	it('releases unregistered teams once registration closes', async () => {
+	it('refunds unregistered teams once registration closes', async () => {
 		await seedTeam('team-a')
 		await seedTeam('team-b')
-		await hold('pi_a', 60_000, 'team-a')
-		await hold('pi_b', 40_000, 'team-b')
+		await pay('pi_a', 60_000, 'team-a')
+		await pay('pi_b', 40_000, 'team-b')
 
-		const result = await sweepTeamPayments({
-			now: new Date(REGISTRATION_END + 1000),
-		})
+		const result = await sweepTeamPayments({ now: AFTER_CLOSE })
 
-		expect(stripeCalls().sort()).toEqual(['cancel pi_a', 'cancel pi_b'])
+		expect(stripeCalls().sort()).toEqual([
+			'refund pi_a 60000',
+			'refund pi_b 40000',
+		])
 		expect(result).toEqual({ teamsChecked: 2, teamsActedOn: 2, failures: [] })
 	})
 
-	it('does nothing to a fresh hold before registration closes', async () => {
+	it('does nothing to a team still in the running', async () => {
 		await seedTeam('team-a')
-		await hold('pi_a', 60_000, 'team-a')
+		await pay('pi_a', 60_000, 'team-a')
 
 		await sweepTeamPayments()
 
 		expect(stripeCalls()).toEqual([])
 	})
 
-	it('captures a hold in its last day rather than let it lapse', async () => {
-		const expiresAt = Date.now() + 3 * DAY_MS
-		await seedTeam('team-a')
-		await hold('pi_expiring', 60_000, 'team-a', { expiresAt })
-		await hold('pi_fresh', 40_000, 'team-a')
-
-		await sweepTeamPayments({
-			now: new Date(expiresAt - EXPIRY_CAPTURE_MARGIN_MS / 2),
-		})
-
-		expect(stripeCalls()).toEqual(['capture pi_expiring 60000'])
-	})
-
-	it('keeps the registered teams’ money after registration closes', async () => {
+	it('passes over a registered team, whose money its triggers settle', async () => {
+		// Past seasons cost a query per team and no settlement.
 		await seedTeam('team-a', true)
 		await seasonRef().update({ registeredTeamCount: 1 })
-		await hold('pi_a', TOTAL, 'team-a')
+		await pay('pi_a', TOTAL, 'team-a')
 
-		await sweepTeamPayments({ now: new Date(REGISTRATION_END + 1000) })
+		const result = await sweepTeamPayments({ now: AFTER_CLOSE })
 
-		expect(stripeCalls()).toEqual(['capture pi_a 100000'])
-	})
-
-	it('releases a hold that reached a covered team without being settled', async () => {
-		// The trigger that would have released it was lost.
-		await seedTeam('team-a', true)
-		await seasonRef().update({ registeredTeamCount: 1 })
-		await hold('pi_a', TOTAL, 'team-a')
-		await setContributionStatus(firestore, {
-			teamId: 'team-a',
-			seasonId: SEASON,
-			paymentIntentId: 'pi_a',
-			status: 'captured',
-		})
-		fakeStripe.intents.get('pi_a')!.status = 'succeeded'
-		fakeStripe.intents.get('pi_a')!.amount_received = TOTAL
-		await hold('pi_late', 20_000, 'team-a')
-
-		await sweepTeamPayments()
-
-		expect(stripeCalls()).toEqual(['cancel pi_late'])
-	})
-
-	it('refunds an unregistered team whose only money the expiry net took', async () => {
-		// No holds left to find it by: the captured money is the only sign.
-		await seedTeam('team-a')
-		await hold('pi_a', 60_000, 'team-a')
-		await setContributionStatus(firestore, {
-			teamId: 'team-a',
-			seasonId: SEASON,
-			paymentIntentId: 'pi_a',
-			status: 'captured',
-		})
-		const pi = fakeStripe.intents.get('pi_a')!
-		pi.status = 'succeeded'
-		pi.amount_received = 60_000
-		pi.amount_capturable = 0
-
-		const result = await sweepTeamPayments({
-			now: new Date(REGISTRATION_END + 1000),
-		})
-
-		expect(stripeCalls()).toEqual(['refund pi_a 60000'])
-		expect(result.teamsChecked).toBe(1)
-	})
-
-	it('passes over a registered team whose money is all captured', async () => {
-		// Nothing left to settle, so past seasons cost a query per team and
-		// no settlement.
-		await seedTeam('team-a', true)
-		await hold('pi_a', TOTAL, 'team-a')
-		await setContributionStatus(firestore, {
-			teamId: 'team-a',
-			seasonId: SEASON,
-			paymentIntentId: 'pi_a',
-			status: 'captured',
-		})
-
-		expect((await sweepTeamPayments()).teamsChecked).toBe(0)
+		expect(result.teamsChecked).toBe(0)
+		expect(stripeCalls()).toEqual([])
 	})
 
 	it('skips teams that hold no money', async () => {
 		await seedTeam('team-a')
+		await pay('pi_a', 60_000, 'team-a')
+		refundedInDashboard('pi_a', 60_000)
+		await sweepTeamPayments({ now: AFTER_CLOSE })
 		await seedTeam('team-b')
+		fakeStripe.calls.length = 0
 
-		expect(await sweepTeamPayments()).toEqual({
+		expect(await sweepTeamPayments({ now: AFTER_CLOSE })).toEqual({
 			teamsChecked: 0,
 			teamsActedOn: 0,
 			failures: [],
@@ -280,41 +206,37 @@ describe('the hourly sweep', () => {
 	it('ignores a season on per-player pricing', async () => {
 		await seedSeason('season-old', { teamRegistrationTotalCents: null })
 		await seedTeam('team-old', false, 'season-old')
-		await hold('pi_old', 50_000, 'team-old', { seasonId: 'season-old' })
+		await pay('pi_old', 50_000, 'team-old', { seasonId: 'season-old' })
 
-		const result = await sweepTeamPayments({
-			now: new Date(REGISTRATION_END + 1000),
-		})
+		const result = await sweepTeamPayments({ now: AFTER_CLOSE })
 
 		expect(result.teamsChecked).toBe(0)
 		expect(stripeCalls()).toEqual([])
 	})
 
 	it('covers every season on team payments, not just the current one', async () => {
-		// A hold from last season is still money, whichever season is newest.
+		// Money from last season is still money, whichever season is newest.
 		await seedSeason('season-2', {
 			dateStart: Timestamp.fromMillis(Date.now() + DAY_MS),
 		})
 		await seedTeam('team-a')
-		await hold('pi_a', 50_000, 'team-a')
+		await pay('pi_a', 50_000, 'team-a')
 
-		await sweepTeamPayments({ now: new Date(REGISTRATION_END + 1000) })
+		await sweepTeamPayments({ now: AFTER_CLOSE })
 
-		expect(stripeCalls()).toEqual(['cancel pi_a'])
+		expect(stripeCalls()).toEqual(['refund pi_a 50000'])
 	})
 
 	it('settles the other teams when one fails', async () => {
 		await seedTeam('team-a')
 		await seedTeam('team-b')
-		await hold('pi_a', 60_000, 'team-a')
-		await hold('pi_b', 40_000, 'team-b')
-		failNext('cancel', 'pi_a')
+		await pay('pi_a', 60_000, 'team-a')
+		await pay('pi_b', 40_000, 'team-b')
+		failNext('refund', 'pi_a')
 
-		const result = await sweepTeamPayments({
-			now: new Date(REGISTRATION_END + 1000),
-		})
+		const result = await sweepTeamPayments({ now: AFTER_CLOSE })
 
-		expect(stripeCalls()).toEqual(['cancel pi_b'])
+		expect(stripeCalls()).toEqual(['refund pi_b 40000'])
 		expect(result.failures).toEqual([
 			expect.objectContaining({ teamId: 'team-a', seasonId: SEASON }),
 		])
@@ -327,21 +249,21 @@ describe('the hourly sweep', () => {
 			})
 
 		beforeEach(async () => {
-			// Registration has closed, so any unregistered money is released.
+			// Registration has closed, so any unregistered money is refunded.
 			await seasonRef().update({
 				registrationEnd: Timestamp.fromMillis(Date.now() - 1000),
 			})
 			await seedTeam('team-a')
-			await hold('pi_a', 60_000, 'team-a')
+			await pay('pi_a', 60_000, 'team-a')
 		})
 
 		it('runs the sweep', async () => {
 			await run()
-			expect(stripeCalls()).toEqual(['cancel pi_a'])
+			expect(stripeCalls()).toEqual(['refund pi_a 60000'])
 		})
 
 		it('throws when a team could not be settled, so the failure is seen', async () => {
-			failNext('cancel', 'pi_a')
+			failNext('refund', 'pi_a')
 			await expect(run()).rejects.toThrow(/1 of 1 team/)
 		})
 
@@ -356,109 +278,103 @@ describe('the hourly sweep', () => {
 })
 
 describe('the daily reconciliation', () => {
+	const NOW = new Date()
 	const reconcile = () =>
-		reconcileTeamPayments({ stripe: new FakeStripe() as never })
+		reconcileTeamPayments({ stripe: new FakeStripe() as never, now: NOW })
 
-	it('asks Stripe for live team holds and nothing else', async () => {
+	it('asks Stripe for recent team payments and nothing else', async () => {
 		await reconcile()
-		expect(fakeStripe.searches).toEqual([LIVE_TEAM_HOLDS_QUERY])
-		expect(LIVE_TEAM_HOLDS_QUERY).toBe(
-			"status:'requires_capture' AND metadata['kind']:'team_contribution'"
+
+		const since =
+			Math.floor(NOW.getTime() / 1000) -
+			RECONCILIATION_LOOKBACK_DAYS * 24 * 60 * 60
+		expect(fakeStripe.searches).toEqual([recentTeamPaymentsQuery(NOW)])
+		expect(recentTeamPaymentsQuery(NOW)).toBe(
+			`status:'succeeded' AND metadata['kind']:'team_contribution' AND created>${since}`
 		)
 	})
 
-	it('records a hold the webhook never delivered', async () => {
+	it('looks back further than any registration window', () => {
+		// A missed payment must be found before the window it belongs to
+		// could have closed and been settled without it.
+		expect(RECONCILIATION_LOOKBACK_DAYS).toBeGreaterThan(31)
+	})
+
+	it('records a payment the webhook never delivered', async () => {
 		// Otherwise the money is invisible: the team is not credited with it,
-		// and nothing would ever capture or release it.
+		// and nothing would ever refund it.
 		await seedTeam('team-a')
-		await hold('pi_lost', 50_000, 'team-a', { inLedger: false })
+		await pay('pi_lost', 50_000, 'team-a', { inLedger: false })
 
 		const report = await reconcile()
 
-		expect(report.unrecordedHolds).toEqual([
+		expect(report.unrecordedPayments).toEqual([
 			{ paymentIntentId: 'pi_lost', outcome: 'recorded' },
 		])
 		expect(await entry('team-a', 'pi_lost')).toMatchObject({
-			status: 'authorized',
+			status: 'paid',
 			amountCents: 50_000,
 		})
 	})
 
-	it('records the hold’s real expiry, not a guess', async () => {
-		const expiresAt = Date.now() + 4 * DAY_MS
-		await seedTeam('team-a')
-		await hold('pi_lost', 50_000, 'team-a', { expiresAt, inLedger: false })
-
-		await reconcile()
-
-		expect((await entry('team-a', 'pi_lost'))?.captureBefore.toMillis()).toBe(
-			Math.floor(expiresAt / 1000) * 1000
-		)
-	})
-
-	it('releases a lost hold whose team no longer exists', async () => {
-		await hold('pi_orphan', 50_000, 'team-gone', { inLedger: false })
+	it('refunds a lost payment whose team no longer exists', async () => {
+		await pay('pi_orphan', 50_000, 'team-gone', { inLedger: false })
 
 		const report = await reconcile()
 
-		expect(report.unrecordedHolds).toEqual([
-			{ paymentIntentId: 'pi_orphan', outcome: 'released-unattributable' },
+		expect(report.unrecordedPayments).toEqual([
+			{ paymentIntentId: 'pi_orphan', outcome: 'refunded-unattributable' },
 		])
-		expect(stripeCalls()).toEqual(['cancel pi_orphan'])
+		expect(stripeCalls()).toEqual(['refund pi_orphan 50000'])
 	})
 
-	it('leaves holds the ledger already has alone', async () => {
-		await seedTeam('team-a')
-		await hold('pi_a', 50_000, 'team-a')
+	it('passes over a payment already refunded in full, day after day', async () => {
+		// An unattributable payment refunded yesterday is still in the
+		// search. It is not missing, so it is not reported.
+		await pay('pi_orphan', 50_000, 'team-gone', { inLedger: false })
+		refundedInDashboard('pi_orphan', 50_000)
 
 		const report = await reconcile()
 
-		expect(report).toEqual({ unrecordedHolds: [], corrected: [], failures: [] })
+		expect(report.unrecordedPayments).toEqual([])
 		expect(stripeCalls()).toEqual([])
 	})
 
-	it('corrects a hold the bank let go, so it stops counting', async () => {
-		// Registration counts committed money. A lapsed hold that the ledger
-		// still called authorized would count toward a team's total.
+	it('leaves payments the ledger already has alone', async () => {
 		await seedTeam('team-a')
-		await hold('pi_a', 50_000, 'team-a')
-		fakeStripe.intents.get('pi_a')!.status = 'canceled'
+		await pay('pi_a', 50_000, 'team-a')
+
+		const report = await reconcile()
+
+		expect(report).toEqual({
+			unrecordedPayments: [],
+			corrected: [],
+			failures: [],
+		})
+		expect(stripeCalls()).toEqual([])
+	})
+
+	it('corrects a refund issued in the Dashboard, so it stops counting', async () => {
+		// Registration counts paid money. A payment refunded elsewhere that
+		// the ledger still called paid would count toward a team's total.
+		await seedTeam('team-a')
+		await pay('pi_a', 50_000, 'team-a')
+		refundedInDashboard('pi_a', 50_000)
 
 		const report = await reconcile()
 
 		expect(report.corrected).toEqual([
 			{ teamId: 'team-a', seasonId: SEASON, paymentIntentId: 'pi_a' },
 		])
-		expect((await entry('team-a', 'pi_a'))?.status).toBe('canceled')
-		expect(
-			(await ledgerTotals(firestore, 'team-a', SEASON)).authorizedCents
-		).toBe(0)
-	})
-
-	it('corrects a refund issued in the Dashboard', async () => {
-		await seedTeam('team-a', true)
-		await hold('pi_a', 50_000, 'team-a')
-		await setContributionStatus(firestore, {
-			teamId: 'team-a',
-			seasonId: SEASON,
-			paymentIntentId: 'pi_a',
-			status: 'captured',
-		})
-		const pi = fakeStripe.intents.get('pi_a')!
-		pi.status = 'succeeded'
-		pi.amount_received = 50_000
-		pi.latest_charge.amount_refunded = 50_000
-
-		await reconcile()
-
 		expect((await entry('team-a', 'pi_a'))?.status).toBe('refunded')
+		expect(await ledgerPaidCents(firestore, 'team-a', SEASON)).toBe(0)
 	})
 
 	it('reports a payment it could not check and carries on', async () => {
 		await seedTeam('team-a')
-		await hold('pi_a', 50_000, 'team-a')
-		await hold('pi_b', 40_000, 'team-a')
-		fakeStripe.intents.get('pi_b')!.status = 'canceled'
+		await pay('pi_a', 50_000, 'team-a')
+		await pay('pi_b', 40_000, 'team-a')
+		refundedInDashboard('pi_b', 40_000)
 		failNext('retrieve', 'pi_a')
 
 		const report = await reconcile()
@@ -466,12 +382,12 @@ describe('the daily reconciliation', () => {
 		expect(report.failures).toEqual([
 			expect.objectContaining({ paymentIntentId: 'pi_a' }),
 		])
-		expect((await entry('team-a', 'pi_b'))?.status).toBe('canceled')
+		expect((await entry('team-a', 'pi_b'))?.status).toBe('refunded')
 	})
 
 	it('throws as scheduled when anything failed', async () => {
 		await seedTeam('team-a')
-		await hold('pi_a', 50_000, 'team-a')
+		await pay('pi_a', 50_000, 'team-a')
 		failNext('retrieve', 'pi_a')
 
 		await expect(
@@ -482,30 +398,24 @@ describe('the daily reconciliation', () => {
 	})
 })
 
-describe('releaseTeamContribution', () => {
+describe('refundTeamContribution', () => {
 	const ADMIN = 'admin-1'
-	const release = (data: Record<string, unknown> = {}, uid = ADMIN) =>
-		(manifest.releaseTeamContribution as Callable).run({
-			auth: authed(uid),
-			data: {
-				teamId: 'team-a',
-				seasonId: SEASON,
-				paymentIntentId: 'pi_a',
-				reason: 'Payer left the team before it registered.',
-				...data,
-			},
-		} as never) as Promise<{ status: string }>
+	const request = (data: Record<string, unknown> = {}, uid = ADMIN) => ({
+		auth: authed(uid),
+		data: {
+			teamId: 'team-a',
+			seasonId: SEASON,
+			paymentIntentId: 'pi_a',
+			reason: 'Test payment by an admin.',
+			...data,
+		},
+	})
+	const refund = (data: Record<string, unknown> = {}) =>
+		(manifest.refundTeamContribution as Callable).run(
+			request(data) as never
+		) as Promise<unknown>
 	const codeOf = (data: Record<string, unknown> = {}, uid = ADMIN) =>
-		errorCodeFrom(manifest.releaseTeamContribution, {
-			auth: authed(uid),
-			data: {
-				teamId: 'team-a',
-				seasonId: SEASON,
-				paymentIntentId: 'pi_a',
-				reason: 'Payer left the team before it registered.',
-				...data,
-			},
-		})
+		errorCodeFrom(manifest.refundTeamContribution, request(data, uid))
 
 	beforeEach(async () => {
 		await firestore
@@ -517,42 +427,30 @@ describe('releaseTeamContribution', () => {
 			.doc('player-1')
 			.set({ admin: false, banned: false, email: 'p@example.com' })
 		await seedTeam('team-a')
-		await hold('pi_a', 50_000, 'team-a')
+		await pay('pi_a', 50_000, 'team-a')
 	})
 
-	it('cancels a hold and records who released it and why', async () => {
-		await expect(release()).resolves.toEqual({
-			success: true,
-			status: 'canceled',
-		})
+	it('refunds in full and records who did it and why', async () => {
+		await expect(refund()).resolves.toEqual({ success: true })
 
-		expect(stripeCalls()).toEqual(['cancel pi_a'])
-		const released = await entry('team-a', 'pi_a')
-		expect(released).toMatchObject({
-			status: 'canceled',
-			releaseReason: 'Payer left the team before it registered.',
-		})
-		expect(released?.releasedBy.path).toBe(`players/${ADMIN}`)
-		expect(released?.releasedAt).toBeDefined()
-	})
-
-	it('refunds a captured contribution', async () => {
-		await setContributionStatus(firestore, {
-			teamId: 'team-a',
-			seasonId: SEASON,
-			paymentIntentId: 'pi_a',
-			status: 'captured',
-		})
-		const pi = fakeStripe.intents.get('pi_a')!
-		pi.status = 'succeeded'
-		pi.amount_received = 50_000
-		pi.amount_capturable = 0
-
-		await expect(release()).resolves.toEqual({
-			success: true,
-			status: 'refunded',
-		})
 		expect(stripeCalls()).toEqual(['refund pi_a 50000'])
+		const refunded = await entry('team-a', 'pi_a')
+		expect(refunded).toMatchObject({
+			status: 'refunded',
+			refundReason: 'Test payment by an admin.',
+		})
+		expect(refunded?.refundedBy.path).toBe(`players/${ADMIN}`)
+		expect(refunded?.refundedAt).toBeDefined()
+	})
+
+	it('refunds what is left of a partly refunded payment', async () => {
+		refundedInDashboard('pi_a', 20_000)
+		await reconcileTeamPayments({ stripe: new FakeStripe() as never })
+
+		await refund()
+
+		expect(stripeCalls()).toEqual(['refund pi_a 30000'])
+		expect((await entry('team-a', 'pi_a'))?.status).toBe('refunded')
 	})
 
 	it('refuses a non-admin', async () => {
@@ -560,18 +458,12 @@ describe('releaseTeamContribution', () => {
 		expect(stripeCalls()).toEqual([])
 	})
 
-	it('refuses a contribution already settled', async () => {
-		// Settled on both sides, as it would be.
-		await setContributionStatus(firestore, {
-			teamId: 'team-a',
-			seasonId: SEASON,
-			paymentIntentId: 'pi_a',
-			status: 'canceled',
-		})
-		fakeStripe.intents.get('pi_a')!.status = 'canceled'
+	it('refuses a contribution already refunded', async () => {
+		await refund()
+		fakeStripe.calls.length = 0
 
 		expect(await codeOf()).toBe('failed-precondition')
-		expect((await entry('team-a', 'pi_a'))?.releasedBy).toBeUndefined()
+		expect(stripeCalls()).toEqual([])
 	})
 
 	it('reports a contribution that does not exist', async () => {
@@ -589,40 +481,35 @@ describe('releaseTeamContribution', () => {
 		expect(stripeCalls()).toEqual([])
 	})
 
-	it('corrects the record instead of acting when Stripe disagrees', async () => {
-		// The ledger says captured; Stripe says the hold was cancelled. A
-		// refund would fail, and the admin needs to know what is true.
-		await setContributionStatus(firestore, {
-			teamId: 'team-a',
-			seasonId: SEASON,
-			paymentIntentId: 'pi_a',
-			status: 'captured',
-		})
-		fakeStripe.intents.get('pi_a')!.status = 'canceled'
+	it('corrects the record instead of refunding when Stripe disagrees', async () => {
+		// The ledger says paid; Stripe says it was refunded in the Dashboard.
+		// Refunding again would fail, and the admin needs to know what is
+		// true.
+		refundedInDashboard('pi_a', 50_000)
 
 		expect(await codeOf()).toBe('failed-precondition')
 		expect(stripeCalls()).toEqual([])
-		expect((await entry('team-a', 'pi_a'))?.status).toBe('canceled')
-		expect((await entry('team-a', 'pi_a'))?.releaseReason).toBeUndefined()
+		expect((await entry('team-a', 'pi_a'))?.status).toBe('refunded')
+		expect((await entry('team-a', 'pi_a'))?.refundReason).toBeUndefined()
 	})
 
-	it('leaves no audit trail for a release Stripe refused', async () => {
-		failNext('cancel', 'pi_a')
+	it('leaves no audit trail for a refund Stripe refused', async () => {
+		failNext('refund', 'pi_a')
 
 		expect(await codeOf()).toBe('internal')
 		const unchanged = await entry('team-a', 'pi_a')
-		expect(unchanged?.status).toBe('authorized')
-		expect(unchanged?.releasedBy).toBeUndefined()
+		expect(unchanged?.status).toBe('paid')
+		expect(unchanged?.refundedBy).toBeUndefined()
 	})
 
-	it('leaves the team registered when its money is released', async () => {
+	it('leaves the team registered when its money is refunded', async () => {
 		// Registration is irreversible; the shortfall is for a person.
 		await teamSeasonRef(firestore, 'team-a', SEASON).update({
 			registered: true,
 		})
 		await seasonRef().update({ registeredTeamCount: LOCK })
 
-		await release()
+		await refund()
 
 		const teamSeason = (
 			await teamSeasonRef(firestore, 'team-a', SEASON).get()

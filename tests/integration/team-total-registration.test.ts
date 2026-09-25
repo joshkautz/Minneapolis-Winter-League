@@ -13,7 +13,7 @@ import {
 	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
-import { addHold, fakeStripe, resetFakeStripe } from './fake-stripe.js'
+import { addPayment, fakeStripe, resetFakeStripe } from './fake-stripe.js'
 
 // The contribution trigger settles a team once it registers, which calls
 // Stripe. Without this the suite would reach the real API.
@@ -87,8 +87,7 @@ const seedSignedRoster = async (count: number) => {
 const contribute = (
 	paymentIntentId: string,
 	amountCents: number,
-	playerId = 'signed-0',
-	status: 'authorized' | 'captured' = 'authorized'
+	playerId = 'signed-0'
 ) =>
 	recordContribution(firestore, {
 		teamId: TEAM,
@@ -96,7 +95,6 @@ const contribute = (
 		playerId,
 		paymentIntentId,
 		amountCents,
-		status,
 	})
 
 const isRegistered = async () =>
@@ -195,18 +193,7 @@ describe('team-total registration', () => {
 		expect(await isRegistered()).toBe(true)
 	})
 
-	it('counts captured money as well as held money', async () => {
-		// Capturing a hold must not make a funded team look unfunded.
-		await seedSignedRoster(MIN)
-		await contribute('pi_1', 60_000, 'signed-0', 'captured')
-		await contribute('pi_2', 40_000, 'signed-1', 'authorized')
-
-		await updateTeamRegistrationStatus(TEAM, SEASON)
-
-		expect(await isRegistered()).toBe(true)
-	})
-
-	it.each(['canceled', 'refunded'] as const)(
+	it.each(['refunded'] as const)(
 		'does not count money that was %s',
 		async (status) => {
 			await seedSignedRoster(MIN)
@@ -339,27 +326,25 @@ describe('money arriving last', () => {
 
 	it('registers the team when its contribution lands', async () => {
 		await seedSignedRoster(MIN)
-		addHold('pi_1', TOTAL, { kind: 'team_contribution' })
+		addPayment('pi_1', TOTAL, { kind: 'team_contribution' })
 		await contribute('pi_1', TOTAL)
 		expect(await isRegistered()).toBe(false)
 
 		await fireContribution(undefined, {
-			status: 'authorized',
+			status: 'paid',
 			amountCents: TOTAL,
 		})
 
 		expect(await isRegistered()).toBe(true)
-		// And, having registered, it is charged.
-		expect(fakeStripe.calls).toEqual([
-			{ method: 'capture', paymentIntentId: 'pi_1', amount: TOTAL },
-		])
+		// It paid exactly its total, so nothing is refunded.
+		expect(fakeStripe.calls).toEqual([])
 	})
 
 	it('ignores a write that changes neither status nor amount', async () => {
 		await seedSignedRoster(MIN)
 		await contribute('pi_1', TOTAL)
 
-		const same = { status: 'authorized', amountCents: TOTAL }
+		const same = { status: 'paid', amountCents: TOTAL }
 		await fireContribution(same, same)
 
 		expect(await isRegistered()).toBe(false)
@@ -374,7 +359,7 @@ describe('money arriving last', () => {
 		await contribute('pi_1', TOTAL)
 
 		await fireContribution(undefined, {
-			status: 'authorized',
+			status: 'paid',
 			amountCents: TOTAL,
 		})
 

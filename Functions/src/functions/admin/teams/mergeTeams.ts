@@ -40,7 +40,7 @@ import {
 } from '../../../shared/membership.js'
 import {
 	CONTRIBUTIONS_SUBCOLLECTION,
-	hasUnsettledMoney,
+	holdsMoney,
 } from '../../../shared/contributions.js'
 import {
 	Collections,
@@ -161,7 +161,7 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				)
 			}
 
-			// ---- Validation: the losing team holds no unsettled money -------
+			// ---- Validation: the losing team holds no money ----------------
 			// The merge ends by recursively deleting the losing team, which
 			// would take its contributions with it. Moving them is possible
 			// but the money is tied to a PaymentIntent whose metadata names
@@ -174,11 +174,11 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				const contributions = contributionsSnap.docs.map(
 					(doc) => doc.data() as TeamContributionDocument
 				)
-				if (hasUnsettledMoney(contributions)) {
+				if (holdsMoney(contributions)) {
 					throw new HttpsError(
 						'failed-precondition',
-						`Cannot merge: team ${losingTeamId} still has money committed for ` +
-							`season ${teamSeasonDoc.id}. Cancel or refund its contributions first.`
+						`Cannot merge: team ${losingTeamId} still holds money for ` +
+							`season ${teamSeasonDoc.id}. Refund its contributions first.`
 					)
 				}
 			}

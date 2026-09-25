@@ -260,15 +260,13 @@ export interface TeamRosterDocument extends DocumentData {
 }
 
 /**
- * Where a team contribution stands with the payment processor.
+ * Where a team contribution stands.
  *
- * `authorized` is a hold: the money is committed but has not left the payer's
- * account. `captured` is money actually taken. The other two are terminal and
- * count toward nothing — `canceled` for a hold released before capture, which
- * costs nothing, and `refunded` for money returned after capture, which does.
+ * A contribution is charged the moment the payer completes Checkout, so it
+ * starts `paid`. `refunded` means all of it went back; a partial refund
+ * leaves it `paid` with a smaller `amountCents`.
  */
-export type ContributionStatus =
-	'authorized' | 'captured' | 'canceled' | 'refunded'
+export type ContributionStatus = 'paid' | 'refunded'
 
 /**
  * One payment toward a team's registration total.
@@ -285,28 +283,26 @@ export interface TeamContributionDocument extends DocumentData {
 	/**
 	 * The player who paid, on the roster when they did. If they have since
 	 * left, their money no longer counts toward the team, and an unregistered
-	 * team releases it; see `committedByRosterCents`.
+	 * team refunds it; see `paidByRosterCents`.
 	 */
 	player: DocumentReference<PlayerDocument>
-	/** Amount in cents, as charged. */
+	/**
+	 * In cents: while `paid`, what the team still holds of this payment (paid
+	 * less any partial refund); once `refunded`, what was paid.
+	 */
 	amountCents: number
 	status: ContributionStatus
 	/** Stripe PaymentIntent id; matches the document id. */
 	paymentIntentId: string
 	/**
-	 * When the authorization expires, from the charge's `capture_before`.
-	 * Null once the contribution reaches a terminal state, or when unknown.
+	 * What was first paid, set when a partial refund changes `amountCents`.
+	 * Absent while the two are the same.
 	 */
-	captureBefore: Timestamp | null
-	/**
-	 * What was first authorized, set when a partial capture or refund changes
-	 * `amountCents`. Absent while the two are the same.
-	 */
-	authorizedAmountCents?: number
-	/** Set when an admin released this contribution by hand. */
-	releasedBy?: DocumentReference<PlayerDocument>
-	releaseReason?: string
-	releasedAt?: Timestamp
+	paidAmountCents?: number
+	/** Set when an admin refunded this contribution by hand. */
+	refundedBy?: DocumentReference<PlayerDocument>
+	refundReason?: string
+	refundedAt?: Timestamp
 	createdAt: Timestamp
 	updatedAt: Timestamp
 }
@@ -346,11 +342,11 @@ export interface SeasonDocument extends DocumentData {
 	 */
 	registeredTeamCount?: number
 	/**
-	 * The collective amount a team must commit to register, in cents.
+	 * The collective amount a team must pay to register, in cents.
 	 *
 	 * Its presence is what selects the pricing model. Set, the season uses
 	 * **team-total** pricing: a team registers on ten players who have signed
-	 * their waiver plus this much committed by any of its rostered players, in
+	 * their waiver plus this much paid by any of its rostered players, in
 	 * any split. Absent, the season keeps the original **per-player** rule,
 	 * where ten players must each individually be paid and signed.
 	 *

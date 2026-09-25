@@ -10,7 +10,7 @@
  * - **Per-player** (the original): ten roster members each individually paid
  *   and signed.
  * - **Team-total**: ten roster members who have signed, plus that much money
- *   committed by people still on the roster, in any split. A player is registered by their
+ *   paid by people still on the roster, in any split. A player is registered by their
  *   waiver; the money belongs to the team.
  */
 
@@ -28,7 +28,7 @@ import {
 	type TeamContributionDocument,
 } from '../types.js'
 import {
-	committedByRosterCents,
+	paidByRosterCents,
 	teamContributionsCollection,
 } from '../shared/contributions.js'
 import { playerSeasonRef, teamSeasonRef } from '../shared/database.js'
@@ -99,7 +99,7 @@ export async function updateTeamRegistrationStatus(
 				teamId,
 				seasonId,
 				qualifyingPlayers: result.qualifyingPlayers,
-				committedCents: result.committedCents,
+				paidCents: result.paidCents,
 				requiredCents: result.requiredCents,
 			})
 			return
@@ -130,7 +130,7 @@ type ClaimOutcome =
 	| {
 			outcome: 'underfunded'
 			qualifyingPlayers: number
-			committedCents: number
+			paidCents: number
 			requiredCents: number
 	  }
 	| { outcome: 'already-registered' }
@@ -204,18 +204,18 @@ async function claimSpotIfQualified(
 				teamContributionsCollection(firestore, teamId, seasonId)
 			)
 			// Only the money of people still on the team counts.
-			const committed = committedByRosterCents(
+			const paid = paidByRosterCents(
 				contributionsSnap.docs.map(
 					(doc) => doc.data() as TeamContributionDocument
 				),
 				new Set(rosterSnap.docs.map((doc) => doc.id))
 			)
 
-			if (committed < teamTotalCents) {
+			if (paid < teamTotalCents) {
 				return {
 					outcome: 'underfunded',
 					qualifyingPlayers,
-					committedCents: committed,
+					paidCents: paid,
 					requiredCents: teamTotalCents,
 				}
 			}
