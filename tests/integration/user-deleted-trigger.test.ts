@@ -75,6 +75,18 @@ const seedPlayerEverywhere = async (uid: string): Promise<void> => {
 			type: 'invitation',
 		})
 
+	// A leaderboard entry, which caches the player's name.
+	await firestore
+		.collection('rankings')
+		.doc(uid)
+		.set({ player: playerRef(uid), playerId: uid, playerName: 'Test Player' })
+
+	// A signed waiver.
+	await playerRef(uid)
+		.collection('waiverSignatures')
+		.doc('sig-1')
+		.set({ seasonId: SEASON, signerName: 'Test Player' })
+
 	// Local Stripe records.
 	await firestore
 		.collection('stripe')
@@ -211,6 +223,29 @@ describe('userDeleted', () => {
 		expect((await teamSeasonRef(firestore, TEAM, SEASON).get()).exists).toBe(
 			true
 		)
+	})
+
+	it('deletes the leaderboard entry, which shows the player’s name', async () => {
+		await fire(VICTIM)
+
+		expect((await firestore.doc(`rankings/${VICTIM}`).get()).exists).toBe(false)
+		expect((await firestore.doc(`rankings/${BYSTANDER}`).get()).exists).toBe(
+			true
+		)
+	})
+
+	it('keeps signed waivers as a legal record', async () => {
+		// A release matters most after someone has left; see docs/WAIVERS.md.
+		await fire(VICTIM)
+
+		expect(
+			(await playerRef(VICTIM).collection('waiverSignatures').get()).size
+		).toBe(1)
+	})
+
+	it('can run twice, as it does after deletePlayer', async () => {
+		await fire(VICTIM)
+		await expect(fire(VICTIM)).resolves.toBeUndefined()
 	})
 
 	it('returns quietly when there is no player document', async () => {

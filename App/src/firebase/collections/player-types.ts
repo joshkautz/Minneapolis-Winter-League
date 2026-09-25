@@ -46,3 +46,12 @@ export interface UpdatePlayerResponse {
 	playerId: string
 	message: string
 }
+
+/**
+ * Response interface for a player deleting their own account
+ * Must match Functions/src/functions/user/players/delete.ts DeletePlayerResponse
+ */
+export interface DeletePlayerResponse {
+	success: true
+	message: string
+}

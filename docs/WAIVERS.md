@@ -39,10 +39,26 @@ it needs Node's crypto.
 
 Records are private to the player and admins (`firestore.rules`) because of
 the personal data, unlike the public player document they sit under. They are
-never edited or deleted; a correction is a new record. Deleting an account
-removes the player document and player-seasons but keeps these records, as
-it always kept the Dropbox Sign ones: a release matters most after someone
-has left.
+never edited or deleted; a correction is a new record.
+
+## After an account is deleted
+
+Deleting an account keeps its signatures, as it always kept the Dropbox Sign
+records: a release matters most after someone has left. The confirmation a
+player sees before deleting says so. Everything else about them goes; see
+Account deletion in [functions/README.md](./functions/README.md#account-deletion).
+
+With the player document gone, the admin screens can no longer reach the
+records, and the player's own read access went with their sign-in. They are
+still at `players/{uid}/waiverSignatures` — the Firebase console shows the
+missing parent in italics. To find them by person, query the
+`waiverSignatures` collection group with the Admin SDK on the `email` field,
+which each record keeps.
+
+They are kept indefinitely for now. How long to keep them is a question for
+the league's attorney: at least as long as a claim could be brought, which
+for someone who signed as a minor runs from their eighteenth birthday. See
+the roadmap.
 
 Seasons signed before September 2026 went through Dropbox Sign; their
 records are in `dropbox/{uid}/waivers`, kept read-only as history. The 357

@@ -58,7 +58,7 @@ during account setup. Everything else requires a verified one.
 
 | Function                                     | Fires on                                               | Does                                                                                    |
 | -------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `userDeleted`                                | Auth account deleted                                   | Removes the player from every roster and deletes their data                             |
+| `userDeleted`                                | Auth account deleted                                   | Deletes the player's data, keeping waivers; see [Account deletion](#account-deletion)   |
 | `onOfferUpdated`                             | `offers/{offerId}` updated                             | On acceptance, adds the player to the roster and points their season record at the team |
 | `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes the team's registration                                                      |
 | `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                 |
@@ -70,6 +70,23 @@ Every trigger honours the migration kill-switch,
 `system/maintenance.migrationInProgress`, and returns without writing while it
 is set. Which ones the platform retries on failure is pinned by
 `tests/integration/trigger-retries.test.ts`.
+
+## Account deletion
+
+A player deletes their own account from their profile, which calls
+`deletePlayer`. It refuses unless the player signed in within the last five
+minutes (the App asks for the password again), and while they are on a team
+this season, banned, or the only admin. Then it deletes their data and their
+sign-in. An admin deleting a user from the Firebase console gets the same
+cleanup through `userDeleted`; the callable's deletion fires that trigger
+too, which finds nothing left.
+
+Both run `services/accountDeletionService`. It deletes the player document,
+their player-seasons, their roster entries in every season, their open
+offers, their leaderboard entry and the site's copy of their Stripe records.
+It keeps their waiver signatures ([WAIVERS.md](../WAIVERS.md)), their team
+contributions, which are the team's ledger, and their posts, which then show
+as from a former player.
 
 ## Scheduled functions
 
@@ -98,6 +115,7 @@ them and a forged request, and it runs before any read or write.
 
 | Module                                | Holds                                                                                           |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `services/accountDeletionService`     | What deleting an account removes, and what it keeps; shared by `deletePlayer` and `userDeleted` |
 | `services/teamRegistrationService`    | The registration rule and the transactional twelve-team cap                                     |
 | `services/teamDeletionService`        | Deleting a team-season, refusing while it holds unsettled money                                 |
 | `services/teamSettlementService`      | Capturing, releasing and reconciling a team's money with Stripe                                 |
@@ -112,7 +130,7 @@ them and a forged request, and it runs before any read or write.
 | `shared/settlement`                   | Pure decisions about a team's money: what to capture, cancel or refund                          |
 | `shared/stripe`                       | Stripe client, customer lookup, the team registration Product                                   |
 | `shared/returnUrls`                   | The allowlist for Checkout return URLs                                                          |
-| `shared/waivers`                      | Sending a waiver, idempotent per player and season                                              |
+| `shared/seasonPricing`                | Validating a season's team registration total, which cannot change once money depends on it     |
 | `shared/names`                        | Player name validation, mirroring the App's schema                                              |
 | `shared/database`                     | Document reference builders and the current-season lookup                                       |
 

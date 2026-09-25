@@ -1,5 +1,9 @@
 # Player Management Firebase Functions
 
+> **Historical.** Written for the 2025 move of player writes into Functions.
+> The code has since changed — `deletePlayer` no longer takes `playerId` or
+> `adminOverride` — so see `docs/functions/README.md` for what exists now.
+
 ## Overview
 
 I've created a complete set of secure Firebase Functions for player management that replaces all client-side operations with server-side validation. This ensures all security requirements are enforced at the server level where they cannot be bypassed.
