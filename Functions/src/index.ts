@@ -113,11 +113,6 @@ export { deleteSeason } from './functions/admin/seasons/delete.js'
 export { setSwissSeeding } from './functions/admin/swiss/setSeeding.js'
 export { getSwissRankings } from './functions/admin/swiss/getRankings.js'
 
-// Storage functions (user-accessible)
-export { getUploadUrl } from './functions/user/storage/getUploadUrl.js'
-export { getDownloadUrl } from './functions/user/storage/getDownloadUrl.js'
-export { getFileMetadata } from './functions/user/storage/getFileMetadata.js'
-
 // Player Rankings functions (admin-only)
 // Note: Only full rebuild is supported - incremental updates were deprecated
 // because TrueSkill requires accurate sigma (uncertainty) tracking across all games

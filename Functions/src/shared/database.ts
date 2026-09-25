@@ -157,30 +157,6 @@ export function canonicalPlayerRefFromPlayerSeasonDoc(
 }
 
 /**
- * Read a player's per-season subdoc. Returns null if it doesn't exist.
- */
-export async function getPlayerSeason(
-	firestore: FirebaseFirestore.Firestore,
-	playerId: string,
-	seasonId: string
-): Promise<PlayerSeasonDocument | null> {
-	const snap = await playerSeasonRef(firestore, playerId, seasonId).get()
-	return snap.exists ? (snap.data() ?? null) : null
-}
-
-/**
- * Read a team's per-season subdoc. Returns null if it doesn't exist.
- */
-export async function getTeamSeason(
-	firestore: FirebaseFirestore.Firestore,
-	teamId: string,
-	seasonId: string
-): Promise<TeamSeasonDocument | null> {
-	const snap = await teamSeasonRef(firestore, teamId, seasonId).get()
-	return snap.exists ? (snap.data() ?? null) : null
-}
-
-/**
  * Gets the current season (most recent by dateStart)
  */
 export async function getCurrentSeason(): Promise<SeasonDocument | null> {

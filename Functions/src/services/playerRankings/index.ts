@@ -31,7 +31,6 @@ export {
 	updateCalculationState,
 } from './persistence/calculationState.js'
 export {
-	updateProgress,
 	updateSeasonalProgress,
 	updateGameProgress,
 } from './persistence/progressTracker.js'

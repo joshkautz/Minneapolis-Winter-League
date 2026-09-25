@@ -14,7 +14,7 @@ import { VALID_PAYLOADS } from './payloads.js'
 /**
  * Authorization sweep across every callable.
  *
- * firestore.rules denies all client writes, so these 47 functions are the
+ * firestore.rules denies all client writes, so these 44 functions are the
  * entire write path into the database. Each one's first job is to reject a
  * caller who should not be there. Individual callables have their own deeper
  * tests; this file proves none of them is missing the gate altogether —
@@ -67,9 +67,6 @@ const USER_CALLABLES = [
 	'createTeamContributionCheckout',
 	'deletePlayer',
 	'deleteTeam',
-	'getDownloadUrl',
-	'getFileMetadata',
-	'getUploadUrl',
 	'rolloverTeam',
 	'signWaiver',
 	'updateOffer',
@@ -133,8 +130,8 @@ beforeAll(async () => {
 
 beforeEach(async () => {
 	await resetFirestore(firestore)
-	// Auth records: getUploadUrl reads emailVerified from the Auth record
-	// rather than the token claim, so these have to exist.
+	// Auth records: the payment checkouts, deletePlayer and the admin player
+	// callables look the caller or target up in Auth, so these have to exist.
 	await seedAuthUser('player-1', true)
 	await seedAuthUser('unverified-1', false)
 	await seedAuthUser('admin-1', true)
@@ -179,8 +176,8 @@ describe('the sweep covers every callable in the deploy manifest', () => {
 		expect(missing).toEqual([])
 	})
 
-	it('covers all 47 callables', () => {
-		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(47)
+	it('covers all 44 callables', () => {
+		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(44)
 	})
 
 	it('has a valid payload for every callable', () => {
