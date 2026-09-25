@@ -45,6 +45,19 @@ describe('errorMessage', () => {
 		)
 	})
 
+	it('explains a callable that got no response at all', () => {
+		// What the SDK throws when the Functions server cannot be reached.
+		expect(
+			errorMessage(callableError('internal', 'internal [0]'), FALLBACK)
+		).toMatch(/could not reach the server/)
+	})
+
+	it('treats a status-suffixed placeholder as no message', () => {
+		expect(
+			errorMessage(callableError('internal', 'internal [500]'), FALLBACK)
+		).toBe(FALLBACK)
+	})
+
 	it('explains a callable that never reached the server', () => {
 		expect(
 			errorMessage(callableError('unavailable', 'unavailable'), FALLBACK)

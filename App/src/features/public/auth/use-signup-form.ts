@@ -115,8 +115,9 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 							success: false,
 						}
 					)
-					// Don't throw here - account was created successfully even if player doc failed
-					// The user can still use their account, and this can be retried later
+					// The account exists either way. CompleteProfileDialog sees the
+					// missing profile and asks for the name again, so the player can
+					// finish without starting over.
 					logger.error('Player document creation failed', playerCreationError)
 				}
 

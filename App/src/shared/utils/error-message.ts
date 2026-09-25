@@ -59,6 +59,16 @@ const TRANSPORT_MESSAGES: Record<string, string> = {
 	unauthenticated: 'Sign in to continue.',
 }
 
+/**
+ * The Functions SDK reports a request that got no response at all — the
+ * server unreachable, the connection dropped — as `internal` with HTTP
+ * status 0 appended: "internal [0]".
+ */
+const NO_RESPONSE = /^internal\s*\[0\]$/i
+
+/** A status the SDK appends to its placeholder messages: "internal [500]". */
+const STATUS_SUFFIX = /\s*\[\d+\]$/
+
 /** Messages that say nothing: the SDK's own words for "no message". */
 const EMPTY_MESSAGES = new Set(['', 'internal', 'unknown', 'error'])
 
@@ -105,9 +115,13 @@ export const errorMessage = (error: unknown, fallback: string): string => {
 
 	const code = fullCode(error)
 	const message = rawMessage(error)
+	if (code === 'functions/internal' && NO_RESPONSE.test(message)) {
+		return NETWORK
+	}
+	const bare = message.replace(STATUS_SUFFIX, '').toLowerCase()
 	const readable =
-		!EMPTY_MESSAGES.has(message.toLowerCase()) &&
-		message.toLowerCase() !== errorCode(error) &&
+		!EMPTY_MESSAGES.has(bare) &&
+		bare !== errorCode(error) &&
 		!TECHNICAL.some((pattern) => pattern.test(message))
 
 	// Auth's own messages are never fit to show.

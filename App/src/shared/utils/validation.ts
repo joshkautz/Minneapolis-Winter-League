@@ -202,6 +202,12 @@ export const profileFormSchema = z.object({
 	email: emailSchema,
 })
 
+/** Finishing a profile whose creation failed at sign-up. */
+export const completeProfileFormSchema = profileFormSchema.pick({
+	firstname: true,
+	lastname: true,
+})
+
 export const teamFormSchema = z.object({
 	name: teamNameSchema,
 	logo: z.string().optional(),
@@ -216,5 +222,6 @@ export type LoginFormData = z.infer<typeof loginFormSchema>
 export type SignupFormData = z.infer<typeof signupFormSchema>
 export type ResetPasswordFormData = z.infer<typeof resetPasswordFormSchema>
 export type ProfileFormData = z.infer<typeof profileFormSchema>
+export type CompleteProfileFormData = z.infer<typeof completeProfileFormSchema>
 export type TeamFormData = z.infer<typeof teamFormSchema>
 export type RolloverTeamFormData = z.infer<typeof rolloverTeamFormSchema>
