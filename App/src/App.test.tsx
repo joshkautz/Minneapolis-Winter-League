@@ -17,7 +17,7 @@ import { ProvidersWrapper } from '@/providers'
 // The home page's particle animation loads asynchronously and needs
 // OffscreenCanvas, which jsdom lacks. When the test finished first, its
 // failure landed during teardown and failed the run about one time in three.
-vi.mock('./features/public/home/particles', () => ({
+vi.mock('./shared/components/particles', () => ({
 	SparklesCore: () => null,
 }))
 

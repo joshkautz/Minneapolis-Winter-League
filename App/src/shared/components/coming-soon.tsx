@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { cn } from '@/shared/utils'
-import { SparklesCore } from '@/features/public/home/particles'
+import { Sparkles } from './sparkles'
 import { useSiteSettings } from '@/providers'
 
 export const ComingSoon = ({
@@ -27,7 +27,7 @@ export const ComingSoon = ({
 				)}
 			>
 				<div className='absolute inset-0 w-full h-full pointer-events-none opacity-60 dark:opacity-40'>
-					<SparklesCore
+					<Sparkles
 						background='transparent'
 						minSize={particleConfig.minSize}
 						maxSize={particleConfig.maxSize}
