@@ -73,10 +73,12 @@ const seedPlayer = async (uid: string, admin = false): Promise<void> => {
 	await seedAuthUser(uid, true)
 	await firestore.doc(`players/${uid}`).set({
 		admin,
-		email: `${uid}@example.com`,
 		firstname: 'Test',
 		lastname: 'Player',
 	})
+	await firestore
+		.doc(`playerContacts/${uid}`)
+		.set({ email: `${uid}@example.com` })
 	for (const seasonId of [CURRENT, PAST]) {
 		await playerSeasonRef(firestore, uid, seasonId).set({
 			season: firestore.doc(`seasons/${seasonId}`),
@@ -144,6 +146,12 @@ describe('deletePlayer', () => {
 		expect(
 			await exists(`teams/team-1/teamSeasons/${PAST}/roster/${PLAYER}`)
 		).toBe(false)
+	})
+
+	it('deletes the private email', async () => {
+		await run(caller(PLAYER))
+
+		expect(await exists(`playerContacts/${PLAYER}`)).toBe(false)
 	})
 
 	it('keeps signed waivers', async () => {

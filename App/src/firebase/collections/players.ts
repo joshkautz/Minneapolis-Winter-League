@@ -6,6 +6,7 @@ import {
 	collection,
 	collectionGroup,
 	doc,
+	documentId,
 	getDoc,
 	or,
 	query,
@@ -29,6 +30,7 @@ import {
 } from '@/shared/utils'
 import {
 	WAIVER_SIGNATURES_SUBCOLLECTION,
+	type PlayerContactDocument,
 	type WaiverSignatureDocument,
 } from '@/types'
 
@@ -56,6 +58,40 @@ export const getPlayerRef = (
 		authValue.uid
 	) as DocumentReference<PlayerDocument>
 }
+
+/** A player document by id, for the admin screens that pick one. */
+export const playerRefById = (
+	playerId: string | undefined
+): DocumentReference<PlayerDocument> | undefined =>
+	playerId
+		? (doc(
+				firestore,
+				Collections.PLAYERS,
+				playerId
+			) as DocumentReference<PlayerDocument>)
+		: undefined
+
+// ---- Contact details (private) --------------------------------------------
+
+/**
+ * A player's email, at `playerContacts/{uid}`. Readable by that player and
+ * admins only; everyone else gets permission-denied.
+ */
+export const playerContactRef = (
+	playerId: string
+): DocumentReference<PlayerContactDocument> =>
+	doc(
+		firestore,
+		Collections.PLAYER_CONTACTS,
+		playerId
+	) as DocumentReference<PlayerContactDocument>
+
+/** Every player's email. Only an admin may run this query. */
+export const allPlayerContactsQuery = (): Query<PlayerContactDocument> =>
+	collection(
+		firestore,
+		Collections.PLAYER_CONTACTS
+	) as Query<PlayerContactDocument>
 
 // ---- Waiver signatures -----------------------------------------------------
 
@@ -291,8 +327,9 @@ export const getPlayersQuery = (
 }
 
 /**
- * The admin player search: by email when the term contains an `@`, by first
- * and last name when it contains a space, and otherwise by either name.
+ * The admin player search by name: first and last name when the term
+ * contains a space, and otherwise either name. A search by email goes
+ * through the private contacts instead (`playersByIdsQuery`).
  */
 export const adminPlayerSearchQuery = (
 	search: string
@@ -302,17 +339,6 @@ export const adminPlayerSearchQuery = (
 	}
 
 	const trimmed = search.trim()
-	const searchLower = trimmed.toLowerCase()
-
-	// Check if it looks like an email (contains @)
-	if (trimmed.includes('@')) {
-		// Search by email only
-		return query(
-			collection(firestore, Collections.PLAYERS),
-			where('email', '>=', searchLower),
-			where('email', '<=', searchLower + '\uf8ff')
-		) as Query<PlayerDocument>
-	}
 
 	// Check if searching by full name (contains space)
 	if (trimmed.includes(' ')) {
@@ -350,3 +376,21 @@ export const adminPlayerSearchQuery = (
 		)
 	) as Query<PlayerDocument>
 }
+
+/** The most ids Firestore accepts in one `in` filter. */
+export const MAX_IDS_PER_QUERY = 30
+
+/**
+ * The players with these ids, for turning an email match in the private
+ * contacts into player documents. Only the first `MAX_IDS_PER_QUERY` are
+ * used.
+ */
+export const playersByIdsQuery = (
+	playerIds: string[]
+): Query<PlayerDocument> | undefined =>
+	playerIds.length === 0
+		? undefined
+		: (query(
+				collection(firestore, Collections.PLAYERS),
+				where(documentId(), 'in', playerIds.slice(0, MAX_IDS_PER_QUERY))
+			) as Query<PlayerDocument>)

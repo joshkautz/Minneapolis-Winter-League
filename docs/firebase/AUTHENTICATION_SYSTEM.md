@@ -10,7 +10,8 @@ document.
 
 1. `createUserWithEmailAndPassword` creates the Auth user.
 2. `sendEmailVerification` sends the verification email.
-3. `createPlayer` creates `players/{uid}`. It checks only that the caller is
+3. `createPlayer` creates `players/{uid}`, and `playerContacts/{uid}` with
+   the email, which only the player and admins can read. It checks only that the caller is
    signed in (`validateBasicAuthentication`), because the email cannot be
    verified yet.
 

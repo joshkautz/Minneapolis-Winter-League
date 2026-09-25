@@ -118,6 +118,7 @@ const Collections = {
 	GAMES: 'games',
 	OFFERS: 'offers',
 	PLAYERS: 'players',
+	PLAYER_CONTACTS: 'playerContacts',
 	SEASONS: 'seasons',
 	TEAMS: 'teams',
 	RANKINGS: 'rankings',
@@ -668,7 +669,6 @@ async function createPlayersFromAuth(authUsers) {
 		// written later by createTeamsForActiveSeasons.
 		return {
 			admin: false, // All non-admin as requested
-			email: user.email,
 			firstname: firstname,
 			lastname: lastname,
 		}
@@ -679,6 +679,11 @@ async function createPlayersFromAuth(authUsers) {
 		const player = players[i]
 		const user = authUsers[i]
 		await db.collection(Collections.PLAYERS).doc(user.uid).set(player)
+		// The email is private, so it lives beside the player, not on it.
+		await db
+			.collection(Collections.PLAYER_CONTACTS)
+			.doc(user.uid)
+			.set({ email: user.email.toLowerCase() })
 		createdPlayers.push({ id: user.uid, ...player })
 		console.log(`   Created player: ${player.firstname} ${player.lastname}`)
 	}

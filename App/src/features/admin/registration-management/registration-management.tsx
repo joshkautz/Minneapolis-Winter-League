@@ -18,7 +18,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { usePlayerEmails, useQueryErrorHandler } from '@/shared/hooks'
 import {
 	canonicalPlayerIdFromPlayerSeasonDoc,
 	getPlayerRef,
@@ -152,7 +152,13 @@ export const RegistrationManagement = () => {
 		...doc.data(),
 	})) as (SeasonDocument & { id: string })[] | undefined
 
-	const isLoading = playerLoading || playersLoading || playerSeasonsLoading
+	const { emails, loading: emailsLoading } = usePlayerEmails(
+		isAdmin,
+		'RegistrationManagement'
+	)
+
+	const isLoading =
+		playerLoading || playersLoading || playerSeasonsLoading || emailsLoading
 
 	// Process players for the selected season
 	const allPlayers = useMemo(() => {
@@ -187,7 +193,7 @@ export const RegistrationManagement = () => {
 				id: playerId,
 				firstname: playerData.firstname,
 				lastname: playerData.lastname,
-				email: playerData.email,
+				email: emails.get(playerId) ?? '',
 				paid: hasPaid,
 				signed: hasSigned,
 				teamName: seasonData.team?.id || null,
@@ -195,7 +201,7 @@ export const RegistrationManagement = () => {
 		})
 
 		return players
-	}, [playersSnapshot, playerSeasonsSnapshot, filterSeasonId])
+	}, [playersSnapshot, playerSeasonsSnapshot, filterSeasonId, emails])
 
 	// Sorting function
 	const sortedPlayers = useMemo(() => {

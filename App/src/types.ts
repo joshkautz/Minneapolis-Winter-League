@@ -48,6 +48,11 @@ export enum Collections {
 	POSTS = 'posts',
 	NEWS = 'news',
 	OFFERS = 'offers',
+	/**
+	 * `playerContacts/{uid}` — a player's email address. Private to that
+	 * player and admins, which is why it is not on the public player document.
+	 */
+	PLAYER_CONTACTS = 'playerContacts',
 	PLAYERS = 'players',
 	RANKINGS = 'rankings',
 	RANKINGS_HISTORY = 'rankings-history',
@@ -131,12 +136,13 @@ export enum SeasonFormat {
  * Player season participation lives in the `players/{uid}/playerSeasons/{seasonId}`
  * subcollection (see PlayerSeasonDocument). The legacy `seasons[]` array on
  * the player document was removed in the 2026 data model migration.
+ *
+ * Anyone can read this document, so it holds nothing private: the player's
+ * email is in `playerContacts/{uid}` (see PlayerContactDocument).
  */
 export interface PlayerDocument extends DocumentData {
 	/** Whether the player has admin privileges */
 	admin: boolean
-	/** Player's email address */
-	email: string
 	/** Player's first name */
 	firstname: string
 	/** Player's last name */
@@ -152,6 +158,16 @@ export interface PlayerDocument extends DocumentData {
 	 * set, and the next carry-forward re-applied it.
 	 */
 	banned: boolean
+}
+
+/**
+ * A player's contact details, at `playerContacts/{uid}`: readable only by
+ * that player and admins. Written by `createPlayer`, changed by
+ * `updatePlayerAdmin`, and deleted with the account.
+ */
+export interface PlayerContactDocument extends DocumentData {
+	/** The sign-in email, lowercased; kept in step with Firebase Auth. */
+	email: string
 }
 
 /**

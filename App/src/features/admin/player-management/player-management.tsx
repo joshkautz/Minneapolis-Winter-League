@@ -7,7 +7,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { doc, getDocs, type DocumentReference } from 'firebase/firestore'
+import { getDoc, getDocs } from 'firebase/firestore'
 import { toast } from 'sonner'
 import {
 	ArrowLeft,
@@ -25,12 +25,15 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
-import { firestore } from '@/firebase/app'
 import {
-	getPlayerRef,
-	playerSeasonsSubcollection,
 	adminPlayerSearchQuery,
+	getPlayerRef,
+	playerContactRef,
+	playerRefById,
+	playersByIdsQuery,
+	playerSeasonsSubcollection,
 } from '@/firebase/collections/players'
+import { seasonRefById } from '@/firebase/collections/seasons'
 import { useSeasonsContext } from '@/providers'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
@@ -64,14 +67,13 @@ import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import {
-	Collections,
 	type PlayerDocument,
 	type SeasonDocument,
 	type TeamSeasonDocument,
 	logger,
 	extractErrorMessage,
 } from '@/shared/utils'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { usePlayerEmails, useQueryErrorHandler } from '@/shared/hooks'
 
 interface SeasonFormData {
 	seasonId: string
@@ -159,10 +161,18 @@ export const PlayerManagement = () => {
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
-	const searchQuery = useMemo(
-		() => adminPlayerSearchQuery(searchTerm),
-		[searchTerm]
-	)
+	const { emails } = usePlayerEmails(isAdmin, 'PlayerManagement')
+
+	// A term with an @ is matched against the private emails, which only
+	// admins can read; anything else searches names on the public players.
+	const searchQuery = useMemo(() => {
+		const term = searchTerm.trim().toLowerCase()
+		if (!term.includes('@')) return adminPlayerSearchQuery(searchTerm)
+		const matchingIds = [...emails]
+			.filter(([, email]) => email.startsWith(term))
+			.map(([playerId]) => playerId)
+		return playersByIdsQuery(matchingIds)
+	}, [searchTerm, emails])
 
 	const [playersSnapshot, playersLoading, playersError] =
 		useCollection(searchQuery)
@@ -192,15 +202,7 @@ export const PlayerManagement = () => {
 
 	// Fetch selected player - create document reference directly since we have a raw UID
 	const [selectedPlayerSnapshot, selectedPlayerLoading, selectedPlayerError] =
-		useDocument(
-			selectedPlayerId
-				? (doc(
-						firestore,
-						Collections.PLAYERS,
-						selectedPlayerId
-					) as DocumentReference<PlayerDocument>)
-				: undefined
-		)
+		useDocument(playerRefById(selectedPlayerId ?? undefined))
 
 	useQueryErrorHandler({
 		error: selectedPlayerError,
@@ -234,7 +236,10 @@ export const PlayerManagement = () => {
 				const playerData = selectedPlayerSnapshot.data() as PlayerDocument
 				const playerSeasonsRef = playerSeasonsSubcollection(selectedPlayerId)
 				if (!playerSeasonsRef) return
-				const playerSeasonsSnap = await getDocs(playerSeasonsRef)
+				const [playerSeasonsSnap, contactSnap] = await Promise.all([
+					getDocs(playerSeasonsRef),
+					getDoc(playerContactRef(selectedPlayerId)),
+				])
 
 				// Fetch email verification status from Firebase Auth
 				let emailVerified = false
@@ -262,7 +267,7 @@ export const PlayerManagement = () => {
 				const newFormData = {
 					firstname: playerData.firstname,
 					lastname: playerData.lastname,
-					email: playerData.email,
+					email: contactSnap.data()?.email ?? '',
 					admin: playerData.admin,
 					emailVerified,
 					hasAuthAccount,
@@ -575,7 +580,7 @@ export const PlayerManagement = () => {
 													{player.firstname} {player.lastname}
 												</span>
 												<span className='text-xs text-muted-foreground'>
-													{player.email}
+													{emails.get(player.id) ?? ''}
 												</span>
 											</div>
 										</Button>
@@ -1024,14 +1029,7 @@ const SeasonCard = ({
 	const season = seasons?.find((s) => s.id === seasonData.seasonId)
 	const seasonName = season?.name || 'Unknown Season'
 
-	// Create season ref directly - no need to fetch the document just for the ref
-	const seasonRef = season
-		? (doc(
-				firestore,
-				Collections.SEASONS,
-				season.id
-			) as DocumentReference<SeasonDocument>)
-		: undefined
+	const seasonRef = season ? seasonRefById(season.id) : undefined
 
 	// Fetch teams for this season
 	const [teamsSnapshot, , teamsError] = useCollection(

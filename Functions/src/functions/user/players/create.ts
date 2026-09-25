@@ -13,6 +13,7 @@ import {
 } from '../../../types.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { validateBasicAuthentication } from '../../../shared/auth.js'
+import { playerContactRef } from '../../../shared/database.js'
 import { validateAndNormalizeName } from '../../../shared/names.js'
 
 /**
@@ -100,7 +101,6 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 			// concrete type can't be PlayerDocument as-is — drop the annotation.
 			const player = {
 				admin: false,
-				email: email,
 				firstname: trimmedFirstname,
 				lastname: trimmedLastname,
 				createdAt: FieldValue.serverTimestamp(),
@@ -108,6 +108,9 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 
 			const batch = firestore.batch()
 			batch.set(playerRef, player)
+			batch.set(playerContactRef(firestore, userId), {
+				email: email.trim().toLowerCase(),
+			})
 			for (const seasonDoc of seasonsSnapshot.docs) {
 				const seasonSubRef = playerRef
 					.collection(PLAYER_SEASONS_SUBCOLLECTION)

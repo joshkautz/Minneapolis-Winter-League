@@ -22,6 +22,7 @@ import { useEffect, useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { updatePlayerViaFunction, DocumentSnapshot } from '@/firebase'
 import { PlayerDocument } from '@/shared/utils'
+import { useAuthContext } from '@/providers'
 import {
 	profileFormSchema,
 	type ProfileFormData,
@@ -42,6 +43,9 @@ interface ProfileFormProps {
 export const ProfileForm = ({
 	authenticatedUserSnapshot,
 }: ProfileFormProps) => {
+	// The email shown is the sign-in address; the player document does not
+	// carry it (it is private, in playerContacts).
+	const { authStateUser } = useAuthContext()
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	const form = useForm<ProfileFormData>({
@@ -55,10 +59,10 @@ export const ProfileForm = ({
 			if (data) {
 				form.setValue('firstname', data.firstname)
 				form.setValue('lastname', data.lastname)
-				form.setValue('email', data.email)
+				form.setValue('email', authStateUser?.email ?? '')
 			}
 		}
-	}, [authenticatedUserSnapshot, form])
+	}, [authenticatedUserSnapshot, authStateUser, form])
 
 	const onSubmit = useCallback(async (data: ProfileFormData) => {
 		setIsSubmitting(true)

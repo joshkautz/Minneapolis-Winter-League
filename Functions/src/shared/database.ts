@@ -11,6 +11,7 @@ import {
 	Collections,
 	DocumentReference,
 	PLAYER_SEASONS_SUBCOLLECTION,
+	PlayerContactDocument,
 	PlayerDocument,
 	PlayerSeasonDocument,
 	SeasonDocument,
@@ -83,6 +84,16 @@ export function playerRef(
 	return firestore
 		.collection(Collections.PLAYERS)
 		.doc(playerId) as DocumentReference<PlayerDocument>
+}
+
+/** A player's private contact details; see PlayerContactDocument. */
+export function playerContactRef(
+	firestore: FirebaseFirestore.Firestore,
+	playerId: string
+): DocumentReference<PlayerContactDocument> {
+	return firestore
+		.collection(Collections.PLAYER_CONTACTS)
+		.doc(playerId) as DocumentReference<PlayerContactDocument>
 }
 
 export function playerSeasonRef(

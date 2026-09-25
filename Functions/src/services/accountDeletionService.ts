@@ -25,6 +25,7 @@ import {
 	type DocumentReference,
 	type PlayerDocument,
 } from '../types.js'
+import { playerContactRef } from '../shared/database.js'
 
 export interface AccountDeletionSummary {
 	rosterEntriesDeleted: number
@@ -66,6 +67,7 @@ export async function deletePlayerAccountData(
 	await firestore.collection(Collections.RANKINGS).doc(uid).delete()
 
 	await deleteLocalStripeData(firestore, uid)
+	await playerContactRef(firestore, uid).delete()
 
 	const playerDoc = await playerRef.get()
 	if (playerDoc.exists) await playerRef.delete()

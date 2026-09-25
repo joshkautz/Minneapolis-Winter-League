@@ -36,13 +36,15 @@ by `tests/rules/firestore.test.ts`:
 
 | Data                                         | Readable by                        |
 | -------------------------------------------- | ---------------------------------- |
+| `playerContacts/{uid}` — the player's email  | that player and admins             |
 | `stripe/{uid}` — checkouts and payments      | that player                        |
 | `dropbox/{uid}` — pre-2026 waiver records    | that player                        |
 | `players/{uid}/waiverSignatures`             | that player and admins             |
 | a team-season's `contributions`, `checkouts` | that season's roster and admins    |
 | `system/maintenance` — the kill-switch       | admins, and no client may write it |
 
-A player's email is on their public player document. Waiver signatures carry
+Emails are kept off the public player document for the same reason: anyone
+with the web config can list `players`. Waiver signatures carry
 the sensitive fields — date of birth, address, emergency contacts — which is
 why they are a separate, private subcollection (`docs/WAIVERS.md`).
 
