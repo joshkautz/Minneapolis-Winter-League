@@ -29,7 +29,10 @@ const TEAM = 'team-1'
 const TOTAL = 100_000
 const DAY_MS = 24 * 60 * 60 * 1000
 
-type Contribution = { amountCents: number; status: string }
+type Contribution = { amountCents: number; status: string; payer?: string }
+
+/** The roster: contributors `payer-0`, `payer-1`… are all on it. */
+const ROSTER_SIZE = 11
 
 let season: Record<string, unknown>
 let teamSeason: Record<string, unknown>
@@ -75,10 +78,11 @@ vi.mock('react-firebase-hooks/firestore', () => ({
 					docs: contributions.map((contribution, index) => ({
 						id: `pi_${index}`,
 						data: () => ({
-							player: { id: `payer-${index}` },
+							player: { id: contribution.payer ?? `payer-${index}` },
 							createdAt: Timestamp.now(),
 							paymentIntentId: `pi_${index}`,
-							...contribution,
+							amountCents: contribution.amountCents,
+							status: contribution.status,
 						}),
 					})),
 				},
@@ -89,9 +93,11 @@ vi.mock('react-firebase-hooks/firestore', () => ({
 		if (query?.kind === 'playerSeasons') {
 			return [
 				{
-					docs: Array.from({ length: signedCount }, () => ({
+					docs: Array.from({ length: ROSTER_SIZE }, (_, index) => ({
+						// A player-season's id is its season; its parent is the player.
 						id: SEASON,
-						data: () => ({ signed: true }),
+						ref: { parent: { parent: { id: `payer-${index}` } } },
+						data: () => ({ signed: index < signedCount }),
 					})),
 				},
 				false,
@@ -153,6 +159,31 @@ describe('TeamPaymentCard', () => {
 			expect(
 				screen.getByRole('button', { name: 'All $400' })
 			).toBeInTheDocument()
+		})
+
+		it('does not count a teammate who has left', () => {
+			// Their hold is being released, as on the server.
+			contributions = [
+				{ amountCents: 60_000, status: 'authorized', payer: 'departed' },
+				{ amountCents: 30_000, status: 'authorized' },
+			]
+			render(<TeamPaymentCard />)
+
+			expect(screen.getByText('$300 of $1,000')).toBeInTheDocument()
+			expect(
+				screen.getByRole('button', { name: 'All $700' })
+			).toBeInTheDocument()
+		})
+
+		it('counts all of a registered team’s money, since that is final', () => {
+			teamSeason = { name: 'Frostbite', registered: true }
+			contributions = [
+				{ amountCents: 40_000, status: 'captured', payer: 'departed' },
+				{ amountCents: 60_000, status: 'captured' },
+			]
+			render(<TeamPaymentCard />)
+
+			expect(screen.getByText('$1,000 of $1,000')).toBeInTheDocument()
 		})
 
 		it('shows how many players have signed', () => {

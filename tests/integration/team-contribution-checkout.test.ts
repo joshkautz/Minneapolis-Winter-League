@@ -190,6 +190,7 @@ beforeEach(async () => {
 	await seedTeam(TEAM)
 	await seedTeam(OTHER_TEAM)
 	await seedMember(PAYER, TEAM)
+	await seedMember('someone-else', TEAM)
 })
 
 describe('createTeamContributionCheckout', () => {
@@ -298,7 +299,8 @@ describe('createTeamContributionCheckout', () => {
 				status: 'authorized',
 			})
 
-			expect(await codeOf({ amountCents: 30_001 })).toBe('invalid-argument')
+			// Whole dollars, so only the balance can be what refuses it.
+			expect(await codeOf({ amountCents: 30_100 })).toBe('invalid-argument')
 			expect(sessionsCreate).not.toHaveBeenCalled()
 
 			await run({ amountCents: 30_000 })
@@ -314,7 +316,7 @@ describe('createTeamContributionCheckout', () => {
 				amountCents: 90_000,
 				status: 'captured',
 			})
-			expect(await codeOf({ amountCents: 10_001 })).toBe('invalid-argument')
+			expect(await codeOf({ amountCents: 10_100 })).toBe('invalid-argument')
 		})
 
 		it('does not count a released hold', async () => {
@@ -334,6 +336,22 @@ describe('createTeamContributionCheckout', () => {
 				seasonId: SEASON,
 				paymentIntentId: 'pi_existing',
 				status: 'canceled',
+			})
+
+			await run({ amountCents: TOTAL })
+			expect(sentSession().line_items[0].price_data.unit_amount).toBe(TOTAL)
+		})
+
+		it('does not count a teammate who has left', async () => {
+			// Their hold is being released, so it must not shrink what the rest
+			// of the team may put in.
+			await recordContribution(firestore, {
+				teamId: TEAM,
+				seasonId: SEASON,
+				playerId: 'departed',
+				paymentIntentId: 'pi_departed',
+				amountCents: 70_000,
+				status: 'authorized',
 			})
 
 			await run({ amountCents: TOTAL })

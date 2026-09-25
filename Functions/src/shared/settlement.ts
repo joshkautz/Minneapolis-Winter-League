@@ -46,6 +46,12 @@ export interface PlannedContribution {
 	createdAtMillis: number
 	/** When the authorization lapses, from the charge. Null if unknown. */
 	captureBeforeMillis: number | null
+	/**
+	 * Whether the payer is still on the team's roster. An unregistered team
+	 * releases a leaver's money; a registered team charges it only if the
+	 * people still on the team do not cover the total.
+	 */
+	payerOnRoster: boolean
 }
 
 export type SettlementAction =
@@ -103,9 +109,28 @@ function inCommitOrder(
 }
 
 /**
+ * The order a registered team is charged in: the people still on it, oldest
+ * first, then anyone who has left, oldest first.
+ *
+ * Registration counts only the current roster's money, so a payer who left
+ * before the team registered is never needed and their hold is released. One
+ * who left after it registered was part of what secured the spot; their hold
+ * is charged only for whatever the rest of the team does not cover.
+ */
+function inChargeOrder(
+	contributions: PlannedContribution[]
+): PlannedContribution[] {
+	return [
+		...inCommitOrder(contributions.filter((c) => c.payerOnRoster)),
+		...inCommitOrder(contributions.filter((c) => !c.payerOnRoster)),
+	]
+}
+
+/**
  * Keep exactly `totalCents`: capture holds oldest first until the total is
  * reached — the last one partially if it straddles the line — and cancel
- * the rest. Money already captured counts first; if more than the total was
+ * the rest. Payers still on the team come before any who left
+ * (`inChargeOrder`). Money already captured counts first; if more than the total was
  * somehow captured, the excess is refunded newest first.
  *
  * Oldest first is the fairness rule: whoever committed earliest is charged,
@@ -115,7 +140,7 @@ function planKeep(
 	contributions: PlannedContribution[],
 	totalCents: number
 ): SettlementPlan {
-	const ordered = inCommitOrder(contributions)
+	const ordered = inChargeOrder(contributions)
 	const actions: SettlementAction[] = []
 
 	const captured = ordered.filter((c) => c.status === 'captured')
@@ -215,6 +240,15 @@ function planHold(
 	}
 }
 
+/**
+ * Plans what to do with a team's money.
+ *
+ * Before a team registers, a payer who has left is given back everything
+ * they put in: they are not charged for a team they are no longer on, and
+ * registration has already stopped counting it. Once it has registered,
+ * registration is final, so their money is charged last rather than
+ * released (see `inChargeOrder`).
+ */
 export function planSettlement(params: {
 	contributions: PlannedContribution[]
 	disposition: SettlementDisposition
@@ -227,8 +261,18 @@ export function planSettlement(params: {
 			return planKeep(contributions, totalCents)
 		case 'release':
 			return planRelease(contributions)
-		case 'hold':
-			return planHold(contributions, totalCents, nowMillis)
+		case 'hold': {
+			const leavers = contributions.filter((c) => !c.payerOnRoster)
+			const plan = planHold(
+				contributions.filter((c) => c.payerOnRoster),
+				totalCents,
+				nowMillis
+			)
+			return {
+				actions: [...planRelease(leavers).actions, ...plan.actions],
+				shortfallCents: 0,
+			}
+		}
 	}
 }
 

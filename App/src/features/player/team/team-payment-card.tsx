@@ -21,9 +21,13 @@ import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	teamContributionsQuery,
 } from '@/firebase/collections/teams'
-import { playerSeasonsOnTeamQuery } from '@/firebase/collections/players'
+import {
+	canonicalPlayerIdFromPlayerSeasonDoc,
+	playerSeasonsOnTeamQuery,
+} from '@/firebase/collections/players'
 import {
 	CENTS_PER_DOLLAR,
+	committedByRosterCents,
 	committedCents,
 	contributionAmountError,
 	formatDollars,
@@ -202,19 +206,23 @@ export const TeamPaymentCard = () => {
 				? teamContributionsQuery(teamId, seasonId)
 				: undefined
 		)
-	const [playerSeasonsSnapshot] = useCollection(
+	const [playerSeasonsSnapshot, playerSeasonsLoading] = useCollection(
 		teamPayments ? playerSeasonsOnTeamQuery(teamRef) : undefined
 	)
 
-	// A player-season's id is its season id, so `doc.id` here is the season —
-	// which is what this filters on — not the player.
-	const signedPlayers = useMemo(
-		() =>
-			playerSeasonsSnapshot?.docs.filter(
-				(doc) => doc.id === seasonId && doc.data().signed
-			).length ?? 0,
+	// This season's roster. A player-season's id is its season id, so
+	// `doc.id` here is the season — which is what this filters on — and the
+	// player comes from its parent.
+	const rosterSeasons = useMemo(
+		() => playerSeasonsSnapshot?.docs.filter((doc) => doc.id === seasonId),
 		[playerSeasonsSnapshot, seasonId]
 	)
+	const rosterPlayerIds = useMemo(
+		() => new Set(rosterSeasons?.map(canonicalPlayerIdFromPlayerSeasonDoc)),
+		[rosterSeasons]
+	)
+	const signedPlayers =
+		rosterSeasons?.filter((doc) => doc.data().signed).length ?? 0
 
 	useEffect(() => {
 		if (contributionsError) {
@@ -228,9 +236,16 @@ export const TeamPaymentCard = () => {
 
 	const totalCents = season.teamRegistrationTotalCents
 	const contributions = contributionsSnapshot?.docs ?? []
-	const committed = committedCents(contributions.map((doc) => doc.data()))
-	const remainingCents = Math.max(0, totalCents - committed)
 	const registered = teamSeason?.registered === true
+	// Before registering, only the current roster's money counts, as on the
+	// server. After, all of it is the team's: registration is final.
+	const committed = registered
+		? committedCents(contributions.map((doc) => doc.data()))
+		: committedByRosterCents(
+				contributions.map((doc) => doc.data()),
+				rosterPlayerIds
+			)
+	const remainingCents = Math.max(0, totalCents - committed)
 
 	const now = Timestamp.now()
 	const notOpenYet = now < season.registrationStart
@@ -309,7 +324,7 @@ export const TeamPaymentCard = () => {
 			description={`Your team registers once ${MIN_SIGNED_PLAYERS} players have signed their waiver and ${formatDollars(totalCents)} has been committed, split however you like. Only your teammates can see this.`}
 			className='max-w-none'
 		>
-			{contributionsLoading ? (
+			{contributionsLoading || playerSeasonsLoading ? (
 				<LoadingSpinner size='sm' />
 			) : (
 				<div className='space-y-5'>

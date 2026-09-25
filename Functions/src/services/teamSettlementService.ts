@@ -76,7 +76,9 @@ export class SettlementIncompleteError extends Error {
 
 /**
  * Brings a team's money into line with where the team stands: captured if it
- * registered, released if it is out, held if it is still in the running.
+ * registered, released if it is out, held if it is still in the running —
+ * except that a payer who has left an unregistered team is released
+ * whatever the team is doing.
  *
  * Idempotent, and cheap when there is nothing to do — it reads the season,
  * the team-season and the ledger, and returns.
@@ -92,11 +94,15 @@ export async function settleTeamSeason(
 	const firestore = options.firestore ?? getFirestore()
 	const now = options.now ?? new Date()
 
-	const [seasonSnap, teamSeasonSnap, contributionsSnap] = await Promise.all([
-		firestore.collection(Collections.SEASONS).doc(seasonId).get(),
-		teamSeasonRef(firestore, teamId, seasonId).get(),
-		teamContributionsCollection(firestore, teamId, seasonId).get(),
-	])
+	const [seasonSnap, teamSeasonSnap, contributionsSnap, rosterSnap] =
+		await Promise.all([
+			firestore.collection(Collections.SEASONS).doc(seasonId).get(),
+			teamSeasonRef(firestore, teamId, seasonId).get(),
+			teamContributionsCollection(firestore, teamId, seasonId).get(),
+			teamSeasonRef(firestore, teamId, seasonId).collection('roster').get(),
+		])
+	// Roster entries are keyed by player id.
+	const rosterPlayerIds = new Set(rosterSnap.docs.map((doc) => doc.id))
 
 	const season = seasonSnap.data() as SeasonDocument | undefined
 	const totalCents = season?.teamRegistrationTotalCents
@@ -120,7 +126,7 @@ export async function settleTeamSeason(
 
 	const plan = planSettlement({
 		contributions: contributionsSnap.docs.map((doc) =>
-			toPlanned(doc.id, doc.data() as TeamContributionDocument)
+			toPlanned(doc.id, doc.data() as TeamContributionDocument, rosterPlayerIds)
 		),
 		disposition,
 		totalCents,
@@ -191,7 +197,8 @@ export async function settleTeamSeason(
 
 function toPlanned(
 	paymentIntentId: string,
-	data: TeamContributionDocument
+	data: TeamContributionDocument,
+	rosterPlayerIds: ReadonlySet<string>
 ): PlannedContribution {
 	return {
 		paymentIntentId,
@@ -201,6 +208,7 @@ function toPlanned(
 		// read back; zero only sorts a malformed one first.
 		createdAtMillis: data.createdAt?.toMillis?.() ?? 0,
 		captureBeforeMillis: data.captureBefore?.toMillis?.() ?? null,
+		payerOnRoster: rosterPlayerIds.has(data.player.id),
 	}
 }
 

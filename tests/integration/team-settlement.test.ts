@@ -14,7 +14,10 @@ import {
 	recordContribution,
 	teamContributionsCollection,
 } from '../../Functions/src/shared/contributions.js'
-import { teamSeasonRef } from '../../Functions/src/shared/database.js'
+import {
+	teamRosterEntryRef,
+	teamSeasonRef,
+} from '../../Functions/src/shared/database.js'
 import {
 	SettlementIncompleteError,
 	settleTeamSeason,
@@ -93,6 +96,12 @@ const hold = async (
 		metadataFor(teamId),
 		captureBeforeSeconds
 	)
+	// The payer is on the team: money from someone who has left is
+	// released, which the leaver tests cover.
+	await teamRosterEntryRef(firestore, teamId, SEASON, 'payer').set({
+		player: firestore.collection('players').doc('payer'),
+		dateJoined: Timestamp.now(),
+	})
 	await recordContribution(firestore, {
 		teamId,
 		seasonId: SEASON,
