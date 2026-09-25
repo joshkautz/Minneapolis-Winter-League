@@ -12,6 +12,7 @@ import type { WaiverSubmission } from '@/shared/waiver'
 import type {
 	CreatePlayerRequest,
 	CreatePlayerResponse,
+	DeletePlayerResponse,
 	UpdatePlayerRequest,
 	UpdatePlayerResponse,
 } from './player-types'
@@ -60,6 +61,24 @@ export const updatePlayerViaFunction = async (
 	const result = await updatePlayer(data)
 	return result.data
 }
+
+/**
+ * Deletes the signed-in player's account: their data and their sign-in.
+ *
+ * The server refuses unless the caller signed in within the last few
+ * minutes, so re-authenticate with their password first. It also refuses
+ * while they are on a team this season, and for the league's only admin;
+ * those errors carry a message to show as is.
+ */
+export const deletePlayerViaFunction =
+	async (): Promise<DeletePlayerResponse> => {
+		const deletePlayer = httpsCallable<
+			Record<string, never>,
+			DeletePlayerResponse
+		>(functions, 'deletePlayer')
+		const result = await deletePlayer({})
+		return result.data
+	}
 
 //////////////////////////////////////////////////////////////////////////////
 // UPDATE PLAYER (Admin)

@@ -184,7 +184,12 @@ stops intercepting and emulator tests fail with real network calls. The flag
 writes the lockfile and nothing else, which is all that is wanted here — the
 root install is what local builds and tests run against.
 
-If you have already created `Functions/node_modules`, delete it.
+If you have already created `Functions/node_modules`, delete it. **A local
+`firebase deploy` creates it too**: the `predeploy` hook is a full install.
+After deploying from a checkout, delete it before running tests, or the
+emulator suites fail with Firestore unable to serialize a
+`ServerTimestampTransform` — two copies of the SDK, one writing the other's
+sentinels.
 
 CI runs the real predeploy path (`Build Functions the way firebase deploy
 does`) to catch divergence before a deploy does. It is a separate job with its
