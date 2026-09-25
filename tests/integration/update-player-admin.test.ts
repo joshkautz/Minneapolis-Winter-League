@@ -14,6 +14,7 @@ import {
 	updatePlayerAdmin,
 } from '../../Functions/src/index.js'
 import {
+	playerContactRef,
 	playerSeasonRef,
 	teamRosterEntryRef,
 	teamSeasonRef,
@@ -88,11 +89,13 @@ const seedPlayer = async (
 ) => {
 	await playerRef(playerId).set({
 		admin: options.admin ?? false,
-		email: `${playerId}@example.com`,
 		// A real name, because names are now validated server-side: an id like
 		// 'player-1' is rejected for its digit and hyphen.
 		firstname: 'Existing',
 		lastname: 'Name',
+	})
+	await playerContactRef(firestore, playerId).set({
+		email: `${playerId}@example.com`,
 	})
 	await playerSeasonRef(firestore, playerId, SEASON).set({
 		season: seasonRef(),
@@ -215,9 +218,12 @@ describe('updatePlayerAdmin: player document', () => {
 
 		await call({ playerId: PLAYER, email: 'New.Address@Example.com' })
 
-		expect((await readPlayer())?.email).toBe('new.address@example.com')
+		const contact = await playerContactRef(firestore, PLAYER).get()
+		expect(contact.data()?.email).toBe('new.address@example.com')
 		const authUser = await getAuth().getUser(PLAYER)
 		expect(authUser.email).toBe('new.address@example.com')
+		// Never back on the public player document.
+		expect(await readPlayer()).not.toHaveProperty('email')
 	})
 
 	it('treats an admin-set email as verified', async () => {
@@ -361,6 +367,13 @@ describe('updatePlayerAdmin: season state', () => {
 
 		expect(season?.paid).toBe(true)
 		expect(season?.signed).toBe(true)
+		// The recorded signature carries the email from the private contact.
+		const signatures = await playerRef(PLAYER)
+			.collection('waiverSignatures')
+			.get()
+		expect(signatures.docs.map((doc) => doc.data().email)).toEqual([
+			`${PLAYER}@example.com`,
+		])
 	})
 
 	it('bans a player league-wide, not per season', async () => {

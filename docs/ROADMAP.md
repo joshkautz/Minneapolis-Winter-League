@@ -259,16 +259,6 @@ eventually hit a word still on the list. Two things cover that:
 
 If a real name is reported as blocked, add it to the list in **both** files.
 
-## Player emails are public
-
-`players/{uid}` is readable by anyone, signed in or not, and carries the
-player's `email`. Only the admin screens show it, but the rules do not know
-that: anyone can list every player's address with the web SDK and the
-public config. Moving `email` to a private subdocument (readable by that
-player and admins, like `waiverSignatures`) would close it. It touches
-`createPlayer`, `updatePlayerAdmin`, the admin search by email, the
-registration export and the Stripe customer lookup.
-
 ## Team logo size
 
 `createTeam` and `updateTeam` check that a logo is an image but not how large

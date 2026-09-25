@@ -25,7 +25,11 @@ import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { validateAndNormalizeName } from '../../../shared/names.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
-import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
+import {
+	playerContactRef,
+	playerSeasonRef,
+	teamSeasonRef,
+} from '../../../shared/database.js'
 import {
 	addPlayerToTeam,
 	removePlayerFromTeam,
@@ -251,7 +255,8 @@ export const updatePlayerAdmin = onCall<
 				)
 			}
 			const playerData = playerDoc.data()
-			const currentEmail = playerData?.email
+			const contactDocRef = playerContactRef(firestore, playerId)
+			const currentEmail = (await contactDocRef.get()).data()?.email
 
 			// Both of the fields below write to Firebase Authentication, and a
 			// player document can outlive its Auth account. Check once, up
@@ -278,6 +283,9 @@ export const updatePlayerAdmin = onCall<
 			}
 
 			const updates: Record<string, unknown> = {}
+			// Set when the email changes; it lives in playerContacts, not on
+			// the public player document.
+			let newContactEmail: string | undefined
 			const changes: UpdatePlayerAdminResponse['changes'] = {}
 
 			if (
@@ -337,7 +345,7 @@ export const updatePlayerAdmin = onCall<
 						email: trimmedNewEmail,
 						emailVerified: true,
 					})
-					updates.email = trimmedNewEmail
+					newContactEmail = trimmedNewEmail
 					changes.email = { from: currentEmail || '', to: trimmedNewEmail }
 				}
 			}
@@ -568,7 +576,7 @@ export const updatePlayerAdmin = onCall<
 								dateOfBirth: null,
 								mailingAddress: null,
 								emergencyContacts: [],
-								email: playerData?.email ?? null,
+								email: newContactEmail ?? currentEmail ?? null,
 								ipAddress: null,
 								userAgent: null,
 								note: 'Marked signed by an admin in Player Management.',
@@ -609,6 +617,9 @@ export const updatePlayerAdmin = onCall<
 			// Apply player parent doc updates if any.
 			if (Object.keys(updates).length > 0) {
 				await playerDocRef.update(updates)
+			}
+			if (newContactEmail !== undefined) {
+				await contactDocRef.set({ email: newContactEmail })
 			}
 
 			// Cancel pending offers for newly-added team memberships.

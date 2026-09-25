@@ -124,6 +124,15 @@ service cloud.firestore {
       }
     }
     
+    // A player's email. Kept off the public player document so that listing
+    // players does not list their addresses; only the player and admins
+    // may read it.
+    match /playerContacts/{playerId} {
+      allow read: if isAuthenticated()
+        && (request.auth.uid == playerId || isAdmin());
+      allow write: if false; // Use createPlayer, updatePlayerAdmin
+    }
+
     match /offers/{offerId} {
       allow read: if true;
       allow create: if false; // Use createOffer

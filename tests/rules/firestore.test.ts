@@ -75,10 +75,9 @@ beforeEach(async () => {
 		await setDoc(doc(db, 'teams/team-1/teamSeasons/season-1/roster/user-1'), {
 			dateJoined: new Date(),
 		})
-		await setDoc(doc(db, 'players/user-1'), {
-			admin: false,
-			email: 'a@example.com',
-		})
+		await setDoc(doc(db, 'players/user-1'), { admin: false })
+		await setDoc(doc(db, 'playerContacts/user-1'), { email: 'a@example.com' })
+		await setDoc(doc(db, 'playerContacts/user-2'), { email: 'b@example.com' })
 		await setDoc(doc(db, 'players/user-1/playerSeasons/season-1'), {
 			paid: true,
 		})
@@ -224,6 +223,45 @@ describe('per-user private data', () => {
 
 	it('denies reading private data while signed out', async () => {
 		await assertFails(getDoc(doc(anonymous(), 'stripe/user-1')))
+	})
+})
+
+describe('player contacts', () => {
+	// Emails live here rather than on the public player document, so that
+	// anyone with the web config cannot list every player's address.
+	const contact = 'playerContacts/user-1'
+
+	it('are readable by the player they belong to', async () => {
+		await assertSucceeds(getDoc(doc(verified('user-1'), contact)))
+	})
+
+	it('are readable, and listable, by an admin', async () => {
+		await assertSucceeds(getDoc(doc(verified('admin-1'), contact)))
+		await assertSucceeds(
+			getDocs(collection(verified('admin-1'), 'playerContacts'))
+		)
+	})
+
+	it('are not readable by another player', async () => {
+		await assertFails(getDoc(doc(verified('user-2'), contact)))
+	})
+
+	it('cannot be listed by a player', async () => {
+		await assertFails(getDocs(collection(verified('user-1'), 'playerContacts')))
+	})
+
+	it('are not readable while signed out', async () => {
+		await assertFails(getDoc(doc(anonymous(), contact)))
+		await assertFails(getDocs(collection(anonymous(), 'playerContacts')))
+	})
+
+	it('cannot be written, even by the player or an admin', async () => {
+		await assertFails(
+			setDoc(doc(verified('user-1'), contact), { email: 'new@example.com' })
+		)
+		await assertFails(
+			setDoc(doc(verified('admin-1'), contact), { email: 'new@example.com' })
+		)
 	})
 })
 

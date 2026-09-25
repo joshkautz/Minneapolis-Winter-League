@@ -27,7 +27,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { auth } from '@/firebase/auth'
-import { getPlayerRef } from '@/firebase/collections/players'
+import { getPlayerRef, playerContactRef } from '@/firebase/collections/players'
 import { allPendingOffersQuery } from '@/firebase/collections/offers'
 import { updateOfferViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -185,12 +185,15 @@ export const OfferManagement = () => {
 
 					try {
 						// Fetch player data
-						const playerDoc = await getDoc(offerData.player)
+						const [playerDoc, contactDoc] = await Promise.all([
+							getDoc(offerData.player),
+							getDoc(playerContactRef(offerData.player.id)),
+						])
 						const playerData = playerDoc.data()
 						const playerName = playerData
 							? `${playerData.firstname} ${playerData.lastname}`
 							: 'Unknown Player'
-						const playerEmail = playerData?.email || 'N/A'
+						const playerEmail = contactDoc.data()?.email || 'N/A'
 
 						// Fetch team data
 						const teamDoc = await getDoc(offerData.team)

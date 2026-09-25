@@ -30,6 +30,10 @@ function as it is actually exported from `Functions/src/index.ts`.
 Per-user private data (`stripe/{uid}`, `dropbox/{uid}`) is gated on
 `request.auth.uid == uid` for reads and denied for writes.
 
+`playerContacts/{uid}` holds the player's email, readable by that player and
+admins. It is separate because `players/{uid}` is public: never add an email,
+or any other contact detail, to the player document.
+
 `players/{uid}/waiverSignatures` holds a date of birth, an address and
 emergency contacts, so although the player document above it is public, this
 subcollection is readable only by that player and admins. Never add a

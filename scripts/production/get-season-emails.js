@@ -42,32 +42,37 @@ async function getCurrentSeason() {
 	}
 }
 
+/**
+ * Everyone with a player-season in the season, with the email from their
+ * private contact document (emails are not on the public player documents).
+ */
 async function getSeasonParticipantEmails(seasonId) {
-	const playersSnapshot = await db.collection('players').get()
+	const playerSeasons = await db
+		.collectionGroup('playerSeasons')
+		.where('season', '==', db.collection('seasons').doc(seasonId))
+		.get()
+	if (playerSeasons.empty) return []
 
-	const participants = []
+	const playerIds = playerSeasons.docs.map((doc) => doc.ref.parent.parent.id)
+	const [players, contacts] = await Promise.all([
+		db.getAll(...playerIds.map((id) => db.collection('players').doc(id))),
+		db.getAll(
+			...playerIds.map((id) => db.collection('playerContacts').doc(id))
+		),
+	])
 
-	for (const playerDoc of playersSnapshot.docs) {
-		const playerData = playerDoc.data()
-
-		// Find this player's participation in the season
-		const seasonParticipation = playerData.seasons?.find(
-			(ps) => ps.season?.id === seasonId || ps.season?.path?.includes(seasonId)
-		)
-
-		if (seasonParticipation) {
-			participants.push({
-				email: playerData.email,
-				firstname: playerData.firstname,
-				lastname: playerData.lastname,
-				paid: seasonParticipation.paid,
-				signed: seasonParticipation.signed,
-				hasTeam: !!seasonParticipation.team,
-			})
+	return playerSeasons.docs.map((doc, index) => {
+		const season = doc.data()
+		const player = players[index].data() ?? {}
+		return {
+			email: contacts[index].data()?.email ?? '',
+			firstname: player.firstname ?? '',
+			lastname: player.lastname ?? '',
+			paid: season.paid === true,
+			signed: season.signed === true,
+			hasTeam: Boolean(season.team),
 		}
-	}
-
-	return participants
+	})
 }
 
 async function main() {
@@ -84,13 +89,18 @@ async function main() {
 
 	const allParticipants = await getSeasonParticipantEmails(currentSeason.id)
 
-	// Filter for only active participants (paid, signed, and on a team)
+	// Active means on a team and signed, and under per-player pricing also
+	// paid. Under team payments the money is the team's, so a player's own
+	// `paid` flag is never set.
+	const teamPricing =
+		typeof currentSeason.teamRegistrationTotalCents === 'number'
 	const activeParticipants = allParticipants.filter(
-		(p) => p.paid && p.signed && p.hasTeam
+		(p) => p.hasTeam && p.signed && (teamPricing || p.paid)
 	)
+	const rule = teamPricing ? 'signed, on a team' : 'paid, signed, on a team'
 
 	console.log(
-		`Found ${activeParticipants.length} active participants (paid, signed, on team) out of ${allParticipants.length} total for ${currentSeason.name}:\n`
+		`Found ${activeParticipants.length} active participants (${rule}) out of ${allParticipants.length} total for ${currentSeason.name}:\n`
 	)
 
 	// Sort by last name, first name

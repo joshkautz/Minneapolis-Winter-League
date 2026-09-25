@@ -6,7 +6,6 @@ import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	canonicalTeamRefFromTeamSeasonDoc,
 } from '@/firebase/collections/teams'
-import { Mail } from 'lucide-react'
 import {
 	cn,
 	PlayerDocument,
@@ -80,7 +79,6 @@ export const ManageInvitePlayerDetail = ({
 
 	const playerData = playerQueryDocumentSnapshot.data()
 	const playerName = `${playerData.firstname} ${playerData.lastname}`
-	const playerEmail = playerData.email
 	const playerInitials =
 		`${playerData.firstname[0]}${playerData.lastname[0]}`.toUpperCase()
 
@@ -146,12 +144,6 @@ export const ManageInvitePlayerDetail = ({
 									</span>
 								</Badge>
 							)}
-						</div>
-						<div className='flex items-center gap-1 text-xs text-muted-foreground min-w-0'>
-							<Mail className='h-3 w-3 flex-shrink-0' />
-							<span className='truncate block max-w-[250px]'>
-								{playerEmail}
-							</span>
 						</div>
 					</div>
 				</div>

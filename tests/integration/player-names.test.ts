@@ -107,6 +107,29 @@ describe('createPlayer', () => {
 		})
 	})
 
+	it('keeps the email off the public player document', async () => {
+		// Anyone can read players/{uid}; only the player and admins can read
+		// playerContacts/{uid}.
+		await create({})
+
+		expect(await readPlayer()).not.toHaveProperty('email')
+		const contact = await firestore
+			.collection('playerContacts')
+			.doc(PLAYER)
+			.get()
+		expect(contact.data()).toEqual({ email: `${PLAYER}@example.com` })
+	})
+
+	it('creates no contact when the name is rejected', async () => {
+		await failsWith({ firstname: 'Josh1' })
+
+		const contact = await firestore
+			.collection('playerContacts')
+			.doc(PLAYER)
+			.get()
+		expect(contact.exists).toBe(false)
+	})
+
 	it.each(REJECTED)('rejects a first name %s', async (_label, firstname) => {
 		expect(await failsWith({ firstname })).toBe('invalid-argument')
 	})

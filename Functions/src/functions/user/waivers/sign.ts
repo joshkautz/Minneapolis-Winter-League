@@ -183,7 +183,7 @@ export const signWaiver = onCall<WaiverSubmission>(
 				relationship: contact.relationship.trim(),
 				phone: contact.phone.trim(),
 			})),
-			email: request.auth.token.email ?? player.email ?? null,
+			email: request.auth.token.email ?? null,
 			ipAddress: clientIp(request.rawRequest),
 			userAgent:
 				(request.rawRequest.headers?.['user-agent'] as string | undefined) ??
