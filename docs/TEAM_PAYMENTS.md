@@ -713,7 +713,10 @@ offering an individual payment.
 
 Admins get a Payments dialog per team on the team management page, with the
 manual release behind a required reason and a warning that a registered team
-will be left short.
+will be left short. That release is also how a registered team gets its money
+back: the page never offers to delete a registered team, only unregistered
+ones in the current season (`deleteUnregisteredTeam`, which is told the
+season and refuses any other).
 
 The home page's "How to Register" steps were reordered to match what now
 happens in every season — join a team, then sign the waiver it triggers —

@@ -85,7 +85,7 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	setSwissSeeding: { seasonId: 'season-1', teamSeeding: ['team-1', 'team-2'] },
 	getSwissRankings: { seasonId: 'season-1' },
 	mergeTeams: { winningTeamId: 'team-1', losingTeamId: 'team-2' },
-	deleteUnregisteredTeam: { teamId: 'team-1' },
+	deleteUnregisteredTeam: { teamId: 'team-1', seasonId: 'season-1' },
 	updateTeamAdmin: { teamId: 'team-1', seasonId: 'season-1', name: 'Renamed' },
 
 	// --- user: offers ------------------------------------------------------

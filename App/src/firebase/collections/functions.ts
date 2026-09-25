@@ -209,6 +209,8 @@ export const getPlayerAuthInfoViaFunction = async (
 interface DeleteUnregisteredTeamRequest {
 	/** The team ID to delete */
 	teamId: string
+	/** The season being viewed; the server refuses any but the current one */
+	seasonId: string
 }
 
 /**

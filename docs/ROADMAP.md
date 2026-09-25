@@ -73,19 +73,6 @@ Three decisions carry it:
 Also retires the per-player returning discount, which does not map onto a team
 total.
 
-## Admins cannot delete a registered team
-
-Team Management offers **Delete Team** on registered teams, and it calls
-`deleteTeam` — which refuses registered teams and anyone who is not that
-team's captain, so it fails for every admin. `deleteUnregisteredTeam`, the
-admin path, refuses registered teams too. No server path exists.
-
-It needs a decision before code: a registered team has captured team
-payments (or, before 2026 Fall, ten paid players), so deleting one means
-deciding what happens to that money — refund it, keep it, or require it be
-released first through the payments dialog. Until then the button should
-probably be hidden for registered teams rather than fail.
-
 ## Account deletion has no screen
 
 `deletePlayer` lets a player delete their own profile (and an admin anyone's
