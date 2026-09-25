@@ -16,10 +16,13 @@ Functions/src/
   triggers/{auth,documents,payments}/   Firestore and lifecycle triggers
   triggers/scheduled/   onSchedule functions (the team payments sweep and reconciliation)
   api/webhooks/         the Stripe HTTP endpoint
-  services/             multi-step domain logic (playerRankings, swissRankings)
+  services/             multi-step domain logic: team registration, team payments
+                        (checkout reservations, intake, settlement, sweep,
+                        reconciliation), team and account deletion, rankings
   waiver/               the waiver's text and signing rules, also imported by the App
-  shared/               auth, database, errors, format, offers, storage, stripe,
-                        returnUrls, contributions (team payment ledger) helpers
+  shared/               small helpers: auth, database refs, membership, names,
+                        contributions and settlement arithmetic, gameSchedule,
+                        returnUrls, stripe, storage, maintenance kill-switch
   config/               constants.ts (static) and environment.ts (secrets)
   types.ts              Collections enum and document interfaces
 ```

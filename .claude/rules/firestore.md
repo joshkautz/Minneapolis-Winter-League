@@ -36,6 +36,14 @@ subcollection is readable only by that player and admins. Never add a
 collection-group rule for it, and never copy those fields onto a public
 document.
 
+A team-season's `contributions` and `checkouts` are readable only by that
+season's roster and admins, and deliberately have no collection-group rule, so
+no one can list every team's money at once.
+
+`system/maintenance`, the migration kill-switch, is readable by admins and
+writable by no client. Setting it stops every trigger; the migration script
+flips it with the Admin SDK.
+
 The catch-all `match /{document=**} { allow read, write: if false; }` at the
 bottom must stay last.
 

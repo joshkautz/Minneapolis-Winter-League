@@ -28,7 +28,7 @@ Run everything from the repository root.
 ```bash
 npm run dev            # emulators + Functions watch + Vite, all at once
 npm run seed           # populate the emulators with synthetic data (no prod access)
-npm run verify         # format + lint + typecheck + test + test:rules + build
+npm run verify         # format, lint, typecheck, test, test:rules, test:integration, build
 npm test               # vitest across App and Functions, single run
 npm run test:rules     # Firestore rules tests (boots the emulator itself)
 npm run typecheck      # tsc --noEmit across both workspaces
@@ -82,7 +82,9 @@ already allowed.
 ## Conventions
 
 - Prettier owns formatting: **tabs**, no semicolons, single quotes, width 80.
-  Never hand-format; run `npm run format:fix`.
+  Never hand-format; run `npm run format:fix`. That script and `lint:check`
+  cover `App/` and `Functions/` only, so format anything you touch under
+  `tests/`, `scripts/` or `docs/` with `npx prettier --write <file>`.
 - ESLint flat config. `eslint.base.js` holds the shared rules; each workspace
   extends it. Functions is stricter than App — `no-explicit-any` and
   `explicit-function-return-type` are errors there, warnings/off in App.
@@ -126,7 +128,7 @@ already allowed.
 
 ## Tests
 
-Four suites (~1,340 tests), all run by `npm run verify`:
+Four suites (~1,370 tests), all run by `npm run verify`:
 
 | Suite           | Location                      | Covers                                                  |
 | --------------- | ----------------------------- | ------------------------------------------------------- |

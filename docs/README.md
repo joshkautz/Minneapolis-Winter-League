@@ -7,9 +7,9 @@ Documentation for the Minneapolis Winter League application, grouped by area.
 | Directory                      | Contents                                                           |
 | ------------------------------ | ------------------------------------------------------------------ |
 | [`setup/`](./setup/)           | Environment setup, environment variables, emulator data, reloading |
-| [`app/`](./app/)               | React front end — features, error boundaries, bundle size          |
+| [`app/`](./app/)               | React front end — layout, data access, routing, feature notes      |
 | [`functions/`](./functions/)   | Cloud Functions — what exists, player ranking algorithm            |
-| [`firebase/`](./firebase/)     | Firestore collections, indexes, authentication                     |
+| [`firebase/`](./firebase/)     | The data model, indexes, authentication                            |
 | [`historical/`](./historical/) | Completed migrations and superseded plans, kept for context        |
 
 Top-level documents: [Project Structure](./PROJECT_STRUCTURE.md),

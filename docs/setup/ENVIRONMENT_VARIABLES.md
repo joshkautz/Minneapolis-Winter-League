@@ -1,8 +1,11 @@
-# Environment Variables Documentation
+# Environment Variables
 
-## Overview
+The App is configured with Vite env files in `App/`; Functions read Firebase
+secrets. Both are covered below.
 
-This document describes how environment variables are configured and used in the Minneapolis Winter League application.
+`App/.env.staging` points at production: there is only one Firebase project.
+`App/.env.test` holds a fake Firebase config for Vitest, without which
+`App/src/firebase/app.ts` throws at import.
 
 ## Vite Environment Variable Loading Priority
 
@@ -83,12 +86,12 @@ If an invalid log level is set, the application defaults to `error` level.
 
 ```json
 {
-  "scripts": {
-    "dev": "vite --mode development", // Loads .env.development
-    "build": "tsc && vite build", // Loads .env.production (default)
-    "build:staging": "vite build --mode staging", // Loads .env.staging
-    "dev:emulators": "VITE_USE_EMULATORS=true vite --mode development"
-  }
+	"scripts": {
+		"dev": "vite --mode development", // Loads .env.development
+		"build": "tsc && vite build", // Loads .env.production (default)
+		"build:staging": "vite build --mode staging", // Loads .env.staging
+		"dev:emulators": "VITE_USE_EMULATORS=true vite --mode development"
+	}
 }
 ```
 
@@ -98,20 +101,20 @@ If an invalid log level is set, the application defaults to `error` level.
 
 ```typescript
 // Only VITE_ prefixed variables are available in browser
-import.meta.env.VITE_FIREBASE_API_KEY; // ✅ Available
-import.meta.env.VITE_USE_EMULATORS; // ✅ Available
-import.meta.env.VITE_LOG_LEVEL; // ✅ Available
-import.meta.env.MODE; // ✅ Available (built-in)
-import.meta.env.DEV; // ✅ Available (built-in)
+import.meta.env.VITE_FIREBASE_API_KEY // ✅ Available
+import.meta.env.VITE_USE_EMULATORS // ✅ Available
+import.meta.env.VITE_LOG_LEVEL // ✅ Available
+import.meta.env.MODE // ✅ Available (built-in)
+import.meta.env.DEV // ✅ Available (built-in)
 ```
 
 ### ❌ NOT Available in Client Code
 
 ```typescript
 // Server-only variables (no VITE_ prefix)
-import.meta.env.DATABASE_PASSWORD; // ❌ Undefined
-import.meta.env.SECRET_KEY; // ❌ Undefined
-process.env.NODE_ENV; // ❌ Undefined (use import.meta.env.MODE)
+import.meta.env.DATABASE_PASSWORD // ❌ Undefined
+import.meta.env.SECRET_KEY // ❌ Undefined
+process.env.NODE_ENV // ❌ Undefined (use import.meta.env.MODE)
 ```
 
 ## Security Rules
@@ -134,8 +137,24 @@ process.env.NODE_ENV; // ❌ Undefined (use import.meta.env.MODE)
 Vite automatically provides these:
 
 ```typescript
-import.meta.env.MODE; // "development", "production", "staging", etc.
-import.meta.env.DEV; // true in development mode
-import.meta.env.PROD; // true in production mode
-import.meta.env.SSR; // true if server-side rendering
+import.meta.env.MODE // "development", "production", "staging", etc.
+import.meta.env.DEV // true in development mode
+import.meta.env.PROD // true in production mode
+import.meta.env.SSR // true if server-side rendering
 ```
+
+## Functions secrets
+
+Functions read two secrets, declared per function in its `secrets` option:
+
+```bash
+STRIPE_SECRET_KEY       # a restricted key; see .claude/rules/functions.md
+STRIPE_WEBHOOK_SECRET   # the webhook endpoint's signing secret
+```
+
+In production they are Firebase secrets, set with
+`firebase functions:secrets:set <NAME>`. Under the emulator they come from
+`Functions/.secret.local`, which is gitignored; a secret missing from it is
+fetched from production Secret Manager with your own credentials, so the
+emulator refuses a live Stripe key (`sk_live_`, `rk_live_`) and uses a
+placeholder instead. Put a test-mode key there to exercise payments locally.
