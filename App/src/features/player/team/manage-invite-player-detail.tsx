@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react'
+import { useMemo } from 'react'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { playerSeasonRef } from '@/firebase/collections/players'
 import { QueryDocumentSnapshot, offersForPlayerByTeamQuery } from '@/firebase'
@@ -7,20 +7,19 @@ import {
 	canonicalTeamRefFromTeamSeasonDoc,
 } from '@/firebase/collections/teams'
 import { Mail } from 'lucide-react'
-import { toast } from 'sonner'
 import {
 	cn,
 	PlayerDocument,
 	TeamSeasonDocument,
 	OfferDocument,
 	OfferStatus,
-	logger,
 } from '@/shared/utils'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
 import { LoadingButton } from '@/shared/components'
 import { usePendingAction } from '@/shared/hooks/use-pending-action'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 export const ManageInvitePlayerDetail = ({
 	teamQueryDocumentSnapshot,
@@ -52,20 +51,12 @@ export const ManageInvitePlayerDetail = ({
 		? canonicalTeamIdFromTeamSeasonDoc(teamQueryDocumentSnapshot)
 		: undefined
 
-	// Log and notify on query errors
-	useEffect(() => {
-		if (offersError) {
-			logger.error('Failed to load offers:', {
-				component: 'ManageInvitePlayerDetail',
-				playerId: playerQueryDocumentSnapshot.id,
-				teamId,
-				error: offersError.message,
-			})
-			toast.error('Failed to load offers', {
-				description: offersError.message,
-			})
-		}
-	}, [offersError, playerQueryDocumentSnapshot.id, teamId])
+	useQueryErrorHandler({
+		error: offersError,
+		component: 'ManageInvitePlayerDetail',
+		errorLabel: 'offers',
+		context: { playerId: playerQueryDocumentSnapshot.id, teamId },
+	})
 
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()

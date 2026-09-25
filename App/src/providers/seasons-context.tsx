@@ -7,14 +7,14 @@ import {
 	useState,
 } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { toast } from 'sonner'
 import {
 	QuerySnapshot,
 	seasonsQuery,
 	FirestoreError,
 	QueryDocumentSnapshot,
 } from '@/firebase'
-import { SeasonDocument, initialSelectedSeasonId, logger } from '@/shared/utils'
+import { SeasonDocument, initialSelectedSeasonId } from '@/shared/utils'
+import { useQueryErrorHandler } from '@/shared/hooks/use-query-error-handler'
 
 /** The season the visitor last picked in a season selector. */
 const PICKED_SEASON_KEY = 'season'
@@ -79,18 +79,11 @@ export const SeasonsContextProvider = ({
 		seasonsQuerySnapshotError,
 	] = useCollection(seasonsQuery())
 
-	// Log and notify on seasons query errors
-	useEffect(() => {
-		if (seasonsQuerySnapshotError) {
-			logger.error('Failed to load seasons:', {
-				component: 'SeasonsContextProvider',
-				error: seasonsQuerySnapshotError.message,
-			})
-			toast.error('Failed to load seasons', {
-				description: seasonsQuerySnapshotError.message,
-			})
-		}
-	}, [seasonsQuerySnapshotError])
+	useQueryErrorHandler({
+		error: seasonsQuerySnapshotError,
+		component: 'SeasonsContextProvider',
+		errorLabel: 'seasons',
+	})
 
 	const [
 		selectedSeasonQueryDocumentSnapshot,

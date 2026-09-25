@@ -98,9 +98,8 @@ export const GamesContextProvider = ({ children }: PropsWithChildren) => {
 
 		errors.forEach(({ error, name }) => {
 			if (error) {
-				logger.error(`Failed to load ${name}:`, {
+				logger.error(`Failed to load ${name}`, error, {
 					component: 'GamesContextProvider',
-					error: error.message,
 				})
 				toast.error(`Failed to load ${name}`, {
 					description: error.message,

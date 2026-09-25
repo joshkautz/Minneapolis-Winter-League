@@ -138,9 +138,8 @@ export const OffersContextProvider = ({ children }: PropsWithChildren) => {
 
 		errors.forEach(({ error, name }) => {
 			if (error) {
-				logger.error(`Failed to load ${name}:`, {
+				logger.error(`Failed to load ${name}`, error, {
 					component: 'OffersContextProvider',
-					error: error.message,
 				})
 				toast.error(`Failed to load ${name}`, {
 					description: error.message,

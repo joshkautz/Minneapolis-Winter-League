@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import {
 	QueryDocumentSnapshot,
 	DocumentSnapshot,
@@ -9,7 +8,6 @@ import {
 	canonicalTeamRefFromTeamSeasonDoc,
 } from '@/firebase/collections/teams'
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { toast } from 'sonner'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { LoadingButton } from '@/shared/components'
 import { usePendingAction } from '@/shared/hooks/use-pending-action'
@@ -18,9 +16,9 @@ import {
 	TeamSeasonDocument,
 	OfferDocument,
 	OfferStatus,
-	logger,
 } from '@/shared/utils'
 import { Link } from 'react-router-dom'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 export const ManageTeamDetail = ({
 	handleRequest,
@@ -46,19 +44,12 @@ export const ManageTeamDetail = ({
 		currentSeasonTeamsQueryDocumentSnapshot
 	)
 
-	// Log and notify on query errors
-	useEffect(() => {
-		if (offersError) {
-			logger.error('Failed to load offers:', {
-				component: 'ManageTeamDetail',
-				teamId,
-				error: offersError.message,
-			})
-			toast.error('Failed to load offers', {
-				description: offersError.message,
-			})
-		}
-	}, [offersError, teamId])
+	useQueryErrorHandler({
+		error: offersError,
+		component: 'ManageTeamDetail',
+		errorLabel: 'offers',
+		context: { teamId },
+	})
 
 	// Check for offers that should block new requests
 	const blockingOffers = offersForPlayerByTeamQuerySnapshot?.docs.filter(
