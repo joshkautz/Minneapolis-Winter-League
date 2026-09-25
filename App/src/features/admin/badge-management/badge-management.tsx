@@ -74,7 +74,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { BadgeDocument, PlayerDocument, SeasonDocument } from '@/types'
-import { logger } from '@/shared/utils'
+import { fileToBase64, logger } from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 import { Badge } from '@/components/ui/badge'
 
@@ -163,7 +163,7 @@ export const BadgeManagement = () => {
 							createdAt: badgeData.createdAt.toDate(),
 						} as ProcessedBadge
 					} catch (error) {
-						logger.error(`Error processing badge ${badgeId}:`, error as Error)
+						logger.error(`Error processing badge ${badgeId}`, error as Error)
 						return {
 							id: badgeId,
 							name: badgeData.name,
@@ -257,20 +257,6 @@ export const BadgeManagement = () => {
 		}
 	}
 
-	// Convert file to base64
-	const fileToBase64 = (file: File): Promise<string> => {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader()
-			reader.onload = () => {
-				const result = reader.result as string
-				const base64 = result.split(',')[1] // Remove data:image/xxx;base64, prefix
-				resolve(base64)
-			}
-			reader.onerror = reject
-			reader.readAsDataURL(file)
-		})
-	}
-
 	// Submit form
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -334,7 +320,7 @@ export const BadgeManagement = () => {
 
 			resetForm()
 		} catch (error) {
-			logger.error('Error saving badge:', error as Error)
+			logger.error('Error saving badge', error as Error)
 
 			// Extract Firebase Functions error message
 			let errorMessage = 'Failed to save badge'
@@ -380,7 +366,7 @@ export const BadgeManagement = () => {
 			setDeleteDialogOpen(false)
 			setBadgeToDelete(null)
 		} catch (error) {
-			logger.error('Error deleting badge:', error as Error)
+			logger.error('Error deleting badge', error as Error)
 
 			// Extract Firebase Functions error message
 			let errorMessage = 'Failed to delete badge'

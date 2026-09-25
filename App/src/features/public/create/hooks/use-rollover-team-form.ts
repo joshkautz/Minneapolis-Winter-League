@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { getDocs } from 'firebase/firestore'
-import { logger, TeamSeasonDocument } from '@/shared/utils'
+import { logger } from '@/shared/utils'
+import { useResolvedSnapshot } from '@/shared/hooks'
 import {
 	RolloverTeamFormData,
 	rolloverTeamFormSchema,
@@ -13,24 +14,17 @@ import {
 	teamSeasonsQuery,
 } from '@/firebase/collections/teams'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
-import type { TeamCreationData } from '@/features/public/create/hooks/use-team-creation'
+import type { TeamCreationResult } from './use-team-creation'
 
 interface UseRolloverTeamFormProps {
-	setNewTeamDocument: React.Dispatch<
-		React.SetStateAction<TeamCreationData | undefined>
-	>
-	handleResult: ({
-		success,
-		title,
-		description,
-		navigation,
-	}: {
-		success: boolean
-		title: string
-		description: string
-		navigation: boolean
-	}) => void
+	handleResult: (result: TeamCreationResult) => void
 	seasonId: string
+}
+
+/** A captained team and every season it has played, as fetched. */
+interface CaptainTeamHistory {
+	canonicalTeamId: string
+	seasons: { seasonId: string | undefined; name: string }[]
 }
 
 /**
@@ -57,7 +51,6 @@ export interface RolloverTeamOption {
  * recent team name + season + already-rolled-over status.
  */
 export const useRolloverTeamForm = ({
-	setNewTeamDocument,
 	handleResult,
 	seasonId,
 }: UseRolloverTeamFormProps) => {
@@ -68,9 +61,6 @@ export const useRolloverTeamForm = ({
 	const { seasonsQuerySnapshot } = useSeasonsContext()
 
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-	const [selectedCanonicalTeamId, setSelectedCanonicalTeamId] = useState<
-		string | undefined
-	>(undefined)
 
 	// Build a Set of canonical team ids that already have a teamSeasons subdoc
 	// in the current season (i.e., have already been rolled over).
@@ -94,86 +84,85 @@ export const useRolloverTeamForm = ({
 		return map
 	}, [seasonsQuerySnapshot])
 
-	// For each canonical captain team, load all of its teamSeasons subdocs to
-	// derive the most recent team name + season for display.
-	const [availableTeams, setAvailableTeams] = useState<RolloverTeamOption[]>([])
-
-	useEffect(() => {
-		const captainSnaps =
-			teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot?.docs ?? []
-		if (captainSnaps.length === 0) {
-			setAvailableTeams([])
-			return
-		}
-
-		let cancelled = false
-		const load = async () => {
-			const rows = await Promise.all(
-				captainSnaps.map(async (canonicalSnap) => {
-					const canonicalTeamId = canonicalSnap.id
-					const tsQuery = teamSeasonsQuery(canonicalTeamId)
-					if (!tsQuery) return null
-					try {
-						const tsSnap = await getDocs(tsQuery)
-						if (tsSnap.empty) return null
-						// Pick the most recent team-season by season dateStart.
-						let bestSeasonId: string | undefined
-						let bestSeconds = -Infinity
-						let bestName = ''
-						for (const doc of tsSnap.docs) {
-							const seasonRef = (doc.data() as TeamSeasonDocument).season
-							const seconds = seasonRef
-								? (seasonDateStartMap.get(seasonRef.id) ?? 0)
-								: 0
-							if (seconds > bestSeconds) {
-								bestSeconds = seconds
-								bestSeasonId = seasonRef?.id
-								bestName = (doc.data() as TeamSeasonDocument).name
+	// Each captained team's full season history, fetched once per captain
+	// snapshot. Everything shown in the dropdown is derived from it below, so
+	// a change to the seasons or to this season's teams needs no refetch.
+	const { items: captainTeamHistories } = useResolvedSnapshot(
+		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
+		async (snapshot) => {
+			const histories = await Promise.all(
+				snapshot.docs.map(
+					async (canonicalSnap): Promise<CaptainTeamHistory | null> => {
+						const canonicalTeamId = canonicalSnap.id
+						const historyQuery = teamSeasonsQuery(canonicalTeamId)
+						if (!historyQuery) return null
+						try {
+							const teamSeasons = await getDocs(historyQuery)
+							return {
+								canonicalTeamId,
+								seasons: teamSeasons.docs.map((doc) => ({
+									seasonId: doc.data().season?.id,
+									name: doc.data().name,
+								})),
 							}
+						} catch (error) {
+							logger.error(
+								'Failed to load team seasons for rollover candidate',
+								error,
+								{ component: 'useRolloverTeamForm', canonicalTeamId }
+							)
+							return null
 						}
-						const mostRecentSeasonName = bestSeasonId
-							? (seasonsQuerySnapshot?.docs
-									.find((s) => s.id === bestSeasonId)
-									?.data()?.name ?? 'Unknown Season')
-							: 'Unknown Season'
-						return {
-							canonicalTeamId,
-							displayName: bestName || 'Unknown Team',
-							mostRecentSeasonName,
-							mostRecentSeasonStartSeconds:
-								bestSeconds === -Infinity ? 0 : bestSeconds,
-							alreadyRolledOver: alreadyRolledOverIds.has(canonicalTeamId),
-						} satisfies RolloverTeamOption
-					} catch (err) {
-						logger.error('Failed to load team seasons for rollover candidate', {
-							component: 'useRolloverTeamForm',
-							canonicalTeamId,
-							error: err instanceof Error ? err.message : String(err),
-						})
-						return null
+					}
+				)
+			)
+			return histories.filter(
+				(history): history is CaptainTeamHistory => history !== null
+			)
+		}
+	)
+
+	const availableTeams = useMemo(
+		() =>
+			captainTeamHistories
+				.filter((history) => history.seasons.length > 0)
+				.map((history): RolloverTeamOption => {
+					// The most recent team-season, by its season's start date.
+					let mostRecent = history.seasons[0]
+					let mostRecentSeconds = -Infinity
+					for (const teamSeason of history.seasons) {
+						const seconds = teamSeason.seasonId
+							? (seasonDateStartMap.get(teamSeason.seasonId) ?? 0)
+							: 0
+						if (seconds > mostRecentSeconds) {
+							mostRecentSeconds = seconds
+							mostRecent = teamSeason
+						}
+					}
+					return {
+						canonicalTeamId: history.canonicalTeamId,
+						displayName: mostRecent.name || 'Unknown Team',
+						mostRecentSeasonName:
+							seasonsQuerySnapshot?.docs
+								.find((season) => season.id === mostRecent.seasonId)
+								?.data()?.name ?? 'Unknown Season',
+						mostRecentSeasonStartSeconds: mostRecentSeconds,
+						alreadyRolledOver: alreadyRolledOverIds.has(
+							history.canonicalTeamId
+						),
 					}
 				})
-			)
-
-			if (cancelled) return
-			const filtered = rows.filter((r): r is RolloverTeamOption => r !== null)
-			// Most recent first.
-			filtered.sort(
-				(a, b) =>
-					b.mostRecentSeasonStartSeconds - a.mostRecentSeasonStartSeconds
-			)
-			setAvailableTeams(filtered)
-		}
-		load()
-		return () => {
-			cancelled = true
-		}
-	}, [
-		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
-		seasonsQuerySnapshot,
-		seasonDateStartMap,
-		alreadyRolledOverIds,
-	])
+				.sort(
+					(a, b) =>
+						b.mostRecentSeasonStartSeconds - a.mostRecentSeasonStartSeconds
+				),
+		[
+			captainTeamHistories,
+			seasonDateStartMap,
+			seasonsQuerySnapshot,
+			alreadyRolledOverIds,
+		]
+	)
 
 	const form = useForm<RolloverTeamFormData>({
 		resolver: standardSchemaResolver(rolloverTeamFormSchema),
@@ -182,15 +171,15 @@ export const useRolloverTeamForm = ({
 		},
 	})
 
-	// Auto-select the most recent team that hasn't been rolled over yet.
+	// Preselect the most recent team not yet rolled over, until the captain
+	// picks one. The form holds the choice, so this only syncs it.
 	useEffect(() => {
-		if (selectedCanonicalTeamId !== undefined) return
+		if (form.getValues('selectedTeam')) return
 		const firstEligible = availableTeams.find((t) => !t.alreadyRolledOver)
 		if (firstEligible) {
-			setSelectedCanonicalTeamId(firstEligible.canonicalTeamId)
 			form.setValue('selectedTeam', firstEligible.canonicalTeamId)
 		}
-	}, [availableTeams, selectedCanonicalTeamId, form])
+	}, [availableTeams, form])
 
 	const onSubmit = useCallback(
 		async (data: RolloverTeamFormData) => {
@@ -212,12 +201,6 @@ export const useRolloverTeamForm = ({
 					timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 				})
 
-				setNewTeamDocument({
-					name: selected.displayName,
-					storageRef: undefined,
-					teamId: result.teamId,
-				})
-
 				handleResult({
 					success: true,
 					title: 'Team rolled over successfully',
@@ -230,7 +213,7 @@ export const useRolloverTeamForm = ({
 					error instanceof Error ? error : new Error(String(error)),
 					{
 						component: 'useRolloverTeamForm',
-						canonicalTeamId: selectedCanonicalTeamId,
+						canonicalTeamId: data.selectedTeam,
 					}
 				)
 
@@ -263,24 +246,12 @@ export const useRolloverTeamForm = ({
 				setIsSubmitting(false)
 			}
 		},
-		[
-			availableTeams,
-			selectedCanonicalTeamId,
-			setNewTeamDocument,
-			handleResult,
-			setIsSubmitting,
-			seasonId,
-		]
+		[availableTeams, handleResult, setIsSubmitting, seasonId]
 	)
-
-	const handleTeamChange = useCallback((canonicalTeamId: string) => {
-		setSelectedCanonicalTeamId(canonicalTeamId)
-	}, [])
 
 	return {
 		form,
 		onSubmit,
-		handleTeamChange,
 		availableTeams,
 		hasCaptainTeams:
 			(teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot?.docs.length ?? 0) >

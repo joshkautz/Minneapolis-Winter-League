@@ -1,15 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useCollection } from 'react-firebase-hooks/firestore'
-import { toast } from 'sonner'
-import { getDocs, type DocumentSnapshot } from 'firebase/firestore'
 import { Newspaper } from 'lucide-react'
 import { useSeasonsContext } from '@/providers'
 import { newsQueryBySeason } from '@/firebase/collections/news'
-import { NewsDocument } from '@/types'
+import type { NewsDocument } from '@/types'
 import { PageContainer, PageHeader, LoadingSpinner } from '@/shared/components'
-import { logger } from '@/shared/utils'
 import { NewsCard } from './news-card'
 import { NewsEmptyState } from './news-empty-state'
+import { usePaginatedFeed } from '@/shared/hooks'
 
 const NEWS_PAGE_SIZE = 10
 
@@ -19,133 +15,22 @@ const NEWS_PAGE_SIZE = 10
  */
 export const News = () => {
 	const { selectedSeasonQueryDocumentSnapshot } = useSeasonsContext()
-	const [allPosts, setAllPosts] = useState<
-		Array<{ id: string; data: NewsDocument }>
-	>([])
-	const [lastDoc, setLastDoc] = useState<
-		DocumentSnapshot<NewsDocument> | undefined
-	>(undefined)
-	const [hasMore, setHasMore] = useState(true)
-	const [isLoadingMore, setIsLoadingMore] = useState(false)
-	const observerTarget = useRef<HTMLDivElement>(null)
-
-	// Initial query for first page
-	const initialQuery = selectedSeasonQueryDocumentSnapshot
-		? newsQueryBySeason(selectedSeasonQueryDocumentSnapshot.ref, NEWS_PAGE_SIZE)
-		: null
-
-	const [snapshot, loading, error] = useCollection(initialQuery)
-
-	// Log and notify on query errors
-	useEffect(() => {
-		if (error) {
-			logger.error('Failed to load news:', {
-				component: 'News',
-				error: error.message,
-			})
-			toast.error('Failed to load news', {
-				description: error.message,
-			})
-		}
-	}, [error])
-
-	// Initialize posts from first query
-	useEffect(() => {
-		if (snapshot && !loading) {
-			const posts = snapshot.docs.map((doc) => ({
-				id: doc.id,
-				data: doc.data(),
-			}))
-			setAllPosts(posts)
-
-			// Set last document for pagination
-			if (snapshot.docs.length > 0) {
-				setLastDoc(snapshot.docs[snapshot.docs.length - 1])
-			}
-
-			// Check if there might be more posts
-			setHasMore(snapshot.docs.length === NEWS_PAGE_SIZE)
-		}
-	}, [snapshot, loading])
-
-	// Load more posts
-	const loadMore = useCallback(async () => {
-		if (
-			!selectedSeasonQueryDocumentSnapshot ||
-			!lastDoc ||
-			!hasMore ||
-			isLoadingMore
-		) {
-			return
-		}
-
-		setIsLoadingMore(true)
-
-		try {
-			const nextQuery = newsQueryBySeason(
-				selectedSeasonQueryDocumentSnapshot.ref,
-				NEWS_PAGE_SIZE,
-				lastDoc
-			)
-			const nextSnapshot = await getDocs(nextQuery)
-
-			if (nextSnapshot.docs.length > 0) {
-				const newPosts = nextSnapshot.docs.map((doc) => ({
-					id: doc.id,
-					data: doc.data(),
-				}))
-
-				setAllPosts((prev) => [...prev, ...newPosts])
-				setLastDoc(nextSnapshot.docs[nextSnapshot.docs.length - 1])
-				setHasMore(nextSnapshot.docs.length === NEWS_PAGE_SIZE)
-			} else {
-				setHasMore(false)
-			}
-		} catch (err) {
-			logger.error('Error loading more news:', err)
-		} finally {
-			setIsLoadingMore(false)
-		}
-	}, [selectedSeasonQueryDocumentSnapshot, lastDoc, hasMore, isLoadingMore])
-
-	// Intersection Observer for infinite scroll
-	useEffect(() => {
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-					loadMore()
-				}
-			},
-			{ threshold: 0.1 }
-		)
-
-		const currentTarget = observerTarget.current
-		if (currentTarget) {
-			observer.observe(currentTarget)
-		}
-
-		return () => {
-			if (currentTarget) {
-				observer.unobserve(currentTarget)
-			}
-		}
-	}, [hasMore, isLoadingMore, loadMore])
-
-	// Reset pagination when the season changes.
-	//
-	// Adjusted during render rather than in an effect: React re-runs this
-	// component immediately with the cleared state and never commits the
-	// stale list, so the previous season's news never flash on screen.
-	// https://react.dev/learn/you-might-not-need-an-effect
-	const seasonId = selectedSeasonQueryDocumentSnapshot?.id
-	const [renderedSeasonId, setRenderedSeasonId] = useState(seasonId)
-	if (seasonId !== renderedSeasonId) {
-		setRenderedSeasonId(seasonId)
-		setAllPosts([])
-		setLastDoc(undefined)
-		setHasMore(true)
-		setIsLoadingMore(false)
-	}
+	const seasonRef = selectedSeasonQueryDocumentSnapshot?.ref
+	const {
+		items: allPosts,
+		loading,
+		error,
+		hasMore,
+		isLoadingMore,
+		sentinelRef,
+	} = usePaginatedFeed<NewsDocument>({
+		pageQuery: seasonRef
+			? (after) => newsQueryBySeason(seasonRef, NEWS_PAGE_SIZE, after)
+			: null,
+		pageSize: NEWS_PAGE_SIZE,
+		component: 'News',
+		errorLabel: 'news',
+	})
 
 	if (error) {
 		return (
@@ -201,7 +86,7 @@ export const News = () => {
 					))}
 
 					{/* Intersection observer target */}
-					<div ref={observerTarget} className='h-4' />
+					<div ref={sentinelRef} className='h-4' />
 
 					{/* Loading indicator for pagination */}
 					{isLoadingMore && (

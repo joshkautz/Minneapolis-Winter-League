@@ -41,6 +41,9 @@ export default defineConfig({
 			'@/firebase': path.resolve(import.meta.dirname, './src/firebase'),
 			'@/components': path.resolve(import.meta.dirname, './src/components'),
 		},
+		// Radix tracks open layers (dialogs, popovers, menus) in module state.
+		// Two copies would keep two stacks, so a dialog opened from a menu
+		// could be dismissed by the wrong Escape or outside click.
 		dedupe: ['@radix-ui/react-dismissable-layer'],
 	},
 	server: {

@@ -3,23 +3,14 @@ import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { TeamFormData, teamFormSchema } from '@/shared/utils/validation'
 import { editTeamViaFunction } from '@/firebase/collections/functions'
-import { logger } from '@/shared/utils'
+import { fileToBase64, logger } from '@/shared/utils'
+import type { FormResult } from '@/shared/types'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useSeasonsContext } from '@/providers'
 import { useTeamManagement } from './use-team-management'
 
 interface UseManageEditTeamFormProps {
-	handleResult: ({
-		success,
-		title,
-		description,
-		navigation,
-	}: {
-		success: boolean
-		title: string
-		description: string
-		navigation: boolean
-	}) => void
+	handleResult: (result: FormResult) => void
 }
 
 /**
@@ -74,7 +65,6 @@ export const useManageEditTeamForm = ({
 					success: false,
 					title: 'Team not found',
 					description: 'Unable to find team information',
-					navigation: false,
 				})
 				return
 			}
@@ -82,41 +72,18 @@ export const useManageEditTeamForm = ({
 			setIsSubmitting(true)
 
 			try {
-				// Convert blob to base64 if present
-				let logoBlob: string | undefined
-				let logoContentType: string | undefined
-
-				if (blob) {
-					logoContentType = blob.type
-					// Convert File/Blob to base64
-					const reader = new FileReader()
-					const base64Promise = new Promise<string>((resolve, reject) => {
-						reader.onload = () => {
-							const result = reader.result as string
-							// Remove the data:image/xxx;base64, prefix
-							const base64 = result.split(',')[1]
-							resolve(base64)
-						}
-						reader.onerror = reject
-					})
-					reader.readAsDataURL(blob)
-					logoBlob = await base64Promise
-				}
-
-				// Call Firebase Function to update team
 				const result = await editTeamViaFunction({
 					teamId: canonicalTeamId,
 					seasonId,
 					name: data.name,
-					logoBlob,
-					logoContentType,
+					logoBlob: blob ? await fileToBase64(blob) : undefined,
+					logoContentType: blob?.type,
 				})
 
 				handleResult({
 					success: true,
 					title: 'Changes saved',
 					description: result.message,
-					navigation: false, // Don't navigate, just close dialog
 				})
 			} catch (error) {
 				logger.error(
@@ -152,7 +119,6 @@ export const useManageEditTeamForm = ({
 					success: false,
 					title: errorTitle,
 					description: errorMessage,
-					navigation: false,
 				})
 			} finally {
 				setIsSubmitting(false)

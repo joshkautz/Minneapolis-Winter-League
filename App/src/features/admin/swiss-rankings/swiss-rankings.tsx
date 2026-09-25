@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument } from 'react-firebase-hooks/firestore'
+import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import {
 	ArrowLeft,
 	AlertTriangle,
@@ -26,9 +26,8 @@ import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
-	teamsBySeasonQuery,
+	teamsInSeasonQuery,
 } from '@/firebase/collections/teams'
-import { getDocs } from 'firebase/firestore'
 import {
 	getSwissRankingsViaFunction,
 	setSwissSeedingViaFunction,
@@ -98,12 +97,6 @@ export const SwissRankings = () => {
 	const [seedingOrder, setSeedingOrder] = useState<string[]>([])
 	const [isSavingSeeding, setIsSavingSeeding] = useState(false)
 
-	// Teams for the selected season (fetched separately from global context)
-	const [seasonTeams, setSeasonTeams] = useState<
-		Map<string, TeamSeasonDocument>
-	>(new Map())
-	const [isLoadingTeams, setIsLoadingTeams] = useState(false)
-
 	// Filter to only Swiss seasons
 	const swissSeasons = useMemo(() => {
 		if (!seasonsQuerySnapshot) return []
@@ -119,41 +112,27 @@ export const SwissRankings = () => {
 			}))
 	}, [seasonsQuerySnapshot])
 
-	// Load teams for selected season
-	useEffect(() => {
-		if (!selectedSeasonId) {
-			setSeasonTeams(new Map())
-			return
-		}
-
-		const selectedSeason = swissSeasons.find((s) => s.id === selectedSeasonId)
-		if (!selectedSeason) return
-
-		const loadTeams = async () => {
-			setIsLoadingTeams(true)
-			try {
-				const teamsQuery = teamsBySeasonQuery(selectedSeason.ref)
-				if (teamsQuery) {
-					const teamsSnapshot = await getDocs(teamsQuery)
-					const map = new Map<string, TeamSeasonDocument>()
-					teamsSnapshot.docs.forEach((doc) => {
-						const teamId = canonicalTeamIdFromTeamSeasonDoc(doc)
-						map.set(teamId, doc.data())
-					})
-					setSeasonTeams(map)
-				}
-			} catch (error) {
-				logger.error('Error loading teams for season:', error)
-			} finally {
-				setIsLoadingTeams(false)
-			}
-		}
-
-		loadTeams()
-	}, [selectedSeasonId, swissSeasons])
-
-	// Use the loaded teams map
-	const teamMap = seasonTeams
+	// Teams for the selected season, keyed by canonical team id. Fetched here
+	// rather than taken from the teams context, which follows the season
+	// picked in the header, not the one picked on this page.
+	const selectedSeasonRef = swissSeasons.find(
+		(season) => season.id === selectedSeasonId
+	)?.ref
+	const [seasonTeamsSnapshot, isLoadingTeams, seasonTeamsError] = useCollection(
+		teamsInSeasonQuery(selectedSeasonRef)
+	)
+	useQueryErrorHandler({
+		error: seasonTeamsError,
+		component: 'SwissRankings',
+		errorLabel: 'teams for this season',
+	})
+	const teamMap = useMemo(() => {
+		const map = new Map<string, TeamSeasonDocument>()
+		seasonTeamsSnapshot?.docs.forEach((doc) => {
+			map.set(canonicalTeamIdFromTeamSeasonDoc(doc), doc.data())
+		})
+		return map
+	}, [seasonTeamsSnapshot])
 
 	// Load rankings when season changes
 	useEffect(() => {
@@ -180,7 +159,7 @@ export const SwissRankings = () => {
 					setSeedingOrder(result.rankings.map((r) => r.teamId))
 				}
 			} catch (error) {
-				logger.error('Error loading Swiss rankings:', error)
+				logger.error('Error loading Swiss rankings', error)
 				toast.error(
 					error instanceof Error
 						? error.message
@@ -207,7 +186,7 @@ export const SwissRankings = () => {
 			setSwissInitialSeeding(seedingOrder)
 			toast.success('Seeding saved successfully')
 		} catch (error) {
-			logger.error('Error saving seeding:', error)
+			logger.error('Error saving seeding', error)
 			toast.error(
 				error instanceof Error ? error.message : 'Failed to save seeding'
 			)

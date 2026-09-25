@@ -9,36 +9,21 @@ import {
 import { Input } from '@/components/ui/input'
 import { LoadingButton } from '@/shared/components'
 
-import { useCreateTeamForm } from '@/features/public/create/hooks'
-import type { TeamCreationData } from '@/features/public/create/hooks/use-team-creation'
+import { useCreateTeamForm } from './hooks'
+import type { TeamCreationResult } from './hooks/use-team-creation'
 
 interface CreateFormProps {
-	setNewTeamDocument: React.Dispatch<
-		React.SetStateAction<TeamCreationData | undefined>
-	>
-	handleResult: ({
-		success,
-		title,
-		description,
-		navigation,
-	}: {
-		success: boolean
-		title: string
-		description: string
-		navigation: boolean
-	}) => void
+	handleResult: (result: TeamCreationResult) => void
 	seasonId: string
 	isTeamRegistrationFull?: boolean
 }
 
 export const CreateTeamForm = ({
-	setNewTeamDocument,
 	handleResult,
 	seasonId,
 	isTeamRegistrationFull = false,
 }: CreateFormProps) => {
 	const { form, onSubmit, handleFileChange, isSubmitting } = useCreateTeamForm({
-		setNewTeamDocument,
 		handleResult,
 		seasonId,
 	})

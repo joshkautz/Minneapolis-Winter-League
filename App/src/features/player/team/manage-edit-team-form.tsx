@@ -11,19 +11,10 @@ import { Label } from '@/components/ui/label'
 import { LoadingSpinner, LoadingButton } from '@/shared/components'
 import { useManageEditTeamForm } from './hooks/use-manage-edit-team-form'
 import { useTeamManagement } from './hooks/use-team-management'
+import type { FormResult } from '@/shared/types'
 
 interface ManageEditTeamFormProps {
-	handleResult: ({
-		success,
-		title,
-		description,
-		navigation,
-	}: {
-		success: boolean
-		title: string
-		description: string
-		navigation: boolean
-	}) => void
+	handleResult: (result: FormResult) => void
 }
 
 export const ManageEditTeamForm = ({

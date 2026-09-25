@@ -53,7 +53,7 @@ export const CreatePostDialog = ({
 			setContent('')
 			setOpen(false)
 		} catch (error) {
-			logger.error('Failed to create post:', error)
+			logger.error('Failed to create post', error)
 			toast.error('Failed to create post', {
 				description:
 					error instanceof Error ? error.message : 'Please try again',

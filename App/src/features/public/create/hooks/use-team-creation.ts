@@ -1,19 +1,12 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { StorageReference } from '@/firebase/storage'
-import { useAuthContext, useSeasonsContext, useTeamsContext } from '@/providers'
+import { useAuthContext, useSeasonsContext } from '@/providers'
+import { useIsTeamRegistrationFull } from '@/shared/hooks'
+import type { FormResult } from '@/shared/types'
 
-export interface TeamCreationData {
-	name: string | undefined
-	storageRef: StorageReference | undefined
-	teamId: string | undefined
-}
-
-interface TeamCreationResult {
-	success: boolean
-	title: string
-	description: string
+/** A create or rollover result; `navigation` sends the captain to /manage. */
+export interface TeamCreationResult extends FormResult {
 	navigation: boolean
 }
 
@@ -25,9 +18,6 @@ interface UseTeamCreationReturn {
 	currentSeasonQueryDocumentSnapshot: ReturnType<
 		typeof useSeasonsContext
 	>['currentSeasonQueryDocumentSnapshot']
-	setNewTeamDocument: React.Dispatch<
-		React.SetStateAction<TeamCreationData | undefined>
-	>
 	handleResult: (result: TeamCreationResult) => void
 	toggleRolloverMode: () => void
 }
@@ -49,11 +39,7 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		seasonsQuerySnapshot,
 		seasonsQuerySnapshotLoading,
 	} = useSeasonsContext()
-	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
-
-	const [newTeamDocument, setNewTeamDocument] = useState<TeamCreationData>() // Keep for backward compatibility
-	// This is used by child components to store team creation data
-	void newTeamDocument // Suppress unused variable warning
+	const isTeamRegistrationFull = useIsTeamRegistrationFull()
 	const [rolloverMode, setRolloverMode] = useState(false)
 
 	const isRostered = useMemo(
@@ -65,17 +51,6 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 			) || false,
 		[authenticatedUserSeasonsSnapshot, currentSeasonQueryDocumentSnapshot]
 	)
-
-	const isTeamRegistrationFull = useMemo(() => {
-		if (!currentSeasonTeamsQuerySnapshot) return false
-
-		// Count teams that are fully registered
-		const registeredTeamsCount = currentSeasonTeamsQuerySnapshot.docs.filter(
-			(teamDoc) => teamDoc.data().registered === true
-		).length
-
-		return registeredTeamsCount >= 12
-	}, [currentSeasonTeamsQuerySnapshot])
 
 	const isLoading = useMemo(
 		() =>
@@ -113,9 +88,6 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		setRolloverMode((prev) => !prev)
 	}, [])
 
-	// Team creation is now handled directly in the forms via Firebase Functions
-	// No additional processing needed here since functions handle the complete workflow
-
 	return {
 		// State
 		rolloverMode,
@@ -125,7 +97,6 @@ export const useTeamCreation = (): UseTeamCreationReturn => {
 		currentSeasonQueryDocumentSnapshot,
 
 		// Actions
-		setNewTeamDocument,
 		handleResult,
 		toggleRolloverMode,
 	}

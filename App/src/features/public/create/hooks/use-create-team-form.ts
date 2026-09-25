@@ -1,33 +1,13 @@
 import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { StorageReference } from '@/firebase/storage'
 import { TeamFormData, teamFormSchema } from '@/shared/utils/validation'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { createTeamViaFunction } from '@/firebase/collections/functions'
-import { logger } from '@/shared/utils'
+import { fileToBase64, logger } from '@/shared/utils'
+import type { TeamCreationResult } from './use-team-creation'
 
 interface UseCreateTeamFormProps {
-	setNewTeamDocument: React.Dispatch<
-		React.SetStateAction<
-			| {
-					name: string | undefined
-					storageRef: StorageReference | undefined
-					teamId: string | undefined
-			  }
-			| undefined
-		>
-	>
-	handleResult: ({
-		success,
-		title,
-		description,
-		navigation,
-	}: {
-		success: boolean
-		title: string
-		description: string
-		navigation: boolean
-	}) => void
+	handleResult: (result: TeamCreationResult) => void
 	seasonId: string
 }
 
@@ -37,7 +17,6 @@ interface UseCreateTeamFormProps {
  * Encapsulates form validation, file handling, and team creation logic.
  */
 export const useCreateTeamForm = ({
-	setNewTeamDocument,
 	handleResult,
 	seasonId,
 }: UseCreateTeamFormProps) => {
@@ -69,41 +48,12 @@ export const useCreateTeamForm = ({
 			setIsSubmitting(true)
 
 			try {
-				// Convert blob to base64 if present
-				let logoBlob: string | undefined
-				let logoContentType: string | undefined
-
-				if (blob) {
-					logoContentType = blob.type
-					// Convert File/Blob to base64
-					const reader = new FileReader()
-					const base64Promise = new Promise<string>((resolve, reject) => {
-						reader.onload = () => {
-							const result = reader.result as string
-							// Remove the data:image/xxx;base64, prefix
-							const base64 = result.split(',')[1]
-							resolve(base64)
-						}
-						reader.onerror = reject
-					})
-					reader.readAsDataURL(blob)
-					logoBlob = await base64Promise
-				}
-
-				// Call Firebase Function to create team
 				const result = await createTeamViaFunction({
 					name: data.name,
-					logoBlob,
-					logoContentType,
+					logoBlob: blob ? await fileToBase64(blob) : undefined,
+					logoContentType: blob?.type,
 					seasonId,
 					timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-				})
-
-				// Set the team document for any subsequent processing
-				setNewTeamDocument({
-					name: data.name,
-					storageRef: undefined, // Not needed since server handles upload
-					teamId: result.teamId,
 				})
 
 				handleResult({
@@ -152,14 +102,7 @@ export const useCreateTeamForm = ({
 				setIsSubmitting(false)
 			}
 		},
-		[
-			isSubmitting,
-			setIsSubmitting,
-			blob,
-			setNewTeamDocument,
-			handleResult,
-			seasonId,
-		]
+		[isSubmitting, setIsSubmitting, blob, handleResult, seasonId]
 	)
 
 	return {

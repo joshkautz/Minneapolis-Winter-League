@@ -44,7 +44,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 			// Firebase Functions errors have a message property
 			const firebaseError = error as { message?: string }
 			const errorMessage = firebaseError?.message || 'Invite not rejected'
-			logger.error('Invite rejection failed:', error)
+			logger.error('Invite rejection failed', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -66,7 +66,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 			// Firebase Functions errors have a message property
 			const firebaseError = error as { message?: string }
 			const errorMessage = firebaseError?.message || 'Invite not accepted'
-			logger.error('Invite acceptance failed:', error)
+			logger.error('Invite acceptance failed', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})
@@ -88,7 +88,7 @@ export const ManageNonCaptainsOffersPanel = () => {
 			// Firebase Functions errors have a message property
 			const firebaseError = error as { message?: string }
 			const errorMessage = firebaseError?.message || 'Request not canceled'
-			logger.error('Request cancellation failed:', error)
+			logger.error('Request cancellation failed', error)
 			toast.error('Failure', {
 				description: errorMessage,
 			})

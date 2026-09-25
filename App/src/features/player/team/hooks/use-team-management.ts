@@ -1,30 +1,19 @@
-import { useCallback, useMemo } from 'react'
-import { toast } from 'sonner'
+import { useMemo } from 'react'
 import { QueryDocumentSnapshot } from 'firebase/firestore'
 import { useAuthContext, useTeamsContext, useSeasonsContext } from '@/providers'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
-import type { PlayerSeasonDocument, TeamSeasonDocument } from '@/types'
-
-interface TeamManagementResult {
-	success: boolean
-	title: string
-	description: string
-	navigation: boolean
-}
+import type { TeamSeasonDocument } from '@/types'
 
 interface UseTeamManagementReturn {
 	isLoading: boolean
-	isAdmin: boolean
 	isCaptain: boolean
 	hasTeam: boolean
 	team: QueryDocumentSnapshot<TeamSeasonDocument> | undefined
-	currentSeasonData: PlayerSeasonDocument | undefined
-	handleResult: (result: TeamManagementResult) => void
 }
 
 /**
- * Custom hook for team management logic
- * Centralizes team management state and business logic
+ * The signed-in player's team this season, and whether they captain it, for
+ * the captain's edit-team form.
  */
 export const useTeamManagement = (): UseTeamManagementReturn => {
 	const {
@@ -40,11 +29,6 @@ export const useTeamManagement = (): UseTeamManagementReturn => {
 		currentSeasonQueryDocumentSnapshot,
 		currentSeasonQueryDocumentSnapshotLoading,
 	} = useSeasonsContext()
-
-	const isAdmin = useMemo(
-		() => authenticatedUserSnapshot?.data()?.admin ?? false,
-		[authenticatedUserSnapshot]
-	)
 
 	const currentSeasonData = useMemo(
 		() =>
@@ -92,28 +76,5 @@ export const useTeamManagement = (): UseTeamManagementReturn => {
 		]
 	)
 
-	const handleResult = useCallback(
-		({ success, title, description }: TeamManagementResult) => {
-			if (success) {
-				toast.success(title, { description })
-			} else {
-				toast.error(title, { description })
-			}
-			// No navigation needed for team management operations
-		},
-		[]
-	)
-
-	return {
-		// State
-		isLoading,
-		isAdmin,
-		isCaptain,
-		hasTeam,
-		team,
-		currentSeasonData,
-
-		// Actions
-		handleResult,
-	}
+	return { isLoading, isCaptain, hasTeam, team }
 }

@@ -11,7 +11,6 @@ export const CreateTeam = () => {
 		isRostered,
 		isTeamRegistrationFull,
 		currentSeasonQueryDocumentSnapshot,
-		setNewTeamDocument,
 		handleResult,
 		toggleRolloverMode,
 	} = useTeamCreation()
@@ -49,7 +48,6 @@ export const CreateTeam = () => {
 					onToggleMode={toggleRolloverMode}
 					createNewForm={
 						<CreateTeamForm
-							setNewTeamDocument={setNewTeamDocument}
 							handleResult={handleResult}
 							seasonId={currentSeasonQueryDocumentSnapshot?.id || ''}
 							isTeamRegistrationFull={isTeamRegistrationFull}
@@ -57,7 +55,6 @@ export const CreateTeam = () => {
 					}
 					rolloverForm={
 						<RolloverTeamForm
-							setNewTeamDocument={setNewTeamDocument}
 							handleResult={handleResult}
 							seasonId={currentSeasonQueryDocumentSnapshot?.id || ''}
 							isTeamRegistrationFull={isTeamRegistrationFull}

@@ -34,7 +34,7 @@ import {
 	QuerySnapshot,
 } from '@/firebase'
 import { playerSeasonsSubcollection } from '@/firebase/collections/players'
-import { PlayerDocument, PlayerSeasonDocument } from '@/shared/utils'
+import { logger, PlayerDocument, PlayerSeasonDocument } from '@/shared/utils'
 
 /** How often to refresh user data from Firebase Auth (in milliseconds) */
 const USER_REFRESH_INTERVAL = 10000 // 10 seconds
@@ -52,8 +52,8 @@ interface AuthContextValue {
 	authenticatedUserSnapshotError: FirestoreError | undefined
 	/**
 	 * The authenticated user's per-season subdocs as a live collection
-	 * snapshot. Doc id matches the season id; data has paid/signed/banned/
-	 * captain/team.
+	 * snapshot. Doc id matches the season id; data has paid/signed/captain/
+	 * team.
 	 */
 	authenticatedUserSeasonsSnapshot:
 		QuerySnapshot<PlayerSeasonDocument> | undefined
@@ -166,8 +166,13 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
 
 				// Increment counter to trigger re-renders in consuming components
 				setUserRefreshCount((prev) => prev + 1)
-			} catch {
-				// Silently handle errors (user might have been signed out)
+			} catch (error) {
+				// Expected when the user signed out between ticks; the next tick,
+				// or the auth state listener, sorts it out.
+				logger.debug('Could not refresh the signed-in user', {
+					component: 'AuthContextProvider',
+					error: error instanceof Error ? error.message : String(error),
+				})
 			}
 		}, USER_REFRESH_INTERVAL)
 
