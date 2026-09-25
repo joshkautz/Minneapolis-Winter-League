@@ -1,14 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
-import {
-	collectionGroup,
-	getDocs,
-	query,
-	where,
-	Timestamp,
-} from 'firebase/firestore'
-import { firestore } from '@/firebase/app'
+import { getDocs, Timestamp } from 'firebase/firestore'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
-import { PLAYER_SEASONS_SUBCOLLECTION, PlayerSeasonDocument } from '@/types'
 import { Users } from 'lucide-react'
 import { formatTimestamp } from '@/shared/utils'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
@@ -19,6 +11,7 @@ import {
 	PageHeader,
 } from '@/shared/components'
 import { TeamCard } from './team-card'
+import { registeredPlayerSeasonsQuery } from '@/firebase/collections/players'
 
 // Types for better TypeScript support
 enum SeasonStatus {
@@ -111,18 +104,10 @@ export const Teams = () => {
 		let cancelled = false
 
 		const countRegisteredPlayers = async () => {
-			const psSnap = await getDocs(
-				query(
-					collectionGroup(firestore, PLAYER_SEASONS_SUBCOLLECTION),
-					where('season', '==', seasonRef),
-					where('paid', '==', true),
-					where('signed', '==', true)
-				)
-			)
+			const psSnap = await getDocs(registeredPlayerSeasonsQuery(seasonRef))
 			const counts = new Map<string, number>()
 			psSnap.docs.forEach((d) => {
-				const data = d.data() as PlayerSeasonDocument
-				const teamRef = data.team
+				const teamRef = d.data().team
 				if (!teamRef) return
 				counts.set(teamRef.id, (counts.get(teamRef.id) ?? 0) + 1)
 			})

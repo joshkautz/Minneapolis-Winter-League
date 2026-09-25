@@ -7,17 +7,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import {
-	doc,
-	query,
-	collection,
-	where,
-	or,
-	and,
-	getDocs,
-	type DocumentReference,
-	type Query,
-} from 'firebase/firestore'
+import { doc, getDocs, type DocumentReference } from 'firebase/firestore'
 import { toast } from 'sonner'
 import {
 	ArrowLeft,
@@ -39,11 +29,12 @@ import { firestore } from '@/firebase/app'
 import {
 	getPlayerRef,
 	playerSeasonsSubcollection,
+	adminPlayerSearchQuery,
 } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
-	teamsBySeasonQuery,
+	teamsInSeasonQuery,
 } from '@/firebase/collections/teams'
 import {
 	updatePlayerAdminViaFunction,
@@ -168,61 +159,10 @@ export const PlayerManagement = () => {
 
 	const isAdmin = playerSnapshot?.data()?.admin || false
 
-	// Search for players by name or email
-	const searchQuery = useMemo(() => {
-		if (searchTerm === '') {
-			return undefined
-		}
-
-		const trimmed = searchTerm.trim()
-		const searchLower = trimmed.toLowerCase()
-
-		// Check if it looks like an email (contains @)
-		if (trimmed.includes('@')) {
-			// Search by email only
-			return query(
-				collection(firestore, Collections.PLAYERS),
-				where('email', '>=', searchLower),
-				where('email', '<=', searchLower + '\uf8ff')
-			) as Query<PlayerDocument>
-		}
-
-		// Check if searching by full name (contains space)
-		if (trimmed.includes(' ')) {
-			const [firstname, lastname] = trimmed.split(' ', 2)
-			const firstCapitalized =
-				firstname.charAt(0).toUpperCase() + firstname.slice(1).toLowerCase()
-			const lastCapitalized =
-				lastname.charAt(0).toUpperCase() + lastname.slice(1).toLowerCase()
-
-			// Search by firstname AND lastname
-			return query(
-				collection(firestore, Collections.PLAYERS),
-				where('firstname', '>=', firstCapitalized),
-				where('firstname', '<=', firstCapitalized + '\uf8ff'),
-				where('lastname', '>=', lastCapitalized),
-				where('lastname', '<=', lastCapitalized + '\uf8ff')
-			) as Query<PlayerDocument>
-		}
-
-		// Search by firstname OR lastname
-		const searchCapitalized =
-			trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
-
-		return query(
-			collection(firestore, Collections.PLAYERS),
-			or(
-				and(
-					where('firstname', '>=', searchCapitalized),
-					where('firstname', '<=', searchCapitalized + '\uf8ff')
-				),
-				and(
-					where('lastname', '>=', searchCapitalized),
-					where('lastname', '<=', searchCapitalized + '\uf8ff')
-				)
-			)
-		) as Query<PlayerDocument>
-	}, [searchTerm])
+	const searchQuery = useMemo(
+		() => adminPlayerSearchQuery(searchTerm),
+		[searchTerm]
+	)
 
 	const [playersSnapshot, playersLoading, playersError] =
 		useCollection(searchQuery)
@@ -309,10 +249,9 @@ export const PlayerManagement = () => {
 					hasAuthAccount = authInfo.hasAuthAccount
 				} catch (error) {
 					if (isCancelled) return
-					logger.error('Failed to fetch player auth info:', {
+					logger.error('Failed to fetch player auth info', error, {
 						component: 'PlayerManagement',
 						playerId: selectedPlayerId,
-						error: error instanceof Error ? error.message : 'Unknown error',
 					})
 					// Default to false if we can't fetch the status
 				}
@@ -1096,7 +1035,7 @@ const SeasonCard = ({
 
 	// Fetch teams for this season
 	const [teamsSnapshot, , teamsError] = useCollection(
-		seasonRef ? teamsBySeasonQuery(seasonRef) : undefined
+		seasonRef ? teamsInSeasonQuery(seasonRef) : undefined
 	)
 
 	// Use consistent error handling pattern

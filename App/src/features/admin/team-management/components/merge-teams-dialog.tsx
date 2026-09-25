@@ -10,16 +10,14 @@
 
 import { useMemo, useState } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { collectionGroup, query, type Query } from 'firebase/firestore'
 import { toast } from 'sonner'
 import { Combine, Loader2, AlertTriangle } from 'lucide-react'
 
-import { firestore } from '@/firebase/app'
 import { logger, TeamSeasonDocument } from '@/shared/utils'
-import { TEAM_SEASONS_SUBCOLLECTION } from '@/types'
 import {
 	allTeamsQuery,
 	canonicalTeamIdFromTeamSeasonDoc,
+	allTeamSeasonsQuery,
 } from '@/firebase/collections/teams'
 import { useSeasonsContext } from '@/providers'
 import { mergeTeamsViaFunction } from '@/firebase/collections/functions'
@@ -75,11 +73,7 @@ export const MergeTeamsDialog = ({
 	// read of ~30-50 docs in our scale, so it's cheap; gating on `open` makes
 	// sure we only do it when the dialog is actually visible.
 	const [allTeamSeasonsSnapshot, allTeamSeasonsLoading] = useCollection(
-		open
-			? (query(
-					collectionGroup(firestore, TEAM_SEASONS_SUBCOLLECTION)
-				) as Query<TeamSeasonDocument>)
-			: null
+		open ? allTeamSeasonsQuery() : null
 	)
 
 	// Map seasonId → dateStart seconds for "most recent" sorting.
@@ -165,7 +159,7 @@ export const MergeTeamsDialog = ({
 			setSelectedLosingTeamId('')
 			onOpenChange(false)
 		} catch (error) {
-			logger.error('Failed to merge teams:', error)
+			logger.error('Failed to merge teams', error)
 			let errorMessage = 'Failed to merge teams. Please try again.'
 			if (error && typeof error === 'object' && 'message' in error) {
 				errorMessage = (error as { message: string }).message

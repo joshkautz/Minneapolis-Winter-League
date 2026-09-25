@@ -21,7 +21,6 @@ export {
 	teamsQuery,
 	teamSeasonsQuery,
 	teamsInSeasonQuery,
-	teamsBySeasonQuery,
 	teamSeasonRef,
 	teamRosterSubcollection,
 	allTeamsQuery,

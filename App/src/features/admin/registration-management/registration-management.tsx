@@ -8,7 +8,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { collection, query } from 'firebase/firestore'
 import {
 	ArrowLeft,
 	AlertTriangle,
@@ -19,12 +18,12 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
-import { firestore } from '@/firebase/app'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import {
 	canonicalPlayerIdFromPlayerSeasonDoc,
 	getPlayerRef,
 	playerSeasonsInSeasonQuery,
+	allPlayersQuery,
 } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import {
@@ -51,12 +50,7 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import { PageContainer, PageHeader, QueryError } from '@/shared/components'
-import {
-	PlayerDocument,
-	PlayerSeasonDocument,
-	SeasonDocument,
-	Collections,
-} from '@/types'
+import { PlayerDocument, PlayerSeasonDocument, SeasonDocument } from '@/types'
 
 type SortField = 'name' | 'email' | 'paid' | 'signed' | 'team'
 type SortDirection = 'asc' | 'desc'
@@ -107,10 +101,8 @@ export const RegistrationManagement = () => {
 		direction: SortDirection
 	}>({ field: 'name', direction: 'asc' })
 
-	// Query all players
-	const allPlayersQuery = query(collection(firestore, Collections.PLAYERS))
 	const [playersSnapshot, playersLoading, playersError] =
-		useCollection(allPlayersQuery)
+		useCollection(allPlayersQuery())
 
 	// Resolve the selected season's DocumentReference and query every player
 	// season subdoc for it via a collection-group query.

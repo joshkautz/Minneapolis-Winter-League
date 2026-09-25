@@ -14,6 +14,7 @@ import { httpsCallable } from 'firebase/functions'
 import { firestore, functions } from '../app'
 import {
 	PlayerRankingDocument,
+	RankingHistoryDocument,
 	RankingsCalculationDocument,
 	Collections,
 } from '../../types'
@@ -27,6 +28,13 @@ export const currentPlayerRankingsQuery = (): Query<PlayerRankingDocument> => {
 		orderBy('rank', 'asc')
 	) as Query<PlayerRankingDocument>
 }
+
+/** Every rankings snapshot, for a player's rating history. */
+export const rankingsHistoryQuery = (): Query<RankingHistoryDocument> =>
+	collection(
+		firestore,
+		Collections.RANKINGS_HISTORY
+	) as Query<RankingHistoryDocument>
 
 /**
  * Creates a query for rankings calculations (for monitoring progress)

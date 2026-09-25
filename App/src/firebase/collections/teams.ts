@@ -124,6 +124,15 @@ export const teamsInSeasonQuery = (
 	) as Query<TeamSeasonDocument>
 }
 
+/**
+ * Every team-season subdoc in every season — one collection-group read,
+ * small at the league's size — for joining each team to its latest name.
+ */
+export const allTeamSeasonsQuery = (): Query<TeamSeasonDocument> =>
+	query(
+		collectionGroup(firestore, TEAM_SEASONS_SUBCOLLECTION)
+	) as Query<TeamSeasonDocument>
+
 // ---- Canonical derivation from team season doc snapshots -----------------
 
 /**
@@ -155,9 +164,6 @@ export const canonicalTeamRefFromTeamSeasonDoc = (
 	if (!teamRef) throw new Error('TeamSeasonDocument has no parent team')
 	return teamRef as DocumentReference<TeamDocument>
 }
-
-/** Legacy alias preserved for callers that use the old name. */
-export const teamsBySeasonQuery = teamsInSeasonQuery
 
 // ---- Roster subcollection ------------------------------------------------
 
