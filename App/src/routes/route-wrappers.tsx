@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { LazyWrapper, ProtectedRoute } from '@/shared/components'
 
 /**
@@ -13,19 +14,26 @@ interface RouteWrapperProps {
 }
 
 /**
- * Wrapper for public routes that only need lazy loading
+ * Wrapper for public routes: lazy loading and an error boundary
  */
 export const PublicRoute = ({ children }: RouteWrapperProps) => {
-	return <LazyWrapper>{children}</LazyWrapper>
+	return (
+		<LazyWrapper>
+			<ErrorBoundary>{children}</ErrorBoundary>
+		</LazyWrapper>
+	)
 }
 
 /**
- * Wrapper for authenticated routes that need both protection and lazy loading
+ * Wrapper for authenticated routes: protection, lazy loading and an error
+ * boundary
  */
 export const AuthenticatedRoute = ({ children }: RouteWrapperProps) => {
 	return (
 		<ProtectedRoute>
-			<LazyWrapper>{children}</LazyWrapper>
+			<LazyWrapper>
+				<ErrorBoundary>{children}</ErrorBoundary>
+			</LazyWrapper>
 		</ProtectedRoute>
 	)
 }
