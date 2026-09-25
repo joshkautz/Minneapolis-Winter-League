@@ -1,7 +1,5 @@
 /**
  * Shared types exports
- *
- * Centralized exports for all type definitions
  */
 
-export * from './hooks'
+export type { FormResult } from './form-result'
