@@ -26,7 +26,7 @@ const STATUS_VARIANTS: Record<
 }
 
 const STATUS_HINTS: Record<ContributionStatus, string> = {
-	authorized: 'Held on the card, charged once the team is confirmed',
+	authorized: 'Held on the card, charged when the team registers',
 	captured: 'Charged',
 	canceled: 'Hold released; never charged',
 	refunded: 'Charged and refunded',

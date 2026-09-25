@@ -11,8 +11,10 @@
  * - User must be authenticated and email verified
  * - User must not be banned
  * - The current season must use team-level pricing
- * - Registration must be open; there is no admin bypass, because money that
- *   arrives after the window has nowhere to go but back
+ * - Registration must be open. An admin may contribute before it opens, so
+ *   the flow can be tried with a real card ahead of opening day; nobody may
+ *   after it closes, because money that arrives then has nowhere to go but
+ *   back
  * - The team is the caller's own for the current season, read from their
  *   player-season and confirmed against the roster; the client cannot name
  *   a team
@@ -53,11 +55,13 @@ import {
 	TEAM_REGISTRATION_PRODUCT_ID,
 } from '../../../shared/stripe.js'
 import { formatDateForUser } from '../../../shared/format.js'
-import type {
-	PlayerSeasonDocument,
-	SeasonDocument,
-	TeamContributionDocument,
-	TeamSeasonDocument,
+import {
+	Collections,
+	type PlayerDocument,
+	type PlayerSeasonDocument,
+	type SeasonDocument,
+	type TeamContributionDocument,
+	type TeamSeasonDocument,
 } from '../../../types.js'
 import type Stripe from 'stripe'
 
@@ -96,9 +100,11 @@ const CURRENCY = 'usd'
  * a $1,000 line nobody recognises becomes a dispute.
  */
 const HOLD_EXPLANATION =
-	`Your card is authorized now and charged only when your team is confirmed. ` +
-	`If your team does not get one of the ${TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK} spots, ` +
-	`the authorization is released and you are never charged.`
+	`Your card is authorized now and charged when your team registers. ` +
+	`An authorization lasts about a week, so if your team has not registered ` +
+	`by then it is charged early rather than allowed to lapse. If your team ` +
+	`does not get one of the ${TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK} spots, ` +
+	`the authorization is released, or the charge refunded in full.`
 
 type CheckoutSessionCreateParams = Parameters<
 	Stripe['checkout']['sessions']['create']
@@ -130,6 +136,13 @@ export const createTeamContributionCheckout = onCall<
 		const firestore = getFirestore()
 
 		await validateNotBanned(firestore, userId)
+
+		const isAdmin =
+			(
+				(
+					await firestore.collection(Collections.PLAYERS).doc(userId).get()
+				).data() as PlayerDocument | undefined
+			)?.admin === true
 
 		const currentSeason = (await getCurrentSeason()) as
 			(SeasonDocument & { id: string }) | null
@@ -167,7 +180,10 @@ export const createTeamContributionCheckout = onCall<
 		const now = new Date()
 		const registrationStart = currentSeason.registrationStart.toDate()
 		const registrationEnd = currentSeason.registrationEnd.toDate()
-		if (now < registrationStart) {
+		// Only the start is waived for admins. Their early money is held like
+		// anyone's, so the hourly sweep captures it in its last day; an admin
+		// testing releases it from Team Management > Payments before then.
+		if (now < registrationStart && !isAdmin) {
 			throw new HttpsError(
 				'failed-precondition',
 				`Registration has not opened yet. Registration opens ${formatDateForUser(registrationStart, timezone)}.`

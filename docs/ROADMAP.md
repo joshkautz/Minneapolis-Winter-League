@@ -82,10 +82,6 @@ Signed in the app since 2026 Fall: `docs/WAIVERS.md`. Left:
 - **A copy by email.** Players can print or save their copy; emailing one
   needs an email provider the project does not have.
 - **Captains reminding teammates** who have not signed.
-- **How long to keep signatures.** They outlive a deleted account and are
-  kept indefinitely until the attorney says how long they must be; for a
-  minor the clock starts at eighteen. Then either a scheduled deletion or a
-  written policy.
 
 ### Waiver review
 

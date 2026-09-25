@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
@@ -14,6 +14,13 @@ import { ProvidersWrapper } from '@/providers'
  * navigation landmarks rather than page copy keeps this test about wiring
  * rather than content.
  */
+// The home page's particle animation loads asynchronously and needs
+// OffscreenCanvas, which jsdom lacks. When the test finished first, its
+// failure landed during teardown and failed the run about one time in three.
+vi.mock('./features/public/home/particles', () => ({
+	SparklesCore: () => null,
+}))
+
 describe('App', () => {
 	test('renders the navigation shell without tripping the error boundary', async () => {
 		render(
