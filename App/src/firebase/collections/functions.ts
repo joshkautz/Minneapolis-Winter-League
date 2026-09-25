@@ -512,8 +512,6 @@ interface EditTeamRequest {
 	teamId: string
 	seasonId: string
 	name?: string
-	logo?: string
-	storagePath?: string
 	logoBlob?: string // Base64 encoded image
 	logoContentType?: string // MIME type of the image
 }

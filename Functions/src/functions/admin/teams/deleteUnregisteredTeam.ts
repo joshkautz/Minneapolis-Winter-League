@@ -97,10 +97,15 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 			)
 
 			if (!result.success) {
-				throw new HttpsError(
-					'internal',
-					result.error || 'Failed to delete team'
-				)
+				// A refusal says why; anything else was logged by the service.
+				throw result.errorCode &&
+					result.errorCode !== 'internal' &&
+					result.error
+					? new HttpsError(result.errorCode, result.error)
+					: new HttpsError(
+							'internal',
+							'The team could not be deleted. Please try again.'
+						)
 			}
 
 			logger.info('Successfully deleted unregistered team', {
@@ -128,7 +133,10 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 				adminUserId: request.auth?.uid,
 				error: errorMessage,
 			})
-			throw new HttpsError('internal', errorMessage)
+			throw new HttpsError(
+				'internal',
+				'The team could not be deleted. Please try again.'
+			)
 		}
 	}
 )

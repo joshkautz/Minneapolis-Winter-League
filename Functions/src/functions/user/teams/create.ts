@@ -13,8 +13,7 @@
  */
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
-import { getStorage } from 'firebase-admin/storage'
-import { getPublicFileUrl } from '../../../shared/storage.js'
+import { parseImageUpload, storeImage } from '../../../shared/images.js'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
@@ -62,19 +61,8 @@ export const createTeam = onCall<CreateTeamRequest>(
 			)
 		}
 
-		if (logoBlob && !logoContentType) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Logo content type is required when uploading logo'
-			)
-		}
-
-		if (logoContentType && !logoContentType.startsWith('image/')) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Only image files are allowed for logos'
-			)
-		}
+		// Checked before any reads, so a bad logo is refused straight away.
+		const logo = parseImageUpload(logoBlob, logoContentType, 'The logo')
 
 		try {
 			const firestore = getFirestore()
@@ -141,38 +129,12 @@ export const createTeam = onCall<CreateTeamRequest>(
 				)
 			}
 
-			// Generate canonical team id and upload logo (if any).
+			// Store the logo before writing anything, so a failed upload refuses
+			// the whole request rather than creating a team without its logo.
 			const teamId = crypto.randomUUID()
-			const fileId = crypto.randomUUID()
-			let logoUrl = ''
-			let storagePath = ''
-
-			if (logoBlob && logoContentType) {
-				try {
-					const storage = getStorage()
-					const bucket = storage.bucket()
-					const fileName = `teams/${fileId}`
-					const file = bucket.file(fileName)
-
-					const buffer = Buffer.from(logoBlob, 'base64')
-					await file.save(buffer, {
-						metadata: { contentType: logoContentType },
-					})
-					await file.makePublic()
-
-					logoUrl = getPublicFileUrl(bucket.name, fileName)
-					storagePath = fileName
-
-					logger.info(`Successfully uploaded logo for team: ${teamId}`, {
-						fileName,
-						contentType: logoContentType,
-					})
-				} catch (uploadError) {
-					logger.error('Logo upload failed:', uploadError)
-					logoUrl = ''
-					storagePath = ''
-				}
-			}
+			const storedLogo = logo
+				? await storeImage(`teams/${crypto.randomUUID()}`, logo, 'The logo')
+				: null
 
 			// Atomically: create canonical team parent + season subdoc + roster
 			// entry, and create or update the player's season subdoc.
@@ -193,8 +155,8 @@ export const createTeam = onCall<CreateTeamRequest>(
 				txn.set(teamSeasonDocRef, {
 					season: seasonDocRef,
 					name: name.trim(),
-					logo: logoUrl || null,
-					storagePath: storagePath || null,
+					logo: storedLogo?.url ?? null,
+					storagePath: storedLogo?.storagePath ?? null,
 					registered: false,
 					registeredDate: null,
 					placement: null,
@@ -259,7 +221,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 
 			throw new HttpsError(
 				'internal',
-				error instanceof Error ? error.message : 'Failed to create team'
+				'Your team could not be created. Please try again.'
 			)
 		}
 	}

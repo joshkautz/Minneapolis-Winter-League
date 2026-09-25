@@ -7,7 +7,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { LoadingButton } from '@/shared/components'
+import { ImageField, LoadingButton } from '@/shared/components'
 
 import { useCreateTeamForm } from './hooks'
 import type { TeamCreationResult } from './hooks/use-team-creation'
@@ -23,7 +23,7 @@ export const CreateTeamForm = ({
 	seasonId,
 	isTeamRegistrationFull = false,
 }: CreateFormProps) => {
-	const { form, onSubmit, handleFileChange, isSubmitting } = useCreateTeamForm({
+	const { form, onSubmit, handleLogoChange, isSubmitting } = useCreateTeamForm({
 		handleResult,
 		seasonId,
 	})
@@ -61,26 +61,13 @@ export const CreateTeamForm = ({
 						)}
 					/>
 
-					<div className='space-y-2'>
-						<label htmlFor='team-logo-upload' className='text-sm font-medium'>
-							Team Logo (Optional)
-						</label>
-						<Input
-							id='team-logo-upload'
-							type='file'
-							accept='image/*'
-							onChange={handleFileChange}
-							className='h-11'
-							disabled={isSubmitting || isTeamRegistrationFull}
-							aria-describedby='team-logo-description'
-						/>
-						<p
-							id='team-logo-description'
-							className='text-xs text-muted-foreground'
-						>
-							PNG, JPG, GIF, or WebP image
-						</p>
-					</div>
+					<ImageField
+						label='Team Logo (Optional)'
+						subject='The logo'
+						onFileChange={handleLogoChange}
+						disabled={isSubmitting || isTeamRegistrationFull}
+						previewAlt='Team logo preview'
+					/>
 
 					<div className='pt-2'>
 						<LoadingButton

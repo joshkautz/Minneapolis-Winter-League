@@ -4,10 +4,10 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
-import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
 import { Collections, BadgeDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
+import { parseImageUpload, storeImage } from '../../../shared/images.js'
 import { FIREBASE_CONFIG, BADGE_CONFIG } from '../../../config/constants.js'
 
 interface CreateBadgeRequest {
@@ -77,31 +77,11 @@ export const createBadge = onCall<CreateBadgeRequest>(
 			)
 		}
 
-		// Validate image parameters if provided
-		if (imageBlob && !imageContentType) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Image content type is required when uploading image'
-			)
-		}
-
-		if (imageContentType && !imageContentType.startsWith('image/')) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Only image files are allowed for badge images'
-			)
-		}
-
-		// Validate image size (5MB max)
-		if (imageBlob) {
-			const bufferSize = Buffer.from(imageBlob, 'base64').length
-			if (bufferSize > BADGE_CONFIG.MAX_IMAGE_SIZE_BYTES) {
-				throw new HttpsError(
-					'invalid-argument',
-					'Image size must not exceed 5MB'
-				)
-			}
-		}
+		const image = parseImageUpload(
+			imageBlob,
+			imageContentType,
+			'The badge image'
+		)
 
 		try {
 			const firestore = getFirestore()
@@ -122,39 +102,14 @@ export const createBadge = onCall<CreateBadgeRequest>(
 			let storagePath: string | null = null
 
 			// Handle image upload if provided
-			if (imageBlob && imageContentType) {
-				try {
-					const storage = getStorage()
-					const bucket = storage.bucket()
-					const fileName = `badges/${badgeId}`
-					const file = bucket.file(fileName)
-
-					// Convert base64 to buffer
-					const buffer = Buffer.from(imageBlob, 'base64')
-
-					// Upload file
-					await file.save(buffer, {
-						metadata: {
-							contentType: imageContentType,
-						},
-					})
-
-					// Generate Firebase Storage URL (respects storage.rules)
-					const encodedPath = encodeURIComponent(fileName)
-					imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`
-					storagePath = fileName
-
-					logger.info(`Successfully uploaded badge image: ${badgeId}`, {
-						fileName,
-						contentType: imageContentType,
-					})
-				} catch (uploadError) {
-					logger.error('Badge image upload failed:', uploadError)
-					throw new HttpsError(
-						'internal',
-						'Failed to upload badge image. Please try again.'
-					)
-				}
+			if (image) {
+				const stored = await storeImage(
+					`badges/${badgeId}-${crypto.randomUUID()}`,
+					image,
+					'The badge image'
+				)
+				imageUrl = stored.url
+				storagePath = stored.storagePath
 			}
 
 			// Create badge document
@@ -215,7 +170,7 @@ export const createBadge = onCall<CreateBadgeRequest>(
 
 			throw new HttpsError(
 				'internal',
-				`Failed to create badge: ${errorMessage}`
+				'The badge could not be created. Please try again.'
 			)
 		}
 	}
