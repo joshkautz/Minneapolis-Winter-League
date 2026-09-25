@@ -8,9 +8,11 @@
 
 import { User } from '../auth'
 import {
+	cancelTeamContributionCheckoutSession,
 	createStripeCheckoutSession,
 	createTeamContributionCheckoutSession,
 } from '../functions'
+import { logger } from '@/shared/utils'
 
 /**
  * Builds a URL with payment status query parameter
@@ -105,5 +107,18 @@ export const startTeamContribution = async (
 		return error instanceof Error
 			? error.message
 			: 'Could not start the payment. Please try again.'
+	}
+}
+
+/**
+ * Frees the amount the signed-in player's checkout reserved, after they came
+ * back from Stripe without paying. Best effort: if it fails, the
+ * reservation still ends when the session times out.
+ */
+export const cancelTeamContribution = async (): Promise<void> => {
+	try {
+		await cancelTeamContributionCheckoutSession()
+	} catch (error) {
+		logger.error('Could not release a cancelled team checkout', error)
 	}
 }

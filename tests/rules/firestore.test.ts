@@ -97,15 +97,18 @@ beforeEach(async () => {
 		// Team payments. user-1 is on team-1's roster for season-1 only.
 		await setDoc(
 			doc(db, 'teams/team-1/teamSeasons/season-1/contributions/pi_1'),
-			{ amountCents: 50_000, status: 'authorized' }
+			{ amountCents: 50_000, status: 'paid' }
 		)
+		await setDoc(doc(db, 'teams/team-1/teamSeasons/season-1/checkouts/open'), {
+			reservations: { r1: { amountCents: 30_000 } },
+		})
 		await setDoc(doc(db, 'teams/team-1/teamSeasons/season-2'), {
 			name: 'Test Team',
 			registered: false,
 		})
 		await setDoc(
 			doc(db, 'teams/team-1/teamSeasons/season-2/contributions/pi_2'),
-			{ amountCents: 50_000, status: 'authorized' }
+			{ amountCents: 50_000, status: 'paid' }
 		)
 		await setDoc(doc(db, 'players/user-2'), {
 			admin: false,
@@ -360,10 +363,41 @@ describe('team payments', () => {
 
 	it('cannot be written, even by an admin', async () => {
 		await assertFails(
-			setDoc(doc(verified('admin-1'), `${ledger}/pi_1`), { status: 'captured' })
+			setDoc(doc(verified('admin-1'), `${ledger}/pi_1`), { status: 'refunded' })
 		)
 		await assertFails(
 			setDoc(doc(verified('user-1'), `${ledger}/pi_new`), { amountCents: 1 })
+		)
+	})
+})
+
+describe('open team checkouts', () => {
+	// Who is paying what right now: private exactly as the ledger is.
+	const open = 'teams/team-1/teamSeasons/season-1/checkouts/open'
+
+	it('are readable by a player on the team’s roster, and by an admin', async () => {
+		await assertSucceeds(getDoc(doc(verified('user-1'), open)))
+		await assertSucceeds(getDoc(doc(verified('admin-1'), open)))
+	})
+
+	it('are not readable by a player on another team, or signed out', async () => {
+		await assertFails(getDoc(doc(verified('user-2'), open)))
+		await assertFails(getDoc(doc(anonymous(), open)))
+	})
+
+	it('cannot be listed across teams', async () => {
+		await assertFails(
+			getDocs(collectionGroup(verified('admin-1'), 'checkouts'))
+		)
+	})
+
+	it('cannot be written, even by an admin or a rostered player', async () => {
+		// A reservation written from the client would block a team's payments.
+		await assertFails(
+			setDoc(doc(verified('admin-1'), open), { reservations: {} })
+		)
+		await assertFails(
+			setDoc(doc(verified('user-1'), open), { reservations: {} })
 		)
 	})
 })

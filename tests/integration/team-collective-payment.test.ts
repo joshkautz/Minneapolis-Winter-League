@@ -7,7 +7,12 @@ import {
 } from 'firebase-admin/firestore'
 import type { Request, Response } from 'firebase-functions/v2/https'
 import { authed, initTestApp, resetFirestore, seedAuthUser } from './helpers.js'
-import { completeCheckout, fakeStripe, resetFakeStripe } from './fake-stripe.js'
+import {
+	completeCheckout,
+	fakeStripe,
+	resetFakeStripe,
+	timeOutCheckout,
+} from './fake-stripe.js'
 import { resetTeamRegistrationProductCache } from '../../Functions/src/shared/stripe.js'
 import {
 	playerSeasonRef,
@@ -15,6 +20,7 @@ import {
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
 import { teamContributionsCollection } from '../../Functions/src/shared/contributions.js'
+import { openCheckoutsRef } from '../../Functions/src/shared/checkoutReservations.js'
 import { CURRENT_WAIVER_VERSION_ID } from '../../Functions/src/waiver/versions.js'
 
 /**
@@ -239,6 +245,17 @@ const leaveTeam = (playerId: string) =>
 		})
 	)
 
+/** Moves every open reservation past its time, as half an hour would. */
+const pastReservationTimes = async () => {
+	const ref = openCheckoutsRef(firestore, TEAM, SEASON)
+	const reservations = (await ref.get()).data()?.reservations ?? {}
+	for (const id of Object.keys(reservations)) {
+		await ref.update({
+			[`reservations.${id}.expiresAt`]: Timestamp.fromMillis(Date.now() - 1000),
+		})
+	}
+}
+
 // ---- What to look at -------------------------------------------------------
 
 const isRegistered = async () =>
@@ -260,12 +277,23 @@ const ledgerByPayer = async (): Promise<Record<string, string>> => {
 
 /** Every Stripe call that moved money, by payer. */
 const stripeCallsByPayer = (): string[] =>
-	fakeStripe.calls.map((call) => {
-		const payer = fakeStripe.intents.get(call.paymentIntentId)?.metadata
-			.firebaseUID
-		return call.amount === undefined
-			? `${call.method} ${payer}`
-			: `${call.method} ${payer} ${call.amount}`
+	fakeStripe.calls
+		.filter((call) => call.method === 'refund')
+		.map((call) => {
+			const payer = fakeStripe.intents.get(call.paymentIntentId)?.metadata
+				.firebaseUID
+			return `${call.method} ${payer} ${call.amount}`
+		})
+
+/** Whether a Checkout session can still be paid. */
+const sessionStatus = (sessionId: string) =>
+	fakeStripe.sessions.get(sessionId)?.status
+
+/** The payer comes back from Stripe without paying; the App cancels. */
+const cancelCheckout = (playerId: string) =>
+	manifest.cancelTeamContributionCheckout.run({
+		auth: authed(playerId),
+		data: {},
 	})
 
 // ---- Setup -----------------------------------------------------------------
@@ -368,56 +396,74 @@ describe('a team paying collectively', () => {
 		expect(stripeCallsByPayer()).toEqual([])
 	})
 
-	it('refunds the latest payer when teammates pay over the total at once', async () => {
-		// Both see $500 left and both pay it. The later payment is refunded;
-		// preventing the race would need a reservation held for as long as
-		// a Checkout session stays open.
+	it('never lets two teammates pay the same dollars', async () => {
+		// Both see $500 left. Blair opens Checkout first, which sets the $500
+		// aside, so Casey is told a teammate is paying it.
 		await signWaivers(PLAYERS.slice(0, 10))
 		await contribute(ALEX, 500)
 		const blairSession = await openCheckout(BLAIR, 500)
-		const caseySession = await openCheckout(CASEY, 500)
+
+		await expect(openCheckout(CASEY, 500)).rejects.toThrow(
+			/A teammate is paying the rest/
+		)
 
 		await finishCheckout(blairSession)
-		await finishCheckout(caseySession)
+		expect(await isRegistered()).toBe(true)
+		// Exactly the total, so nobody is refunded and no fee is lost.
+		expect(stripeCallsByPayer()).toEqual([])
+	})
+
+	it('lets a teammate pay what is left beside an open checkout', async () => {
+		await signWaivers(PLAYERS.slice(0, 10))
+		await contribute(ALEX, 500)
+		const blairSession = await openCheckout(BLAIR, 200)
+
+		await expect(openCheckout(CASEY, 400)).rejects.toThrow(
+			/only needs \$300\.00 more while a teammate finishes paying \$200\.00/
+		)
+		await contribute(CASEY, 300)
+		await finishCheckout(blairSession)
 
 		expect(await isRegistered()).toBe(true)
-		expect(stripeCallsByPayer()).toEqual([`refund ${CASEY} 50000`])
+		expect(stripeCallsByPayer()).toEqual([])
 		expect(await ledgerByPayer()).toEqual({
 			[ALEX]: 'paid 50000',
-			[BLAIR]: 'paid 50000',
-			[CASEY]: 'refunded 50000',
+			[BLAIR]: 'paid 20000',
+			[CASEY]: 'paid 30000',
 		})
 	})
 
-	it('refunds the later payment when two teammates race for the last $300', async () => {
-		await signWaivers(PLAYERS.slice(0, 10))
+	it('frees the amount as soon as a teammate comes back without paying', async () => {
 		await contribute(ALEX, 700)
 		const blairSession = await openCheckout(BLAIR, 300)
-		const caseySession = await openCheckout(CASEY, 300)
+		await expect(openCheckout(CASEY, 300)).rejects.toThrow(/A teammate/)
 
-		await finishCheckout(caseySession)
-		await finishCheckout(blairSession)
+		await cancelCheckout(BLAIR)
 
-		// Casey's arrived first, so it covers the $300; Blair's is refunded.
-		expect(stripeCallsByPayer()).toEqual([`refund ${BLAIR} 30000`])
+		// Closed at Stripe too, so Blair cannot pay it after all.
+		expect(sessionStatus(blairSession)).toBe('expired')
+		await expect(openCheckout(CASEY, 300)).resolves.toMatch(/^cs_/)
 	})
 
-	it('refunds only the part of a payment that crosses the total', async () => {
-		await signWaivers(PLAYERS.slice(0, 10))
-		// Blair opens Checkout for $500 while the whole $1,000 is open…
-		const blairSession = await openCheckout(BLAIR, 500)
-		// …and Alex pays $700 before Blair finishes.
+	it('frees the amount once an abandoned checkout times out', async () => {
 		await contribute(ALEX, 700)
+		const blairSession = await openCheckout(BLAIR, 300)
+		// Blair closed the tab. Half an hour later Stripe closes the session.
+		timeOutCheckout(blairSession)
+		await pastReservationTimes()
 
-		await finishCheckout(blairSession)
+		await expect(openCheckout(CASEY, 300)).resolves.toMatch(/^cs_/)
+	})
 
-		// Alex's landed first, so Blair keeps paying only the $300 still
-		// owed and is refunded the other $200.
-		expect(stripeCallsByPayer()).toEqual([`refund ${BLAIR} 20000`])
-		expect(await ledgerByPayer()).toEqual({
-			[ALEX]: 'paid 70000',
-			[BLAIR]: 'paid 30000 of 50000',
-		})
+	it('closes a payer’s earlier checkout when they open another', async () => {
+		const first = await openCheckout(BLAIR, 300)
+
+		const second = await openCheckout(BLAIR, 500)
+
+		expect(sessionStatus(first)).toBe('expired')
+		expect(() => completeCheckout(first)).toThrow(/expired/)
+		await finishCheckout(second)
+		expect(await ledgerByPayer()).toEqual({ [BLAIR]: 'paid 50000' })
 	})
 
 	it('keeps Stripe’s page, the payment and the ledger in agreement', async () => {
@@ -431,6 +477,7 @@ describe('a team paying collectively', () => {
 			firebaseUID: ALEX,
 			teamId: TEAM,
 			seasonId: SEASON,
+			reservationId: expect.any(String),
 		})
 
 		const paymentIntentId = await finishCheckout(sessionId)
@@ -506,14 +553,15 @@ describe('a payer who leaves the team', () => {
 		expect(await ledgerByPayer()).toEqual({ [ALEX]: 'paid 100000' })
 	})
 
-	it('is refunded a payment that lands after they left', async () => {
-		// Left while still on Stripe's page.
+	it('cannot pay for the team after leaving it', async () => {
+		// Left while still on Stripe's page: the checkout is closed as they
+		// go, so there is nothing to refund.
 		const sessionId = await openCheckout(DREW, 500)
+
 		await leaveTeam(DREW)
 
-		await finishCheckout(sessionId)
-
-		expect(stripeCallsByPayer()).toEqual([`refund ${DREW} 50000`])
-		expect(await ledgerByPayer()).toEqual({ [DREW]: 'refunded 50000' })
+		expect(sessionStatus(sessionId)).toBe('expired')
+		expect(() => completeCheckout(sessionId)).toThrow(/expired/)
+		expect(await ledgerByPayer()).toEqual({})
 	})
 })

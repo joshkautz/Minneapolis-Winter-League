@@ -32,6 +32,8 @@ import {
 } from '../../shared/database.js'
 import { deleteUnregisteredTeamsForSeasonLock } from '../../services/teamDeletionService.js'
 import { settleTeamSeason } from '../../services/teamSettlementService.js'
+import { closeOpenCheckouts } from '../../services/teamCheckoutReservations.js'
+import { createStripeClient } from '../../shared/stripe.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 const LOCK_THRESHOLD = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
@@ -116,13 +118,18 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 				seasonId,
 			}))
 
-			// Give back every unregistered team's money before deleting it.
-			// Each is settled on its own so one failure does not stop the
-			// others; a team that fails keeps its team-season until the retry.
+			// Give back every unregistered team's money before deleting it,
+			// closing any checkout still open first so nobody pays for a team
+			// that is out — and anything paid in the meantime is taken in and
+			// refunded with the rest. Each is settled on its own so one
+			// failure does not stop the others; a team that fails keeps its
+			// team-season until the retry.
+			const stripe = createStripeClient()
 			const settled: typeof pairs = []
 			const settlementFailures: { teamId: string; error: string }[] = []
 			for (const pair of pairs) {
 				try {
+					await closeOpenCheckouts(firestore, stripe, pair)
 					await settleTeamSeason(pair.teamId, seasonId)
 					settled.push(pair)
 				} catch (error) {

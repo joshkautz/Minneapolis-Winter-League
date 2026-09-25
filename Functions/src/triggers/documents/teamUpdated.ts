@@ -14,6 +14,8 @@ import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'
 import { settleTeamSeason } from '../../services/teamSettlementService.js'
+import { closeOpenCheckouts } from '../../services/teamCheckoutReservations.js'
+import { createStripeClient } from '../../shared/stripe.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
@@ -50,8 +52,15 @@ export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
 
 			// Registration first, so the settlement sees whether the team is
 			// in. Cheap when the leaver paid nothing: it reads, finds no
-			// action, and never calls Stripe.
+			// action, and never calls Stripe. A checkout the leaver still has
+			// open is closed before it, so they cannot pay for a team they
+			// have left.
 			if (!after?.exists) {
+				await closeOpenCheckouts(getFirestore(), createStripeClient(), {
+					teamId,
+					seasonId,
+					playerId: event.params.playerId,
+				})
 				await settleTeamSeason(teamId, seasonId)
 			}
 		} catch (error) {

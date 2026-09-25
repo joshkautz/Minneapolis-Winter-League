@@ -53,6 +53,7 @@ export { newsQueryBySeason, allNewsQueryBySeason } from './collections/news'
 export {
 	stripeRegistration,
 	startTeamContribution,
+	cancelTeamContribution,
 } from './collections/payments'
 
 // Re-export Firebase types for convenience

@@ -129,6 +129,7 @@ export { signWaiver } from './functions/user/waivers/sign.js'
 // Payment functions (user-accessible)
 export { createStripeCheckout } from './functions/user/payments/createStripeCheckout.js'
 export { createTeamContributionCheckout } from './functions/user/payments/createTeamContributionCheckout.js'
+export { cancelTeamContributionCheckout } from './functions/user/payments/cancelTeamContributionCheckout.js'
 
 // Payment management functions (admin-only)
 export { refundTeamContribution } from './functions/admin/payments/refundTeamContribution.js'

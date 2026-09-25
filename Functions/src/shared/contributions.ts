@@ -127,7 +127,7 @@ export function contributionAmountError(
 	return null
 }
 
-function formatDollars(cents: number): string {
+export function formatDollars(cents: number): string {
 	return `$${(cents / 100).toFixed(2)}`
 }
 

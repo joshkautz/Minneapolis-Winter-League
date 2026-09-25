@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useCollection } from 'react-firebase-hooks/firestore'
+import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from 'firebase/firestore'
 import { toast } from 'sonner'
 import { CheckCircle, CreditCard, Info } from 'lucide-react'
@@ -16,10 +16,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { startTeamContribution } from '@/firebase'
+import { cancelTeamContribution, startTeamContribution } from '@/firebase'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	teamContributionsQuery,
+	teamOpenCheckoutsRef,
 } from '@/firebase/collections/teams'
 import {
 	canonicalPlayerIdFromPlayerSeasonDoc,
@@ -46,9 +47,7 @@ import {
 const PAYMENT_EXPLANATION =
 	`Your card is charged now. If you leave the team before it registers, or ` +
 	`it does not get one of the ${REGISTRATION_SPOTS} spots, you are refunded ` +
-	`in full. If your team pays more than its total, the extra is refunded, ` +
-	`latest payments first. Refunds take 5 to 10 business days to reach your ` +
-	`card.`
+	`in full. Refunds take 5 to 10 business days to reach your card.`
 
 /** Tells the payer how Checkout went, once, when Stripe sends them back. */
 const usePaymentReturnToast = (): void => {
@@ -63,6 +62,9 @@ const usePaymentReturnToast = (): void => {
 					'Your contribution will appear here in a moment. Thank you!',
 			})
 		} else {
+			// Free the amount the checkout set aside, so teammates can pay it
+			// now rather than when the session times out.
+			void cancelTeamContribution()
 			toast.info('Payment cancelled', {
 				description: 'Nothing was charged. You can try again when ready.',
 			})
@@ -181,7 +183,8 @@ export const TeamPaymentCard = () => {
 
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
-	const { currentSeasonData, isBanned, isAdmin } = useUserStatus()
+	const { currentSeasonData, isBanned, isAdmin, authStateUser } =
+		useUserStatus()
 
 	const season = currentSeasonQueryDocumentSnapshot?.data()
 	const seasonId = currentSeasonQueryDocumentSnapshot?.id
@@ -203,6 +206,11 @@ export const TeamPaymentCard = () => {
 				? teamContributionsQuery(teamId, seasonId)
 				: undefined
 		)
+	const [openCheckoutsSnapshot] = useDocument(
+		teamPayments && teamId && seasonId
+			? teamOpenCheckoutsRef(teamId, seasonId)
+			: undefined
+	)
 	const [playerSeasonsSnapshot, playerSeasonsLoading] = useCollection(
 		teamPayments ? playerSeasonsOnTeamQuery(teamRef) : undefined
 	)
@@ -245,6 +253,29 @@ export const TeamPaymentCard = () => {
 	const remainingCents = Math.max(0, totalCents - paid)
 
 	const now = Timestamp.now()
+
+	// What teammates are paying on Stripe's page right now is set aside for
+	// them, so nobody else can pay the same dollars. The payer's own checkout
+	// does not count against them: opening another replaces it. A
+	// reservation past its time is left out here; the server asks Stripe.
+	const othersPaying = Object.values(
+		openCheckoutsSnapshot?.data()?.reservations ?? {}
+	).filter(
+		(reservation) =>
+			reservation.player.id !== authStateUser?.uid &&
+			reservation.expiresAt.toMillis() > now.toMillis()
+	)
+	const reservedByOthersCents = othersPaying.reduce(
+		(sum, reservation) => sum + reservation.amountCents,
+		0
+	)
+	const availableCents = Math.max(0, remainingCents - reservedByOthersCents)
+	const freesUpAt = othersPaying.length
+		? new Date(
+				Math.max(...othersPaying.map((r) => r.expiresAt.toMillis()))
+			).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+		: null
+
 	const notOpenYet = now < season.registrationStart
 	const closed = now > season.registrationEnd
 	const full = (season.registeredTeamCount ?? 0) >= REGISTRATION_SPOTS
@@ -294,6 +325,16 @@ export const TeamPaymentCard = () => {
 		)
 	} else if (isBanned) {
 		status = null
+	} else if (availableCents === 0) {
+		status = (
+			<Alert>
+				<Info className='h-4 w-4' />
+				<AlertDescription>
+					A teammate is paying the rest of the team’s total right now. If they
+					do not finish, it becomes available again by {freesUpAt}.
+				</AlertDescription>
+			</Alert>
+		)
 	} else {
 		status = (
 			<div className='space-y-3'>
@@ -310,7 +351,13 @@ export const TeamPaymentCard = () => {
 						</AlertDescription>
 					</Alert>
 				)}
-				<ContributeForm remainingCents={remainingCents} />
+				{reservedByOthersCents > 0 && (
+					<p className='text-sm text-muted-foreground'>
+						A teammate is paying {formatDollars(reservedByOthersCents)} right
+						now, so {formatDollars(availableCents)} is left for everyone else.
+					</p>
+				)}
+				<ContributeForm remainingCents={availableCents} />
 			</div>
 		)
 	}

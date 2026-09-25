@@ -24,11 +24,15 @@
  *   left
  * - The amount is checked against the team's live remaining balance, with a
  *   floor; the client proposes, the server decides
+ * - The amount is reserved while the payer is on Stripe's page, and what
+ *   teammates have reserved is not available: two people can never pay the
+ *   same dollars, so a team cannot pay more than its total. See
+ *   services/teamCheckoutReservations.ts
  * - Return URLs must be on one of the league's own origins
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore } from 'firebase-admin/firestore'
+import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../../config/constants.js'
@@ -43,6 +47,7 @@ import {
 } from '../../../shared/database.js'
 import {
 	CENTS_PER_DOLLAR,
+	formatDollars,
 	paidByRosterCents,
 	contributionAmountError,
 	teamContributionsCollection,
@@ -56,6 +61,13 @@ import {
 	TEAM_REGISTRATION_PRODUCT_ID,
 } from '../../../shared/stripe.js'
 import { formatDateForUser } from '../../../shared/format.js'
+import { removeReservation } from '../../../shared/checkoutReservations.js'
+import {
+	attachSession,
+	closeOpenCheckouts,
+	reserveContribution,
+	resolveExpiredReservations,
+} from '../../../services/teamCheckoutReservations.js'
 import {
 	Collections,
 	type PlayerDocument,
@@ -91,8 +103,12 @@ interface CreateTeamContributionCheckoutResponse {
  */
 const CHECKOUT_SESSION_LIFETIME_SECONDS = 31 * 60
 
-/** Checkout groups idempotency keys into windows of this length. */
-const IDEMPOTENCY_WINDOW_MS = 60_000
+/**
+ * How much longer than its session a reservation lasts before the session
+ * exists. Only matters if creating the session fails in a way that leaves the
+ * reservation behind; once the session exists, its own expiry is used.
+ */
+const RESERVATION_MARGIN_SECONDS = 60
 
 const CURRENCY = 'usd'
 
@@ -103,9 +119,8 @@ const CURRENCY = 'usd'
 const PAYMENT_EXPLANATION =
 	`Your card is charged now. If you leave the team before it registers, or ` +
 	`it does not get one of the ${TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK} ` +
-	`spots, you are refunded in full. If your team pays more than its total, ` +
-	`the extra is refunded, latest payments first. Refunds take 5 to 10 ` +
-	`business days to reach your card.`
+	`spots, you are refunded in full. Refunds take 5 to 10 business days to ` +
+	`reach your card.`
 
 type CheckoutSessionCreateParams = Parameters<
 	Stripe['checkout']['sessions']['create']
@@ -267,10 +282,9 @@ export const createTeamContributionCheckout = onCall<
 			)
 		}
 
-		// Two teammates who both see $200 remaining can both pay it, and the
-		// later payment is refunded, at the cost of its processing fee.
-		// Refusing it here would need a reservation system, held for as long
-		// as a Checkout session stays open, to save a fee on a rare race.
+		// A first check against what has been paid, so an amount that could
+		// never be accepted is refused before Stripe is involved. What
+		// teammates are paying right now is taken off below, atomically.
 		const amountError = contributionAmountError(amountCents, remainingCents)
 		if (amountError) {
 			throw new HttpsError('invalid-argument', amountError)
@@ -278,8 +292,42 @@ export const createTeamContributionCheckout = onCall<
 		// contributionAmountError has established this.
 		const validAmountCents = amountCents as number
 
+		const stripe = createStripeClient()
+		let reservationId: string | undefined
 		try {
-			const stripe = createStripeClient()
+			// This payer's earlier checkout, if they opened one and came back
+			// some other way than Stripe's cancel link, is closed first: one
+			// open checkout per payer. Then any teammate's that has run out
+			// of time is settled against Stripe, so it stops blocking.
+			await closeOpenCheckouts(firestore, stripe, {
+				teamId,
+				seasonId,
+				playerId: userId,
+			})
+			await resolveExpiredReservations(firestore, stripe, { teamId, seasonId })
+
+			const sessionExpiresAtSeconds =
+				Math.floor(Date.now() / 1000) + CHECKOUT_SESSION_LIFETIME_SECONDS
+			const reserved = await reserveContribution(firestore, {
+				teamId,
+				seasonId,
+				playerId: userId,
+				rosterPlayerIds,
+				totalCents: teamTotalCents,
+				amountCents: validAmountCents,
+				// Until the session exists; replaced by its own expiry below.
+				expiresAt: Timestamp.fromMillis(
+					(sessionExpiresAtSeconds + RESERVATION_MARGIN_SECONDS) * 1000
+				),
+				validate: contributionAmountError,
+			})
+			if (reserved.outcome === 'invalid') {
+				throw new HttpsError('invalid-argument', reserved.reason)
+			}
+			if (reserved.outcome === 'too-much') {
+				throw tooMuchError(reserved)
+			}
+			reservationId = reserved.reservationId
 
 			const [customer] = await Promise.all([
 				getOrCreateStripeCustomer(firestore, stripe, {
@@ -289,13 +337,15 @@ export const createTeamContributionCheckout = onCall<
 				ensureTeamRegistrationProduct(stripe),
 			])
 
-			// Everything the webhook needs to attribute the money. It is set
-			// here, by the server, and the webhook trusts nothing else.
+			// Everything the webhook needs to attribute the money and end the
+			// reservation. It is set here, by the server, and the webhook
+			// trusts nothing else.
 			const metadata = {
 				kind: TEAM_CONTRIBUTION_KIND,
 				firebaseUID: userId,
 				teamId,
 				seasonId,
+				reservationId,
 			}
 
 			const sessionParams: CheckoutSessionCreateParams = {
@@ -326,24 +376,38 @@ export const createTeamContributionCheckout = onCall<
 				custom_text: {
 					submit: { message: PAYMENT_EXPLANATION },
 				},
-				expires_at:
-					Math.floor(Date.now() / 1000) + CHECKOUT_SESSION_LIFETIME_SECONDS,
+				expires_at: sessionExpiresAtSeconds,
 				success_url: successUrl,
 				cancel_url: cancelUrl,
 			}
 
-			// Same caller, team, amount and minute: a double-click or a retry
-			// gets the same session back rather than a second payment.
-			const timeWindow = Math.floor(Date.now() / IDEMPOTENCY_WINDOW_MS)
-			const idempotencyKey = `team_contribution_${userId}_${teamId}_${seasonId}_${validAmountCents}_${timeWindow}`
-
+			// One session per reservation: a retry of this request gets the
+			// same session back rather than a second one.
 			const stripeSession = await stripe.checkout.sessions.create(
 				sessionParams,
-				{ idempotencyKey }
+				{ idempotencyKey: `team_contribution_${reservationId}` }
 			)
 
 			if (!stripeSession.url) {
 				throw new HttpsError('internal', 'Failed to create checkout URL')
+			}
+
+			const attached = await attachSession(firestore, {
+				teamId,
+				seasonId,
+				reservationId,
+				sessionId: stripeSession.id,
+				expiresAt: Timestamp.fromMillis(sessionExpiresAtSeconds * 1000),
+			})
+			if (!attached) {
+				// The same payer opened another checkout meanwhile — a double
+				// click — which ended this one's reservation. Nobody may pay
+				// against a session nothing is reserved for.
+				await stripe.checkout.sessions.expire(stripeSession.id)
+				throw new HttpsError(
+					'aborted',
+					'You opened another payment at the same time. Use that one.'
+				)
 			}
 
 			logger.info('Created team contribution checkout session', {
@@ -351,7 +415,7 @@ export const createTeamContributionCheckout = onCall<
 				teamId,
 				seasonId,
 				amountCents: validAmountCents,
-				remainingCents,
+				reservationId,
 				sessionId: stripeSession.id,
 			})
 
@@ -361,6 +425,26 @@ export const createTeamContributionCheckout = onCall<
 				sessionId: stripeSession.id,
 			}
 		} catch (error) {
+			// A reservation whose checkout never opened would block the team
+			// until it expired.
+			if (reservationId) {
+				await removeReservation(firestore, {
+					teamId,
+					seasonId,
+					reservationId,
+				}).catch((cleanupError: unknown) =>
+					logger.error('Could not remove an unused reservation', {
+						teamId,
+						seasonId,
+						reservationId,
+						error:
+							cleanupError instanceof Error
+								? cleanupError.message
+								: String(cleanupError),
+					})
+				)
+			}
+
 			if (error instanceof HttpsError) {
 				throw error
 			}
@@ -376,3 +460,39 @@ export const createTeamContributionCheckout = onCall<
 		}
 	}
 )
+
+/**
+ * Why a contribution was refused once teammates' open checkouts were taken
+ * off, in words the payer can act on.
+ */
+function tooMuchError(result: {
+	availableCents: number
+	reservedByOthersCents: number
+}): HttpsError {
+	const { availableCents, reservedByOthersCents } = result
+	if (availableCents > 0 && reservedByOthersCents === 0) {
+		// A teammate's payment landed while this request was deciding.
+		return new HttpsError(
+			'invalid-argument',
+			`Your team only needs ${formatDollars(availableCents)} more.`
+		)
+	}
+	if (availableCents > 0) {
+		return new HttpsError(
+			'invalid-argument',
+			`Your team only needs ${formatDollars(availableCents)} more while a ` +
+				`teammate finishes paying ${formatDollars(reservedByOthersCents)}.`
+		)
+	}
+	if (reservedByOthersCents > 0) {
+		return new HttpsError(
+			'failed-precondition',
+			'A teammate is paying the rest of your team’s total right now. If ' +
+				'they do not finish, it frees up within 30 minutes.'
+		)
+	}
+	return new HttpsError(
+		'failed-precondition',
+		'Your team has already paid the full amount'
+	)
+}

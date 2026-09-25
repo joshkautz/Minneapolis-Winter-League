@@ -269,6 +269,31 @@ export interface TeamRosterDocument extends DocumentData {
 export type ContributionStatus = 'paid' | 'refunded'
 
 /**
+ * A contribution someone is paying right now: the amount set aside for them
+ * while their Checkout session is open, so a teammate cannot pay the same
+ * dollars at the same time. Mirrors Functions/src/types.ts.
+ */
+export interface CheckoutReservation {
+	player: DocumentReference<PlayerDocument>
+	amountCents: number
+	/** The Stripe Checkout session, once it has been created. */
+	sessionId: string | null
+	/** When the session closes. */
+	expiresAt: Timestamp
+	createdAt: Timestamp
+}
+
+/**
+ * Every open reservation for a team-season, at
+ * `teams/{teamId}/teamSeasons/{seasonId}/checkouts/open`. **PRIVATE** like
+ * the contribution ledger.
+ */
+export interface OpenCheckoutsDocument extends DocumentData {
+	/** By reservation id. A reservation is deleted once it has ended. */
+	reservations: Record<string, CheckoutReservation>
+}
+
+/**
  * One payment toward a team's registration total.
  *
  * Stored at `teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}`.

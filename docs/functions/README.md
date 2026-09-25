@@ -32,24 +32,24 @@ Functions/src/
 
 ## Callables
 
-46 in total, every one covered by the authorization sweep in
+47 in total, every one covered by the authorization sweep in
 `tests/integration/callables-authorization.test.ts`.
 
-| Domain        | User                                                                         | Admin                                                                                 |
-| ------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Players       | `createPlayer`, `updatePlayer`, `deletePlayer`                               | `updatePlayerAdmin`, `getPlayerAuthInfo`                                              |
-| Teams         | `createTeam`, `rolloverTeam`, `updateTeam`, `deleteTeam`, `updateTeamRoster` | `deleteUnregisteredTeam`, `updateTeamAdmin`, `mergeTeams`                             |
-| Offers        | `createOffer`, `updateOffer`                                                 |                                                                                       |
-| Payments      | `createStripeCheckout`, `createTeamContributionCheckout`                     | `refundTeamContribution`                                                              |
-| Waivers       | `signWaiver`                                                                 |                                                                                       |
-| Storage       | `getUploadUrl`, `getDownloadUrl`, `getFileMetadata`                          |                                                                                       |
-| Posts         | `createPost`, `updatePost`, `createReply`, `updateReply`                     | `deletePost`, `deleteReply`                                                           |
-| Seasons       |                                                                              | `createSeason`, `updateSeason`, `deleteSeason`, `setSwissSeeding`, `getSwissRankings` |
-| Games         |                                                                              | `createGame`, `updateGame`, `deleteGame`                                              |
-| Rankings      |                                                                              | `rebuildPlayerRankings`                                                               |
-| News          |                                                                              | `createNews`, `updateNews`, `deleteNews`                                              |
-| Badges        |                                                                              | `createBadge`, `updateBadge`, `deleteBadge`, `awardBadge`, `revokeBadge`              |
-| Site settings |                                                                              | `updateSiteSettings`                                                                  |
+| Domain        | User                                                                                       | Admin                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| Players       | `createPlayer`, `updatePlayer`, `deletePlayer`                                             | `updatePlayerAdmin`, `getPlayerAuthInfo`                                              |
+| Teams         | `createTeam`, `rolloverTeam`, `updateTeam`, `deleteTeam`, `updateTeamRoster`               | `deleteUnregisteredTeam`, `updateTeamAdmin`, `mergeTeams`                             |
+| Offers        | `createOffer`, `updateOffer`                                                               |                                                                                       |
+| Payments      | `createStripeCheckout`, `createTeamContributionCheckout`, `cancelTeamContributionCheckout` | `refundTeamContribution`                                                              |
+| Waivers       | `signWaiver`                                                                               |                                                                                       |
+| Storage       | `getUploadUrl`, `getDownloadUrl`, `getFileMetadata`                                        |                                                                                       |
+| Posts         | `createPost`, `updatePost`, `createReply`, `updateReply`                                   | `deletePost`, `deleteReply`                                                           |
+| Seasons       |                                                                                            | `createSeason`, `updateSeason`, `deleteSeason`, `setSwissSeeding`, `getSwissRankings` |
+| Games         |                                                                                            | `createGame`, `updateGame`, `deleteGame`                                              |
+| Rankings      |                                                                                            | `rebuildPlayerRankings`                                                               |
+| News          |                                                                                            | `createNews`, `updateNews`, `deleteNews`                                              |
+| Badges        |                                                                                            | `createBadge`, `updateBadge`, `deleteBadge`, `awardBadge`, `revokeBadge`              |
+| Site settings |                                                                                            | `updateSiteSettings`                                                                  |
 
 `createPlayer` and `updatePlayer` accept an unverified email, because they run
 during account setup. Everything else requires a verified one.
@@ -119,6 +119,7 @@ them and a forged request, and it runs before any read or write.
 | `services/teamDeletionService`        | Deleting a team-season, refusing while it holds money                                           |
 | `services/teamSettlementService`      | Refunding and reconciling a team's money with Stripe                                            |
 | `services/teamContributionIntake`     | Taking a PaymentIntent into the ledger, or refunding it if it cannot be attributed              |
+| `services/teamCheckoutReservations`   | Reserving a contribution while its payer is on Stripe's page, and ending the reservation        |
 | `services/teamPaymentsSweep`          | Finding and settling every unregistered team holding money                                      |
 | `services/teamPaymentsReconciliation` | Checking Stripe and the ledger against each other                                               |
 | `services/playerRankings`             | The TrueSkill rankings rebuild — see [PLAYER_RANKING_ALGORITHM.md](PLAYER_RANKING_ALGORITHM.md) |
