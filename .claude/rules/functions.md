@@ -95,6 +95,38 @@ So before deleting a secret, list which deployed functions mount it
 (`serviceConfig.secretEnvironmentVariables` in the Cloud Functions API), and
 clear a stale mount by patching that field alone.
 
+A deployed function is pinned to the secret **version** that was latest
+when it deployed. After `firebase functions:secrets:set`, let the CLI
+redeploy the functions it lists, or they keep the old value. When it then
+destroys the old version, its warning that the version is "in use" counts
+retired revisions too; what matters is the revision serving traffic
+(`trafficStatuses` on the Cloud Run service).
+
+### The Stripe key is restricted
+
+`STRIPE_SECRET_KEY` is a **restricted** key, created in the Dashboard, with:
+
+- **Write:** Checkout Sessions, Customers, PaymentIntents, Products, Refunds
+- **Read:** Charges (for `expand: ['latest_charge']`), Prices
+- **None:** everything else, including webhook endpoints
+
+A call outside that list fails in production with `StripePermissionError`
+("more_permissions_required"), and nothing here catches it first: the
+emulator refuses live keys and the tests fake Stripe. So adding a new kind of
+Stripe call means adding its permission to the key in the Dashboard in the
+same change. Account housekeeping — webhook endpoints, keys — is done in the
+Dashboard, not with this key.
+
+### Changing the Stripe API version
+
+A webhook endpoint is pinned to the API version it was created with, and
+renders every event in that version whatever the SDK expects. When
+`API_VERSION` in `config/constants.ts` moves, create a new endpoint on the
+new version with the same URL and events, set `STRIPE_WEBHOOK_SECRET` to its
+signing secret (the CLI redeploys `stripeWebhook`), then delete the old
+endpoint. Until it is deleted each event goes to both, and the old one's
+deliveries fail verification harmlessly; the handler is idempotent.
+
 ## Scheduled functions
 
 `onSchedule` functions live in `triggers/scheduled/`. The two there follow
