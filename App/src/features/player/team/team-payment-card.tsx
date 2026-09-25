@@ -6,6 +6,7 @@ import { CheckCircle, CreditCard, Info } from 'lucide-react'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 import {
+	LoadingButton,
 	LoadingSpinner,
 	NotificationCard,
 	TeamContributionsList,
@@ -36,12 +37,16 @@ import {
 /**
  * Shown above the pay button. A card hold looks like a charge on a
  * statement, so the payer is told up front what it is and when it becomes
- * one. The same wording is on Stripe's page.
+ * one — including the early charge the hourly sweep makes rather than let
+ * a week-old hold lapse. The same wording is on Stripe's page
+ * (`createTeamContributionCheckout`).
  */
 const HOLD_EXPLANATION =
-	`Your card is authorized now and charged only when your team is ` +
-	`confirmed. If your team does not get one of the ${REGISTRATION_SPOTS} ` +
-	`spots, the authorization is released and you are never charged.`
+	`Your card is authorized now and charged when your team registers. ` +
+	`An authorization lasts about a week, so if your team has not registered ` +
+	`by then it is charged early rather than allowed to lapse. If your team ` +
+	`does not get one of the ${REGISTRATION_SPOTS} spots, the authorization ` +
+	`is released, or the charge refunded in full.`
 
 /** Tells the payer how Checkout went, once, when Stripe sends them back. */
 const usePaymentReturnToast = (): void => {
@@ -53,8 +58,8 @@ const usePaymentReturnToast = (): void => {
 		if (status === 'success') {
 			toast.success('Card authorized', {
 				description:
-					'Your contribution will appear here in a moment. You are only ' +
-					'charged once your team is confirmed.',
+					'Your contribution will appear here in a moment. It is held on ' +
+					'your card until your team registers.',
 			})
 		} else {
 			toast.info('Payment cancelled', {
@@ -81,6 +86,17 @@ const ContributeForm = ({ remainingCents }: { remainingCents: number }) => {
 	)
 	const [submitting, setSubmitting] = useState(false)
 
+	// Pressing Back on Stripe's page can restore this page from the
+	// back-forward cache exactly as it was left — spinning. Nothing is in
+	// flight by then, so let the payer try again.
+	useEffect(() => {
+		const onPageShow = (event: PageTransitionEvent) => {
+			if (event.persisted) setSubmitting(false)
+		}
+		window.addEventListener('pageshow', onPageShow)
+		return () => window.removeEventListener('pageshow', onPageShow)
+	}, [])
+
 	const amountCents = Math.round(Number(dollars) * CENTS_PER_DOLLAR)
 	const error =
 		dollars.trim() === ''
@@ -88,7 +104,7 @@ const ContributeForm = ({ remainingCents }: { remainingCents: number }) => {
 			: contributionAmountError(amountCents, remainingCents)
 
 	const submit = async () => {
-		if (error) return
+		if (error || submitting) return
 		setSubmitting(true)
 		const failure = await startTeamContribution(amountCents)
 		if (failure) {
@@ -140,22 +156,16 @@ const ContributeForm = ({ remainingCents }: { remainingCents: number }) => {
 
 			<p className='text-sm text-muted-foreground'>{HOLD_EXPLANATION}</p>
 
-			<Button
+			<LoadingButton
 				onClick={submit}
-				disabled={Boolean(error) || submitting}
+				disabled={Boolean(error)}
+				loading={submitting}
+				loadingText='Opening Stripe...'
 				className='w-full'
 			>
-				{submitting ? (
-					<LoadingSpinner size='sm' className='mr-2' />
-				) : (
-					<CreditCard className='mr-2 h-4 w-4' />
-				)}
-				{submitting
-					? 'Opening Stripe...'
-					: error
-						? 'Contribute'
-						: `Contribute ${formatDollars(amountCents)}`}
-			</Button>
+				<CreditCard className='h-4 w-4' aria-hidden='true' />
+				{error ? 'Contribute' : `Contribute ${formatDollars(amountCents)}`}
+			</LoadingButton>
 		</div>
 	)
 }
@@ -170,7 +180,7 @@ export const TeamPaymentCard = () => {
 
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
-	const { currentSeasonData, isBanned } = useUserStatus()
+	const { currentSeasonData, isBanned, isAdmin } = useUserStatus()
 
 	const season = currentSeasonQueryDocumentSnapshot?.data()
 	const seasonId = currentSeasonQueryDocumentSnapshot?.id
@@ -246,11 +256,11 @@ export const TeamPaymentCard = () => {
 						? `All ${REGISTRATION_SPOTS} spots have been taken.`
 						: `Registration closed on ${formatTimestamp(season.registrationEnd)}.`}{' '}
 					Any money your team committed is released automatically: holds are
-					cancelled and nobody is charged.
+					cancelled, and anything already charged is refunded in full.
 				</AlertDescription>
 			</Alert>
 		)
-	} else if (notOpenYet) {
+	} else if (notOpenYet && !isAdmin) {
 		status = (
 			<Alert>
 				<Info className='h-4 w-4' />
@@ -273,7 +283,24 @@ export const TeamPaymentCard = () => {
 	} else if (isBanned) {
 		status = null
 	} else {
-		status = <ContributeForm remainingCents={remainingCents} />
+		status = (
+			<div className='space-y-3'>
+				{notOpenYet && (
+					// Only an admin gets here: the server lets admins contribute
+					// before registration opens, to try the flow for real.
+					<Alert className='border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950'>
+						<Info className='h-4 w-4 !text-amber-600 dark:!text-amber-400' />
+						<AlertDescription className='!text-amber-800 dark:!text-amber-200'>
+							Registration opens {formatTimestamp(season.registrationStart)}. As
+							an admin you can contribute early to test. It is a real
+							authorization on your card: release it from Team Management,
+							Payments, within six days, or it is charged.
+						</AlertDescription>
+					</Alert>
+				)}
+				<ContributeForm remainingCents={remainingCents} />
+			</div>
+		)
 	}
 
 	return (

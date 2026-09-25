@@ -246,7 +246,7 @@ describe('createTeamContributionCheckout', () => {
 		it('tells the payer the charge is a hold', async () => {
 			await run()
 			expect(sentSession().custom_text.submit.message).toMatch(
-				/authorized now and charged only when your team is confirmed/
+				/authorized now and charged when your team registers\. An authorization lasts about a week/
 			)
 		})
 
@@ -401,7 +401,8 @@ describe('createTeamContributionCheckout', () => {
 		})
 
 		it('refuses an admin who is not on a team', async () => {
-			// Admins get no bypass here. Money has to belong to a team.
+			// Early payment is an admin's only bypass. Money has to belong to a
+			// team.
 			await seedAuthUser('admin-1', true)
 			await firestore.collection('players').doc('admin-1').set({
 				admin: true,
@@ -448,6 +449,33 @@ describe('createTeamContributionCheckout', () => {
 				registrationStart: Timestamp.fromMillis(Date.now() + DAY_MS),
 			})
 			expect(await codeOf()).toBe('failed-precondition')
+		})
+
+		it('lets an admin contribute before registration opens', async () => {
+			// So the flow can be tried with a real card before opening day.
+			await firestore.collection('players').doc(PAYER).update({ admin: true })
+			await seasonRef().update({
+				registrationStart: Timestamp.fromMillis(Date.now() + 7 * DAY_MS),
+			})
+
+			await expect(run()).resolves.toMatchObject({
+				url: 'https://checkout.stripe.com/c/pay/cs_test_1',
+			})
+			// The same hold as anyone's: nothing about it is marked as a test.
+			expect(sentSession().payment_intent_data.capture_method).toBe('manual')
+		})
+
+		it('holds an early admin to every other rule', async () => {
+			await firestore.collection('players').doc(PAYER).update({ admin: true })
+			await seasonRef().update({
+				registrationStart: Timestamp.fromMillis(Date.now() + 7 * DAY_MS),
+			})
+
+			// More than the team needs is still refused.
+			expect(await codeOf({ amountCents: TOTAL + 100 })).toBe(
+				'invalid-argument'
+			)
+			expect(sessionsCreate).not.toHaveBeenCalled()
 		})
 
 		it('refuses after registration closes', async () => {

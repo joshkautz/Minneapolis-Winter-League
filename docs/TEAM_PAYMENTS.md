@@ -188,16 +188,21 @@ never reaches a contributor at all.
 
 ### What the UI actually has to say
 
-Once holds never expire, the explanation gets short, because the seven days
-stop being a deadline anyone has to act on:
+Once holds never expire, the seven days stop being a deadline anyone has to
+act on, but they still decide when some cards are charged, so the
+explanation has to say so:
 
-> **Your card is authorized for $1,000 now, and charged when your team is
-> confirmed.** If your team does not get one of the twelve spots, the
-> authorization is released and you are never charged.
+> Your card is authorized now and charged when your team registers. An
+> authorization lasts about a week, so if your team has not registered by
+> then it is charged early rather than allowed to lapse. If your team does
+> not get one of the 12 spots, the authorization is released, or the charge
+> refunded in full.
 
-No countdown, no expiry date, no instruction. The only thing a contributor
-needs to know is that the money is committed but not yet taken, and that they
-do not have to do anything else.
+An earlier version promised "you are never charged" if the team missed out.
+That was untrue for anyone whose hold the expiry net had already captured —
+they are charged and then refunded — and a charge the payer was told would
+never happen is the one they dispute. No countdown, no expiry date, no
+instruction: the contributor still has nothing to do.
 
 It is still worth showing, on the team page, that a contribution is
 `authorized` rather than `paid` — a captain chasing the last two signatures
@@ -567,9 +572,12 @@ Decisions made while building it:
 - **The client never names a team.** The callable reads it from the
   caller's player-season and confirms it against the roster entry; a
   request carrying a `teamId` has it ignored.
-- **No admin bypass of the registration window.** The per-player checkout
-  lets admins pay at any time. Money that arrives after the window can only
-  be sent back, so here the window applies to everyone.
+- **Admins may pay before the window opens, never after it closes.** An
+  admin can try the whole flow with a real card ahead of opening day.
+  Their early money is an ordinary hold, so a test must be released from
+  the Payments dialog within six days, before the sweep captures it. Money
+  that arrives after the window can only be sent back, so the close applies
+  to everyone. (The per-player checkout lets admins pay at any time.)
 - **Cards only.** Every card network supports manual capture, and the
   hold's expiry is read from the card details on the charge.
 - **Sessions expire after 31 minutes**, just over Stripe's floor. The

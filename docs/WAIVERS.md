@@ -55,10 +55,11 @@ missing parent in italics. To find them by person, query the
 `waiverSignatures` collection group with the Admin SDK on the `email` field,
 which each record keeps.
 
-They are kept indefinitely for now. How long to keep them is a question for
-the league's attorney: at least as long as a claim could be brought, which
-for someone who signed as a minor runs from their eighteenth birthday. See
-the roadmap.
+They are kept indefinitely, by the league's decision in September 2026. A
+claim can be brought years after the season it concerns — for someone who
+signed as a minor the clock only starts at eighteen — so there is no point
+at which a signature is safe to discard. Nothing deletes them, and nothing
+should without a new decision.
 
 Seasons signed before September 2026 went through Dropbox Sign; their
 records are in `dropbox/{uid}/waivers`, kept read-only as history. The 357
