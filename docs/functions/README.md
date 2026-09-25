@@ -60,7 +60,7 @@ during account setup. Everything else requires a verified one.
 | -------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
 | `userDeleted`                                | Auth account deleted                                   | Deletes the player's data, keeping waivers; see [Account deletion](#account-deletion)   |
 | `onOfferUpdated`                             | `offers/{offerId}` updated                             | On acceptance, adds the player to the roster and points their season record at the team |
-| `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes the team's registration                                                      |
+| `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes registration; releases a leaver's money on an unregistered team              |
 | `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                 |
 | `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes, and settles a new hold             |
 | `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Captures the new team's money; at twelve, releases and removes the unregistered ones    |

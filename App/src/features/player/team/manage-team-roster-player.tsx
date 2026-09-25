@@ -30,6 +30,7 @@ import {
 import { playerSeasonRef } from '@/firebase/collections/players'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
+import { useDeparturePaymentNote } from './hooks/use-departure-payment-note'
 
 export const ManageTeamRosterPlayer = ({
 	playerRef,
@@ -44,6 +45,10 @@ export const ManageTeamRosterPlayer = ({
 		currentSeasonData,
 	} = useUserStatus()
 	const [playerSnapshot, , playerError] = useDocument(playerRef)
+	const isSelf = playerRef.id === authenticatedUserSnapshot?.id
+	const departurePaymentNote = useDeparturePaymentNote(
+		isSelf ? null : (playerSnapshot?.data()?.firstname ?? 'This player')
+	)
 	const [playerSeasonSnapshot] = useDocument(
 		playerSeasonRef(playerRef.id, currentSeasonQueryDocumentSnapshot?.id)
 	)
@@ -316,13 +321,16 @@ export const ManageTeamRosterPlayer = ({
 													? 'Are you sure you want to leave?'
 													: 'Are you sure?'
 											}
-											description={
+											description={[
 												playerSnapshot.id === authenticatedUserSnapshot?.id
 													? 'You will not be able to rejoin until a captain accepts you back on to the roster.'
 													: `${
 															playerSnapshot.data()?.firstname
-														} will not be able to rejoin until a captain accepts them back on to the roster.`
-											}
+														} will not be able to rejoin until a captain accepts them back on to the roster.`,
+												departurePaymentNote,
+											]
+												.filter(Boolean)
+												.join(' ')}
 											onConfirm={removeFromTeamOnClickHandler}
 										>
 											<DropdownMenuItem

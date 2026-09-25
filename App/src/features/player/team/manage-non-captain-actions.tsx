@@ -15,6 +15,7 @@ import { useTeamsContext } from '@/providers'
 import { logger, errorHandler } from '@/shared/utils'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
+import { useDeparturePaymentNote } from './hooks/use-departure-payment-note'
 
 export const ManageNonCaptainActions = () => {
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
@@ -22,6 +23,7 @@ export const ManageNonCaptainActions = () => {
 		useUserStatus()
 	const [dropdownOpen, setDropdownOpen] = useState(false)
 	const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
+	const departurePaymentNote = useDeparturePaymentNote()
 
 	const teamQueryDocumentSnapshot = useMemo(
 		() =>
@@ -100,9 +102,12 @@ export const ManageNonCaptainActions = () => {
 
 			<DestructiveConfirmationDialog
 				title={'Are you sure you want to leave?'}
-				description={
-					'You will not be able to rejoin unless a captain accepts you back on to the roster.'
-				}
+				description={[
+					'You will not be able to rejoin unless a captain accepts you back on to the roster.',
+					departurePaymentNote,
+				]
+					.filter(Boolean)
+					.join(' ')}
 				onConfirm={removeFromTeamOnClickHandler}
 				open={confirmDialogOpen}
 				onOpenChange={setConfirmDialogOpen}

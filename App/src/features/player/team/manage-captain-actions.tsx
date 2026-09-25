@@ -10,8 +10,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ManageEditTeamDialog } from './manage-edit-team-dialog'
 import { useManageCaptainActions } from './hooks/use-manage-captain-actions'
+import { useDeparturePaymentNote } from './hooks/use-departure-payment-note'
 
 export const ManageCaptainActions = () => {
+	const departurePaymentNote = useDeparturePaymentNote()
 	const {
 		open,
 		setOpen,
@@ -68,9 +70,12 @@ export const ManageCaptainActions = () => {
 				open={leaveTeamDialogOpen}
 				onOpenChange={setLeaveTeamDialogOpen}
 				title={'Are you sure you want to leave?'}
-				description={
-					'You will not be able to rejoin unless a captain accepts you back on to the roster.'
-				}
+				description={[
+					'You will not be able to rejoin unless a captain accepts you back on to the roster.',
+					departurePaymentNote,
+				]
+					.filter(Boolean)
+					.join(' ')}
 				onConfirm={removeFromTeamOnClickHandler}
 			>
 				<></>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+	committedByRosterCents,
 	committedCents,
 	contributionAmountError,
 	formatDollars,
@@ -86,6 +87,29 @@ describe('totals', () => {
 
 	it('counts held and taken money as committed, and nothing released', () => {
 		expect(committedCents(ledger)).toBe(70_000)
+	})
+
+	it('counts only the current roster’s money toward the total', () => {
+		const byPayer = [
+			{
+				status: 'authorized' as const,
+				amountCents: 40_000,
+				player: { id: 'on' },
+			},
+			{
+				status: 'captured' as const,
+				amountCents: 30_000,
+				player: { id: 'left' },
+			},
+			{
+				status: 'canceled' as const,
+				amountCents: 20_000,
+				player: { id: 'on' },
+			},
+		]
+		expect(committedByRosterCents(byPayer as never, new Set(['on']))).toBe(
+			40_000
+		)
 	})
 })
 

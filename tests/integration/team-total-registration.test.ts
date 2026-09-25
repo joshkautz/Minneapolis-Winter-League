@@ -138,6 +138,28 @@ describe('team-total registration', () => {
 		expect(await isRegistered()).toBe(false)
 	})
 
+	it('does not count money from someone who has left the team', async () => {
+		// Their hold is normally released as they leave. If Stripe is down
+		// and it is still held, it must not register the team: they would be
+		// charged for a team they are no longer on.
+		await seedSignedRoster(MIN)
+		await contribute('pi_departed', TOTAL, 'departed')
+
+		await updateTeamRegistrationStatus(TEAM, SEASON)
+
+		expect(await isRegistered()).toBe(false)
+	})
+
+	it('registers on what the roster itself committed, beside a leaver’s', async () => {
+		await seedSignedRoster(MIN)
+		await contribute('pi_departed', 50_000, 'departed')
+		await contribute('pi_1', TOTAL, 'signed-1')
+
+		await updateTeamRegistrationStatus(TEAM, SEASON)
+
+		expect(await isRegistered()).toBe(true)
+	})
+
 	it('does not register on the players alone', async () => {
 		await seedSignedRoster(MIN)
 

@@ -12,6 +12,9 @@
  * - a capture of less than the hold releases the rest
  * - refunds only from `succeeded`, never more than is left
  * - an idempotency key replays its first result, whatever has happened since
+ * - a Checkout session only holds money once the payer completes it
+ *   (`completeCheckout`), and the hold carries the session's PaymentIntent
+ *   metadata and amount, as Stripe's does
  *
  * Use it as the SDK's default export:
  *
@@ -62,6 +65,28 @@ interface FakeState {
 		count: number
 		waiting: (() => void)[]
 	} | null
+	/** Checkout sessions created, by id, with the parameters sent. */
+	sessions: Map<string, FakeCheckoutSession>
+	customers: Set<string>
+	products: Set<string>
+}
+
+/** What the code sends `checkout.sessions.create`, as far as the fake reads. */
+interface CheckoutSessionParams {
+	customer?: string
+	line_items: { price_data: { unit_amount: number } }[]
+	payment_intent_data: {
+		capture_method: string
+		metadata: Record<string, string>
+	}
+	metadata: Record<string, string>
+}
+
+export interface FakeCheckoutSession {
+	id: string
+	url: string
+	params: CheckoutSessionParams
+	paymentIntentId: string | null
 }
 
 export const fakeStripe: FakeState = {
@@ -72,6 +97,9 @@ export const fakeStripe: FakeState = {
 	nextEvent: undefined,
 	searches: [],
 	retrieveGate: null,
+	sessions: new Map(),
+	customers: new Set(),
+	products: new Set(),
 }
 
 export function resetFakeStripe(): void {
@@ -82,6 +110,49 @@ export function resetFakeStripe(): void {
 	fakeStripe.nextEvent = undefined
 	fakeStripe.searches.length = 0
 	fakeStripe.retrieveGate = null
+	fakeStripe.sessions.clear()
+	fakeStripe.customers.clear()
+	fakeStripe.products.clear()
+}
+
+/**
+ * The payer finishes on Stripe's page: the session's card is authorized for
+ * its amount, and the `checkout.session.completed` event Stripe would send
+ * is returned for the test to deliver. Only manual-capture sessions exist in
+ * this codebase's team flow, so the result is always a hold.
+ */
+export function completeCheckout(
+	sessionId: string,
+	options: { captureBeforeSeconds?: number } = {}
+): unknown {
+	const session = fakeStripe.sessions.get(sessionId)
+	if (!session) throw new Error(`No such checkout session: ${sessionId}`)
+	if (session.params.payment_intent_data.capture_method !== 'manual') {
+		throw new Error('The fake only models manual-capture Checkout')
+	}
+	const paymentIntentId = `pi_${sessionId.slice('cs_'.length)}`
+	addHold(
+		paymentIntentId,
+		session.params.line_items[0].price_data.unit_amount,
+		session.params.payment_intent_data.metadata,
+		options.captureBeforeSeconds
+	)
+	session.paymentIntentId = paymentIntentId
+	return {
+		id: `evt_${sessionId}`,
+		type: 'checkout.session.completed',
+		data: {
+			object: {
+				id: sessionId,
+				object: 'checkout.session',
+				// A manual-capture session completes unpaid: the money is held.
+				payment_status: 'unpaid',
+				payment_intent: paymentIntentId,
+				metadata: session.params.metadata,
+				customer: session.params.customer ?? null,
+			},
+		},
+	}
 }
 
 /** Makes the next `count` retrieves of a PaymentIntent return together. */
@@ -178,6 +249,63 @@ function idempotent<T>(key: string | undefined, run: () => T): T {
 }
 
 export class FakeStripe {
+	checkout = {
+		sessions: {
+			create: async (
+				params: CheckoutSessionParams,
+				options: { idempotencyKey?: string } = {}
+			): Promise<{ id: string; url: string }> =>
+				idempotent(options.idempotencyKey, () => {
+					const id = `cs_${fakeStripe.sessions.size + 1}`
+					const session: FakeCheckoutSession = {
+						id,
+						url: `https://checkout.stripe.com/c/pay/${id}`,
+						params: copy(params),
+						paymentIntentId: null,
+					}
+					fakeStripe.sessions.set(id, session)
+					return { id, url: session.url }
+				}),
+		},
+	}
+
+	customers = {
+		retrieve: async (id: string): Promise<{ id: string }> => {
+			if (!fakeStripe.customers.has(id)) {
+				throw new StripeInvalidRequestError(
+					'resource_missing',
+					`No such customer: '${id}'`
+				)
+			}
+			return { id }
+		},
+		create: async (
+			_params: unknown,
+			options: { idempotencyKey?: string } = {}
+		): Promise<{ id: string }> =>
+			idempotent(options.idempotencyKey, () => {
+				const id = `cus_${fakeStripe.customers.size + 1}`
+				fakeStripe.customers.add(id)
+				return { id }
+			}),
+	}
+
+	products = {
+		retrieve: async (id: string): Promise<{ id: string }> => {
+			if (!fakeStripe.products.has(id)) {
+				throw new StripeInvalidRequestError(
+					'resource_missing',
+					`No such product: '${id}'`
+				)
+			}
+			return { id }
+		},
+		create: async (params: { id: string }): Promise<{ id: string }> => {
+			fakeStripe.products.add(params.id)
+			return { id: params.id }
+		},
+	}
+
 	paymentIntents = {
 		retrieve: async (id: string): Promise<FakePaymentIntent> => {
 			maybeFail('retrieve', id)

@@ -36,6 +36,7 @@ const contribution = (
 		createdAtMillis: NOW - 60 * HOUR + sequence,
 		// Comfortably unexpired unless a test says otherwise.
 		captureBeforeMillis: NOW + 5 * 24 * HOUR,
+		payerOnRoster: true,
 		...overrides,
 	}
 }
@@ -424,6 +425,127 @@ describe('hold', () => {
 			'hold'
 		).actions
 		expect(actions.some((a) => a.type === 'refund')).toBe(false)
+	})
+})
+
+describe('a payer who has left the team', () => {
+	const leaver = (
+		amountCents: number,
+		status: PlannedContribution['status'] = 'authorized'
+	) => contribution(amountCents, status, { payerOnRoster: false })
+
+	describe('before the team registers', () => {
+		it('has their hold released, which costs nothing', () => {
+			const gone = leaver(40_000)
+			const stays = contribution(30_000)
+
+			expect(plan([gone, stays], 'hold').actions).toEqual([
+				{ type: 'cancel', paymentIntentId: gone.paymentIntentId },
+			])
+		})
+
+		it('is refunded what the expiry net already took', () => {
+			const gone = leaver(40_000, 'captured')
+
+			expect(plan([gone], 'hold').actions).toEqual([
+				{
+					type: 'refund',
+					paymentIntentId: gone.paymentIntentId,
+					amountCents: 40_000,
+				},
+			])
+		})
+
+		it('does not change how the rest of the team’s expiring money is taken', () => {
+			// The leaver's $900 would otherwise cover the team, so an expiring
+			// $500 hold of a teammate would be only partly captured.
+			const gone = leaver(90_000)
+			const expiring = contribution(50_000, 'authorized', {
+				captureBeforeMillis: NOW + HOUR,
+			})
+
+			expect(plan([gone, expiring], 'hold').actions).toEqual([
+				{ type: 'cancel', paymentIntentId: gone.paymentIntentId },
+				{
+					type: 'capture',
+					paymentIntentId: expiring.paymentIntentId,
+					amountCents: 50_000,
+				},
+			])
+		})
+	})
+
+	describe('once the team is registered', () => {
+		it('is not charged when the team still on it covers the total', () => {
+			// Left before the team registered: registration never counted them.
+			const gone = leaver(40_000)
+			const stays = contribution(TOTAL)
+
+			expect(plan([gone, stays], 'keep').actions).toEqual([
+				{
+					type: 'capture',
+					paymentIntentId: stays.paymentIntentId,
+					amountCents: TOTAL,
+				},
+				{ type: 'cancel', paymentIntentId: gone.paymentIntentId },
+			])
+		})
+
+		it('comes after the team, however early they paid', () => {
+			const gone = leaver(60_000)
+			const stays = contribution(60_000)
+
+			expect(plan([gone, stays], 'keep').actions).toEqual([
+				{
+					type: 'capture',
+					paymentIntentId: stays.paymentIntentId,
+					amountCents: 60_000,
+				},
+				{
+					type: 'capture',
+					paymentIntentId: gone.paymentIntentId,
+					amountCents: 40_000,
+				},
+			])
+		})
+
+		it('is charged when they left after their money secured the spot', () => {
+			// Registration is final; the team must not be left short.
+			const gone = leaver(TOTAL)
+
+			const result = plan([gone], 'keep')
+			expect(result.actions).toEqual([
+				{
+					type: 'capture',
+					paymentIntentId: gone.paymentIntentId,
+					amountCents: TOTAL,
+				},
+			])
+			expect(result.shortfallCents).toBe(0)
+		})
+
+		it('keeps money already taken from them', () => {
+			const gone = leaver(40_000, 'captured')
+			const stays = contribution(TOTAL)
+
+			expect(plan([gone, stays], 'keep').actions).toEqual([
+				{
+					type: 'capture',
+					paymentIntentId: stays.paymentIntentId,
+					amountCents: 60_000,
+				},
+			])
+		})
+	})
+
+	it('is released with everyone else when the team misses out', () => {
+		const gone = leaver(40_000)
+		const stays = contribution(30_000)
+
+		expect(plan([gone, stays], 'release').actions).toEqual([
+			{ type: 'cancel', paymentIntentId: gone.paymentIntentId },
+			{ type: 'cancel', paymentIntentId: stays.paymentIntentId },
+		])
 	})
 })
 

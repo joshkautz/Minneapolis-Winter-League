@@ -289,13 +289,23 @@ there is no way to un-register a team and leave $1,000 captured against it.
 
 ## Returning money that should not be kept
 
-Two events oblige the league to give money back, and both apply to any team
-holding contributions that has not registered:
+Three events oblige the league to give money back. The first two apply to
+any team holding contributions that has not registered:
 
 1. **Twelve other teams register.** The season is full; every unregistered
    team is settled.
 2. **The registration window closes.** Anything still unregistered is
    settled.
+3. **A payer leaves a team that has not registered** — on their own, or
+   removed by a captain. Their money is released the moment they go (the
+   roster trigger settles the team), and it stops counting toward the total
+   at once, so a team can never register on the money of someone not on
+   it. It also stops reducing what their former teammates may put in.
+
+Once a team has registered, registration is final, and a payer who leaves
+afterwards stays charged: their money helped secure the spot. Settlement
+charges the people still on the team first and a leaver only for any gap,
+so a leaver whose hold was never needed is released rather than charged.
 
 "Settle" is one operation with two branches, decided per contribution:
 
@@ -630,6 +640,7 @@ the team stands, and everything that can change that calls it:
 | `onTeamRegistrationChange`, for the new team | Captures exactly the total, oldest first; releases the rest   |
 | the same trigger, when the twelfth registers | Releases every unregistered team's money, then deletes it     |
 | the contribution trigger, on a new hold      | Releases a hold that landed too late; leaves a live one alone |
+| the roster trigger, when someone leaves      | Releases a leaver's money if the team has not registered      |
 | the webhook, on Dashboard or bank changes    | Corrects the ledger to what Stripe says                       |
 
 The decisions are a pure planner (`shared/settlement.ts`) with no Stripe in
@@ -779,6 +790,15 @@ commands. The emulator cannot reach Stripe (a live key is refused there), so
 it proves the cap, not settlement: registered teams keep their holds
 authorized and the three losers stay in place, the path taken when a release
 fails. The first run, on 24 September 2026, registered exactly twelve.
+
+**Drive the whole flow, not just its pieces.**
+`tests/integration/team-collective-payment.test.ts` does what players do —
+open Checkout, finish on Stripe's page, sign, leave — through the real
+callables and webhook, and fires every trigger production would until
+nothing changes. It covers several payers funding one team, the
+overpayment race, a partial capture, and leaving before and after
+registration. The fake Stripe it runs on models Checkout, so a completed
+session produces the hold Stripe would.
 
 ## Migration
 

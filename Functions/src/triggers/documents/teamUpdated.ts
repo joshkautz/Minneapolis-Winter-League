@@ -2,7 +2,10 @@
  * Team-season roster trigger
  *
  * Fires when a roster entry is created or deleted under a team's season
- * subcollection. Recomputes the team's registration status for that season.
+ * subcollection. Recomputes the team's registration status for that season,
+ * and when someone leaves, settles the team's money: a payer who leaves a
+ * team that has not registered has their hold released straight away,
+ * rather than at the next hourly sweep. See `planSettlement`.
  */
 
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
@@ -10,6 +13,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'
+import { settleTeamSeason } from '../../services/teamSettlementService.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
@@ -18,6 +22,7 @@ export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
 		region: FIREBASE_CONFIG.REGION,
 		// A throw is only retried with this set; see .claude/rules/functions.md.
 		retry: true,
+		secrets: ['STRIPE_SECRET_KEY'],
 	},
 	async (event) => {
 		const { teamId, seasonId } = event.params
@@ -42,6 +47,13 @@ export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
 			logger.info(
 				`Updated team registration status for roster change: ${teamId}/${seasonId}`
 			)
+
+			// Registration first, so the settlement sees whether the team is
+			// in. Cheap when the leaver paid nothing: it reads, finds no
+			// action, and never calls Stripe.
+			if (!after?.exists) {
+				await settleTeamSeason(teamId, seasonId)
+			}
 		} catch (error) {
 			// Rethrown so the platform retries; see playerUpdated.ts.
 			logger.error('Error updating team registration on roster change:', {

@@ -282,7 +282,11 @@ export type ContributionStatus =
  * team-season document; sum this subcollection instead.
  */
 export interface TeamContributionDocument extends DocumentData {
-	/** The player who paid. Always someone on the roster for this season. */
+	/**
+	 * The player who paid, on the roster when they did. If they have since
+	 * left, their money no longer counts toward the team, and an unregistered
+	 * team releases it; see `committedByRosterCents`.
+	 */
 	player: DocumentReference<PlayerDocument>
 	/** Amount in cents, as charged. */
 	amountCents: number

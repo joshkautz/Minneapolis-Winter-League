@@ -77,6 +77,25 @@ export const committedCents = (
 }
 
 /**
+ * What the team's current roster has committed: the figure the server
+ * registers on and takes the remaining balance from
+ * (`committedByRosterCents` in Functions). A teammate who left is being
+ * released, so their money no longer counts.
+ */
+export const committedByRosterCents = (
+	contributions: Pick<
+		TeamContributionDocument,
+		'status' | 'amountCents' | 'player'
+	>[],
+	rosterPlayerIds: ReadonlySet<string>
+): number =>
+	committedCents(
+		contributions.filter((contribution) =>
+			rosterPlayerIds.has(contribution.player.id)
+		)
+	)
+
+/**
  * Why a proposed contribution would be refused, or null if it is fine.
  * The same rule the server applies: whole dollars, at least $10 unless less
  * is owed, and no more than the team still needs.

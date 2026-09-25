@@ -37,12 +37,11 @@ import {
 import {
 	getCurrentSeason,
 	playerSeasonRef,
-	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../../shared/database.js'
 import {
 	CENTS_PER_DOLLAR,
-	committedCents,
+	committedByRosterCents,
 	contributionAmountError,
 	teamContributionsCollection,
 } from '../../../shared/contributions.js'
@@ -224,17 +223,19 @@ export const createTeamContributionCheckout = onCall<
 		}
 		const teamId = teamRef.id
 
-		const [rosterEntrySnap, teamSeasonSnap, contributionsSnap, userRecord] =
+		const [rosterSnap, teamSeasonSnap, contributionsSnap, userRecord] =
 			await Promise.all([
-				teamRosterEntryRef(firestore, teamId, seasonId, userId).get(),
+				teamSeasonRef(firestore, teamId, seasonId).collection('roster').get(),
 				teamSeasonRef(firestore, teamId, seasonId).get(),
 				teamContributionsCollection(firestore, teamId, seasonId).get(),
 				getAuth().getUser(userId),
 			])
+		// Roster entries are keyed by player id.
+		const rosterPlayerIds = new Set(rosterSnap.docs.map((doc) => doc.id))
 
 		// Both sides of the membership are written together, so disagreement
 		// means something is wrong; refuse rather than guess which is right.
-		if (!rosterEntrySnap.exists || !teamSeasonSnap.exists) {
+		if (!rosterPlayerIds.has(userId) || !teamSeasonSnap.exists) {
 			throw new HttpsError(
 				'failed-precondition',
 				'You must be on a team to contribute to one'
@@ -249,10 +250,13 @@ export const createTeamContributionCheckout = onCall<
 			)
 		}
 
-		const committed = committedCents(
+		// What the team still needs, from the people on it now. A teammate
+		// who left is being released, and does not reduce anyone's share.
+		const committed = committedByRosterCents(
 			contributionsSnap.docs.map(
 				(doc) => doc.data() as TeamContributionDocument
-			)
+			),
+			rosterPlayerIds
 		)
 		const remainingCents = teamTotalCents - committed
 		if (remainingCents <= 0) {

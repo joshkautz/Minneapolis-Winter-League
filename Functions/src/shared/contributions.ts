@@ -102,6 +102,25 @@ export function committedCents(
 }
 
 /**
+ * What a team's **current** roster has committed toward its total — the
+ * figure registration and the checkout's remaining balance both use.
+ *
+ * A payer who has left the team no longer counts: their money is released
+ * (see `shared/settlement.ts`), and until it is, counting it could register
+ * a team on the money of someone who is not on it, and charge them for it.
+ */
+export function committedByRosterCents(
+	contributions: TeamContributionDocument[],
+	rosterPlayerIds: ReadonlySet<string>
+): number {
+	return committedCents(
+		contributions.filter((contribution) =>
+			rosterPlayerIds.has(contribution.player.id)
+		)
+	)
+}
+
+/**
  * Why a proposed contribution is unacceptable, or null if it is fine.
  *
  * Pure so the boundaries can be tested without a database. The caller has

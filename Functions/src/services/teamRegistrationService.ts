@@ -10,7 +10,7 @@
  * - **Per-player** (the original): ten roster members each individually paid
  *   and signed.
  * - **Team-total**: ten roster members who have signed, plus that much money
- *   committed by any of them, in any split. A player is registered by their
+ *   committed by people still on the roster, in any split. A player is registered by their
  *   waiver; the money belongs to the team.
  */
 
@@ -28,7 +28,7 @@ import {
 	type TeamContributionDocument,
 } from '../types.js'
 import {
-	committedCents,
+	committedByRosterCents,
 	teamContributionsCollection,
 } from '../shared/contributions.js'
 import { playerSeasonRef, teamSeasonRef } from '../shared/database.js'
@@ -203,10 +203,12 @@ async function claimSpotIfQualified(
 			const contributionsSnap = await transaction.get(
 				teamContributionsCollection(firestore, teamId, seasonId)
 			)
-			const committed = committedCents(
+			// Only the money of people still on the team counts.
+			const committed = committedByRosterCents(
 				contributionsSnap.docs.map(
 					(doc) => doc.data() as TeamContributionDocument
-				)
+				),
+				new Set(rosterSnap.docs.map((doc) => doc.id))
 			)
 
 			if (committed < teamTotalCents) {

@@ -21,7 +21,10 @@ import {
 	setContributionStatus,
 	teamContributionsCollection,
 } from '../../Functions/src/shared/contributions.js'
-import { teamSeasonRef } from '../../Functions/src/shared/database.js'
+import {
+	teamRosterEntryRef,
+	teamSeasonRef,
+} from '../../Functions/src/shared/database.js'
 import { sweepTeamPayments } from '../../Functions/src/services/teamPaymentsSweep.js'
 import {
 	LIVE_TEAM_HOLDS_QUERY,
@@ -111,6 +114,11 @@ const hold = async (
 			: Math.floor(options.expiresAt / 1000)
 	)
 	if (options.inLedger === false) return
+	// The payer is on the team: money from someone who has left is released.
+	await teamRosterEntryRef(firestore, teamId, seasonId, 'payer').set({
+		player: firestore.collection('players').doc('payer'),
+		dateJoined: Timestamp.now(),
+	})
 	await recordContribution(firestore, {
 		teamId,
 		seasonId,
