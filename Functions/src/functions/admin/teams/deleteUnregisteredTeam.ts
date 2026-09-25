@@ -2,6 +2,16 @@
  * Delete unregistered team callable function (Admin only)
  *
  * Deletes an unregistered team's participation in the current season.
+ *
+ * Security validations performed:
+ * - Caller must be an admin.
+ * - The request names the season, and it must be the current one. Team
+ *   Management lists any season, and this used to take only the team and
+ *   delete its current-season entry, so a Delete pressed while viewing a
+ *   past season removed the team from this season instead.
+ * - The team must not be registered. A registered team's money is settled
+ *   through the Payments dialog; it is never deleted here.
+ * - `deleteTeamSeasonWithCleanup` refuses a team still holding money.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -14,6 +24,8 @@ import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletionServi
 
 interface DeleteUnregisteredTeamRequest {
 	teamId: string
+	/** The season the admin was looking at; must be the current season. */
+	seasonId: string
 }
 
 interface DeleteUnregisteredTeamResponse {
@@ -33,9 +45,12 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 
 			await validateAdminUser(authContext, firestore)
 
-			const { teamId } = data
-			if (!teamId) {
-				throw new HttpsError('invalid-argument', 'Team ID is required')
+			const { teamId, seasonId: requestedSeasonId } = data
+			if (!teamId || !requestedSeasonId) {
+				throw new HttpsError(
+					'invalid-argument',
+					'Team ID and season ID are required'
+				)
 			}
 
 			const currentSeason = await getCurrentSeason()
@@ -43,6 +58,12 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 				throw new HttpsError('not-found', 'No current season found')
 			}
 			const seasonId = currentSeason.id
+			if (requestedSeasonId !== seasonId) {
+				throw new HttpsError(
+					'failed-precondition',
+					`Only teams in the current season, ${currentSeason.name}, can be deleted.`
+				)
+			}
 
 			// Verify the team has a season subdoc for the current season.
 			const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)

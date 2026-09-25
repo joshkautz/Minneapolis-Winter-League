@@ -7,13 +7,11 @@
 import { useState, useMemo } from 'react'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { toast } from 'sonner'
 import {
 	ArrowLeft,
 	Trash2,
 	AlertTriangle,
 	RefreshCw,
-	Users as UsersIcon,
 	CheckCircle,
 	Shield,
 	Award,
@@ -24,17 +22,13 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 
 import { auth } from '@/firebase/auth'
-import { logger, usesTeamPayments } from '@/shared/utils'
+import { usesTeamPayments } from '@/shared/utils'
 import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	canonicalTeamRefFromTeamSeasonDoc,
 	teamsInSeasonQuery,
 } from '@/firebase/collections/teams'
-import {
-	deleteUnregisteredTeamViaFunction,
-	deleteTeamViaFunction,
-} from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -55,16 +49,6 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { TeamDocument, SeasonDocument, TeamSeasonDocument } from '@/types'
 import { useSeasonsContext } from '@/providers'
 import { useQueryErrorHandler } from '@/shared/hooks'
@@ -72,6 +56,8 @@ import { TeamBadgesDialog } from './components/team-badges-dialog'
 import { TeamEditDialog } from './components/team-edit-dialog'
 import { MergeTeamsDialog } from './components/merge-teams-dialog'
 import { TeamPaymentsDialog } from './components/team-payments-dialog'
+import { DeleteTeamDialog } from './components/delete-team-dialog'
+import { RosterSize } from './components/roster-size'
 import { DocumentReference } from '@/firebase'
 
 export const TeamManagement = () => {
@@ -135,10 +121,12 @@ export const TeamManagement = () => {
 	const [teamToDelete, setTeamToDelete] = useState<{
 		id: string
 		name: string
-		rosterSize: number
-		isRegistered: boolean
 	} | null>(null)
-	const [isDeleting, setIsDeleting] = useState(false)
+	// Only the current season's teams can be deleted; deleteUnregisteredTeam
+	// refuses any other.
+	const isCurrentSeasonSelected =
+		!!selectedSeasonId &&
+		selectedSeasonId === currentSeasonQueryDocumentSnapshot?.id
 
 	// State for badge management dialog
 	const [teamForBadges, setTeamForBadges] = useState<{
@@ -216,13 +204,8 @@ export const TeamManagement = () => {
 		data: TeamSeasonDocument
 	}
 
-	const handleDeleteClick = (team: TeamRow, isRegistered: boolean) => {
-		setTeamToDelete({
-			id: team.id,
-			name: team.name,
-			rosterSize: 0,
-			isRegistered,
-		})
+	const handleDeleteClick = (team: TeamRow) => {
+		setTeamToDelete({ id: team.id, name: team.name })
 	}
 
 	const handleManageBadgesClick = (
@@ -247,50 +230,6 @@ export const TeamManagement = () => {
 			name: team.name,
 			seasonId: selectedSeasonId,
 		})
-	}
-
-	const handleConfirmDelete = async () => {
-		if (!teamToDelete) return
-
-		setIsDeleting(true)
-		try {
-			if (teamToDelete.isRegistered) {
-				// For registered teams, use the generic delete function
-				// deleteTeam refuses registered teams and non-captains, so this
-				// path cannot succeed for an admin; see docs/ROADMAP.md.
-				await deleteTeamViaFunction({
-					teamId: teamToDelete.id,
-					seasonId: selectedSeasonId,
-					timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-				})
-				toast.success('Team deleted successfully', {
-					description: `${teamToDelete.name} has been permanently deleted`,
-				})
-			} else {
-				// For unregistered teams, use the specialized function with detailed response
-				const result = await deleteUnregisteredTeamViaFunction({
-					teamId: teamToDelete.id,
-				})
-				toast.success(result.message, {
-					description: `${result.playersRemoved} player${result.playersRemoved !== 1 ? 's' : ''} removed from team`,
-				})
-			}
-
-			// Close dialog
-			setTeamToDelete(null)
-		} catch (error: unknown) {
-			logger.error('Error deleting team:', error)
-
-			// Extract error message from Firebase Functions error
-			let errorMessage = 'Failed to delete team. Please try again.'
-			if (error && typeof error === 'object' && 'message' in error) {
-				errorMessage = (error as { message: string }).message
-			}
-
-			toast.error(errorMessage)
-		} finally {
-			setIsDeleting(false)
-		}
 	}
 
 	// Handle authentication and data loading
@@ -395,8 +334,13 @@ export const TeamManagement = () => {
 				<AlertDescription>
 					<ul className='space-y-2 list-disc list-inside'>
 						<li>
-							Deleting a team will remove all players from the roster, revoke
-							captain status, and delete all related offers.
+							Only unregistered teams in the current season can be deleted.
+							Deleting one removes its players from the roster, revokes captain
+							status, and deletes its open offers.
+						</li>
+						<li>
+							A registered team cannot be deleted. To refund one, release its
+							money from Payments; to combine two, use Merge.
 						</li>
 					</ul>
 				</AlertDescription>
@@ -453,10 +397,10 @@ export const TeamManagement = () => {
 												</div>
 											</TableCell>
 											<TableCell>
-												<div className='flex items-center gap-2'>
-													<UsersIcon className='h-4 w-4 text-muted-foreground' />
-													<span>roster</span>
-												</div>
+												<RosterSize
+													teamId={team.id}
+													seasonId={selectedSeasonId}
+												/>
 											</TableCell>
 											<TableCell>
 												<Badge
@@ -512,14 +456,6 @@ export const TeamManagement = () => {
 													>
 														<Combine className='h-4 w-4 mr-2' />
 														Merge...
-													</Button>
-													<Button
-														variant='destructive'
-														size='sm'
-														onClick={() => handleDeleteClick(team, true)}
-													>
-														<Trash2 className='h-4 w-4 mr-2' />
-														Delete Team
 													</Button>
 												</div>
 											</TableCell>
@@ -583,10 +519,10 @@ export const TeamManagement = () => {
 												</div>
 											</TableCell>
 											<TableCell>
-												<div className='flex items-center gap-2'>
-													<UsersIcon className='h-4 w-4 text-muted-foreground' />
-													<span>roster</span>
-												</div>
+												<RosterSize
+													teamId={team.id}
+													seasonId={selectedSeasonId}
+												/>
 											</TableCell>
 											<TableCell>
 												<Badge
@@ -643,14 +579,16 @@ export const TeamManagement = () => {
 														<Combine className='h-4 w-4 mr-2' />
 														Merge...
 													</Button>
-													<Button
-														variant='destructive'
-														size='sm'
-														onClick={() => handleDeleteClick(team, false)}
-													>
-														<Trash2 className='h-4 w-4 mr-2' />
-														Delete Team
-													</Button>
+													{isCurrentSeasonSelected && (
+														<Button
+															variant='destructive'
+															size='sm'
+															onClick={() => handleDeleteClick(team)}
+														>
+															<Trash2 className='h-4 w-4 mr-2' />
+															Delete Team
+														</Button>
+													)}
 												</div>
 											</TableCell>
 										</TableRow>
@@ -662,57 +600,11 @@ export const TeamManagement = () => {
 				</CardContent>
 			</Card>
 
-			{/* Delete Confirmation Dialog */}
-			<AlertDialog
-				open={!!teamToDelete}
-				onOpenChange={(open) => {
-					// Stays open, spinner showing, until the request settles.
-					if (!open && !isDeleting) setTeamToDelete(null)
-				}}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle className='flex items-center gap-2'>
-							<Trash2 className='h-5 w-5 text-red-600' />
-							Delete Team "{teamToDelete?.name}"?
-						</AlertDialogTitle>
-						<AlertDialogDescription className='space-y-2'>
-							<p>
-								This will permanently delete the team and remove all{' '}
-								<strong>{teamToDelete?.rosterSize} player(s)</strong> from the
-								roster.
-							</p>
-							<p className='text-red-600 font-semibold'>
-								This action cannot be undone.
-							</p>
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={(event) => {
-								// Radix closes on click; the handler closes it on success.
-								event.preventDefault()
-								void handleConfirmDelete()
-							}}
-							disabled={isDeleting}
-							className='bg-red-600 hover:bg-red-700'
-						>
-							{isDeleting ? (
-								<>
-									<RefreshCw className='h-4 w-4 mr-2 animate-spin' />
-									Deleting...
-								</>
-							) : (
-								<>
-									<Trash2 className='h-4 w-4 mr-2' />
-									Delete Team
-								</>
-							)}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteTeamDialog
+				team={teamToDelete}
+				seasonId={selectedSeasonId}
+				onClose={() => setTeamToDelete(null)}
+			/>
 
 			{/* Badge Management Dialog */}
 			{teamForBadges && (
