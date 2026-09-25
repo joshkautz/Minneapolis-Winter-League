@@ -34,7 +34,6 @@ export const TEAM_CONFIG = {
 export const GAME_CONFIG = {
 	ALLOWED_TIME_SLOTS: ['18:00', '18:45', '19:30', '20:15'],
 	ALLOWED_FIELDS: [1, 2, 3],
-	ALLOWED_MONTHS: [11, 12], // November and December
 } as const
 
 // Badge Configuration
