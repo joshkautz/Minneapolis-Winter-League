@@ -318,7 +318,7 @@ describe('TeamPaymentCard', () => {
 			season = beforeOpening()
 		})
 
-		it('offers a player nothing to pay yet', () => {
+		it('offers a player nothing to pay yet, and no admin notice', () => {
 			render(<TeamPaymentCard />)
 
 			expect(
@@ -327,6 +327,7 @@ describe('TeamPaymentCard', () => {
 			expect(
 				screen.queryByLabelText('Amount (dollars)')
 			).not.toBeInTheDocument()
+			expect(screen.queryByText(/As an admin/)).not.toBeInTheDocument()
 		})
 
 		it('lets an admin contribute early, warning that it is a real hold', async () => {
@@ -347,6 +348,14 @@ describe('TeamPaymentCard', () => {
 
 			expect(startTeamContribution).toHaveBeenCalledWith(1_000)
 		})
+	})
+
+	it('shows an admin no test notice once registration is open', () => {
+		userStatus = { isAdmin: true, isBanned: false }
+		render(<TeamPaymentCard />)
+
+		expect(screen.getByLabelText('Amount (dollars)')).toBeInTheDocument()
+		expect(screen.queryByText(/As an admin/)).not.toBeInTheDocument()
 	})
 
 	it('shows a registered team as registered, with nothing to pay', () => {
