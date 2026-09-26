@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { GameDocument, hasAssignedTeams } from '@/shared/utils'
+import { hasAssignedTeams } from '@/shared/utils'
+import { GameDocument } from '@/types'
 import {
 	Card,
 	CardContent,

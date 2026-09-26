@@ -8,9 +8,9 @@ import {
 	formatDollars,
 	formatTimestamp,
 	MIN_SIGNED_PLAYERS,
-	TeamRosterDocument,
 	usesTeamPayments,
 } from '@/shared/utils'
+import { TeamRosterDocument } from '@/types'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,

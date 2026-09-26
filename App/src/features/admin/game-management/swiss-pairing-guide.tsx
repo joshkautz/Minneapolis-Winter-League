@@ -31,7 +31,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useSwissStandings } from '@/shared/hooks'
 import { useMonradPairings } from '@/shared/hooks/use-monrad-pairings'
-import { QuerySnapshot } from '@/firebase'
+import { type QuerySnapshot } from 'firebase/firestore'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { GameDocument, TeamSeasonDocument } from '@/types'
 

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { DocumentReference } from '@/firebase'
+import { type DocumentReference } from 'firebase/firestore'
 import { updateTeamRosterViaFunction } from '@/firebase/collections/functions'
 import {
 	DropdownMenu,
@@ -24,9 +24,9 @@ import { useSeasonsContext, useTeamsContext } from '@/providers'
 import {
 	logger,
 	isPlayerRegisteredForSeason,
-	PlayerDocument,
 	errorMessage,
 } from '@/shared/utils'
+import { PlayerDocument } from '@/types'
 import { playerSeasonRef } from '@/firebase/collections/players'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useUserStatus } from '@/shared/hooks/use-user-status'

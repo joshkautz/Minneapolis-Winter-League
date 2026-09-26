@@ -11,10 +11,10 @@ import {
 	currentSeasonRegularGamesQuery,
 	currentSeasonPlayoffGamesQuery,
 	allGamesQuery,
-	FirestoreError,
-	QuerySnapshot,
-} from '@/firebase'
-import { GameDocument, logger, errorMessage } from '@/shared/utils'
+} from '@/firebase/collections/games'
+import { type FirestoreError, type QuerySnapshot } from 'firebase/firestore'
+import { logger, errorMessage } from '@/shared/utils'
+import { GameDocument } from '@/types'
 import { useSeasonsContext } from './seasons-context'
 
 interface GameProps {
@@ -32,24 +32,18 @@ interface GameProps {
 	allGamesQuerySnapshotError: FirestoreError | undefined
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const GamesContext = createContext<GameProps>({
-	gamesQuerySnapshot: undefined,
-	gamesQuerySnapshotLoading: false,
-	gamesQuerySnapshotError: undefined,
-	regularSeasonGamesQuerySnapshot: undefined,
-	regularSeasonGamesQuerySnapshotLoading: false,
-	regularSeasonGamesQuerySnapshotError: undefined,
-	playoffGamesQuerySnapshot: undefined,
-	playoffGamesQuerySnapshotLoading: false,
-	playoffGamesQuerySnapshotError: undefined,
-	allGamesQuerySnapshot: undefined,
-	allGamesQuerySnapshotLoading: false,
-	allGamesQuerySnapshotError: undefined,
-})
+const GamesContext = createContext<GameProps | null>(null)
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useGamesContext = () => useContext(GamesContext)
+export const useGamesContext = (): GameProps => {
+	const context = useContext(GamesContext)
+	if (!context) {
+		throw new Error(
+			'useGamesContext must be used within a GamesContextProvider'
+		)
+	}
+	return context
+}
 
 export const GamesContextProvider = ({ children }: PropsWithChildren) => {
 	const { selectedSeasonQueryDocumentSnapshot } = useSeasonsContext()

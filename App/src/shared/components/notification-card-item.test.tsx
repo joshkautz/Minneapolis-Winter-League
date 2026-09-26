@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { OfferDirection } from '@/shared/utils'
+import { OfferDirection } from '@/types'
 import type { OfferDocumentWithUI } from '@/shared/hooks'
 import { NotificationCardItem } from './notification-card-item'
 

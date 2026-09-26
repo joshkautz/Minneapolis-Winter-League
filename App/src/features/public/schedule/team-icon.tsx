@@ -1,5 +1,6 @@
-import { QueryDocumentSnapshot } from '@/firebase'
-import { TeamSeasonDocument, cn } from '@/shared/utils'
+import { type QueryDocumentSnapshot } from 'firebase/firestore'
+import { cn } from '@/shared/utils'
+import { TeamSeasonDocument } from '@/types'
 
 export const TeamIcon = ({
 	team,

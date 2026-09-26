@@ -1,3 +1,4 @@
+import { formatDistanceToNow } from 'date-fns'
 /**
  * Date and time utilities
  *
@@ -61,4 +62,26 @@ export const formatTimestampWithTime = (
 
 	const date = new Date(timestamp.seconds * 1000)
 	return formatDateTime(date)
+}
+
+/** A short date for tables: "Sep 25, 2026". */
+export const formatShortDate = (date: Date): string =>
+	date.toLocaleDateString('en-US', {
+		year: 'numeric',
+		month: 'short',
+		day: 'numeric',
+	})
+
+/** A clock time for tables: "02:30 PM". */
+export const formatClockTime = (date: Date): string =>
+	date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+
+/** How long ago, for feeds: "3 hours ago". */
+export const formatRelativeTime = (date: Date): string => {
+	try {
+		return formatDistanceToNow(date, { addSuffix: true })
+	} catch {
+		// An invalid date (a timestamp still pending on the server).
+		return 'Recently'
+	}
 }

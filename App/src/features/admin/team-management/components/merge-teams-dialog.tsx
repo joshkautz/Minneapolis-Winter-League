@@ -13,7 +13,8 @@ import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { Combine, Loader2, AlertTriangle } from 'lucide-react'
 
-import { logger, TeamSeasonDocument, errorMessage } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
+import { TeamSeasonDocument } from '@/types'
 import {
 	allTeamsQuery,
 	canonicalTeamIdFromTeamSeasonDoc,

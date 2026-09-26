@@ -5,24 +5,12 @@
  */
 
 import { useState, useEffect, useMemo } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
-import {
-	ArrowLeft,
-	AlertTriangle,
-	Trophy,
-	Loader2,
-	GripVertical,
-	Save,
-	Info,
-} from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useCollection } from 'react-firebase-hooks/firestore'
+import { Trophy, Loader2, GripVertical, Save, Info } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { auth } from '@/firebase/auth'
 import { logger, cn, errorMessage } from '@/shared/utils'
 import { useQueryErrorHandler } from '@/shared/hooks'
-import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
@@ -54,6 +42,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { SeasonDocument, SeasonFormat, TeamSeasonDocument } from '@/types'
+import { BackToAdminButton } from '@/features/admin/shared'
 
 /**
  * Swiss matchup pattern for 12 teams across 3 fields
@@ -67,22 +56,9 @@ const SWISS_MATCHUP_PATTERN = [
 ]
 
 export const SwissRankings = () => {
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
-
-	const isAdmin = playerSnapshot?.data()?.admin || false
-
 	// Get seasons from context
 	const { seasonsQuerySnapshot, seasonsQuerySnapshotLoading } =
 		useSeasonsContext()
-
-	// Log and notify on query errors
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'SwissRankings',
-		errorLabel: 'player',
-	})
 
 	// State
 	const [selectedSeasonId, setSelectedSeasonId] = useState<string>('')
@@ -136,7 +112,7 @@ export const SwissRankings = () => {
 
 	// Load rankings when season changes
 	useEffect(() => {
-		if (!selectedSeasonId || !isAdmin) return
+		if (!selectedSeasonId) return
 
 		const loadRankings = async () => {
 			setIsLoadingRankings(true)
@@ -167,7 +143,7 @@ export const SwissRankings = () => {
 		}
 
 		loadRankings()
-	}, [selectedSeasonId, isAdmin])
+	}, [selectedSeasonId])
 
 	// Handle saving seeding
 	const handleSaveSeeding = async () => {
@@ -213,33 +189,13 @@ export const SwissRankings = () => {
 		setSeedingOrder(newOrder)
 	}
 
-	// Handle authentication and data loading
-	if (playerLoading || seasonsQuerySnapshotLoading) {
+	if (seasonsQuerySnapshotLoading) {
 		return (
 			<div className='container mx-auto px-4 py-8'>
 				<Card>
 					<CardContent className='p-6 text-center'>
 						<Loader2 className='h-8 w-8 animate-spin mx-auto mb-4' />
 						<p>Loading...</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
-	// Handle non-admin users
-	if (!isAdmin) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access this page.
-						</p>
 					</CardContent>
 				</Card>
 			</div>
@@ -256,12 +212,7 @@ export const SwissRankings = () => {
 
 			{/* Back to Dashboard */}
 			<div className='flex items-center justify-between'>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 			</div>
 
 			{/* Season Selector */}

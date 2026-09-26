@@ -1,8 +1,8 @@
 import {
-	QueryDocumentSnapshot,
-	DocumentSnapshot,
-	offersForPlayerByTeamQuery,
-} from '@/firebase'
+	type QueryDocumentSnapshot,
+	type DocumentSnapshot,
+} from 'firebase/firestore'
+import { offersForPlayerByTeamQuery } from '@/firebase/collections/offers'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	canonicalTeamRefFromTeamSeasonDoc,
@@ -16,7 +16,7 @@ import {
 	TeamSeasonDocument,
 	OfferDocument,
 	OfferStatus,
-} from '@/shared/utils'
+} from '@/types'
 import { Link } from 'react-router-dom'
 import { useQueryErrorHandler } from '@/shared/hooks'
 

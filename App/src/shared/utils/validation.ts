@@ -81,7 +81,7 @@ export const passwordSchema = z
 		}
 	)
 
-export const loginPasswordSchema = z.string({
+const loginPasswordSchema = z.string({
 	error: 'Password is required',
 })
 

@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore'
 
 import { firestore } from '../app'
-import { SeasonDocument, Collections } from '@/shared/utils'
+import { SeasonDocument, Collections } from '@/types'
 
 /**
  * Creates a query for all seasons

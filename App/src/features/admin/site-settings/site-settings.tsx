@@ -5,21 +5,10 @@
  */
 
 import { useState } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
-import {
-	Heart,
-	Palette,
-	Shield,
-	Snowflake,
-	Sun,
-	Moon,
-	LucideIcon,
-} from 'lucide-react'
+import { Heart, Palette, Snowflake, Sun, Moon, LucideIcon } from 'lucide-react'
 
-import { auth } from '@/firebase/auth'
-import { getPlayerRef } from '@/firebase/collections/players'
 import { getSiteSettingsRef } from '@/firebase/collections/site-settings'
 import { updateSiteSettingsViaFunction } from '@/firebase/collections/functions'
 import { ThemeVariant } from '@/types'
@@ -466,15 +455,11 @@ const ColorPaletteCard = ({
 }
 
 export const SiteSettings = () => {
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading] = useDocument(playerRef)
 	const [settingsSnapshot, settingsLoading] = useDocument(getSiteSettingsRef())
 
 	const [isUpdating, setIsUpdating] = useState(false)
 	const [previewVariant, setPreviewVariant] = useState<ThemeVariant>('default')
 
-	const isAdmin = playerSnapshot?.data()?.admin || false
 	const savedVariant: ThemeVariant =
 		settingsSnapshot?.data()?.themeVariant ?? 'default'
 
@@ -511,7 +496,7 @@ export const SiteSettings = () => {
 	}
 
 	// Handle loading state
-	if (playerLoading || settingsLoading) {
+	if (settingsLoading) {
 		return (
 			<PageContainer withSpacing withGap>
 				<PageHeader
@@ -526,30 +511,6 @@ export const SiteSettings = () => {
 					</CardHeader>
 					<CardContent>
 						<Skeleton className='h-10 w-full' />
-					</CardContent>
-				</Card>
-			</PageContainer>
-		)
-	}
-
-	// Handle non-admin users
-	if (!isAdmin) {
-		return (
-			<PageContainer withSpacing withGap>
-				<PageHeader
-					title='Site Settings'
-					description='Configure site-wide settings and theme variants'
-					icon={Palette}
-				/>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-destructive mb-4'>
-							<Shield className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access site settings.
-						</p>
 					</CardContent>
 				</Card>
 			</PageContainer>

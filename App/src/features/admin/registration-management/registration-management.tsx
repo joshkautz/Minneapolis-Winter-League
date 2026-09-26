@@ -6,22 +6,13 @@
  */
 
 import { useState, useEffect, useMemo } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import {
-	ArrowLeft,
-	AlertTriangle,
-	Users,
-	Loader2,
-	ArrowUpDown,
-} from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useCollection } from 'react-firebase-hooks/firestore'
+import { Users, Loader2, ArrowUpDown } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
-import { auth } from '@/firebase/auth'
 import { usePlayerEmails, useQueryErrorHandler } from '@/shared/hooks'
 import {
 	canonicalPlayerIdFromPlayerSeasonDoc,
-	getPlayerRef,
 	playerSeasonsInSeasonQuery,
 	allPlayersQuery,
 } from '@/firebase/collections/players'
@@ -51,6 +42,7 @@ import {
 } from '@/components/ui/table'
 import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import { PlayerDocument, PlayerSeasonDocument, SeasonDocument } from '@/types'
+import { BackToAdminButton } from '@/features/admin/shared'
 
 type SortField = 'name' | 'email' | 'paid' | 'signed' | 'team'
 type SortDirection = 'asc' | 'desc'
@@ -84,9 +76,6 @@ const SortIcon = ({
 
 export const RegistrationManagement = () => {
 	const navigate = useNavigate()
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 	const {
 		seasonsQuerySnapshot: seasonsSnapshot,
 		seasonsQuerySnapshotError: seasonsError,
@@ -113,12 +102,6 @@ export const RegistrationManagement = () => {
 	const [playerSeasonsSnapshot, playerSeasonsLoading, playerSeasonsError] =
 		useCollection(playerSeasonsInSeasonQuery(filterSeasonRef))
 
-	// Log and notify on query errors
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'RegistrationManagement',
-		errorLabel: 'player',
-	})
 	useQueryErrorHandler({
 		error: seasonsError,
 		component: 'RegistrationManagement',
@@ -146,19 +129,16 @@ export const RegistrationManagement = () => {
 		return undefined
 	}, [currentSeasonQueryDocumentSnapshot?.id, filterSeasonId])
 
-	const isAdmin = playerSnapshot?.data()?.admin || false
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),
 	})) as (SeasonDocument & { id: string })[] | undefined
 
 	const { emails, loading: emailsLoading } = usePlayerEmails(
-		isAdmin,
 		'RegistrationManagement'
 	)
 
-	const isLoading =
-		playerLoading || playersLoading || playerSeasonsLoading || emailsLoading
+	const isLoading = playersLoading || playerSeasonsLoading || emailsLoading
 
 	// Process players for the selected season
 	const allPlayers = useMemo(() => {
@@ -246,16 +226,6 @@ export const RegistrationManagement = () => {
 		}
 	}
 
-	if (playerLoading) {
-		return (
-			<PageContainer>
-				<div className='flex justify-center items-center h-64'>
-					<p>Loading...</p>
-				</div>
-			</PageContainer>
-		)
-	}
-
 	// Handle query errors
 	if (seasonsError) {
 		return (
@@ -281,24 +251,6 @@ export const RegistrationManagement = () => {
 		)
 	}
 
-	if (!isAdmin) {
-		return (
-			<PageContainer>
-				<Card>
-					<CardContent className='pt-6'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground text-center'>
-							You don't have permission to access registration management.
-						</p>
-					</CardContent>
-				</Card>
-			</PageContainer>
-		)
-	}
-
 	if (isLoading) {
 		return (
 			<PageContainer>
@@ -319,12 +271,7 @@ export const RegistrationManagement = () => {
 
 			{/* Back to Dashboard */}
 			<div className='flex items-center justify-between'>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 			</div>
 
 			{/* All Players Table */}

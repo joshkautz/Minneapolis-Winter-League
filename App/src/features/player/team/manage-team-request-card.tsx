@@ -1,16 +1,15 @@
 import { useCallback } from 'react'
 import { toast } from 'sonner'
-import { DocumentSnapshot, QueryDocumentSnapshot } from '@/firebase'
+import {
+	type DocumentSnapshot,
+	type QueryDocumentSnapshot,
+} from 'firebase/firestore'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { useTeamsContext, useAuthContext } from '@/providers'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { NotificationCard, LoadingSpinner } from '@/shared/components'
-import {
-	OfferType,
-	PlayerDocument,
-	TeamSeasonDocument,
-	errorMessage,
-} from '@/shared/utils'
+import { errorMessage } from '@/shared/utils'
+import { OfferType, PlayerDocument, TeamSeasonDocument } from '@/types'
 import { ManageTeamDetail } from './manage-team-detail'
 
 export const ManageTeamRequestCard = () => {

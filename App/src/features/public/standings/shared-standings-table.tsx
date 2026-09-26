@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
 	Table,
@@ -14,30 +14,39 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { QuerySnapshot } from '@/firebase'
+import { type QuerySnapshot } from 'firebase/firestore'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
-import { TeamSeasonDocument, cn } from '@/shared/utils'
+import { cn } from '@/shared/utils'
+import { TeamSeasonDocument } from '@/types'
 import { TeamStanding } from '@/shared/hooks'
 
-interface SharedStandingsTableProps {
-	data: {
-		[key: string]: TeamStanding
-	}
+interface SharedStandingsTableProps<S extends TeamStanding> {
+	data: Record<string, S>
 	teamsQuerySnapshot: QuerySnapshot<TeamSeasonDocument> | undefined
-	sortFunction: (a: [string, TeamStanding], b: [string, TeamStanding]) => number
+	sortFunction: (a: [string, S], b: [string, S]) => number
 	rankColumnHeader: string
 	useTeamPlacement?: boolean
 	'aria-label'?: string
+	/** A column after the point differential, such as the Swiss score. */
+	extraColumn?: {
+		header: ReactNode
+		cell: (standing: S) => ReactNode
+	}
 }
 
-export const SharedStandingsTable = ({
+/**
+ * The standings table every format shares: rank, team, wins, losses and
+ * point differential, with an optional extra column.
+ */
+export const SharedStandingsTable = <S extends TeamStanding>({
 	data,
 	teamsQuerySnapshot,
 	sortFunction,
 	rankColumnHeader,
 	useTeamPlacement = false,
 	'aria-label': ariaLabel,
-}: SharedStandingsTableProps) => {
+	extraColumn,
+}: SharedStandingsTableProps<S>) => {
 	const navigate = useNavigate()
 
 	// Create a Map for O(1) team lookups instead of O(n) find() calls
@@ -142,12 +151,14 @@ export const SharedStandingsTable = ({
 								</TooltipContent>
 							</Tooltip>
 						</TableHead>
+						{extraColumn?.header}
 					</TableRow>
 				</TableHeader>
 				<TableBody>
 					{Object.entries(data)
 						.sort(sortFunction)
-						.map(([key, { wins, losses, pointsFor, pointsAgainst }], index) => {
+						.map(([key, standing], index) => {
+							const { wins, losses, pointsFor, pointsAgainst } = standing
 							const teamEntry = teamMap.get(key)
 							const teamDocument = teamEntry?.data
 							const url = teamDocument?.logo
@@ -221,6 +232,11 @@ export const SharedStandingsTable = ({
 										{differential > 0 ? '+' : ''}
 										{differential}
 									</TableCell>
+									{extraColumn && (
+										<TableCell className='text-center font-medium' role='cell'>
+											{extraColumn.cell(standing)}
+										</TableCell>
+									)}
 								</TableRow>
 							)
 						})}

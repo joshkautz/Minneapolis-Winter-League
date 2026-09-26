@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom'
 import { AlertCircle, CheckCircle, FileSignature, Printer } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { QueryDocumentSnapshot } from '@/firebase'
-import { formatTimestamp, SeasonDocument } from '@/shared/utils'
+import { type QueryDocumentSnapshot } from 'firebase/firestore'
+import { formatTimestamp } from '@/shared/utils'
+import { SeasonDocument } from '@/types'
 import {
 	signatureForSeason,
 	useWaiverSignatures,

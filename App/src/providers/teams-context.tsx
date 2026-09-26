@@ -18,13 +18,9 @@ import {
 	teamsQuery,
 } from '@/firebase/collections/teams'
 import { playerSeasonsSubcollection } from '@/firebase/collections/players'
-import { FirestoreError, QuerySnapshot } from '@/firebase'
-import {
-	TeamDocument,
-	TeamSeasonDocument,
-	logger,
-	errorMessage,
-} from '@/shared/utils'
+import { type FirestoreError, type QuerySnapshot } from 'firebase/firestore'
+import { logger, errorMessage } from '@/shared/utils'
+import { TeamDocument, TeamSeasonDocument } from '@/types'
 import { useSeasonsContext } from './seasons-context'
 import { useAuthContext } from './auth-context'
 
@@ -53,24 +49,18 @@ interface TeamProps {
 	allTeamsQuerySnapshotError: FirestoreError | undefined
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const TeamsContext = createContext<TeamProps>({
-	currentSeasonTeamsQuerySnapshot: undefined,
-	currentSeasonTeamsQuerySnapshotLoading: false,
-	currentSeasonTeamsQuerySnapshotError: undefined,
-	selectedSeasonTeamsQuerySnapshot: undefined,
-	selectedSeasonTeamsQuerySnapshotLoading: false,
-	selectedSeasonTeamsQuerySnapshotError: undefined,
-	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot: undefined,
-	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotLoading: false,
-	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError: undefined,
-	allTeamsQuerySnapshot: undefined,
-	allTeamsQuerySnapshotLoading: false,
-	allTeamsQuerySnapshotError: undefined,
-})
+const TeamsContext = createContext<TeamProps | null>(null)
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useTeamsContext = () => useContext(TeamsContext)
+export const useTeamsContext = (): TeamProps => {
+	const context = useContext(TeamsContext)
+	if (!context) {
+		throw new Error(
+			'useTeamsContext must be used within a TeamsContextProvider'
+		)
+	}
+	return context
+}
 
 export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 	const {

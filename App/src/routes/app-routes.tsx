@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { Layout } from '@/shared/components'
-import { PublicRoute, AuthenticatedRoute } from './route-wrappers'
+import { AdminRoute, AuthenticatedRoute, PublicRoute } from './route-wrappers'
 import {
 	Home,
 	Schedule,
@@ -165,105 +165,105 @@ export const AppRoutes = () => {
 				<Route
 					path='/admin'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<AdminDashboard />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/player-management'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<PlayerManagement />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/offer-management'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<OfferManagement />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/team-management'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<TeamManagement />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/news-management'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<NewsManagement />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/posts-management'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<PostsManagement />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/season-management'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<SeasonManagement />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/swiss-rankings'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<SwissRankings />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/game-management'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<GameManagement />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/rankings-management'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<PlayerRankingManagement />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/registration-management'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<RegistrationManagement />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/badge-management'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<BadgeManagement />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				<Route
 					path='/admin/site-settings'
 					element={
-						<AuthenticatedRoute>
+						<AdminRoute>
 							<SiteSettings />
-						</AuthenticatedRoute>
+						</AdminRoute>
 					}
 				/>
 				{/* Error routes */}

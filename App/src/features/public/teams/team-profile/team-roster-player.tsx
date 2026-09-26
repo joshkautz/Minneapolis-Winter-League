@@ -3,14 +3,11 @@ import { Link } from 'react-router-dom'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import { StarFilledIcon } from '@radix-ui/react-icons'
 
-import { DocumentReference } from '@/firebase'
+import { type DocumentReference } from 'firebase/firestore'
 import { playerSeasonRef } from '@/firebase/collections/players'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-	PlayerDocument,
-	SeasonDocument,
-	isPlayerRegisteredForSeason,
-} from '@/shared/utils'
+import { isPlayerRegisteredForSeason } from '@/shared/utils'
+import { PlayerDocument, SeasonDocument } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext } from '@/providers'
 import { useQueryErrorHandler } from '@/shared/hooks'

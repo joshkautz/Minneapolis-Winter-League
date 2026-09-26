@@ -6,7 +6,7 @@ import {
 	signOut,
 } from 'firebase/auth'
 import { toast } from 'sonner'
-import { auth } from '@/firebase/auth'
+import { auth } from '@/firebase/app'
 import { deletePlayerViaFunction } from '@/firebase/collections/functions'
 import { errorCode, errorMessage, LEAGUE_CONTACT, logger } from '@/shared/utils'
 

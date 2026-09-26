@@ -5,23 +5,12 @@
  */
 
 import { useState } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument } from 'react-firebase-hooks/firestore'
 import { getDocs } from 'firebase/firestore'
-import {
-	ArrowLeft,
-	AlertTriangle,
-	Calendar,
-	Plus,
-	Edit,
-	Trash2,
-	Loader2,
-} from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Calendar, Plus, Edit, Trash2, Loader2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
-import { auth } from '@/firebase/auth'
 import {
 	CENTS_PER_DOLLAR,
 	formatDollars,
@@ -31,7 +20,6 @@ import {
 	errorMessage,
 } from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
-import { getPlayerRef } from '@/firebase/collections/players'
 import { useSeasonsContext } from '@/providers'
 import { teamsInSeasonQuery } from '@/firebase/collections/teams'
 import {
@@ -64,6 +52,7 @@ import { Badge } from '@/components/ui/badge'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { DestructiveConfirmationDialog } from '@/shared/components/destructive-confirmation-dialog'
 import { SeasonDocument, SeasonFormat } from '@/types'
+import { BackToAdminButton } from '@/features/admin/shared'
 
 interface ProcessedSeason {
 	id: string
@@ -89,11 +78,6 @@ type DialogMode = 'create' | 'edit' | null
 
 export const SeasonManagement = () => {
 	const navigate = useNavigate()
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
-
-	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	// Get all seasons from context
 	const {
@@ -102,12 +86,6 @@ export const SeasonManagement = () => {
 		seasonsQuerySnapshotError: seasonsError,
 	} = useSeasonsContext()
 
-	// Log and notify on query errors
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'SeasonManagement',
-		errorLabel: 'player',
-	})
 	useQueryErrorHandler({
 		error: seasonsError,
 		component: 'SeasonManagement',
@@ -391,19 +369,6 @@ export const SeasonManagement = () => {
 		}
 	}
 
-	// Handle authentication and data loading
-	if (playerLoading) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<p>Loading...</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	// Handle query errors
 	if (seasonsError) {
 		return (
@@ -413,25 +378,6 @@ export const SeasonManagement = () => {
 					title='Error Loading Seasons'
 					onRetry={() => navigate(0)}
 				/>
-			</div>
-		)
-	}
-
-	// Handle non-admin users
-	if (!isAdmin) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access this page.
-						</p>
-					</CardContent>
-				</Card>
 			</div>
 		)
 	}
@@ -446,12 +392,7 @@ export const SeasonManagement = () => {
 
 			{/* Back to Dashboard */}
 			<div className='flex items-center justify-between'>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 				<Button onClick={openCreateDialog}>
 					<Plus className='h-4 w-4 mr-2' />
 					Create Season

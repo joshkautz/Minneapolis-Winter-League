@@ -4,7 +4,8 @@
  * Centralized exports for all context providers and hooks
  */
 
-export { ThemeProvider, ThemeContext } from './theme-context'
+export { ThemeProvider, useThemeContext } from './theme-context'
+export type { ResolvedTheme, ThemePreference } from './theme-context'
 export { AuthContextProvider, useAuthContext } from './auth-context'
 export { SeasonsContextProvider, useSeasonsContext } from './seasons-context'
 export { TeamsContextProvider, useTeamsContext } from './teams-context'

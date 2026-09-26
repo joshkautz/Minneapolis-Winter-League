@@ -1,18 +1,19 @@
 import { useMemo } from 'react'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { playerSeasonRef } from '@/firebase/collections/players'
-import { QueryDocumentSnapshot, offersForPlayerByTeamQuery } from '@/firebase'
+import { type QueryDocumentSnapshot } from 'firebase/firestore'
+import { offersForPlayerByTeamQuery } from '@/firebase/collections/offers'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	canonicalTeamRefFromTeamSeasonDoc,
 } from '@/firebase/collections/teams'
+import { cn } from '@/shared/utils'
 import {
-	cn,
 	PlayerDocument,
 	TeamSeasonDocument,
 	OfferDocument,
 	OfferStatus,
-} from '@/shared/utils'
+} from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useTeamsContext, useSeasonsContext } from '@/providers'

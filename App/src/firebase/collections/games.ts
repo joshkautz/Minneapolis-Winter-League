@@ -19,7 +19,7 @@ import {
 	SeasonDocument,
 	TeamDocument,
 	Collections,
-} from '@/shared/utils'
+} from '@/types'
 
 /**
  * Creates a query for regular season games in a specific season

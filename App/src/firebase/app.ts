@@ -1,7 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { connectAuthEmulator, getAuth } from 'firebase/auth'
 import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore'
-import { connectStorageEmulator, getStorage } from 'firebase/storage'
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions'
 import { logger } from '@/shared/utils'
 
@@ -37,7 +36,6 @@ export const app = initializeApp(firebaseConfig)
 // Initialize Firebase services
 export const auth = getAuth(app)
 export const firestore = getFirestore(app)
-export const storage = getStorage(app)
 export const functions = getFunctions(app)
 
 // Connect to emulators when enabled
@@ -50,7 +48,6 @@ if (useEmulators) {
 			disableWarnings: true,
 		})
 		connectFirestoreEmulator(firestore, 'localhost', 8080)
-		connectStorageEmulator(storage, 'localhost', 9199)
 		connectFunctionsEmulator(functions, 'localhost', 5001)
 
 		logger.info(`Firebase connected to emulators`, {
@@ -70,6 +67,3 @@ if (useEmulators) {
 		mode: import.meta.env.DEV ? 'development' : 'production',
 	})
 }
-
-// Export configuration for debugging
-export { firebaseConfig, useEmulators }

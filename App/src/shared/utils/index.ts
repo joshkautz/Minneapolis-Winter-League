@@ -5,7 +5,6 @@
  */
 
 export * from './utils'
-export * from './interfaces'
 export * from './validation'
 export * from './date-time'
 export * from './season-utils'

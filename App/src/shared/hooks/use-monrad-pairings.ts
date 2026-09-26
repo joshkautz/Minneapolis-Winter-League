@@ -11,7 +11,7 @@
  */
 
 import { useMemo } from 'react'
-import { QuerySnapshot } from '@/firebase'
+import { type QuerySnapshot } from 'firebase/firestore'
 import { GameDocument, TeamSeasonDocument } from '@/types'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { SwissTeamStanding, sortBySwissScore } from './use-swiss-standings'
@@ -120,7 +120,7 @@ const buildSeasonMatchupsMap = (
 /**
  * Count how many times two teams have played each other this season
  */
-export const getMatchupCount = (
+const getMatchupCount = (
 	team1Id: string,
 	team2Id: string,
 	gamesQuerySnapshot: QuerySnapshot<GameDocument> | undefined
@@ -244,4 +244,3 @@ export const useMonradPairings = (
 
 // Legacy export for backwards compatibility
 export type Pairing = ScheduledGame
-export type MonradPairingsResult = MonradScheduleResult

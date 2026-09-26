@@ -1,31 +1,34 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
-import { Timestamp } from 'firebase/firestore'
+import { Timestamp, type DocumentSnapshot } from 'firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { Award, Lock, Loader2, Calendar, Trophy } from 'lucide-react'
 import { NotificationCard } from '@/shared/components'
+import { gamesByTeamQuery } from '@/firebase/collections/games'
 import {
-	gamesByTeamQuery,
 	teamSeasonsQuery,
 	getTeamRef,
 	teamSeasonRef,
 	teamRosterSubcollection,
 	teamsInSeasonQuery,
-	DocumentSnapshot,
-} from '@/firebase'
-import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
+	canonicalTeamIdFromTeamSeasonDoc,
+} from '@/firebase/collections/teams'
 import { teamBadgesQuery } from '@/firebase/collections/badges'
 import {
-	GameDocument,
-	TeamDocument,
-	TeamSeasonDocument,
 	hasAssignedTeams,
 	getTeamRole,
 	formatTimestamp,
 	logger,
 } from '@/shared/utils'
-import { BadgeDocument, TeamBadgeDocument, TeamRosterDocument } from '@/types'
+import {
+	GameDocument,
+	TeamDocument,
+	TeamSeasonDocument,
+	BadgeDocument,
+	TeamBadgeDocument,
+	TeamRosterDocument,
+} from '@/types'
 import { TeamRosterPlayer } from './team-roster-player'
 import { TeamHistory } from './team-history'
 import {

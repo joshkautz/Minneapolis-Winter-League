@@ -2,15 +2,11 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 
 import { NotificationCard } from '@/shared/components'
-import { DocumentSnapshot, QuerySnapshot } from '@/firebase'
+import { type DocumentSnapshot, type QuerySnapshot } from 'firebase/firestore'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useSeasonsContext } from '@/providers'
-import {
-	GameDocument,
-	TeamSeasonDocument,
-	sortBySeasonStartDesc,
-	teamRecordsBySeason,
-} from '@/shared/utils'
+import { sortBySeasonStartDesc, teamRecordsBySeason } from '@/shared/utils'
+import { GameDocument, TeamSeasonDocument, type TeamDocument } from '@/types'
 
 // Format placement with ordinal suffix and medal emoji for top 3
 const formatPlacement = (placement: number | null) => {
@@ -45,8 +41,7 @@ export const TeamHistory = ({
 	historyQuerySnapshot,
 	gamesQuerySnapshot,
 }: {
-	teamDocumentSnapshot:
-		DocumentSnapshot<import('@/shared/utils').TeamDocument> | undefined
+	teamDocumentSnapshot: DocumentSnapshot<TeamDocument> | undefined
 	historyQuerySnapshot: QuerySnapshot<TeamSeasonDocument>
 	/**
 	 * Games for THIS team only — `gamesByTeamQuery(teamRef)` from the

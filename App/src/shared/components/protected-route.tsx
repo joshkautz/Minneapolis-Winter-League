@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuthContext } from '@/providers'
-import { LoadingSpinner } from '@/shared/components'
+import { LoadingSpinner } from './loading-spinner'
 
 export const ProtectedRoute = ({ children }: PropsWithChildren) => {
 	const { authStateUser, authStateLoading } = useAuthContext()

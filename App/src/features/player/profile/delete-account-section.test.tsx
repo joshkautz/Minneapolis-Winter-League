@@ -35,7 +35,10 @@ vi.mock('firebase/auth', async (importOriginal) => ({
 	EmailAuthProvider: { credential },
 }))
 
-vi.mock('@/firebase/auth', () => ({ auth: { currentUser } }))
+vi.mock('@/firebase/app', async (importOriginal) => ({
+	...(await importOriginal<typeof import('@/firebase/app')>()),
+	auth: { currentUser },
+}))
 
 vi.mock('@/firebase/collections/functions', () => ({
 	deletePlayerViaFunction,
