@@ -7,6 +7,13 @@
  *
  * Captain status, paid and signed live on the player season subdoc.
  * The team's roster subcollection is the pure membership join.
+ *
+ * Security validations:
+ * - Caller must be an admin
+ * - A new name must be 2–50 characters (admins skip the profanity filter)
+ * - A player added must exist and not be on another team this season
+ * - The team is never left without a captain
+ * - The request is applied whole, in one transaction, or not at all
  */
 
 import { getFirestore } from 'firebase-admin/firestore'
@@ -14,11 +21,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
-import {
-	playerSeasonRef,
-	teamRosterEntryRef,
-	teamSeasonRef,
-} from '../../../shared/database.js'
+import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
 import {
 	addPlayerToTeam,
 	removePlayerFromTeam,
@@ -114,239 +117,151 @@ export const updateTeamAdmin = onCall<
 				? undefined
 				: validateTeamName(name, { checkProfanity: false })
 
+		const addPlayers = rosterChanges?.addPlayers ?? []
+		const removePlayers = rosterChanges?.removePlayers ?? []
+		const captainUpdates = rosterChanges?.updateCaptainStatus ?? []
 		const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
 
-		// Verify team season exists.
-		const teamSeasonSnap = await teamSeasonDocRef.get()
-		if (!teamSeasonSnap.exists) {
-			throw new HttpsError('not-found', 'Team not found for this season')
-		}
-		const teamSeasonData = teamSeasonSnap.data()
-		if (!teamSeasonData) {
-			throw new HttpsError('internal', 'Unable to retrieve team season data')
-		}
-		const seasonRef = teamSeasonData.season as DocumentReference<SeasonDocument>
+		// Everything is read, checked against the roster as it will be after
+		// every change, and written in one transaction: a request is applied
+		// whole or not at all. Applied one change at a time, a refusal halfway
+		// through left the earlier changes in place behind an error.
+		const { changes, seasonRef } = await firestore.runTransaction(
+			async (txn) => {
+				const teamSeasonSnap = await txn.get(teamSeasonDocRef)
+				const teamSeasonData = teamSeasonSnap.data()
+				if (!teamSeasonSnap.exists || !teamSeasonData) {
+					throw new HttpsError('not-found', 'Team not found for this season')
+				}
+				const seasonDocRef =
+					teamSeasonData.season as DocumentReference<SeasonDocument>
 
-		const changes: UpdateTeamAdminResponse['changes'] = {}
+				const rosterSnap = await txn.get(teamSeasonDocRef.collection('roster'))
+				const rosterIds = rosterSnap.docs.map((doc) => doc.id)
+				const addIds = addPlayers.map(({ playerId }) => playerId)
+				const [rosterSeasonSnaps, addSeasonSnaps, addPlayerSnaps] =
+					await Promise.all([
+						Promise.all(
+							rosterIds.map((id) =>
+								txn.get(playerSeasonRef(firestore, id, seasonId))
+							)
+						),
+						Promise.all(
+							addIds.map((id) =>
+								txn.get(playerSeasonRef(firestore, id, seasonId))
+							)
+						),
+						Promise.all(
+							addIds.map((id) =>
+								txn.get(firestore.collection('players').doc(id))
+							)
+						),
+					])
 
-		// 1. Name update on the team season subdoc.
-		if (teamName !== undefined && teamName !== teamSeasonData.name) {
-			changes.name = { from: teamSeasonData.name, to: teamName }
-			await teamSeasonDocRef.update({ name: teamName })
-			logger.info('Updated team name', {
-				teamId,
-				seasonId,
-				from: teamSeasonData.name,
-				to: teamName,
-			})
-		}
+				// Captain status by player, for the roster as it stands and then
+				// as each change leaves it.
+				const captains = new Map<string, boolean>(
+					rosterIds.map((id, i) => [
+						id,
+						rosterSeasonSnaps[i].data()?.captain === true,
+					])
+				)
+				const result: UpdateTeamAdminResponse['changes'] = {}
+				// Removing or demoting a captain must leave one: without a
+				// captain nobody can manage the roster.
+				let lostACaptain = false
 
-		// 2. Roster changes — handled per operation, no transactional rebuild.
-		const addedPlayerIds: string[] = []
-		if (rosterChanges) {
-			// 2a. Add players.
-			if (rosterChanges.addPlayers && rosterChanges.addPlayers.length > 0) {
-				changes.rosterAdded = []
-				for (const { playerId, captain } of rosterChanges.addPlayers) {
-					const playerDocRef = firestore
-						.collection('players')
-						.doc(playerId) as DocumentReference<PlayerDocument>
-					const playerDoc = await playerDocRef.get()
-					if (!playerDoc.exists) {
-						throw new HttpsError('not-found', `Player not found: ${playerId}`)
+				if (teamName !== undefined && teamName !== teamSeasonData.name) {
+					result.name = { from: teamSeasonData.name, to: teamName }
+				}
+
+				addPlayers.forEach(({ playerId, captain }, i) => {
+					if (!addPlayerSnaps[i].exists) {
+						throw new HttpsError('not-found', 'That player does not exist.')
 					}
-
-					// Check if already on this team via roster subcollection.
-					const rosterEntryRef = teamRosterEntryRef(
-						firestore,
-						teamId,
-						seasonId,
-						playerId
-					)
-					if ((await rosterEntryRef.get()).exists) {
+					if (captains.has(playerId)) {
 						throw new HttpsError(
 							'already-exists',
-							`Player ${playerId} is already on this team`
+							'That player is already on this team.'
 						)
 					}
-
-					// Check if player is on another team for this season via player season subdoc.
-					const playerSeasonDocRef = playerSeasonRef(
-						firestore,
-						playerId,
-						seasonId
-					)
-					const playerSeasonSnap = await playerSeasonDocRef.get()
-					const playerSeasonData = playerSeasonSnap.data()
-					if (playerSeasonData?.team && playerSeasonData.team.id !== teamId) {
+					const otherTeam = addSeasonSnaps[i].data()?.team
+					if (otherTeam && otherTeam.id !== teamId) {
 						throw new HttpsError(
 							'failed-precondition',
-							`Player ${playerId} is already on another team for this season`
+							'That player is already on another team this season. Remove them from it first.'
 						)
 					}
+					captains.set(playerId, captain)
+				})
 
-					// Atomic add: create roster entry + create-or-update player season.
-					await firestore.runTransaction((txn) => {
-						addPlayerToTeam(txn, firestore, {
-							playerId,
-							teamId,
-							seasonId,
-							seasonRef,
-							captain,
-							existingPlayerSeason: playerSeasonSnap.exists
-								? (playerSeasonData ?? null)
-								: null,
-						})
-						return Promise.resolve()
-					})
+				for (const playerId of removePlayers) {
+					if (!captains.has(playerId)) {
+						throw new HttpsError(
+							'not-found',
+							"That player is not on this team's roster."
+						)
+					}
+					if (captains.get(playerId)) lostACaptain = true
+					captains.delete(playerId)
+				}
 
-					changes.rosterAdded.push(playerId)
-					addedPlayerIds.push(playerId)
-					logger.info('Added player to team roster', {
+				const captainChanges: NonNullable<
+					UpdateTeamAdminResponse['changes']['captainChanges']
+				> = []
+				for (const { playerId, captain } of captainUpdates) {
+					const current = captains.get(playerId)
+					if (current === undefined) {
+						throw new HttpsError(
+							'not-found',
+							"That player is not on this team's roster."
+						)
+					}
+					if (current === captain) continue
+					if (current) lostACaptain = true
+					captains.set(playerId, captain)
+					captainChanges.push({ playerId, from: current, to: captain })
+				}
+
+				if (lostACaptain && ![...captains.values()].some(Boolean)) {
+					throw new HttpsError(
+						'failed-precondition',
+						'That would leave the team without a captain. Promote another player first.'
+					)
+				}
+
+				// Every check has passed: write.
+				if (result.name) {
+					txn.update(teamSeasonDocRef, { name: result.name.to })
+				}
+				addPlayers.forEach(({ playerId, captain }, i) => {
+					addPlayerToTeam(txn, firestore, {
+						playerId,
 						teamId,
 						seasonId,
-						playerId,
+						seasonRef: seasonDocRef,
 						captain,
+						existingPlayerSeason: addSeasonSnaps[i].data() ?? null,
 					})
+				})
+				for (const playerId of removePlayers) {
+					removePlayerFromTeam(txn, firestore, { playerId, teamId, seasonId })
 				}
-			}
-
-			// 2b. Remove players.
-			if (
-				rosterChanges.removePlayers &&
-				rosterChanges.removePlayers.length > 0
-			) {
-				changes.rosterRemoved = []
-
-				// Last-captain check requires reading all roster + player season subdocs once.
-				const rosterSnap = await teamSeasonDocRef.collection('roster').get()
-				const playerSeasonSnaps = await Promise.all(
-					rosterSnap.docs.map((d) =>
-						playerSeasonRef(firestore, d.id, seasonId).get()
-					)
-				)
-				const captainSetByPlayerId = new Map<string, boolean>()
-				for (let i = 0; i < rosterSnap.docs.length; i++) {
-					captainSetByPlayerId.set(
-						rosterSnap.docs[i].id,
-						playerSeasonSnaps[i].data()?.captain === true
-					)
-				}
-
-				for (const playerId of rosterChanges.removePlayers) {
-					const rosterEntryRef = teamRosterEntryRef(
-						firestore,
-						teamId,
-						seasonId,
-						playerId
-					)
-					if (!(await rosterEntryRef.get()).exists) {
-						throw new HttpsError(
-							'not-found',
-							`Player ${playerId} is not on this team's roster`
-						)
-					}
-
-					const targetIsCaptain = captainSetByPlayerId.get(playerId) === true
-					if (targetIsCaptain) {
-						const otherCaptains = Array.from(
-							captainSetByPlayerId.entries()
-						).filter(([id, isCap]) => isCap && id !== playerId)
-						if (otherCaptains.length === 0) {
-							throw new HttpsError(
-								'failed-precondition',
-								`Cannot remove ${playerId}: they are the only captain. Promote another player first.`
-							)
-						}
-					}
-
-					await firestore.runTransaction((txn) => {
-						removePlayerFromTeam(txn, firestore, {
-							playerId,
-							teamId,
-							seasonId,
-						})
-						return Promise.resolve()
-					})
-
-					captainSetByPlayerId.delete(playerId)
-					changes.rosterRemoved.push(playerId)
-					logger.info('Removed player from team roster', {
-						teamId,
-						seasonId,
+				for (const { playerId, to } of captainChanges) {
+					setPlayerCaptainStatus(txn, firestore, {
 						playerId,
-					})
-				}
-			}
-
-			// 2c. Captain status updates.
-			if (
-				rosterChanges.updateCaptainStatus &&
-				rosterChanges.updateCaptainStatus.length > 0
-			) {
-				changes.captainChanges = []
-
-				const rosterSnap = await teamSeasonDocRef.collection('roster').get()
-				const playerSeasonSnaps = await Promise.all(
-					rosterSnap.docs.map((d) =>
-						playerSeasonRef(firestore, d.id, seasonId).get()
-					)
-				)
-				const captainSetByPlayerId = new Map<string, boolean>()
-				for (let i = 0; i < rosterSnap.docs.length; i++) {
-					captainSetByPlayerId.set(
-						rosterSnap.docs[i].id,
-						playerSeasonSnaps[i].data()?.captain === true
-					)
-				}
-
-				for (const { playerId, captain } of rosterChanges.updateCaptainStatus) {
-					const currentCaptainStatus = captainSetByPlayerId.get(playerId)
-					if (currentCaptainStatus === undefined) {
-						throw new HttpsError(
-							'not-found',
-							`Player ${playerId} is not on this team's roster`
-						)
-					}
-					if (currentCaptainStatus === captain) continue
-
-					if (currentCaptainStatus && !captain) {
-						const otherCaptains = Array.from(
-							captainSetByPlayerId.entries()
-						).filter(([id, isCap]) => isCap && id !== playerId)
-						if (otherCaptains.length === 0) {
-							throw new HttpsError(
-								'failed-precondition',
-								`Cannot demote ${playerId}: they are the only captain. Promote another player first.`
-							)
-						}
-					}
-
-					await firestore.runTransaction((txn) => {
-						setPlayerCaptainStatus(txn, firestore, {
-							playerId,
-							seasonId,
-							captain,
-						})
-						return Promise.resolve()
-					})
-					captainSetByPlayerId.set(playerId, captain)
-
-					changes.captainChanges.push({
-						playerId,
-						from: currentCaptainStatus,
-						to: captain,
-					})
-					logger.info('Updated player captain status', {
-						teamId,
 						seasonId,
-						playerId,
-						from: currentCaptainStatus,
-						to: captain,
+						captain: to,
 					})
 				}
+
+				if (addIds.length > 0) result.rosterAdded = addIds
+				if (removePlayers.length > 0) result.rosterRemoved = [...removePlayers]
+				if (captainChanges.length > 0) result.captainChanges = captainChanges
+				return { changes: result, seasonRef: seasonDocRef }
 			}
-		}
+		)
+		const addedPlayerIds = changes.rosterAdded ?? []
 
 		// Cancel pending offers for added players (outside any transaction).
 		for (const playerId of addedPlayerIds) {
