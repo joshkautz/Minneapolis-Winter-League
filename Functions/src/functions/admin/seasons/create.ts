@@ -8,7 +8,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { getFirestore, Timestamp, WriteBatch } from 'firebase-admin/firestore'
+import { getFirestore, WriteBatch } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
@@ -20,6 +20,7 @@ import {
 import { validateAdminUser } from '../../../shared/auth.js'
 import { validateTeamRegistrationTotal } from '../../../shared/seasonPricing.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { parseSeasonInput } from '../../../shared/seasonInput.js'
 
 interface CreateSeasonRequest {
 	name: string
@@ -64,25 +65,14 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			teamRegistrationTotalCents,
 		} = data
 
-		if (
-			!name ||
-			!dateStart ||
-			!dateEnd ||
-			!registrationStart ||
-			!registrationEnd
-		) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Season name and all date fields are required'
-			)
-		}
-
-		if (name.length < 3 || name.length > 100) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Season name must be between 3 and 100 characters'
-			)
-		}
+		const season = parseSeasonInput({
+			name,
+			dateStart,
+			dateEnd,
+			registrationStart,
+			registrationEnd,
+			stripe,
+		})
 
 		try {
 			const firestore = getFirestore()
@@ -94,35 +84,13 @@ export const createSeason = onCall<CreateSeasonRequest>(
 					? undefined
 					: validateTeamRegistrationTotal(teamRegistrationTotalCents)
 
-			const dateStartTimestamp = Timestamp.fromDate(new Date(dateStart))
-			const dateEndTimestamp = Timestamp.fromDate(new Date(dateEnd))
-			const registrationStartTimestamp = Timestamp.fromDate(
-				new Date(registrationStart)
-			)
-			const registrationEndTimestamp = Timestamp.fromDate(
-				new Date(registrationEnd)
-			)
-
-			const stripeConfig = stripe?.priceId
-				? {
-						priceId: stripe.priceId,
-						...(stripe.priceIdDev && { priceIdDev: stripe.priceIdDev }),
-						...(stripe.returningPlayerCouponId && {
-							returningPlayerCouponId: stripe.returningPlayerCouponId,
-						}),
-						...(stripe.returningPlayerCouponIdDev && {
-							returningPlayerCouponIdDev: stripe.returningPlayerCouponIdDev,
-						}),
-					}
-				: undefined
-
 			const seasonData: SeasonDocument = {
-				name: name.trim(),
-				dateStart: dateStartTimestamp,
-				dateEnd: dateEndTimestamp,
-				registrationStart: registrationStartTimestamp,
-				registrationEnd: registrationEndTimestamp,
-				...(stripeConfig && { stripe: stripeConfig }),
+				name: season.name,
+				dateStart: season.dateStart,
+				dateEnd: season.dateEnd,
+				registrationStart: season.registrationStart,
+				registrationEnd: season.registrationEnd,
+				...(season.stripe && { stripe: season.stripe }),
 				...(format === SeasonFormat.SWISS && { format: SeasonFormat.SWISS }),
 				// Set explicitly so the twelve-spot claim never reads a missing
 				// counter as its own default.
@@ -150,7 +118,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			if (playersSnapshot.empty) {
 				return {
 					success: true,
-					message: `Season "${name}" created successfully (no existing players to update)`,
+					message: `Season "${season.name}" created successfully (no existing players to update)`,
 					seasonId: seasonRef.id,
 				} as CreateSeasonResponse
 			}
@@ -204,7 +172,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 
 			return {
 				success: true,
-				message: `Season "${name}" created successfully and added to ${playersUpdated} players`,
+				message: `Season "${season.name}" created successfully and added to ${playersUpdated} players`,
 				seasonId: seasonRef.id,
 			} as CreateSeasonResponse
 		} catch (error) {
