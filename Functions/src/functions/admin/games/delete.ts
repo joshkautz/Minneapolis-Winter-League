@@ -41,7 +41,7 @@ interface DeleteGameResponse {
  * @returns {DeleteGameResponse} Response containing success status and deleted game info
  */
 export const deleteGame = onCall<DeleteGameRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<DeleteGameResponse> => {
 		try {
 			const { auth: authContext, data } = request

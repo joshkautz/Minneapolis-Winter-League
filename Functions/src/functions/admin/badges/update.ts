@@ -40,7 +40,7 @@ interface UpdateBadgeResponse {
  * - Fields are validated if provided
  */
 export const updateBadge = onCall<UpdateBadgeRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<UpdateBadgeResponse> => {
 		const { data, auth } = request
 

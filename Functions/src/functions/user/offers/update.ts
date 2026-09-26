@@ -39,7 +39,7 @@ interface UpdateOfferRequest {
  * - Admins bypass banned and registration date restrictions
  */
 export const updateOffer = onCall<UpdateOfferRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 

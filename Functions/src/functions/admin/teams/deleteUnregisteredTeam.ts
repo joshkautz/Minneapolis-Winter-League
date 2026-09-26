@@ -37,7 +37,7 @@ interface DeleteUnregisteredTeamResponse {
 }
 
 export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<DeleteUnregisteredTeamResponse> => {
 		try {
 			const { auth: authContext, data } = request

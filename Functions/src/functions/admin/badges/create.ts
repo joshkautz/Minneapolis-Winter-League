@@ -34,7 +34,7 @@ interface CreateBadgeResponse {
  * - Image must be a valid image type if provided
  */
 export const createBadge = onCall<CreateBadgeRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<CreateBadgeResponse> => {
 		const { data, auth } = request
 

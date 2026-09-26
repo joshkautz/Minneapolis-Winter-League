@@ -79,7 +79,7 @@ interface MergeTeamsResponse {
 const BATCH_LIMIT = 400
 
 export const mergeTeams = onCall<MergeTeamsRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<MergeTeamsResponse> => {
 		try {
 			const { auth: authContext, data } = request

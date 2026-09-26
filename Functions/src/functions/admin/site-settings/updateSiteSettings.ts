@@ -29,7 +29,7 @@ const THEME_SETTINGS_DOC_ID = 'theme'
  * - Theme variant must be a valid value
  */
 export const updateSiteSettings = onCall<UpdateSiteSettingsRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<UpdateSiteSettingsResponse> => {
 		const { data, auth } = request
 

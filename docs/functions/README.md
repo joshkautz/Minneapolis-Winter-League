@@ -174,7 +174,7 @@ production Secret Manager with your own credentials. So under the emulator
 refused and the placeholder returned; put a test-mode key in `.secret.local`
 to exercise payments locally.
 
-Static settings — region, CORS origins, team registration thresholds, the
+Static settings — region, time zone, team registration thresholds, the
 Stripe API version — are in `config/constants.ts`.
 
 ## Running and deploying

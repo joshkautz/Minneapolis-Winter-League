@@ -10,14 +10,14 @@
  * Only the league's own origins are accepted.
  */
 
-import { FIREBASE_CONFIG } from '../config/constants.js'
 import { isRunningInEmulator } from '../config/environment.js'
 
 const PROJECT_ID = 'minnesota-winter-league'
 
 /** Origins the production site is served from. */
 const ALLOWED_ORIGINS: ReadonlySet<string> = new Set([
-	...FIREBASE_CONFIG.CORS_ORIGINS,
+	'https://mplswinterleague.com',
+	'https://www.mplswinterleague.com',
 	`https://${PROJECT_ID}.web.app`,
 	`https://${PROJECT_ID}.firebaseapp.com`,
 ])

@@ -44,7 +44,7 @@ export const createReply = onCall<
 	CreateReplyRequest,
 	Promise<CreateReplyResponse>
 >(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<CreateReplyResponse> => {
 		const { data, auth } = request
 

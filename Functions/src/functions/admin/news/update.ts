@@ -34,7 +34,7 @@ interface UpdateNewsResponse {
  * - Title and content are validated if provided
  */
 export const updateNews = onCall<UpdateNewsRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<UpdateNewsResponse> => {
 		const { data, auth } = request
 

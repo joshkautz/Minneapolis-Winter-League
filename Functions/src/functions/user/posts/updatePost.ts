@@ -40,7 +40,7 @@ export const updatePost = onCall<
 	UpdatePostRequest,
 	Promise<UpdatePostResponse>
 >(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<UpdatePostResponse> => {
 		const { data, auth } = request
 

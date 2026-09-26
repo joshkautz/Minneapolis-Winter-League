@@ -35,7 +35,7 @@ interface DeleteBadgeResponse {
  * 3. Delete the badge document
  */
 export const deleteBadge = onCall<DeleteBadgeRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<DeleteBadgeResponse> => {
 		const { data, auth } = request
 

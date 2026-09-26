@@ -38,7 +38,7 @@ export const deletePost = onCall<
 	DeletePostRequest,
 	Promise<DeletePostResponse>
 >(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<DeletePostResponse> => {
 		const { data, auth } = request
 

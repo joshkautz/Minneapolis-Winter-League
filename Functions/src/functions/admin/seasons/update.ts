@@ -55,7 +55,7 @@ interface UpdateSeasonResponse {
  *   or removed while any team in the season holds money
  */
 export const updateSeason = onCall<UpdateSeasonRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 

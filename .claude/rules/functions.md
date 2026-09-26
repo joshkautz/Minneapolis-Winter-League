@@ -44,6 +44,10 @@ export const doThing = onCall<DoThingRequest>(
 
 - Always pass `{ region: FIREBASE_CONFIG.REGION }`. Omitting it deploys to the
   wrong region and the App cannot reach it.
+- Don't pass `cors`. A callable authenticates with the player's ID token,
+  which no other site can read, so an origin list protects nothing — and it
+  broke half the callables on the `web.app` domain and PR previews, which
+  the site is also served from.
 - Open with a docblock listing the security validations the function performs.
   Every existing callable does this and it is the fastest way to review one.
 - Use the `shared/auth.ts` validators rather than hand-rolling checks:

@@ -32,7 +32,7 @@ interface CreateNewsResponse {
  * - Title and content are required and validated
  */
 export const createNews = onCall<CreateNewsRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<CreateNewsResponse> => {
 		const { data, auth } = request
 

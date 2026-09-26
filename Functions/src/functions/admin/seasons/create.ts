@@ -50,7 +50,7 @@ interface CreateSeasonResponse {
 }
 
 export const createSeason = onCall<CreateSeasonRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 

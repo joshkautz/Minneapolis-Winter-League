@@ -75,7 +75,7 @@ export const updateTeamAdmin = onCall<
 	UpdateTeamAdminRequest,
 	Promise<UpdateTeamAdminResponse>
 >(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<UpdateTeamAdminResponse> => {
 		const { auth, data } = request
 

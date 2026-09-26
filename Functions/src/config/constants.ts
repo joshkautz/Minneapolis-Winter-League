@@ -13,10 +13,6 @@ export const FIREBASE_CONFIG = {
 	 * `waiver/rules.ts` holds the same value, since that file cannot import.
 	 */
 	TIME_ZONE: 'America/Chicago',
-	CORS_ORIGINS: [
-		'https://mplswinterleague.com',
-		'https://www.mplswinterleague.com',
-	],
 } as const
 
 // Business Logic Constants (static)
