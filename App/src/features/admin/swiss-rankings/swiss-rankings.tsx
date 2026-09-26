@@ -23,7 +23,7 @@ import {
 } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PageContainer, PageHeader } from '@/shared/components'
+import { PageContainer, PageHeader, TeamLogo } from '@/shared/components'
 import {
 	Table,
 	TableBody,
@@ -308,15 +308,12 @@ export const SwissRankings = () => {
 													</TableCell>
 													<TableCell>
 														<div className='flex items-center gap-2'>
-															{team?.logo ? (
-																<img
-																	src={team.logo}
-																	alt={team.name}
-																	className='w-6 h-6 rounded-full object-cover'
-																/>
-															) : (
-																<div className='w-6 h-6 rounded-full bg-gradient-to-r from-primary to-sky-300' />
-															)}
+															<TeamLogo
+																name={team?.name}
+																logo={team?.logo}
+																alt=''
+																className='h-6 w-6 rounded-full'
+															/>
 															<span>{team?.name || ranking.teamId}</span>
 														</div>
 													</TableCell>
@@ -411,15 +408,12 @@ export const SwissRankings = () => {
 												{index + 1}
 											</span>
 											<div className='flex items-center gap-2 flex-1'>
-												{team?.logo ? (
-													<img
-														src={team.logo}
-														alt={team.name}
-														className='w-6 h-6 rounded-full object-cover'
-													/>
-												) : (
-													<div className='w-6 h-6 rounded-full bg-gradient-to-r from-primary to-sky-300' />
-												)}
+												<TeamLogo
+													name={team?.name}
+													logo={team?.logo}
+													alt=''
+													className='h-6 w-6 rounded-full'
+												/>
 												<span>{team?.name || teamId}</span>
 											</div>
 											<div className='flex gap-1'>

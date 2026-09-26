@@ -4,7 +4,7 @@ import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp, type DocumentSnapshot } from 'firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { Award, Lock, Loader2, Calendar, Trophy } from 'lucide-react'
-import { NotificationCard } from '@/shared/components'
+import { NotificationCard, TeamLogo } from '@/shared/components'
 import { gamesByTeamQuery } from '@/firebase/collections/games'
 import {
 	teamSeasonsQuery,
@@ -296,8 +296,6 @@ export const TeamProfile = () => {
 	const isMobile = useIsMobile()
 	const [selectedBadge, setSelectedBadge] = useState<EnhancedBadge | null>(null)
 
-	const [imageError, setImageError] = useState(false)
-
 	const teamSeasonData = teamSeasonSnapshot?.data() as
 		TeamSeasonDocument | undefined
 	const teamName = teamSeasonData?.name
@@ -363,22 +361,13 @@ export const TeamProfile = () => {
 				<div className='flex flex-col sm:flex-row items-center gap-6 sm:gap-8'>
 					{/* Team Logo */}
 					<div className='w-32 h-32 sm:w-40 sm:h-40 flex-shrink-0 group'>
-						<div className='aspect-square w-full overflow-hidden rounded-xl bg-muted shadow-md'>
-							{teamLogo && !imageError ? (
-								<img
-									src={teamLogo}
-									alt={`${teamName || 'Team'} logo`}
-									className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-105'
-									onError={() => setImageError(true)}
-								/>
-							) : (
-								<div className='flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-sky-300'>
-									<span className='text-4xl sm:text-5xl font-bold text-primary-foreground'>
-										{teamName?.charAt(0)?.toUpperCase() || 'T'}
-									</span>
-								</div>
-							)}
-						</div>
+						<TeamLogo
+							name={teamName}
+							logo={teamLogo}
+							className='aspect-square w-full rounded-xl shadow-md'
+							imageClassName='transition-transform duration-300 group-hover:scale-105'
+							initialClassName='text-4xl sm:text-5xl'
+						/>
 					</div>
 
 					{/* Team Info */}

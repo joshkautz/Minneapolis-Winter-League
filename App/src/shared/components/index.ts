@@ -22,6 +22,8 @@ export { PageContainer } from './page-container'
 export { PageHeader } from './page-header'
 export { TeamContributionsList } from './team-contributions-list'
 export { ImageField } from './image-field'
+export { TeamLogo } from './team-logo'
+export { SeasonHistoryRow } from './season-history-row'
 
 // Error components
 export * from './errors'

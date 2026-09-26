@@ -1,8 +1,8 @@
-import { ReactNode, useMemo, useState } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
-import { NotificationCard } from '@/shared/components'
+import { NotificationCard, TeamLogo } from '@/shared/components'
 import { ManageTeamRosterPlayer } from './manage-team-roster-player'
 import {
 	formatDollars,
@@ -75,30 +75,15 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 			</p>
 		)
 
-	const [imageError, setImageError] = useState(false)
-
 	const titleData = (
 		<div className={'flex items-center gap-3'}>
-			<div
-				className={
-					'relative h-12 w-12 rounded-full overflow-hidden bg-muted flex-shrink-0'
-				}
-			>
-				{team?.data()?.logo && !imageError ? (
-					<img
-						src={team.data().logo || undefined}
-						alt={`${team.data().name} team logo`}
-						className={'h-full w-full object-cover rounded-full'}
-						onError={() => setImageError(true)}
-					/>
-				) : (
-					<div className='flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-sky-300'>
-						<span className='text-sm font-bold text-primary-foreground'>
-							{team?.data()?.name?.charAt(0)?.toUpperCase() || 'T'}
-						</span>
-					</div>
-				)}
-			</div>
+			<TeamLogo
+				name={team?.data()?.name}
+				logo={team?.data()?.logo}
+				alt={`${team?.data()?.name ?? 'Team'} team logo`}
+				className='relative h-12 w-12 flex-shrink-0 rounded-full'
+				initialClassName='text-sm'
+			/>
 			<div className='flex flex-col justify-center'>
 				<h3 className='font-semibold text-lg leading-tight'>
 					{team?.data().name}

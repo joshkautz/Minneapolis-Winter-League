@@ -19,6 +19,7 @@ import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { cn } from '@/shared/utils'
 import { TeamSeasonDocument } from '@/types'
 import { TeamStanding } from '@/shared/hooks'
+import { TeamLogo } from '@/shared/components'
 
 interface SharedStandingsTableProps<S extends TeamStanding> {
 	data: Record<string, S>
@@ -196,20 +197,12 @@ export const SharedStandingsTable = <S extends TeamStanding>({
 									<TableCell role='cell'>
 										<div className='flex items-center gap-3 py-1'>
 											<div className='flex-shrink-0 w-10 h-10 flex items-center justify-center'>
-												{url ? (
-													<img
-														className='w-8 h-8 rounded-full object-cover bg-muted border border-border'
-														src={url}
-														alt={`${teamDocument?.name} logo`}
-														loading='lazy'
-													/>
-												) : (
-													<div
-														className='w-8 h-8 rounded-full bg-gradient-to-r from-primary to-sky-300 border border-border'
-														aria-label={`${teamDocument?.name} default logo`}
-														role='img'
-													/>
-												)}
+												<TeamLogo
+													name={teamDocument?.name}
+													logo={url}
+													loading='lazy'
+													className='h-8 w-8 rounded-full border border-border'
+												/>
 											</div>
 											<span className='font-medium text-foreground group-hover:text-primary transition-colors truncate'>
 												{teamDocument?.name}

@@ -1,5 +1,10 @@
 import { Link } from 'react-router-dom'
-import { cn, formatTimestampWithTime } from '@/shared/utils'
+import {
+	formatTimestampWithTime,
+	MIN_SIGNED_PLAYERS,
+	ordinal,
+} from '@/shared/utils'
+import { TeamLogo } from '@/shared/components'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Timestamp } from 'firebase/firestore'
@@ -25,22 +30,6 @@ interface TeamCardProps {
 	placement?: number // Placement number for registered teams
 }
 
-// Helper function to get ordinal suffix
-const getOrdinalSuffix = (num: number): string => {
-	const j = num % 10
-	const k = num % 100
-	if (j === 1 && k !== 11) {
-		return num + 'st'
-	}
-	if (j === 2 && k !== 12) {
-		return num + 'nd'
-	}
-	if (j === 3 && k !== 13) {
-		return num + 'rd'
-	}
-	return num + 'th'
-}
-
 // Team Card Component
 export const TeamCard = ({
 	teamId,
@@ -49,9 +38,8 @@ export const TeamCard = ({
 	placement,
 }: TeamCardProps) => {
 	const { name, logo, registered, registeredDate, rosterCount = 0 } = teamData
-	const MIN_PLAYERS_REQUIRED = 10
 	const progressPercentage = Math.min(
-		(rosterCount / MIN_PLAYERS_REQUIRED) * 100,
+		(rosterCount / MIN_SIGNED_PLAYERS) * 100,
 		100
 	)
 	const linkTo = seasonId ? `/teams/${teamId}/${seasonId}` : `/teams/${teamId}`
@@ -64,34 +52,15 @@ export const TeamCard = ({
 		>
 			<Card className='h-full transition-all duration-300 hover:shadow-lg group-hover:shadow-xl py-0'>
 				<CardHeader className='p-0'>
-					<div className='aspect-square w-full overflow-hidden rounded-t-lg bg-muted'>
-						{logo ? (
-							<img
-								src={logo}
-								alt={`${name} team logo`}
-								className='h-full w-full object-cover transition-transform duration-300 group-hover:scale-105'
-								loading='lazy'
-								onError={(e) => {
-									const target = e.target as HTMLImageElement
-									target.style.display = 'none'
-									const parent = target.parentElement
-									if (parent) {
-										parent.className = cn(
-											parent.className,
-											'bg-gradient-to-br from-primary to-sky-300 flex items-center justify-center'
-										)
-										parent.innerHTML = `<span class="text-primary-foreground font-semibold text-lg">${name.charAt(0).toUpperCase()}</span>`
-									}
-								}}
-							/>
-						) : (
-							<div className='flex h-full w-full items-center justify-center bg-gradient-to-br from-primary to-sky-300'>
-								<span className='text-2xl font-bold text-primary-foreground'>
-									{name.charAt(0).toUpperCase()}
-								</span>
-							</div>
-						)}
-					</div>
+					<TeamLogo
+						name={name}
+						logo={logo}
+						alt={`${name} team logo`}
+						loading='lazy'
+						className='aspect-square w-full rounded-t-lg'
+						imageClassName='transition-transform duration-300 group-hover:scale-105'
+						initialClassName='text-2xl'
+					/>
 				</CardHeader>
 
 				<CardContent className='flex flex-col items-center justify-center p-4'>
@@ -106,7 +75,7 @@ export const TeamCard = ({
 						{!registered ? (
 							<div className='flex flex-col gap-2'>
 								<span className='text-sm text-muted-foreground'>
-									{rosterCount}/{MIN_PLAYERS_REQUIRED} players
+									{rosterCount}/{MIN_SIGNED_PLAYERS} players
 								</span>
 								<Progress value={progressPercentage} className='h-2' />
 							</div>
@@ -114,7 +83,7 @@ export const TeamCard = ({
 							<div className='flex flex-col items-center gap-2'>
 								<div className='text-sm text-green-600 dark:text-green-500'>
 									<span>
-										Registered {placement && `- ${getOrdinalSuffix(placement)}`}
+										Registered {placement && `- ${ordinal(placement)}`}
 									</span>
 								</div>
 								{placement && registeredDate && (
