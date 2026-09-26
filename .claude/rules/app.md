@@ -41,6 +41,18 @@ Import Firebase from `firebase/firestore`, never `@firebase/firestore` — the
 two resolve to separate SDK instances and refs from one fail the other's type
 checks.
 
+Import each thing from the one place it lives. There is no `@/firebase`
+barrel:
+
+- query builders and callables from their module,
+  `@/firebase/collections/<domain>` or `@/firebase/collections/functions`;
+- the app, Auth and Firestore instances from `@/firebase/app`;
+- SDK types (`DocumentReference`, `QuerySnapshot`, `User`) from the SDK;
+- document shapes (`PlayerDocument`, `SeasonDocument`) from `@/types`.
+
+A context hook throws when used outside its provider. Returning empty
+defaults instead hid a missing provider as an empty page.
+
 Shared hooks cover the patterns that recur, so reach for them before writing
 an effect:
 
@@ -109,6 +121,25 @@ close while pending — otherwise the spinner is never seen.
 
 In a list, keep pending state per row (in the row component, or keyed by id).
 One shared flag makes every row's button spin at once.
+
+## Admin pages
+
+Route an admin page through `AdminRoute` (`routes/route-wrappers.tsx`). It
+renders `AdminGate`, which reads the player's `admin` flag from the auth
+context once, so a page never checks for itself or opens its own listener
+on the player document. Shared admin pieces — `BackToAdminButton`, the
+season filter and its card — are in `features/admin/shared`.
+
+The gate hides pages; it protects nothing. Every admin callable calls
+`validateAdminUser` itself.
+
+## Rules shared with the server
+
+Validation both sides enforce is written once in Functions and imported
+through `@/shared/image-rules`, `@/shared/name-rules`, `@/shared/text-rules`
+and `@/shared/waiver`. Use those constants — for a field's `maxLength` and
+counter too — rather than restating a limit. A new rule goes in the
+Functions file, which must stay free of imports.
 
 ## Providers
 
