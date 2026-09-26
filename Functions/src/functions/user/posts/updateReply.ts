@@ -14,6 +14,7 @@ import {
 } from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
 
 interface UpdateReplyRequest {
 	postId: string
@@ -57,21 +58,7 @@ export const updateReply = onCall<
 			)
 		}
 
-		// Validate content length (10-1000 characters)
-		const trimmedContent = content.trim()
-		if (trimmedContent.length < 10) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Reply content must be at least 10 characters long'
-			)
-		}
-
-		if (trimmedContent.length > 1000) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Reply content must not exceed 1,000 characters'
-			)
-		}
+		const trimmedContent = requireText(content, TEXT_RULES.replyContent)
 
 		try {
 			const firestore = getFirestore()

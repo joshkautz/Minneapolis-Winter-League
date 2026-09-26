@@ -12,7 +12,8 @@ import {
 	parseImageUpload,
 	storeImage,
 } from '../../../shared/images.js'
-import { FIREBASE_CONFIG, BADGE_CONFIG } from '../../../config/constants.js'
+import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
 
 interface UpdateBadgeRequest {
 	badgeId: string
@@ -70,38 +71,12 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 			)
 		}
 
-		// Validate name if provided
 		if (name !== undefined && name !== null) {
-			if (name.trim().length < BADGE_CONFIG.NAME_MIN_LENGTH) {
-				throw new HttpsError(
-					'invalid-argument',
-					`Name must be at least ${BADGE_CONFIG.NAME_MIN_LENGTH} characters long`
-				)
-			}
-
-			if (name.length > BADGE_CONFIG.NAME_MAX_LENGTH) {
-				throw new HttpsError(
-					'invalid-argument',
-					`Name must not exceed ${BADGE_CONFIG.NAME_MAX_LENGTH} characters`
-				)
-			}
+			requireText(name, TEXT_RULES.badgeName)
 		}
 
-		// Validate description if provided
 		if (description !== undefined && description !== null) {
-			if (description.trim().length < BADGE_CONFIG.DESCRIPTION_MIN_LENGTH) {
-				throw new HttpsError(
-					'invalid-argument',
-					`Description must be at least ${BADGE_CONFIG.DESCRIPTION_MIN_LENGTH} characters long`
-				)
-			}
-
-			if (description.length > BADGE_CONFIG.DESCRIPTION_MAX_LENGTH) {
-				throw new HttpsError(
-					'invalid-argument',
-					`Description must not exceed ${BADGE_CONFIG.DESCRIPTION_MAX_LENGTH} characters`
-				)
-			}
+			requireText(description, TEXT_RULES.badgeDescription)
 		}
 
 		const image = parseImageUpload(

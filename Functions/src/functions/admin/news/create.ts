@@ -8,6 +8,7 @@ import { logger } from 'firebase-functions/v2'
 import { Collections } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
 
 interface CreateNewsRequest {
 	title: string
@@ -45,35 +46,9 @@ export const createNews = onCall<CreateNewsRequest>(
 			)
 		}
 
-		// Validate title length (min 3, max 200 characters)
-		if (title.trim().length < 3) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Title must be at least 3 characters long'
-			)
-		}
+		requireText(title, TEXT_RULES.newsTitle)
 
-		if (title.length > 200) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Title must not exceed 200 characters'
-			)
-		}
-
-		// Validate content length (min 10, max 10000 characters)
-		if (content.trim().length < 10) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Content must be at least 10 characters long'
-			)
-		}
-
-		if (content.length > 10000) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Content must not exceed 10,000 characters'
-			)
-		}
+		requireText(content, TEXT_RULES.newsContent)
 
 		try {
 			const firestore = getFirestore()

@@ -36,14 +36,6 @@ export const GAME_CONFIG = {
 	ALLOWED_FIELDS: [1, 2, 3],
 } as const
 
-// Badge Configuration
-export const BADGE_CONFIG = {
-	NAME_MIN_LENGTH: 3,
-	NAME_MAX_LENGTH: 100,
-	DESCRIPTION_MIN_LENGTH: 10,
-	DESCRIPTION_MAX_LENGTH: 500,
-} as const
-
 // Stripe Configuration (lazy-loaded)
 export function getStripeConfig(): {
 	readonly SECRET_KEY: string

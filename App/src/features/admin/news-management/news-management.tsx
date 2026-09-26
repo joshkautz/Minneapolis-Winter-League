@@ -73,6 +73,7 @@ import {
 	SeasonFilterCard,
 	useAdminSeasonFilter,
 } from '@/features/admin/shared'
+import { TEXT_RULES, textProblem } from '@/shared/text-rules'
 
 interface ProcessedNews {
 	id: string
@@ -212,24 +213,12 @@ export const NewsManagement = () => {
 
 	// Handle create/edit submit
 	const handleSubmit = async () => {
-		// Validation
-		if (formTitle.trim().length < 3) {
-			toast.error('Title must be at least 3 characters long')
-			return
-		}
-
-		if (formTitle.length > 200) {
-			toast.error('Title must not exceed 200 characters')
-			return
-		}
-
-		if (formContent.trim().length < 10) {
-			toast.error('Content must be at least 10 characters long')
-			return
-		}
-
-		if (formContent.length > 10000) {
-			toast.error('Content must not exceed 10,000 characters')
+		// The server's own rules, so the message matches what it would say.
+		const problem =
+			textProblem(formTitle, TEXT_RULES.newsTitle) ??
+			textProblem(formContent, TEXT_RULES.newsContent)
+		if (problem) {
+			toast.error(problem)
 			return
 		}
 
@@ -519,7 +508,11 @@ export const NewsManagement = () => {
 							>
 								<span>3-200 characters</span>
 								<span
-									className={titleCharCount > 200 ? 'text-destructive' : ''}
+									className={
+										titleCharCount > TEXT_RULES.newsTitle.max
+											? 'text-destructive'
+											: ''
+									}
 								>
 									{titleCharCount}/200
 								</span>
@@ -537,7 +530,7 @@ export const NewsManagement = () => {
 								value={formContent}
 								onChange={(e) => setFormContent(e.target.value)}
 								rows={10}
-								maxLength={10000}
+								maxLength={TEXT_RULES.newsContent.max}
 								className='resize-none font-mono text-sm'
 								aria-describedby='content-description'
 							/>
@@ -547,7 +540,11 @@ export const NewsManagement = () => {
 							>
 								<span>10-10,000 characters (line breaks preserved)</span>
 								<span
-									className={contentCharCount > 10000 ? 'text-destructive' : ''}
+									className={
+										contentCharCount > TEXT_RULES.newsContent.max
+											? 'text-destructive'
+											: ''
+									}
 								>
 									{contentCharCount}/10,000
 								</span>

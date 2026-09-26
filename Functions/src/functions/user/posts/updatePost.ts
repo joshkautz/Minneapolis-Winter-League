@@ -14,6 +14,7 @@ import {
 } from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
 
 interface UpdatePostRequest {
 	postId: string
@@ -56,21 +57,7 @@ export const updatePost = onCall<
 			)
 		}
 
-		// Validate content length (10-2000 characters)
-		const trimmedContent = content.trim()
-		if (trimmedContent.length < 10) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Post content must be at least 10 characters long'
-			)
-		}
-
-		if (trimmedContent.length > 2000) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Post content must not exceed 2,000 characters'
-			)
-		}
+		const trimmedContent = requireText(content, TEXT_RULES.postContent)
 
 		try {
 			const firestore = getFirestore()
