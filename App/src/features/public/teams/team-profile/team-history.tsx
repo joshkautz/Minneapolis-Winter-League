@@ -24,12 +24,7 @@ export const TeamHistory = ({
 }: {
 	teamDocumentSnapshot: DocumentSnapshot<TeamDocument> | undefined
 	historyQuerySnapshot: QuerySnapshot<TeamSeasonDocument>
-	/**
-	 * Games for THIS team only — `gamesByTeamQuery(teamRef)` from the
-	 * parent team-profile component. Replaces the previous reliance on
-	 * the unbounded `useGamesContext().allGamesQuerySnapshot`, which
-	 * pulled every game ever played just to compute one team's history.
-	 */
+	/** This team's games only — `gamesByTeamQuery(teamRef)` from the profile. */
 	gamesQuerySnapshot: QuerySnapshot<GameDocument> | undefined
 }) => {
 	const { seasonsQuerySnapshot } = useSeasonsContext()

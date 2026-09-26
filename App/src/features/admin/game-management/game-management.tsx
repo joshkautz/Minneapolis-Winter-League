@@ -15,7 +15,8 @@ import {
 	teamsInSeasonQuery,
 	canonicalTeamIdFromTeamSeasonDoc,
 } from '@/firebase/collections/teams'
-import { useSeasonsContext, useGamesContext } from '@/providers'
+import { useSeasonsContext } from '@/providers'
+import { allGamesQuery } from '@/firebase/collections/games'
 import {
 	createGameViaFunction,
 	updateGameViaFunction,
@@ -103,11 +104,11 @@ export const GameManagement = () => {
 		seasonsQuerySnapshotError: seasonsError,
 		currentSeasonQueryDocumentSnapshot,
 	} = useSeasonsContext()
-	const {
-		allGamesQuerySnapshot: gamesSnapshot,
-		allGamesQuerySnapshotLoading: gamesLoading,
-		allGamesQuerySnapshotError: gamesError,
-	} = useGamesContext()
+	// Every game ever played, which only this page needs — it lists all
+	// seasons' games. Held here rather than in the games provider, which
+	// every visitor's every page mounts.
+	const [gamesSnapshot, gamesLoading, gamesError] =
+		useCollection(allGamesQuery())
 
 	useQueryErrorHandler({
 		error: gamesError,
