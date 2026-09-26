@@ -1,4 +1,3 @@
-import { useContext, useEffect, useState } from 'react'
 import { LaptopIcon, MoonIcon, SunIcon } from '@radix-ui/react-icons'
 import {
 	Select,
@@ -7,7 +6,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { ThemeContext } from '@/providers'
+import { useThemeContext, type ThemePreference } from '@/providers'
 import { cn, logger } from '@/shared/utils'
 import { useAnimatedSelect } from '@/shared/hooks'
 
@@ -18,59 +17,24 @@ const themeOptions = [
 ] as const
 
 export const ThemeSelect = ({ mobile = false }: { mobile?: boolean }) => {
-	const themeContext = useContext(ThemeContext)
-	const [stringValue, setStringValue] = useState<string>('')
-	const [initialSelection, setInitialSelection] = useState<boolean>(false)
+	const { preference, setPreference } = useThemeContext()
 
-	// Get the stored theme preference (including 'system')
-	const getStoredTheme = (): 'light' | 'dark' | 'system' => {
-		const stored = localStorage.getItem('theme')
-		if (stored === 'light' || stored === 'dark' || stored === 'system') {
-			return stored
-		}
-		return 'system' // Default to system if nothing is stored
-	}
-
-	// Use the animated select hook
 	const { handleAnimatedChange, getTransitionClasses, getIconClasses } =
 		useAnimatedSelect({
-			onValueChange: (theme: string) => {
-				const newTheme = theme as 'light' | 'dark' | 'system'
-				setStringValue(theme)
-				logger.userAction('theme_changed', 'ThemeSelect', { theme: newTheme })
-				if (themeContext) {
-					themeContext.setTheme(newTheme)
-				}
+			onValueChange: (value: string) => {
+				const next = value as ThemePreference
+				logger.userAction('theme_changed', 'ThemeSelect', { theme: next })
+				setPreference(next)
 			},
 		})
 
-	useEffect(() => {
-		if (!initialSelection) {
-			const currentTheme = getStoredTheme()
-			const timer = setTimeout(() => {
-				setStringValue(currentTheme)
-				setInitialSelection(true)
-			}, 0)
-			return () => clearTimeout(timer)
-		}
-		return undefined
-	}, [initialSelection])
-
-	if (!themeContext) {
-		return null
-	}
-
-	const handleThemeChange = (theme: string) => {
-		handleAnimatedChange(theme)
-	}
-
-	const getCurrentThemeOption = () => {
-		return themeOptions.find((option) => option.value === stringValue)
-	}
+	const currentOption = themeOptions.find(
+		(option) => option.value === preference
+	)
 
 	return (
 		<div className='w-full'>
-			<Select value={stringValue} onValueChange={handleThemeChange}>
+			<Select value={preference} onValueChange={handleAnimatedChange}>
 				<SelectTrigger
 					className={cn(
 						'w-full px-3 hover:bg-accent dark:hover:bg-accent dark:hover:text-accent-foreground dark:hover:[&_svg]:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset rounded-md cursor-pointer',
@@ -78,22 +42,19 @@ export const ThemeSelect = ({ mobile = false }: { mobile?: boolean }) => {
 					)}
 				>
 					<SelectValue placeholder='Select theme'>
-						{(() => {
-							const currentOption = getCurrentThemeOption()
-							if (!stringValue || !currentOption) return null
-							const IconComponent = currentOption.icon
-							return (
-								<div
-									className={cn(
-										'flex items-center gap-2',
-										getTransitionClasses()
-									)}
-								>
-									<IconComponent className={cn('w-4 h-4', getIconClasses())} />
-									<span>{currentOption.label}</span>
-								</div>
-							)
-						})()}
+						{currentOption && (
+							<div
+								className={cn(
+									'flex items-center gap-2',
+									getTransitionClasses()
+								)}
+							>
+								<currentOption.icon
+									className={cn('w-4 h-4', getIconClasses())}
+								/>
+								<span>{currentOption.label}</span>
+							</div>
+						)}
 					</SelectValue>
 				</SelectTrigger>
 				<SelectContent>
