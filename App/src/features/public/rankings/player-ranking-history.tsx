@@ -6,12 +6,17 @@
  */
 
 import { useMemo, useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import { getDoc } from 'firebase/firestore'
 
-import { logger, teamRecordsBySeason, type SeasonRecord } from '@/shared/utils'
+import {
+	logger,
+	sortBySeasonStartDesc,
+	teamRecordsBySeason,
+	type SeasonRecord,
+} from '@/shared/utils'
 import { PlayerSeasonDocument, TeamSeasonDocument } from '@/types'
 import {
 	playerSeasonsSubcollection,
@@ -21,7 +26,6 @@ import { teamSeasonRef } from '@/firebase/collections/teams'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import {
 	ChartConfig,
 	ChartContainer,
@@ -36,10 +40,11 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { Trophy, ArrowLeft, Users, Shield } from 'lucide-react'
+import { Trophy, ArrowLeft, Users } from 'lucide-react'
 import { useSeasonsContext, useGamesContext } from '@/providers'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { rankingsHistoryQuery } from '@/firebase/collections/player-rankings'
+import { SeasonHistoryRow } from '@/shared/components'
 
 interface PlayerRankingHistoryProps {
 	/** Optional class name for styling */
@@ -76,30 +81,13 @@ const chartConfig = {
 interface TeamHistoryEntry {
 	seasonId: string
 	seasonName: string
-	teamId: string | null
-	teamName: string | null
+	teamId: string
+	teamName: string
 	teamLogo: string | null
 	wins: number
 	losses: number
 	placement: number | null
 	isCaptain: boolean
-}
-
-// Format placement with ordinal suffix and medal emoji for top 3
-const formatPlacement = (placement: number | null) => {
-	if (placement === null) return 'TBD'
-	if (placement === 1) return '1st 🥇'
-	if (placement === 2) return '2nd 🥈'
-	if (placement === 3) return '3rd 🥉'
-	const suffix =
-		placement % 10 === 1 && placement !== 11
-			? 'st'
-			: placement % 10 === 2 && placement !== 12
-				? 'nd'
-				: placement % 10 === 3 && placement !== 13
-					? 'rd'
-					: 'th'
-	return `${placement}${suffix}`
 }
 
 export const PlayerRankingHistory = ({
@@ -329,74 +317,41 @@ export const PlayerRankingHistory = ({
 		}
 	}, [playerSeasonsSnapshot])
 
-	// Process player's team history from their playerSeasons subcollection.
+	// The player's teams, newest season first. Seasons without a team (a
+	// free agent's) are left out.
 	const teamHistory = useMemo((): TeamHistoryEntry[] => {
 		if (!playerSeasonsSnapshot?.docs || !playerId) return []
 
-		// Map seasonId → season dateStart timestamp for sorting.
-		const seasonTimestamps = new Map<string, number>()
-		seasonsQuerySnapshot?.docs.forEach((doc) => {
-			const data = doc.data()
-			if (data.dateStart) {
-				const timestamp =
-					typeof data.dateStart.toDate === 'function'
-						? data.dateStart.toDate().getTime()
-						: data.dateStart instanceof Date
-							? data.dateStart.getTime()
-							: data.dateStart.seconds
-								? data.dateStart.seconds * 1000
-								: 0
-				seasonTimestamps.set(doc.id, timestamp)
-			}
+		const seasonsById = new Map(
+			seasonsQuerySnapshot?.docs.map((doc) => [doc.id, doc.data()]) ?? []
+		)
+
+		const entries = playerSeasonsSnapshot.docs.flatMap((psDoc) => {
+			const seasonId = psDoc.id
+			const playerSeason = psDoc.data() as PlayerSeasonDocument
+			const teamId = playerSeason.team?.id
+			if (!teamId) return []
+
+			const teamSeason = teamSeasonByKey.get(`${teamId}::${seasonId}`)
+			const record = teamRecords[`${teamId}::${seasonId}`]
+			return [
+				{
+					seasonId,
+					seasonName: seasonsById.get(seasonId)?.name || 'Unknown Season',
+					teamId,
+					teamName: teamSeason?.name ?? 'Unknown Team',
+					teamLogo: teamSeason?.logo ?? null,
+					wins: record?.wins || 0,
+					losses: record?.losses || 0,
+					placement: teamSeason?.placement ?? null,
+					isCaptain: playerSeason.captain || false,
+				},
+			]
 		})
 
-		const history: (TeamHistoryEntry & { sortTimestamp: number })[] =
-			playerSeasonsSnapshot.docs
-				.map((psDoc) => {
-					const seasonId = psDoc.id
-					const ps = psDoc.data() as PlayerSeasonDocument
-
-					const seasonDoc = seasonsQuerySnapshot?.docs.find(
-						(s) => s.id === seasonId
-					)
-					const seasonName = seasonDoc?.data()?.name || 'Unknown Season'
-
-					const teamRef = ps.team
-					let teamId: string | null = null
-					let teamName: string | null = null
-					let teamLogo: string | null = null
-					let placement: number | null = null
-
-					if (teamRef) {
-						teamId = teamRef.id
-						const ts = teamSeasonByKey.get(`${teamRef.id}::${seasonId}`)
-						teamName = ts?.name ?? 'Unknown Team'
-						teamLogo = ts?.logo ?? null
-						placement = ts?.placement ?? null
-					}
-
-					const record = teamId ? teamRecords[`${teamId}::${seasonId}`] : null
-
-					return {
-						seasonId,
-						seasonName,
-						teamId,
-						teamName,
-						teamLogo,
-						wins: record?.wins || 0,
-						losses: record?.losses || 0,
-						placement,
-						isCaptain: ps.captain || false,
-						sortTimestamp: seasonTimestamps.get(seasonId) || 0,
-					}
-				})
-				// Filter out entries without a team (free agents)
-				.filter((entry) => entry.teamId !== null)
-
-		// Sort by season dateStart timestamp (most recent first)
-		return history
-			.sort((a, b) => b.sortTimestamp - a.sortTimestamp)
-			.map(({ sortTimestamp: _sortTimestamp, ...entry }) => entry)
+		return sortBySeasonStartDesc(entries, (entry) =>
+			seasonsById.get(entry.seasonId)?.dateStart?.toMillis()
+		)
 	}, [
 		playerSeasonsSnapshot,
 		playerId,
@@ -814,75 +769,17 @@ export const PlayerRankingHistory = ({
 						<ul aria-label='Team history' className='list-none m-0 p-0'>
 							{teamHistory.map((entry, index) => (
 								<li key={`${entry.seasonId}-${entry.teamId}-${index}`}>
-									<Link
-										to={
-											entry.teamId
-												? `/teams/${entry.teamId}/${entry.seasonId}`
-												: '#'
-										}
-										className='flex items-center gap-4 px-6 py-3 border-b last:border-b-0 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
-										aria-label={`${entry.teamName}, ${entry.seasonName}, ${entry.wins} wins ${entry.losses} losses, finished ${formatPlacement(entry.placement)}${entry.isCaptain ? ', Team Captain' : ''}`}
-									>
-										{/* Team Logo */}
-										<div className='flex-shrink-0'>
-											{entry.teamLogo ? (
-												<img
-													src={entry.teamLogo}
-													alt=''
-													className='w-10 h-10 rounded-full object-cover bg-muted'
-												/>
-											) : (
-												<div className='w-10 h-10 rounded-full bg-gradient-to-br from-primary to-sky-300 flex items-center justify-center'>
-													<span className='text-sm font-bold text-primary-foreground'>
-														{entry.teamName?.charAt(0)?.toUpperCase() || 'T'}
-													</span>
-												</div>
-											)}
-										</div>
-
-										{/* Team Info */}
-										<div className='flex-1 min-w-0'>
-											<div className='flex items-center gap-2'>
-												<span className='font-medium text-foreground truncate'>
-													{entry.teamName}
-												</span>
-												{entry.isCaptain && (
-													<Badge
-														variant='secondary'
-														className='flex items-center gap-1 shrink-0'
-													>
-														<Shield className='h-3 w-3' />
-														<span className='sr-only sm:not-sr-only'>
-															Captain
-														</span>
-													</Badge>
-												)}
-											</div>
-											<span className='text-sm text-muted-foreground'>
-												{entry.seasonName}
-											</span>
-										</div>
-
-										{/* Win-Loss Record */}
-										<div className='flex-shrink-0 text-center'>
-											<div className='text-sm font-medium'>
-												{entry.wins}-{entry.losses}
-											</div>
-											<div className='text-xs text-muted-foreground'>
-												Record
-											</div>
-										</div>
-
-										{/* Placement */}
-										<div className='flex-shrink-0 text-right min-w-[60px]'>
-											<div className='text-sm font-medium'>
-												{formatPlacement(entry.placement)}
-											</div>
-											<div className='text-xs text-muted-foreground'>
-												Finish
-											</div>
-										</div>
-									</Link>
+									<SeasonHistoryRow
+										to={`/teams/${entry.teamId}/${entry.seasonId}`}
+										teamName={entry.teamName}
+										teamLogo={entry.teamLogo}
+										seasonName={entry.seasonName}
+										wins={entry.wins}
+										losses={entry.losses}
+										placement={entry.placement}
+										captain={entry.isCaptain}
+										className='px-6'
+									/>
 								</li>
 							))}
 						</ul>

@@ -1,7 +1,11 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { User } from 'firebase/auth'
-import { Timestamp, QuerySnapshot } from 'firebase/firestore'
+import {
+	Timestamp,
+	QuerySnapshot,
+	type QueryDocumentSnapshot,
+} from 'firebase/firestore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -15,16 +19,15 @@ import {
 	Tag,
 	Users,
 } from 'lucide-react'
-import { stripeRegistration, QueryDocumentSnapshot } from '@/firebase'
+import { stripeRegistration } from '@/firebase/collections/payments'
 import {
 	formatTimestamp,
-	PlayerSeasonDocument,
-	SeasonDocument,
 	didPlayerPayPreviousSeason,
 	formatDollars,
 	MIN_SIGNED_PLAYERS,
 	usesTeamPayments,
 } from '@/shared/utils'
+import { PlayerSeasonDocument, SeasonDocument } from '@/types'
 import { getSeasonPriceId, getSeasonCouponId } from '@/firebase/stripe'
 
 interface PaymentSectionProps {

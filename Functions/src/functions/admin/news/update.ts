@@ -8,6 +8,7 @@ import { logger } from 'firebase-functions/v2'
 import { Collections, SeasonDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
 
 interface UpdateNewsRequest {
 	newsId: string
@@ -33,7 +34,7 @@ interface UpdateNewsResponse {
  * - Title and content are validated if provided
  */
 export const updateNews = onCall<UpdateNewsRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<UpdateNewsResponse> => {
 		const { data, auth } = request
 
@@ -52,38 +53,12 @@ export const updateNews = onCall<UpdateNewsRequest>(
 			)
 		}
 
-		// Validate title if provided
 		if (title !== undefined) {
-			if (title.trim().length < 3) {
-				throw new HttpsError(
-					'invalid-argument',
-					'Title must be at least 3 characters long'
-				)
-			}
-
-			if (title.length > 200) {
-				throw new HttpsError(
-					'invalid-argument',
-					'Title must not exceed 200 characters'
-				)
-			}
+			requireText(title, TEXT_RULES.newsTitle)
 		}
 
-		// Validate content if provided
 		if (content !== undefined) {
-			if (content.trim().length < 10) {
-				throw new HttpsError(
-					'invalid-argument',
-					'Content must be at least 10 characters long'
-				)
-			}
-
-			if (content.length > 10000) {
-				throw new HttpsError(
-					'invalid-argument',
-					'Content must not exceed 10,000 characters'
-				)
-			}
+			requireText(content, TEXT_RULES.newsContent)
 		}
 
 		try {

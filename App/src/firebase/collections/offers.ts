@@ -32,7 +32,7 @@ import {
 	TeamDocument,
 	SeasonDocument,
 	Collections,
-} from '@/shared/utils'
+} from '@/types'
 
 /**
  * Look up the player's per-season subdoc for the current season and return

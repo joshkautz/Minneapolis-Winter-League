@@ -54,7 +54,7 @@ interface GetSwissRankingsResponse {
  * - Season must exist
  */
 export const getSwissRankings = onCall<GetSwissRankingsRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 		const { seasonId } = data

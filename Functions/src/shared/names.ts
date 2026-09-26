@@ -1,98 +1,64 @@
 /**
- * Player name validation.
+ * Player and team name validation.
  *
- * `App/src/shared/utils/validation.ts` has the same rules as a Zod schema,
- * and that is the copy readers actually meet — it drives the inline errors on
- * the profile and sign-up forms. This one exists because the schema is not a
- * control: callables are invocable by any authenticated user, so a name that
- * never passes through the form can be anything at all. Names appear on
- * rosters, the schedule and the public rankings.
- *
- * The two are intentionally duplicated rather than shared, the same way
- * `types.ts` is: the workspaces build against different SDKs and neither
- * imports from the other. They must be changed together.
- *
+ * The rules themselves live in `nameRules.ts`, which the App imports so its
+ * forms say the same thing. This is the copy that counts: callables are
+ * invocable by any authenticated user, so a name that never passes through a
+ * form can be anything at all, and names appear on rosters, the schedule and
+ * the public rankings.
  */
 
 import { HttpsError } from 'firebase-functions/v2/https'
 import { Filter } from 'bad-words'
-
-/** Matches the App's `nameSchema` bounds. */
-const MIN_LENGTH = 2
-const MAX_LENGTH = 50
-
-/** Letters from any script, plus spaces, hyphens and apostrophes. */
-const ALLOWED_CHARACTERS = /^[\p{L}\p{M}\s'-]+$/u
-
-/**
- * Typographic characters that mean the same thing as their ASCII
- * counterparts, normalized before validating.
- *
- * iOS and macOS substitute a curly apostrophe (U+2019) as you type, so
- * "O'Dowd" typed on a phone arrives as "O\u2019Dowd". Rejecting that tells
- * someone their own name is invalid for a reason they cannot see. Two players
- * in this league are already stored with one.
- */
-const TYPOGRAPHIC_REPLACEMENTS: [RegExp, string][] = [
-	[/[\u2018\u2019\u02BC\u055A]/g, "'"],
-	[/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, '-'],
-]
-
-/**
- * Entries removed from the `bad-words` blocklist because they are real
- * people's names, and this filter is applied to names.
- *
- * Out of the box the list blocks Cox, Wang, Butt, Schaffer, Dick and Dyke,
- * among others — Cox is a top-1000 US surname and Wang is one of the most
- * common surnames in the world. Refusing them tells someone their legal name
- * is unacceptable, and a server-side rejection is the final word on it.
- *
- * The criterion for removal is: an established given name or surname whose
- * word is not primarily a slur against a group. Entries that are principally
- * slurs stay blocked even where they also occur as surnames, because the harm
- * of publishing one is higher and the collision is rarer.
- *
- * This is best-effort and cannot be complete — surnames are not enumerable.
- * The backstop is that admins bypass this check entirely (see
- * `checkProfanity`), so an organizer can always set a name the filter refuses.
- *
- * **Keep in sync with `App/src/shared/utils/validation.ts`.**
- */
-const REAL_NAMES_WRONGLY_FLAGGED = [
-	'butt',
-	'cox',
-	'dick',
-	'dyke',
-	'fanny',
-	'fuk',
-	'gaylord',
-	'hoar',
-	'hoare',
-	'hore',
-	'kuntz',
-	'lipshits',
-	'lipshitz',
-	'muff',
-	'pecker',
-	'schaffer',
-	'schmuck',
-	'wang',
-	'willies',
-	'willy',
-]
+import {
+	PLAYER_NAME_CHARACTERS,
+	REAL_NAMES_WRONGLY_FLAGGED,
+	REPEATED_PUNCTUATION,
+	formatPlayerName,
+	nameLengthProblem,
+	normalizeTypography,
+} from './nameRules.js'
 
 const profanityFilter = new Filter()
 profanityFilter.removeWords(...REAL_NAMES_WRONGLY_FLAGGED)
 
-/** Doubled punctuation is malformed; doubled spaces are collapsed instead. */
-const REPEATED_PUNCTUATION = /'{2,}|-{2,}/
+interface NameOptions {
+	/**
+	 * Admin edits skip the profanity check. The filter cannot know every
+	 * surname, so an organizer typing a name deliberately is the override
+	 * for a real person it refuses — the same reasoning as an admin-set
+	 * email counting as verified. The structural rules still apply.
+	 */
+	checkProfanity?: boolean
+}
+
+const invalid = (message: string): HttpsError =>
+	new HttpsError('invalid-argument', message)
+
+const requireString = (value: unknown, label: string): string => {
+	if (typeof value !== 'string' || value.trim() === '') {
+		throw invalid(`${label} is required.`)
+	}
+	return value.trim()
+}
+
+const refuseProfanity = (
+	name: string,
+	label: string,
+	options: NameOptions,
+	advice: string
+): void => {
+	if (options.checkProfanity !== false && profanityFilter.isProfane(name)) {
+		throw invalid(`${label} contains inappropriate language. ${advice}`)
+	}
+}
 
 /**
  * Validates and normalizes a player name, returning the value to store.
  *
- * Normalization matches the App's transform so a name written through a
- * callable reads the same as one typed into the form: whitespace runs
- * collapse to a single space and each word is capitalized.
+ * Normalization matches the App's so a name written through a callable reads
+ * the same as one typed into the form: whitespace runs collapse to a single
+ * space and each word is capitalized.
  *
  * @param value - the raw name from the request
  * @param label - field name for the error message, e.g. 'First name'
@@ -101,69 +67,48 @@ const REPEATED_PUNCTUATION = /'{2,}|-{2,}/
 export function validateAndNormalizeName(
 	value: unknown,
 	label: string,
-	options: {
-		/**
-		 * Admin edits skip the profanity check. The filter cannot know every
-		 * surname, so an organizer typing a name deliberately is the override
-		 * for a real person it refuses — the same reasoning as an admin-set
-		 * email counting as verified. The structural rules still apply.
-		 */
-		checkProfanity?: boolean
-	} = {}
+	options: NameOptions = {}
 ): string {
-	if (typeof value !== 'string') {
-		throw new HttpsError(
-			'invalid-argument',
-			`${label} is required and must be a non-empty string`
-		)
-	}
+	const name = normalizeTypography(requireString(value, label))
 
-	const trimmed = TYPOGRAPHIC_REPLACEMENTS.reduce(
-		(text, [pattern, replacement]) => text.replace(pattern, replacement),
-		value.trim()
-	)
+	const lengthProblem = nameLengthProblem(name, label)
+	if (lengthProblem) throw invalid(lengthProblem)
 
-	if (trimmed.length < MIN_LENGTH) {
-		throw new HttpsError(
-			'invalid-argument',
-			`${label} must be at least ${MIN_LENGTH} characters`
-		)
-	}
-
-	if (trimmed.length > MAX_LENGTH) {
-		throw new HttpsError(
-			'invalid-argument',
-			`${label} must be less than ${MAX_LENGTH} characters`
-		)
-	}
-
-	if (!ALLOWED_CHARACTERS.test(trimmed)) {
-		throw new HttpsError(
-			'invalid-argument',
+	if (!PLAYER_NAME_CHARACTERS.test(name)) {
+		throw invalid(
 			`${label} can only contain letters, spaces, hyphens, and apostrophes`
 		)
 	}
-
-	if (REPEATED_PUNCTUATION.test(trimmed)) {
-		throw new HttpsError(
-			'invalid-argument',
-			`${label} cannot contain consecutive hyphens or apostrophes`
-		)
+	if (REPEATED_PUNCTUATION.test(name)) {
+		throw invalid(`${label} cannot contain consecutive hyphens or apostrophes`)
 	}
+	refuseProfanity(
+		name,
+		label,
+		options,
+		'If this is your real name, please contact the league and an organizer will set it for you.'
+	)
 
-	if (options.checkProfanity !== false && profanityFilter.isProfane(trimmed)) {
-		throw new HttpsError(
-			'invalid-argument',
-			`${label} contains inappropriate language. If this is your real name, please contact the league and an organizer will set it for you.`
-		)
-	}
+	return formatPlayerName(name)
+}
 
-	// Capitalize the first letter of each word. `\b\w` would only reach
-	// ASCII, leaving "josé" as "José" but "ñoño" untouched.
-	return trimmed
-		.replace(/\s+/g, ' ')
-		.replace(
-			/(^|[\s'-])(\p{L})/gu,
-			(_match, boundary, letter) => boundary + letter.toUpperCase()
-		)
+/**
+ * Validates a team name, returning it trimmed. Team names may hold any
+ * characters — numbers, punctuation, emoji — so only length and language
+ * are checked.
+ *
+ * @throws HttpsError('invalid-argument') when the name is not usable
+ */
+export function validateTeamName(
+	value: unknown,
+	options: NameOptions = {}
+): string {
+	const label = 'Team name'
+	const name = requireString(value, label)
+
+	const lengthProblem = nameLengthProblem(name, label)
+	if (lengthProblem) throw invalid(lengthProblem)
+
+	refuseProfanity(name, label, options, 'Please choose a different name.')
+	return name
 }

@@ -5,10 +5,8 @@
  */
 
 import { useState, useMemo } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
+import { useCollection } from 'react-firebase-hooks/firestore'
 import {
-	ArrowLeft,
 	Trash2,
 	AlertTriangle,
 	RefreshCw,
@@ -21,9 +19,7 @@ import {
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
-import { auth } from '@/firebase/auth'
 import { usesTeamPayments } from '@/shared/utils'
-import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	canonicalTeamRefFromTeamSeasonDoc,
@@ -49,8 +45,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import { TeamDocument, SeasonDocument, TeamSeasonDocument } from '@/types'
-import { useSeasonsContext } from '@/providers'
+import { TeamDocument, TeamSeasonDocument } from '@/types'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { TeamBadgesDialog } from './components/team-badges-dialog'
 import { TeamEditDialog } from './components/team-edit-dialog'
@@ -58,40 +53,22 @@ import { MergeTeamsDialog } from './components/merge-teams-dialog'
 import { TeamPaymentsDialog } from './components/team-payments-dialog'
 import { DeleteTeamDialog } from './components/delete-team-dialog'
 import { RosterSize } from './components/roster-size'
-import { DocumentReference } from '@/firebase'
+import { type DocumentReference } from 'firebase/firestore'
+import {
+	BackToAdminButton,
+	useAdminSeasonFilter,
+} from '@/features/admin/shared'
 
 export const TeamManagement = () => {
 	const navigate = useNavigate()
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 	const {
-		seasonsQuerySnapshot: seasonsSnapshot,
-		seasonsQuerySnapshotError: seasonsError,
-		currentSeasonQueryDocumentSnapshot,
-	} = useSeasonsContext()
-
-	const isAdmin = playerSnapshot?.data()?.admin || false
-
-	// Season selection state
-	// Derived rather than stored: the selection defaults to the current season
-	// until the user picks one. An effect that seeded state once the season
-	// loaded rendered an empty selection first and then corrected it, which
-	// React 19 flags as a cascading render.
-	const [selectedSeasonOverride, setSelectedSeasonId] = useState<
-		string | undefined
-	>(undefined)
-	const selectedSeasonId =
-		selectedSeasonOverride ?? currentSeasonQueryDocumentSnapshot?.id ?? ''
-	const seasons = seasonsSnapshot?.docs.map((doc) => ({
-		id: doc.id,
-		...doc.data(),
-	})) as (SeasonDocument & { id: string })[] | undefined
-
-	// Get selected season snapshot
-	const selectedSeasonSnapshot = selectedSeasonId
-		? seasonsSnapshot?.docs.find((doc) => doc.id === selectedSeasonId)
-		: null
+		currentSeasonId,
+		seasons,
+		seasonsError,
+		selectedSeasonId,
+		setSelectedSeasonId,
+		selectedSeasonSnapshot,
+	} = useAdminSeasonFilter()
 
 	// Fetch team season subdocs for selected season
 	const [teamsSnapshot, teamsLoading, teamsError] = useCollection(
@@ -100,12 +77,6 @@ export const TeamManagement = () => {
 			: null
 	)
 
-	// Log and notify on query errors
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'TeamManagement',
-		errorLabel: 'player',
-	})
 	useQueryErrorHandler({
 		error: seasonsError,
 		component: 'TeamManagement',
@@ -125,8 +96,7 @@ export const TeamManagement = () => {
 	// Only the current season's teams can be deleted; deleteUnregisteredTeam
 	// refuses any other.
 	const isCurrentSeasonSelected =
-		!!selectedSeasonId &&
-		selectedSeasonId === currentSeasonQueryDocumentSnapshot?.id
+		!!selectedSeasonId && selectedSeasonId === currentSeasonId
 
 	// State for badge management dialog
 	const [teamForBadges, setTeamForBadges] = useState<{
@@ -232,21 +202,6 @@ export const TeamManagement = () => {
 		})
 	}
 
-	// Handle authentication and data loading
-	// Only show full loading screen on initial page load (when player data is loading)
-	// For season changes, keep the page structure and show loading state in tables
-	if (playerLoading) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<p>Loading...</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	// Handle query errors
 	if (seasonsError) {
 		return (
@@ -272,25 +227,6 @@ export const TeamManagement = () => {
 		)
 	}
 
-	// Handle non-admin users
-	if (!isAdmin) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access the admin dashboard.
-						</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	return (
 		<PageContainer withSpacing withGap>
 			<PageHeader
@@ -301,12 +237,7 @@ export const TeamManagement = () => {
 
 			{/* Back to Dashboard and Season Selector */}
 			<div className='flex items-center justify-between gap-4'>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 
 				<div>
 					<Select

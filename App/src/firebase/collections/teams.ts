@@ -36,8 +36,9 @@ import {
 	TeamDocument,
 	TeamRosterDocument,
 	TeamSeasonDocument,
-} from '@/shared/utils'
-import type { OpenCheckoutsDocument, TeamContributionDocument } from '@/types'
+	type OpenCheckoutsDocument,
+	type TeamContributionDocument,
+} from '@/types'
 
 // ---- Canonical team document ---------------------------------------------
 

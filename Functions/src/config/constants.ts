@@ -13,10 +13,6 @@ export const FIREBASE_CONFIG = {
 	 * `waiver/rules.ts` holds the same value, since that file cannot import.
 	 */
 	TIME_ZONE: 'America/Chicago',
-	CORS_ORIGINS: [
-		'https://mplswinterleague.com',
-		'https://www.mplswinterleague.com',
-	],
 } as const
 
 // Business Logic Constants (static)
@@ -34,14 +30,6 @@ export const TEAM_CONFIG = {
 export const GAME_CONFIG = {
 	ALLOWED_TIME_SLOTS: ['18:00', '18:45', '19:30', '20:15'],
 	ALLOWED_FIELDS: [1, 2, 3],
-} as const
-
-// Badge Configuration
-export const BADGE_CONFIG = {
-	NAME_MIN_LENGTH: 3,
-	NAME_MAX_LENGTH: 100,
-	DESCRIPTION_MIN_LENGTH: 10,
-	DESCRIPTION_MAX_LENGTH: 500,
 } as const
 
 // Stripe Configuration (lazy-loaded)

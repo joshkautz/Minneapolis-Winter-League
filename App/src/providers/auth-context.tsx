@@ -20,21 +20,24 @@ import {
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 
 // Winter League
-import {
-	auth,
+import { auth } from '@/firebase/app'
+import type {
+	ActionCodeSettings,
+	AuthError,
 	User,
 	UserCredential,
-	AuthError,
-	ActionCodeSettings,
-} from '@/firebase/auth'
+} from 'firebase/auth'
 import {
 	getPlayerRef,
-	FirestoreError,
-	DocumentSnapshot,
-	QuerySnapshot,
-} from '@/firebase'
-import { playerSeasonsSubcollection } from '@/firebase/collections/players'
-import { logger, PlayerDocument, PlayerSeasonDocument } from '@/shared/utils'
+	playerSeasonsSubcollection,
+} from '@/firebase/collections/players'
+import {
+	type FirestoreError,
+	type DocumentSnapshot,
+	type QuerySnapshot,
+} from 'firebase/firestore'
+import { logger } from '@/shared/utils'
+import { PlayerDocument, PlayerSeasonDocument } from '@/types'
 
 /** How often to refresh user data from Firebase Auth (in milliseconds) */
 const USER_REFRESH_INTERVAL = 10000 // 10 seconds

@@ -325,10 +325,67 @@ describe('rolloverTeam', () => {
 	})
 
 	it('refuses a second rollover of the same team', async () => {
+		// By its other former captain: the first captain would be refused
+		// anyway, as already on a team, so only this reaches the team check.
 		await seedPriorSeason(OLD_SEASON, { name: 'Homemade Furby', captain: true })
+		await seedPlayer('co-captain')
+		await seedPriorSeason(OLD_SEASON, {
+			name: 'Homemade Furby',
+			playerId: 'co-captain',
+			captain: true,
+		})
 		await rollover()
 
-		expect(await fails()).toBe('already-exists')
+		expect(await fails('co-captain')).toBe('already-exists')
+		expect(
+			(
+				await teamRosterEntryRef(
+					firestore,
+					TEAM,
+					NEW_SEASON,
+					'co-captain'
+				).get()
+			).exists
+		).toBe(false)
+	})
+
+	it('lets only one of two simultaneous rollovers through', async () => {
+		// Both pass every read outside the transaction, so without the checks
+		// inside it the second would overwrite the first's team season.
+		await seedPriorSeason(OLD_SEASON, { name: 'Homemade Furby', captain: true })
+
+		const codes = await Promise.all([fails(), fails()])
+
+		expect(codes.sort()).toEqual(['already-exists', null].sort())
+		expect((await readNewTeamSeason())?.name).toBe('Homemade Furby')
+	})
+
+	it('keeps a captain to one team when rolling over two at once', async () => {
+		// The rollover and the other team's creation race: whichever commits
+		// second must see the first.
+		await seedPriorSeason(OLD_SEASON, { name: 'Homemade Furby', captain: true })
+		await seedPriorSeason(OLDER_SEASON, {
+			teamId: 'other-team',
+			name: 'Other Team',
+			captain: true,
+		})
+
+		const codes = await Promise.all([
+			fails(),
+			fails(CAPTAIN, { originalTeamId: 'other-team' }),
+		])
+
+		expect(codes.sort()).toEqual(['already-exists', null].sort())
+		const rosteredThisSeason = (
+			await firestore
+				.collectionGroup('roster')
+				.where('player', '==', playerRef(CAPTAIN))
+				.get()
+		).docs.filter((doc) => doc.ref.parent.parent?.id === NEW_SEASON)
+		expect(rosteredThisSeason).toHaveLength(1)
+		expect((await readNewPlayerSeason())?.team?.id).toBe(
+			rosteredThisSeason[0].ref.parent.parent?.parent.parent?.id
+		)
 	})
 
 	it('refuses a banned captain who already registered for the season', async () => {

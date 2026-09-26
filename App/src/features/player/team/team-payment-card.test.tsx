@@ -17,8 +17,8 @@ const { startTeamContribution, cancelTeamContribution, toastError } =
 		toastError: vi.fn(),
 	}))
 
-vi.mock('@/firebase', async (importOriginal) => ({
-	...(await importOriginal<typeof import('@/firebase')>()),
+vi.mock('@/firebase/collections/payments', async (importOriginal) => ({
+	...(await importOriginal<typeof import('@/firebase/collections/payments')>()),
 	startTeamContribution,
 	cancelTeamContribution,
 }))

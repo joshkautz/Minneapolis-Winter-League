@@ -15,12 +15,12 @@ import { toast } from 'sonner'
 import {
 	outgoingOffersQuery,
 	incomingOffersQuery,
-	FirestoreError,
-	QuerySnapshot,
-	getPlayerRef,
-} from '@/firebase'
+} from '@/firebase/collections/offers'
+import { type FirestoreError, type QuerySnapshot } from 'firebase/firestore'
+import { getPlayerRef } from '@/firebase/collections/players'
 import { useAuthContext } from './auth-context'
-import { OfferDocument, logger, errorMessage } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
+import { OfferDocument } from '@/types'
 import { useSeasonsContext } from './seasons-context'
 
 interface OffersProps {
@@ -34,19 +34,18 @@ interface OffersProps {
 	dependenciesLoading: boolean
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const OffersContext = createContext<OffersProps>({
-	outgoingOffersQuerySnapshot: undefined,
-	outgoingOffersQuerySnapshotLoading: false,
-	outgoingOffersQuerySnapshotError: undefined,
-	incomingOffersQuerySnapshot: undefined,
-	incomingOffersQuerySnapshotLoading: false,
-	incomingOffersQuerySnapshotError: undefined,
-	dependenciesLoading: true,
-})
+const OffersContext = createContext<OffersProps | null>(null)
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useOffersContext = () => useContext(OffersContext)
+export const useOffersContext = (): OffersProps => {
+	const context = useContext(OffersContext)
+	if (!context) {
+		throw new Error(
+			'useOffersContext must be used within a OffersContextProvider'
+		)
+	}
+	return context
+}
 
 export const OffersContextProvider = ({ children }: PropsWithChildren) => {
 	const {

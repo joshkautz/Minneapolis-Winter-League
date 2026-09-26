@@ -8,12 +8,13 @@ import {
 } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import {
-	QuerySnapshot,
-	seasonsQuery,
-	FirestoreError,
-	QueryDocumentSnapshot,
-} from '@/firebase'
-import { SeasonDocument, initialSelectedSeasonId } from '@/shared/utils'
+	type QuerySnapshot,
+	type FirestoreError,
+	type QueryDocumentSnapshot,
+} from 'firebase/firestore'
+import { seasonsQuery } from '@/firebase/collections/seasons'
+import { initialSelectedSeasonId } from '@/shared/utils'
+import { SeasonDocument } from '@/types'
 import { useQueryErrorHandler } from '@/shared/hooks/use-query-error-handler'
 
 /** The season the visitor last picked in a season selector. */

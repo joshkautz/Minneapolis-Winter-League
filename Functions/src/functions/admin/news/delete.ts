@@ -28,7 +28,7 @@ interface DeleteNewsResponse {
  * - News post must exist
  */
 export const deleteNews = onCall<DeleteNewsRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<DeleteNewsResponse> => {
 		const { data, auth } = request
 

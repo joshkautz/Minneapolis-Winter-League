@@ -5,12 +5,8 @@
  */
 
 import { useState } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
 import {
-	ArrowLeft,
-	AlertTriangle,
 	Award,
 	Plus,
 	Pencil,
@@ -19,13 +15,11 @@ import {
 	X,
 	Trophy,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
-import { auth } from '@/firebase/auth'
-import { getPlayerRef } from '@/firebase/collections/players'
-import { useSeasonsContext, useBadgesContext } from '@/providers'
+import { useBadgesContext } from '@/providers'
 import {
 	createBadgeViaFunction,
 	updateBadgeViaFunction,
@@ -74,10 +68,15 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { BadgeDocument, PlayerDocument, SeasonDocument } from '@/types'
+import { BadgeDocument, PlayerDocument } from '@/types'
 import { fileToBase64, logger, errorMessage } from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 import { Badge } from '@/components/ui/badge'
+import {
+	BackToAdminButton,
+	useAdminSeasonFilter,
+} from '@/features/admin/shared'
+import { TEXT_RULES, textProblem } from '@/shared/text-rules'
 
 interface ProcessedBadge {
 	id: string
@@ -92,42 +91,14 @@ type DialogMode = 'create' | 'edit' | 'closed'
 
 export const BadgeManagement = () => {
 	const navigate = useNavigate()
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
-	const {
-		seasonsQuerySnapshot: seasonsSnapshot,
-		seasonsQuerySnapshotError: seasonsError,
-		currentSeasonQueryDocumentSnapshot,
-	} = useSeasonsContext()
+	const { seasons, seasonsError, selectedSeasonId, setSelectedSeasonId } =
+		useAdminSeasonFilter()
 	const {
 		allBadgesQuerySnapshot: badgesSnapshot,
 		allBadgesQuerySnapshotLoading: badgesLoading,
 		allBadgesQuerySnapshotError: badgesError,
 	} = useBadgesContext()
 
-	const isAdmin = playerSnapshot?.data()?.admin || false
-	const seasons = seasonsSnapshot?.docs.map((doc) => ({
-		id: doc.id,
-		...doc.data(),
-	})) as (SeasonDocument & { id: string })[] | undefined
-
-	// Derived rather than stored: the selection defaults to the current season
-	// until the user picks one. An effect that seeded state once the season
-	// loaded rendered an empty selection first and then corrected it, which
-	// React 19 flags as a cascading render.
-	const [selectedSeasonOverride, setSelectedSeasonId] = useState<
-		string | undefined
-	>(undefined)
-	const selectedSeasonId =
-		selectedSeasonOverride ?? currentSeasonQueryDocumentSnapshot?.id ?? ''
-
-	// Log and notify on query errors
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'BadgeManagement',
-		errorLabel: 'player',
-	})
 	useQueryErrorHandler({
 		error: seasonsError,
 		component: 'BadgeManagement',
@@ -236,8 +207,11 @@ export const BadgeManagement = () => {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 
-		if (!formData.name.trim() || !formData.description.trim()) {
-			toast.error('Please fill in all required fields')
+		const problem =
+			textProblem(formData.name, TEXT_RULES.badgeName) ??
+			textProblem(formData.description, TEXT_RULES.badgeDescription)
+		if (problem) {
+			toast.error(problem)
 			return
 		}
 
@@ -342,7 +316,7 @@ export const BadgeManagement = () => {
 	}
 
 	// Loading state
-	if (playerLoading || badgesLoading || isProcessing) {
+	if (badgesLoading || isProcessing) {
 		return (
 			<div className='container mx-auto px-4 py-8'>
 				<Card>
@@ -367,25 +341,6 @@ export const BadgeManagement = () => {
 		)
 	}
 
-	// Access denied
-	if (!isAdmin) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' aria-hidden='true' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access badge management.
-						</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	return (
 		<PageContainer withSpacing withGap>
 			<PageHeader
@@ -396,12 +351,7 @@ export const BadgeManagement = () => {
 
 			{/* Back to Dashboard */}
 			<div className='flex items-center justify-between gap-4'>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 				<Button onClick={handleCreate}>
 					<Plus className='h-4 w-4 mr-2' />
 					Create Badge
@@ -542,6 +492,7 @@ export const BadgeManagement = () => {
 										setFormData((prev) => ({ ...prev, name: e.target.value }))
 									}
 									placeholder='Enter badge name'
+									maxLength={TEXT_RULES.badgeName.max}
 									required
 								/>
 							</div>
@@ -561,6 +512,7 @@ export const BadgeManagement = () => {
 									}
 									placeholder='Enter badge description'
 									rows={3}
+									maxLength={TEXT_RULES.badgeDescription.max}
 									required
 								/>
 							</div>

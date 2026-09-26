@@ -28,7 +28,7 @@ import {
 	teamSeasonRef,
 } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { formatDateForUser } from '../../../shared/format.js'
+import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 
 interface CreateOfferRequest {
 	playerId: string
@@ -158,14 +158,11 @@ export const createOffer = onCall<CreateOfferRequest>(
 
 				// Validate that registration has not ended (skip for admins).
 				if (!isAdmin) {
-					const now = new Date()
-					const registrationEnd = seasonData.registrationEnd.toDate()
-					if (now > registrationEnd) {
-						throw new HttpsError(
-							'failed-precondition',
-							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
-						)
-					}
+					assertRegistrationOpen(
+						seasonData,
+						'Team roster changes are not allowed after registration has closed.',
+						timezone
+					)
 				}
 
 				// Validate authorization based on offer type.

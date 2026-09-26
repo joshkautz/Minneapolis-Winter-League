@@ -1,33 +1,10 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
-
-import { NotificationCard } from '@/shared/components'
-import { DocumentSnapshot, QuerySnapshot } from '@/firebase'
+import { NotificationCard, SeasonHistoryRow } from '@/shared/components'
+import { type DocumentSnapshot, type QuerySnapshot } from 'firebase/firestore'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useSeasonsContext } from '@/providers'
-import {
-	GameDocument,
-	TeamSeasonDocument,
-	sortBySeasonStartDesc,
-	teamRecordsBySeason,
-} from '@/shared/utils'
-
-// Format placement with ordinal suffix and medal emoji for top 3
-const formatPlacement = (placement: number | null) => {
-	if (placement === null) return 'TBD'
-	if (placement === 1) return '1st 🥇'
-	if (placement === 2) return '2nd 🥈'
-	if (placement === 3) return '3rd 🥉'
-	const suffix =
-		placement % 10 === 1 && placement !== 11
-			? 'st'
-			: placement % 10 === 2 && placement !== 12
-				? 'nd'
-				: placement % 10 === 3 && placement !== 13
-					? 'rd'
-					: 'th'
-	return `${placement}${suffix}`
-}
+import { sortBySeasonStartDesc, teamRecordsBySeason } from '@/shared/utils'
+import { GameDocument, TeamSeasonDocument, type TeamDocument } from '@/types'
 
 interface ProcessedHistoryEntry {
 	id: string
@@ -45,8 +22,7 @@ export const TeamHistory = ({
 	historyQuerySnapshot,
 	gamesQuerySnapshot,
 }: {
-	teamDocumentSnapshot:
-		DocumentSnapshot<import('@/shared/utils').TeamDocument> | undefined
+	teamDocumentSnapshot: DocumentSnapshot<TeamDocument> | undefined
 	historyQuerySnapshot: QuerySnapshot<TeamSeasonDocument>
 	/**
 	 * Games for THIS team only — `gamesByTeamQuery(teamRef)` from the
@@ -123,58 +99,18 @@ export const TeamHistory = ({
 			{processedHistory.length > 0 ? (
 				<div role='list' aria-label='Team history' className='-mx-4'>
 					{processedHistory.map((entry) => (
-						<Link
-							key={entry.seasonId}
-							to={`/teams/${entry.id}/${entry.seasonId}`}
-							className='flex items-center gap-4 px-4 py-3 border-b last:border-b-0 cursor-pointer transition-colors hover:bg-muted/50 focus:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
-							role='listitem'
-							aria-label={`${entry.teamName}, ${entry.seasonName}, ${entry.wins} wins ${entry.losses} losses, finished ${formatPlacement(entry.placement)}`}
-						>
-							{/* Team Logo */}
-							<div className='flex-shrink-0'>
-								{entry.teamLogo ? (
-									<img
-										src={entry.teamLogo}
-										alt=''
-										className='w-10 h-10 rounded-full object-cover bg-muted'
-									/>
-								) : (
-									<div className='w-10 h-10 rounded-full bg-gradient-to-br from-primary to-sky-300 flex items-center justify-center'>
-										<span className='text-sm font-bold text-primary-foreground'>
-											{entry.teamName?.charAt(0)?.toUpperCase() || 'T'}
-										</span>
-									</div>
-								)}
-							</div>
-
-							{/* Team Info */}
-							<div className='flex-1 min-w-0'>
-								<div className='flex items-center gap-2'>
-									<span className='font-medium text-foreground truncate'>
-										{entry.teamName}
-									</span>
-								</div>
-								<span className='text-sm text-muted-foreground'>
-									{entry.seasonName}
-								</span>
-							</div>
-
-							{/* Win-Loss Record */}
-							<div className='flex-shrink-0 text-center'>
-								<div className='text-sm font-medium'>
-									{entry.wins}-{entry.losses}
-								</div>
-								<div className='text-xs text-muted-foreground'>Record</div>
-							</div>
-
-							{/* Placement */}
-							<div className='flex-shrink-0 text-right min-w-[60px]'>
-								<div className='text-sm font-medium'>
-									{formatPlacement(entry.placement)}
-								</div>
-								<div className='text-xs text-muted-foreground'>Finish</div>
-							</div>
-						</Link>
+						<div role='listitem' key={entry.seasonId}>
+							<SeasonHistoryRow
+								to={`/teams/${entry.id}/${entry.seasonId}`}
+								teamName={entry.teamName}
+								teamLogo={entry.teamLogo}
+								seasonName={entry.seasonName}
+								wins={entry.wins}
+								losses={entry.losses}
+								placement={entry.placement}
+								className='px-4'
+							/>
+						</div>
 					))}
 				</div>
 			) : (

@@ -20,8 +20,10 @@ import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { useEffect, useCallback, useState } from 'react'
 import { toast } from 'sonner'
-import { updatePlayerViaFunction, DocumentSnapshot } from '@/firebase'
-import { PlayerDocument, errorMessage } from '@/shared/utils'
+import { updatePlayerViaFunction } from '@/firebase/collections/functions'
+import { type DocumentSnapshot } from 'firebase/firestore'
+import { errorMessage } from '@/shared/utils'
+import { PlayerDocument } from '@/types'
 import { useAuthContext } from '@/providers'
 import {
 	profileFormSchema,

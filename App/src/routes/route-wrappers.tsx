@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
-import { LazyWrapper, ProtectedRoute } from '@/shared/components'
+import { AdminGate, LazyWrapper, ProtectedRoute } from '@/shared/components'
 
 /**
  * Route wrapper components for consistent route configuration
@@ -34,6 +34,22 @@ export const AuthenticatedRoute = ({ children }: RouteWrapperProps) => {
 			<LazyWrapper>
 				<ErrorBoundary>{children}</ErrorBoundary>
 			</LazyWrapper>
+		</ProtectedRoute>
+	)
+}
+
+/**
+ * Wrapper for admin routes: an authenticated route that renders only for an
+ * admin. The page's chunk is not even loaded for anyone else.
+ */
+export const AdminRoute = ({ children }: RouteWrapperProps) => {
+	return (
+		<ProtectedRoute>
+			<AdminGate>
+				<LazyWrapper>
+					<ErrorBoundary>{children}</ErrorBoundary>
+				</LazyWrapper>
+			</AdminGate>
 		</ProtectedRoute>
 	)
 }

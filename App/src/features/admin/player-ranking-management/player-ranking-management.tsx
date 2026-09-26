@@ -6,12 +6,8 @@
  */
 
 import { useState } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
-import { Link } from 'react-router-dom'
+import { useCollection } from 'react-firebase-hooks/firestore'
 
-import { auth } from '@/firebase/auth'
-import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	playerRankingsCalculationsQuery,
 	rebuildPlayerRankings,
@@ -45,33 +41,20 @@ import {
 	XCircle,
 	AlertCircle,
 	Settings,
-	ArrowLeft,
-	AlertTriangle,
 } from 'lucide-react'
 import { useQueryErrorHandler } from '@/shared/hooks'
+import { BackToAdminButton } from '@/features/admin/shared'
 
 export const PlayerRankingManagement = () => {
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
-
 	const [isCalculating, setIsCalculating] = useState(false)
 	const [calculationError, setCalculationError] = useState<string | null>(null)
 	const [calculationSuccess, setCalculationSuccess] = useState<string | null>(
 		null
 	)
 
-	const isAdmin = playerSnapshot?.data()?.admin || false
-
 	const [calculationsSnapshot, loading, error] = useCollection(
 		playerRankingsCalculationsQuery()
 	)
-
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'PlayerRankingManagement',
-		errorLabel: 'player',
-	})
 
 	useQueryErrorHandler({
 		error,
@@ -192,42 +175,6 @@ export const PlayerRankingManagement = () => {
 		}
 	}
 
-	// Handle authentication and data loading
-	if (playerLoading) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<RefreshCw
-							className='h-8 w-8 animate-spin mx-auto mb-4'
-							aria-hidden='true'
-						/>
-						<p>Loading...</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
-	// Handle non-admin users
-	if (!isAdmin) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' aria-hidden='true' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access the admin dashboard.
-						</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	return (
 		<div className='container mx-auto px-4 py-8 space-y-6'>
 			{/* Header */}
@@ -243,12 +190,7 @@ export const PlayerRankingManagement = () => {
 
 			{/* Back to Dashboard */}
 			<div>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' aria-hidden='true' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 			</div>
 
 			{/* Status Alerts */}

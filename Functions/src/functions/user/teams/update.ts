@@ -7,6 +7,11 @@
  * The logo is only ever an uploaded image. The request used to accept a
  * logo URL and Storage path as well, which let a captain point their team
  * at any file — and team deletion removes the file at that path.
+ *
+ * Security validations:
+ * - User must be authenticated and email verified
+ * - Only a captain of the team for that season may edit it
+ * - A new name must be 2–50 characters and pass the profanity filter
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -16,6 +21,7 @@ import { logger } from 'firebase-functions/v2'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { validateTeamName } from '../../../shared/names.js'
 
 interface EditTeamRequest {
 	teamId: string
@@ -47,12 +53,7 @@ export const updateTeam = onCall<EditTeamRequest>(
 				'There is nothing to change. Enter a new name or choose a logo.'
 			)
 		}
-		if (
-			name !== undefined &&
-			(typeof name !== 'string' || name.trim() === '')
-		) {
-			throw new HttpsError('invalid-argument', 'Enter a team name.')
-		}
+		const teamName = name === undefined ? undefined : validateTeamName(name)
 
 		try {
 			const firestore = getFirestore()
@@ -94,12 +95,9 @@ export const updateTeam = onCall<EditTeamRequest>(
 			// Build update payload, only changing fields that actually changed.
 			const updateData: Record<string, unknown> = {}
 			const changes: string[] = []
-			if (name !== undefined) {
-				const trimmedName = name.trim()
-				if (trimmedName !== teamSeasonData.name) {
-					updateData.name = trimmedName
-					changes.push('name')
-				}
+			if (teamName !== undefined && teamName !== teamSeasonData.name) {
+				updateData.name = teamName
+				changes.push('name')
 			}
 			if (storedLogo) {
 				updateData.logo = storedLogo.url

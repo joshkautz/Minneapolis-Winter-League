@@ -1,5 +1,5 @@
-import { QuerySnapshot } from '@/firebase'
-import { TeamSeasonDocument } from '@/shared/utils'
+import { type QuerySnapshot } from 'firebase/firestore'
+import { TeamSeasonDocument } from '@/types'
 import { TeamStanding } from '@/shared/hooks'
 import { SharedStandingsTable } from './shared-standings-table'
 

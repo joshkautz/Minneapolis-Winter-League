@@ -171,6 +171,27 @@ describe('createTeam', () => {
 		expect(code).toBe('already-exists')
 	})
 
+	it('lets only one of two simultaneous requests through', async () => {
+		// A double tap or two tabs: both requests pass the early check, so only
+		// the check inside the transaction stops the player captaining two teams.
+		const codes = await Promise.all(
+			['First Team', 'Second Team'].map((name) =>
+				errorCodeFrom(fn('createTeam'), {
+					auth: authed(PLAYER),
+					data: { name, seasonId: SEASON },
+				})
+			)
+		)
+		expect(codes.sort()).toEqual(['already-exists', null].sort())
+
+		const rosters = await firestore
+			.collectionGroup('roster')
+			.where('player', '==', firestore.collection('players').doc(PLAYER))
+			.get()
+		expect(rosters.size).toBe(1)
+		expect((await firestore.collectionGroup('teamSeasons').get()).size).toBe(1)
+	})
+
 	it('requires a name and a season', async () => {
 		expect(
 			await errorCodeFrom(fn('createTeam'), {
@@ -205,6 +226,93 @@ describe('createTeam', () => {
 			data: { name: 'Test Team', seasonId: SEASON, logoBlob: 'ZmFrZQ==' },
 		})
 		expect(code).toBe('invalid-argument')
+	})
+})
+
+describe('team names', () => {
+	/**
+	 * The form's rules were the only ones: the server took any non-empty
+	 * name, so a request that skipped the form could put any length or
+	 * language on the public schedule and standings.
+	 */
+	const TOO_LONG = 'a'.repeat(51)
+	const PROFANE = 'Shit Show'
+
+	const create = (uid: string, name: unknown): Promise<string | null> =>
+		errorCodeFrom(fn('createTeam'), {
+			auth: authed(uid),
+			data: { name, seasonId: SEASON },
+		})
+
+	const createdTeam = async (uid = PLAYER): Promise<string> => {
+		expect(await create(uid, 'Test Team')).toBeNull()
+		return (await playerSeasonRef(firestore, uid, SEASON).get()).data()!.team!
+			.id
+	}
+
+	const storedName = async (teamId: string): Promise<string | undefined> =>
+		(
+			await firestore
+				.collection('teams')
+				.doc(teamId)
+				.collection('teamSeasons')
+				.doc(SEASON)
+				.get()
+		).data()?.name
+
+	it.each([
+		['too long', TOO_LONG],
+		['too short', 'A'],
+		['profane', PROFANE],
+	])('refuses to create a team whose name is %s', async (_label, name) => {
+		expect(await create(PLAYER, name)).toBe('invalid-argument')
+		expect(
+			(await playerSeasonRef(firestore, PLAYER, SEASON).get()).exists
+		).toBe(false)
+	})
+
+	it('stores the name trimmed', async () => {
+		expect(await create(PLAYER, '  Mounds View Marlins  ')).toBeNull()
+		const teamId = (
+			await playerSeasonRef(firestore, PLAYER, SEASON).get()
+		).data()!.team!.id
+		expect(await storedName(teamId)).toBe('Mounds View Marlins')
+	})
+
+	it('lets an admin create a team the profanity filter refuses', async () => {
+		// As with player names: the filter cannot know every word, and an
+		// organizer typing one deliberately is the override.
+		await seedPlayer('admin-1', { admin: true })
+		expect(await create('admin-1', PROFANE)).toBeNull()
+	})
+
+	it.each([
+		['too long', TOO_LONG],
+		['profane', PROFANE],
+	])('refuses to rename a team to a name that is %s', async (_label, name) => {
+		const teamId = await createdTeam()
+
+		const code = await errorCodeFrom(fn('updateTeam'), {
+			auth: authed(PLAYER),
+			data: { teamId, seasonId: SEASON, name },
+		})
+
+		expect(code).toBe('invalid-argument')
+		expect(await storedName(teamId)).toBe('Test Team')
+	})
+
+	it('holds an admin to the length limit, but not the profanity filter', async () => {
+		const teamId = await createdTeam()
+		await seedPlayer('admin-1', { admin: true })
+		const rename = (name: string): Promise<string | null> =>
+			errorCodeFrom(fn('updateTeamAdmin'), {
+				auth: authed('admin-1'),
+				data: { teamId, seasonId: SEASON, name },
+			})
+
+		expect(await rename(TOO_LONG)).toBe('invalid-argument')
+		expect(await rename(PROFANE)).toBeNull()
+		expect(await storedName(teamId)).toBe(PROFANE)
 	})
 })
 
@@ -247,6 +355,107 @@ describe('updateTeamRoster', () => {
 			data: { teamId, playerId: PLAYER, action: 'make-admin' },
 		})
 		expect(code).toBe('invalid-argument')
+	})
+
+	/** Puts another player on PLAYER's team, as captain or not. */
+	const addTeammate = async (
+		playerId: string,
+		captain: boolean
+	): Promise<void> => {
+		await seedPlayer(playerId)
+		await teamRosterEntryRef(firestore, teamId, SEASON, playerId).set({
+			player: firestore.collection('players').doc(playerId),
+			dateJoined: Timestamp.now(),
+		})
+		await playerSeasonRef(firestore, playerId, SEASON).set({
+			season: firestore.collection('seasons').doc(SEASON),
+			team: firestore.collection('teams').doc(teamId),
+			captain,
+			paid: false,
+			signed: false,
+		})
+	}
+
+	const roster = (
+		caller: string,
+		playerId: string,
+		action: string
+	): Promise<string | null> =>
+		errorCodeFrom(fn('updateTeamRoster'), {
+			auth: authed(caller),
+			data: { teamId, playerId, action },
+		})
+
+	const isCaptain = async (playerId: string): Promise<boolean> =>
+		(await playerSeasonRef(firestore, playerId, SEASON).get()).data()
+			?.captain === true
+
+	it('lets a captain promote a teammate, who can then demote them', async () => {
+		await addTeammate('teammate', false)
+
+		expect(await roster(PLAYER, 'teammate', 'promote')).toBeNull()
+		expect(await isCaptain('teammate')).toBe(true)
+
+		expect(await roster('teammate', PLAYER, 'demote')).toBeNull()
+		expect(await isCaptain(PLAYER)).toBe(false)
+	})
+
+	it('refuses a teammate who is not a captain', async () => {
+		await addTeammate('teammate', false)
+
+		expect(await roster('teammate', 'teammate', 'promote')).toBe(
+			'permission-denied'
+		)
+	})
+
+	it('lets a player leave, clearing both sides of the membership', async () => {
+		await addTeammate('teammate', false)
+
+		expect(await roster('teammate', 'teammate', 'remove')).toBeNull()
+
+		expect(
+			(await teamRosterEntryRef(firestore, teamId, SEASON, 'teammate').get())
+				.exists
+		).toBe(false)
+		expect(
+			(await playerSeasonRef(firestore, 'teammate', SEASON).get()).data()?.team
+		).toBeNull()
+	})
+
+	it('keeps a captain when two captains demote each other at once', async () => {
+		// Each sees two captains; checked outside the transaction, both
+		// demotions went through and nobody could manage the team.
+		await addTeammate('co-captain', true)
+
+		const codes = await Promise.all([
+			roster(PLAYER, 'co-captain', 'demote'),
+			roster('co-captain', PLAYER, 'demote'),
+		])
+
+		expect(codes.filter((code) => code === null)).toHaveLength(1)
+		expect(
+			[await isCaptain(PLAYER), await isCaptain('co-captain')].filter(Boolean)
+		).toHaveLength(1)
+	})
+
+	it('keeps a captain when two captains leave at once', async () => {
+		await addTeammate('co-captain', true)
+
+		const codes = await Promise.all([
+			roster(PLAYER, PLAYER, 'remove'),
+			roster('co-captain', 'co-captain', 'remove'),
+		])
+
+		expect(codes.filter((code) => code === null)).toHaveLength(1)
+		const remaining = await firestore
+			.collection('teams')
+			.doc(teamId)
+			.collection('teamSeasons')
+			.doc(SEASON)
+			.collection('roster')
+			.get()
+		expect(remaining.size).toBe(1)
+		expect(await isCaptain(remaining.docs[0].id)).toBe(true)
 	})
 
 	it('rejects a team that does not exist', async () => {

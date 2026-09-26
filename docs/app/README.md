@@ -17,7 +17,8 @@ App/src/
   features/public/      pages anyone can open: home, schedule, standings, teams,
                         rankings, news, message board, sign-in, join, create
   features/player/      signed-in pages: profile, manage team, waiver
-  features/admin/       one directory per admin screen
+  features/admin/       one directory per admin screen; admin/shared holds the
+                        back button and season filter they share
   providers/            auth, seasons, teams, offers, games, badges, site settings, theme
   firebase/             SDK setup and typed query builders per collection
   shared/               components, hooks and utils used by more than one feature
@@ -59,16 +60,32 @@ fallback, which should say what failed ("Your team could not be created.
 Please try again."). Never show `error.message` directly.
 
 Images are picked with `ImageField` (`shared/components/image-field.tsx`),
-which checks a file against the server's own rules
-(`shared/image-rules.ts`, imported from `Functions/src/shared/imageRules.ts`)
-the moment it is chosen and says why it cannot be used.
+which checks a file against the server's own rules the moment it is chosen
+and says why it cannot be used.
+
+Rules both sides enforce are written once, in Functions, and imported here
+by relative path so a form refuses in the server's own words:
+
+| App module              | From `Functions/src/`  | Rules                                         |
+| ----------------------- | ---------------------- | --------------------------------------------- |
+| `shared/image-rules.ts` | `shared/imageRules.ts` | Upload types and size                         |
+| `shared/name-rules.ts`  | `shared/nameRules.ts`  | Player and team names, and the profanity list |
+| `shared/text-rules.ts`  | `shared/textRules.ts`  | Badge, news, post and reply lengths           |
+| `shared/waiver.ts`      | `waiver/`              | The waiver's text and signing rules           |
+
+Those files have no imports, which is what makes loading them from the
+other workspace safe. The server's copy is the control; the App's check is
+a convenience.
 
 ## Routing, code splitting and errors
 
 `routes/route-components.ts` lazy-loads every page with `lazyImport`, so each
 route is its own chunk. `routes/app-routes.tsx` renders each through
-`PublicRoute` or `AuthenticatedRoute` (`routes/route-wrappers.tsx`), which add
-the Suspense fallback and an `ErrorBoundary`. A page that throws shows an
+`PublicRoute`, `AuthenticatedRoute` or `AdminRoute`
+(`routes/route-wrappers.tsx`), which add the Suspense fallback and an
+`ErrorBoundary`. `AdminRoute` also renders `AdminGate`, the one check of the
+player's `admin` flag, so an admin page does not check for itself. It hides
+pages rather than protecting anything: every admin callable checks too. A page that throws shows an
 error card while the navigation keeps working; `GlobalErrorBoundary` in
 `App.tsx` catches anything outside a route.
 

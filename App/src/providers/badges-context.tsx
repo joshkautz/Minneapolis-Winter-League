@@ -5,7 +5,7 @@ import { PropsWithChildren, createContext, useContext } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 
 // Winter League
-import { FirestoreError, QuerySnapshot } from '@/firebase'
+import { type FirestoreError, type QuerySnapshot } from 'firebase/firestore'
 import { allBadgesQuery } from '@/firebase/collections/badges'
 import { BadgeDocument } from '@/types'
 import { useQueryErrorHandler } from '@/shared/hooks/use-query-error-handler'
@@ -16,15 +16,18 @@ interface BadgeProps {
 	allBadgesQuerySnapshotError: FirestoreError | undefined
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const BadgesContext = createContext<BadgeProps>({
-	allBadgesQuerySnapshot: undefined,
-	allBadgesQuerySnapshotLoading: false,
-	allBadgesQuerySnapshotError: undefined,
-})
+const BadgesContext = createContext<BadgeProps | null>(null)
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useBadgesContext = () => useContext(BadgesContext)
+export const useBadgesContext = (): BadgeProps => {
+	const context = useContext(BadgesContext)
+	if (!context) {
+		throw new Error(
+			'useBadgesContext must be used within a BadgesContextProvider'
+		)
+	}
+	return context
+}
 
 export const BadgesContextProvider = ({ children }: PropsWithChildren) => {
 	const [

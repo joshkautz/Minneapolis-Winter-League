@@ -1,11 +1,6 @@
 import { toast } from 'sonner'
-import {
-	OfferDocument,
-	OfferDirection,
-	OfferStatus,
-	logger,
-	errorMessage,
-} from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
+import { OfferDocument, OfferDirection, OfferStatus } from '@/types'
 import {
 	NotificationCard,
 	LoadingSpinner,
@@ -13,7 +8,7 @@ import {
 } from '@/shared/components'
 import { useOffersContext, useTeamsContext } from '@/providers'
 import { useOffer, OfferDocumentWithUI } from '@/shared/hooks'
-import { DocumentReference } from '@/firebase'
+import { type DocumentReference } from 'firebase/firestore'
 import { updateOfferViaFunction } from '@/firebase/collections/functions'
 
 export const ManageNonCaptainsOffersPanel = () => {

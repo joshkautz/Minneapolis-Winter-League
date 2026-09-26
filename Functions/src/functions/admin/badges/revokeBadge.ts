@@ -29,7 +29,7 @@ interface RevokeBadgeResponse {
 }
 
 export const revokeBadge = onCall<RevokeBadgeRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<RevokeBadgeResponse> => {
 		const { data, auth } = request
 		const { badgeId, teamId } = data

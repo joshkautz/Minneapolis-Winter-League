@@ -5,7 +5,7 @@
  * sessions are wrapped in `./functions`.
  */
 
-import { User } from '../auth'
+import type { User } from 'firebase/auth'
 import {
 	cancelTeamContributionCheckoutViaFunction,
 	createStripeCheckoutViaFunction,

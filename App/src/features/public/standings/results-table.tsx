@@ -1,6 +1,6 @@
-import { QuerySnapshot } from '@/firebase'
+import { type QuerySnapshot } from 'firebase/firestore'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
-import { TeamSeasonDocument } from '@/shared/utils'
+import { TeamSeasonDocument } from '@/types'
 import { TeamStanding } from '@/shared/hooks'
 import { SharedStandingsTable } from './shared-standings-table'
 

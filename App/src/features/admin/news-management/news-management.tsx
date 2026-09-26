@@ -4,13 +4,10 @@
  * Allows admins to create, edit, and delete news posts
  */
 
-import { useState, useMemo } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
+import { useState } from 'react'
+import { useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
 import {
-	ArrowLeft,
-	AlertTriangle,
 	Newspaper,
 	Plus,
 	Pencil,
@@ -19,14 +16,10 @@ import {
 	User,
 	Loader2,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { formatDistanceToNow } from 'date-fns'
 
-import { auth } from '@/firebase/auth'
-import { getPlayerRef } from '@/firebase/collections/players'
 import { allNewsQueryBySeason } from '@/firebase/collections/news'
-import { useSeasonsContext } from '@/providers'
 import {
 	createNewsViaFunction,
 	updateNewsViaFunction,
@@ -67,8 +60,20 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { NewsDocument, PlayerDocument, SeasonDocument } from '@/types'
-import { logger, errorMessage } from '@/shared/utils'
+import {
+	logger,
+	errorMessage,
+	formatShortDate,
+	formatClockTime,
+	formatRelativeTime,
+} from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
+import {
+	BackToAdminButton,
+	SeasonFilterCard,
+	useAdminSeasonFilter,
+} from '@/features/admin/shared'
+import { TEXT_RULES, textProblem } from '@/shared/text-rules'
 
 interface ProcessedNews {
 	id: string
@@ -85,57 +90,21 @@ type DialogMode = 'create' | 'edit' | 'closed'
 
 export const NewsManagement = () => {
 	const navigate = useNavigate()
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 
-	const isAdmin = playerSnapshot?.data()?.admin || false
-
-	// Get all seasons from context
 	const {
-		seasonsQuerySnapshot: seasonsSnapshot,
-		seasonsQuerySnapshotError: seasonsError,
-	} = useSeasonsContext()
-	const seasons = seasonsSnapshot?.docs.map((doc) => ({
-		id: doc.id,
-		...doc.data(),
-	})) as (SeasonDocument & { id: string })[] | undefined
-
-	// Get current season (most recent)
-	const currentSeason = useMemo(() => {
-		if (!seasons || seasons.length === 0) return null
-		return seasons[0] // Seasons are sorted by dateStart desc
-	}, [seasons])
-
-	// Selected season for filtering news
-	// Derived rather than stored: the selection defaults to the current season
-	// until the user picks one. An effect that seeded state once the season
-	// loaded rendered an empty selection first and then corrected it, which
-	// React 19 flags as a cascading render.
-	const [selectedSeasonOverride, setSelectedSeasonId] = useState<
-		string | undefined
-	>(undefined)
-	const selectedSeasonId = selectedSeasonOverride ?? currentSeason?.id ?? ''
-
-	// Fetch news for selected season
-	const selectedSeasonRef = useMemo(() => {
-		if (!selectedSeasonId || !seasonsSnapshot) return null
-		const seasonDoc = seasonsSnapshot.docs.find(
-			(doc) => doc.id === selectedSeasonId
-		)
-		return seasonDoc?.ref || null
-	}, [selectedSeasonId, seasonsSnapshot])
+		currentSeasonId,
+		seasons,
+		seasonsError,
+		selectedSeasonId,
+		setSelectedSeasonId,
+		selectedSeasonSnapshot,
+	} = useAdminSeasonFilter()
+	const selectedSeasonRef = selectedSeasonSnapshot?.ref ?? null
 
 	const [newsSnapshot, newsLoading, newsError] = useCollection(
 		selectedSeasonRef ? allNewsQueryBySeason(selectedSeasonRef) : null
 	)
 
-	// Log and notify on query errors
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'NewsManagement',
-		errorLabel: 'player',
-	})
 	useQueryErrorHandler({
 		error: seasonsError,
 		component: 'NewsManagement',
@@ -220,7 +189,7 @@ export const NewsManagement = () => {
 		setDialogMode('create')
 		setFormTitle('')
 		setFormContent('')
-		setFormSeasonId(currentSeason?.id || '')
+		setFormSeasonId(currentSeasonId ?? '')
 		setEditingNewsId(null)
 	}
 
@@ -244,24 +213,12 @@ export const NewsManagement = () => {
 
 	// Handle create/edit submit
 	const handleSubmit = async () => {
-		// Validation
-		if (formTitle.trim().length < 3) {
-			toast.error('Title must be at least 3 characters long')
-			return
-		}
-
-		if (formTitle.length > 200) {
-			toast.error('Title must not exceed 200 characters')
-			return
-		}
-
-		if (formContent.trim().length < 10) {
-			toast.error('Content must be at least 10 characters long')
-			return
-		}
-
-		if (formContent.length > 10000) {
-			toast.error('Content must not exceed 10,000 characters')
+		// The server's own rules, so the message matches what it would say.
+		const problem =
+			textProblem(formTitle, TEXT_RULES.newsTitle) ??
+			textProblem(formContent, TEXT_RULES.newsContent)
+		if (problem) {
+			toast.error(problem)
 			return
 		}
 
@@ -335,42 +292,6 @@ export const NewsManagement = () => {
 		}
 	}
 
-	const formatDate = (date: Date) => {
-		return date.toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-		})
-	}
-
-	const formatTime = (date: Date) => {
-		return date.toLocaleTimeString('en-US', {
-			hour: '2-digit',
-			minute: '2-digit',
-		})
-	}
-
-	const formatRelativeTime = (date: Date) => {
-		try {
-			return formatDistanceToNow(date, { addSuffix: true })
-		} catch {
-			return 'Recently'
-		}
-	}
-
-	// Handle authentication and data loading
-	if (playerLoading) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<p>Loading...</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	// Handle query errors
 	if (seasonsError) {
 		return (
@@ -396,25 +317,6 @@ export const NewsManagement = () => {
 		)
 	}
 
-	// Handle non-admin users
-	if (!isAdmin) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access the admin dashboard.
-						</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	return (
 		<PageContainer withSpacing withGap>
 			<PageHeader
@@ -425,42 +327,18 @@ export const NewsManagement = () => {
 
 			{/* Back to Dashboard */}
 			<div className='flex items-center justify-between gap-4'>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 				<Button onClick={handleOpenCreate}>
 					<Plus className='h-4 w-4 mr-2' />
 					Create News Post
 				</Button>
 			</div>
 
-			{/* Season Selector */}
-			<Card>
-				<CardHeader>
-					<CardTitle className='text-lg'>Filter by Season</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<Select
-						value={selectedSeasonId}
-						onValueChange={setSelectedSeasonId}
-						disabled={!seasons || seasons.length === 0}
-					>
-						<SelectTrigger className='w-full max-w-md'>
-							<SelectValue placeholder='Select a season' />
-						</SelectTrigger>
-						<SelectContent>
-							{seasons?.map((season) => (
-								<SelectItem key={season.id} value={season.id}>
-									{season.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</CardContent>
-			</Card>
+			<SeasonFilterCard
+				seasons={seasons}
+				selectedSeasonId={selectedSeasonId}
+				onSeasonChange={setSelectedSeasonId}
+			/>
 
 			{/* News Table */}
 			<Card>
@@ -529,10 +407,10 @@ export const NewsManagement = () => {
 												<div className='text-sm'>
 													<div className='flex items-center gap-1'>
 														<Calendar className='h-3 w-3 text-muted-foreground' />
-														{formatDate(news.createdAt)}
+														{formatShortDate(news.createdAt)}
 													</div>
 													<div className='text-xs text-muted-foreground'>
-														{formatTime(news.createdAt)}
+														{formatClockTime(news.createdAt)}
 													</div>
 												</div>
 											</TableCell>
@@ -621,18 +499,25 @@ export const NewsManagement = () => {
 								placeholder='Enter news post title'
 								value={formTitle}
 								onChange={(e) => setFormTitle(e.target.value)}
-								maxLength={200}
+								maxLength={TEXT_RULES.newsTitle.max}
 								aria-describedby='title-description'
 							/>
 							<p
 								id='title-description'
 								className='text-xs text-muted-foreground flex justify-between'
 							>
-								<span>3-200 characters</span>
+								<span>
+									{TEXT_RULES.newsTitle.min}-{TEXT_RULES.newsTitle.max}{' '}
+									characters
+								</span>
 								<span
-									className={titleCharCount > 200 ? 'text-destructive' : ''}
+									className={
+										titleCharCount > TEXT_RULES.newsTitle.max
+											? 'text-destructive'
+											: ''
+									}
 								>
-									{titleCharCount}/200
+									{titleCharCount}/{TEXT_RULES.newsTitle.max}
 								</span>
 							</p>
 						</div>
@@ -648,7 +533,7 @@ export const NewsManagement = () => {
 								value={formContent}
 								onChange={(e) => setFormContent(e.target.value)}
 								rows={10}
-								maxLength={10000}
+								maxLength={TEXT_RULES.newsContent.max}
 								className='resize-none font-mono text-sm'
 								aria-describedby='content-description'
 							/>
@@ -658,7 +543,11 @@ export const NewsManagement = () => {
 							>
 								<span>10-10,000 characters (line breaks preserved)</span>
 								<span
-									className={contentCharCount > 10000 ? 'text-destructive' : ''}
+									className={
+										contentCharCount > TEXT_RULES.newsContent.max
+											? 'text-destructive'
+											: ''
+									}
 								>
 									{contentCharCount}/10,000
 								</span>

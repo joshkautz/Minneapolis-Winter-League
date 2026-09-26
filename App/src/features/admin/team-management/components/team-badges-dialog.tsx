@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useResolvedSnapshot, useQueryErrorHandler } from '@/shared/hooks'
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { getDoc } from 'firebase/firestore'
+import { getDoc, type DocumentReference } from 'firebase/firestore'
 import { Award, Trash2, Loader2, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
@@ -38,7 +38,6 @@ import {
 	PlayerDocument,
 	TeamDocument,
 } from '@/types'
-import { DocumentReference } from '@/firebase'
 
 interface ProcessedTeamBadge {
 	id: string

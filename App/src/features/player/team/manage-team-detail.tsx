@@ -1,22 +1,21 @@
 import {
-	QueryDocumentSnapshot,
-	DocumentSnapshot,
-	offersForPlayerByTeamQuery,
-} from '@/firebase'
+	type QueryDocumentSnapshot,
+	type DocumentSnapshot,
+} from 'firebase/firestore'
+import { offersForPlayerByTeamQuery } from '@/firebase/collections/offers'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	canonicalTeamRefFromTeamSeasonDoc,
 } from '@/firebase/collections/teams'
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { LoadingButton } from '@/shared/components'
+import { LoadingButton, TeamLogo } from '@/shared/components'
 import { usePendingAction } from '@/shared/hooks/use-pending-action'
 import {
 	PlayerDocument,
 	TeamSeasonDocument,
 	OfferDocument,
 	OfferStatus,
-} from '@/shared/utils'
+} from '@/types'
 import { Link } from 'react-router-dom'
 import { useQueryErrorHandler } from '@/shared/hooks'
 
@@ -72,18 +71,13 @@ export const ManageTeamDetail = ({
 			<Link
 				to={`/teams/${teamId}/${currentSeasonTeamsQueryDocumentSnapshot.id}`}
 			>
-				<Avatar>
-					<AvatarImage
-						src={
-							currentSeasonTeamsQueryDocumentSnapshot.data().logo ?? undefined
-						}
-						alt={'team logo'}
-					/>
-					<AvatarFallback>
-						{currentSeasonTeamsQueryDocumentSnapshot.data().name?.slice(0, 2) ??
-							'NA'}
-					</AvatarFallback>
-				</Avatar>
+				<TeamLogo
+					name={currentSeasonTeamsQueryDocumentSnapshot.data().name}
+					logo={currentSeasonTeamsQueryDocumentSnapshot.data().logo}
+					alt=''
+					className='h-8 w-8 rounded-full'
+					initialClassName='text-xs'
+				/>
 			</Link>
 			<Link
 				to={`/teams/${teamId}/${currentSeasonTeamsQueryDocumentSnapshot.id}`}

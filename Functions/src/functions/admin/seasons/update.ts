@@ -3,7 +3,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
-import { FieldValue, getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { FieldValue, getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { Collections, SeasonDocument, SeasonFormat } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
@@ -12,6 +12,7 @@ import {
 	validateTeamRegistrationTotal,
 } from '../../../shared/seasonPricing.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { parseSeasonInput } from '../../../shared/seasonInput.js'
 
 interface UpdateSeasonRequest {
 	seasonId: string
@@ -54,7 +55,7 @@ interface UpdateSeasonResponse {
  *   or removed while any team in the season holds money
  */
 export const updateSeason = onCall<UpdateSeasonRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 
@@ -75,26 +76,14 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 			throw new HttpsError('invalid-argument', 'Season ID is required')
 		}
 
-		if (
-			!name ||
-			!dateStart ||
-			!dateEnd ||
-			!registrationStart ||
-			!registrationEnd
-		) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Season name and all date fields are required'
-			)
-		}
-
-		// Validate season name length
-		if (name.length < 3 || name.length > 100) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Season name must be between 3 and 100 characters'
-			)
-		}
+		const season = parseSeasonInput({
+			name,
+			dateStart,
+			dateEnd,
+			registrationStart,
+			registrationEnd,
+			stripe,
+		})
 
 		try {
 			const firestore = getFirestore()
@@ -109,30 +98,6 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 			if (!seasonDoc.exists) {
 				throw new HttpsError('not-found', 'Season not found')
 			}
-
-			// Convert dates to Timestamps
-			const dateStartTimestamp = Timestamp.fromDate(new Date(dateStart))
-			const dateEndTimestamp = Timestamp.fromDate(new Date(dateEnd))
-			const registrationStartTimestamp = Timestamp.fromDate(
-				new Date(registrationStart)
-			)
-			const registrationEndTimestamp = Timestamp.fromDate(
-				new Date(registrationEnd)
-			)
-
-			// Build stripe config (only include if at least priceId is provided)
-			const stripeConfig = stripe?.priceId
-				? {
-						priceId: stripe.priceId,
-						...(stripe.priceIdDev && { priceIdDev: stripe.priceIdDev }),
-						...(stripe.returningPlayerCouponId && {
-							returningPlayerCouponId: stripe.returningPlayerCouponId,
-						}),
-						...(stripe.returningPlayerCouponIdDev && {
-							returningPlayerCouponIdDev: stripe.returningPlayerCouponIdDev,
-						}),
-					}
-				: undefined
 
 			// Pricing. Only touched when the request says something about it.
 			let pricingUpdate: Record<string, number | FieldValue> = {}
@@ -160,12 +125,12 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 
 			// Update the season document
 			const updateData: Record<string, unknown> = {
-				name: name.trim(),
-				dateStart: dateStartTimestamp,
-				dateEnd: dateEndTimestamp,
-				registrationStart: registrationStartTimestamp,
-				registrationEnd: registrationEndTimestamp,
-				...(stripeConfig && { stripe: stripeConfig }),
+				name: season.name,
+				dateStart: season.dateStart,
+				dateEnd: season.dateEnd,
+				registrationStart: season.registrationStart,
+				registrationEnd: season.registrationEnd,
+				...(season.stripe && { stripe: season.stripe }),
 				// Traditional is stored as no format at all. Deleted rather than
 				// written as undefined, which Firestore rejects — and did, for
 				// every traditional season, until this was noticed.
@@ -180,13 +145,13 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 
 			logger.info(`Season updated: ${seasonId}`, {
 				seasonId,
-				name: name.trim(),
+				name: season.name,
 				updatedBy: auth?.uid,
 			})
 
 			return {
 				success: true,
-				message: `Season "${name}" updated successfully`,
+				message: `Season "${season.name}" updated successfully`,
 			} as UpdateSeasonResponse
 		} catch (error) {
 			// If it's already an HttpsError, just re-throw it

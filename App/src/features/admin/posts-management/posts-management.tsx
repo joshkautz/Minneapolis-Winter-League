@@ -4,13 +4,10 @@
  * Allows admins to moderate posts and replies
  */
 
-import { useState, useMemo, useEffect } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
+import { useState, useEffect } from 'react'
+import { useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
 import {
-	ArrowLeft,
-	AlertTriangle,
 	Users,
 	Trash2,
 	Calendar,
@@ -24,13 +21,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 
-import { auth } from '@/firebase/auth'
-import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	allPostsQueryBySeason,
 	repliesQuery,
 } from '@/firebase/collections/posts'
-import { useSeasonsContext } from '@/providers'
 import {
 	deletePostViaFunction,
 	deleteReplyViaFunction,
@@ -52,25 +46,24 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { PostDocument, ReplyDocument, PlayerDocument } from '@/types'
 import {
-	PostDocument,
-	ReplyDocument,
-	PlayerDocument,
-	SeasonDocument,
-} from '@/types'
-import { logger, errorMessage } from '@/shared/utils'
+	logger,
+	errorMessage,
+	formatShortDate,
+	formatClockTime,
+	formatRelativeTime,
+} from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
+import {
+	BackToAdminButton,
+	SeasonFilterCard,
+	useAdminSeasonFilter,
+} from '@/features/admin/shared'
 
 interface ProcessedPost {
 	id: string
@@ -93,57 +86,20 @@ interface ProcessedReply {
 
 export const PostsManagement = () => {
 	const navigate = useNavigate()
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 
-	const isAdmin = playerSnapshot?.data()?.admin || false
-
-	// Get all seasons from context
 	const {
-		seasonsQuerySnapshot: seasonsSnapshot,
-		seasonsQuerySnapshotError: seasonsError,
-	} = useSeasonsContext()
-	const seasons = seasonsSnapshot?.docs.map((doc) => ({
-		id: doc.id,
-		...doc.data(),
-	})) as (SeasonDocument & { id: string })[] | undefined
-
-	// Get current season (most recent)
-	const currentSeason = useMemo(() => {
-		if (!seasons || seasons.length === 0) return null
-		return seasons[0] // Seasons are sorted by dateStart desc
-	}, [seasons])
-
-	// Selected season for filtering posts
-	// Derived rather than stored: the selection defaults to the current season
-	// until the user picks one. An effect that seeded state once the season
-	// loaded rendered an empty selection first and then corrected it, which
-	// React 19 flags as a cascading render.
-	const [selectedSeasonOverride, setSelectedSeasonId] = useState<
-		string | undefined
-	>(undefined)
-	const selectedSeasonId = selectedSeasonOverride ?? currentSeason?.id ?? ''
-
-	// Fetch posts for selected season
-	const selectedSeasonRef = useMemo(() => {
-		if (!selectedSeasonId || !seasonsSnapshot) return null
-		const seasonDoc = seasonsSnapshot.docs.find(
-			(doc) => doc.id === selectedSeasonId
-		)
-		return seasonDoc?.ref || null
-	}, [selectedSeasonId, seasonsSnapshot])
+		seasons,
+		seasonsError,
+		selectedSeasonId,
+		setSelectedSeasonId,
+		selectedSeasonSnapshot,
+	} = useAdminSeasonFilter()
+	const selectedSeasonRef = selectedSeasonSnapshot?.ref ?? null
 
 	const [postsSnapshot, postsLoading, postsError] = useCollection(
 		selectedSeasonRef ? allPostsQueryBySeason(selectedSeasonRef) : null
 	)
 
-	// Log and notify on query errors
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'PostsManagement',
-		errorLabel: 'player',
-	})
 	useQueryErrorHandler({
 		error: seasonsError,
 		component: 'PostsManagement',
@@ -275,42 +231,6 @@ export const PostsManagement = () => {
 		}
 	}
 
-	const formatDate = (date: Date) => {
-		return date.toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-		})
-	}
-
-	const formatTime = (date: Date) => {
-		return date.toLocaleTimeString('en-US', {
-			hour: '2-digit',
-			minute: '2-digit',
-		})
-	}
-
-	const formatRelativeTime = (date: Date) => {
-		try {
-			return formatDistanceToNow(date, { addSuffix: true })
-		} catch {
-			return 'Recently'
-		}
-	}
-
-	// Handle authentication and data loading
-	if (playerLoading) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<p>Loading...</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	// Handle query errors
 	if (seasonsError) {
 		return (
@@ -336,25 +256,6 @@ export const PostsManagement = () => {
 		)
 	}
 
-	// Handle non-admin users
-	if (!isAdmin) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access the admin dashboard.
-						</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	return (
 		<PageContainer withSpacing withGap>
 			<PageHeader
@@ -365,38 +266,14 @@ export const PostsManagement = () => {
 
 			{/* Back to Dashboard */}
 			<div className='flex items-center justify-between gap-4'>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 			</div>
 
-			{/* Season Selector */}
-			<Card>
-				<CardHeader>
-					<CardTitle className='text-lg'>Filter by Season</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<Select
-						value={selectedSeasonId}
-						onValueChange={setSelectedSeasonId}
-						disabled={!seasons || seasons.length === 0}
-					>
-						<SelectTrigger className='w-full max-w-md'>
-							<SelectValue placeholder='Select a season' />
-						</SelectTrigger>
-						<SelectContent>
-							{seasons?.map((season) => (
-								<SelectItem key={season.id} value={season.id}>
-									{season.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</CardContent>
-			</Card>
+			<SeasonFilterCard
+				seasons={seasons}
+				selectedSeasonId={selectedSeasonId}
+				onSeasonChange={setSelectedSeasonId}
+			/>
 
 			{/* Posts Table */}
 			<Card>
@@ -493,10 +370,10 @@ export const PostsManagement = () => {
 														<div className='text-sm'>
 															<div className='flex items-center gap-1'>
 																<Calendar className='h-3 w-3 text-muted-foreground' />
-																{formatDate(post.createdAt)}
+																{formatShortDate(post.createdAt)}
 															</div>
 															<div className='text-xs text-muted-foreground'>
-																{formatTime(post.createdAt)}
+																{formatClockTime(post.createdAt)}
 															</div>
 														</div>
 													</TableCell>

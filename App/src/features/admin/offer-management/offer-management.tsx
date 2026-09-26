@@ -5,12 +5,9 @@
  */
 
 import { useState, useMemo, ReactNode, KeyboardEvent } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
+import { useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc } from 'firebase/firestore'
 import {
-	ArrowLeft,
-	AlertTriangle,
 	Mail,
 	Users,
 	Calendar,
@@ -26,8 +23,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
-import { auth } from '@/firebase/auth'
-import { getPlayerRef, playerContactRef } from '@/firebase/collections/players'
+import { playerContactRef } from '@/firebase/collections/players'
 import { allPendingOffersQuery } from '@/firebase/collections/offers'
 import { updateOfferViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -43,13 +39,14 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import {
-	OfferDocument,
-	OfferStatus,
-	OfferType,
 	logger,
 	errorMessage,
+	formatShortDate,
+	formatClockTime,
 } from '@/shared/utils'
+import { OfferDocument, OfferStatus, OfferType } from '@/types'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
+import { BackToAdminButton } from '@/features/admin/shared'
 
 interface ProcessedOffer {
 	id: string
@@ -130,23 +127,12 @@ const SortableColumnHeader = ({
 
 export const OfferManagement = () => {
 	const navigate = useNavigate()
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
-
-	const isAdmin = playerSnapshot?.data()?.admin || false
 
 	// Fetch all pending offers
 	const [offersSnapshot, offersLoading, offersError] = useCollection(
 		allPendingOffersQuery()
 	)
 
-	// Log and notify on query errors
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'OfferManagement',
-		errorLabel: 'player',
-	})
 	useQueryErrorHandler({
 		error: offersError,
 		component: 'OfferManagement',
@@ -293,21 +279,6 @@ export const OfferManagement = () => {
 		})
 	}, [offers, sortColumn, sortDirection])
 
-	const formatDate = (date: Date) => {
-		return date.toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-		})
-	}
-
-	const formatTime = (date: Date) => {
-		return date.toLocaleTimeString('en-US', {
-			hour: '2-digit',
-			minute: '2-digit',
-		})
-	}
-
 	// Handle offer status update
 	const handleUpdateOfferStatus = async (
 		offerId: string,
@@ -341,19 +312,6 @@ export const OfferManagement = () => {
 		}
 	}
 
-	// Handle authentication and data loading
-	if (playerLoading) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<p>Loading...</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	// Handle query errors
 	if (offersError) {
 		return (
@@ -363,25 +321,6 @@ export const OfferManagement = () => {
 					title='Error Loading Offers'
 					onRetry={() => navigate(0)}
 				/>
-			</div>
-		)
-	}
-
-	// Handle non-admin users
-	if (!isAdmin) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access the admin dashboard.
-						</p>
-					</CardContent>
-				</Card>
 			</div>
 		)
 	}
@@ -396,12 +335,7 @@ export const OfferManagement = () => {
 
 			{/* Back to Dashboard */}
 			<div>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 			</div>
 
 			{/* Offers Table */}
@@ -539,10 +473,10 @@ export const OfferManagement = () => {
 												<div className='text-sm'>
 													<div className='flex items-center gap-1'>
 														<Calendar className='h-3 w-3 text-muted-foreground' />
-														{formatDate(offer.createdAt)}
+														{formatShortDate(offer.createdAt)}
 													</div>
 													<div className='text-xs text-muted-foreground'>
-														{formatTime(offer.createdAt)}
+														{formatClockTime(offer.createdAt)}
 													</div>
 												</div>
 											</TableCell>

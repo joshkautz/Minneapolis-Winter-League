@@ -36,6 +36,7 @@ import {
 	updateReplyViaFunction,
 } from '@/firebase/collections/functions'
 import { logger, errorMessage } from '@/shared/utils'
+import { TEXT_RULES, textProblem } from '@/shared/text-rules'
 
 /**
  * Posts outlive the account that wrote them, so a deleted player's posts and
@@ -49,10 +50,8 @@ interface PostCardProps {
 	currentUserId?: string
 }
 
-const MIN_POST_LENGTH = 10
-const MAX_POST_LENGTH = 2000
-const MIN_REPLY_LENGTH = 10
-const MAX_REPLY_LENGTH = 1000
+const MAX_POST_LENGTH = TEXT_RULES.postContent.max
+const MAX_REPLY_LENGTH = TEXT_RULES.replyContent.max
 
 /**
  * Individual post card component
@@ -104,12 +103,14 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 		}
 	}
 
+	const isEditValid = textProblem(editContent, TEXT_RULES.postContent) === null
+	const isReplyValid =
+		textProblem(replyContent, TEXT_RULES.replyContent) === null
+
 	// Handle edit submission
 	const handleEditSubmit = useCallback(async () => {
 		const trimmed = editContent.trim()
-		if (trimmed.length < MIN_POST_LENGTH || trimmed.length > MAX_POST_LENGTH) {
-			return
-		}
+		if (!isEditValid) return
 
 		setIsSubmittingEdit(true)
 		try {
@@ -127,17 +128,12 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 		} finally {
 			setIsSubmittingEdit(false)
 		}
-	}, [postId, editContent])
+	}, [postId, editContent, isEditValid])
 
 	// Handle reply submission
 	const handleReplySubmit = useCallback(async () => {
 		const trimmed = replyContent.trim()
-		if (
-			trimmed.length < MIN_REPLY_LENGTH ||
-			trimmed.length > MAX_REPLY_LENGTH
-		) {
-			return
-		}
+		if (!isReplyValid) return
 
 		setIsSubmittingReply(true)
 		try {
@@ -155,20 +151,12 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 		} finally {
 			setIsSubmittingReply(false)
 		}
-	}, [postId, replyContent])
+	}, [postId, replyContent, isReplyValid])
 
 	const handleCancelEdit = () => {
 		setEditContent(post.content)
 		setIsEditing(false)
 	}
-
-	const isEditValid =
-		editContent.trim().length >= MIN_POST_LENGTH &&
-		editContent.trim().length <= MAX_POST_LENGTH
-
-	const isReplyValid =
-		replyContent.trim().length >= MIN_REPLY_LENGTH &&
-		replyContent.trim().length <= MAX_REPLY_LENGTH
 
 	return (
 		<Card className='transition-all hover:shadow-md'>
@@ -391,14 +379,11 @@ const ReplyItem = ({
 		}
 	}
 
+	const isEditValid = textProblem(editContent, TEXT_RULES.replyContent) === null
+
 	const handleEditSubmit = async () => {
 		const trimmed = editContent.trim()
-		if (
-			trimmed.length < MIN_REPLY_LENGTH ||
-			trimmed.length > MAX_REPLY_LENGTH
-		) {
-			return
-		}
+		if (!isEditValid) return
 
 		setIsSubmitting(true)
 		try {
@@ -418,10 +403,6 @@ const ReplyItem = ({
 			setIsSubmitting(false)
 		}
 	}
-
-	const isEditValid =
-		editContent.trim().length >= MIN_REPLY_LENGTH &&
-		editContent.trim().length <= MAX_REPLY_LENGTH
 
 	return (
 		<div className='border-l-2 border-muted pl-4 py-2'>

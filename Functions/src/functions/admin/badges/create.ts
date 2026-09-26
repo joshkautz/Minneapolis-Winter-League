@@ -8,7 +8,8 @@ import { logger } from 'firebase-functions/v2'
 import { Collections, BadgeDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { parseImageUpload, storeImage } from '../../../shared/images.js'
-import { FIREBASE_CONFIG, BADGE_CONFIG } from '../../../config/constants.js'
+import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
 
 interface CreateBadgeRequest {
 	name: string
@@ -33,7 +34,7 @@ interface CreateBadgeResponse {
  * - Image must be a valid image type if provided
  */
 export const createBadge = onCall<CreateBadgeRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<CreateBadgeResponse> => {
 		const { data, auth } = request
 
@@ -47,35 +48,9 @@ export const createBadge = onCall<CreateBadgeRequest>(
 			)
 		}
 
-		// Validate name length
-		if (name.trim().length < BADGE_CONFIG.NAME_MIN_LENGTH) {
-			throw new HttpsError(
-				'invalid-argument',
-				`Name must be at least ${BADGE_CONFIG.NAME_MIN_LENGTH} characters long`
-			)
-		}
+		requireText(name, TEXT_RULES.badgeName)
 
-		if (name.length > BADGE_CONFIG.NAME_MAX_LENGTH) {
-			throw new HttpsError(
-				'invalid-argument',
-				`Name must not exceed ${BADGE_CONFIG.NAME_MAX_LENGTH} characters`
-			)
-		}
-
-		// Validate description length
-		if (description.trim().length < BADGE_CONFIG.DESCRIPTION_MIN_LENGTH) {
-			throw new HttpsError(
-				'invalid-argument',
-				`Description must be at least ${BADGE_CONFIG.DESCRIPTION_MIN_LENGTH} characters long`
-			)
-		}
-
-		if (description.length > BADGE_CONFIG.DESCRIPTION_MAX_LENGTH) {
-			throw new HttpsError(
-				'invalid-argument',
-				`Description must not exceed ${BADGE_CONFIG.DESCRIPTION_MAX_LENGTH} characters`
-			)
-		}
+		requireText(description, TEXT_RULES.badgeDescription)
 
 		const image = parseImageUpload(
 			imageBlob,

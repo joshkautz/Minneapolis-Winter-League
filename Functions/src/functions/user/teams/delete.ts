@@ -13,8 +13,8 @@ import { SeasonDocument } from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { formatDateForUser } from '../../../shared/format.js'
 import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletionService.js'
+import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 
 interface DeleteTeamRequest {
 	teamId: string
@@ -85,14 +85,11 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 				const seasonDoc = await teamSeasonData.season.get()
 				if (seasonDoc.exists) {
 					const seasonData = seasonDoc.data() as SeasonDocument
-					const now = new Date()
-					const registrationEnd = seasonData.registrationEnd.toDate()
-					if (now > registrationEnd) {
-						throw new HttpsError(
-							'failed-precondition',
-							`Teams cannot be deleted after registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
-						)
-					}
+					assertRegistrationOpen(
+						seasonData,
+						'Teams cannot be deleted after registration has closed.',
+						timezone
+					)
 				}
 			}
 

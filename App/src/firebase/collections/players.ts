@@ -20,15 +20,13 @@ import {
 } from 'firebase/firestore'
 
 import { firestore } from '../app'
-import { User } from '../auth'
+import type { User } from 'firebase/auth'
 import {
 	Collections,
 	PLAYER_SEASONS_SUBCOLLECTION,
 	PlayerDocument,
 	PlayerSeasonDocument,
 	SeasonDocument,
-} from '@/shared/utils'
-import {
 	WAIVER_SIGNATURES_SUBCOLLECTION,
 	type PlayerContactDocument,
 	type WaiverSignatureDocument,

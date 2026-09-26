@@ -26,18 +26,9 @@ describe('usePlayerEmails', () => {
 			false,
 			undefined,
 		])
-		const { result } = renderHook(() => usePlayerEmails(true, 'Test'))
+		const { result } = renderHook(() => usePlayerEmails('Test'))
 
 		expect(result.current.emails.get('p2')).toBe('two@example.com')
 		expect(result.current.emails.size).toBe(2)
-	})
-
-	it('does not query until the viewer is known to be an admin', () => {
-		// The contacts are admin-only; querying as anyone else is refused.
-		useCollection.mockReturnValue([undefined, false, undefined])
-		const { result } = renderHook(() => usePlayerEmails(false, 'Test'))
-
-		expect(useCollection).toHaveBeenCalledWith(null)
-		expect(result.current.emails.size).toBe(0)
 	})
 })

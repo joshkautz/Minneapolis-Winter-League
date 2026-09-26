@@ -1,4 +1,4 @@
-import { PlayerDocument } from '@/shared/utils'
+import { PlayerDocument } from '@/types'
 import {
 	FirestoreError,
 	getDocsFromServer,

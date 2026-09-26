@@ -1,14 +1,11 @@
 import { useCallback, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { getPlayersQuery, QueryDocumentSnapshot } from '@/firebase'
+import { getPlayersQuery } from '@/firebase/collections/players'
+import { type QueryDocumentSnapshot } from 'firebase/firestore'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { NotificationCard } from '@/shared/components'
-import {
-	OfferType,
-	PlayerDocument,
-	TeamSeasonDocument,
-	errorMessage,
-} from '@/shared/utils'
+import { errorMessage } from '@/shared/utils'
+import { OfferType, PlayerDocument, TeamSeasonDocument } from '@/types'
 import { ManageInvitePlayerDetail } from './manage-invite-player-detail'
 import { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
 import { usePlayersSearch, useDebounce, useUserStatus } from '@/shared/hooks'

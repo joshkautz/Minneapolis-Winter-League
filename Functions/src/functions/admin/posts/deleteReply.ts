@@ -39,7 +39,7 @@ export const deleteReply = onCall<
 	DeleteReplyRequest,
 	Promise<DeleteReplyResponse>
 >(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<DeleteReplyResponse> => {
 		const { data, auth } = request
 

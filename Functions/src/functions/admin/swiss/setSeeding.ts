@@ -25,7 +25,7 @@ interface SetSwissSeedingResponse {
 }
 
 export const setSwissSeeding = onCall<SetSwissSeedingRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 		const { seasonId, teamSeeding } = data

@@ -18,7 +18,7 @@ import {
 } from '../../../shared/auth.js'
 import { playerSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { formatDateForUser } from '../../../shared/format.js'
+import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 
 interface UpdateOfferRequest {
 	offerId: string
@@ -39,7 +39,7 @@ interface UpdateOfferRequest {
  * - Admins bypass banned and registration date restrictions
  */
 export const updateOffer = onCall<UpdateOfferRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request) => {
 		const { data, auth } = request
 
@@ -112,15 +112,11 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 
 				// Validate that registration has not ended (skip for admins)
 				if (!isAdmin) {
-					const now = new Date()
-					const registrationEnd = seasonData.registrationEnd.toDate()
-
-					if (now > registrationEnd) {
-						throw new HttpsError(
-							'failed-precondition',
-							`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
-						)
-					}
+					assertRegistrationOpen(
+						seasonData,
+						'Team roster changes are not allowed after registration has closed.',
+						timezone
+					)
 				}
 
 				// When accepting an offer, validate the player is not banned (skip for admins)

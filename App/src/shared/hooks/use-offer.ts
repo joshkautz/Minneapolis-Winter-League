@@ -1,4 +1,4 @@
-import { getPlayerSnapshot } from '@/firebase'
+import { getPlayerSnapshot } from '@/firebase/collections/players'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import {
 	QuerySnapshot,
@@ -6,7 +6,8 @@ import {
 	DocumentReference,
 } from 'firebase/firestore'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { OfferDocument, TeamSeasonDocument, logger } from '@/shared/utils'
+import { logger } from '@/shared/utils'
+import { OfferDocument, TeamSeasonDocument } from '@/types'
 import { toast } from 'sonner'
 
 // Extended OfferDocument with UI-specific fields for display

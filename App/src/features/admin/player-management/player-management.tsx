@@ -5,12 +5,10 @@
  */
 
 import { useState, useMemo, useEffect } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
 import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
 import { getDoc, getDocs } from 'firebase/firestore'
 import { toast } from 'sonner'
 import {
-	ArrowLeft,
 	Users,
 	AlertTriangle,
 	Search,
@@ -24,10 +22,8 @@ import {
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
-import { auth } from '@/firebase/auth'
 import {
 	adminPlayerSearchQuery,
-	getPlayerRef,
 	playerContactRef,
 	playerRefById,
 	playersByIdsQuery,
@@ -66,14 +62,14 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { PageContainer, PageHeader, QueryError } from '@/shared/components'
+import { logger, errorMessage } from '@/shared/utils'
 import {
 	type PlayerDocument,
 	type SeasonDocument,
 	type TeamSeasonDocument,
-	logger,
-	errorMessage,
-} from '@/shared/utils'
+} from '@/types'
 import { usePlayerEmails, useQueryErrorHandler } from '@/shared/hooks'
+import { BackToAdminButton } from '@/features/admin/shared'
 
 interface SeasonFormData {
 	seasonId: string
@@ -109,9 +105,6 @@ interface PlayerFormData {
 
 export const PlayerManagement = () => {
 	const navigate = useNavigate()
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 
 	const [searchTerm, setSearchTerm] = useState('')
 	const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
@@ -159,9 +152,7 @@ export const PlayerManagement = () => {
 		? formData.seasons.length - visibleSeasons.length
 		: 0
 
-	const isAdmin = playerSnapshot?.data()?.admin || false
-
-	const { emails } = usePlayerEmails(isAdmin, 'PlayerManagement')
+	const { emails } = usePlayerEmails('PlayerManagement')
 
 	// A term with an @ is matched against the private emails, which only
 	// admins can read; anything else searches names on the public players.
@@ -183,12 +174,6 @@ export const PlayerManagement = () => {
 		seasonsQuerySnapshotError: seasonsError,
 	} = useSeasonsContext()
 
-	// Log and notify on query errors
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'PlayerManagement',
-		errorLabel: 'player',
-	})
 	useQueryErrorHandler({
 		error: playersError,
 		component: 'PlayerManagement',
@@ -452,19 +437,6 @@ export const PlayerManagement = () => {
 		})
 	}
 
-	// Handle authentication and data loading
-	if (playerLoading) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<p>Loading...</p>
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
 	// Handle query errors
 	if (seasonsError) {
 		return (
@@ -474,25 +446,6 @@ export const PlayerManagement = () => {
 					title='Error Loading Seasons'
 					onRetry={() => navigate(0)}
 				/>
-			</div>
-		)
-	}
-
-	// Handle non-admin users
-	if (!isAdmin) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground'>
-							You don't have permission to access the admin dashboard.
-						</p>
-					</CardContent>
-				</Card>
 			</div>
 		)
 	}
@@ -507,12 +460,7 @@ export const PlayerManagement = () => {
 
 			{/* Back to Dashboard */}
 			<div>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 			</div>
 
 			{/* Important Notes */}

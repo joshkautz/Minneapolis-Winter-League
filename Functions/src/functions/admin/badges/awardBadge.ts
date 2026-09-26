@@ -37,7 +37,7 @@ interface AwardBadgeResponse {
 }
 
 export const awardBadge = onCall<AwardBadgeRequest>(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<AwardBadgeResponse> => {
 		const { data, auth } = request
 		const { badgeId, teamId, seasonId: providedSeasonId } = data

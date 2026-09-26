@@ -18,6 +18,7 @@ import {
 	validateNotBanned,
 } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
 
 interface CreatePostRequest {
 	content: string
@@ -43,7 +44,7 @@ export const createPost = onCall<
 	CreatePostRequest,
 	Promise<CreatePostResponse>
 >(
-	{ cors: [...FIREBASE_CONFIG.CORS_ORIGINS], region: FIREBASE_CONFIG.REGION },
+	{ region: FIREBASE_CONFIG.REGION },
 	async (request): Promise<CreatePostResponse> => {
 		const { data, auth } = request
 
@@ -60,21 +61,7 @@ export const createPost = onCall<
 			)
 		}
 
-		// Validate content length (10-2000 characters)
-		const trimmedContent = content.trim()
-		if (trimmedContent.length < 10) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Post content must be at least 10 characters long'
-			)
-		}
-
-		if (trimmedContent.length > 2000) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Post content must not exceed 2,000 characters'
-			)
-		}
+		const trimmedContent = requireText(content, TEXT_RULES.postContent)
 
 		try {
 			const firestore = getFirestore()

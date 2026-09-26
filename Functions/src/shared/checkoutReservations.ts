@@ -12,8 +12,8 @@ import {
 	type CheckoutReservation,
 } from '../types.js'
 
-export const CHECKOUTS_SUBCOLLECTION = 'checkouts'
-export const OPEN_CHECKOUTS_DOC = 'open'
+const CHECKOUTS_SUBCOLLECTION = 'checkouts'
+const OPEN_CHECKOUTS_DOC = 'open'
 
 /** Firestore's NOT_FOUND, from updating a document that does not exist. */
 const NOT_FOUND = 5

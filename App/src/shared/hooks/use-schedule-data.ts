@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { QueryDocumentSnapshot } from '@/firebase'
-import { GameDocument } from '@/shared/utils'
+import { type QueryDocumentSnapshot } from 'firebase/firestore'
+import { GameDocument } from '@/types'
 import { useGamesContext } from '@/providers'
 
 /**

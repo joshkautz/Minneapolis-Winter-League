@@ -5,23 +5,12 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useAuthState } from 'react-firebase-hooks/auth'
-import { useDocument, useCollection } from 'react-firebase-hooks/firestore'
+import { useCollection } from 'react-firebase-hooks/firestore'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
-import {
-	ArrowLeft,
-	Edit,
-	Trash2,
-	Calendar,
-	AlertTriangle,
-	Plus,
-	Loader2,
-} from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Edit, Trash2, Calendar, Plus, Loader2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
-import { auth } from '@/firebase/auth'
-import { getPlayerRef } from '@/firebase/collections/players'
 import {
 	teamsInSeasonQuery,
 	canonicalTeamIdFromTeamSeasonDoc,
@@ -81,6 +70,7 @@ import {
 } from '@/types'
 import { Timestamp } from 'firebase/firestore'
 import { SwissPairingGuide } from './swiss-pairing-guide'
+import { BackToAdminButton } from '@/features/admin/shared'
 
 interface GameFormData {
 	date: string
@@ -108,9 +98,6 @@ const INITIAL_FORM_DATA: GameFormData = {
 
 export const GameManagement = () => {
 	const navigate = useNavigate()
-	const [user] = useAuthState(auth)
-	const playerRef = getPlayerRef(user)
-	const [playerSnapshot, playerLoading, playerError] = useDocument(playerRef)
 	const {
 		seasonsQuerySnapshot: seasonsSnapshot,
 		seasonsQuerySnapshotError: seasonsError,
@@ -122,12 +109,6 @@ export const GameManagement = () => {
 		allGamesQuerySnapshotError: gamesError,
 	} = useGamesContext()
 
-	// Log and notify on query errors
-	useQueryErrorHandler({
-		error: playerError,
-		component: 'GameManagement',
-		errorLabel: 'player',
-	})
 	useQueryErrorHandler({
 		error: gamesError,
 		component: 'GameManagement',
@@ -164,7 +145,6 @@ export const GameManagement = () => {
 		return undefined
 	}, [currentSeasonQueryDocumentSnapshot?.id, filterSeasonId])
 
-	const isAdmin = playerSnapshot?.data()?.admin || false
 	const games = gamesSnapshot?.docs.map((doc) => ({
 		id: doc.id,
 		...doc.data(),
@@ -173,7 +153,7 @@ export const GameManagement = () => {
 		id: doc.id,
 		...doc.data(),
 	})) as (SeasonDocument & { id: string })[] | undefined
-	const isLoading = playerLoading || gamesLoading
+	const isLoading = gamesLoading
 
 	// Get the selected season's document reference for querying teams
 	const selectedSeasonDoc = seasons?.find(
@@ -571,16 +551,6 @@ export const GameManagement = () => {
 			})
 		: []
 
-	if (playerLoading) {
-		return (
-			<PageContainer>
-				<div className='flex justify-center items-center h-64'>
-					<p>Loading...</p>
-				</div>
-			</PageContainer>
-		)
-	}
-
 	// Handle query errors
 	if (gamesError) {
 		return (
@@ -606,24 +576,6 @@ export const GameManagement = () => {
 		)
 	}
 
-	if (!isAdmin) {
-		return (
-			<PageContainer>
-				<Card>
-					<CardContent className='pt-6'>
-						<div className='flex items-center justify-center gap-2 text-red-600 mb-4'>
-							<AlertTriangle className='h-6 w-6' />
-							<h2 className='text-xl font-semibold'>Access Denied</h2>
-						</div>
-						<p className='text-muted-foreground text-center'>
-							You don't have permission to access game management.
-						</p>
-					</CardContent>
-				</Card>
-			</PageContainer>
-		)
-	}
-
 	if (isLoading) {
 		return (
 			<PageContainer>
@@ -644,12 +596,7 @@ export const GameManagement = () => {
 
 			{/* Back to Dashboard and Create Button */}
 			<div className='flex items-center justify-between'>
-				<Button variant='outline' asChild>
-					<Link to='/admin'>
-						<ArrowLeft className='h-4 w-4 mr-2' />
-						Back to Admin Dashboard
-					</Link>
-				</Button>
+				<BackToAdminButton />
 				<Button onClick={openCreateDialog}>
 					<Plus className='h-4 w-4 mr-2' />
 					Create Game

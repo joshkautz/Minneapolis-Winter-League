@@ -1,15 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { validateAndNormalizeName } from './names.js'
+import { validateAndNormalizeName, validateTeamName } from './names.js'
 
 /**
- * These rules exist in two places on purpose — this copy and the App's
- * `nameSchema` — because the App's is not a control. A callable is invocable
- * by any authenticated user, so anything the form would have rejected reaches
- * Firestore unless it is rejected here, and names show up on rosters, the
- * schedule and the public rankings.
- *
- * The cases below mirror `App/src/shared/utils/validation.test.ts`. When one
- * changes, both do.
+ * The App's `nameSchema` applies the same rules (`nameRules.ts`), but it is
+ * not a control. A callable is invocable by any authenticated user, so
+ * anything the form would have rejected reaches Firestore unless it is
+ * rejected here, and names show up on rosters, the schedule and the public
+ * rankings.
  */
 
 const codeOf = (value: unknown): string | null => {
@@ -194,5 +191,45 @@ describe('validateAndNormalizeName', () => {
 		} catch (error) {
 			expect((error as Error).message).toContain('Last name')
 		}
+	})
+})
+
+describe('validateTeamName', () => {
+	const codeOfTeam = (value: unknown, checkProfanity = true): string | null => {
+		try {
+			validateTeamName(value, { checkProfanity })
+			return null
+		} catch (error) {
+			return (error as { code?: string }).code ?? 'unknown'
+		}
+	}
+
+	it('trims the name and otherwise keeps it as typed', () => {
+		// Team names are not people's names: digits, punctuation and case
+		// are the team's own.
+		expect(validateTeamName('  The 3rd Floor!  ')).toBe('The 3rd Floor!')
+	})
+
+	it.each([
+		['a missing name', undefined],
+		['a number', 42],
+		['only whitespace', '   '],
+		['a single character', 'A'],
+		['a name longer than 50 characters', 'a'.repeat(51)],
+		['profanity', 'Shit Show'],
+	])('rejects %s', (_label, input) => {
+		expect(codeOfTeam(input)).toBe('invalid-argument')
+	})
+
+	it('accepts a name of exactly 50 characters', () => {
+		expect(validateTeamName('a'.repeat(50))).toHaveLength(50)
+	})
+
+	it('lets an admin set a name the profanity filter refuses', () => {
+		expect(codeOfTeam('Shit Show', false)).toBeNull()
+	})
+
+	it('still holds an admin to the length limits', () => {
+		expect(codeOfTeam('a'.repeat(51), false)).toBe('invalid-argument')
 	})
 })
