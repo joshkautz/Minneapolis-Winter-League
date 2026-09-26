@@ -5,6 +5,7 @@ import {
 	contributionAmountError,
 	formatDollars,
 	isPlayerRegisteredForSeason,
+	registeredPlayersByTeam,
 	suggestedContributionsCents,
 	usesTeamPayments,
 } from './team-payments'
@@ -167,5 +168,43 @@ describe('formatDollars', () => {
 
 	it('shows cents otherwise', () => {
 		expect(formatDollars(1_250)).toBe('$12.50')
+	})
+})
+
+describe('registeredPlayersByTeam', () => {
+	/**
+	 * The teams page counted only players who had paid and signed. Under team
+	 * payments nobody pays individually, so every 2026 Fall team read 0/10
+	 * however many of its players had signed.
+	 */
+	const team = (id: string) => ({ id }) as never
+	const TEAM_TOTAL = { teamRegistrationTotalCents: 100_000 }
+	const PER_PLAYER = {}
+
+	const roster = [
+		{ team: team('a'), signed: true, paid: false },
+		{ team: team('a'), signed: true, paid: true },
+		{ team: team('a'), signed: false, paid: true },
+		{ team: team('b'), signed: true, paid: false },
+		{ team: null, signed: true, paid: true },
+	]
+
+	it('counts every signed player under team payments', () => {
+		const counts = registeredPlayersByTeam(roster, TEAM_TOTAL)
+		expect(counts.get('a')).toBe(2)
+		expect(counts.get('b')).toBe(1)
+	})
+
+	it('counts only paid and signed players under per-player pricing', () => {
+		const counts = registeredPlayersByTeam(roster, PER_PLAYER)
+		expect(counts.get('a')).toBe(1)
+		expect(counts.has('b')).toBe(false)
+	})
+
+	it('leaves out free agents', () => {
+		expect([...registeredPlayersByTeam(roster, TEAM_TOTAL).keys()]).toEqual([
+			'a',
+			'b',
+		])
 	})
 })
