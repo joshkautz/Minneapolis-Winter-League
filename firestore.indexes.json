@@ -199,24 +199,6 @@
 			"queryScope": "COLLECTION_GROUP",
 			"fields": [
 				{
-					"fieldPath": "season",
-					"order": "ASCENDING"
-				},
-				{
-					"fieldPath": "paid",
-					"order": "ASCENDING"
-				},
-				{
-					"fieldPath": "signed",
-					"order": "ASCENDING"
-				}
-			]
-		},
-		{
-			"collectionGroup": "playerSeasons",
-			"queryScope": "COLLECTION_GROUP",
-			"fields": [
-				{
 					"fieldPath": "team",
 					"order": "ASCENDING"
 				},

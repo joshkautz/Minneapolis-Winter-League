@@ -52,6 +52,23 @@ export const isPlayerRegisteredForSeason = (
 	return usesTeamPayments(season) ? true : Boolean(playerSeason.paid)
 }
 
+/**
+ * How many of each team's players count toward its ten, keyed by the
+ * canonical team id, from every player-season in the season.
+ */
+export const registeredPlayersByTeam = (
+	playerSeasons: Pick<PlayerSeasonDocument, 'paid' | 'signed' | 'team'>[],
+	season: Pick<SeasonDocument, 'teamRegistrationTotalCents'> | undefined
+): Map<string, number> => {
+	const counts = new Map<string, number>()
+	for (const playerSeason of playerSeasons) {
+		const teamId = playerSeason.team?.id
+		if (!teamId || !isPlayerRegisteredForSeason(playerSeason, season)) continue
+		counts.set(teamId, (counts.get(teamId) ?? 0) + 1)
+	}
+	return counts
+}
+
 /** What a team holds: every payment, less what has been refunded. */
 export const paidCents = (
 	contributions: Pick<TeamContributionDocument, 'status' | 'amountCents'>[]
