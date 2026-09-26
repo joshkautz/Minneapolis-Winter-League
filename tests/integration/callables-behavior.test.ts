@@ -270,6 +270,107 @@ describe('updateTeamRoster', () => {
 		expect(code).toBe('invalid-argument')
 	})
 
+	/** Puts another player on PLAYER's team, as captain or not. */
+	const addTeammate = async (
+		playerId: string,
+		captain: boolean
+	): Promise<void> => {
+		await seedPlayer(playerId)
+		await teamRosterEntryRef(firestore, teamId, SEASON, playerId).set({
+			player: firestore.collection('players').doc(playerId),
+			dateJoined: Timestamp.now(),
+		})
+		await playerSeasonRef(firestore, playerId, SEASON).set({
+			season: firestore.collection('seasons').doc(SEASON),
+			team: firestore.collection('teams').doc(teamId),
+			captain,
+			paid: false,
+			signed: false,
+		})
+	}
+
+	const roster = (
+		caller: string,
+		playerId: string,
+		action: string
+	): Promise<string | null> =>
+		errorCodeFrom(fn('updateTeamRoster'), {
+			auth: authed(caller),
+			data: { teamId, playerId, action },
+		})
+
+	const isCaptain = async (playerId: string): Promise<boolean> =>
+		(await playerSeasonRef(firestore, playerId, SEASON).get()).data()
+			?.captain === true
+
+	it('lets a captain promote a teammate, who can then demote them', async () => {
+		await addTeammate('teammate', false)
+
+		expect(await roster(PLAYER, 'teammate', 'promote')).toBeNull()
+		expect(await isCaptain('teammate')).toBe(true)
+
+		expect(await roster('teammate', PLAYER, 'demote')).toBeNull()
+		expect(await isCaptain(PLAYER)).toBe(false)
+	})
+
+	it('refuses a teammate who is not a captain', async () => {
+		await addTeammate('teammate', false)
+
+		expect(await roster('teammate', 'teammate', 'promote')).toBe(
+			'permission-denied'
+		)
+	})
+
+	it('lets a player leave, clearing both sides of the membership', async () => {
+		await addTeammate('teammate', false)
+
+		expect(await roster('teammate', 'teammate', 'remove')).toBeNull()
+
+		expect(
+			(await teamRosterEntryRef(firestore, teamId, SEASON, 'teammate').get())
+				.exists
+		).toBe(false)
+		expect(
+			(await playerSeasonRef(firestore, 'teammate', SEASON).get()).data()?.team
+		).toBeNull()
+	})
+
+	it('keeps a captain when two captains demote each other at once', async () => {
+		// Each sees two captains; checked outside the transaction, both
+		// demotions went through and nobody could manage the team.
+		await addTeammate('co-captain', true)
+
+		const codes = await Promise.all([
+			roster(PLAYER, 'co-captain', 'demote'),
+			roster('co-captain', PLAYER, 'demote'),
+		])
+
+		expect(codes.filter((code) => code === null)).toHaveLength(1)
+		expect(
+			[await isCaptain(PLAYER), await isCaptain('co-captain')].filter(Boolean)
+		).toHaveLength(1)
+	})
+
+	it('keeps a captain when two captains leave at once', async () => {
+		await addTeammate('co-captain', true)
+
+		const codes = await Promise.all([
+			roster(PLAYER, PLAYER, 'remove'),
+			roster('co-captain', 'co-captain', 'remove'),
+		])
+
+		expect(codes.filter((code) => code === null)).toHaveLength(1)
+		const remaining = await firestore
+			.collection('teams')
+			.doc(teamId)
+			.collection('teamSeasons')
+			.doc(SEASON)
+			.collection('roster')
+			.get()
+		expect(remaining.size).toBe(1)
+		expect(await isCaptain(remaining.docs[0].id)).toBe(true)
+	})
+
 	it('rejects a team that does not exist', async () => {
 		const code = await errorCodeFrom(fn('updateTeamRoster'), {
 			auth: authed(PLAYER),

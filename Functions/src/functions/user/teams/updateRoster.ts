@@ -4,6 +4,14 @@
  * Handles player management actions on a team: promote, demote, or remove.
  * Captain status lives on the player season subdoc — there is exactly one
  * write per state change, no dual-update of team and player.
+ *
+ * Security validations:
+ * - User must be authenticated and email verified
+ * - Registration must be open, unless the caller is an admin
+ * - Only a captain of the team may promote, demote or remove; any player may
+ *   remove themselves
+ * - A team never loses its last captain
+ * - A registered team never drops below the registration minimum
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -35,6 +43,24 @@ interface UpdateTeamRosterRequest {
 	action: 'promote' | 'demote' | 'remove'
 	timezone?: string
 }
+
+const ROSTER_RESULTS = {
+	promote: {
+		success: true,
+		action: 'promoted',
+		message: 'Player promoted to captain',
+	},
+	demote: {
+		success: true,
+		action: 'demoted',
+		message: 'Player demoted from captain',
+	},
+	remove: {
+		success: true,
+		action: 'removed',
+		message: 'Player removed from team',
+	},
+} as const
 
 export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
@@ -79,34 +105,6 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 				throw new HttpsError('internal', 'Invalid season data')
 			}
 
-			// Verify the team season + roster entry exist.
-			const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
-			const teamSeasonSnap = await teamSeasonDocRef.get()
-			if (!teamSeasonSnap.exists) {
-				throw new HttpsError('not-found', 'Team not found for this season')
-			}
-			const teamSeasonData = teamSeasonSnap.data()
-
-			const targetRosterRef = teamRosterEntryRef(
-				firestore,
-				teamId,
-				seasonId,
-				playerId
-			)
-			const targetRosterSnap = await targetRosterRef.get()
-			if (!targetRosterSnap.exists) {
-				throw new HttpsError('not-found', 'Player is not on this team')
-			}
-
-			// Authorization: load the caller's player season subdoc to check captain.
-			const callerSeasonRef = playerSeasonRef(firestore, userId, seasonId)
-			const callerSeasonSnap = await callerSeasonRef.get()
-			const callerSeasonData = callerSeasonSnap.data()
-			const userIsCaptain =
-				callerSeasonData?.team?.id === teamId &&
-				callerSeasonData?.captain === true
-
-			// Admin bypass for the registration window.
 			const callerPlayerSnap = await firestore
 				.collection(Collections.PLAYERS)
 				.doc(userId)
@@ -121,153 +119,132 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 				)
 			}
 
-			// Captains can manage any player; any player can remove themselves.
-			const canPerformAction =
-				userIsCaptain || (action === 'remove' && playerId === userId)
-			if (!canPerformAction) {
-				if (action === 'remove') {
+			const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
+
+			// Every check on the team's state is made inside the transaction
+			// that acts on it. Made outside, two captains demoting each other at
+			// once would both see two captains and leave the team with none.
+			await firestore.runTransaction(async (txn) => {
+				const [teamSeasonSnap, targetRosterSnap, rosterSnap] =
+					await Promise.all([
+						txn.get(teamSeasonDocRef),
+						txn.get(teamRosterEntryRef(firestore, teamId, seasonId, playerId)),
+						txn.get(teamSeasonDocRef.collection('roster')),
+					])
+				if (!teamSeasonSnap.exists) {
+					throw new HttpsError('not-found', 'Team not found for this season')
+				}
+				if (!targetRosterSnap.exists) {
+					throw new HttpsError('not-found', 'Player is not on this team')
+				}
+
+				const [callerSeasonSnap, targetSeasonSnap, ...rosterSeasonSnaps] =
+					await Promise.all(
+						[userId, playerId, ...rosterSnap.docs.map((d) => d.id)].map((id) =>
+							txn.get(playerSeasonRef(firestore, id, seasonId))
+						)
+					)
+
+				// Captains can manage any player; any player can remove themselves.
+				const callerSeason = callerSeasonSnap.data()
+				const userIsCaptain =
+					callerSeason?.team?.id === teamId && callerSeason?.captain === true
+				if (!userIsCaptain && !(action === 'remove' && playerId === userId)) {
 					throw new HttpsError(
 						'permission-denied',
-						'You can only remove yourself from the team'
+						action === 'remove'
+							? 'You can only remove yourself from the team'
+							: 'Only team captains can manage team players'
 					)
 				}
-				throw new HttpsError(
-					'permission-denied',
-					'Only team captains can manage team players'
-				)
-			}
 
-			// Common: load the target player's season subdoc.
-			const targetSeasonRef = playerSeasonRef(firestore, playerId, seasonId)
-			const targetSeasonSnap = await targetSeasonRef.get()
-			if (!targetSeasonSnap.exists) {
-				throw new HttpsError('not-found', 'Target player has no season record')
-			}
+				if (!targetSeasonSnap.exists) {
+					throw new HttpsError(
+						'not-found',
+						'Target player has no season record'
+					)
+				}
 
-			switch (action) {
-				case 'promote': {
-					await firestore.runTransaction((txn) => {
+				const captainCount = rosterSeasonSnaps.filter(
+					(snap) => snap.data()?.captain === true
+				).length
+				const targetIsCaptain = targetSeasonSnap.data()?.captain === true
+
+				switch (action) {
+					case 'promote':
 						setPlayerCaptainStatus(txn, firestore, {
 							playerId,
 							seasonId,
 							captain: true,
 						})
-						return Promise.resolve()
-					})
-					logger.info('Promoted player to captain', { teamId, playerId })
-					return {
-						success: true,
-						action: 'promoted',
-						message: 'Player promoted to captain',
-					}
-				}
+						return
 
-				case 'demote': {
-					// Last-captain check: count captains on this team's roster by reading
-					// each player's season subdoc.
-					const rosterSnap = await teamSeasonDocRef.collection('roster').get()
-					const captainSeasons = await Promise.all(
-						rosterSnap.docs.map((d) =>
-							playerSeasonRef(firestore, d.id, seasonId).get()
-						)
-					)
-					const captainCount = captainSeasons.filter(
-						(snap) => snap.data()?.captain === true
-					).length
-					if (captainCount <= 1) {
-						throw new HttpsError(
-							'failed-precondition',
-							'Cannot demote the last captain. You must promote another player to captain first.'
-						)
-					}
-					await firestore.runTransaction((txn) => {
+					case 'demote':
+						if (captainCount <= 1) {
+							throw new HttpsError(
+								'failed-precondition',
+								'Cannot demote the last captain. You must promote another player to captain first.'
+							)
+						}
 						setPlayerCaptainStatus(txn, firestore, {
 							playerId,
 							seasonId,
 							captain: false,
 						})
-						return Promise.resolve()
-					})
-					logger.info('Demoted player from captain', { teamId, playerId })
-					return {
-						success: true,
-						action: 'demoted',
-						message: 'Player demoted from captain',
-					}
-				}
+						return
 
-				case 'remove': {
-					const rosterSnap = await teamSeasonDocRef.collection('roster').get()
-					const rosterPlayerSeasonSnaps = await Promise.all(
-						rosterSnap.docs.map((d) =>
-							playerSeasonRef(firestore, d.id, seasonId).get()
-						)
-					)
-
-					// Last-captain check.
-					const captainCount = rosterPlayerSeasonSnaps.filter(
-						(snap) => snap.data()?.captain === true
-					).length
-					const targetIsCaptain = targetSeasonSnap.data()?.captain === true
-					if (targetIsCaptain && captainCount <= 1) {
-						throw new HttpsError(
-							'failed-precondition',
-							'Cannot remove the last captain. You must promote another player to captain before leaving the team.'
-						)
-					}
-
-					// Registered-team threshold check: would this departure drop the
-					// team below the minimum?
-					if (teamSeasonData?.registered) {
-						const minPlayersRequired = TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
-						const remainingRegistered = rosterPlayerSeasonSnaps.filter(
-							(snap, i) =>
-								rosterSnap.docs[i].id !== playerId &&
-								countsTowardRegistration(
-									snap.data() as PlayerSeasonDocument | undefined,
-									seasonData
-								)
-						).length
-						if (remainingRegistered < minPlayersRequired) {
+					case 'remove': {
+						if (targetIsCaptain && captainCount <= 1) {
 							throw new HttpsError(
 								'failed-precondition',
-								`You cannot leave your team at this time. Your departure would cause the team to lose its registered status. The team needs at least ${minPlayersRequired} registered players, but would only have ${remainingRegistered} after your departure.`
+								'Cannot remove the last captain. You must promote another player to captain before leaving the team.'
 							)
 						}
-					}
 
-					await firestore.runTransaction((txn) => {
+						// Would this departure drop a registered team below the minimum?
+						if (teamSeasonSnap.data()?.registered) {
+							const minPlayersRequired =
+								TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
+							const remainingRegistered = rosterSeasonSnaps.filter(
+								(snap, i) =>
+									rosterSnap.docs[i].id !== playerId &&
+									countsTowardRegistration(
+										snap.data() as PlayerSeasonDocument | undefined,
+										seasonData
+									)
+							).length
+							if (remainingRegistered < minPlayersRequired) {
+								throw new HttpsError(
+									'failed-precondition',
+									`You cannot leave your team at this time. Your departure would cause the team to lose its registered status. The team needs at least ${minPlayersRequired} registered players, but would only have ${remainingRegistered} after your departure.`
+								)
+							}
+						}
+
 						removePlayerFromTeam(txn, firestore, {
 							playerId,
 							teamId,
 							seasonId,
 						})
-						return Promise.resolve()
-					})
-
-					logger.info('Removed player from team', { teamId, playerId })
-					return {
-						success: true,
-						action: 'removed',
-						message: 'Player removed from team',
 					}
 				}
+			})
 
-				default:
-					throw new HttpsError('invalid-argument', 'Invalid action')
-			}
+			logger.info(`Team roster ${action}`, { teamId, playerId, userId })
+			return ROSTER_RESULTS[action]
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
+			if (error instanceof HttpsError) throw error
 			logger.error('Error updating team roster:', {
 				teamId,
 				playerId,
 				action,
 				userId,
-				error: errorMessage,
+				error: error instanceof Error ? error.message : 'Unknown error',
 			})
-			if (error instanceof HttpsError) throw error
-			throw new HttpsError('failed-precondition', errorMessage)
+			throw new HttpsError(
+				'internal',
+				'The roster could not be changed. Please try again.'
+			)
 		}
 	}
 )
