@@ -577,3 +577,90 @@ describe('updatePlayerAdmin: season state', () => {
 		)
 	})
 })
+
+describe('updatePlayerAdmin applies a save whole or not at all', () => {
+	/**
+	 * It used to change the sign-in email first, then write each season in a
+	 * transaction of its own and the player document last. A refusal on a
+	 * later season left the email, the earlier seasons and nothing else
+	 * changed — the admin saw an error over a half-saved player.
+	 */
+	const LATER_SEASON = 'season-2'
+
+	beforeEach(async () => {
+		await firestore
+			.collection('seasons')
+			.doc(LATER_SEASON)
+			.set({ name: '2031 Winter' })
+		await seedPlayer(PLAYER)
+		await seedAuthUser(PLAYER, true)
+		// In the later season the player is the only captain of TEAM, so
+		// demoting them there is refused.
+		await teamSeasonRef(firestore, TEAM, LATER_SEASON).set({
+			season: firestore.collection('seasons').doc(LATER_SEASON),
+			name: TEAM,
+			registered: false,
+		})
+		await playerSeasonRef(firestore, PLAYER, LATER_SEASON).set({
+			season: firestore.collection('seasons').doc(LATER_SEASON),
+			team: teamRef(TEAM),
+			captain: true,
+			paid: false,
+			signed: false,
+		})
+		await teamRosterEntryRef(firestore, TEAM, LATER_SEASON, PLAYER).set({
+			player: playerRef(PLAYER),
+			dateJoined: Timestamp.now(),
+		})
+	})
+
+	const refusedSave = {
+		playerId: PLAYER,
+		firstname: 'Renamed',
+		email: 'renamed@example.com',
+		seasons: [
+			seasonUpdate({ paid: true }),
+			seasonUpdate({ seasonId: LATER_SEASON, teamId: TEAM, captain: false }),
+		],
+	}
+
+	it('changes no season when a later one is refused', async () => {
+		expect(await fails(refusedSave)).toBe('failed-precondition')
+
+		expect((await readSeason())?.paid).toBe(false)
+		expect((await readPlayer())?.firstname).toBe('Existing')
+	})
+
+	it('leaves the sign-in email alone when the rest is refused', async () => {
+		await fails(refusedSave)
+
+		expect((await getAuth().getUser(PLAYER)).email).toBe(
+			`${PLAYER}@example.com`
+		)
+		expect(
+			(await playerContactRef(firestore, PLAYER).get()).data()?.email
+		).toBe(`${PLAYER}@example.com`)
+	})
+
+	it('refuses an email another account uses, before writing anything', async () => {
+		await seedAuthUser('someone-else', true)
+
+		expect(
+			await fails({
+				playerId: PLAYER,
+				firstname: 'Renamed',
+				email: 'someone-else@example.com',
+			})
+		).toBe('already-exists')
+		expect((await readPlayer())?.firstname).toBe('Existing')
+	})
+
+	it('refuses a season listed twice', async () => {
+		expect(
+			await fails({
+				playerId: PLAYER,
+				seasons: [seasonUpdate({ paid: true }), seasonUpdate({ paid: false })],
+			})
+		).toBe('invalid-argument')
+	})
+})
