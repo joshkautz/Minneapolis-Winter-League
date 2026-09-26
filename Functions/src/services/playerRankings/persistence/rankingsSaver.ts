@@ -37,7 +37,7 @@ async function loadPreviousRankings(): Promise<Map<string, number>> {
  * the return type is loosened with a structural type rather than the
  * strict `PlayerRankingDocument`.
  */
-export function calculatePlayerRankings(
+function calculatePlayerRankings(
 	playerRatings: Map<string, PlayerRatingState>,
 	previousRatings: Map<string, number>
 ): Array<

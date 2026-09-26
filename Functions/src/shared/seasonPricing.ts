@@ -19,7 +19,7 @@ import {
 } from './contributions.js'
 
 /** A sanity cap, well above any plausible team fee: $100,000. */
-export const MAX_TEAM_REGISTRATION_TOTAL_CENTS = 10_000_000
+const MAX_TEAM_REGISTRATION_TOTAL_CENTS = 10_000_000
 
 /**
  * Checks a proposed total. Whole dollars, because contributions are whole

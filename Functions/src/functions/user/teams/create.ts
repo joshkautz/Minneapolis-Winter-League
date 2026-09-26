@@ -34,7 +34,7 @@ import {
 	teamSeasonRef,
 } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { formatDateForUser } from '../../../shared/format.js'
+import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 
 interface CreateTeamRequest {
 	name: string
@@ -81,8 +81,6 @@ export const createTeam = onCall<CreateTeamRequest>(
 			if (!seasonData) {
 				throw new HttpsError('internal', 'Unable to retrieve season data')
 			}
-			const now = new Date()
-
 			// Load player canonical doc.
 			const playerDocRef = firestore
 				.collection(Collections.PLAYERS)
@@ -105,13 +103,11 @@ export const createTeam = onCall<CreateTeamRequest>(
 			}
 
 			if (!isAdmin) {
-				const registrationEnd = seasonData.registrationEnd.toDate()
-				if (now > registrationEnd) {
-					throw new HttpsError(
-						'failed-precondition',
-						`Team registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
-					)
-				}
+				assertRegistrationOpen(
+					seasonData,
+					'Team registration has closed.',
+					timezone
+				)
 			}
 
 			// Check whether the player already has a team for this season by

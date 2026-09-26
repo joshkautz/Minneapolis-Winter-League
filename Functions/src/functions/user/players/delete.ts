@@ -31,7 +31,7 @@ import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { deletePlayerAccountData } from '../../../services/accountDeletionService.js'
 
 /** How recently the caller must have signed in to delete their account. */
-export const RECENT_SIGN_IN_SECONDS = 5 * 60
+const RECENT_SIGN_IN_SECONDS = 5 * 60
 
 export interface DeletePlayerResponse {
 	success: true

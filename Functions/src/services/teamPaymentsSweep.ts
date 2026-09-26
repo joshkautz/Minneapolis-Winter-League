@@ -89,7 +89,7 @@ async function holdsPaidMoney(
  * team's money is settled when it registers, and again whenever a payment
  * lands on it, so past seasons cost a query per team and no more.
  */
-export async function findTeamsToSettle(
+async function findTeamsToSettle(
 	firestore: Firestore
 ): Promise<TeamWithMoney[]> {
 	const teams: TeamWithMoney[] = []

@@ -106,7 +106,7 @@ export const isMinorOn = (dateOfBirth: string, today: string): boolean =>
  * and punctuation are ignored, so "Mary-Jo O'Neil" matches "mary jo oneil".
  * Accented letters stay distinct from unaccented ones.
  */
-export const normalizeName = (name: string): string =>
+const normalizeName = (name: string): string =>
 	name
 		.normalize('NFKC')
 		.toLocaleLowerCase('en-US')

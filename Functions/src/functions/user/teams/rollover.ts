@@ -14,7 +14,7 @@
  * - Admins bypass banned and registration date restrictions
  */
 
-import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore'
+import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
@@ -36,7 +36,7 @@ import {
 	teamSeasonRef,
 } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { formatDateForUser } from '../../../shared/format.js'
+import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 
 interface RolloverTeamRequest {
 	originalTeamId: string
@@ -92,13 +92,11 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 			if (!isAdmin) {
 				await validateNotBanned(firestore, userId)
 
-				const registrationEnd = seasonData.registrationEnd.toDate()
-				if (Timestamp.now().toDate() > registrationEnd) {
-					throw new HttpsError(
-						'failed-precondition',
-						`Team registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
-					)
-				}
+				assertRegistrationOpen(
+					seasonData,
+					'Team registration has closed.',
+					timezone
+				)
 			}
 
 			// Verify the canonical team exists.

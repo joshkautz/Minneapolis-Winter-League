@@ -20,7 +20,6 @@ import {
 	removePlayerFromTeam,
 	setPlayerCaptainStatus,
 } from '../../../shared/membership.js'
-import { formatDateForUser } from '../../../shared/format.js'
 import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../../config/constants.js'
 import {
 	Collections,
@@ -28,6 +27,7 @@ import {
 	type SeasonDocument,
 } from '../../../types.js'
 import { countsTowardRegistration } from '../../../services/teamRegistrationService.js'
+import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 
 interface UpdateTeamRosterRequest {
 	teamId: string
@@ -74,7 +74,7 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 			if (!seasonSnap.exists) {
 				throw new HttpsError('not-found', 'Season not found')
 			}
-			const seasonData = seasonSnap.data()
+			const seasonData = seasonSnap.data() as SeasonDocument | undefined
 			if (!seasonData) {
 				throw new HttpsError('internal', 'Invalid season data')
 			}
@@ -114,14 +114,11 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 			const isAdmin = callerPlayerSnap.data()?.admin === true
 
 			if (!isAdmin) {
-				const now = new Date()
-				const registrationEnd = seasonData.registrationEnd.toDate()
-				if (now > registrationEnd) {
-					throw new HttpsError(
-						'failed-precondition',
-						`Team roster changes are not allowed after registration has closed. Registration ended ${formatDateForUser(registrationEnd, timezone)}.`
-					)
-				}
+				assertRegistrationOpen(
+					seasonData,
+					'Team roster changes are not allowed after registration has closed.',
+					timezone
+				)
 			}
 
 			// Captains can manage any player; any player can remove themselves.
@@ -228,7 +225,7 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 								rosterSnap.docs[i].id !== playerId &&
 								countsTowardRegistration(
 									snap.data() as PlayerSeasonDocument | undefined,
-									seasonData as SeasonDocument
+									seasonData
 								)
 						).length
 						if (remainingRegistered < minPlayersRequired) {
