@@ -3,13 +3,10 @@
  *
  * Security validations:
  * - User must be authenticated and email verified
- * - User must not be banned for the target season
+ * - User must not be banned
  * - Registration must not have ended
  * - User must not already be on a team for this season
  * - Admins bypass banned and registration date restrictions
- *
- * Note: When creating a new player season subdoc, banned status is preserved
- * from the most recent previous season to maintain ban continuity.
  */
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
@@ -30,11 +27,11 @@ import {
 import {
 	playerSeasonRef,
 	teamRef as canonicalTeamRef,
-	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
+import { addPlayerToTeam } from '../../../shared/membership.js'
 
 interface CreateTeamRequest {
 	name: string
@@ -110,15 +107,10 @@ export const createTeam = onCall<CreateTeamRequest>(
 				)
 			}
 
-			// Check whether the player already has a team for this season by
-			// reading their season subdoc.
+			// Checked here too, before the logo is stored, so a player already
+			// on a team is refused without leaving an orphaned upload behind.
 			const playerSeasonDocRef = playerSeasonRef(firestore, userId, seasonId)
-			const existingPlayerSeasonSnap = await playerSeasonDocRef.get()
-			const existingPlayerSeasonData = existingPlayerSeasonSnap.exists
-				? existingPlayerSeasonSnap.data()
-				: undefined
-
-			if (existingPlayerSeasonData?.team) {
+			if ((await playerSeasonDocRef.get()).data()?.team) {
 				throw new HttpsError(
 					'already-exists',
 					'Player is already on a team for this season'
@@ -132,18 +124,23 @@ export const createTeam = onCall<CreateTeamRequest>(
 				? await storeImage(`teams/${crypto.randomUUID()}`, logo, 'The logo')
 				: null
 
-			// Atomically: create canonical team parent + season subdoc + roster
-			// entry, and create or update the player's season subdoc.
+			// Atomically: the canonical team, its season, and the captain's
+			// membership on both sides.
 			const teamCanonicalRef = canonicalTeamRef(firestore, teamId)
 			const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
-			const rosterEntryDocRef = teamRosterEntryRef(
-				firestore,
-				teamId,
-				seasonId,
-				userId
-			)
 
 			await firestore.runTransaction(async (txn) => {
+				// Checked again here, where it holds: two requests at once — a
+				// double tap, two tabs — both pass the check above, and without
+				// this the player would captain two teams.
+				const playerSeasonSnap = await txn.get(playerSeasonDocRef)
+				if (playerSeasonSnap.data()?.team) {
+					throw new HttpsError(
+						'already-exists',
+						'Player is already on a team for this season'
+					)
+				}
+
 				txn.set(teamCanonicalRef, {
 					createdAt: FieldValue.serverTimestamp(),
 					createdBy: playerDocRef,
@@ -157,25 +154,14 @@ export const createTeam = onCall<CreateTeamRequest>(
 					registeredDate: null,
 					placement: null,
 				})
-				txn.set(rosterEntryDocRef, {
-					player: playerDocRef,
-					dateJoined: FieldValue.serverTimestamp(),
+				addPlayerToTeam(txn, firestore, {
+					playerId: userId,
+					teamId,
+					seasonId,
+					seasonRef: seasonDocRef,
+					captain: true,
+					existingPlayerSeason: playerSeasonSnap.data() ?? null,
 				})
-
-				if (existingPlayerSeasonData) {
-					txn.update(playerSeasonDocRef, {
-						team: teamCanonicalRef,
-						captain: true,
-					})
-				} else {
-					txn.set(playerSeasonDocRef, {
-						season: seasonDocRef,
-						team: teamCanonicalRef,
-						paid: false,
-						signed: false,
-						captain: true,
-					})
-				}
 			})
 
 			// Cancel any pending offers for this player in this season since they

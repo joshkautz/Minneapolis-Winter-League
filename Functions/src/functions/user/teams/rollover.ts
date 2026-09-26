@@ -6,7 +6,7 @@
  *
  * Security validations:
  * - User must be authenticated and email verified
- * - User must not be banned for the target season
+ * - User must not be banned
  * - Registration must not have ended
  * - User must have been a captain of the canonical team in any prior season
  * - User must not already be on a team for this season
@@ -14,7 +14,7 @@
  * - Admins bypass banned and registration date restrictions
  */
 
-import { getFirestore, FieldValue } from 'firebase-admin/firestore'
+import { getFirestore } from 'firebase-admin/firestore'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import {
@@ -32,11 +32,11 @@ import {
 import {
 	playerSeasonRef,
 	teamRef as canonicalTeamRef,
-	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
+import { addPlayerToTeam } from '../../../shared/membership.js'
 
 interface RolloverTeamRequest {
 	originalTeamId: string
@@ -154,41 +154,31 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 				)
 			}
 
-			// Check if player is already on a team for this season.
 			const playerSeasonDocRef = playerSeasonRef(firestore, userId, seasonId)
-			const existingPlayerSeasonSnap = await playerSeasonDocRef.get()
-			const existingPlayerSeasonData = existingPlayerSeasonSnap.exists
-				? existingPlayerSeasonSnap.data()
-				: undefined
-			if (existingPlayerSeasonData?.team) {
-				throw new HttpsError(
-					'already-exists',
-					'Player is already on a team for this season'
-				)
-			}
-
-			// Check if the team already has a season subdoc for this season.
 			const teamSeasonDocRef = teamSeasonRef(
 				firestore,
 				originalTeamId,
 				seasonId
 			)
-			const teamSeasonExisting = await teamSeasonDocRef.get()
-			if (teamSeasonExisting.exists) {
-				throw new HttpsError(
-					'already-exists',
-					'Team has already been rolled over for this season'
-				)
-			}
-
-			const rosterEntryDocRef = teamRosterEntryRef(
-				firestore,
-				originalTeamId,
-				seasonId,
-				userId
-			)
 
 			await firestore.runTransaction(async (txn) => {
+				// Checked in the transaction, where they hold: two requests at
+				// once — a double tap, two tabs — would otherwise both pass, and
+				// the player would captain two teams or the season be written twice.
+				const playerSeasonSnap = await txn.get(playerSeasonDocRef)
+				if (playerSeasonSnap.data()?.team) {
+					throw new HttpsError(
+						'already-exists',
+						'Player is already on a team for this season'
+					)
+				}
+				if ((await txn.get(teamSeasonDocRef)).exists) {
+					throw new HttpsError(
+						'already-exists',
+						'Team has already been rolled over for this season'
+					)
+				}
+
 				txn.set(teamSeasonDocRef, {
 					season: seasonDocRef,
 					name: mostRecentSeasonName ?? '',
@@ -198,24 +188,14 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 					registeredDate: null,
 					placement: null,
 				})
-				txn.set(rosterEntryDocRef, {
-					player: playerDocRef,
-					dateJoined: FieldValue.serverTimestamp(),
+				addPlayerToTeam(txn, firestore, {
+					playerId: userId,
+					teamId: originalTeamId,
+					seasonId,
+					seasonRef: seasonDocRef,
+					captain: true,
+					existingPlayerSeason: playerSeasonSnap.data() ?? null,
 				})
-				if (existingPlayerSeasonData) {
-					txn.update(playerSeasonDocRef, {
-						team: teamCanonicalDocRef,
-						captain: true,
-					})
-				} else {
-					txn.set(playerSeasonDocRef, {
-						season: seasonDocRef,
-						team: teamCanonicalDocRef,
-						paid: false,
-						signed: false,
-						captain: true,
-					})
-				}
 			})
 
 			const canceledOffersCount = await cancelPendingOffersForPlayer(

@@ -171,6 +171,27 @@ describe('createTeam', () => {
 		expect(code).toBe('already-exists')
 	})
 
+	it('lets only one of two simultaneous requests through', async () => {
+		// A double tap or two tabs: both requests pass the early check, so only
+		// the check inside the transaction stops the player captaining two teams.
+		const codes = await Promise.all(
+			['First Team', 'Second Team'].map((name) =>
+				errorCodeFrom(fn('createTeam'), {
+					auth: authed(PLAYER),
+					data: { name, seasonId: SEASON },
+				})
+			)
+		)
+		expect(codes.sort()).toEqual(['already-exists', null].sort())
+
+		const rosters = await firestore
+			.collectionGroup('roster')
+			.where('player', '==', firestore.collection('players').doc(PLAYER))
+			.get()
+		expect(rosters.size).toBe(1)
+		expect((await firestore.collectionGroup('teamSeasons').get()).size).toBe(1)
+	})
+
 	it('requires a name and a season', async () => {
 		expect(
 			await errorCodeFrom(fn('createTeam'), {
