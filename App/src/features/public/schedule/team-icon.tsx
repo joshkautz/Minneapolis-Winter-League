@@ -1,5 +1,5 @@
 import { type QueryDocumentSnapshot } from 'firebase/firestore'
-import { cn } from '@/shared/utils'
+import { TeamLogo } from '@/shared/components'
 import { TeamSeasonDocument } from '@/types'
 
 export const TeamIcon = ({
@@ -19,31 +19,13 @@ export const TeamIcon = ({
 		)
 	}
 
-	const url = team.data().logo
-	const teamName = team.data().name
-	const firstLetter = teamName?.charAt(0).toUpperCase() || '?'
-
-	if (url) {
-		return (
-			<img
-				className={cn(
-					'shrink-0 w-8 h-8 rounded-full object-cover bg-muted transition duration-300'
-				)}
-				src={url}
-				alt={teamName}
-			/>
-		)
-	}
-
 	return (
-		<div
-			className={cn(
-				'shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center transition duration-300'
-			)}
-		>
-			<span className='text-xs text-primary-foreground font-bold'>
-				{firstLetter}
-			</span>
-		</div>
+		<TeamLogo
+			name={team.data().name}
+			logo={team.data().logo}
+			alt={team.data().name}
+			className='h-8 w-8 shrink-0 rounded-full'
+			initialClassName='text-xs'
+		/>
 	)
 }
