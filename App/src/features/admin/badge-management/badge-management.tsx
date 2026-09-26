@@ -76,6 +76,7 @@ import {
 	BackToAdminButton,
 	useAdminSeasonFilter,
 } from '@/features/admin/shared'
+import { TEXT_RULES, textProblem } from '@/shared/text-rules'
 
 interface ProcessedBadge {
 	id: string
@@ -206,8 +207,11 @@ export const BadgeManagement = () => {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 
-		if (!formData.name.trim() || !formData.description.trim()) {
-			toast.error('Please fill in all required fields')
+		const problem =
+			textProblem(formData.name, TEXT_RULES.badgeName) ??
+			textProblem(formData.description, TEXT_RULES.badgeDescription)
+		if (problem) {
+			toast.error(problem)
 			return
 		}
 
@@ -488,6 +492,7 @@ export const BadgeManagement = () => {
 										setFormData((prev) => ({ ...prev, name: e.target.value }))
 									}
 									placeholder='Enter badge name'
+									maxLength={TEXT_RULES.badgeName.max}
 									required
 								/>
 							</div>
@@ -507,6 +512,7 @@ export const BadgeManagement = () => {
 									}
 									placeholder='Enter badge description'
 									rows={3}
+									maxLength={TEXT_RULES.badgeDescription.max}
 									required
 								/>
 							</div>

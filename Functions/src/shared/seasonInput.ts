@@ -6,9 +6,7 @@
 import { Timestamp } from 'firebase-admin/firestore'
 import { HttpsError } from 'firebase-functions/v2/https'
 import type { SeasonStripeConfig } from '../types.js'
-
-const NAME_MIN_LENGTH = 3
-const NAME_MAX_LENGTH = 100
+import { TEXT_RULES, textProblem } from './textRules.js'
 
 export interface SeasonInput {
 	name: unknown
@@ -48,15 +46,9 @@ const parseDate = (value: unknown, label: string): Timestamp => {
  * `invalid-argument` with a message for the admin when one is wrong.
  */
 export function parseSeasonInput(input: SeasonInput): ParsedSeasonInput {
-	if (typeof input.name !== 'string') {
-		throw invalid('The season name is required.')
-	}
-	const name = input.name.trim()
-	if (name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
-		throw invalid(
-			`The season name must be between ${NAME_MIN_LENGTH} and ${NAME_MAX_LENGTH} characters.`
-		)
-	}
+	const nameProblem = textProblem(input.name, TEXT_RULES.seasonName)
+	if (nameProblem) throw invalid(nameProblem)
+	const name = (input.name as string).trim()
 
 	const dateStart = parseDate(input.dateStart, 'The season start date')
 	const dateEnd = parseDate(input.dateEnd, 'The season end date')

@@ -53,6 +53,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { DestructiveConfirmationDialog } from '@/shared/components/destructive-confirmation-dialog'
 import { SeasonDocument, SeasonFormat } from '@/types'
 import { BackToAdminButton } from '@/features/admin/shared'
+import { TEXT_RULES, textProblem } from '@/shared/text-rules'
 
 interface ProcessedSeason {
 	id: string
@@ -253,13 +254,9 @@ export const SeasonManagement = () => {
 
 	const handleSubmit = async () => {
 		// Validation
-		if (!formName.trim()) {
-			toast.error('Season name is required')
-			return
-		}
-
-		if (formName.length < 3 || formName.length > 100) {
-			toast.error('Season name must be between 3 and 100 characters')
+		const nameProblem = textProblem(formName, TEXT_RULES.seasonName)
+		if (nameProblem) {
+			toast.error(nameProblem)
 			return
 		}
 
@@ -544,10 +541,10 @@ export const SeasonManagement = () => {
 								placeholder='e.g., Winter 2025'
 								value={formName}
 								onChange={(e) => setFormName(e.target.value)}
-								maxLength={100}
+								maxLength={TEXT_RULES.seasonName.max}
 							/>
 							<p className='text-xs text-muted-foreground'>
-								{formName.length}/100 characters
+								{formName.length}/{TEXT_RULES.seasonName.max} characters
 							</p>
 						</div>
 

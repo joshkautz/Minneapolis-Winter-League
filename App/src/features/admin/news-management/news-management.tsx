@@ -499,14 +499,17 @@ export const NewsManagement = () => {
 								placeholder='Enter news post title'
 								value={formTitle}
 								onChange={(e) => setFormTitle(e.target.value)}
-								maxLength={200}
+								maxLength={TEXT_RULES.newsTitle.max}
 								aria-describedby='title-description'
 							/>
 							<p
 								id='title-description'
 								className='text-xs text-muted-foreground flex justify-between'
 							>
-								<span>3-200 characters</span>
+								<span>
+									{TEXT_RULES.newsTitle.min}-{TEXT_RULES.newsTitle.max}{' '}
+									characters
+								</span>
 								<span
 									className={
 										titleCharCount > TEXT_RULES.newsTitle.max
@@ -514,7 +517,7 @@ export const NewsManagement = () => {
 											: ''
 									}
 								>
-									{titleCharCount}/200
+									{titleCharCount}/{TEXT_RULES.newsTitle.max}
 								</span>
 							</p>
 						</div>

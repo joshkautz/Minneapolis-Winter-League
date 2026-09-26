@@ -53,8 +53,9 @@ describe('parseSeasonInput', () => {
 	})
 
 	it('checks the trimmed name length', () => {
-		expect(refusal({ name: '  ab  ' })).toMatch(/between 3 and 100/)
-		expect(refusal({ name: undefined })).toBe('The season name is required.')
+		expect(refusal({ name: '  ab  ' })).toMatch(/at least 3 characters/)
+		expect(refusal({ name: 'a'.repeat(101) })).toMatch(/exceed 100/)
+		expect(refusal({ name: undefined })).toBe('Season name is required.')
 	})
 
 	it('keeps only the Stripe prices that were given', () => {

@@ -15,14 +15,15 @@ import {
 } from '@/components/ui/dialog'
 import { createPostViaFunction } from '@/firebase/collections/functions'
 import { logger, errorMessage } from '@/shared/utils'
+import { TEXT_RULES, textProblem } from '@/shared/text-rules'
 
 interface CreatePostDialogProps {
 	seasonId: string
 	canPost: boolean
 }
 
-const MIN_CONTENT_LENGTH = 10
-const MAX_CONTENT_LENGTH = 2000
+const { min: MIN_CONTENT_LENGTH, max: MAX_CONTENT_LENGTH } =
+	TEXT_RULES.postContent
 
 /**
  * Dialog for creating a new post
@@ -36,9 +37,7 @@ export const CreatePostDialog = ({
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	const trimmedContent = content.trim()
-	const isValidLength =
-		trimmedContent.length >= MIN_CONTENT_LENGTH &&
-		trimmedContent.length <= MAX_CONTENT_LENGTH
+	const isValidLength = textProblem(content, TEXT_RULES.postContent) === null
 
 	const handleSubmit = async () => {
 		if (!isValidLength || isSubmitting) return
