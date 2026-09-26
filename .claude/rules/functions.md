@@ -69,6 +69,14 @@ export const doThing = onCall<DoThingRequest>(
   from the client.
 - Multi-document writes go in a Firestore transaction or batch. Roster and
   registration state spans several documents and must not tear.
+- **Read what a check depends on inside the transaction that writes.** A
+  check made before it is a race: two requests at once both pass, and a
+  player captains two teams or a team loses its last captain. A request
+  carrying several changes is checked against the state it leaves and
+  written in one transaction, so a refusal applies none of them —
+  `updateTeamAdmin` and `updatePlayerAdmin` show the shape. Firebase Auth
+  cannot join a transaction: check what it would refuse first, and change
+  it after the commit.
 - Build document references with the helpers in `shared/database.ts`
   (`playerSeasonRef`, `teamSeasonRef`, `teamRosterEntryRef`) rather than
   assembling paths by hand.

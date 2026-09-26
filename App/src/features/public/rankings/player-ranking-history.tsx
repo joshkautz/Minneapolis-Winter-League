@@ -9,7 +9,7 @@ import { useMemo, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { getDoc } from 'firebase/firestore'
+import { getDoc, getDocs } from 'firebase/firestore'
 
 import {
 	logger,
@@ -17,7 +17,7 @@ import {
 	teamRecordsBySeason,
 	type SeasonRecord,
 } from '@/shared/utils'
-import { PlayerSeasonDocument, TeamSeasonDocument } from '@/types'
+import { GameDocument, PlayerSeasonDocument, TeamSeasonDocument } from '@/types'
 import {
 	playerSeasonsSubcollection,
 	allPlayersQuery,
@@ -41,7 +41,8 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Trophy, ArrowLeft, Users } from 'lucide-react'
-import { useSeasonsContext, useGamesContext } from '@/providers'
+import { useSeasonsContext } from '@/providers'
+import { gamesByTeamQuery } from '@/firebase/collections/games'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { rankingsHistoryQuery } from '@/firebase/collections/player-rankings'
 import { SeasonHistoryRow } from '@/shared/components'
@@ -98,7 +99,6 @@ export const PlayerRankingHistory = ({
 
 	// Get seasons and games data from contexts
 	const { seasonsQuerySnapshot } = useSeasonsContext()
-	const { allGamesQuerySnapshot: allGamesSnapshot } = useGamesContext()
 
 	// Subscribe to the player's per-season subcollection. Replaces the dead
 	// `playerData.seasons` array.
@@ -207,25 +207,10 @@ export const PlayerRankingHistory = ({
 			const playerRank = playerData.rank
 			if (typeof playerRank !== 'number' || playerRank <= 0) return
 
-			// Get the round date
-			let roundDate: Date
-			if (data.roundMeta?.roundStartTime) {
-				if (typeof data.roundMeta.roundStartTime.toDate === 'function') {
-					roundDate = data.roundMeta.roundStartTime.toDate()
-				} else if (data.roundMeta.roundStartTime instanceof Date) {
-					roundDate = data.roundMeta.roundStartTime
-				} else if (data.roundMeta.roundStartTime.seconds) {
-					roundDate = new Date(
-						data.roundMeta.roundStartTime.seconds * 1000 +
-							(data.roundMeta.roundStartTime.nanoseconds || 0) / 1000000
-					)
-				} else {
-					roundDate = new Date(timestamp)
-				}
-			} else {
-				roundDate = new Date(timestamp)
-			}
-
+			// When the round was played; the id's timestamp if it was not
+			// recorded.
+			const roundDate =
+				data.roundMeta.roundStartTime?.toDate() ?? new Date(timestamp)
 			if (isNaN(roundDate.getTime())) return
 
 			// Create one data point per round
@@ -243,28 +228,64 @@ export const PlayerRankingHistory = ({
 		return playerHistory.sort((a, b) => a.timestamp - b.timestamp)
 	}, [rankingHistorySnapshot, playerId])
 
+	// The games of every team the player has been on, fetched per team:
+	// the page used to read every game ever played for this. A game between
+	// two of their teams comes back twice, so it is kept once, by id.
+	const [teamGames, setTeamGames] = useState<GameDocument[]>([])
+	useEffect(() => {
+		const teamRefs = new Map(
+			(playerSeasonsSnapshot?.docs ?? []).flatMap((psDoc) => {
+				const teamRef = (psDoc.data() as PlayerSeasonDocument).team
+				return teamRef ? [[teamRef.id, teamRef] as const] : []
+			})
+		)
+		let cancelled = false
+		const load = async () => {
+			try {
+				const snapshots = await Promise.all(
+					[...teamRefs.values()].flatMap((teamRef) => {
+						const teamGamesQuery = gamesByTeamQuery(teamRef)
+						return teamGamesQuery ? [getDocs(teamGamesQuery)] : []
+					})
+				)
+				const games = new Map(
+					snapshots.flatMap((snapshot) =>
+						snapshot.docs.map((doc) => [doc.id, doc.data()] as const)
+					)
+				)
+				if (!cancelled) setTeamGames([...games.values()])
+			} catch (err) {
+				logger.error('Failed to load team games for history', err, {
+					component: 'PlayerRankingHistory',
+					playerId,
+				})
+			}
+		}
+		load()
+		return () => {
+			cancelled = true
+		}
+	}, [playerSeasonsSnapshot, playerId])
+
 	// Each team's record in each season, keyed `${teamId}::${seasonId}`.
 	// Per season: a team keeps its id when it rolls over, so tallying by team
 	// alone credited every season's games to each season's row.
 	const teamRecords = useMemo(() => {
 		const records: Record<string, SeasonRecord> = {}
-		if (!allGamesSnapshot?.docs || !playerSeasonsSnapshot?.docs) return records
-
-		const games = allGamesSnapshot.docs.map((gameDoc) => gameDoc.data())
 		const teamIds = new Set(
-			playerSeasonsSnapshot.docs
+			(playerSeasonsSnapshot?.docs ?? [])
 				.map((psDoc) => (psDoc.data() as PlayerSeasonDocument).team?.id)
 				.filter((id): id is string => Boolean(id))
 		)
 		for (const teamId of teamIds) {
 			for (const [seasonId, record] of Object.entries(
-				teamRecordsBySeason(games, teamId)
+				teamRecordsBySeason(teamGames, teamId)
 			)) {
 				records[`${teamId}::${seasonId}`] = record
 			}
 		}
 		return records
-	}, [allGamesSnapshot, playerSeasonsSnapshot])
+	}, [teamGames, playerSeasonsSnapshot])
 
 	// Load each (canonicalTeamId, seasonId) team-season subdoc the player has
 	// participated in. Bounded by player history length (~5 docs typical).

@@ -10,7 +10,6 @@ import {
 	currentSeasonGamesQuery,
 	currentSeasonRegularGamesQuery,
 	currentSeasonPlayoffGamesQuery,
-	allGamesQuery,
 } from '@/firebase/collections/games'
 import { type FirestoreError, type QuerySnapshot } from 'firebase/firestore'
 import { logger, errorMessage } from '@/shared/utils'
@@ -27,9 +26,6 @@ interface GameProps {
 	playoffGamesQuerySnapshot: QuerySnapshot<GameDocument> | undefined
 	playoffGamesQuerySnapshotLoading: boolean
 	playoffGamesQuerySnapshotError: FirestoreError | undefined
-	allGamesQuerySnapshot: QuerySnapshot<GameDocument> | undefined
-	allGamesQuerySnapshotLoading: boolean
-	allGamesQuerySnapshotError: FirestoreError | undefined
 }
 
 const GamesContext = createContext<GameProps | null>(null)
@@ -72,12 +68,6 @@ export const GamesContextProvider = ({ children }: PropsWithChildren) => {
 		currentSeasonPlayoffGamesQuery(selectedSeasonQueryDocumentSnapshot)
 	)
 
-	const [
-		allGamesQuerySnapshot,
-		allGamesQuerySnapshotLoading,
-		allGamesQuerySnapshotError,
-	] = useCollection(allGamesQuery())
-
 	// Log and notify on games query errors
 	useEffect(() => {
 		const errors = [
@@ -87,7 +77,6 @@ export const GamesContextProvider = ({ children }: PropsWithChildren) => {
 				name: 'regular season games',
 			},
 			{ error: playoffGamesQuerySnapshotError, name: 'playoff games' },
-			{ error: allGamesQuerySnapshotError, name: 'all games' },
 		].filter((e) => e.error)
 
 		errors.forEach(({ error, name }) => {
@@ -107,7 +96,6 @@ export const GamesContextProvider = ({ children }: PropsWithChildren) => {
 		gamesQuerySnapshotError,
 		regularSeasonGamesQuerySnapshotError,
 		playoffGamesQuerySnapshotError,
-		allGamesQuerySnapshotError,
 	])
 
 	return (
@@ -122,9 +110,6 @@ export const GamesContextProvider = ({ children }: PropsWithChildren) => {
 				playoffGamesQuerySnapshot,
 				playoffGamesQuerySnapshotLoading,
 				playoffGamesQuerySnapshotError,
-				allGamesQuerySnapshot,
-				allGamesQuerySnapshotLoading,
-				allGamesQuerySnapshotError,
 			}}
 		>
 			{children}

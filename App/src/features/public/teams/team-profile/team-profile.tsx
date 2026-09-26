@@ -1,7 +1,11 @@
 import { useMemo, useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
-import { Timestamp, type DocumentSnapshot } from 'firebase/firestore'
+import {
+	getCountFromServer,
+	Timestamp,
+	type DocumentSnapshot,
+} from 'firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { Award, Lock, Loader2, Calendar, Trophy } from 'lucide-react'
 import { NotificationCard, TeamLogo } from '@/shared/components'
@@ -13,6 +17,7 @@ import {
 	teamRosterSubcollection,
 	teamsInSeasonQuery,
 	canonicalTeamIdFromTeamSeasonDoc,
+	allTeamsQuery,
 } from '@/firebase/collections/teams'
 import { teamBadgesQuery } from '@/firebase/collections/badges'
 import {
@@ -31,11 +36,7 @@ import {
 } from '@/types'
 import { TeamRosterPlayer } from './team-roster-player'
 import { TeamHistory } from './team-history'
-import {
-	useSeasonsContext,
-	useBadgesContext,
-	useTeamsContext,
-} from '@/providers'
+import { useSeasonsContext, useBadgesContext } from '@/providers'
 import {
 	Popover,
 	PopoverContent,
@@ -106,7 +107,27 @@ export const TeamProfile = () => {
 	const { currentSeasonQueryDocumentSnapshot, seasonsQuerySnapshot } =
 		useSeasonsContext()
 	const { allBadgesQuerySnapshot: allBadgesSnapshot } = useBadgesContext()
-	const { allTeamsQuerySnapshot: allTeamsSnapshot } = useTeamsContext()
+	// How many teams there have ever been, for the share of teams holding
+	// each badge. Counted on the server: it used to be a live listener on
+	// every team document, held by the provider on every page.
+	const [totalTeams, setTotalTeams] = useState<number>()
+	useEffect(() => {
+		let cancelled = false
+		getCountFromServer(allTeamsQuery())
+			.then((snapshot) => {
+				if (!cancelled) setTotalTeams(snapshot.data().count)
+			})
+			.catch((error) => {
+				logger.error('Failed to count teams', error, {
+					component: 'TeamProfile',
+				})
+				// Badges still show; their percentages read 0%.
+				if (!cancelled) setTotalTeams(0)
+			})
+		return () => {
+			cancelled = true
+		}
+	}, [])
 
 	// `:seasonId` is optional in the route. When omitted we render the team's
 	// current-season subdoc; when provided we render that historical season.
@@ -212,13 +233,11 @@ export const TeamProfile = () => {
 	// Process all badges with stats (percentage, earned status) - synchronously via useMemo
 	const allBadgesWithStats = useMemo((): EnhancedBadge[] | null => {
 		// Return null while waiting for data (distinct from empty array = no badges)
-		if (!allBadgesSnapshot || !allTeamsSnapshot || !teamBadgesSnapshot) {
+		if (!allBadgesSnapshot || totalTeams === undefined || !teamBadgesSnapshot) {
 			return null
 		}
 
-		// allTeamsSnapshot is the canonical teams collection — each doc id is
-		// already the unique canonical team id, so the size is the count.
-		const totalUniqueTeams = allTeamsSnapshot.size
+		const totalUniqueTeams = totalTeams
 
 		// Create a set of earned badge IDs for this team
 		const earnedBadgeIds = new Set(teamBadgesSnapshot.docs.map((doc) => doc.id))
@@ -269,7 +288,7 @@ export const TeamProfile = () => {
 			// Then sort alphabetically by name within each group
 			return a.name.localeCompare(b.name)
 		})
-	}, [allBadgesSnapshot, allTeamsSnapshot, teamBadgesSnapshot])
+	}, [allBadgesSnapshot, totalTeams, teamBadgesSnapshot])
 
 	const isLoading = useMemo(
 		() =>

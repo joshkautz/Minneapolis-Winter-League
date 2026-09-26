@@ -12,11 +12,7 @@ import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 
 // Winter League
-import {
-	allTeamsQuery,
-	teamsInSeasonQuery,
-	teamsQuery,
-} from '@/firebase/collections/teams'
+import { teamsInSeasonQuery, teamsQuery } from '@/firebase/collections/teams'
 import { playerSeasonsSubcollection } from '@/firebase/collections/players'
 import { type FirestoreError, type QuerySnapshot } from 'firebase/firestore'
 import { logger, errorMessage } from '@/shared/utils'
@@ -44,9 +40,6 @@ interface TeamProps {
 	teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError:
 		FirestoreError | undefined
 	/** All canonical teams in the system. */
-	allTeamsQuerySnapshot: QuerySnapshot<TeamDocument> | undefined
-	allTeamsQuerySnapshotLoading: boolean
-	allTeamsQuerySnapshotError: FirestoreError | undefined
 }
 
 const TeamsContext = createContext<TeamProps | null>(null)
@@ -144,12 +137,6 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
 	] = useCollection(teamsQuery(teamsForWhichAuthenticatedUserIsCaptain))
 
-	const [
-		allTeamsQuerySnapshot,
-		allTeamsQuerySnapshotLoading,
-		allTeamsQuerySnapshotError,
-	] = useCollection(allTeamsQuery())
-
 	// Log and notify on teams query errors
 	useEffect(() => {
 		const errors = [
@@ -164,10 +151,6 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 			{
 				error: teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
 				name: 'captain teams',
-			},
-			{
-				error: allTeamsQuerySnapshotError,
-				name: 'all teams',
 			},
 		].filter((e) => e.error)
 
@@ -188,7 +171,6 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 		selectedSeasonTeamsQuerySnapshotError,
 		currentSeasonTeamsQuerySnapshotError,
 		teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
-		allTeamsQuerySnapshotError,
 	])
 
 	return (
@@ -203,9 +185,6 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 				teamsForWhichAuthenticatedUserIsCaptainQuerySnapshot,
 				teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotLoading,
 				teamsForWhichAuthenticatedUserIsCaptainQuerySnapshotError,
-				allTeamsQuerySnapshot,
-				allTeamsQuerySnapshotLoading,
-				allTeamsQuerySnapshotError,
 			}}
 		>
 			{children}

@@ -212,6 +212,22 @@ Triggers are invoked with `.run(event)` and a synthetic event carrying
   short-circuit initially passed with the guard removed, because the
   waiver-exists check masked it — the gap only showed under mutation.
 
+## Reads that grow with the league
+
+The providers mounted on every page no longer listen to every game or
+every team; those were moved to the one screen that needed each, or
+replaced with a server-side count (September 2026). One page still reads
+more than it shows:
+
+- **A player's ranking page** (`features/public/rankings/player-ranking-history.tsx`)
+  reads every `rankings-history` snapshot — each holding every player's
+  rank — to chart one player, and every player document to fill its
+  picker. Both grow with every round and every sign-up. Fixing it means
+  storing history per player when the rankings rebuild saves it
+  (`services/playerRankings/persistence/`), so the page can read one
+  player's rounds; the picker can use the players the latest snapshot
+  lists.
+
 ## One player name still needs a human decision
 
 `players/SzxvT9AJsuhgkDORAhDD1hC4VQY2` has the firstname
