@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { deleteUnregisteredTeamViaFunction } from '@/firebase/collections/functions'
 import { LoadingButton } from '@/shared/components'
-import { extractErrorMessage, logger } from '@/shared/utils'
+import { errorMessage, logger } from '@/shared/utils'
 import { useRosterSize } from './use-roster-size'
 
 const players = (count: number): string =>
@@ -55,7 +55,7 @@ export const DeleteTeamDialog = ({
 		} catch (error) {
 			logger.error('Error deleting team', error)
 			toast.error(
-				extractErrorMessage(error, 'Failed to delete team. Please try again.')
+				errorMessage(error, 'The team could not be deleted. Please try again.')
 			)
 		} finally {
 			setIsDeleting(false)

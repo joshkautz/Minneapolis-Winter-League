@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
-import { errorHandler, logger } from '@/shared/utils'
+import { errorMessage, logger } from '@/shared/utils'
 
 const getInitials = (
 	firstName: string | undefined,
@@ -58,8 +58,11 @@ export const useAccountSection = () => {
 					userId: authStateUser?.uid,
 				}
 			)
-			errorHandler.handleAuth(error, 'sign_out', {
-				fallbackMessage: 'An unexpected error occurred while signing out',
+			toast.error('Unable to log out', {
+				description: errorMessage(
+					error,
+					'You could not be signed out. Please try again.'
+				),
 			})
 		}
 	}

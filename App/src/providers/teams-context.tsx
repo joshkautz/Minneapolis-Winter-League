@@ -19,7 +19,12 @@ import {
 } from '@/firebase/collections/teams'
 import { playerSeasonsSubcollection } from '@/firebase/collections/players'
 import { FirestoreError, QuerySnapshot } from '@/firebase'
-import { TeamDocument, TeamSeasonDocument, logger } from '@/shared/utils'
+import {
+	TeamDocument,
+	TeamSeasonDocument,
+	logger,
+	errorMessage,
+} from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 import { useAuthContext } from './auth-context'
 
@@ -182,7 +187,10 @@ export const TeamsContextProvider = ({ children }: PropsWithChildren) => {
 					component: 'TeamsContextProvider',
 				})
 				toast.error(`Failed to load ${name}`, {
-					description: error.message,
+					description: errorMessage(
+						error,
+						'Please reload the page to try again.'
+					),
 				})
 			}
 		})

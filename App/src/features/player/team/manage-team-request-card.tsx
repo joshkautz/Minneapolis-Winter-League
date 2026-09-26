@@ -5,7 +5,12 @@ import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { useTeamsContext, useAuthContext } from '@/providers'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { NotificationCard, LoadingSpinner } from '@/shared/components'
-import { OfferType, PlayerDocument, TeamSeasonDocument } from '@/shared/utils'
+import {
+	OfferType,
+	PlayerDocument,
+	TeamSeasonDocument,
+	errorMessage,
+} from '@/shared/utils'
 import { ManageTeamDetail } from './manage-team-detail'
 
 export const ManageTeamRequestCard = () => {
@@ -42,11 +47,12 @@ export const ManageTeamRequestCard = () => {
 				})
 				return true
 			} catch (error: unknown) {
-				// Firebase Functions errors have a message property
-				const firebaseError = error as { message?: string }
-				const errorMessage = firebaseError?.message || 'Failed to send request'
+				const description = errorMessage(
+					error,
+					'Your request could not be sent. Please try again.'
+				)
 				toast.error('Unable to send request', {
-					description: errorMessage,
+					description,
 				})
 				return false
 			}

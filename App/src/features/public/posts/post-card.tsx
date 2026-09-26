@@ -35,7 +35,7 @@ import {
 	createReplyViaFunction,
 	updateReplyViaFunction,
 } from '@/firebase/collections/functions'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 
 /**
  * Posts outlive the account that wrote them, so a deleted player's posts and
@@ -122,8 +122,7 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 		} catch (error) {
 			logger.error('Failed to update post', error)
 			toast.error('Failed to update post', {
-				description:
-					error instanceof Error ? error.message : 'Please try again',
+				description: errorMessage(error, 'Please try again.'),
 			})
 		} finally {
 			setIsSubmittingEdit(false)
@@ -151,8 +150,7 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 		} catch (error) {
 			logger.error('Failed to post reply', error)
 			toast.error('Failed to post reply', {
-				description:
-					error instanceof Error ? error.message : 'Please try again',
+				description: errorMessage(error, 'Please try again.'),
 			})
 		} finally {
 			setIsSubmittingReply(false)
@@ -414,8 +412,7 @@ const ReplyItem = ({
 		} catch (error) {
 			logger.error('Failed to update reply', error)
 			toast.error('Failed to update reply', {
-				description:
-					error instanceof Error ? error.message : 'Please try again',
+				description: errorMessage(error, 'Please try again.'),
 			})
 		} finally {
 			setIsSubmitting(false)

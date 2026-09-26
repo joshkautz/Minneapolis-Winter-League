@@ -42,7 +42,6 @@ export const BADGE_CONFIG = {
 	NAME_MAX_LENGTH: 100,
 	DESCRIPTION_MIN_LENGTH: 10,
 	DESCRIPTION_MAX_LENGTH: 500,
-	MAX_IMAGE_SIZE_BYTES: 5 * 1024 * 1024, // 5MB
 } as const
 
 // Stripe Configuration (lazy-loaded)

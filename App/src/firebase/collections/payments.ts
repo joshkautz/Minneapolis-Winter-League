@@ -11,7 +11,7 @@ import {
 	createStripeCheckoutViaFunction,
 	createTeamContributionCheckoutViaFunction,
 } from './functions'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 
 /**
  * Builds a URL with payment status query parameter
@@ -71,14 +71,9 @@ export const stripeRegistration = async (
 	} catch (error) {
 		setStripeLoading(false)
 
-		// Extract error message from Firebase Functions error
-		let errorMessage = 'Failed to create checkout session'
-		if (error instanceof Error) {
-			// Firebase Functions errors have a 'message' property
-			errorMessage = error.message
-		}
-
-		setStripeError(errorMessage)
+		setStripeError(
+			errorMessage(error, 'Checkout could not be opened. Please try again.')
+		)
 	}
 }
 
@@ -103,9 +98,7 @@ export const startTeamContribution = async (
 		window.location.assign(result.url)
 		return null
 	} catch (error) {
-		return error instanceof Error
-			? error.message
-			: 'Could not start the payment. Please try again.'
+		return errorMessage(error, 'Could not start the payment. Please try again.')
 	}
 }
 

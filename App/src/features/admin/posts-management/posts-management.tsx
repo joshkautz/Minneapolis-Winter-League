@@ -69,7 +69,7 @@ import {
 	PlayerDocument,
 	SeasonDocument,
 } from '@/types'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 
 interface ProcessedPost {
@@ -241,7 +241,7 @@ export const PostsManagement = () => {
 				{ component: 'PostsManagement', action: 'deletePost' }
 			)
 			toast.error(
-				error instanceof Error ? error.message : 'Failed to delete post'
+				errorMessage(error, 'The post could not be deleted. Please try again.')
 			)
 		} finally {
 			setIsDeleting(false)
@@ -268,7 +268,7 @@ export const PostsManagement = () => {
 				{ component: 'PostsManagement', action: 'deleteReply' }
 			)
 			toast.error(
-				error instanceof Error ? error.message : 'Failed to delete reply'
+				errorMessage(error, 'The reply could not be deleted. Please try again.')
 			)
 		} finally {
 			setIsDeleting(false)

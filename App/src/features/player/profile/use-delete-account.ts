@@ -8,7 +8,7 @@ import {
 import { toast } from 'sonner'
 import { auth } from '@/firebase/auth'
 import { deletePlayerViaFunction } from '@/firebase/collections/functions'
-import { isFirebaseFunctionsError, logger } from '@/shared/utils'
+import { errorCode, errorMessage, LEAGUE_CONTACT, logger } from '@/shared/utils'
 
 /** Auth error codes that mean the password was wrong. */
 const WRONG_PASSWORD_CODES = new Set([
@@ -19,7 +19,7 @@ const WRONG_PASSWORD_CODES = new Set([
 
 /** Why re-entering the password failed, in words a player can act on. */
 const reauthenticationMessage = (error: unknown): string => {
-	const code = isFirebaseFunctionsError(error) ? error.code : undefined
+	const code = errorCode(error)
 	if (code && WRONG_PASSWORD_CODES.has(code)) {
 		return 'That password is incorrect.'
 	}
@@ -37,11 +37,10 @@ const reauthenticationMessage = (error: unknown): string => {
  * carry a message written to be shown. Anything else is unexpected.
  */
 const deletionMessage = (error: unknown): string =>
-	isFirebaseFunctionsError(error) &&
-	error.code === 'functions/failed-precondition' &&
-	error.message
-		? error.message
-		: 'We could not delete your account. Try again, or email leadership@mplsmallard.com.'
+	errorMessage(
+		error,
+		`We could not delete your account. Try again, or email ${LEAGUE_CONTACT}.`
+	)
 
 /**
  * Deletes the signed-in player's account.

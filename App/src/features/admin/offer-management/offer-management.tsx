@@ -42,7 +42,13 @@ import {
 	TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { OfferDocument, OfferStatus, OfferType, logger } from '@/shared/utils'
+import {
+	OfferDocument,
+	OfferStatus,
+	OfferType,
+	logger,
+	errorMessage,
+} from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 
 interface ProcessedOffer {
@@ -328,7 +334,7 @@ export const OfferManagement = () => {
 				{ component: 'ManageOffers', action: 'updateOffer', offerId }
 			)
 			toast.error(
-				error instanceof Error ? error.message : 'Failed to update offer status'
+				errorMessage(error, 'The offer could not be updated. Please try again.')
 			)
 		} finally {
 			setUpdatingOfferId(null)

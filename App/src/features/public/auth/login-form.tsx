@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useLoginForm } from './use-login-form'
+import { errorMessage } from '@/shared/utils'
 
 interface LoginFormProps {
 	onSuccess: () => void
@@ -67,7 +68,10 @@ export const LoginForm = ({ onSuccess, onForgotPassword }: LoginFormProps) => {
 						</LoadingButton>
 						{error && (
 							<p className='text-sm text-red-500 text-center'>
-								{error.message || 'An error occurred during login'}
+								{errorMessage(
+									error,
+									'You could not be signed in. Please try again.'
+								)}
 							</p>
 						)}
 					</form>

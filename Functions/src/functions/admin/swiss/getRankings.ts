@@ -157,7 +157,7 @@ export const getSwissRankings = onCall<GetSwissRankingsRequest>(
 
 			throw new HttpsError(
 				'internal',
-				`Failed to get Swiss rankings: ${errorMessage}`
+				'The Swiss rankings could not be worked out. Please try again.'
 			)
 		}
 	}

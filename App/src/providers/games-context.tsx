@@ -14,7 +14,7 @@ import {
 	FirestoreError,
 	QuerySnapshot,
 } from '@/firebase'
-import { GameDocument, logger } from '@/shared/utils'
+import { GameDocument, logger, errorMessage } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 
 interface GameProps {
@@ -102,7 +102,10 @@ export const GamesContextProvider = ({ children }: PropsWithChildren) => {
 					component: 'GamesContextProvider',
 				})
 				toast.error(`Failed to load ${name}`, {
-					description: error.message,
+					description: errorMessage(
+						error,
+						'Please reload the page to try again.'
+					),
 				})
 			}
 		})

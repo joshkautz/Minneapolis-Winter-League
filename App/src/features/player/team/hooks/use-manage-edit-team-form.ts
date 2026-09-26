@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { TeamFormData, teamFormSchema } from '@/shared/utils/validation'
 import { editTeamViaFunction } from '@/firebase/collections/functions'
-import { fileToBase64, logger } from '@/shared/utils'
+import { fileToBase64, logger, errorMessage } from '@/shared/utils'
 import type { FormResult } from '@/shared/types'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { useSeasonsContext } from '@/providers'
@@ -29,7 +29,8 @@ export const useManageEditTeamForm = ({
 	const canonicalTeamId = team
 		? canonicalTeamIdFromTeamSeasonDoc(team)
 		: undefined
-	const [blob, setBlob] = useState<Blob>()
+	// Already checked against the upload rules by ImageField.
+	const [blob, setBlob] = useState<File>()
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
 	const form = useForm<TeamFormData>({
@@ -43,16 +44,6 @@ export const useManageEditTeamForm = ({
 			form.setValue('name', team?.data().name)
 		}
 	}, [team, form])
-
-	const handleFileChange = useCallback(
-		(event: React.ChangeEvent<HTMLInputElement>) => {
-			if (!event.target.files?.[0]) {
-				return
-			}
-			setBlob(event.target.files[0])
-		},
-		[setBlob]
-	)
 
 	const onSubmit = useCallback(
 		async (data: TeamFormData) => {
@@ -97,28 +88,14 @@ export const useManageEditTeamForm = ({
 				)
 
 				// Handle Firebase Functions errors
-				let errorMessage = 'Failed to update team. Please try again.'
-				let errorTitle = 'Team update failed'
-
-				if (error && typeof error === 'object' && 'message' in error) {
-					errorMessage = error.message as string
-				} else if (error instanceof Error) {
-					errorMessage = error.message
-				}
-
-				// Provide more user-friendly titles based on error message
-				if (errorMessage.includes('Team not found')) {
-					errorTitle = 'Team Not Found'
-				} else if (errorMessage.includes('Only team captains')) {
-					errorTitle = 'Permission Denied'
-				} else if (errorMessage.includes('Only image files')) {
-					errorTitle = 'Invalid File Type'
-				}
-
+				// The server's message says what went wrong; the title is fixed.
 				handleResult({
 					success: false,
-					title: errorTitle,
-					description: errorMessage,
+					title: 'Team update failed',
+					description: errorMessage(
+						error,
+						'Your team could not be saved. Please try again.'
+					),
 				})
 			} finally {
 				setIsSubmitting(false)
@@ -137,7 +114,7 @@ export const useManageEditTeamForm = ({
 	return {
 		form,
 		onSubmit,
-		handleFileChange,
+		handleLogoChange: setBlob,
 		blob,
 		isSubmitting,
 		team,

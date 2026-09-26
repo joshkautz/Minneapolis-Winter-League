@@ -161,7 +161,7 @@ export const updateNews = onCall<UpdateNewsRequest>(
 
 			throw new HttpsError(
 				'internal',
-				`Failed to update news post: ${errorMessage}`
+				'The news post could not be saved. Please try again.'
 			)
 		}
 	}

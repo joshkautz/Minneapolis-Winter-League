@@ -51,7 +51,7 @@ import {
 	User,
 	Search,
 } from 'lucide-react'
-import { cn } from '@/shared/utils'
+import { cn, errorMessage } from '@/shared/utils'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { Input } from '@/components/ui/input'
 import { useQueryErrorHandler } from '@/shared/hooks'
@@ -1071,7 +1071,10 @@ export const PlayerRankings = ({
 				<Card>
 					<CardContent className='p-6'>
 						<p className='text-red-600' role='alert'>
-							Error loading players: {error.message}
+							{errorMessage(
+								error,
+								'The players could not be loaded. Please reload the page.'
+							)}
 						</p>
 					</CardContent>
 				</Card>

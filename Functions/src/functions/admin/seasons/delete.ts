@@ -127,7 +127,7 @@ export const deleteSeason = onCall<DeleteSeasonRequest>(
 
 			throw new HttpsError(
 				'internal',
-				`Failed to delete season: ${errorMessage}`
+				'The season could not be deleted. Please try again.'
 			)
 		}
 	}

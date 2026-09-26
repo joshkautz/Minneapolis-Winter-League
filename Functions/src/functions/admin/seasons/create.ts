@@ -218,7 +218,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			})
 			throw new HttpsError(
 				'internal',
-				`Failed to create season: ${errorMessage}`
+				'The season could not be created. Please try again.'
 			)
 		}
 	}

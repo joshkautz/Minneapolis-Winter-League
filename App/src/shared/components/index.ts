@@ -21,6 +21,7 @@ export { LoadingButton } from './loading-button'
 export { PageContainer } from './page-container'
 export { PageHeader } from './page-header'
 export { TeamContributionsList } from './team-contributions-list'
+export { ImageField } from './image-field'
 
 // Error components
 export * from './errors'

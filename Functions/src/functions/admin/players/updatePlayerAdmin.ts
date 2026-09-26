@@ -660,7 +660,7 @@ export const updatePlayerAdmin = onCall<
 			if (error instanceof HttpsError) throw error
 			throw new HttpsError(
 				'internal',
-				error instanceof Error ? error.message : 'Failed to update player'
+				'The player’s changes could not be saved. Please try again.'
 			)
 		}
 	}

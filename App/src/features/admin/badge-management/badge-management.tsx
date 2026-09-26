@@ -17,7 +17,6 @@ import {
 	Trash2,
 	Image as ImageIcon,
 	X,
-	Loader2,
 	Trophy,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -44,6 +43,8 @@ import {
 	PageContainer,
 	PageHeader,
 	DestructiveConfirmationDialog,
+	ImageField,
+	LoadingButton,
 	LoadingSpinner,
 	QueryError,
 } from '@/shared/components'
@@ -74,7 +75,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { BadgeDocument, PlayerDocument, SeasonDocument } from '@/types'
-import { fileToBase64, logger } from '@/shared/utils'
+import { fileToBase64, logger, errorMessage } from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 import { Badge } from '@/components/ui/badge'
 
@@ -198,9 +199,6 @@ export const BadgeManagement = () => {
 		removeImage: false,
 	})
 
-	// Image preview state
-	const [imagePreview, setImagePreview] = useState<File | null>(null)
-
 	// Loading states
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -212,7 +210,6 @@ export const BadgeManagement = () => {
 			imageFile: null,
 			removeImage: false,
 		})
-		setImagePreview(null)
 		setSelectedBadge(null)
 		setDialogMode('closed')
 	}
@@ -233,28 +230,6 @@ export const BadgeManagement = () => {
 			removeImage: false,
 		})
 		setDialogMode('edit')
-	}
-
-	// Handle file selection
-	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0]
-		if (file) {
-			// Validate file type
-			if (!file.type.startsWith('image/')) {
-				toast.error('Please select an image file')
-				return
-			}
-
-			// Validate file size (5MB max)
-			const maxSize = 5 * 1024 * 1024
-			if (file.size > maxSize) {
-				toast.error('Image size must not exceed 5MB')
-				return
-			}
-
-			setFormData((prev) => ({ ...prev, imageFile: file, removeImage: false }))
-			setImagePreview(file)
-		}
 	}
 
 	// Submit form
@@ -322,28 +297,17 @@ export const BadgeManagement = () => {
 		} catch (error) {
 			logger.error('Error saving badge', error as Error)
 
-			// Extract Firebase Functions error message
-			let errorMessage = 'Failed to save badge'
-			if (error && typeof error === 'object') {
-				// Check for Firebase Functions error structure
-				if ('code' in error && 'message' in error) {
-					// Firebase Functions error
-					errorMessage = String(error.message)
-				} else if ('message' in error && typeof error.message === 'string') {
-					errorMessage = error.message
-				} else if ('details' in error && typeof error.details === 'string') {
-					errorMessage = error.details
+			toast.error(
+				dialogMode === 'create'
+					? 'Badge creation failed'
+					: 'Badge update failed',
+				{
+					description: errorMessage(
+						error,
+						'The badge could not be saved. Please try again.'
+					),
 				}
-			} else if (error instanceof Error) {
-				errorMessage = error.message
-			}
-
-			toast.error(errorMessage, {
-				description:
-					dialogMode === 'create'
-						? 'Badge creation failed'
-						: 'Badge update failed',
-			})
+			)
 		} finally {
 			setIsSubmitting(false)
 		}
@@ -368,16 +332,11 @@ export const BadgeManagement = () => {
 		} catch (error) {
 			logger.error('Error deleting badge', error as Error)
 
-			// Extract Firebase Functions error message
-			let errorMessage = 'Failed to delete badge'
-			if (error && typeof error === 'object' && 'message' in error) {
-				errorMessage = String(error.message)
-			} else if (error instanceof Error) {
-				errorMessage = error.message
-			}
-
-			toast.error(errorMessage, {
-				description: 'Badge deletion failed',
+			toast.error('Badge deletion failed', {
+				description: errorMessage(
+					error,
+					'The badge could not be deleted. Please try again.'
+				),
 			})
 		}
 	}
@@ -606,47 +565,23 @@ export const BadgeManagement = () => {
 								/>
 							</div>
 
-							<div className='space-y-2'>
-								<Label htmlFor='image'>Badge Logo (Optional)</Label>
-
-								<Input
-									id='image'
-									type='file'
-									accept='image/*'
-									onChange={handleFileChange}
-									aria-describedby='badge-image-description'
-								/>
-								<p
-									id='badge-image-description'
-									className='text-xs text-muted-foreground'
-								>
-									PNG, JPG, GIF, or WebP image
-								</p>
-
-								{/* Image Preview */}
-								{imagePreview ? (
-									<div className='group flex items-center justify-center w-40 h-40 mx-auto rounded-md overflow-hidden'>
-										<img
-											src={URL.createObjectURL(imagePreview)}
-											alt='Badge image preview'
-											className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
-										/>
-									</div>
-								) : selectedBadge?.imageUrl && !formData.removeImage ? (
-									<div className='group flex items-center justify-center w-40 h-40 mx-auto rounded-md overflow-hidden'>
-										<img
-											src={selectedBadge.imageUrl}
-											alt={selectedBadge.name}
-											className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
-										/>
-									</div>
-								) : (
-									<div className='flex items-center justify-center w-40 h-40 mx-auto rounded-md bg-muted'>
-										<span className='text-sm text-muted-foreground'>
-											No image
-										</span>
-									</div>
-								)}
+							<ImageField
+								label='Badge Image (Optional)'
+								subject='The badge image'
+								currentUrl={
+									formData.removeImage ? null : selectedBadge?.imageUrl
+								}
+								onFileChange={(file: File | undefined) =>
+									setFormData((prev) => ({
+										...prev,
+										imageFile: file ?? null,
+										removeImage: file ? false : prev.removeImage,
+									}))
+								}
+								disabled={isSubmitting}
+								previewAlt={selectedBadge?.name ?? 'Badge image preview'}
+								emptyLabel='No image'
+							>
 								{dialogMode === 'edit' &&
 									selectedBadge?.imageUrl &&
 									!formData.removeImage && (
@@ -665,16 +600,20 @@ export const BadgeManagement = () => {
 								{formData.removeImage && (
 									<Badge variant='destructive'>Image will be removed</Badge>
 								)}
-							</div>
+							</ImageField>
 						</div>
 
 						<DialogFooter>
-							<Button type='submit' disabled={isSubmitting} className='w-full'>
-								{isSubmitting && (
-									<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-								)}
+							<LoadingButton
+								type='submit'
+								loading={isSubmitting}
+								loadingText={
+									dialogMode === 'create' ? 'Creating Badge...' : 'Saving...'
+								}
+								className='w-full'
+							>
 								{dialogMode === 'create' ? 'Create Badge' : 'Save Changes'}
-							</Button>
+							</LoadingButton>
 						</DialogFooter>
 					</form>
 				</DialogContent>

@@ -5,7 +5,7 @@ import {
 	useOffersContext,
 	useSeasonsContext,
 } from '@/providers'
-import { logger, usesTeamPayments } from '@/shared/utils'
+import { logger, usesTeamPayments, errorMessage } from '@/shared/utils'
 import { useResponsiveDrawer } from '@/shared/hooks'
 
 /**
@@ -155,9 +155,11 @@ export const useTopNavigation = () => {
 				})
 			} else {
 				// Handle case where signOut returns false but doesn't throw
-				const errorMessage = signOutError?.message || 'Please try again later.'
 				toast.error('Unable to Log Out', {
-					description: errorMessage,
+					description: errorMessage(
+						signOutError,
+						'You could not be signed out. Please try again.'
+					),
 				})
 			}
 		} catch (error) {

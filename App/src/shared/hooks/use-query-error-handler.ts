@@ -8,6 +8,7 @@
 import { useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { logger } from '@/shared/utils'
+import { errorMessage } from '@/shared/utils/error-message'
 
 interface UseQueryErrorHandlerOptions {
 	/** The error from a query (undefined if no error) */
@@ -54,7 +55,7 @@ export function useQueryErrorHandler(
 			...context,
 		})
 		toast.error(`Failed to load ${errorLabel}`, {
-			description: error.message,
+			description: errorMessage(error, 'Please reload the page to try again.'),
 		})
 	}, [error])
 }

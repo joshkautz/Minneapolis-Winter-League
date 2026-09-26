@@ -51,6 +51,16 @@ export const doThing = onCall<DoThingRequest>(
   (auth only, for pre-verification flows), `validateAdminUser`, `validateNotBanned`.
 - Throw `HttpsError` with an accurate code (`invalid-argument`, `not-found`,
   `permission-denied`, `failed-precondition`). Never return an error shape.
+- Its message is shown to the player as written, so write it for them: say
+  what is wrong and what to do. In a catch-all, log the real error and throw
+  `internal` with a fixed sentence ("Your team could not be saved. Please try
+  again."); never put `error.message` in it — that sends Firestore and stack
+  text to the browser.
+- Take images with `parseImageUpload` and `storeImage` (`shared/images.ts`):
+  one set of rules for every upload, and a clear message when one is
+  refused. Parse before any work, and store before writing Firestore, so a
+  failed upload changes nothing. Never accept a file URL or Storage path
+  from the client.
 - Multi-document writes go in a Firestore transaction or batch. Roster and
   registration state spans several documents and must not tear.
 - Build document references with the helpers in `shared/database.ts`

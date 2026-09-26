@@ -139,7 +139,10 @@ export const createPost = onCall<
 				error: errorMessage,
 			})
 
-			throw new HttpsError('internal', `Failed to create post: ${errorMessage}`)
+			throw new HttpsError(
+				'internal',
+				'Your post could not be published. Please try again.'
+			)
 		}
 	}
 )

@@ -16,7 +16,11 @@
 
 import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
-import { Collections, type TeamContributionDocument } from '../types.js'
+import {
+	Collections,
+	TEAM_SEASONS_SUBCOLLECTION,
+	type TeamContributionDocument,
+} from '../types.js'
 import {
 	playerSeasonRef,
 	teamRef as canonicalTeamRef,
@@ -35,8 +39,17 @@ export interface TeamDeletionResult {
 	playersUpdated: number
 	offersDeleted: number
 	logoDeleted: boolean
+	/**
+	 * Why it failed. A refusal (`not-found`, `failed-precondition`) carries a
+	 * message fit to show the caller; `internal` carries the raw error for the
+	 * logs only.
+	 */
+	errorCode?: 'not-found' | 'failed-precondition' | 'internal'
 	error?: string
 }
+
+/** Logos written by createTeam and updateTeam; nothing outside it is a logo. */
+const TEAM_LOGO_PREFIX = 'teams/'
 
 interface DeleteOptions {
 	/** Skip the "team is registered" guard. Used by the registration-lock cleanup. */
@@ -71,7 +84,8 @@ export async function deleteTeamSeasonWithCleanup(
 				playersUpdated: 0,
 				offersDeleted: 0,
 				logoDeleted: false,
-				error: 'Team season not found',
+				errorCode: 'not-found',
+				error: 'This team is no longer in that season. Reload the page.',
 			}
 		}
 
@@ -87,7 +101,8 @@ export async function deleteTeamSeasonWithCleanup(
 				playersUpdated: 0,
 				offersDeleted: 0,
 				logoDeleted: false,
-				error: 'Cannot delete a registered team',
+				errorCode: 'failed-precondition',
+				error: 'A registered team cannot be deleted.',
 			}
 		}
 
@@ -111,6 +126,7 @@ export async function deleteTeamSeasonWithCleanup(
 				playersUpdated: 0,
 				offersDeleted: 0,
 				logoDeleted: false,
+				errorCode: 'failed-precondition',
 				error:
 					'Cannot delete a team that still holds money. ' +
 					'Refund its contributions first.',
@@ -121,12 +137,7 @@ export async function deleteTeamSeasonWithCleanup(
 		const rosterSnap = await teamSeasonDocRef.collection('roster').get()
 		const rosterPlayerIds = rosterSnap.docs.map((d) => d.id)
 
-		// 2. Delete the season-specific logo (best effort, fire-and-forget).
-		if (teamSeasonData?.storagePath) {
-			logoDeleted = await deleteTeamLogo(teamSeasonData.storagePath)
-		}
-
-		// 3. Apply the cleanup writes in a transaction so the team season,
+		// 2. Apply the cleanup writes in a transaction so the team season,
 		// roster, and player season updates are atomic.
 		await firestore.runTransaction(async (transaction) => {
 			// Firestore requires every read in a transaction to happen before
@@ -164,6 +175,15 @@ export async function deleteTeamSeasonWithCleanup(
 			// Delete the season subdoc itself.
 			transaction.delete(teamSeasonDocRef)
 		})
+
+		// 3. Delete the logo, once the season is gone. Before it, a failed
+		// transaction would leave a team whose logo no longer exists.
+		if (teamSeasonData?.storagePath) {
+			logoDeleted = await deleteUnsharedTeamLogo(
+				teamCanonicalRef,
+				teamSeasonData.storagePath
+			)
+		}
 
 		// 4. Delete offers referencing this team + season. (Outside the
 		// transaction because the query needs to run separately.)
@@ -219,6 +239,7 @@ export async function deleteTeamSeasonWithCleanup(
 			playersUpdated,
 			offersDeleted,
 			logoDeleted,
+			errorCode: 'internal',
 			error: errorMessage,
 		}
 	}
@@ -248,11 +269,33 @@ export async function deleteUnregisteredTeamsForSeasonLock(
 }
 
 /**
- * Delete team logo from Storage. Best-effort — failures are logged and
- * swallowed because they should not block the rest of the cleanup.
+ * Delete a deleted team-season's logo from Storage, unless it is still in
+ * use. A rollover copies the previous season's logo, file and all, so the
+ * team's other seasons may show the same file; and only files under
+ * `teams/` are logos, whatever the document says. Best effort — failures
+ * are logged, because they should not block the rest of the cleanup.
  */
-async function deleteTeamLogo(storagePath: string): Promise<boolean> {
+async function deleteUnsharedTeamLogo(
+	teamCanonicalRef: FirebaseFirestore.DocumentReference,
+	storagePath: string
+): Promise<boolean> {
+	if (!storagePath.startsWith(TEAM_LOGO_PREFIX)) {
+		logger.warn('Not deleting a team logo outside teams/', { storagePath })
+		return false
+	}
 	try {
+		const otherSeasons = await teamCanonicalRef
+			.collection(TEAM_SEASONS_SUBCOLLECTION)
+			.where('storagePath', '==', storagePath)
+			.limit(1)
+			.get()
+		if (!otherSeasons.empty) {
+			logger.info('Keeping a team logo another season still shows', {
+				storagePath,
+			})
+			return false
+		}
+
 		const storage = getStorage()
 		await storage.bucket().file(storagePath).delete()
 		logger.info(`Deleted team logo: ${storagePath}`)

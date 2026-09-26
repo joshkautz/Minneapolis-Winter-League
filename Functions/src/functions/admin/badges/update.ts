@@ -4,10 +4,14 @@
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
-import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
 import { Collections, BadgeDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
+import {
+	deleteStoredImage,
+	parseImageUpload,
+	storeImage,
+} from '../../../shared/images.js'
 import { FIREBASE_CONFIG, BADGE_CONFIG } from '../../../config/constants.js'
 
 interface UpdateBadgeRequest {
@@ -100,31 +104,11 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 			}
 		}
 
-		// Validate image parameters if provided
-		if (imageBlob && !imageContentType) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Image content type is required when uploading image'
-			)
-		}
-
-		if (imageContentType && !imageContentType.startsWith('image/')) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Only image files are allowed for badge images'
-			)
-		}
-
-		// Validate image size (5MB max)
-		if (imageBlob) {
-			const bufferSize = Buffer.from(imageBlob, 'base64').length
-			if (bufferSize > BADGE_CONFIG.MAX_IMAGE_SIZE_BYTES) {
-				throw new HttpsError(
-					'invalid-argument',
-					'Image size must not exceed 5MB'
-				)
-			}
-		}
+		const image = parseImageUpload(
+			imageBlob,
+			imageContentType,
+			'The badge image'
+		)
 
 		try {
 			const firestore = getFirestore()
@@ -159,79 +143,32 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 				updates.description = description.trim()
 			}
 
-			// Handle image updates
+			// Store a new image under a fresh path before touching the badge,
+			// so a failed upload leaves the badge as it was.
 			if (removeImage) {
-				// Remove existing image from storage if it exists
-				if (existingBadge.storagePath) {
-					try {
-						const storage = getStorage()
-						const bucket = storage.bucket()
-						const file = bucket.file(existingBadge.storagePath)
-						await file.delete()
-						logger.info(`Deleted old badge image: ${existingBadge.storagePath}`)
-					} catch (deleteError) {
-						logger.warn(
-							'Failed to delete old badge image (may not exist):',
-							deleteError
-						)
-					}
-				}
 				updates.imageUrl = null
 				updates.storagePath = null
-			} else if (imageBlob && imageContentType) {
-				// Remove old image if exists
-				if (existingBadge.storagePath) {
-					try {
-						const storage = getStorage()
-						const bucket = storage.bucket()
-						const oldFile = bucket.file(existingBadge.storagePath)
-						await oldFile.delete()
-						logger.info(`Deleted old badge image: ${existingBadge.storagePath}`)
-					} catch (deleteError) {
-						logger.warn(
-							'Failed to delete old badge image (may not exist):',
-							deleteError
-						)
-					}
-				}
-
-				// Upload new image
-				try {
-					const storage = getStorage()
-					const bucket = storage.bucket()
-					const fileName = `badges/${badgeId}`
-					const file = bucket.file(fileName)
-
-					// Convert base64 to buffer
-					const buffer = Buffer.from(imageBlob, 'base64')
-
-					// Upload file
-					await file.save(buffer, {
-						metadata: {
-							contentType: imageContentType,
-						},
-					})
-
-					// Generate Firebase Storage URL (respects storage.rules)
-					const encodedPath = encodeURIComponent(fileName)
-					updates.imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`
-					updates.storagePath = fileName
-
-					logger.info(`Successfully uploaded new badge image: ${badgeId}`, {
-						fileName,
-						contentType: imageContentType,
-					})
-				} catch (uploadError) {
-					logger.error('Badge image upload failed:', uploadError)
-					throw new HttpsError(
-						'internal',
-						'Failed to upload badge image. Please try again.'
-					)
-				}
+			} else if (image) {
+				const stored = await storeImage(
+					`badges/${badgeId}-${crypto.randomUUID()}`,
+					image,
+					'The badge image'
+				)
+				updates.imageUrl = stored.url
+				updates.storagePath = stored.storagePath
 			}
 
 			// Update badge document
 			await badgeRef.update(updates)
+
+			// The old image goes only once the badge no longer points to it.
+			if (
+				updates.storagePath !== undefined &&
+				existingBadge.storagePath &&
+				existingBadge.storagePath !== updates.storagePath
+			) {
+				await deleteStoredImage(existingBadge.storagePath)
+			}
 
 			logger.info('Badge updated successfully', {
 				badgeId,
@@ -264,7 +201,7 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 
 			throw new HttpsError(
 				'internal',
-				`Failed to update badge: ${errorMessage}`
+				'The badge could not be saved. Please try again.'
 			)
 		}
 	}

@@ -3,7 +3,12 @@ import { toast } from 'sonner'
 import { getPlayersQuery, QueryDocumentSnapshot } from '@/firebase'
 import { createOfferViaFunction } from '@/firebase/collections/functions'
 import { NotificationCard } from '@/shared/components'
-import { OfferType, PlayerDocument, TeamSeasonDocument } from '@/shared/utils'
+import {
+	OfferType,
+	PlayerDocument,
+	TeamSeasonDocument,
+	errorMessage,
+} from '@/shared/utils'
 import { ManageInvitePlayerDetail } from './manage-invite-player-detail'
 import { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
 import { usePlayersSearch, useDebounce, useUserStatus } from '@/shared/hooks'
@@ -60,11 +65,12 @@ export const ManageInvitePlayerList = () => {
 				})
 				return true
 			} catch (error: unknown) {
-				// Firebase Functions errors have a message property
-				const firebaseError = error as { message?: string }
-				const errorMessage = firebaseError?.message || 'Failed to send invite'
+				const description = errorMessage(
+					error,
+					'The invite could not be sent. Please try again.'
+				)
 				toast.error('Invite failed', {
-					description: errorMessage,
+					description,
 				})
 				return false
 			}

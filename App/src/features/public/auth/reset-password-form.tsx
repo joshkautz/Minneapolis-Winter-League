@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useResetPasswordForm } from './use-reset-password-form'
+import { errorMessage } from '@/shared/utils'
 
 interface ResetPasswordFormProps {
 	onSuccess: () => void
@@ -72,8 +73,10 @@ export const ResetPasswordForm = ({
 							</LoadingButton>
 							{error && (
 								<p className='text-sm text-red-500 text-center'>
-									{error.message ||
-										'An error occurred while sending reset email'}
+									{errorMessage(
+										error,
+										'The reset email could not be sent. Please try again.'
+									)}
 								</p>
 							)}
 							<Button

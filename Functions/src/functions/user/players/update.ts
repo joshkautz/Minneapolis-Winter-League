@@ -124,7 +124,7 @@ export const updatePlayer = onCall<UpdatePlayerRequest>(
 
 			throw new HttpsError(
 				'internal',
-				error instanceof Error ? error.message : 'Failed to update player'
+				'Your profile could not be saved. Please try again.'
 			)
 		}
 	}

@@ -98,7 +98,7 @@ export const deleteGame = onCall<DeleteGameRequest>(
 
 			throw new HttpsError(
 				'internal',
-				error instanceof Error ? error.message : 'Failed to delete game'
+				'The game could not be deleted. Please try again.'
 			)
 		}
 	}

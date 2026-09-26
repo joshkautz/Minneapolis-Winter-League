@@ -37,6 +37,7 @@ import {
 	REGISTRATION_SPOTS,
 	suggestedContributionsCents,
 	usesTeamPayments,
+	errorMessage,
 } from '@/shared/utils'
 
 /**
@@ -232,7 +233,10 @@ export const TeamPaymentCard = () => {
 	useEffect(() => {
 		if (contributionsError) {
 			toast.error('Could not load your team’s payments', {
-				description: contributionsError.message,
+				description: errorMessage(
+					contributionsError,
+					'Please reload the page to try again.'
+				),
 			})
 		}
 	}, [contributionsError])

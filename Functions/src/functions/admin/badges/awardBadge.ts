@@ -145,7 +145,10 @@ export const awardBadge = onCall<AwardBadgeRequest>(
 				teamId: data.teamId,
 				error: errorMessage,
 			})
-			throw new HttpsError('internal', `Failed to award badge: ${errorMessage}`)
+			throw new HttpsError(
+				'internal',
+				'The badge could not be awarded. Please try again.'
+			)
 		}
 	}
 )

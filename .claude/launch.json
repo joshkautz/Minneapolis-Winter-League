@@ -2,15 +2,36 @@
 	"version": "0.0.1",
 	"configurations": [
 		{
+			"name": "emulators-no-functions",
+			"runtimeExecutable": "npx",
+			"runtimeArgs": [
+				"firebase",
+				"emulators:start",
+				"--only",
+				"auth,firestore",
+				"--project",
+				"minnesota-winter-league"
+			],
+			"port": 9099
+		},
+		{
 			"name": "app-emulators",
 			"runtimeExecutable": "npm",
-			"runtimeArgs": ["run", "dev:emulators", "--workspace=App"],
+			"runtimeArgs": [
+				"run",
+				"dev:emulators",
+				"--workspace=App"
+			],
 			"port": 5173
 		},
 		{
 			"name": "app",
 			"runtimeExecutable": "npm",
-			"runtimeArgs": ["run", "dev", "--workspace=App"],
+			"runtimeArgs": [
+				"run",
+				"dev",
+				"--workspace=App"
+			],
 			"port": 5173
 		}
 	]

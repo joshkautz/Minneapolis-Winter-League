@@ -17,7 +17,7 @@ import {
 	rebuildPlayerRankings,
 } from '@/firebase/collections/player-rankings'
 import { RankingsCalculationDocument, Timestamp } from '@/types'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -97,7 +97,10 @@ export const PlayerRankingManagement = () => {
 			)
 		} catch (err) {
 			setCalculationError(
-				err instanceof Error ? err.message : 'Failed to start calculation'
+				errorMessage(
+					err,
+					'The rankings rebuild could not be started. Please try again.'
+				)
 			)
 		} finally {
 			setIsCalculating(false)
@@ -344,7 +347,10 @@ export const PlayerRankingManagement = () => {
 						<Alert variant='destructive' role='alert'>
 							<XCircle className='h-4 w-4' aria-hidden='true' />
 							<AlertDescription>
-								Error loading calculations: {error.message}
+								{errorMessage(
+									error,
+									'The rankings calculations could not be loaded. Please reload the page.'
+								)}
 							</AlertDescription>
 						</Alert>
 					) : calculations && calculations.length > 0 ? (

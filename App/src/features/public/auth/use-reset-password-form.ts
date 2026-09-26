@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
 import { useAuthContext } from '@/providers'
-import { errorHandler, logger } from '@/shared/utils'
+import { errorMessage, logger } from '@/shared/utils'
 import {
 	resetPasswordFormSchema,
 	type ResetPasswordFormData,
@@ -60,9 +60,11 @@ export const useResetPasswordForm = ({
 					email: data.email,
 				}
 			)
-			errorHandler.handleAuth(error, 'password_reset', {
-				fallbackMessage:
-					'An unexpected error occurred while sending reset email',
+			toast.error('Failed to send reset email', {
+				description: errorMessage(
+					error,
+					'The reset email could not be sent. Please try again.'
+				),
 			})
 		}
 	}
@@ -92,7 +94,10 @@ export const useResetPasswordForm = ({
 	useEffect(() => {
 		if (sendPasswordResetEmailError && form.formState.isSubmitted) {
 			toast.error('Failed to send reset email', {
-				description: sendPasswordResetEmailError?.message || 'Please try again',
+				description: errorMessage(
+					sendPasswordResetEmailError,
+					'The reset email could not be sent. Please try again.'
+				),
 			})
 		}
 	}, [sendPasswordResetEmailError, form.formState.isSubmitted])

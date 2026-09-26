@@ -28,6 +28,7 @@ import {
 	logger,
 	MIN_SIGNED_PLAYERS,
 	usesTeamPayments,
+	errorMessage,
 } from '@/shared/utils'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 import { getPlayerRef } from '@/firebase/collections/players'
@@ -357,7 +358,7 @@ export const SeasonManagement = () => {
 		} catch (error) {
 			logger.error('Error submitting season', error)
 			toast.error(
-				error instanceof Error ? error.message : 'Failed to save season'
+				errorMessage(error, 'The season could not be saved. Please try again.')
 			)
 		} finally {
 			setIsSubmitting(false)
@@ -382,7 +383,10 @@ export const SeasonManagement = () => {
 		} catch (error) {
 			logger.error('Error deleting season', error)
 			toast.error(
-				error instanceof Error ? error.message : 'Failed to delete season'
+				errorMessage(
+					error,
+					'The season could not be deleted. Please try again.'
+				)
 			)
 		}
 	}

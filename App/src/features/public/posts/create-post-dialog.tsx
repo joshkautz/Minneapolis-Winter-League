@@ -14,7 +14,7 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { createPostViaFunction } from '@/firebase/collections/functions'
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 
 interface CreatePostDialogProps {
 	seasonId: string
@@ -55,8 +55,7 @@ export const CreatePostDialog = ({
 		} catch (error) {
 			logger.error('Failed to create post', error)
 			toast.error('Failed to create post', {
-				description:
-					error instanceof Error ? error.message : 'Please try again',
+				description: errorMessage(error, 'Please try again.'),
 			})
 		} finally {
 			setIsSubmitting(false)

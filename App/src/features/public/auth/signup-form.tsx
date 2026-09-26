@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { useSignupForm } from '@/features/public/auth'
+import { errorMessage } from '@/shared/utils'
 
 interface SignupFormProps {
 	onSuccess: () => void
@@ -154,7 +155,10 @@ export const SignupForm = ({ onSuccess, onNameAppeal }: SignupFormProps) => {
 						</LoadingButton>
 						{error && (
 							<p className='text-sm text-red-500 text-center'>
-								{error.message || 'An error occurred during signup'}
+								{errorMessage(
+									error,
+									'Your account could not be created. Please try again.'
+								)}
 							</p>
 						)}
 					</form>

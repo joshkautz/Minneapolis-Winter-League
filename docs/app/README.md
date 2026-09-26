@@ -45,6 +45,23 @@ recur:
 | `usePaginatedFeed`          | An infinitely scrolling feed: a live first page, later pages fetched |
 | `usePendingAction`          | A button that calls the server: busy state and no double submits     |
 | `useIsTeamRegistrationFull` | Whether every registration spot this season is taken                 |
+| `usePlayerEmails`           | Every player's email, for admin screens (they are private)           |
+| `useObjectUrl`              | A preview URL for a local file, freed when it changes                |
+
+## Showing errors
+
+Every message a player sees goes through `errorMessage(error, fallback)` in
+`shared/utils/error-message.ts`. A callable's refusal is written for the
+user and is shown as sent. Firebase Auth, Firestore and network failures are
+translated ("Firebase: Error (auth/invalid-credential)." becomes "That email
+and password do not match an account."). Anything else becomes the
+fallback, which should say what failed ("Your team could not be created.
+Please try again."). Never show `error.message` directly.
+
+Images are picked with `ImageField` (`shared/components/image-field.tsx`),
+which checks a file against the server's own rules
+(`shared/image-rules.ts`, imported from `Functions/src/shared/imageRules.ts`)
+the moment it is chosen and says why it cannot be used.
 
 ## Routing, code splitting and errors
 

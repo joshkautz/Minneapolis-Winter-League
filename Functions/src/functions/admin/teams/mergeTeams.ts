@@ -478,7 +478,10 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				adminUserId: request.auth?.uid,
 				error: errorMessage,
 			})
-			throw new HttpsError('internal', errorMessage)
+			throw new HttpsError(
+				'internal',
+				'The teams could not be merged. Please try again.'
+			)
 		}
 	}
 )

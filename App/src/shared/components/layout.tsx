@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { NavigationBar } from './navigation-bar'
+import { CompleteProfileDialog } from './complete-profile-dialog'
 import { AuthModal, useAuthModal } from '@/features/public/auth'
 import { cn } from '@/shared/utils'
 
@@ -21,6 +22,7 @@ export const Layout = () => {
 			<NavigationBar onLoginClick={openAuthModal} />
 			<Outlet context={{ openAuthModal } satisfies OutletContext} />
 			<AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+			<CompleteProfileDialog />
 		</div>
 	)
 }

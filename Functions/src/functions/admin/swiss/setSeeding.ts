@@ -107,7 +107,7 @@ export const setSwissSeeding = onCall<SetSwissSeedingRequest>(
 			})
 			throw new HttpsError(
 				'internal',
-				`Failed to set Swiss seeding: ${errorMessage}`
+				'The seeding could not be saved. Please try again.'
 			)
 		}
 	}

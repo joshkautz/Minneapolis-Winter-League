@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { logger } from '@/shared/utils'
+import { logger, errorMessage } from '@/shared/utils'
 import {
 	getTeamRef,
 	teamRosterSubcollection,
@@ -248,7 +248,7 @@ export const TeamEditDialog = ({
 		} catch (error) {
 			logger.error('Failed to update team name', error)
 			toast.error('Failed to update team name', {
-				description: error instanceof Error ? error.message : 'Unknown error',
+				description: errorMessage(error, 'Please try again.'),
 			})
 		} finally {
 			setIsSavingName(false)
@@ -272,7 +272,7 @@ export const TeamEditDialog = ({
 			} catch (error) {
 				logger.error('Failed to add player', error)
 				toast.error('Failed to add player', {
-					description: error instanceof Error ? error.message : 'Unknown error',
+					description: errorMessage(error, 'Please try again.'),
 				})
 			} finally {
 				setAddingPlayerId(null)
@@ -299,7 +299,7 @@ export const TeamEditDialog = ({
 		} catch (error) {
 			logger.error('Failed to remove player', error)
 			toast.error('Failed to remove player', {
-				description: error instanceof Error ? error.message : 'Unknown error',
+				description: errorMessage(error, 'Please try again.'),
 			})
 		} finally {
 			setIsRemovingPlayer(false)
@@ -334,7 +334,7 @@ export const TeamEditDialog = ({
 			} catch (error) {
 				logger.error('Failed to update captain status', error)
 				toast.error('Failed to update captain status', {
-					description: error instanceof Error ? error.message : 'Unknown error',
+					description: errorMessage(error, 'Please try again.'),
 				})
 			} finally {
 				setCaptainChangeInProgress(null)

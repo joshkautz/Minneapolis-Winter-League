@@ -1,14 +1,17 @@
 /**
  * Update team callable function
  *
- * Edits a team's per-season fields (name, logo, storagePath) for a specific
- * season. Captain check reads the player's season subdoc.
+ * Edits a team's name or logo for a specific season. Captain check reads the
+ * player's season subdoc.
+ *
+ * The logo is only ever an uploaded image. The request used to accept a
+ * logo URL and Storage path as well, which let a captain point their team
+ * at any file — and team deletion removes the file at that path.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
-import { getStorage } from 'firebase-admin/storage'
-import { getPublicFileUrl } from '../../../shared/storage.js'
+import { parseImageUpload, storeImage } from '../../../shared/images.js'
 import { logger } from 'firebase-functions/v2'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
@@ -18,8 +21,6 @@ interface EditTeamRequest {
 	teamId: string
 	seasonId: string
 	name?: string
-	logo?: string
-	storagePath?: string
 	logoBlob?: string // Base64 encoded image
 	logoContentType?: string // MIME type of the image
 }
@@ -29,15 +30,7 @@ export const updateTeam = onCall<EditTeamRequest>(
 	async (request) => {
 		validateAuthentication(request.auth)
 
-		const {
-			teamId,
-			seasonId,
-			name,
-			logo,
-			storagePath,
-			logoBlob,
-			logoContentType,
-		} = request.data
+		const { teamId, seasonId, name, logoBlob, logoContentType } = request.data
 		const userId = request.auth.uid
 
 		if (!teamId || !seasonId) {
@@ -47,30 +40,18 @@ export const updateTeam = onCall<EditTeamRequest>(
 			)
 		}
 
+		const logo = parseImageUpload(logoBlob, logoContentType, 'The logo')
+		if (name === undefined && !logo) {
+			throw new HttpsError(
+				'invalid-argument',
+				'There is nothing to change. Enter a new name or choose a logo.'
+			)
+		}
 		if (
-			!name &&
-			logo === undefined &&
-			storagePath === undefined &&
-			logoBlob === undefined
+			name !== undefined &&
+			(typeof name !== 'string' || name.trim() === '')
 		) {
-			throw new HttpsError(
-				'invalid-argument',
-				'At least one field must be provided to update'
-			)
-		}
-
-		if (logoBlob && !logoContentType) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Logo content type is required when uploading logo'
-			)
-		}
-
-		if (logoContentType && !logoContentType.startsWith('image/')) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Only image files are allowed for logos'
-			)
+			throw new HttpsError('invalid-argument', 'Enter a team name.')
 		}
 
 		try {
@@ -105,55 +86,25 @@ export const updateTeam = onCall<EditTeamRequest>(
 				throw new HttpsError('internal', 'Unable to retrieve team data')
 			}
 
-			// Handle logo upload (outside any transaction).
-			let logoUrl = logo
-			let logoStoragePath = storagePath
-			if (logoBlob && logoContentType) {
-				try {
-					const storage = getStorage()
-					const bucket = storage.bucket()
-					const fileId = crypto.randomUUID()
-					const fileName = `teams/${fileId}`
-					const file = bucket.file(fileName)
-					const buffer = Buffer.from(logoBlob, 'base64')
-					await file.save(buffer, {
-						metadata: { contentType: logoContentType },
-					})
-					await file.makePublic()
-					logoUrl = getPublicFileUrl(bucket.name, fileName)
-					logoStoragePath = fileName
-					logger.info(`Successfully uploaded logo for team: ${teamId}`, {
-						fileName,
-						contentType: logoContentType,
-					})
-				} catch (uploadError) {
-					logger.error('Logo upload failed:', uploadError)
-					throw new HttpsError('internal', 'Failed to upload team logo')
-				}
-			}
+			// Store the new logo (outside any transaction), after every check.
+			const storedLogo = logo
+				? await storeImage(`teams/${crypto.randomUUID()}`, logo, 'The logo')
+				: null
 
 			// Build update payload, only changing fields that actually changed.
 			const updateData: Record<string, unknown> = {}
 			const changes: string[] = []
 			if (name !== undefined) {
-				if (typeof name !== 'string' || name.trim() === '') {
-					throw new HttpsError(
-						'invalid-argument',
-						'Team name must be a non-empty string'
-					)
-				}
 				const trimmedName = name.trim()
 				if (trimmedName !== teamSeasonData.name) {
 					updateData.name = trimmedName
 					changes.push('name')
 				}
 			}
-			if (logoUrl !== undefined) {
-				updateData.logo = logoUrl
+			if (storedLogo) {
+				updateData.logo = storedLogo.url
+				updateData.storagePath = storedLogo.storagePath
 				changes.push('logo')
-			}
-			if (logoStoragePath !== undefined) {
-				updateData.storagePath = logoStoragePath
 			}
 
 			if (Object.keys(updateData).length > 0) {
@@ -189,7 +140,10 @@ export const updateTeam = onCall<EditTeamRequest>(
 				error: errorMessage,
 			})
 			if (error instanceof HttpsError) throw error
-			throw new HttpsError('internal', errorMessage)
+			throw new HttpsError(
+				'internal',
+				'Your team could not be saved. Please try again.'
+			)
 		}
 	}
 )

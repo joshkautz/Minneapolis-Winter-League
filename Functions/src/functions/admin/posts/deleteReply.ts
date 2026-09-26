@@ -120,7 +120,7 @@ export const deleteReply = onCall<
 
 			throw new HttpsError(
 				'internal',
-				`Failed to delete reply: ${errorMessage}`
+				'The reply could not be deleted. Please try again.'
 			)
 		}
 	}

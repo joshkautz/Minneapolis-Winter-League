@@ -370,9 +370,7 @@ export const updateGame = onCall<
 			// Wrap other errors
 			throw new HttpsError(
 				'internal',
-				error instanceof Error
-					? error.message
-					: 'Failed to update game. Please try again.'
+				'The game could not be saved. Please try again.'
 			)
 		}
 	}

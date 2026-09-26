@@ -136,7 +136,7 @@ export const updateReply = onCall<
 
 			throw new HttpsError(
 				'internal',
-				`Failed to update reply: ${errorMessage}`
+				'Your reply could not be saved. Please try again.'
 			)
 		}
 	}

@@ -15,6 +15,12 @@ document.
    signed in (`validateBasicAuthentication`), because the email cannot be
    verified yet.
 
+If step 3 fails — the connection drops, the server errors — the account
+exists with no profile. `CompleteProfileDialog`, mounted in the layout, sees
+a signed-in user whose player document does not exist and asks for their
+name again, retrying `createPlayer` until it succeeds, so no one is left
+stuck on pages waiting for a profile.
+
 Everything else a player does needs a verified email. The shared validator
 `validateAuthentication` reads `email_verified` from the ID token, so a user
 who has just clicked the link is still refused until their token refreshes.

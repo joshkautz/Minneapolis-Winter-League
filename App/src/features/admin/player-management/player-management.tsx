@@ -71,7 +71,7 @@ import {
 	type SeasonDocument,
 	type TeamSeasonDocument,
 	logger,
-	extractErrorMessage,
+	errorMessage,
 } from '@/shared/utils'
 import { usePlayerEmails, useQueryErrorHandler } from '@/shared/hooks'
 
@@ -427,7 +427,10 @@ export const PlayerManagement = () => {
 				{ component: 'PlayerManagement', action: 'updatePlayer' }
 			)
 			toast.error(
-				extractErrorMessage(error, 'Failed to update player. Please try again.')
+				errorMessage(
+					error,
+					'The player’s changes could not be saved. Please try again.'
+				)
 			)
 		} finally {
 			setIsSaving(false)

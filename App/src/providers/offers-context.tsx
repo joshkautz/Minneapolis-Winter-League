@@ -20,7 +20,7 @@ import {
 	getPlayerRef,
 } from '@/firebase'
 import { useAuthContext } from './auth-context'
-import { OfferDocument, logger } from '@/shared/utils'
+import { OfferDocument, logger, errorMessage } from '@/shared/utils'
 import { useSeasonsContext } from './seasons-context'
 
 interface OffersProps {
@@ -142,7 +142,10 @@ export const OffersContextProvider = ({ children }: PropsWithChildren) => {
 					component: 'OffersContextProvider',
 				})
 				toast.error(`Failed to load ${name}`, {
-					description: error.message,
+					description: errorMessage(
+						error,
+						'Please reload the page to try again.'
+					),
 				})
 			}
 		})

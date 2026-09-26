@@ -129,7 +129,10 @@ export const updatePost = onCall<
 				error: errorMessage,
 			})
 
-			throw new HttpsError('internal', `Failed to update post: ${errorMessage}`)
+			throw new HttpsError(
+				'internal',
+				'Your post could not be saved. Please try again.'
+			)
 		}
 	}
 )

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { TeamFormData, teamFormSchema } from '@/shared/utils/validation'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { createTeamViaFunction } from '@/firebase/collections/functions'
-import { fileToBase64, logger } from '@/shared/utils'
+import { fileToBase64, logger, errorMessage } from '@/shared/utils'
 import type { TeamCreationResult } from './use-team-creation'
 
 interface UseCreateTeamFormProps {
@@ -20,7 +20,8 @@ export const useCreateTeamForm = ({
 	handleResult,
 	seasonId,
 }: UseCreateTeamFormProps) => {
-	const [blob, setBlob] = useState<Blob>()
+	// Already checked against the upload rules by ImageField.
+	const [blob, setBlob] = useState<File>()
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
 	const form = useForm<TeamFormData>({
@@ -29,16 +30,6 @@ export const useCreateTeamForm = ({
 			name: '',
 		},
 	})
-
-	const handleFileChange = useCallback(
-		(event: React.ChangeEvent<HTMLInputElement>) => {
-			if (!event.target.files?.[0]) {
-				return
-			}
-			setBlob(event.target.files[0])
-		},
-		[setBlob]
-	)
 
 	const onSubmit = useCallback(
 		async (data: TeamFormData) => {
@@ -74,28 +65,14 @@ export const useCreateTeamForm = ({
 				)
 
 				// Handle Firebase Functions errors
-				let errorMessage = 'An error occurred while creating the team'
-				let errorTitle = 'Team creation failed'
-
-				if (error && typeof error === 'object' && 'message' in error) {
-					errorMessage = error.message as string
-				} else if (error instanceof Error) {
-					errorMessage = error.message
-				}
-
-				// Provide more user-friendly titles based on error message
-				if (errorMessage.includes('registration is not currently open')) {
-					errorTitle = 'Registration Closed'
-				} else if (errorMessage.includes('already on a team')) {
-					errorTitle = 'Already on Team'
-				} else if (errorMessage.includes('Player profile not found')) {
-					errorTitle = 'Profile Not Found'
-				}
-
+				// The server's message says what went wrong; the title is fixed.
 				handleResult({
 					success: false,
-					title: errorTitle,
-					description: errorMessage,
+					title: 'Team creation failed',
+					description: errorMessage(
+						error,
+						'Your team could not be created. Please try again.'
+					),
 					navigation: false,
 				})
 			} finally {
@@ -108,7 +85,7 @@ export const useCreateTeamForm = ({
 	return {
 		form,
 		onSubmit,
-		handleFileChange,
+		handleLogoChange: setBlob,
 		blob,
 		isSubmitting,
 	}

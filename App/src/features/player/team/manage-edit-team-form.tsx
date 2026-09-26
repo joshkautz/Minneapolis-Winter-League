@@ -7,8 +7,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { LoadingSpinner, LoadingButton } from '@/shared/components'
+import { ImageField, LoadingSpinner, LoadingButton } from '@/shared/components'
 import { useManageEditTeamForm } from './hooks/use-manage-edit-team-form'
 import { useTeamManagement } from './hooks/use-team-management'
 import type { FormResult } from '@/shared/types'
@@ -21,7 +20,7 @@ export const ManageEditTeamForm = ({
 	handleResult,
 }: ManageEditTeamFormProps) => {
 	const { isLoading, hasTeam, isCaptain } = useTeamManagement()
-	const { form, onSubmit, handleFileChange, blob, isSubmitting, team } =
+	const { form, onSubmit, handleLogoChange, blob, isSubmitting, team } =
 		useManageEditTeamForm({
 			handleResult,
 		})
@@ -91,46 +90,15 @@ export const ManageEditTeamForm = ({
 						)}
 					/>
 
-					<div className='space-y-2'>
-						<Label htmlFor='team-logo-upload'>Team Logo (Optional)</Label>
-						<Input
-							id='team-logo-upload'
-							type='file'
-							accept='image/*'
-							onChange={handleFileChange}
-							disabled={isSubmitting}
-							aria-describedby='team-logo-description'
-						/>
-						<p
-							id='team-logo-description'
-							className='text-xs text-muted-foreground'
-						>
-							PNG, JPG, GIF, or WebP image
-						</p>
-					</div>
-
-					{/* Logo preview */}
-					{blob ? (
-						<div className='group flex items-center justify-center w-40 h-40 mx-auto rounded-md overflow-hidden'>
-							<img
-								src={URL.createObjectURL(blob)}
-								alt='Team logo preview'
-								className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
-							/>
-						</div>
-					) : currentLogo ? (
-						<div className='group flex items-center justify-center w-40 h-40 mx-auto rounded-md overflow-hidden'>
-							<img
-								src={currentLogo}
-								alt='Current team logo'
-								className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
-							/>
-						</div>
-					) : (
-						<div className='flex items-center justify-center w-40 h-40 mx-auto rounded-md bg-muted'>
-							<span className='text-sm text-muted-foreground'>No logo</span>
-						</div>
-					)}
+					<ImageField
+						label='Team Logo (Optional)'
+						subject='The logo'
+						currentUrl={currentLogo}
+						onFileChange={handleLogoChange}
+						disabled={isSubmitting}
+						previewAlt={blob ? 'Team logo preview' : 'Current team logo'}
+						emptyLabel='No logo'
+					/>
 
 					<div className='pt-2'>
 						<LoadingButton
