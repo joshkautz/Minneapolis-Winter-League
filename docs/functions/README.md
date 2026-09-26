@@ -129,29 +129,38 @@ them and a forged request, and it runs before any read or write.
 
 ## Services and shared helpers
 
-| Module                                | Holds                                                                                                     |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `services/accountDeletionService`     | What deleting an account removes, and what it keeps; shared by `deletePlayer` and `userDeleted`           |
-| `services/teamRegistrationService`    | The registration rule and the transactional twelve-team cap                                               |
-| `services/teamDeletionService`        | Deleting a team-season, refusing while it holds money                                                     |
-| `services/teamSettlementService`      | Refunding and reconciling a team's money with Stripe                                                      |
-| `services/teamContributionIntake`     | Taking a PaymentIntent into the ledger, or refunding it if it cannot be attributed                        |
-| `services/teamCheckoutReservations`   | Reserving a contribution while its payer is on Stripe's page, and ending the reservation                  |
-| `services/teamPaymentsSweep`          | Finding and settling every unregistered team holding money                                                |
-| `services/teamPaymentsReconciliation` | Checking Stripe and the ledger against each other                                                         |
-| `services/playerRankings`             | The TrueSkill rankings rebuild — see [PLAYER_RANKING_ALGORITHM.md](PLAYER_RANKING_ALGORITHM.md)           |
-| `services/swissRankings`              | Swiss-format standings                                                                                    |
-| `shared/auth`                         | `validateAuthentication`, `validateAdminUser`, `validateNotBanned` and friends                            |
-| `shared/membership`                   | Writing both sides of the player↔team relationship atomically                                             |
-| `shared/contributions`                | The team contribution ledger and its arithmetic                                                           |
-| `shared/settlement`                   | Pure decisions about a team's money: what to keep and what to refund                                      |
-| `shared/stripe`                       | Stripe client, customer lookup, the team registration Product                                             |
-| `shared/returnUrls`                   | The allowlist for Checkout return URLs                                                                    |
-| `shared/seasonPricing`                | Validating a season's team registration total, which cannot change once money depends on it               |
-| `shared/names`                        | Player name validation, mirroring the App's schema                                                        |
-| `shared/database`                     | Document reference builders and the current-season lookup                                                 |
-| `shared/gameSchedule`                 | The Saturday time slots and fields a game may be scheduled in                                             |
-| `shared/images`, `shared/imageRules`  | Checking an uploaded image (PNG, JPEG, GIF or WebP, up to 5 MB) and storing it; the App imports the rules |
+| Module                                  | Holds                                                                                                     |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `services/accountDeletionService`       | What deleting an account removes, and what it keeps; shared by `deletePlayer` and `userDeleted`           |
+| `services/teamRegistrationService`      | The registration rule and the transactional twelve-team cap                                               |
+| `services/teamDeletionService`          | Deleting a team-season, refusing while it holds money                                                     |
+| `services/teamSettlementService`        | Refunding and reconciling a team's money with Stripe                                                      |
+| `services/teamContributionIntake`       | Taking a PaymentIntent into the ledger, or refunding it if it cannot be attributed                        |
+| `services/teamCheckoutReservations`     | Reserving a contribution while its payer is on Stripe's page, and ending the reservation                  |
+| `services/teamPaymentsSweep`            | Finding and settling every unregistered team holding money                                                |
+| `services/teamPaymentsReconciliation`   | Checking Stripe and the ledger against each other                                                         |
+| `services/playerRankings`               | The TrueSkill rankings rebuild — see [PLAYER_RANKING_ALGORITHM.md](PLAYER_RANKING_ALGORITHM.md)           |
+| `services/swissRankings`                | Swiss-format standings                                                                                    |
+| `shared/auth`                           | `validateAuthentication`, `validateAdminUser`, `validateNotBanned` and friends                            |
+| `shared/membership`                     | Writing both sides of the player↔team relationship atomically                                             |
+| `shared/contributions`                  | The team contribution ledger and its arithmetic                                                           |
+| `shared/settlement`                     | Pure decisions about a team's money: what to keep and what to refund                                      |
+| `shared/stripe`                         | Stripe client, customer lookup, the team registration Product                                             |
+| `shared/returnUrls`                     | The allowlist for Checkout return URLs                                                                    |
+| `shared/seasonPricing`                  | Validating a season's team registration total, which cannot change once money depends on it               |
+| `shared/names`, `shared/nameRules`      | Player and team name validation; the App imports the rules                                                |
+| `shared/database`                       | Document reference builders and the current-season lookup                                                 |
+| `shared/gameSchedule`                   | The Saturday time slots and fields a game may be scheduled in                                             |
+| `shared/images`, `shared/imageRules`    | Checking an uploaded image (PNG, JPEG, GIF or WebP, up to 5 MB) and storing it; the App imports the rules |
+| `shared/textFields`, `shared/textRules` | Length rules for badge, news, post and reply text; the App imports the rules                              |
+| `shared/seasonInput`                    | Checking a season's name, dates and Stripe prices, for createSeason and updateSeason alike                |
+| `shared/registrationWindow`             | Refusing a request once registration has closed, with the date in the reader's zone                       |
+| `shared/checkoutReservations`           | Where a team-season's open checkout reservations live, and the sum they reserve                           |
+| `shared/offers`                         | Cancelling a player's pending offers once they join a team                                                |
+| `shared/storage`                        | Public URLs for stored files, pointing at the emulator when running under it                              |
+| `shared/format`                         | Dates in user-facing messages, in the reader's zone or Minneapolis's                                      |
+| `shared/errors`                         | Logging a trigger's or webhook's failure before rethrowing it                                             |
+| `shared/maintenance`                    | The migration kill-switch every trigger checks first                                                      |
 
 ## Configuration
 

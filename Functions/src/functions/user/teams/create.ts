@@ -4,6 +4,8 @@
  * Security validations:
  * - User must be authenticated and email verified
  * - User must not be banned
+ * - The team name must be 2–50 characters and, unless the caller is an admin,
+ *   pass the profanity filter
  * - Registration must not have ended
  * - User must not already be on a team for this season
  * - Admins bypass banned and registration date restrictions
@@ -32,6 +34,7 @@ import {
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 import { addPlayerToTeam } from '../../../shared/membership.js'
+import { validateTeamName } from '../../../shared/names.js'
 
 interface CreateTeamRequest {
 	name: string
@@ -95,11 +98,10 @@ export const createTeam = onCall<CreateTeamRequest>(
 
 			const isAdmin = playerDocument.admin === true
 
-			if (!isAdmin) {
-				await validateNotBanned(firestore, userId)
-			}
+			const teamName = validateTeamName(name, { checkProfanity: !isAdmin })
 
 			if (!isAdmin) {
+				await validateNotBanned(firestore, userId)
 				assertRegistrationOpen(
 					seasonData,
 					'Team registration has closed.',
@@ -147,7 +149,7 @@ export const createTeam = onCall<CreateTeamRequest>(
 				})
 				txn.set(teamSeasonDocRef, {
 					season: seasonDocRef,
-					name: name.trim(),
+					name: teamName,
 					logo: storedLogo?.url ?? null,
 					storagePath: storedLogo?.storagePath ?? null,
 					registered: false,

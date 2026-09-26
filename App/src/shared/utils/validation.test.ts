@@ -141,7 +141,7 @@ describe('nameSchema', () => {
 		(name) => {
 			// The form refused to let anyone with these names register. Cox is
 			// a top-1000 US surname and Wang is one of the most common in the
-			// world. Kept in sync with Functions/src/shared/names.ts.
+			// world. The exceptions are the server's, from `@/shared/name-rules`.
 			expect(nameSchema.parse(name)).toBe(name)
 		}
 	)

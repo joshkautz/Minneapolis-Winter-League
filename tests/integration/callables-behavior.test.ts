@@ -229,6 +229,93 @@ describe('createTeam', () => {
 	})
 })
 
+describe('team names', () => {
+	/**
+	 * The form's rules were the only ones: the server took any non-empty
+	 * name, so a request that skipped the form could put any length or
+	 * language on the public schedule and standings.
+	 */
+	const TOO_LONG = 'a'.repeat(51)
+	const PROFANE = 'Shit Show'
+
+	const create = (uid: string, name: unknown): Promise<string | null> =>
+		errorCodeFrom(fn('createTeam'), {
+			auth: authed(uid),
+			data: { name, seasonId: SEASON },
+		})
+
+	const createdTeam = async (uid = PLAYER): Promise<string> => {
+		expect(await create(uid, 'Test Team')).toBeNull()
+		return (await playerSeasonRef(firestore, uid, SEASON).get()).data()!.team!
+			.id
+	}
+
+	const storedName = async (teamId: string): Promise<string | undefined> =>
+		(
+			await firestore
+				.collection('teams')
+				.doc(teamId)
+				.collection('teamSeasons')
+				.doc(SEASON)
+				.get()
+		).data()?.name
+
+	it.each([
+		['too long', TOO_LONG],
+		['too short', 'A'],
+		['profane', PROFANE],
+	])('refuses to create a team whose name is %s', async (_label, name) => {
+		expect(await create(PLAYER, name)).toBe('invalid-argument')
+		expect(
+			(await playerSeasonRef(firestore, PLAYER, SEASON).get()).exists
+		).toBe(false)
+	})
+
+	it('stores the name trimmed', async () => {
+		expect(await create(PLAYER, '  Mounds View Marlins  ')).toBeNull()
+		const teamId = (
+			await playerSeasonRef(firestore, PLAYER, SEASON).get()
+		).data()!.team!.id
+		expect(await storedName(teamId)).toBe('Mounds View Marlins')
+	})
+
+	it('lets an admin create a team the profanity filter refuses', async () => {
+		// As with player names: the filter cannot know every word, and an
+		// organizer typing one deliberately is the override.
+		await seedPlayer('admin-1', { admin: true })
+		expect(await create('admin-1', PROFANE)).toBeNull()
+	})
+
+	it.each([
+		['too long', TOO_LONG],
+		['profane', PROFANE],
+	])('refuses to rename a team to a name that is %s', async (_label, name) => {
+		const teamId = await createdTeam()
+
+		const code = await errorCodeFrom(fn('updateTeam'), {
+			auth: authed(PLAYER),
+			data: { teamId, seasonId: SEASON, name },
+		})
+
+		expect(code).toBe('invalid-argument')
+		expect(await storedName(teamId)).toBe('Test Team')
+	})
+
+	it('holds an admin to the length limit, but not the profanity filter', async () => {
+		const teamId = await createdTeam()
+		await seedPlayer('admin-1', { admin: true })
+		const rename = (name: string): Promise<string | null> =>
+			errorCodeFrom(fn('updateTeamAdmin'), {
+				auth: authed('admin-1'),
+				data: { teamId, seasonId: SEASON, name },
+			})
+
+		expect(await rename(TOO_LONG)).toBe('invalid-argument')
+		expect(await rename(PROFANE)).toBeNull()
+		expect(await storedName(teamId)).toBe(PROFANE)
+	})
+})
+
 describe('updateTeamRoster', () => {
 	let teamId: string
 

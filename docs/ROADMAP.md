@@ -225,16 +225,14 @@ admin editor will be refused until it is corrected, most likely to `Hayden`.
 Left alone deliberately — dropping someone's nickname is their call, not a
 migration's. Fix it from the admin player editor.
 
-## Name validation duplicates the App's rules
+## Name validation
 
-`Functions/src/shared/names.ts` and `App/src/shared/utils/validation.ts`
-enforce the same rules on player names, deliberately duplicated the way
-`types.ts` is: the workspaces build against different SDKs and neither imports
-from the other. **Change them together** — including
-`REAL_NAMES_WRONGLY_FLAGGED`, which appears in both.
-
-The Functions copy is the control; the App's exists so the reader sees the
-error inline rather than after submitting.
+Player and team name rules are written once, in
+`Functions/src/shared/nameRules.ts`, which the App imports. The server's check
+(`shared/names.ts`) is the control; the App's `nameSchema` and
+`teamNameSchema` exist so the reader sees the error inline rather than after
+submitting. Until September 2026 team names had no server-side rules at all —
+any non-empty string was stored.
 
 ### The profanity blocklist and real names
 

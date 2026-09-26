@@ -25,6 +25,7 @@ import {
 	setPlayerCaptainStatus,
 } from '../../../shared/membership.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { validateTeamName } from '../../../shared/names.js'
 import {
 	type DocumentReference,
 	type PlayerDocument,
@@ -106,12 +107,12 @@ export const updateTeamAdmin = onCall<
 			)
 		}
 
-		if (name !== undefined && (typeof name !== 'string' || !name.trim())) {
-			throw new HttpsError(
-				'invalid-argument',
-				'Team name must be a non-empty string'
-			)
-		}
+		// An admin is trusted with language, as for player names, but not
+		// with a name too long for every table it appears in.
+		const teamName =
+			name === undefined
+				? undefined
+				: validateTeamName(name, { checkProfanity: false })
 
 		const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
 
@@ -129,15 +130,14 @@ export const updateTeamAdmin = onCall<
 		const changes: UpdateTeamAdminResponse['changes'] = {}
 
 		// 1. Name update on the team season subdoc.
-		if (name && name.trim() !== teamSeasonData.name) {
-			const trimmedName = name.trim()
-			changes.name = { from: teamSeasonData.name, to: trimmedName }
-			await teamSeasonDocRef.update({ name: trimmedName })
+		if (teamName !== undefined && teamName !== teamSeasonData.name) {
+			changes.name = { from: teamSeasonData.name, to: teamName }
+			await teamSeasonDocRef.update({ name: teamName })
 			logger.info('Updated team name', {
 				teamId,
 				seasonId,
 				from: teamSeasonData.name,
-				to: trimmedName,
+				to: teamName,
 			})
 		}
 

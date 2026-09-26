@@ -21,8 +21,10 @@ Functions/src/
                         reconciliation), team and account deletion, rankings
   waiver/               the waiver's text and signing rules, also imported by the App
   shared/               small helpers: auth, database refs, membership, names,
-                        contributions and settlement arithmetic, gameSchedule,
-                        returnUrls, stripe, storage, maintenance kill-switch
+                        text and image rules, season input, the registration
+                        window, contributions and settlement arithmetic,
+                        gameSchedule, returnUrls, stripe, storage, the
+                        maintenance kill-switch
   config/               constants.ts (static) and environment.ts (secrets)
   types.ts              Collections enum and document interfaces
 ```
@@ -267,8 +269,19 @@ and Stripe redirects to whatever it is given. Check them with
 `isAllowedReturnUrl` from `shared/returnUrls.ts`; an unchecked one is an open
 redirect off a genuine payment page.
 
-Player names are validated by `shared/names.ts`, which mirrors the App's
-`nameSchema`. When you add a field with rules in the App, add them here too.
+Rules both sides need are written once, in an import-free module the App
+imports by relative path: `shared/imageRules.ts` for uploads,
+`shared/nameRules.ts` for player and team names (checked with
+`validateAndNormalizeName` and `validateTeamName` from `shared/names.ts`),
+`shared/textRules.ts` for the length of badge, news, post and reply text
+(checked with `requireText` from `shared/textFields.ts`), and `waiver/`.
+Add a new field's limits there rather than restating them. The profanity
+filter is a dependency, so each side builds its own from the shared
+exceptions list; admins skip it, never the length rules.
+
+Season fields go through `parseSeasonInput` (`shared/seasonInput.ts`), and
+registration deadlines through `assertRegistrationOpen`
+(`shared/registrationWindow.ts`).
 
 ## Lint strictness
 

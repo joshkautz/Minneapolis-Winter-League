@@ -6,44 +6,15 @@
 
 import * as z from 'zod'
 import { Filter } from 'bad-words'
-
-/**
- * Entries removed from the `bad-words` blocklist because they are real
- * people's names, and this filter is applied to names.
- *
- * Out of the box the list blocks Cox, Wang, Butt, Schaffer, Dick and Dyke,
- * among others — Cox is a top-1000 US surname and Wang is one of the most
- * common surnames in the world, so the form refused to let either register.
- *
- * The criterion for removal is: an established given name or surname whose
- * word is not primarily a slur against a group.
- *
- * **Keep in sync with `Functions/src/shared/names.ts`**, which holds the
- * authoritative copy — this one is a convenience so the reader sees the error
- * inline instead of after submitting.
- */
-const REAL_NAMES_WRONGLY_FLAGGED = [
-	'butt',
-	'cox',
-	'dick',
-	'dyke',
-	'fanny',
-	'fuk',
-	'gaylord',
-	'hoar',
-	'hoare',
-	'hore',
-	'kuntz',
-	'lipshits',
-	'lipshitz',
-	'muff',
-	'pecker',
-	'schaffer',
-	'schmuck',
-	'wang',
-	'willies',
-	'willy',
-]
+import {
+	NAME_MAX_LENGTH,
+	NAME_MIN_LENGTH,
+	PLAYER_NAME_CHARACTERS,
+	REAL_NAMES_WRONGLY_FLAGGED,
+	REPEATED_PUNCTUATION,
+	formatPlayerName,
+	normalizeTypography,
+} from '@/shared/name-rules'
 
 const filter = new Filter()
 filter.removeWords(...REAL_NAMES_WRONGLY_FLAGGED)
@@ -86,20 +57,9 @@ const loginPasswordSchema = z.string({
 })
 
 /**
- * Typographic characters that mean the same thing as their ASCII
- * counterparts, normalized before validating.
- *
- * iOS and macOS substitute a curly apostrophe (U+2019) as you type, so
- * "O'Dowd" typed on a phone arrives as "O\u2019Dowd". Rejecting that tells
- * someone their own name is invalid for a reason they cannot see.
- *
- * **Keep in sync with `Functions/src/shared/names.ts`.**
+ * The rules are the server's own (`@/shared/name-rules`); this schema only
+ * shows them inline, so the reader sees the error before submitting.
  */
-const TYPOGRAPHIC_REPLACEMENTS: [RegExp, string][] = [
-	[/[\u2018\u2019\u02BC\u055A]/g, "'"],
-	[/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, '-'],
-]
-
 export const nameSchema = z
 	.string({
 		error: (issue) => {
@@ -108,55 +68,35 @@ export const nameSchema = z
 		},
 	})
 	.trim()
-	.transform((name) =>
-		TYPOGRAPHIC_REPLACEMENTS.reduce(
-			(text, [pattern, replacement]) => text.replace(pattern, replacement),
-			name
-		)
-	)
+	.transform(normalizeTypography)
 	.pipe(
 		z
 			.string()
-			.min(2, 'Name must be at least 2 characters')
-			.max(50, 'Name must be less than 50 characters')
+			.min(
+				NAME_MIN_LENGTH,
+				`Name must be at least ${NAME_MIN_LENGTH} characters`
+			)
+			.max(
+				NAME_MAX_LENGTH,
+				`Name must be at most ${NAME_MAX_LENGTH} characters`
+			)
 			// Letters from any script: José and Nguyễn are names, and an
 			// ASCII-only class refuses them.
 			.regex(
-				/^[\p{L}\p{M}\s'-]+$/u,
+				PLAYER_NAME_CHARACTERS,
 				'Name can only contain letters, spaces, hyphens, and apostrophes'
 			)
-			.refine(
-				(name) => {
-					// Consecutive apostrophes or hyphens are malformed;
-					// consecutive spaces are a typo the transform below
-					// collapses, so they are deliberately not rejected here.
-					return !/'{2,}|-{2,}/.test(name)
-				},
-				{
-					error: 'Name cannot contain consecutive hyphens or apostrophes',
-				}
-			)
-			.refine(
-				(name) => {
-					// Check for inappropriate language using bad-words package
-					return !filter.isProfane(name)
-				},
-				{
-					error:
-						'Name contains inappropriate language. Please choose a different name.',
-				}
-			)
+			// Consecutive spaces are a typo the transform below collapses, so
+			// they are deliberately not rejected here.
+			.refine((name) => !REPEATED_PUNCTUATION.test(name), {
+				error: 'Name cannot contain consecutive hyphens or apostrophes',
+			})
+			.refine((name) => !filter.isProfane(name), {
+				error:
+					'Name contains inappropriate language. Please choose a different name.',
+			})
 	)
-	.transform((name) => {
-		// Collapse runs of whitespace, then capitalize each word. `\b\w`
-		// would only reach ASCII, leaving non-Latin names uncapitalized.
-		return name
-			.replace(/\s+/g, ' ')
-			.replace(
-				/(^|[\s'-])(\p{L})/gu,
-				(_match, boundary, letter) => boundary + letter.toUpperCase()
-			)
-	})
+	.transform(formatPlayerName)
 
 export const teamNameSchema = z
 	.string({
@@ -166,8 +106,14 @@ export const teamNameSchema = z
 		},
 	})
 	.trim()
-	.min(2, 'Team name must be at least 2 characters')
-	.max(50, 'Team name must be less than 50 characters')
+	.min(
+		NAME_MIN_LENGTH,
+		`Team name must be at least ${NAME_MIN_LENGTH} characters`
+	)
+	.max(
+		NAME_MAX_LENGTH,
+		`Team name must be at most ${NAME_MAX_LENGTH} characters`
+	)
 	.refine(
 		(name) => {
 			// Check for inappropriate language using bad-words package
