@@ -131,7 +131,7 @@ already allowed.
 
 ## Tests
 
-Four suites (~1,480 tests), all run by `npm run verify`:
+Four suites (~1,500 tests), all run by `npm run verify`:
 
 | Suite           | Location                      | Covers                                                  |
 | --------------- | ----------------------------- | ------------------------------------------------------- |
