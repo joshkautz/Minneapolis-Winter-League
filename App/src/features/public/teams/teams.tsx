@@ -1,8 +1,10 @@
-import { useMemo, useState, useEffect } from 'react'
-import { getDocs, Timestamp } from 'firebase/firestore'
+import { useMemo } from 'react'
+import { Timestamp } from 'firebase/firestore'
+import { useCollection } from 'react-firebase-hooks/firestore'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { Users } from 'lucide-react'
-import { formatTimestamp } from '@/shared/utils'
+import { formatTimestamp, registeredPlayersByTeam } from '@/shared/utils'
+import { useQueryErrorHandler } from '@/shared/hooks'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
 import {
 	ComingSoon,
@@ -11,7 +13,7 @@ import {
 	PageHeader,
 } from '@/shared/components'
 import { TeamCard } from './team-card'
-import { registeredPlayerSeasonsQuery } from '@/firebase/collections/players'
+import { playerSeasonsInSeasonQuery } from '@/firebase/collections/players'
 
 // Types for better TypeScript support
 enum SeasonStatus {
@@ -43,10 +45,25 @@ export const Teams = () => {
 		return SeasonStatus.PAST
 	}, [selectedSeasonQueryDocumentSnapshot])
 
-	// State to store registered player counts for each team
-	const [registeredPlayerCounts, setRegisteredPlayerCounts] = useState<
-		Map<string, number>
-	>(new Map())
+	// Every player-season in the season, live, so a team's count moves as
+	// its players sign. Who counts depends on the season's pricing, which a
+	// query cannot express: under team payments signing is enough.
+	const [playerSeasonsSnapshot, , playerSeasonsError] = useCollection(
+		playerSeasonsInSeasonQuery(selectedSeasonQueryDocumentSnapshot?.ref)
+	)
+	useQueryErrorHandler({
+		error: playerSeasonsError,
+		component: 'Teams',
+		errorLabel: 'registered players',
+	})
+	const registeredPlayerCounts = useMemo(
+		() =>
+			registeredPlayersByTeam(
+				playerSeasonsSnapshot?.docs.map((doc) => doc.data()) ?? [],
+				selectedSeasonQueryDocumentSnapshot?.data()
+			),
+		[playerSeasonsSnapshot, selectedSeasonQueryDocumentSnapshot]
+	)
 
 	// Calculate team placements based on registration date
 	const teamsWithPlacements = useMemo(() => {
@@ -90,35 +107,6 @@ export const Teams = () => {
 			}
 		})
 	}, [selectedSeasonTeamsQuerySnapshot])
-
-	// Count registered players for each team
-	useEffect(() => {
-		if (
-			!selectedSeasonTeamsQuerySnapshot ||
-			!selectedSeasonQueryDocumentSnapshot
-		) {
-			return
-		}
-
-		const seasonRef = selectedSeasonQueryDocumentSnapshot.ref
-		let cancelled = false
-
-		const countRegisteredPlayers = async () => {
-			const psSnap = await getDocs(registeredPlayerSeasonsQuery(seasonRef))
-			const counts = new Map<string, number>()
-			psSnap.docs.forEach((d) => {
-				const teamRef = d.data().team
-				if (!teamRef) return
-				counts.set(teamRef.id, (counts.get(teamRef.id) ?? 0) + 1)
-			})
-			if (!cancelled) setRegisteredPlayerCounts(counts)
-		}
-
-		countRegisteredPlayers()
-		return () => {
-			cancelled = true
-		}
-	}, [selectedSeasonTeamsQuerySnapshot, selectedSeasonQueryDocumentSnapshot])
 
 	const getEmptyStateMessage = (): string => {
 		switch (seasonStatus) {

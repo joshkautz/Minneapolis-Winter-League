@@ -196,20 +196,6 @@ export const allPlayersQuery = (): Query<PlayerDocument> =>
 	collection(firestore, Collections.PLAYERS) as Query<PlayerDocument>
 
 /**
- * The player-seasons in a season that count towards registration: paid and
- * signed. Served by the `playerSeasons` (season, paid, signed) index.
- */
-export const registeredPlayerSeasonsQuery = (
-	seasonRef: DocumentReference<SeasonDocument>
-): Query<PlayerSeasonDocument> =>
-	query(
-		collectionGroup(firestore, PLAYER_SEASONS_SUBCOLLECTION),
-		where('season', '==', seasonRef),
-		where('paid', '==', true),
-		where('signed', '==', true)
-	) as Query<PlayerSeasonDocument>
-
-/**
  * The captain player-seasons of a team, across every season it has played:
  * filter to one season client-side, since a player-season's id is its season
  * id. Served by the `playerSeasons` (team, captain) index.

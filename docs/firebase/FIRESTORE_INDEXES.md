@@ -1,6 +1,6 @@
 # Firestore Indexes
 
-`firestore.indexes.json` is the source of truth: 17 composite indexes and 6
+`firestore.indexes.json` is the source of truth: 16 composite indexes and 6
 single-field overrides, deployed by CI with the rules.
 
 **The emulator does not enforce composite indexes.** A query that needs a
@@ -28,7 +28,6 @@ another, add its index to the file in the same change.
 | `news`          | collection       | season, createdAt desc | the news feed                                              |
 | `posts`         | collection       | season, createdAt desc | the message board                                          |
 | `teamSeasons`   | collection group | season, registered     | the registration lock counting registered teams            |
-| `playerSeasons` | collection group | season, paid, signed   | who has paid and signed in a season                        |
 | `playerSeasons` | collection group | team, captain          | a team's captains                                          |
 
 ## Single-field overrides
