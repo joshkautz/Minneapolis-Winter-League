@@ -164,3 +164,8 @@ import time without it.
 
 Tailwind v4 with shadcn/ui. Compose classes with `cn()` from `@/shared/utils`.
 Prefer existing primitives in `components/ui/` over new bespoke components.
+
+Draw a team's logo with `TeamLogo` (`@/shared/components`), which falls back
+to the team's initial when there is none or it fails to load; a season of a
+team's history with `SeasonHistoryRow`; and a finish with `formatPlacement`
+or `ordinal` (`@/shared/utils`).
