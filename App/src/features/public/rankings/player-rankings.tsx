@@ -2,7 +2,7 @@
  * Players page component
  *
  * Displays players in a ranked leaderboard format based on skill ratings.
- * Currently uses TrueSkill (v5.0), a Bayesian rating algorithm.
+ * Currently uses TrueSkill (v6.0), a Bayesian rating algorithm.
  */
 
 import { useState } from 'react'
@@ -88,9 +88,15 @@ const ALGORITHM_VERSIONS = {
 			'Bayesian skill rating with team-based inference and uncertainty tracking',
 		date: 'December 2025',
 	},
+	'v6.0': {
+		name: 'Steady History',
+		description:
+			'A season carry-over replaces the look-back discount, so past ratings never change',
+		date: 'September 2026',
+	},
 } as const
 
-const CURRENT_VERSION = 'v5.0'
+const CURRENT_VERSION = 'v6.0'
 
 // Helper component to render version-specific algorithm details
 const AlgorithmVersionContent = ({ version }: { version: string }) => {
@@ -104,9 +110,11 @@ const AlgorithmVersionContent = ({ version }: { version: string }) => {
 		case 'v4.0':
 			return <AlgorithmV4Content />
 		case 'v5.0':
-			return <AlgorithmV5Content />
+			return <TrueSkillContent version='v5.0' />
+		case 'v6.0':
+			return <AlgorithmV6Content />
 		default:
-			return <AlgorithmV5Content />
+			return <AlgorithmV6Content />
 	}
 }
 
@@ -668,7 +676,34 @@ const AlgorithmV4Content = () => (
 )
 
 // v5.0 - TrueSkill (Current Version)
-const AlgorithmV5Content = () => (
+// v6.0 - Steady History
+const AlgorithmV6Content = () => (
+	<>
+		<div>
+			<h4 className='font-semibold mb-2'>What Changed: Season Carry-Over</h4>
+			<p className='text-muted-foreground mb-2'>
+				v5 counted each game for less the more seasons ago it was, counted from
+				the newest season whenever rankings were rebuilt. So every new season
+				quietly re-wrote every past rating and ranking. v6 instead moves each
+				rating part of the way back to the baseline as a new season begins:
+			</p>
+			<div className='bg-muted/20 p-2 rounded text-center mb-2'>
+				<InlineMath math='\mu_{\text{new}} = 25 + (\mu_{\text{old}} - 25) \times 0.95' />
+			</div>
+			<ul className='text-muted-foreground space-y-1 text-xs ml-4'>
+				<li>• Recent seasons still count for more</li>
+				<li>
+					• A rating, once reached, never changes when later seasons are added
+				</li>
+				<li>• Each season's final standings stay as they finished</li>
+			</ul>
+		</div>
+		<TrueSkillContent version='v6.0' />
+	</>
+)
+
+// v5.0 - TrueSkill, and the TrueSkill basics v6.0 shares with it
+const TrueSkillContent = ({ version }: { version: 'v5.0' | 'v6.0' }) => (
 	<>
 		{/* What is TrueSkill */}
 		<div>
@@ -840,11 +875,15 @@ const AlgorithmV5Content = () => (
 
 				<div className='bg-muted/20 p-3 rounded-lg border flex flex-col justify-center items-center text-center min-h-[80px]'>
 					<span className='text-xs font-medium text-muted-foreground mb-1'>
-						SEASON DECAY
+						{version === 'v5.0' ? 'SEASON DECAY' : 'SEASON CARRY-OVER'}
 					</span>
-					<span className='text-lg font-mono font-bold mb-1'>0.80</span>
+					<span className='text-lg font-mono font-bold mb-1'>
+						{version === 'v5.0' ? '0.80' : '0.95'}
+					</span>
 					<p className='text-xs text-muted-foreground'>
-						Historical season weighting
+						{version === 'v5.0'
+							? 'Historical season weighting'
+							: 'Share of a rating kept into a new season'}
 					</p>
 				</div>
 
