@@ -359,6 +359,33 @@ describe('system maintenance flag', () => {
 	})
 })
 
+describe('the email outbox', () => {
+	// Queued email carries a player's address and what is being sent to
+	// them. Only Functions touch it; not even an admin reads it in the App.
+	it('is unreadable and unwritable by everyone, admins included', async () => {
+		await testEnv.withSecurityRulesDisabled(async (ctx) => {
+			const db = ctx.firestore() as unknown as Firestore
+			await setDoc(doc(db, 'mail/mail-1'), { toAddress: 'a@example.com' })
+			await setDoc(doc(db, 'players/admin-1'), {
+				admin: true,
+				email: 'admin@example.com',
+			})
+		})
+		for (const db of [anonymous(), verified('user-1'), verified('admin-1')]) {
+			await assertFails(getDoc(doc(db, 'mail/mail-1')))
+			await assertFails(getDocs(collection(db, 'mail')))
+			await assertFails(setDoc(doc(db, 'mail/mail-2'), { toAddress: 'x' }))
+		}
+	})
+
+	it('keeps the email switch readable by admins only', async () => {
+		await assertFails(getDoc(doc(verified('user-1'), 'system/email')))
+		await assertFails(
+			setDoc(doc(verified('user-1'), 'system/email'), { mode: 'live' })
+		)
+	})
+})
+
 describe('team payments', () => {
 	// What a team has paid, and who paid it, is its own business: visible to
 	// its roster and to admins, never publicly or to other teams.

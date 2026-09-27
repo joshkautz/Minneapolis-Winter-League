@@ -85,3 +85,4 @@ scripts/production/data/**
 # hooks) is committed.
 .claude/settings.local.json
 .claude/worktrees/
+.email-previews/

@@ -26,6 +26,20 @@ export const TEAM_CONFIG = {
 	MIN_CONTRIBUTION_CENTS: 1_000,
 } as const
 
+// Email Configuration
+export const EMAIL_CONFIG = {
+	FROM: 'Minneapolis Winter League <notifications@mplswinterleague.com>',
+	/** Replies reach the organizers, not an unread mailbox. */
+	REPLY_TO: 'leadership@mplsmallard.com',
+	SITE_URL: 'https://mplswinterleague.com',
+	/**
+	 * The postal address CAN-SPAM requires in every announcement: a street
+	 * address, a USPS PO box or a private mailbox. Announcements to players
+	 * are refused until it is set.
+	 */
+	POSTAL_ADDRESS: null as string | null,
+} as const
+
 // Game Configuration
 export const GAME_CONFIG = {
 	ALLOWED_TIME_SLOTS: ['18:00', '18:45', '19:30', '20:15'],

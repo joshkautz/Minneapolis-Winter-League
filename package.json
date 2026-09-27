@@ -29,7 +29,8 @@
 		"deploy": "firebase deploy",
 		"deploy:hosting": "firebase deploy --only hosting",
 		"deploy:functions": "firebase deploy --only functions",
-		"deploy:firestore": "firebase deploy --only firestore"
+		"deploy:firestore": "firebase deploy --only firestore",
+		"email:preview": "npm run build --workspace=Functions && node scripts/email-preview.mjs"
 	},
 	"devDependencies": {
 		"@firebase/rules-unit-testing": "^5.0.2",

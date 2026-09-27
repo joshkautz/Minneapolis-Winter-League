@@ -4,7 +4,8 @@
 
 import { logger } from 'firebase-functions/v2'
 
-export type SecretName = 'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET'
+export type SecretName =
+	'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET' | 'RESEND_API_KEY'
 
 /**
  * Returned in place of a missing secret so functions still load without one.
@@ -13,6 +14,7 @@ export type SecretName = 'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET'
 const SECRET_PLACEHOLDERS: Record<SecretName, string> = {
 	STRIPE_SECRET_KEY: 'DEVELOPMENT_PLACEHOLDER_STRIPE',
 	STRIPE_WEBHOOK_SECRET: 'DEVELOPMENT_PLACEHOLDER_STRIPE_WEBHOOK',
+	RESEND_API_KEY: 'DEVELOPMENT_PLACEHOLDER_RESEND',
 }
 
 const warnedMissingSecrets = new Set<SecretName>()
@@ -76,4 +78,13 @@ export function getStripeSecretKey(): string {
 
 export function getStripeWebhookSecret(): string {
 	return getSecret('STRIPE_WEBHOOK_SECRET')
+}
+
+/**
+ * Resend has no test mode: every key sends real email. So nothing reads this
+ * under the emulator — `email/sender.ts` records emails there instead of
+ * sending them.
+ */
+export function getResendApiKey(): string {
+	return getSecret('RESEND_API_KEY')
 }

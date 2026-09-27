@@ -45,6 +45,11 @@ export enum Collections {
 	 */
 	DROPBOX = 'dropbox',
 	GAMES = 'games',
+	/**
+	 * `mail/{id}` — the email outbox. Written by Functions, sent by the
+	 * `sendQueuedEmail` trigger, and readable by nobody else.
+	 */
+	MAIL = 'mail',
 	POSTS = 'posts',
 	NEWS = 'news',
 	OFFERS = 'offers',
@@ -178,7 +183,23 @@ export interface PlayerDocument extends DocumentData {
 export interface PlayerContactDocument extends DocumentData {
 	/** The sign-in email, lowercased; kept in step with Firebase Auth. */
 	email: string
+	/**
+	 * The email a player can turn off; absent means on. Account email —
+	 * sign-in, receipts — cannot be turned off.
+	 */
+	emailPreferences?: Partial<Record<OptionalEmailCategory, boolean>>
+	/** Proves an unsubscribe link came from an email sent to this player. */
+	unsubscribeToken?: string
 }
+
+/**
+ * What an email is about, which decides whether a player can turn it off
+ * and whether it must carry an unsubscribe link and postal address.
+ */
+export type EmailCategory =
+	'account' | 'teams' | 'registration' | 'announcements'
+
+export type OptionalEmailCategory = Exclude<EmailCategory, 'account'>
 
 /**
  * Player's per-season participation document.

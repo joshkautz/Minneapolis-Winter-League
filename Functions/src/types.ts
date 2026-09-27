@@ -37,6 +37,11 @@ export enum Collections {
 	 */
 	DROPBOX = 'dropbox',
 	GAMES = 'games',
+	/**
+	 * `mail/{id}` — the email outbox. Written by Functions, sent by the
+	 * `sendQueuedEmail` trigger, and readable by nobody else.
+	 */
+	MAIL = 'mail',
 	POSTS = 'posts',
 	NEWS = 'news',
 	OFFERS = 'offers',
@@ -178,7 +183,23 @@ export interface PlayerDocument extends DocumentData {
 export interface PlayerContactDocument extends DocumentData {
 	/** The sign-in email, lowercased; kept in step with Firebase Auth. */
 	email: string
+	/**
+	 * The email a player can turn off; absent means on. Account email —
+	 * sign-in, receipts — cannot be turned off.
+	 */
+	emailPreferences?: Partial<Record<OptionalEmailCategory, boolean>>
+	/** Proves an unsubscribe link came from an email sent to this player. */
+	unsubscribeToken?: string
 }
+
+/**
+ * What an email is about, which decides whether a player can turn it off
+ * and whether it must carry an unsubscribe link and postal address.
+ */
+export type EmailCategory =
+	'account' | 'teams' | 'registration' | 'announcements'
+
+export type OptionalEmailCategory = Exclude<EmailCategory, 'account'>
 
 /**
  * Player's per-season participation document.
@@ -816,4 +837,45 @@ export interface RankingsCalculationDocument extends DocumentData {
 		/** Playoff multiplier */
 		playoffMultiplier: number
 	}
+}
+
+/**
+ * `system/email`: whether email goes out at all. Absent means `off`.
+ *
+ * - `off`: nothing is sent; queued email is recorded as held.
+ * - `test`: only `testRecipients` receive email; everyone else's is skipped.
+ * - `live`: everyone's email is sent.
+ */
+export interface EmailSettingsDocument extends DocumentData {
+	mode: 'off' | 'test' | 'live'
+	testRecipients: string[]
+}
+
+export type MailStatus =
+	| 'queued'
+	| 'sent'
+	| 'held'
+	| 'skipped'
+	| 'unsubscribed'
+	| 'emulated'
+	| 'failed'
+
+/** `mail/{id}`: one email, from queueing to its outcome. */
+export interface MailDocument extends DocumentData {
+	/** A player, whose address is looked up when the email is sent. */
+	toPlayerId: string | null
+	/** Or an address, for email to someone who is not a player. */
+	toAddress: string | null
+	template: string
+	/** The template's props, which must survive a Firestore round trip. */
+	props: Record<string, unknown>
+	category: EmailCategory
+	status: MailStatus
+	createdAt: Timestamp
+	sentAt?: Timestamp
+	/** The provider's id, for looking a delivery up in Resend. */
+	providerId?: string
+	/** Why it was not sent: the setting that held it, or the error. */
+	reason?: string
+	attempts: number
 }
