@@ -21,6 +21,7 @@ import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 import {
 	queueOfferAnsweredEmails,
+	queueOfferWithdrawnEmails,
 	readTeamOfferContext,
 } from '../../../email/teamOfferEmails.js'
 
@@ -42,8 +43,9 @@ interface UpdateOfferRequest {
  * - Atomic transaction with proper cleanup
  * - Admins bypass banned and registration date restrictions
  *
- * Declining emails whoever sent the offer; accepting is emailed by the
- * onOfferUpdated trigger, once the player is really on the team.
+ * Declining emails whoever sent the offer, and withdrawing it emails whoever
+ * it was sent to; accepting is emailed by the onOfferUpdated trigger, once
+ * the player is really on the team.
  */
 export const updateOffer = onCall<UpdateOfferRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
@@ -216,15 +218,28 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 					}
 				}
 
-				// A declined offer tells whoever sent it; read before writing.
-				const declinedEmailContext =
-					status === OfferStatus.REJECTED
-						? await readTeamOfferContext(transaction, firestore, {
-								playerId: offerData.player.id,
-								teamId: offerData.team.id,
-								seasonId: offerData.season.id,
-							})
-						: null
+				// What the other side is told, if anything. A captain canceling a
+				// player's request (the App declines instead) turns it down, so it
+				// is emailed as declined. Only the sender withdrawing their own
+				// offer is emailed as withdrawn, and only if its sending was; an
+				// admin canceling someone else's offer is cleaning up.
+				const emailed: 'declined' | 'withdrawn' | null =
+					status === OfferStatus.REJECTED ||
+					(status === OfferStatus.CANCELED && !isCreator && !isAdmin)
+						? 'declined'
+						: status === OfferStatus.CANCELED &&
+							  isCreator &&
+							  offerData.sentQuietly !== true
+							? 'withdrawn'
+							: null
+				// Read what the email needs before writing.
+				const emailContext = emailed
+					? await readTeamOfferContext(transaction, firestore, {
+							playerId: offerData.player.id,
+							teamId: offerData.team.id,
+							seasonId: offerData.season.id,
+						})
+					: null
 
 				// Update offer status
 				transaction.update(offerRef, {
@@ -232,11 +247,17 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 					respondedAt: FieldValue.serverTimestamp(),
 					respondedBy: firestore.collection(Collections.PLAYERS).doc(userId),
 				})
-				if (declinedEmailContext) {
+				if (emailContext && emailed === 'declined') {
 					queueOfferAnsweredEmails(transaction, firestore, {
 						type: offerData.type,
 						accepted: false,
-						context: declinedEmailContext,
+						context: emailContext,
+					})
+				}
+				if (emailContext && emailed === 'withdrawn') {
+					queueOfferWithdrawnEmails(transaction, firestore, {
+						type: offerData.type,
+						context: emailContext,
 					})
 				}
 

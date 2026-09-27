@@ -474,6 +474,16 @@ export interface OfferDocument extends DocumentData {
 	team: DocumentReference<TeamDocument>
 	/** Type of offer: request or invitation */
 	type: OfferType
+	/**
+	 * When the other side was emailed that this player and team's offer of
+	 * this kind was sent, over the last day; it caps how often they are.
+	 */
+	sendEmailedAt?: Timestamp[]
+	/**
+	 * Set when the offer went out past that cap, so nobody was emailed;
+	 * withdrawing it then emails nobody either.
+	 */
+	sentQuietly?: boolean
 	/** Reason why an offer was automatically canceled (e.g., player joined another team) */
 	canceledReason?: string
 	/** Whether the offer has been processed by the trigger */

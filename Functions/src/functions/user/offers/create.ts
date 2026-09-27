@@ -11,7 +11,7 @@
  * - Admins bypass banned and registration date restrictions
  *
  * An invitation emails the player; a request emails the team's captains,
- * unless the same offer was withdrawn in the last day.
+ * up to OFFER_SEND_EMAILS_PER_DAY times a day for the same player and team.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -33,7 +33,7 @@ import {
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 import {
-	isQuietResend,
+	offerSendEmailPlan,
 	playerDisplayName,
 	queueOfferSentEmails,
 	readTeamOfferContext,
@@ -205,6 +205,13 @@ export const createOffer = onCall<CreateOfferRequest>(
 					)
 				}
 
+				// Sent and withdrawn over and over, it stops emailing the other side.
+				const sendEmail = offerSendEmailPlan(
+					existingOfferDoc.data(),
+					type,
+					new Date()
+				)
+
 				// Create offer document using deterministic ID for atomic operation
 				const offerData = {
 					player: playerRef,
@@ -214,6 +221,8 @@ export const createOffer = onCall<CreateOfferRequest>(
 					status: OfferStatus.PENDING,
 					createdBy: firestore.collection(Collections.PLAYERS).doc(userId),
 					createdAt: FieldValue.serverTimestamp(),
+					sentQuietly: !sendEmail.email,
+					sendEmailedAt: sendEmail.sendEmailedAt,
 				}
 
 				// Read what the email needs before the first write.
@@ -226,7 +235,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 				// Use transaction.set() with the deterministic document ID
 				// This ensures the check and create are atomic
 				transaction.set(pendingOfferRef, offerData)
-				if (!isQuietResend(existingOfferDoc.data(), new Date())) {
+				if (sendEmail.email) {
 					queueOfferSentEmails(transaction, firestore, {
 						type,
 						context: emailContext,

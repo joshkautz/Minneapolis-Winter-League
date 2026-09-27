@@ -215,3 +215,97 @@ export const TeamRequestDeclined = ({
 		</Paragraph>
 	</TeamEmail>
 )
+
+export interface TeamInvitationWithdrawnProps {
+	teamName: string
+	seasonName: string
+}
+
+export interface TeamRequestWithdrawnProps {
+	teamName: string
+	playerName: string
+}
+
+export interface TeamPlayerJoinedElsewhereProps {
+	/** The team the recipient captains, whose offer was withdrawn. */
+	teamName: string
+	playerName: string
+	/** The team the player joined instead. */
+	joinedTeamName: string
+	offerType: 'invitation' | 'request'
+}
+
+export const teamInvitationWithdrawnSubject = ({
+	teamName,
+}: TeamInvitationWithdrawnProps): string =>
+	`${teamName} withdrew their invitation`
+
+export const TeamInvitationWithdrawn = ({
+	teamName,
+	seasonName,
+	...context
+}: TeamInvitationWithdrawnProps & EmailContextProps): ReactElement => (
+	<TeamEmail
+		{...context}
+		preview='There is nothing you need to answer.'
+		heading='Invitation withdrawn'
+		button='Find a team'
+	>
+		<Paragraph>
+			{teamName} withdrew their invitation for {seasonName}, so there is nothing
+			to answer. You can ask another team, or start your own, from your team
+			page.
+		</Paragraph>
+	</TeamEmail>
+)
+
+export const teamRequestWithdrawnSubject = ({
+	teamName,
+	playerName,
+}: TeamRequestWithdrawnProps): string =>
+	`${playerName} withdrew their request to join ${teamName}`
+
+export const TeamRequestWithdrawn = ({
+	teamName,
+	playerName,
+	...context
+}: TeamRequestWithdrawnProps & EmailContextProps): ReactElement => (
+	<TeamEmail
+		{...context}
+		preview='There is nothing you need to answer.'
+		heading='Request withdrawn'
+		button='See your team'
+	>
+		<Paragraph>
+			{playerName} withdrew their request to join {teamName}, so there is
+			nothing to answer.
+		</Paragraph>
+	</TeamEmail>
+)
+
+export const teamPlayerJoinedElsewhereSubject = ({
+	playerName,
+	joinedTeamName,
+}: TeamPlayerJoinedElsewhereProps): string =>
+	`${playerName} joined ${joinedTeamName}`
+
+export const TeamPlayerJoinedElsewhere = ({
+	teamName,
+	playerName,
+	joinedTeamName,
+	offerType,
+	...context
+}: TeamPlayerJoinedElsewhereProps & EmailContextProps): ReactElement => (
+	<TeamEmail
+		{...context}
+		preview={`${playerName} is on another team this season.`}
+		heading={`${playerName} joined another team`}
+		button='Find players'
+	>
+		<Paragraph>
+			{offerType === 'invitation'
+				? `${playerName} joined ${joinedTeamName}, so your invitation from ${teamName} was withdrawn.`
+				: `${playerName} joined ${joinedTeamName}, so their request to join ${teamName} was withdrawn.`}
+		</Paragraph>
+	</TeamEmail>
+)
