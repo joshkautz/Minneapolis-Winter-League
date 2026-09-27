@@ -29,6 +29,8 @@ below. The "Read" column is what `firestore.rules` allows a client.
 | `stripe/{uid}`           | A player's Checkout sessions and payments             | that player         | `createStripeCheckout`, `stripeWebhook`             |
 | `dropbox/{uid}`          | Waivers signed through Dropbox Sign before Sep 2026   | that player         | nothing; kept as history                            |
 | `system/maintenance`     | The migration kill-switch triggers honour             | admins              | `scripts/production/set-maintenance.js`, by hand    |
+| `system/email`           | Whether email is sent: off, test or live              | admins              | `scripts/production/set-email-mode.js`, by hand     |
+| `mail`                   | The email outbox: one document per email              | nobody (Functions)  | `queueEmail`, `sendQueuedEmail`                     |
 
 ## Per-season subcollections
 

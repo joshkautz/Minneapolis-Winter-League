@@ -175,7 +175,7 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-About 1,550 tests across four suites, all run by `npm run verify`. Every callable is
+About 1,600 tests across four suites, all run by `npm run verify`. Every callable is
 covered for authorization, **every trigger** has a suite, and the emulator
 suites are mutation-tested. The conventions that keep them worth having —
 mutation testing, the emulator's missing batch limit, and pinning behaviour
@@ -183,7 +183,7 @@ that is deliberately not fixed — are in `CLAUDE.md`.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 44.
+- **Deeper callable behaviour.** The authorization sweep covers all 46.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
   `updatePlayerAdmin`, `rolloverTeam` and the three game callables have
   behavioural tests. The rest are covered only at the gate; `deletePlayer`,

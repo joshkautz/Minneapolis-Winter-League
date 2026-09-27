@@ -62,9 +62,11 @@ Top-level collections are listed in the `Collections` enum, which is duplicated
 in `Functions/src/types.ts` and `App/src/types.ts` — **keep both in sync**.
 Per-season state hangs off subcollections rather than the parent document:
 
-- `playerContacts/{uid}` — the player's email; **private** to the player and
-  admins, because `players/{uid}` is public. Never put an email back on the
-  player document.
+- `playerContacts/{uid}` — the player's email and email preferences;
+  **private** to the player and admins, because `players/{uid}` is public.
+  Never put an email back on the player document.
+- `mail/{id}` — the email outbox, readable by Functions only; sending is
+  gated by `system/email` (see `docs/EMAIL.md`)
 - `players/{uid}/playerSeasons/{seasonId}` — paid, signed, captain, team
   (a ban is **not** season state — it lives on `players/{uid}.banned`)
 - `players/{uid}/waiverSignatures/{id}` — the evidence behind `signed`;
@@ -123,6 +125,10 @@ already allowed.
   something CI never saw. Keep the `--package-lock-only`: a full install there
   creates a `Functions/node_modules` that shadows the hoisted workspace tree
   and silently breaks `vi.mock()` in the emulator tests.
+- **Email: Resend has no test mode**, so every key sends real email. Nothing
+  sends unless `system/email.mode` allows it, the emulator never sends, and
+  players are emailed only through the `mail/` outbox — never with the Resend
+  CLI or MCP server, which are for setup and testing.
 - `Functions/src/index.ts` is the deploy manifest. Forgetting to export is the
   most common way a new function silently does nothing.
 - `.emulator/` is gitignored and may hold real production data pulled down by
@@ -135,7 +141,7 @@ already allowed.
 
 ## Tests
 
-Four suites (~1,550 tests), all run by `npm run verify`:
+Four suites (~1,600 tests), all run by `npm run verify`:
 
 | Suite           | Location                      | Covers                                                  |
 | --------------- | ----------------------------- | ------------------------------------------------------- |

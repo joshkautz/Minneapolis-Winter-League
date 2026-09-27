@@ -21,6 +21,7 @@ Functions/src/
                         (checkout reservations, intake, settlement, sweep,
                         reconciliation), team and account deletion, rankings
   waiver/               the waiver's text and signing rules, also imported by the App
+  email/                the outbox, sender, switch, unsubscribe and React templates
   shared/               small helpers: auth, database refs, membership, names,
                         text and image rules, season input, the registration
                         window, contributions and settlement arithmetic,
@@ -212,6 +213,17 @@ produced an empty leaderboard without erroring.
 Read rosters through `loadRosterPlayerRefs` or a `.collection('roster')` query
 off `teamSeasonRef`, and never write either side of the player↔team
 relationship directly — `shared/membership.ts` writes both atomically.
+
+## Email
+
+Queue email; never send it inline. Write a `mail/{id}` document with
+`queueEmail` or `queueEmailInTransaction` (`email/outbox.ts`), inside the
+transaction that makes the change the email describes, and give it a stable
+id when the same email must not be queued twice. `sendQueuedEmail` does the
+rest, gated by `system/email` and never from the emulator. A new email is a
+React template registered in `email/templates.tsx` with a category, which
+decides whether it can be turned off and whether it carries an unsubscribe
+link and the postal address. See docs/EMAIL.md.
 
 ## Registering
 
