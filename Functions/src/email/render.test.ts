@@ -25,6 +25,16 @@ describe('renderEmail', () => {
 		}
 	)
 
+	it.each(Object.keys(TEMPLATES) as TemplateName[])(
+		'opens the plain text of %s with its words, not the logo’s link',
+		async (name) => {
+			// The logo is a link to the site. Its image is dropped from the
+			// text version, which left the bare address as the first line.
+			const { text } = await render(name)
+			expect(text.trimStart()).not.toMatch(/^https?:/)
+		}
+	)
+
 	it('builds the announcement from its season', async () => {
 		const email = await render('seasonAnnouncement')
 		expect(email.subject).toBe(

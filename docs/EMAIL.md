@@ -77,7 +77,7 @@ and one player's link never opens another's preferences.
 2. **The `List-Unsubscribe` header** points at `mplswinterleague.com/unsubscribe`
    (a Hosting rewrite to `emailUnsubscribe`), with
    `List-Unsubscribe-Post: List-Unsubscribe=One-Click`. Gmail, Yahoo and
-   Outlook show their own Unsubscribe button from it. A POST unsubscribes
+   Outlook can show their own Unsubscribe button from it. A POST unsubscribes
    straight away and answers 200 — never a redirect; a GET (a mail app opening
    the address in a browser) changes nothing and redirects to the preferences
    page, because link scanners fetch every URL in a message.
@@ -99,7 +99,15 @@ Both read and write preferences through `getEmailPreferences` and
 **Checking DKIM covers the headers.** Gmail offers one-click only when the
 DKIM signature covers `List-Unsubscribe` and `List-Unsubscribe-Post`. In Gmail,
 open a received announcement, choose **Show original**, and check that the
-`DKIM-Signature` header's `h=` list includes both.
+`DKIM-Signature` header's `h=` list includes both. The first test
+announcement (September 2026) passed: SPF, DKIM and DMARC, with both headers
+signed.
+
+**Gmail's button is Gmail's choice.** Correct headers make one-click
+possible; Gmail decides whether to show the button, from the sender's volume
+and reputation. It did not appear on the domain's first test email, and is
+not expected to until the league has sent real announcements for a while.
+The footer link works either way.
 
 **Announcements are commercial email under CAN-SPAM.** They carry the league's
 postal address (`EMAIL_CONFIG.POSTAL_ADDRESS` in
