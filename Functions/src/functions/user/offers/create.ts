@@ -9,6 +9,9 @@
  * - For requests: user must be the player making the request
  * - Player must not already be on a team for this season
  * - Admins bypass banned and registration date restrictions
+ *
+ * An invitation emails the player; a request emails the team's captains,
+ * unless the same offer was withdrawn in the last day.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -29,6 +32,12 @@ import {
 } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
+import {
+	isQuietResend,
+	playerDisplayName,
+	queueOfferSentEmails,
+	readTeamOfferContext,
+} from '../../../email/teamOfferEmails.js'
 
 interface CreateOfferRequest {
 	playerId: string
@@ -207,9 +216,23 @@ export const createOffer = onCall<CreateOfferRequest>(
 					createdAt: FieldValue.serverTimestamp(),
 				}
 
+				// Read what the email needs before the first write.
+				const emailContext = await readTeamOfferContext(
+					transaction,
+					firestore,
+					{ playerId, teamId, seasonId: seasonRef.id }
+				)
+
 				// Use transaction.set() with the deterministic document ID
 				// This ensures the check and create are atomic
 				transaction.set(pendingOfferRef, offerData)
+				if (!isQuietResend(existingOfferDoc.data(), new Date())) {
+					queueOfferSentEmails(transaction, firestore, {
+						type,
+						context: emailContext,
+						captainName: playerDisplayName(currentUserDoc.data()),
+					})
+				}
 
 				logger.info(`Successfully created offer: ${pendingOfferId}`, {
 					type,

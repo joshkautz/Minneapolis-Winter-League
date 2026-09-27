@@ -5,6 +5,7 @@
  *  - Add the player to the team's roster subcollection for the offer's season
  *  - Update the player's season subdoc to point at the new team
  *  - Cancel any other pending offers for that player in that season
+ *  - Email whoever sent the offer that it was accepted
  */
 
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
@@ -20,6 +21,10 @@ import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { playerSeasonRef, teamSeasonRef } from '../../shared/database.js'
 import { addPlayerToTeam } from '../../shared/membership.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
+import {
+	queueOfferAnsweredEmails,
+	readTeamOfferContext,
+} from '../../email/teamOfferEmails.js'
 
 export const onOfferUpdated = onDocumentUpdated(
 	{
@@ -85,6 +90,13 @@ export const onOfferUpdated = onDocumentUpdated(
 					throw new Error('Player is already on a team for this season')
 				}
 
+				// Read what the email needs before the first write.
+				const emailContext = await readTeamOfferContext(
+					transaction,
+					firestore,
+					{ playerId, teamId, seasonId }
+				)
+
 				// Atomic dual-write of the membership relationship.
 				addPlayerToTeam(transaction, firestore, {
 					playerId,
@@ -97,6 +109,11 @@ export const onOfferUpdated = onDocumentUpdated(
 
 				// Mark offer as processed.
 				transaction.update(offerRef, { processed: true })
+				queueOfferAnsweredEmails(transaction, firestore, {
+					type: offerData.type,
+					accepted: true,
+					context: emailContext,
+				})
 
 				// Cancel all other pending offers for this player in this season.
 				const pendingOffersQuery = await firestore

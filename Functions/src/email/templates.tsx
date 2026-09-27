@@ -13,6 +13,24 @@ import {
 	type SeasonAnnouncementProps,
 } from './templates/SeasonAnnouncement.js'
 import { TestEmail, type TestEmailProps } from './templates/TestEmail.js'
+import {
+	TeamInvitation,
+	TeamInvitationAccepted,
+	teamInvitationAcceptedSubject,
+	TeamInvitationDeclined,
+	teamInvitationDeclinedSubject,
+	teamInvitationSubject,
+	TeamJoinRequest,
+	teamJoinRequestSubject,
+	TeamRequestAccepted,
+	teamRequestAcceptedSubject,
+	TeamRequestDeclined,
+	teamRequestDeclinedSubject,
+	type TeamInvitationAnsweredProps,
+	type TeamInvitationProps,
+	type TeamJoinRequestProps,
+	type TeamRequestAnsweredProps,
+} from './templates/TeamOffers.js'
 
 /** What every template receives besides its own props. */
 export interface EmailContext {
@@ -51,6 +69,56 @@ export const TEMPLATES = {
 			teamSpots: 12,
 			minimumSignedPlayers: 10,
 		},
+	}),
+	teamInvitation: define<TeamInvitationProps>({
+		category: 'teams',
+		subject: teamInvitationSubject,
+		footerReason: 'You are receiving this because a captain invited you.',
+		component: TeamInvitation,
+		sample: {
+			teamName: 'Frost Giants',
+			seasonName: '2026 Fall',
+			captainName: 'Sam Rivera',
+		},
+	}),
+	teamJoinRequest: define<TeamJoinRequestProps>({
+		category: 'teams',
+		subject: teamJoinRequestSubject,
+		footerReason: 'You are receiving this because you captain this team.',
+		component: TeamJoinRequest,
+		sample: {
+			teamName: 'Frost Giants',
+			seasonName: '2026 Fall',
+			playerName: 'Alex Chen',
+		},
+	}),
+	teamInvitationAccepted: define<TeamInvitationAnsweredProps>({
+		category: 'teams',
+		subject: teamInvitationAcceptedSubject,
+		footerReason: 'You are receiving this because you captain this team.',
+		component: TeamInvitationAccepted,
+		sample: { teamName: 'Frost Giants', playerName: 'Alex Chen' },
+	}),
+	teamInvitationDeclined: define<TeamInvitationAnsweredProps>({
+		category: 'teams',
+		subject: teamInvitationDeclinedSubject,
+		footerReason: 'You are receiving this because you captain this team.',
+		component: TeamInvitationDeclined,
+		sample: { teamName: 'Frost Giants', playerName: 'Alex Chen' },
+	}),
+	teamRequestAccepted: define<TeamRequestAnsweredProps>({
+		category: 'teams',
+		subject: teamRequestAcceptedSubject,
+		footerReason: 'You are receiving this because you asked to join a team.',
+		component: TeamRequestAccepted,
+		sample: { teamName: 'Frost Giants', seasonName: '2026 Fall' },
+	}),
+	teamRequestDeclined: define<TeamRequestAnsweredProps>({
+		category: 'teams',
+		subject: teamRequestDeclinedSubject,
+		footerReason: 'You are receiving this because you asked to join a team.',
+		component: TeamRequestDeclined,
+		sample: { teamName: 'Frost Giants', seasonName: '2026 Fall' },
 	}),
 	testEmail: define<TestEmailProps>({
 		category: 'account',

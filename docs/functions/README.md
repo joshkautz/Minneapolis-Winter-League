@@ -57,15 +57,15 @@ during account setup. Everything else requires a verified one.
 
 ## Triggers
 
-| Function                                     | Fires on                                               | Does                                                                                    |
-| -------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `userDeleted`                                | Auth account deleted                                   | Deletes the player's data, keeping waivers; see [Account deletion](#account-deletion)   |
-| `onOfferUpdated`                             | `offers/{offerId}` updated                             | On acceptance, adds the player to the roster and points their season record at the team |
-| `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes registration; refunds a leaver's money on an unregistered team               |
-| `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                 |
-| `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes, and settles a new payment          |
-| `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Refunds the new team's excess; at twelve, refunds and removes the unregistered ones     |
-| `onPaymentCreated`                           | `stripe/{uid}/payments/{id}` created                   | Marks a per-player registration paid                                                    |
+| Function                                     | Fires on                                               | Does                                                                                                                   |
+| -------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `userDeleted`                                | Auth account deleted                                   | Deletes the player's data, keeping waivers; see [Account deletion](#account-deletion)                                  |
+| `onOfferUpdated`                             | `offers/{offerId}` updated                             | On acceptance, adds the player to the roster, points their season record at the team and emails whoever sent the offer |
+| `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes registration; refunds a leaver's money on an unregistered team                                              |
+| `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                                                |
+| `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes, and settles a new payment                                         |
+| `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Refunds the new team's excess; at twelve, refunds and removes the unregistered ones                                    |
+| `onPaymentCreated`                           | `stripe/{uid}/payments/{id}` created                   | Marks a per-player registration paid                                                                                   |
 
 Every trigger honours the migration kill-switch,
 `system/maintenance.migrationInProgress`, and returns without writing while it
