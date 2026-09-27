@@ -133,6 +133,25 @@ npm run email:preview   # renders every template to .email-previews/*.html
 To see one in a real inbox, set test mode and call `sendEmailPreview` with the
 template's name; it sends the sample to each test recipient.
 
+## Team emails
+
+Joining a team is emailed to whoever has to act, or asked
+(`email/teamOfferEmails.ts`, templates in `templates/TeamOffers.tsx`). Every
+one is in the `teams` category and links to the team page, `/manage`.
+
+| Event    | Invitation (a captain invites a player) | Request (a player asks to join)    |
+| -------- | --------------------------------------- | ---------------------------------- |
+| Sent     | the player (`teamInvitation`)           | each captain (`teamJoinRequest`)   |
+| Accepted | each captain (`teamInvitationAccepted`) | the player (`teamRequestAccepted`) |
+| Declined | each captain (`teamInvitationDeclined`) | the player (`teamRequestDeclined`) |
+
+"Each captain" is everyone captaining the team that season. Sending is
+queued by `createOffer`, declining by `updateOffer`, and accepting by the
+`onOfferUpdated` trigger, in the transaction that puts the player on the
+roster, so nobody hears of a join that failed. A canceled offer, withdrawn or
+cleared because the player joined another team, sends nothing. Admin roster
+edits send nothing either: they are as often corrections to past seasons.
+
 ## The new-season announcement
 
 `sendSeasonAnnouncement({ seasonId, audience, dryRun })`, admin only, builds
@@ -161,6 +180,15 @@ with these records in Squarespace DNS:
 DMARC is in monitoring mode; tighten it to `p=quarantine` once mail has been
 flowing cleanly for a few weeks. Squarespace has no DNS API, so record changes
 are made by hand.
+
+**The plan limits sending.** Resend's free plan allows 100 emails a day and
+3,000 a month; Pro ($20 a month for 50,000) has no daily limit. The
+announcement alone goes to about 450 players, and the opening day of 2025
+Fall registration saw 150 invitations and requests, each an email or more,
+so the league needs Pro for at least September and October. Over the limit,
+Resend answers `daily_quota_exceeded`, which the sender retries for up to a
+day: the email is late, and after a day of retries it is left `queued`,
+never sent. `resend usage` shows where the account stands.
 
 Functions read `RESEND_API_KEY`, a Firebase secret holding a **send-only key
 restricted to this domain**. Account work — domains, keys, webhooks, logs —

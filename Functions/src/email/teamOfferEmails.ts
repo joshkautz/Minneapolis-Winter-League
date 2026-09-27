@@ -1,0 +1,142 @@
+/**
+ * Who hears about an invitation or a request to join a team, and what they
+ * are told:
+ *
+ * | Event                | Invitation (captain → player) | Request (player → team) |
+ * | -------------------- | ----------------------------- | ----------------------- |
+ * | Sent                 | the player                    | every captain           |
+ * | Accepted             | every captain                 | the player              |
+ * | Declined             | every captain                 | the player              |
+ *
+ * A canceled offer sends nothing: withdrawing one, or its being withdrawn
+ * because the player joined another team, needs nobody to act.
+ *
+ * The emails are queued in the transaction that makes the change, so one
+ * goes out only if the change was saved. A transaction reads before it
+ * writes, so read the context with `readTeamOfferContext` before any write.
+ */
+
+import type { Firestore, Query, Transaction } from 'firebase-admin/firestore'
+import {
+	Collections,
+	OfferType,
+	PLAYER_SEASONS_SUBCOLLECTION,
+	type PlayerDocument,
+	type PlayerSeasonDocument,
+} from '../types.js'
+import {
+	canonicalPlayerIdFromPlayerSeasonDoc,
+	playerRef,
+	teamRef,
+	teamSeasonRef,
+} from '../shared/database.js'
+import { queueEmailInTransaction } from './outbox.js'
+
+/** What the team emails say, read once per change. */
+export interface TeamOfferContext {
+	playerId: string
+	playerName: string
+	teamName: string
+	seasonName: string
+	/** The team's captains this season, who answer and hear about requests. */
+	captainIds: string[]
+}
+
+/** "First Last", as the league shows a player elsewhere. */
+export const playerDisplayName = (
+	player: Partial<PlayerDocument> | undefined
+): string =>
+	[player?.firstname, player?.lastname].filter(Boolean).join(' ').trim() ||
+	'A player'
+
+/** Reads the names and captains a team email needs. */
+export async function readTeamOfferContext(
+	transaction: Transaction,
+	firestore: Firestore,
+	{
+		playerId,
+		teamId,
+		seasonId,
+	}: { playerId: string; teamId: string; seasonId: string }
+): Promise<TeamOfferContext> {
+	const [player, teamSeason, season, captainSeasons] = await Promise.all([
+		transaction.get(playerRef(firestore, playerId)),
+		transaction.get(teamSeasonRef(firestore, teamId, seasonId)),
+		transaction.get(firestore.collection(Collections.SEASONS).doc(seasonId)),
+		// Served by the playerSeasons (team, captain) index. It spans every
+		// season the team has played; a player-season's id is its season's.
+		transaction.get(
+			firestore
+				.collectionGroup(PLAYER_SEASONS_SUBCOLLECTION)
+				.where('team', '==', teamRef(firestore, teamId))
+				.where('captain', '==', true) as Query<PlayerSeasonDocument>
+		),
+	])
+	return {
+		playerId,
+		playerName: playerDisplayName(player.data()),
+		teamName: teamSeason.data()?.name ?? 'your team',
+		seasonName: season.data()?.name ?? 'this season',
+		captainIds: captainSeasons.docs
+			.filter((doc) => doc.id === seasonId)
+			.map((doc) => canonicalPlayerIdFromPlayerSeasonDoc(doc)),
+	}
+}
+
+/** Tells the other side that an invitation or request has been sent. */
+export function queueOfferSentEmails(
+	transaction: Transaction,
+	firestore: Firestore,
+	{
+		type,
+		context,
+		captainName,
+	}: { type: OfferType; context: TeamOfferContext; captainName: string }
+): void {
+	const { playerId, playerName, teamName, seasonName, captainIds } = context
+	if (type === OfferType.INVITATION) {
+		queueEmailInTransaction(transaction, firestore, {
+			to: { playerId },
+			template: 'teamInvitation',
+			props: { teamName, seasonName, captainName },
+		})
+		return
+	}
+	for (const captainId of captainIds) {
+		queueEmailInTransaction(transaction, firestore, {
+			to: { playerId: captainId },
+			template: 'teamJoinRequest',
+			props: { teamName, seasonName, playerName },
+		})
+	}
+}
+
+/** Tells whoever sent an invitation or request how it was answered. */
+export function queueOfferAnsweredEmails(
+	transaction: Transaction,
+	firestore: Firestore,
+	{
+		type,
+		accepted,
+		context,
+	}: { type: OfferType; accepted: boolean; context: TeamOfferContext }
+): void {
+	const { playerId, playerName, teamName, seasonName, captainIds } = context
+	if (type === OfferType.INVITATION) {
+		for (const captainId of captainIds) {
+			queueEmailInTransaction(transaction, firestore, {
+				to: { playerId: captainId },
+				template: accepted
+					? 'teamInvitationAccepted'
+					: 'teamInvitationDeclined',
+				props: { teamName, playerName },
+			})
+		}
+		return
+	}
+	queueEmailInTransaction(transaction, firestore, {
+		to: { playerId },
+		template: accepted ? 'teamRequestAccepted' : 'teamRequestDeclined',
+		props: { teamName, seasonName },
+	})
+}

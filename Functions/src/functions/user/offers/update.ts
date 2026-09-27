@@ -19,6 +19,10 @@ import {
 import { playerSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
+import {
+	queueOfferAnsweredEmails,
+	readTeamOfferContext,
+} from '../../../email/teamOfferEmails.js'
 
 interface UpdateOfferRequest {
 	offerId: string
@@ -37,6 +41,9 @@ interface UpdateOfferRequest {
  * - Offer must exist and be in pending status
  * - Atomic transaction with proper cleanup
  * - Admins bypass banned and registration date restrictions
+ *
+ * Declining emails whoever sent the offer; accepting is emailed by the
+ * onOfferUpdated trigger, once the player is really on the team.
  */
 export const updateOffer = onCall<UpdateOfferRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
@@ -209,12 +216,29 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 					}
 				}
 
+				// A declined offer tells whoever sent it; read before writing.
+				const declinedEmailContext =
+					status === OfferStatus.REJECTED
+						? await readTeamOfferContext(transaction, firestore, {
+								playerId: offerData.player.id,
+								teamId: offerData.team.id,
+								seasonId: offerData.season.id,
+							})
+						: null
+
 				// Update offer status
 				transaction.update(offerRef, {
 					status,
 					respondedAt: FieldValue.serverTimestamp(),
 					respondedBy: firestore.collection(Collections.PLAYERS).doc(userId),
 				})
+				if (declinedEmailContext) {
+					queueOfferAnsweredEmails(transaction, firestore, {
+						type: offerData.type,
+						accepted: false,
+						context: declinedEmailContext,
+					})
+				}
 
 				// If rejected or canceled, we're done - the trigger will handle cleanup
 				if (
