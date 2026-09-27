@@ -10,24 +10,25 @@ below. The "Read" column is what `firestore.rules` allows a client.
 
 ## Top-level collections
 
-| Collection              | Holds                                                 | Read                | Written by                                          |
-| ----------------------- | ----------------------------------------------------- | ------------------- | --------------------------------------------------- |
-| `players`               | Name, `admin`, `banned`                               | anyone              | `createPlayer`, `updatePlayer`, `updatePlayerAdmin` |
-| `playerContacts`        | A player's email, kept off the public player document | that player, admins | `createPlayer`, `updatePlayerAdmin`                 |
-| `teams`                 | A team across seasons; its name lives per season      | anyone              | `createTeam`, `rolloverTeam`, the team callables    |
-| `seasons`               | Dates, format, pricing (`teamRegistrationTotalCents`) | anyone              | `createSeason`, `updateSeason`, `deleteSeason`      |
-| `offers`                | Invitations and requests between players and teams    | anyone              | `createOffer`, `updateOffer`, `onOfferUpdated`      |
-| `games`                 | Kickoff, field, teams, scores                         | anyone              | `createGame`, `updateGame`, `deleteGame`            |
-| `news`                  | Admin announcements for a season                      | anyone              | `createNews`, `updateNews`, `deleteNews`            |
-| `posts`                 | Message board posts, with `replies` beneath           | anyone              | the post and reply callables                        |
-| `badges`                | Badge definitions                                     | anyone              | `createBadge`, `updateBadge`, `deleteBadge`         |
-| `rankings`              | Each player's current TrueSkill rating                | anyone              | `rebuildPlayerRankings`                             |
-| `rankings-history`      | Rating snapshots over time                            | anyone              | `rebuildPlayerRankings`                             |
-| `rankings-calculations` | Progress of a rankings rebuild                        | anyone              | `rebuildPlayerRankings`                             |
-| `siteSettings`          | The site theme                                        | anyone              | `updateSiteSettings`                                |
-| `stripe/{uid}`          | A player's Checkout sessions and payments             | that player         | `createStripeCheckout`, `stripeWebhook`             |
-| `dropbox/{uid}`         | Waivers signed through Dropbox Sign before Sep 2026   | that player         | nothing; kept as history                            |
-| `system/maintenance`    | The migration kill-switch triggers honour             | admins              | `scripts/production/set-maintenance.js`, by hand    |
+| Collection               | Holds                                                 | Read                | Written by                                          |
+| ------------------------ | ----------------------------------------------------- | ------------------- | --------------------------------------------------- |
+| `players`                | Name, `admin`, `banned`                               | anyone              | `createPlayer`, `updatePlayer`, `updatePlayerAdmin` |
+| `playerContacts`         | A player's email, kept off the public player document | that player, admins | `createPlayer`, `updatePlayerAdmin`                 |
+| `teams`                  | A team across seasons; its name lives per season      | anyone              | `createTeam`, `rolloverTeam`, the team callables    |
+| `seasons`                | Dates, format, pricing (`teamRegistrationTotalCents`) | anyone              | `createSeason`, `updateSeason`, `deleteSeason`      |
+| `offers`                 | Invitations and requests between players and teams    | anyone              | `createOffer`, `updateOffer`, `onOfferUpdated`      |
+| `games`                  | Kickoff, field, teams, scores                         | anyone              | `createGame`, `updateGame`, `deleteGame`            |
+| `news`                   | Admin announcements for a season                      | anyone              | `createNews`, `updateNews`, `deleteNews`            |
+| `posts`                  | Message board posts, with `replies` beneath           | anyone              | the post and reply callables                        |
+| `badges`                 | Badge definitions                                     | anyone              | `createBadge`, `updateBadge`, `deleteBadge`         |
+| `rankings`               | Each player's current all-time TrueSkill rating       | anyone              | the rankings rebuild                                |
+| `player-ranking-history` | Each player's rating and ranks after every round      | anyone              | the rankings rebuild                                |
+| `rankings-history`       | Every player's rating after each round (retiring)     | anyone              | the rankings rebuild                                |
+| `rankings-calculations`  | Progress of a rankings rebuild                        | anyone              | the rankings rebuild                                |
+| `siteSettings`           | The site theme                                        | anyone              | `updateSiteSettings`                                |
+| `stripe/{uid}`           | A player's Checkout sessions and payments             | that player         | `createStripeCheckout`, `stripeWebhook`             |
+| `dropbox/{uid}`          | Waivers signed through Dropbox Sign before Sep 2026   | that player         | nothing; kept as history                            |
+| `system/maintenance`     | The migration kill-switch triggers honour             | admins              | `scripts/production/set-maintenance.js`, by hand    |
 
 ## Per-season subcollections
 
@@ -42,6 +43,7 @@ Per-season state hangs off subcollections rather than the parent document:
 | `teams/{teamId}/teamSeasons/{seasonId}/contributions/…` | Team payments, keyed by PaymentIntent id          | that roster, admins |
 | `teams/{teamId}/teamSeasons/{seasonId}/checkouts/open`  | Contributions reserved while payers are on Stripe | that roster, admins |
 | `teams/{teamId}/badges/{badgeId}`                       | Badges awarded to a team                          | anyone              |
+| `seasons/{seasonId}/rankings/{uid}`                     | A rostered player's rank and record that season   | anyone              |
 
 A ban is account-wide and lives on `players/{uid}.banned`, not on a
 player-season.

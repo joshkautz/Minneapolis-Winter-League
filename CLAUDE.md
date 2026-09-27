@@ -69,6 +69,10 @@ Per-season state hangs off subcollections rather than the parent document:
   (a ban is **not** season state — it lives on `players/{uid}.banned`)
 - `players/{uid}/waiverSignatures/{id}` — the evidence behind `signed`;
   **private** to the player and admins (see `docs/WAIVERS.md`)
+- `seasons/{seasonId}/rankings/{playerId}` — a rostered player's standing in
+  that season, written by the rankings rebuild
+- `player-ranking-history/{playerId}` — one player's rating, rank and season
+  rank after every round, so their charts are one read
 - `teams/{teamId}/teamSeasons/{seasonId}` — per-season team participation
 - `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` — membership join
 - `teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}` —
@@ -164,8 +168,9 @@ that an unplayed game forms no round, so the test counts snapshots.
 
 **Emulator ≠ production.** The Firestore emulator does not enforce the 500-op
 `WriteBatch` limit; a 600-op batch commits there and fails in production.
-Anything whose batch size grows with the data needs a unit test that counts
-commits instead (`rankingsSaver.test.ts`).
+Writes whose number grows with the data go through a `BulkWriter`, as the
+rankings rebuild's do; a `WriteBatch` that grows must chunk and be covered by
+a unit test that counts commits.
 
 **Pin behaviour you decide not to change.** Where a known-wrong behaviour is
 left alone, there is a test asserting it with a comment saying why and a
