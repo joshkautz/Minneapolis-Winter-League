@@ -1,19 +1,20 @@
 /**
- * Shared ranking calculation utility with proper tie handling
- *
- * This module extracts the common ranking logic used by both:
- * - snapshotCreator.ts (for round-based snapshots)
- * - rankingsSaver.ts (for final rankings)
+ * Ranking with ties, shared by every ranking the rebuild saves: all-time,
+ * per round and per season.
  */
 
-import { PlayerRatingState } from '../types.js'
 import { RATING_PRECISION_MULTIPLIER } from '../constants.js'
+
+/** Anything with a TrueSkill μ can be ranked. */
+interface Rated {
+	mu: number
+}
 
 /**
  * Represents a player with their calculated rank
  */
-export interface RankedPlayer {
-	player: PlayerRatingState
+export interface RankedPlayer<T extends Rated> {
+	player: T
 	rank: number
 }
 
@@ -27,15 +28,15 @@ export interface RankedPlayer {
  * @param playerRatings - Map of player ratings to rank
  * @returns Array of players with their calculated ranks, sorted by rank (ascending)
  */
-export function calculateRanksWithTieHandling(
-	playerRatings: Map<string, PlayerRatingState>
-): RankedPlayer[] {
+export function calculateRanksWithTieHandling<T extends Rated>(
+	playerRatings: Map<string, T>
+): RankedPlayer<T>[] {
 	// Sort by mu (TrueSkill skill estimate) - higher is better
 	const sortedPlayers = Array.from(playerRatings.values()).sort(
 		(a, b) => b.mu - a.mu
 	)
 
-	const rankedPlayers: RankedPlayer[] = []
+	const rankedPlayers: RankedPlayer<T>[] = []
 	let currentRank = 1
 
 	for (let i = 0; i < sortedPlayers.length; i++) {

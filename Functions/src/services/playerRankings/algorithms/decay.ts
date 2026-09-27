@@ -72,15 +72,3 @@ export function applyRoundBasedDecay(
 		}
 	}
 }
-
-/**
- * Initialize round tracking for players when they first play
- * This should be called when a player is first added to the ratings system
- */
-export function initializePlayerRoundTracking(
-	playerState: PlayerRatingState,
-	gameDate: Date
-): void {
-	playerState.lastGameDate = gameDate
-	playerState.roundsSinceLastGame = 0
-}

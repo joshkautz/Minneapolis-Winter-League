@@ -2,34 +2,36 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { Collections } from '../../../types.js'
 import { TRUESKILL_CONSTANTS } from '../constants.js'
 
+/** Recorded on each calculation, so a result can be traced to its rules. */
+export const ALGORITHM_VERSION = 'v6'
+
 /**
  * Creates a new calculation state document
+ *
+ * @param triggeredBy the admin's uid, or 'schedule'
  */
 export async function createCalculationState(
-	calculationType: 'fresh',
-	userId: string
+	triggeredBy: string
 ): Promise<string> {
 	const firestore = getFirestore()
 
-	// Drop the explicit Partial<RankingsCalculationDocument> annotation so
-	// `FieldValue.serverTimestamp()` can be used in the `startedAt` field —
-	// it's the right runtime value but the strict interface type only knows
-	// about Timestamp.
+	// Not annotated as RankingsCalculationDocument: `startedAt` is a
+	// serverTimestamp sentinel, which the interface only knows as Timestamp.
 	const calculationDoc = {
-		calculationType,
+		calculationType: 'fresh',
 		status: 'pending',
 		startedAt: FieldValue.serverTimestamp(),
 		completedAt: null,
-		triggeredBy: userId,
+		triggeredBy,
 		progress: {
 			currentStep: 'Initializing...',
 			percentComplete: 0,
 			totalSeasons: 0,
-			seasonsProcessed: 0,
+			totalGames: 0,
 		},
 		parameters: {
-			applyDecay: true,
-			seasonDecayFactor: TRUESKILL_CONSTANTS.SEASON_DECAY_FACTOR,
+			algorithmVersion: ALGORITHM_VERSION,
+			seasonCarryOver: TRUESKILL_CONSTANTS.SEASON_CARRY_OVER,
 			playoffMultiplier: TRUESKILL_CONSTANTS.PLAYOFF_MULTIPLIER,
 		},
 	}

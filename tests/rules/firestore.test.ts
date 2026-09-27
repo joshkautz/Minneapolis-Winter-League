@@ -129,6 +129,9 @@ describe('public league data', () => {
 		'players/user-1/playerSeasons/season-1',
 		'games/game-1',
 		'offers/offer-1',
+		'rankings/user-1',
+		'player-ranking-history/user-1',
+		'seasons/season-1/rankings/user-1',
 	]
 
 	it('is readable while signed out', async () => {
@@ -162,6 +165,9 @@ describe('client writes are denied everywhere', () => {
 		'news/news-1',
 		'badges/badge-1',
 		'rankings/user-1',
+		'player-ranking-history/user-1',
+		'seasons/season-1/rankings/user-1',
+		'rankings-calculations/calc-1',
 		'siteSettings/theme',
 		'posts/post-1',
 		'posts/post-1/replies/reply-1',

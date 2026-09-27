@@ -1,11 +1,3 @@
-import { GameDocument } from '../../types.js'
-
-export interface GameProcessingData extends GameDocument {
-	id: string
-	seasonOrder: number // 0 = most recent season, 1 = previous, etc.
-	gameDate: Date
-}
-
 /**
  * Player rating state using TrueSkill algorithm
  *

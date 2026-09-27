@@ -62,6 +62,7 @@ export { onPaymentCreated } from './triggers/payments/paymentCreated.js'
 // Scheduled functions
 export { sweepTeamPaymentsHourly } from './triggers/scheduled/sweepTeamPayments.js'
 export { reconcileTeamPaymentsDaily } from './triggers/scheduled/reconcileTeamPayments.js'
+export { rebuildRankingsNightly } from './triggers/scheduled/rebuildRankingsNightly.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // API ENDPOINTS
@@ -113,9 +114,8 @@ export { deleteSeason } from './functions/admin/seasons/delete.js'
 export { setSwissSeeding } from './functions/admin/swiss/setSeeding.js'
 export { getSwissRankings } from './functions/admin/swiss/getRankings.js'
 
-// Player Rankings functions (admin-only)
-// Note: Only full rebuild is supported - incremental updates were deprecated
-// because TrueSkill requires accurate sigma (uncertainty) tracking across all games
+// Player Rankings (admin-only). A full rebuild every time: TrueSkill carries
+// uncertainty through every game, so there is no incremental update.
 export { rebuildPlayerRankings } from './functions/admin/rankings/rebuildPlayerRankings.js'
 
 // Waiver functions (user-accessible)

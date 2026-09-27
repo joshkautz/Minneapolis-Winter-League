@@ -5,17 +5,17 @@
  * Keeping it pure is what lets the same code run in the rebuild, in unit
  * tests, and against a copy of production data when comparing algorithm
  * changes.
+ *
+ * Every round is computed only from what came before it, so a rating once
+ * reached never changes when later seasons are added. (Until v6 each game
+ * was discounted by how many seasons ago it was, counted at rebuild time,
+ * which re-wrote every past rating whenever a season was created.)
  */
 
 import { TRUESKILL_CONSTANTS } from '../constants.js'
 import { updateRatings, type TrueSkillRating } from '../algorithms/trueskill.js'
 import { applyRoundBasedDecay } from '../algorithms/decay.js'
 import type { PlayerRatingState } from '../types.js'
-
-export interface EngineSeason {
-	id: string
-	dateStart: Date
-}
 
 export interface EngineGame {
 	id: string
@@ -29,27 +29,12 @@ export interface EngineGame {
 }
 
 export interface EngineInput {
-	seasons: EngineSeason[]
 	games: EngineGame[]
 	/** Player ids on each team's roster, keyed by `rosterKey`. */
 	rosters: ReadonlyMap<string, readonly string[]>
 	/** Display names; a rostered player without one is left out. */
 	playerNames: ReadonlyMap<string, string>
 }
-
-/**
- * How older seasons count for less.
- *
- * - `lookback` (v5): each game's movement is scaled by 0.8 per season
- *   between its season and the newest one, counted when the rebuild runs,
- *   so every past rating shifts whenever a season is added.
- * - `boundary` (v6): at the first round of each season every rating moves
- *   toward the baseline, keeping `seasonCarryOver` of its distance from it,
- *   so older seasons count for less going forward. Each round is computed
- *   as it was at the time and never shifts later.
- */
-export type SeasonWeighting =
-	{ kind: 'lookback' } | { kind: 'boundary'; seasonCarryOver: number }
 
 export interface PlayerRoundRating {
 	mu: number
@@ -66,13 +51,19 @@ export interface RoundResult {
 	gameIds: string[]
 	/** Every rated player's state after the round. */
 	ratings: Map<string, PlayerRoundRating>
-	/** Each rated player's μ before the round. */
-	previousMu: Map<string, number>
+}
+
+/** A player's games in one season. */
+export interface SeasonRecord {
+	games: number
+	wins: number
 }
 
 export interface EngineResult {
 	rounds: RoundResult[]
 	players: Map<string, PlayerRatingState>
+	/** Season id → player id → that player's games in the season. */
+	seasonRecords: Map<string, Map<string, SeasonRecord>>
 }
 
 export const rosterKey = (teamId: string, seasonId: string): string =>
@@ -115,14 +106,15 @@ const newPlayerState = (
 	roundsSinceLastGame: 0,
 })
 
-/** Moves every rating part of the way back to the baseline. */
-function carryOverToNewSeason(
-	players: Map<string, PlayerRatingState>,
-	seasonCarryOver: number
-): void {
+/**
+ * Moves every rating part of the way back to the baseline as a season
+ * begins, so older seasons count for less from then on.
+ */
+function carryOverToNewSeason(players: Map<string, PlayerRatingState>): void {
 	const baseline = TRUESKILL_CONSTANTS.INITIAL_MU
 	for (const player of players.values()) {
-		player.mu = baseline + (player.mu - baseline) * seasonCarryOver
+		player.mu =
+			baseline + (player.mu - baseline) * TRUESKILL_CONSTANTS.SEASON_CARRY_OVER
 	}
 }
 
@@ -130,23 +122,13 @@ function carryOverToNewSeason(
  * Plays every completed game, round by round in start order, and returns
  * each player's rating after every round.
  */
-export function runRankings(
-	input: EngineInput,
-	weighting: SeasonWeighting
-): EngineResult {
-	const seasons = [...input.seasons].sort(
-		(a, b) => a.dateStart.getTime() - b.dateStart.getTime()
-	)
-	// 0 for the newest season, 1 for the one before, and so on.
-	const seasonsAgo = new Map(
-		seasons.map((season, i) => [season.id, seasons.length - 1 - i])
-	)
-
+export function runRankings(input: EngineInput): EngineResult {
 	const games = input.games
 		.filter(isCompleted)
 		.sort((a, b) => a.date.getTime() - b.date.getTime())
 
 	const players = new Map<string, PlayerRatingState>()
+	const seasonRecords = new Map<string, Map<string, SeasonRecord>>()
 	const rounds: RoundResult[] = []
 	let previousSeasonId: string | null = null
 
@@ -157,18 +139,10 @@ export function runRankings(
 		const startTime = roundGames[0].date
 		const seasonId = roundGames[0].seasonId
 
-		if (
-			weighting.kind === 'boundary' &&
-			previousSeasonId !== null &&
-			seasonId !== previousSeasonId
-		) {
-			carryOverToNewSeason(players, weighting.seasonCarryOver)
+		if (previousSeasonId !== null && seasonId !== previousSeasonId) {
+			carryOverToNewSeason(players)
 		}
 		previousSeasonId = seasonId
-
-		const previousMu = new Map(
-			[...players].map(([id, player]) => [id, player.mu])
-		)
 
 		const playing = new Set(
 			roundGames.flatMap((game) => [
@@ -179,7 +153,9 @@ export function runRankings(
 		applyRoundBasedDecay(players, startTime, playing)
 
 		for (const game of roundGames) {
-			playGame(game, players, input, rosterOf, weighting, seasonsAgo)
+			const record = seasonRecords.get(game.seasonId) ?? new Map()
+			seasonRecords.set(game.seasonId, record)
+			playGame(game, players, record, input, rosterOf)
 		}
 
 		rounds.push({
@@ -198,20 +174,18 @@ export function runRankings(
 					},
 				])
 			),
-			previousMu,
 		})
 	}
 
-	return { rounds, players }
+	return { rounds, players, seasonRecords }
 }
 
 function playGame(
 	game: EngineGame,
 	players: Map<string, PlayerRatingState>,
+	seasonRecord: Map<string, SeasonRecord>,
 	input: EngineInput,
-	rosterOf: (teamId: string | null, seasonId: string) => string[],
-	weighting: SeasonWeighting,
-	seasonsAgo: Map<string, number>
+	rosterOf: (teamId: string | null, seasonId: string) => string[]
 ): void {
 	const homeRoster = rosterOf(game.homeTeamId, game.seasonId)
 	const awayRoster = rosterOf(game.awayTeamId, game.seasonId)
@@ -235,14 +209,6 @@ function playGame(
 	const winners = homeWon ? home : away
 	const losers = homeWon ? away : home
 
-	const playoff =
-		game.type === 'playoff' ? TRUESKILL_CONSTANTS.PLAYOFF_MULTIPLIER : 1
-	const lookback =
-		weighting.kind === 'lookback'
-			? TRUESKILL_CONSTANTS.SEASON_DECAY_FACTOR **
-				(seasonsAgo.get(game.seasonId) ?? 0)
-			: 1
-
 	const toRating = (player: PlayerRatingState): TrueSkillRating => ({
 		mu: player.mu,
 		sigma: player.sigma,
@@ -250,7 +216,7 @@ function playGame(
 	const updated = updateRatings(
 		winners.map(toRating),
 		losers.map(toRating),
-		playoff * lookback
+		game.type === 'playoff' ? TRUESKILL_CONSTANTS.PLAYOFF_MULTIPLIER : 1
 	)
 	winners.forEach((player, i) => Object.assign(player, updated.winners[i]))
 	losers.forEach((player, i) => Object.assign(player, updated.losers[i]))
@@ -260,5 +226,10 @@ function playGame(
 		player.lastSeasonId = game.seasonId
 		player.seasonsPlayed.add(game.seasonId)
 		player.totalSeasons = player.seasonsPlayed.size
+
+		const record = seasonRecord.get(player.playerId) ?? { games: 0, wins: 0 }
+		record.games++
+		if (winners.includes(player)) record.wins++
+		seasonRecord.set(player.playerId, record)
 	}
 }

@@ -1,133 +1,220 @@
+/**
+ * Saves a rebuild: the all-time leaderboard, each player's history, each
+ * season's standings, and the round snapshots the player page still reads.
+ *
+ * Rankings are a pure projection of the games in the database, so anything
+ * a rebuild no longer produces is deleted rather than left behind — a stale
+ * leaderboard entry keeps its old rank and can outrank current players, and
+ * a snapshot for a moved game describes an evening that never happened.
+ *
+ * Writes go through a BulkWriter: their number grows with the league and
+ * each history grows every round, so a WriteBatch would eventually exceed
+ * both its 500-operation and its 10 MiB request limits.
+ */
+
 import {
-	getFirestore,
 	FieldValue,
-	type WriteBatch,
+	Timestamp,
+	type CollectionReference,
+	type DocumentData,
+	type DocumentReference,
+	type Firestore,
 } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import { Collections, PlayerRankingDocument } from '../../../types.js'
-import { PlayerRatingState } from '../types.js'
-import { calculateRanksWithTieHandling } from '../utils/rankCalculator.js'
+import {
+	Collections,
+	SEASON_RANKINGS_SUBCOLLECTION,
+	type TimeBasedPlayerRanking,
+} from '../../../types.js'
+import type {
+	PlayerHistoryPoint,
+	RankingProjections,
+} from '../engine/projections.js'
+import type { RoundResult } from '../engine/rankingEngine.js'
 
-/**
- * Loads previous rankings to calculate rating changes
- */
-async function loadPreviousRankings(): Promise<Map<string, number>> {
-	const firestore = getFirestore()
-	const previousRatings = new Map<string, number>()
+interface SaveParams {
+	projections: RankingProjections
+	rounds: RoundResult[]
+	playerNames: ReadonlyMap<string, string>
+	/** Every season, so one whose games are all gone is cleared too. */
+	seasonIds: string[]
+	calculationId: string
+}
 
-	const rankingsSnapshot = await firestore
-		.collection(Collections.RANKINGS)
-		.get()
-
-	for (const doc of rankingsSnapshot.docs) {
-		const data = doc.data() as PlayerRankingDocument
-		previousRatings.set(doc.id, data.rating)
-	}
-
-	return previousRatings
+interface Writer {
+	set(ref: DocumentReference, data: DocumentData): void
+	delete(ref: DocumentReference): void
+	/** Flushes every write, throwing if any failed. */
+	finish(): Promise<void>
 }
 
 /**
- * Converts player ratings map to ranked array with proper tie handling
- * Uses TrueSkill mu (skill estimate) for ranking.
- *
- * The returned objects are missing the `player` ref field (added later in
- * `saveFinalRankings`) and use `FieldValue.serverTimestamp()` for
- * `lastUpdated` (resolved to a `Timestamp` server-side at write time), so
- * the return type is loosened with a structural type rather than the
- * strict `PlayerRankingDocument`.
+ * A BulkWriter whose failures are not lost: `close()` resolves even when
+ * writes failed, so each write's promise is kept and checked afterwards.
  */
-function calculatePlayerRankings(
-	playerRatings: Map<string, PlayerRatingState>,
-	previousRatings: Map<string, number>
-): Array<
-	Omit<PlayerRankingDocument, 'player' | 'lastUpdated'> & {
-		lastUpdated: FieldValue
+function trackedWriter(firestore: Firestore): Writer {
+	const writer = firestore.bulkWriter()
+	const writes: Promise<unknown>[] = []
+	return {
+		set: (ref, data) => void writes.push(writer.set(ref, data)),
+		delete: (ref) => void writes.push(writer.delete(ref)),
+		finish: async (): Promise<void> => {
+			await writer.close()
+			const failed = (await Promise.allSettled(writes)).filter(
+				(result): result is PromiseRejectedResult =>
+					result.status === 'rejected'
+			)
+			if (failed.length > 0) {
+				throw new Error(
+					`${failed.length} of ${writes.length} rankings writes failed: ${String(failed[0].reason)}`
+				)
+			}
+		},
 	}
-> {
-	const rankedPlayers = calculateRanksWithTieHandling(playerRatings)
-
-	return rankedPlayers.map(({ player, rank }) => {
-		// Calculate rating change from previous rankings
-		const previousRating = previousRatings.get(player.playerId)
-		const lastRatingChange = previousRating ? player.mu - previousRating : 0
-
-		// Note: player reference is set in saveFinalRankings when creating the
-		// batch. `lastUpdated` is a server-timestamp sentinel that Firestore
-		// resolves to a Timestamp on commit.
-		return {
-			playerId: player.playerId,
-			playerName: player.playerName,
-			rating: player.mu, // TrueSkill μ (skill estimate)
-			totalGames: player.totalGames,
-			totalSeasons: player.totalSeasons,
-			rank,
-			lastUpdated: FieldValue.serverTimestamp(),
-			lastSeasonId: player.lastSeasonId,
-			lastRatingChange,
-		}
-	})
 }
 
-/**
- * Firestore caps a write batch at 500 operations. A rebuild writes one
- * document per player and deletes the leftovers, so a large enough league
- * would silently exceed a single batch.
- */
-const MAX_BATCH_OPERATIONS = 500
+/** Deletes every document in `collection` whose id is not in `keep`. */
+async function deleteAllBut(
+	writer: Writer,
+	collection: CollectionReference,
+	keep: ReadonlySet<string>
+): Promise<number> {
+	const existing = await collection.listDocuments()
+	const stale = existing.filter((doc) => !keep.has(doc.id))
+	for (const doc of stale) writer.delete(doc)
+	return stale.length
+}
 
-/**
- * Saves final player rankings to Firestore.
- *
- * Rankings are a pure projection of the games in the database: a rebuild
- * processes every season, so a player only drops out of the result when they
- * are no longer on the roster of any game that was ever played. Documents for
- * those players are deleted rather than left behind — a stale document keeps
- * its old rating and its old rank, and since ranks are only computed over the
- * rebuilt set, it can still outrank current players in a raw read of the
- * collection.
- */
-export async function saveFinalRankings(
-	playerRatings: Map<string, PlayerRatingState>
+export async function saveRankings(
+	firestore: Firestore,
+	params: SaveParams
 ): Promise<void> {
-	const firestore = getFirestore()
+	const { projections, rounds, playerNames, calculationId } = params
+	const writer = trackedWriter(firestore)
+	const lastUpdated = FieldValue.serverTimestamp()
+	const nameOf = (playerId: string): string => playerNames.get(playerId) ?? ''
+	const playerRef = (playerId: string): DocumentReference =>
+		firestore.collection(Collections.PLAYERS).doc(playerId)
 
-	// Load previous rankings for calculating rating changes
-	const previousRatings = await loadPreviousRankings()
-
-	const rankings = calculatePlayerRankings(playerRatings, previousRatings)
-	const rankedPlayerIds = new Set(rankings.map((ranking) => ranking.playerId))
-
-	const staleRankingIds = [...previousRatings.keys()].filter(
-		(playerId) => !rankedPlayerIds.has(playerId)
+	// ---- All-time leaderboard ------------------------------------------------
+	const rankings = firestore.collection(Collections.RANKINGS)
+	for (const ranking of projections.final) {
+		writer.set(rankings.doc(ranking.playerId), {
+			...ranking,
+			playerName: nameOf(ranking.playerId),
+			player: playerRef(ranking.playerId),
+			lastUpdated,
+		})
+	}
+	const removedRankings = await deleteAllBut(
+		writer,
+		rankings,
+		new Set(projections.final.map((ranking) => ranking.playerId))
 	)
 
-	const operations: ((batch: WriteBatch) => void)[] = [
-		...rankings.map((ranking) => (batch: WriteBatch) => {
-			batch.set(
-				firestore.collection(Collections.RANKINGS).doc(ranking.playerId),
-				{
-					...ranking,
-					player: firestore
-						.collection(Collections.PLAYERS)
-						.doc(ranking.playerId),
-				}
-			)
-		}),
-		...staleRankingIds.map((playerId) => (batch: WriteBatch) => {
-			batch.delete(firestore.collection(Collections.RANKINGS).doc(playerId))
-		}),
-	]
+	// ---- Each player's history -----------------------------------------------
+	const histories = firestore.collection(Collections.PLAYER_RANKING_HISTORY)
+	for (const [playerId, points] of projections.histories) {
+		writer.set(histories.doc(playerId), {
+			player: playerRef(playerId),
+			playerId,
+			playerName: nameOf(playerId),
+			rounds: points.map((point) => ({
+				...point,
+				date: Timestamp.fromDate(point.date),
+			})),
+			calculationId,
+			lastUpdated,
+		})
+	}
+	await deleteAllBut(writer, histories, new Set(projections.histories.keys()))
 
-	for (let i = 0; i < operations.length; i += MAX_BATCH_OPERATIONS) {
-		const batch = firestore.batch()
-		for (const operation of operations.slice(i, i + MAX_BATCH_OPERATIONS)) {
-			operation(batch)
+	// ---- Each season's standings ---------------------------------------------
+	for (const seasonId of params.seasonIds) {
+		const standingsRef = firestore
+			.collection(Collections.SEASONS)
+			.doc(seasonId)
+			.collection(SEASON_RANKINGS_SUBCOLLECTION)
+		const standings = projections.seasons.get(seasonId) ?? []
+		for (const standing of standings) {
+			writer.set(standingsRef.doc(standing.playerId), {
+				...standing,
+				playerName: nameOf(standing.playerId),
+				player: playerRef(standing.playerId),
+				calculationId,
+				lastUpdated,
+			})
 		}
-		await batch.commit()
+		await deleteAllBut(
+			writer,
+			standingsRef,
+			new Set(standings.map((standing) => standing.playerId))
+		)
 	}
 
-	logger.info(`Saved ${rankings.length} player rankings to Firestore`, {
-		removed: staleRankingIds.length,
+	// ---- Round snapshots, read by the player page until it moves to the
+	// per-player histories above.
+	const snapshots = firestore.collection(Collections.RANKINGS_HISTORY)
+	const snapshotIds = new Set<string>()
+	const pointsByRound = new Map<string, Map<string, PlayerHistoryPoint>>()
+	for (const [playerId, points] of projections.histories) {
+		for (const point of points) {
+			const round = pointsByRound.get(point.roundId) ?? new Map()
+			pointsByRound.set(point.roundId, round.set(playerId, point))
+		}
+	}
+	for (const round of rounds) {
+		const snapshotId = `${round.roundId}_${round.seasonId}`
+		snapshotIds.add(snapshotId)
+		writer.set(snapshots.doc(snapshotId), {
+			season: firestore.collection(Collections.SEASONS).doc(round.seasonId),
+			snapshotDate: Timestamp.fromDate(round.startTime),
+			rankings: snapshotRankings(
+				round,
+				pointsByRound.get(round.roundId) ?? new Map(),
+				nameOf
+			),
+			roundMeta: {
+				roundId: round.roundId,
+				roundStartTime: Timestamp.fromDate(round.startTime),
+				gameCount: round.gameIds.length,
+				gameIds: round.gameIds,
+				calculationId,
+			},
+		})
+	}
+	await deleteAllBut(writer, snapshots, snapshotIds)
+
+	await writer.finish()
+	logger.info(`Saved rankings for ${projections.final.length} players`, {
+		removed: removedRankings,
+		seasons: projections.seasons.size,
+		rounds: rounds.length,
 	})
+}
+
+function snapshotRankings(
+	round: RoundResult,
+	points: ReadonlyMap<string, PlayerHistoryPoint>,
+	nameOf: (playerId: string) => string
+): TimeBasedPlayerRanking[] {
+	return [...round.ratings.keys()]
+		.flatMap((playerId) => {
+			const point = points.get(playerId)
+			if (!point) return []
+			const rating = round.ratings.get(playerId)
+			return [
+				{
+					playerId,
+					playerName: nameOf(playerId),
+					rating: point.rating,
+					rank: point.rank,
+					totalGames: rating?.totalGames ?? 0,
+					totalSeasons: rating?.totalSeasons ?? 0,
+					change: point.change,
+					previousRating: point.rating - point.change,
+				},
+			]
+		})
+		.sort((a, b) => a.rank - b.rank)
 }

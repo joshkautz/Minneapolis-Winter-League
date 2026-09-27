@@ -1,185 +1,42 @@
 /**
- * Player Rankings Full Rebuild Firebase Function
+ * Rebuild player rankings callable function
  *
- * This function performs a complete rebuild of all player rankings from scratch.
- * It processes all games grouped by rounds in chronological order, starting with
- * empty player ratings. This provides the most accurate and comprehensive ranking
- * calculation.
+ * Recomputes every ranking from every completed game: the all-time
+ * leaderboard, each player's history and each season's standings. The same
+ * rebuild runs every night on its own (`triggers/scheduled/
+ * rebuildRankingsNightly.ts`); this is the button for running it now.
  *
- * Use this function when:
- * - Setting up rankings for the first time
- * - You need to completely recalculate all rankings from scratch
- * - Recovering from data corruption or algorithm changes
- * - Running periodic full audits of the ranking system
+ * Security validations:
+ * - Caller must be an admin
+ * - Refused while another rebuild is running, so two never interleave writes
  */
 
-import { getFirestore, FieldValue } from 'firebase-admin/firestore'
-import { onCall } from 'firebase-functions/v2/https'
-import { logger } from 'firebase-functions/v2'
-import { z } from 'zod'
-import { Collections, SeasonDocument } from '../../../types.js'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
+import { getFirestore } from 'firebase-admin/firestore'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
-	loadGamesForCalculation,
-	processGamesByRounds,
-	saveFinalRankings,
-	createCalculationState,
-	updateCalculationState,
-} from '../../../services/playerRankings/index.js'
+	isRebuildRunning,
+	rebuildRankings,
+	type RebuildResult,
+} from '../../../services/playerRankings/rebuild.js'
 
-// Validation schema for full rebuild calculation
-const rebuildRankingsSchema = z.object({
-	// No parameters needed - decay is always applied
-})
-
-type RebuildRankingsRequest = z.infer<typeof rebuildRankingsSchema>
-
-/**
- * Player Rankings Full Rebuild
- * Completely rebuilds all player rankings from scratch by processing all games chronologically
- */
-export const rebuildPlayerRankings = onCall<RebuildRankingsRequest>(
+export const rebuildPlayerRankings = onCall(
 	{
 		region: FIREBASE_CONFIG.REGION,
-		timeoutSeconds: 540, // 9 minutes
+		timeoutSeconds: 540,
 		memory: '1GiB',
 	},
-	async (request) => {
-		const { auth, data } = request
+	async (request): Promise<RebuildResult> => {
+		const adminId = await validateAdminUser(request.auth, getFirestore())
 
-		try {
-			// Validate authentication and admin privileges
-			const firestore = getFirestore()
-			await validateAdminUser(auth, firestore)
-
-			// Validate request data
-			rebuildRankingsSchema.parse(data)
-
-			logger.info('Starting complete Player Rankings rebuild', {
-				triggeredBy: auth?.uid,
-				applyDecay: true, // Always applied
-			})
-
-			// Create calculation state document for tracking
-			const calculationId = await createCalculationState(
-				'fresh',
-				auth?.uid ?? 'unknown'
+		if (await isRebuildRunning()) {
+			throw new HttpsError(
+				'failed-precondition',
+				'A rankings rebuild is already running. Wait for it to finish, then try again.'
 			)
-
-			try {
-				await processFullRebuild(calculationId)
-
-				return {
-					calculationId,
-					status: 'completed',
-					message: 'Player Rankings full rebuild completed successfully.',
-				}
-			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Unknown error'
-				const errorStack = error instanceof Error ? error.stack : undefined
-
-				logger.error('Player Rankings rebuild failed:', error)
-				await updateCalculationState(calculationId, {
-					status: 'failed',
-					error: {
-						message: errorMessage,
-						stack: errorStack,
-						timestamp: FieldValue.serverTimestamp(),
-					},
-				})
-
-				return {
-					calculationId,
-					status: 'failed',
-					message: `Player Rankings rebuild failed: ${errorMessage}`,
-				}
-			}
-		} catch (error) {
-			logger.error('Error starting Player Rankings rebuild:', error)
-			throw error
 		}
+
+		return await rebuildRankings(adminId)
 	}
 )
-
-/**
- * Process the complete rebuild - all games from scratch
- * Starts with empty player ratings and processes all games chronologically
- */
-async function processFullRebuild(calculationId: string): Promise<void> {
-	const firestore = getFirestore()
-
-	try {
-		await updateCalculationState(calculationId, {
-			status: 'running',
-			'progress.currentStep':
-				'Loading all seasons and games for complete rebuild...',
-		})
-
-		// Get all seasons ordered by start date
-		const seasonsSnapshot = await firestore
-			.collection(Collections.SEASONS)
-			.orderBy('dateStart', 'asc')
-			.get()
-
-		const seasons = seasonsSnapshot.docs.map((doc) => ({
-			id: doc.id,
-			...doc.data(),
-		})) as (SeasonDocument & { id: string })[]
-
-		logger.info(`Found ${seasons.length} seasons for complete rebuild`)
-
-		await updateCalculationState(calculationId, {
-			'progress.totalSeasons': seasons.length,
-		})
-
-		// Load ALL games from ALL seasons (startSeasonIndex = 0)
-		const allGames = await loadGamesForCalculation(seasons, 0)
-		logger.info(`Loaded ${allGames.length} total games for complete rebuild`)
-
-		await updateCalculationState(calculationId, {
-			'progress.currentStep': 'Rebuilding rankings from scratch...',
-			'progress.totalGames': allGames.length,
-		})
-
-		// Start with completely empty player ratings (complete rebuild)
-		const playerRatings = new Map()
-		logger.info('Starting complete rebuild with empty player ratings')
-
-		// Process ALL games by rounds in chronological order
-		// Round-based decay is applied automatically during round processing
-		await processGamesByRounds(
-			allGames,
-			playerRatings,
-			calculationId,
-			seasons.length
-		)
-
-		logger.info(
-			`After complete rebuild: ${playerRatings.size} players with ratings`
-		)
-
-		// Save final rankings
-		await updateCalculationState(calculationId, {
-			'progress.currentStep': 'Saving rebuilt rankings...',
-			'progress.percentComplete': 95,
-		})
-
-		await saveFinalRankings(playerRatings)
-		logger.info('Complete rebuild: Final rankings saved successfully')
-
-		// Mark calculation as complete
-		await updateCalculationState(calculationId, {
-			status: 'completed',
-			completedAt: FieldValue.serverTimestamp(),
-			'progress.currentStep': 'Complete',
-			'progress.percentComplete': 100,
-		})
-
-		logger.info(`Player Rankings complete rebuild finished: ${calculationId}`)
-	} catch (error) {
-		logger.error(`Player Rankings rebuild failed: ${calculationId}`, error)
-		throw error
-	}
-}
