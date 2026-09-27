@@ -23,6 +23,7 @@ import { deliverQueuedEmail } from '../../Functions/src/email/sender.js'
  * - an invitation emails the player; a request emails every captain
  * - accepting or declining emails whoever sent it
  * - canceling, and anything refused, emails nobody
+ * - re-sending an offer within a day of withdrawing it emails nobody
  */
 
 let firestore: Firestore
@@ -356,6 +357,80 @@ describe('canceling', () => {
 		expect(await answer(caller, 'canceled')).toBeNull()
 
 		expect(await outbox()).toEqual([])
+	})
+})
+
+describe('sending again after withdrawing', () => {
+	/** Moves the offer's cancellation back in time. */
+	const canceledAgo = (ms: number) =>
+		firestore
+			.collection('offers')
+			.doc(offerId())
+			.update({ respondedAt: Timestamp.fromMillis(Date.now() - ms) })
+
+	const HOUR = 60 * 60 * 1000
+
+	it('does not email the captains again when a request is withdrawn and re-sent', async () => {
+		// Otherwise request, cancel, request would email them every time.
+		await createOffer(PLAYER, 'request')
+		await answer(PLAYER, 'canceled')
+		await clearOutbox()
+
+		expect(await createOffer(PLAYER, 'request')).toBeNull()
+
+		expect(await outbox()).toEqual([])
+		expect(
+			(await firestore.collection('offers').doc(offerId()).get()).data()?.status
+		).toBe('pending')
+	})
+
+	it('does not email the player again when an invitation is withdrawn and re-sent', async () => {
+		await createOffer(CAPTAIN, 'invitation')
+		await answer(CAPTAIN, 'canceled')
+		await clearOutbox()
+
+		expect(await createOffer(CO_CAPTAIN, 'invitation')).toBeNull()
+
+		expect(await outbox()).toEqual([])
+	})
+
+	it('emails again once a day has passed since it was withdrawn', async () => {
+		await createOffer(PLAYER, 'request')
+		await answer(PLAYER, 'canceled')
+		await canceledAgo(25 * HOUR)
+		await clearOutbox()
+
+		await createOffer(PLAYER, 'request')
+
+		expect(await sentTo()).toEqual([
+			[CAPTAIN, 'teamJoinRequest'],
+			[CO_CAPTAIN, 'teamJoinRequest'],
+		])
+	})
+
+	it('stays quiet until the day is up', async () => {
+		await createOffer(PLAYER, 'request')
+		await answer(PLAYER, 'canceled')
+		await canceledAgo(23 * HOUR)
+		await clearOutbox()
+
+		await createOffer(PLAYER, 'request')
+
+		expect(await outbox()).toEqual([])
+	})
+
+	it('emails again after a declined request, which the captains answered', async () => {
+		// Declining is not withdrawing: asking again is a new question.
+		await createOffer(PLAYER, 'request')
+		await answer(CAPTAIN, 'rejected')
+		await clearOutbox()
+
+		await createOffer(PLAYER, 'request')
+
+		expect(await sentTo()).toEqual([
+			[CAPTAIN, 'teamJoinRequest'],
+			[CO_CAPTAIN, 'teamJoinRequest'],
+		])
 	})
 })
 

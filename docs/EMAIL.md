@@ -149,7 +149,10 @@ one is in the `teams` category and links to the team page, `/manage`.
 queued by `createOffer`, declining by `updateOffer`, and accepting by the
 `onOfferUpdated` trigger, in the transaction that puts the player on the
 roster, so nobody hears of a join that failed. A canceled offer, withdrawn or
-cleared because the player joined another team, sends nothing. Admin roster
+cleared because the player joined another team, sends nothing. Nor does
+sending an offer again within a day of its being canceled
+(`isQuietResend`), so withdrawing and re-sending cannot email anyone over
+and over. Admin roster
 edits send nothing either: they are as often corrections to past seasons.
 
 ## The new-season announcement

@@ -9,16 +9,24 @@
  * | Declined             | every captain                 | the player              |
  *
  * A canceled offer sends nothing: withdrawing one, or its being withdrawn
- * because the player joined another team, needs nobody to act.
+ * because the player joined another team, needs nobody to act. Nor does
+ * sending it again within a day of its being canceled, or withdrawing and
+ * re-sending would email the other side every time.
  *
  * The emails are queued in the transaction that makes the change, so one
  * goes out only if the change was saved. A transaction reads before it
  * writes, so read the context with `readTeamOfferContext` before any write.
  */
 
-import type { Firestore, Query, Transaction } from 'firebase-admin/firestore'
+import type {
+	Firestore,
+	Query,
+	Timestamp,
+	Transaction,
+} from 'firebase-admin/firestore'
 import {
 	Collections,
+	OfferStatus,
 	OfferType,
 	PLAYER_SEASONS_SUBCOLLECTION,
 	type PlayerDocument,
@@ -31,6 +39,24 @@ import {
 	teamSeasonRef,
 } from '../shared/database.js'
 import { queueEmailInTransaction } from './outbox.js'
+
+/** How long after an offer is canceled sending it again stays quiet. */
+export const RESENT_OFFER_QUIET_MS = 24 * 60 * 60 * 1000
+
+/**
+ * Whether a new offer replaces one canceled so recently that the other side
+ * has already been emailed about it. An offer between a player and a team
+ * reuses one document, so `previous` is what that document held before.
+ */
+export function isQuietResend(
+	previous: { status?: OfferStatus; respondedAt?: Timestamp } | undefined,
+	now: Date
+): boolean {
+	if (previous?.status !== OfferStatus.CANCELED || !previous.respondedAt) {
+		return false
+	}
+	return now.getTime() - previous.respondedAt.toMillis() < RESENT_OFFER_QUIET_MS
+}
 
 /** What the team emails say, read once per change. */
 export interface TeamOfferContext {
