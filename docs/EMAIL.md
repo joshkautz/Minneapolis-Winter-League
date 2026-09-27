@@ -184,14 +184,15 @@ DMARC is in monitoring mode; tighten it to `p=quarantine` once mail has been
 flowing cleanly for a few weeks. Squarespace has no DNS API, so record changes
 are made by hand.
 
-**The plan limits sending.** Resend's free plan allows 100 emails a day and
-3,000 a month; Pro ($20 a month for 50,000) has no daily limit. The
-announcement alone goes to about 450 players, and the opening day of 2025
-Fall registration saw 150 invitations and requests, each an email or more,
-so the league needs Pro for at least September and October. Over the limit,
-Resend answers `daily_quota_exceeded`, which the sender retries for up to a
-day: the email is late, and after a day of retries it is left `queued`,
-never sent. `resend usage` shows where the account stands.
+**The account is on Resend Pro** (since 27 September 2026): 50,000 emails a
+month, no daily limit, and 10 requests a second. The free plan's 100 a day
+would not cover it: the announcement goes to about 450 players, and the
+opening day of 2025 Fall registration saw 150 invitations and requests,
+each an email or more. It could drop back to free between registration
+periods. Over a limit, Resend answers `daily_quota_exceeded` or
+`monthly_quota_exceeded`, which the sender retries for up to a day: the
+email is late, and after a day of retries it is left `queued`, never sent.
+`resend usage` shows where the account stands.
 
 Functions read `RESEND_API_KEY`, a Firebase secret holding a **send-only key
 restricted to this domain**. Account work — domains, keys, webhooks, logs —
