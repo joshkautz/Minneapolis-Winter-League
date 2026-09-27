@@ -218,15 +218,28 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 					}
 				}
 
-				// Declining or withdrawing tells the other side; read before writing.
-				const answerEmailContext =
-					status !== OfferStatus.ACCEPTED
-						? await readTeamOfferContext(transaction, firestore, {
-								playerId: offerData.player.id,
-								teamId: offerData.team.id,
-								seasonId: offerData.season.id,
-							})
-						: null
+				// What the other side is told, if anything. A captain canceling a
+				// player's request (the App declines instead) turns it down, so it
+				// is emailed as declined. Only the sender withdrawing their own
+				// offer is emailed as withdrawn, and only if its sending was; an
+				// admin canceling someone else's offer is cleaning up.
+				const emailed: 'declined' | 'withdrawn' | null =
+					status === OfferStatus.REJECTED ||
+					(status === OfferStatus.CANCELED && !isCreator && !isAdmin)
+						? 'declined'
+						: status === OfferStatus.CANCELED &&
+							  isCreator &&
+							  offerData.sentQuietly !== true
+							? 'withdrawn'
+							: null
+				// Read what the email needs before writing.
+				const emailContext = emailed
+					? await readTeamOfferContext(transaction, firestore, {
+							playerId: offerData.player.id,
+							teamId: offerData.team.id,
+							seasonId: offerData.season.id,
+						})
+					: null
 
 				// Update offer status
 				transaction.update(offerRef, {
@@ -234,25 +247,17 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 					respondedAt: FieldValue.serverTimestamp(),
 					respondedBy: firestore.collection(Collections.PLAYERS).doc(userId),
 				})
-				if (answerEmailContext && status === OfferStatus.REJECTED) {
+				if (emailContext && emailed === 'declined') {
 					queueOfferAnsweredEmails(transaction, firestore, {
 						type: offerData.type,
 						accepted: false,
-						context: answerEmailContext,
+						context: emailContext,
 					})
 				}
-				// Only a withdrawal by whoever sent the offer is news to the other
-				// side. An admin canceling one is cleaning up, and a captain
-				// turning down a request declines it instead.
-				if (
-					answerEmailContext &&
-					status === OfferStatus.CANCELED &&
-					isCreator
-				) {
+				if (emailContext && emailed === 'withdrawn') {
 					queueOfferWithdrawnEmails(transaction, firestore, {
 						type: offerData.type,
-						sentQuietly: offerData.sentQuietly === true,
-						context: answerEmailContext,
+						context: emailContext,
 					})
 				}
 

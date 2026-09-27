@@ -14,6 +14,7 @@ import {
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
 import { deliverQueuedEmail } from '../../Functions/src/email/sender.js'
+import { OFFER_SEND_EMAILS_PER_DAY } from '../../Functions/src/email/teamOfferEmails.js'
 
 /**
  * The emails around joining a team. Each is queued in the transaction that
@@ -25,8 +26,8 @@ import { deliverQueuedEmail } from '../../Functions/src/email/sender.js'
  * - withdrawing emails whoever it was sent to
  * - joining one team tells the captains of the others the player had
  *   offers with
- * - anything refused emails nobody, and neither does re-sending an offer
- *   within a day of withdrawing it, nor then withdrawing it again
+ * - anything refused emails nobody, and an offer withdrawn and re-sent over
+ *   and over stops emailing after OFFER_SEND_EMAILS_PER_DAY sends a day
  */
 
 let firestore: Firestore
@@ -392,42 +393,30 @@ describe('withdrawing', () => {
 		expect(await outbox()).toEqual([])
 	})
 
-	it('emails nobody when someone other than the sender cancels it', async () => {
+	it('tells the player their request was declined when a captain cancels it', async () => {
 		// The API lets a captain cancel a player's request; the App declines
-		// requests instead. Either way the player did not withdraw it, so
-		// the captains must not be told they did.
+		// requests instead. Either way the team turned it down, and the
+		// captains must not be told the player withdrew it.
 		await createOffer(PLAYER, 'request')
 		await clearOutbox()
 
 		expect(await answer(CAPTAIN, 'canceled')).toBeNull()
 
+		expect(await sentTo()).toEqual([[PLAYER, 'teamRequestDeclined']])
+	})
+
+	it('emails nobody when an admin cancels someone else’s offer', async () => {
+		await seedPlayer('admin-1', 'Ada', 'Min')
+		await firestore
+			.collection('players')
+			.doc('admin-1')
+			.set({ admin: true }, { merge: true })
+		await createOffer(CAPTAIN, 'invitation')
+		await clearOutbox()
+
+		expect(await answer('admin-1', 'canceled')).toBeNull()
+
 		expect(await outbox()).toEqual([])
-	})
-
-	it('emails once each way however often an offer is withdrawn and re-sent', async () => {
-		// Invite, withdraw, invite, withdraw, invite, withdraw.
-		for (let round = 0; round < 3; round++) {
-			expect(await createOffer(CAPTAIN, 'invitation')).toBeNull()
-			expect(await answer(CAPTAIN, 'canceled')).toBeNull()
-		}
-
-		expect((await outbox()).map((mail) => mail.template).sort()).toEqual([
-			'teamInvitation',
-			'teamInvitationWithdrawn',
-		])
-	})
-
-	it('marks a re-sent offer as sent quietly, and a first one as not', async () => {
-		const sentQuietly = async () =>
-			(await firestore.collection('offers').doc(offerId()).get()).data()
-				?.sentQuietly
-
-		await createOffer(CAPTAIN, 'invitation')
-		expect(await sentQuietly()).toBe(false)
-
-		await answer(CAPTAIN, 'canceled')
-		await createOffer(CAPTAIN, 'invitation')
-		expect(await sentQuietly()).toBe(true)
 	})
 })
 
@@ -496,44 +485,79 @@ describe('joining one team while holding other offers', () => {
 	})
 })
 
-describe('sending again after withdrawing', () => {
-	/** Moves the offer's cancellation back in time. */
-	const canceledAgo = (ms: number) =>
-		firestore
-			.collection('offers')
-			.doc(offerId())
-			.update({ respondedAt: Timestamp.fromMillis(Date.now() - ms) })
+describe('withdrawing and sending again', () => {
+	const templates = async () =>
+		(await outbox()).map((mail) => mail.template).sort()
+
+	const sentQuietly = async () =>
+		(await firestore.collection('offers').doc(offerId()).get()).data()
+			?.sentQuietly
+
+	/** Moves every recorded send email back in time. */
+	const sendEmailsAgo = async (ms: number) => {
+		const ref = firestore.collection('offers').doc(offerId())
+		const times = ((await ref.get()).data()?.sendEmailedAt ?? []) as Timestamp[]
+		await ref.update({
+			sendEmailedAt: times.map((at) =>
+				Timestamp.fromMillis(at.toMillis() - ms)
+			),
+		})
+	}
 
 	const HOUR = 60 * 60 * 1000
 
-	it('does not email the captains again when a request is withdrawn and re-sent', async () => {
-		// Otherwise request, cancel, request would email them every time.
-		await createOffer(PLAYER, 'request')
-		await answer(PLAYER, 'canceled')
-		await clearOutbox()
-
-		expect(await createOffer(PLAYER, 'request')).toBeNull()
-
-		expect(await outbox()).toEqual([])
-		expect(
-			(await firestore.collection('offers').doc(offerId()).get()).data()?.status
-		).toBe('pending')
-	})
-
-	it('does not email the player again when an invitation is withdrawn and re-sent', async () => {
+	it('tells the player again after a captain withdraws by mistake and re-invites', async () => {
+		// Their last email must not say "withdrawn" while an invitation waits.
 		await createOffer(CAPTAIN, 'invitation')
 		await answer(CAPTAIN, 'canceled')
+		await createOffer(CAPTAIN, 'invitation')
+
+		const mail = await outbox()
+		expect(mail.map((m) => m.template).sort()).toEqual([
+			'teamInvitation',
+			'teamInvitation',
+			'teamInvitationWithdrawn',
+		])
+		expect(await sentQuietly()).toBe(false)
+	})
+
+	it(`stops emailing after ${OFFER_SEND_EMAILS_PER_DAY} sends a day, however often it loops`, async () => {
+		// Invite and withdraw five times in a row.
+		for (let round = 0; round < 5; round++) {
+			expect(await createOffer(CAPTAIN, 'invitation')).toBeNull()
+			expect(await answer(CAPTAIN, 'canceled')).toBeNull()
+		}
+
+		// Each emailed send is followed by its emailed withdrawal; the rest
+		// go out quietly both ways.
+		expect(await templates()).toEqual([
+			'teamInvitation',
+			'teamInvitation',
+			'teamInvitationWithdrawn',
+			'teamInvitationWithdrawn',
+		])
+	})
+
+	it('marks the send past the limit as sent quietly', async () => {
+		for (let round = 0; round < OFFER_SEND_EMAILS_PER_DAY; round++) {
+			await createOffer(PLAYER, 'request')
+			expect(await sentQuietly()).toBe(false)
+			await answer(PLAYER, 'canceled')
+		}
 		await clearOutbox()
 
-		expect(await createOffer(CO_CAPTAIN, 'invitation')).toBeNull()
+		await createOffer(PLAYER, 'request')
 
+		expect(await sentQuietly()).toBe(true)
 		expect(await outbox()).toEqual([])
 	})
 
-	it('emails again once a day has passed since it was withdrawn', async () => {
-		await createOffer(PLAYER, 'request')
-		await answer(PLAYER, 'canceled')
-		await canceledAgo(25 * HOUR)
+	it('emails again once the day has passed', async () => {
+		for (let round = 0; round < OFFER_SEND_EMAILS_PER_DAY; round++) {
+			await createOffer(PLAYER, 'request')
+			await answer(PLAYER, 'canceled')
+		}
+		await sendEmailsAgo(25 * HOUR)
 		await clearOutbox()
 
 		await createOffer(PLAYER, 'request')
@@ -544,10 +568,12 @@ describe('sending again after withdrawing', () => {
 		])
 	})
 
-	it('stays quiet until the day is up', async () => {
-		await createOffer(PLAYER, 'request')
-		await answer(PLAYER, 'canceled')
-		await canceledAgo(23 * HOUR)
+	it('still counts sends within the day', async () => {
+		for (let round = 0; round < OFFER_SEND_EMAILS_PER_DAY; round++) {
+			await createOffer(PLAYER, 'request')
+			await answer(PLAYER, 'canceled')
+		}
+		await sendEmailsAgo(23 * HOUR)
 		await clearOutbox()
 
 		await createOffer(PLAYER, 'request')
@@ -555,8 +581,20 @@ describe('sending again after withdrawing', () => {
 		expect(await outbox()).toEqual([])
 	})
 
+	it('counts each kind of offer apart', async () => {
+		// A player's withdrawn requests do not silence a captain's invitation.
+		for (let round = 0; round < OFFER_SEND_EMAILS_PER_DAY; round++) {
+			await createOffer(PLAYER, 'request')
+			await answer(PLAYER, 'canceled')
+		}
+		await clearOutbox()
+
+		await createOffer(CAPTAIN, 'invitation')
+
+		expect(await sentTo()).toEqual([[PLAYER, 'teamInvitation']])
+	})
+
 	it('emails again after a declined request, which the captains answered', async () => {
-		// Declining is not withdrawing: asking again is a new question.
 		await createOffer(PLAYER, 'request')
 		await answer(CAPTAIN, 'rejected')
 		await clearOutbox()
@@ -567,6 +605,35 @@ describe('sending again after withdrawing', () => {
 			[CAPTAIN, 'teamJoinRequest'],
 			[CO_CAPTAIN, 'teamJoinRequest'],
 		])
+	})
+})
+
+describe('joining a team another way', () => {
+	it('tells the other teams when the player creates their own team', async () => {
+		await createOffer(PLAYER, 'request', OTHER_TEAM)
+		await clearOutbox()
+
+		expect(
+			await errorCodeFrom(fn('createTeam'), {
+				auth: authed(PLAYER),
+				data: { name: 'Ice Hawks', seasonId: SEASON },
+			})
+		).toBeNull()
+
+		expect(await sentTo()).toEqual([
+			[OTHER_CAPTAIN, 'teamPlayerJoinedElsewhere'],
+		])
+		expect((await outbox())[0].props).toEqual({
+			teamName: 'Snow Owls',
+			playerName: 'Alex Chen',
+			joinedTeamName: 'Ice Hawks',
+			offerType: 'request',
+		})
+		expect(
+			(
+				await firestore.collection('offers').doc(offerId(OTHER_TEAM)).get()
+			).data()?.status
+		).toBe('canceled')
 	})
 })
 

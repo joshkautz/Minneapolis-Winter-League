@@ -151,19 +151,24 @@ one is in the `teams` category and links to the team page, `/manage`.
 queued by `createOffer`, declining and withdrawing by `updateOffer`, and
 accepting by the `onOfferUpdated` trigger, in the transaction that puts the
 player on the roster, so nobody hears of a join that failed. The same
-transaction cancels the player's other pending offers that season and tells
-those teams' captains why.
+transaction closes the player's other pending offers that season and tells
+those teams' captains why; creating or rolling over a team, or being added
+by an admin, does the same through `cancelPendingOffersForPlayer`
+(`shared/offers.ts`).
 
-- **Withdrawing and re-sending cannot flood anyone.** An offer sent again
-  within a day of being canceled (`isQuietResend`) emails nobody and is
-  marked `sentQuietly`; withdrawing it then emails nobody either. However
-  often the loop runs, the other side hears once that it was sent and once
-  that it was withdrawn.
-- **Only the sender withdrawing is news.** An admin canceling an offer, or a
-  captain canceling a player's request through the API (the App declines
-  requests instead), sends nothing.
-- **Admin roster edits send nothing**: they are as often corrections to past
-  seasons.
+- **Withdrawing and re-sending cannot flood anyone, and cannot mislead.** A
+  player and a team get at most two "sent" emails a day for each kind of
+  offer (`OFFER_SEND_EMAILS_PER_DAY`, recorded on the offer as
+  `sendEmailedAt`). A captain who withdraws by mistake and invites again is
+  therefore emailed all three times, so the player's last email is the
+  invitation. Past the limit an offer goes out with no email and is marked
+  `sentQuietly`, and withdrawing it then emails nobody either.
+- **Only the sender withdrawing is emailed as withdrawn.** A captain canceling
+  a player's request through the API (the App declines requests instead) is
+  emailed as declined; an admin canceling someone else's offer sends
+  nothing.
+- **Admin roster edits send nothing** about the roster itself: they are as
+  often corrections to past seasons. Only the offers they close are told.
 
 ## The new-season announcement
 
