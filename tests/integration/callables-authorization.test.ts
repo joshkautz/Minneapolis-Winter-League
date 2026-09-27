@@ -69,6 +69,7 @@ const USER_CALLABLES = [
 	'createTeamContributionCheckout',
 	'deletePlayer',
 	'deleteTeam',
+	'getEmailPreferences',
 	'rolloverTeam',
 	'signWaiver',
 	'updateOffer',
@@ -76,6 +77,7 @@ const USER_CALLABLES = [
 	'updatePost',
 	'updateReply',
 	'updateTeam',
+	'updateEmailPreferences',
 	'updateTeamRoster',
 ] as const
 
@@ -88,6 +90,10 @@ const ALLOWS_UNVERIFIED_EMAIL = new Set([
 	'createPlayer',
 	'updatePlayer',
 	'deletePlayer',
+	// A player's own email preferences, which the link in their email opens
+	// with no sign-in at all (tests/integration/email-preferences.test.ts).
+	'getEmailPreferences',
+	'updateEmailPreferences',
 ])
 
 /** Triggers, webhooks and schedules: not callables, excluded from the sweep. */
@@ -181,8 +187,8 @@ describe('the sweep covers every callable in the deploy manifest', () => {
 		expect(missing).toEqual([])
 	})
 
-	it('covers all 46 callables', () => {
-		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(46)
+	it('covers all 48 callables', () => {
+		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(48)
 	})
 
 	it('has a valid payload for every callable', () => {

@@ -13,19 +13,15 @@ import { logger } from 'firebase-functions/v2'
 import { EMAIL_CONFIG } from '../config/constants.js'
 import { isRunningInEmulator } from '../config/environment.js'
 import { playerContactRef, playerRef } from '../shared/database.js'
-import {
-	Collections,
-	type MailDocument,
-	type MailStatus,
-	type PlayerContactDocument,
-} from '../types.js'
+import { Collections, type MailDocument, type MailStatus } from '../types.js'
 import { renderEmail, type RenderedEmail } from './render.js'
 import { deliveryFor, readEmailSettings } from './settings.js'
 import { isTemplateName, type TemplateName } from './templates.js'
 import {
 	isOptionalCategory,
-	unsubscribeTokenFor,
-	unsubscribeUrl,
+	preferenceLinks,
+	preferencesOf,
+	type EmailPreferences,
 } from './unsubscribe.js'
 
 export interface OutgoingEmail {
@@ -76,7 +72,7 @@ export async function deliverQueuedEmail(
 	}
 	if (
 		isOptionalCategory(mail.category) &&
-		recipient.preferences?.[mail.category] === false
+		!recipient.preferences[mail.category]
 	) {
 		return finish('unsubscribed', {
 			reason: `Unsubscribed from ${mail.category}.`,
@@ -97,18 +93,19 @@ export async function deliverQueuedEmail(
 		})
 	}
 
-	const unsubscribe =
+	// Email a player can turn off links to their preferences in the footer
+	// and offers mail apps one-click unsubscribe in its headers.
+	const links =
 		mail.toPlayerId && isOptionalCategory(mail.category)
-			? unsubscribeUrl(
-					mail.toPlayerId,
-					await unsubscribeTokenFor(firestore, mail.toPlayerId),
-					mail.category
-				)
+			? await preferenceLinks(firestore, mail.toPlayerId, mail.category)
 			: null
 	const rendered = await renderEmail(
 		mail.template as TemplateName,
 		mail.props as never,
-		{ recipientFirstName: recipient.firstName, unsubscribeUrl: unsubscribe }
+		{
+			recipientFirstName: recipient.firstName,
+			unsubscribeUrl: links?.page ?? null,
+		}
 	)
 
 	// The emulator reads production secrets, and Resend has no test mode:
@@ -118,7 +115,7 @@ export async function deliverQueuedEmail(
 	}
 
 	const result = await send(
-		outgoing(recipient.address, rendered, mail, unsubscribe),
+		outgoing(recipient.address, rendered, mail, links?.oneClick ?? null),
 		mailId
 	)
 	if (result.ok) {
@@ -144,7 +141,7 @@ export async function deliverQueuedEmail(
 interface ResolvedRecipient {
 	address: string
 	firstName: string | null
-	preferences: PlayerContactDocument['emailPreferences']
+	preferences: EmailPreferences
 }
 
 async function resolveRecipient(
@@ -152,7 +149,11 @@ async function resolveRecipient(
 	mail: MailDocument
 ): Promise<ResolvedRecipient | null> {
 	if (mail.toAddress) {
-		return { address: mail.toAddress, firstName: null, preferences: undefined }
+		return {
+			address: mail.toAddress,
+			firstName: null,
+			preferences: preferencesOf(undefined),
+		}
 	}
 	if (!mail.toPlayerId) return null
 	const [contact, player] = await Promise.all([
@@ -164,7 +165,7 @@ async function resolveRecipient(
 	return {
 		address,
 		firstName: player.data()?.firstname ?? null,
-		preferences: contact.data()?.emailPreferences,
+		preferences: preferencesOf(contact.data()),
 	}
 }
 
@@ -172,7 +173,7 @@ function outgoing(
 	to: string,
 	rendered: RenderedEmail,
 	mail: MailDocument,
-	unsubscribe: string | null
+	oneClick: string | null
 ): OutgoingEmail {
 	return {
 		to,
@@ -181,9 +182,9 @@ function outgoing(
 		text: rendered.text,
 		// One-click unsubscribe (RFC 8058), which Gmail and Yahoo expect of
 		// anything a person can opt out of.
-		headers: unsubscribe
+		headers: oneClick
 			? {
-					'List-Unsubscribe': `<${unsubscribe}>`,
+					'List-Unsubscribe': `<${oneClick}>`,
 					'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
 				}
 			: {},

@@ -4,7 +4,7 @@ import { renderEmail } from './render.js'
 import { TEMPLATES, type TemplateName } from './templates.js'
 
 const UNSUBSCRIBE =
-	'https://mplswinterleague.com/unsubscribe?p=a&t=b&c=announcements'
+	'https://mplswinterleague.com/email-preferences?p=a&t=b&c=announcements'
 
 const render = (name: TemplateName) =>
 	renderEmail(name, TEMPLATES[name].sample as never, {
@@ -35,9 +35,17 @@ describe('renderEmail', () => {
 		expect(email.category).toBe('announcements')
 	})
 
-	it('offers an unsubscribe link in email a player can turn off', async () => {
-		expect((await render('seasonAnnouncement')).html).toContain(
-			UNSUBSCRIBE.replaceAll('&', '&amp;')
+	it('offers a visible Unsubscribe link in email a player can turn off', async () => {
+		const email = await render('seasonAnnouncement')
+		expect(email.html).toContain(UNSUBSCRIBE.replaceAll('&', '&amp;'))
+		expect(email.html).toMatch(/Don(’|'|&#x27;|&apos;)t want these emails\?/)
+		expect(email.text).toMatch(/Unsubscribe/)
+		expect(email.text).toContain(UNSUBSCRIBE)
+	})
+
+	it('carries the league’s postal address in announcements, as CAN-SPAM requires', async () => {
+		expect((await render('seasonAnnouncement')).text).toContain(
+			'4316 Glencrest Road, Golden Valley, MN 55416'
 		)
 	})
 

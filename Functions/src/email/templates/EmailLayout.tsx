@@ -22,7 +22,7 @@ import { COLORS, FONT_STACK, LOGO, RADIUS } from './theme.js'
 export interface EmailFooter {
 	/** One sentence: why this person received this email. */
 	reason: string
-	/** Present for email a player can turn off. */
+	/** The preferences page, for email a player can turn off. */
 	unsubscribeUrl: string | null
 	/** Required by CAN-SPAM in announcements. */
 	postalAddress: string | null
@@ -62,11 +62,13 @@ export const EmailLayout = ({
 				<Section style={footerSection}>
 					<Text style={footerText}>{footer.reason}</Text>
 					{footer.unsubscribeUrl && (
+						// Yahoo and CAN-SPAM want a clearly visible way out in the
+						// body. It opens the preferences page, one click from done.
 						<Text style={footerText}>
+							Don&apos;t want these emails?{' '}
 							<Link href={footer.unsubscribeUrl} style={footerLink}>
 								Unsubscribe
-							</Link>{' '}
-							from these emails.
+							</Link>
 						</Text>
 					)}
 					<Text style={footerText}>
