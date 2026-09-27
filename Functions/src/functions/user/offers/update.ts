@@ -21,6 +21,7 @@ import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 import {
 	queueOfferAnsweredEmails,
+	queueOfferWithdrawnEmails,
 	readTeamOfferContext,
 } from '../../../email/teamOfferEmails.js'
 
@@ -42,8 +43,9 @@ interface UpdateOfferRequest {
  * - Atomic transaction with proper cleanup
  * - Admins bypass banned and registration date restrictions
  *
- * Declining emails whoever sent the offer; accepting is emailed by the
- * onOfferUpdated trigger, once the player is really on the team.
+ * Declining emails whoever sent the offer, and withdrawing it emails whoever
+ * it was sent to; accepting is emailed by the onOfferUpdated trigger, once
+ * the player is really on the team.
  */
 export const updateOffer = onCall<UpdateOfferRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
@@ -216,9 +218,9 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 					}
 				}
 
-				// A declined offer tells whoever sent it; read before writing.
-				const declinedEmailContext =
-					status === OfferStatus.REJECTED
+				// Declining or withdrawing tells the other side; read before writing.
+				const answerEmailContext =
+					status !== OfferStatus.ACCEPTED
 						? await readTeamOfferContext(transaction, firestore, {
 								playerId: offerData.player.id,
 								teamId: offerData.team.id,
@@ -232,11 +234,25 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 					respondedAt: FieldValue.serverTimestamp(),
 					respondedBy: firestore.collection(Collections.PLAYERS).doc(userId),
 				})
-				if (declinedEmailContext) {
+				if (answerEmailContext && status === OfferStatus.REJECTED) {
 					queueOfferAnsweredEmails(transaction, firestore, {
 						type: offerData.type,
 						accepted: false,
-						context: declinedEmailContext,
+						context: answerEmailContext,
+					})
+				}
+				// Only a withdrawal by whoever sent the offer is news to the other
+				// side. An admin canceling one is cleaning up, and a captain
+				// turning down a request declines it instead.
+				if (
+					answerEmailContext &&
+					status === OfferStatus.CANCELED &&
+					isCreator
+				) {
+					queueOfferWithdrawnEmails(transaction, firestore, {
+						type: offerData.type,
+						sentQuietly: offerData.sentQuietly === true,
+						context: answerEmailContext,
 					})
 				}
 

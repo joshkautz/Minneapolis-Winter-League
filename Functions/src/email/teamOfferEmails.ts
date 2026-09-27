@@ -7,11 +7,15 @@
  * | Sent                 | the player                    | every captain           |
  * | Accepted             | every captain                 | the player              |
  * | Declined             | every captain                 | the player              |
+ * | Withdrawn            | the player                    | every captain           |
+ * | Player joined a      | that team's captains          | that team's captains    |
+ * | different team       |                               |                         |
  *
- * A canceled offer sends nothing: withdrawing one, or its being withdrawn
- * because the player joined another team, needs nobody to act. Nor does
- * sending it again within a day of its being canceled, or withdrawing and
- * re-sending would email the other side every time.
+ * Withdrawing and re-sending the same offer must not email the other side
+ * over and over. So an offer sent again within a day of its being canceled
+ * sends nothing and is marked `sentQuietly`, and withdrawing a quietly sent
+ * offer sends nothing either: however often the loop runs, the other side
+ * hears once that it was sent and once that it was withdrawn.
  *
  * The emails are queued in the transaction that makes the change, so one
  * goes out only if the change was saved. A transaction reads before it
@@ -165,4 +169,66 @@ export function queueOfferAnsweredEmails(
 		template: accepted ? 'teamRequestAccepted' : 'teamRequestDeclined',
 		props: { teamName, seasonName },
 	})
+}
+
+/**
+ * Tells the other side that an offer they were sent was withdrawn: the
+ * player, for an invitation; the captains, for a request. Nothing is sent
+ * for an offer that was itself sent quietly (see above).
+ */
+export function queueOfferWithdrawnEmails(
+	transaction: Transaction,
+	firestore: Firestore,
+	{
+		type,
+		sentQuietly,
+		context,
+	}: { type: OfferType; sentQuietly: boolean; context: TeamOfferContext }
+): void {
+	if (sentQuietly) return
+	const { playerId, playerName, teamName, seasonName, captainIds } = context
+	if (type === OfferType.INVITATION) {
+		queueEmailInTransaction(transaction, firestore, {
+			to: { playerId },
+			template: 'teamInvitationWithdrawn',
+			props: { teamName, seasonName },
+		})
+		return
+	}
+	for (const captainId of captainIds) {
+		queueEmailInTransaction(transaction, firestore, {
+			to: { playerId: captainId },
+			template: 'teamRequestWithdrawn',
+			props: { teamName, playerName },
+		})
+	}
+}
+
+/**
+ * Tells the captains of a team whose offer to or from the player was
+ * withdrawn because the player joined `joinedTeamName` instead. The player
+ * is not told: they chose it.
+ */
+export function queuePlayerJoinedElsewhereEmails(
+	transaction: Transaction,
+	firestore: Firestore,
+	{
+		type,
+		context,
+		joinedTeamName,
+	}: { type: OfferType; context: TeamOfferContext; joinedTeamName: string }
+): void {
+	const { playerName, teamName, captainIds } = context
+	for (const captainId of captainIds) {
+		queueEmailInTransaction(transaction, firestore, {
+			to: { playerId: captainId },
+			template: 'teamPlayerJoinedElsewhere',
+			props: {
+				teamName,
+				playerName,
+				joinedTeamName,
+				offerType: type === OfferType.INVITATION ? 'invitation' : 'request',
+			},
+		})
+	}
 }

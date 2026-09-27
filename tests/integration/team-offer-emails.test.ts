@@ -22,8 +22,11 @@ import { deliverQueuedEmail } from '../../Functions/src/email/sender.js'
  *
  * - an invitation emails the player; a request emails every captain
  * - accepting or declining emails whoever sent it
- * - canceling, and anything refused, emails nobody
- * - re-sending an offer within a day of withdrawing it emails nobody
+ * - withdrawing emails whoever it was sent to
+ * - joining one team tells the captains of the others the player had
+ *   offers with
+ * - anything refused emails nobody, and neither does re-sending an offer
+ *   within a day of withdrawing it, nor then withdrawing it again
  */
 
 let firestore: Firestore
@@ -40,6 +43,7 @@ const CAPTAIN = 'captain-1'
 const CO_CAPTAIN = 'captain-2'
 const TEAMMATE = 'teammate-1'
 const PAST_CAPTAIN = 'past-captain'
+const OTHER_CAPTAIN = 'other-captain'
 const PLAYER = 'free-agent'
 
 const daysFromNow = (days: number): Timestamp =>
@@ -184,6 +188,8 @@ beforeEach(async () => {
 	await putOnTeam(TEAMMATE, TEAM, SEASON, false)
 	// Captained the same team last season, and is not on it now.
 	await putOnTeam(PAST_CAPTAIN, TEAM, PAST_SEASON, true)
+	await seedPlayer(OTHER_CAPTAIN, 'Kim', 'Lund')
+	await putOnTeam(OTHER_CAPTAIN, OTHER_TEAM, SEASON, true)
 })
 
 describe('sending an invitation', () => {
@@ -346,17 +352,147 @@ describe('declining', () => {
 	})
 })
 
-describe('canceling', () => {
-	it.each([
-		['a captain withdrawing an invitation', 'invitation', CAPTAIN],
-		['a player withdrawing a request', 'request', PLAYER],
-	] as const)('emails nobody for %s', async (_label, type, caller) => {
-		await createOffer(type === 'invitation' ? CAPTAIN : PLAYER, type)
+describe('withdrawing', () => {
+	it('tells the player when a captain withdraws their invitation', async () => {
+		await createOffer(CAPTAIN, 'invitation')
 		await clearOutbox()
 
-		expect(await answer(caller, 'canceled')).toBeNull()
+		expect(await answer(CAPTAIN, 'canceled')).toBeNull()
+
+		expect(await sentTo()).toEqual([[PLAYER, 'teamInvitationWithdrawn']])
+		expect((await outbox())[0].props).toEqual({
+			teamName: 'Frost Giants',
+			seasonName: '2026 Fall',
+		})
+	})
+
+	it('tells the captains when the player withdraws their request', async () => {
+		await createOffer(PLAYER, 'request')
+		await clearOutbox()
+
+		expect(await answer(PLAYER, 'canceled')).toBeNull()
+
+		expect(await sentTo()).toEqual([
+			[CAPTAIN, 'teamRequestWithdrawn'],
+			[CO_CAPTAIN, 'teamRequestWithdrawn'],
+		])
+		expect((await outbox())[0].props).toEqual({
+			teamName: 'Frost Giants',
+			playerName: 'Alex Chen',
+		})
+	})
+
+	it('emails nobody when withdrawing is refused', async () => {
+		// Only the captain who sent an invitation can withdraw it.
+		await createOffer(CAPTAIN, 'invitation')
+		await clearOutbox()
+
+		expect(await answer(CO_CAPTAIN, 'canceled')).toBe('permission-denied')
 
 		expect(await outbox()).toEqual([])
+	})
+
+	it('emails nobody when someone other than the sender cancels it', async () => {
+		// The API lets a captain cancel a player's request; the App declines
+		// requests instead. Either way the player did not withdraw it, so
+		// the captains must not be told they did.
+		await createOffer(PLAYER, 'request')
+		await clearOutbox()
+
+		expect(await answer(CAPTAIN, 'canceled')).toBeNull()
+
+		expect(await outbox()).toEqual([])
+	})
+
+	it('emails once each way however often an offer is withdrawn and re-sent', async () => {
+		// Invite, withdraw, invite, withdraw, invite, withdraw.
+		for (let round = 0; round < 3; round++) {
+			expect(await createOffer(CAPTAIN, 'invitation')).toBeNull()
+			expect(await answer(CAPTAIN, 'canceled')).toBeNull()
+		}
+
+		expect((await outbox()).map((mail) => mail.template).sort()).toEqual([
+			'teamInvitation',
+			'teamInvitationWithdrawn',
+		])
+	})
+
+	it('marks a re-sent offer as sent quietly, and a first one as not', async () => {
+		const sentQuietly = async () =>
+			(await firestore.collection('offers').doc(offerId()).get()).data()
+				?.sentQuietly
+
+		await createOffer(CAPTAIN, 'invitation')
+		expect(await sentQuietly()).toBe(false)
+
+		await answer(CAPTAIN, 'canceled')
+		await createOffer(CAPTAIN, 'invitation')
+		expect(await sentQuietly()).toBe(true)
+	})
+})
+
+describe('joining one team while holding other offers', () => {
+	/** Answers the player's offer with `teamId` and runs the trigger. */
+	const acceptAndJoin = async (caller: string): Promise<void> => {
+		expect(await answer(caller, 'accepted')).toBeNull()
+		await fireTrigger('pending', 'accepted')
+	}
+
+	it('tells another team’s captains their invitation was withdrawn', async () => {
+		await createOffer(OTHER_CAPTAIN, 'invitation', OTHER_TEAM)
+		await createOffer(PLAYER, 'request')
+		await clearOutbox()
+
+		await acceptAndJoin(CAPTAIN)
+
+		expect(await sentTo()).toEqual([
+			[PLAYER, 'teamRequestAccepted'],
+			[OTHER_CAPTAIN, 'teamPlayerJoinedElsewhere'],
+		])
+		expect(
+			(await outbox()).find(
+				(mail) => mail.template === 'teamPlayerJoinedElsewhere'
+			)?.props
+		).toEqual({
+			teamName: 'Snow Owls',
+			playerName: 'Alex Chen',
+			joinedTeamName: 'Frost Giants',
+			offerType: 'invitation',
+		})
+	})
+
+	it('tells another team’s captains the player’s request to them was withdrawn', async () => {
+		await createOffer(PLAYER, 'request', OTHER_TEAM)
+		await createOffer(CAPTAIN, 'invitation')
+		await clearOutbox()
+
+		await acceptAndJoin(PLAYER)
+
+		expect(await sentTo()).toEqual([
+			[CAPTAIN, 'teamInvitationAccepted'],
+			[CO_CAPTAIN, 'teamInvitationAccepted'],
+			[OTHER_CAPTAIN, 'teamPlayerJoinedElsewhere'],
+		])
+		expect(
+			(await outbox()).find(
+				(mail) => mail.template === 'teamPlayerJoinedElsewhere'
+			)?.props.offerType
+		).toBe('request')
+		// The offer is closed, as before.
+		expect(
+			(
+				await firestore.collection('offers').doc(offerId(OTHER_TEAM)).get()
+			).data()?.status
+		).toBe('canceled')
+	})
+
+	it('tells no other team when the player had no other offers', async () => {
+		await createOffer(PLAYER, 'request')
+		await clearOutbox()
+
+		await acceptAndJoin(CAPTAIN)
+
+		expect(await sentTo()).toEqual([[PLAYER, 'teamRequestAccepted']])
 	})
 })
 

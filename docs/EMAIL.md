@@ -139,21 +139,31 @@ Joining a team is emailed to whoever has to act, or asked
 (`email/teamOfferEmails.ts`, templates in `templates/TeamOffers.tsx`). Every
 one is in the `teams` category and links to the team page, `/manage`.
 
-| Event    | Invitation (a captain invites a player) | Request (a player asks to join)    |
-| -------- | --------------------------------------- | ---------------------------------- |
-| Sent     | the player (`teamInvitation`)           | each captain (`teamJoinRequest`)   |
-| Accepted | each captain (`teamInvitationAccepted`) | the player (`teamRequestAccepted`) |
-| Declined | each captain (`teamInvitationDeclined`) | the player (`teamRequestDeclined`) |
+| Event                   | Invitation (a captain invites a player)    | Request (a player asks to join)            |
+| ----------------------- | ------------------------------------------ | ------------------------------------------ |
+| Sent                    | the player (`teamInvitation`)              | each captain (`teamJoinRequest`)           |
+| Accepted                | each captain (`teamInvitationAccepted`)    | the player (`teamRequestAccepted`)         |
+| Declined                | each captain (`teamInvitationDeclined`)    | the player (`teamRequestDeclined`)         |
+| Withdrawn by its sender | the player (`teamInvitationWithdrawn`)     | each captain (`teamRequestWithdrawn`)      |
+| Player joined elsewhere | each captain (`teamPlayerJoinedElsewhere`) | each captain (`teamPlayerJoinedElsewhere`) |
 
 "Each captain" is everyone captaining the team that season. Sending is
-queued by `createOffer`, declining by `updateOffer`, and accepting by the
-`onOfferUpdated` trigger, in the transaction that puts the player on the
-roster, so nobody hears of a join that failed. A canceled offer, withdrawn or
-cleared because the player joined another team, sends nothing. Nor does
-sending an offer again within a day of its being canceled
-(`isQuietResend`), so withdrawing and re-sending cannot email anyone over
-and over. Admin roster
-edits send nothing either: they are as often corrections to past seasons.
+queued by `createOffer`, declining and withdrawing by `updateOffer`, and
+accepting by the `onOfferUpdated` trigger, in the transaction that puts the
+player on the roster, so nobody hears of a join that failed. The same
+transaction cancels the player's other pending offers that season and tells
+those teams' captains why.
+
+- **Withdrawing and re-sending cannot flood anyone.** An offer sent again
+  within a day of being canceled (`isQuietResend`) emails nobody and is
+  marked `sentQuietly`; withdrawing it then emails nobody either. However
+  often the loop runs, the other side hears once that it was sent and once
+  that it was withdrawn.
+- **Only the sender withdrawing is news.** An admin canceling an offer, or a
+  captain canceling a player's request through the API (the App declines
+  requests instead), sends nothing.
+- **Admin roster edits send nothing**: they are as often corrections to past
+  seasons.
 
 ## The new-season announcement
 

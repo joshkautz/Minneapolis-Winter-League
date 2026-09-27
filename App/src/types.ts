@@ -468,6 +468,11 @@ export interface OfferDocument extends DocumentData {
 	/** Type of offer: request or invitation */
 	type: OfferType
 	/** Reason why an offer was automatically canceled (e.g., player joined another team) */
+	/**
+	 * Set when the offer was sent again within a day of being canceled, so
+	 * nobody was emailed; withdrawing it then emails nobody either.
+	 */
+	sentQuietly?: boolean
 	canceledReason?: string
 	/** Whether the offer has been processed by the offerUpdated trigger */
 	processed?: boolean

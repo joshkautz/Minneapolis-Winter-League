@@ -205,6 +205,10 @@ export const createOffer = onCall<CreateOfferRequest>(
 					)
 				}
 
+				// Sent again straight after being withdrawn: the other side has
+				// already heard about it, so it goes out without an email.
+				const sentQuietly = isQuietResend(existingOfferDoc.data(), new Date())
+
 				// Create offer document using deterministic ID for atomic operation
 				const offerData = {
 					player: playerRef,
@@ -214,6 +218,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 					status: OfferStatus.PENDING,
 					createdBy: firestore.collection(Collections.PLAYERS).doc(userId),
 					createdAt: FieldValue.serverTimestamp(),
+					sentQuietly,
 				}
 
 				// Read what the email needs before the first write.
@@ -226,7 +231,7 @@ export const createOffer = onCall<CreateOfferRequest>(
 				// Use transaction.set() with the deterministic document ID
 				// This ensures the check and create are atomic
 				transaction.set(pendingOfferRef, offerData)
-				if (!isQuietResend(existingOfferDoc.data(), new Date())) {
+				if (!sentQuietly) {
 					queueOfferSentEmails(transaction, firestore, {
 						type,
 						context: emailContext,

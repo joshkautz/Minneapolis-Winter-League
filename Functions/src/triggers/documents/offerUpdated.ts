@@ -5,7 +5,8 @@
  *  - Add the player to the team's roster subcollection for the offer's season
  *  - Update the player's season subdoc to point at the new team
  *  - Cancel any other pending offers for that player in that season
- *  - Email whoever sent the offer that it was accepted
+ *  - Email whoever sent the offer that it was accepted, and the captains of
+ *    the teams whose offers were canceled that the player joined elsewhere
  */
 
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
@@ -23,6 +24,7 @@ import { addPlayerToTeam } from '../../shared/membership.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
 import {
 	queueOfferAnsweredEmails,
+	queuePlayerJoinedElsewhereEmails,
 	readTeamOfferContext,
 } from '../../email/teamOfferEmails.js'
 
@@ -90,11 +92,32 @@ export const onOfferUpdated = onDocumentUpdated(
 					throw new Error('Player is already on a team for this season')
 				}
 
-				// Read what the email needs before the first write.
+				// The player's other pending offers this season, to cancel. Read
+				// in the transaction, before any write, like everything below.
+				const otherPendingOffers = (
+					await transaction.get(
+						firestore
+							.collection(Collections.OFFERS)
+							.where('player', '==', playerCanonicalRef)
+							.where('season', '==', seasonRef)
+							.where('status', '==', OfferStatus.PENDING)
+					)
+				).docs.filter((doc) => doc.id !== offerId)
+
+				// Read what the emails need.
 				const emailContext = await readTeamOfferContext(
 					transaction,
 					firestore,
 					{ playerId, teamId, seasonId }
+				)
+				const otherEmailContexts = await Promise.all(
+					otherPendingOffers.map((doc) =>
+						readTeamOfferContext(transaction, firestore, {
+							playerId,
+							teamId: (doc.data() as OfferDocument).team.id,
+							seasonId,
+						})
+					)
 				)
 
 				// Atomic dual-write of the membership relationship.
@@ -115,30 +138,25 @@ export const onOfferUpdated = onDocumentUpdated(
 					context: emailContext,
 				})
 
-				// Cancel all other pending offers for this player in this season.
-				const pendingOffersQuery = await firestore
-					.collection(Collections.OFFERS)
-					.where('player', '==', playerCanonicalRef)
-					.where('season', '==', seasonRef)
-					.where('status', '==', OfferStatus.PENDING)
-					.get()
-
-				let canceledOffersCount = 0
-				pendingOffersQuery.forEach((doc) => {
-					if (doc.id !== offerId) {
-						transaction.update(doc.ref, {
-							status: OfferStatus.CANCELED,
-							respondedAt: FieldValue.serverTimestamp(),
-							respondedBy: playerCanonicalRef,
-							canceledReason:
-								'Player joined another team by accepting a different offer',
-						})
-						canceledOffersCount++
-					}
+				// Cancel all other pending offers for this player in this season,
+				// telling each of those teams' captains why.
+				otherPendingOffers.forEach((doc, i) => {
+					transaction.update(doc.ref, {
+						status: OfferStatus.CANCELED,
+						respondedAt: FieldValue.serverTimestamp(),
+						respondedBy: playerCanonicalRef,
+						canceledReason:
+							'Player joined another team by accepting a different offer',
+					})
+					queuePlayerJoinedElsewhereEmails(transaction, firestore, {
+						type: (doc.data() as OfferDocument).type,
+						context: otherEmailContexts[i],
+						joinedTeamName: emailContext.teamName,
+					})
 				})
 
 				logger.info(`Successfully processed offer acceptance: ${offerId}`, {
-					canceledPendingOffers: canceledOffersCount,
+					canceledPendingOffers: otherPendingOffers.length,
 				})
 			})
 		} catch (error) {
