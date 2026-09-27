@@ -14,7 +14,8 @@ Functions/src/
   functions/admin/<domain>/   callables that require admin
   functions/user/<domain>/    callables available to signed-in players
   triggers/{auth,documents,payments}/   Firestore and lifecycle triggers
-  triggers/scheduled/   onSchedule functions (the team payments sweep and reconciliation)
+  triggers/scheduled/   onSchedule functions (the team payments sweep and
+                        reconciliation, the nightly rankings rebuild)
   api/webhooks/         the Stripe HTTP endpoint
   services/             multi-step domain logic: team registration, team payments
                         (checkout reservations, intake, settlement, sweep,
@@ -157,8 +158,8 @@ deliveries fail verification harmlessly; the handler is idempotent.
 
 ## Scheduled functions
 
-`onSchedule` functions live in `triggers/scheduled/`. The two there follow
-the same shape:
+`onSchedule` functions live in `triggers/scheduled/`. They follow the same
+shape:
 
 - `region`, a `timeZone` of `America/Chicago`, and `maxInstances: 1`.
 - Honour the migration kill-switch like every trigger.
@@ -259,11 +260,15 @@ own `npm ci`, so it never sees the shadowing tree.
 ## Batch limits
 
 A Firestore `WriteBatch` caps at **500 operations**, counting sets, updates
-and deletes together. The emulator does not enforce this — a 600-operation
-batch commits there and fails in production — so any code path whose batch
-size grows with the data must chunk, and must be covered by a unit test that
-counts commits rather than by an emulator test. See
-`services/playerRankings/persistence/rankingsSaver.ts`.
+and deletes together, and a request at 10 MiB. The emulator enforces neither
+— a 600-operation batch commits there and fails in production.
+
+For writes whose number grows with the data, and that need not be atomic,
+use a `BulkWriter`: it has no such limits. But its `close()` resolves even
+when writes failed, so keep each write's promise and check them, as
+`services/playerRankings/persistence/rankingsSaver.ts` does. A `WriteBatch`
+that grows must chunk, and be covered by a unit test that counts commits
+rather than by an emulator test.
 
 ## Validation is not the App's job
 

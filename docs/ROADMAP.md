@@ -140,9 +140,9 @@ teamSeasons, roster, playerSeasons) but three gaps remain:
   games, so every `teamSeasons.placement` stays `null`. The placement logic
   itself is intact; the game generator never produces the second playoff
   week it looks for.
-- **No rankings.** The Players page reads the `rankings` collection, which is
-  produced by the `rebuildPlayerRankings` admin callable rather than the
-  seeder, so it is empty locally until that function is run.
+- **No rankings.** The Players page reads what the rankings rebuild writes,
+  and the seeder does not run it, so rankings are empty locally until the
+  Rebuild button is pressed with Functions running.
 - **No news, posts, Swiss-format seasons or rollover-eligible captains.** The
   pages that read them are covered by hook tests
   (`use-paginated-feed.test.ts`, `use-rollover-team-form.test.ts`) but cannot
@@ -175,7 +175,7 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-About 1,500 tests across four suites, all run by `npm run verify`. Every callable is
+About 1,550 tests across four suites, all run by `npm run verify`. Every callable is
 covered for authorization, **every trigger** has a suite, and the emulator
 suites are mutation-tested. The conventions that keep them worth having —
 mutation testing, the emulator's missing batch limit, and pinning behaviour

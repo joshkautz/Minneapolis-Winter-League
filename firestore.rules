@@ -49,6 +49,12 @@ service cloud.firestore {
       allow create: if false; // Use createSeason
       allow update: if false; // Use updateSeason
       allow delete: if false; // Use deleteSeason
+
+      // Each player's standing in the season, written by the rankings rebuild.
+      match /rankings/{playerId} {
+        allow read: if true;
+        allow write: if false; // Functions only
+      }
     }
     
     match /games/{gameId} {
@@ -154,6 +160,12 @@ service cloud.firestore {
       allow delete: if false; // Functions only
     }
     
+    // One player's rating, rank and season rank after every round.
+    match /player-ranking-history/{playerId} {
+      allow read: if true;
+      allow write: if false; // Functions only
+    }
+
     match /rankings-history/{snapshotId} {
       allow read: if true;
       allow create: if false; // Functions only

@@ -2,7 +2,7 @@
 
 > **Minneapolis Winter League Player Rankings Rating System**
 >
-> A TrueSkill-based Bayesian player ranking algorithm that evaluates individual performance across seasons, considering team outcomes, uncertainty estimation, playoff performance, and round-based inactivity decay.
+> A TrueSkill-based Bayesian player ranking algorithm (v6) that evaluates individual performance across seasons, considering team outcomes, uncertainty estimation, playoff performance, round-based inactivity decay and a carry-over between seasons. Every rating is computed only from the games before it, so past ratings never change when seasons are added.
 
 ## Table of Contents
 
@@ -14,28 +14,27 @@
 - [Team Skill Aggregation](#team-skill-aggregation)
 - [Season and Time-Based Factors](#season-and-time-based-factors)
 - [Round-Based Decay Mechanics](#round-based-decay-mechanics)
-- [Round Snapshots and History](#round-snapshots-and-history)
+- [What a Rebuild Saves](#what-a-rebuild-saves)
 - [Calculation Flow](#calculation-flow)
 - [Technical Implementation](#technical-implementation)
 
 ## Mathematical Notation
 
-| Symbol                             | Description                                      |
-| ---------------------------------- | ------------------------------------------------ |
-| $\mu$                              | Player skill estimate (mean of Gaussian)         |
-| $\sigma$                           | Skill uncertainty (standard deviation)           |
-| $\mu_0$                            | Initial skill estimate (25.0)                    |
-| $\sigma_0$                         | Initial uncertainty (8.333)                      |
-| $\beta$                            | Performance variance (4.167)                     |
-| $\tau$                             | Dynamics factor (0.0833)                         |
-| $\epsilon$                         | Draw probability margin                          |
-| $\alpha$                           | Season decay factor (0.8)                        |
-| $\gamma$                           | Gravity well decay per round (0.998)             |
-| $\delta$                           | Inactivity decay per round (0.992)               |
-| $f_{\text{playoff}}$               | Playoff multiplier (2.0)                         |
-| $n$                                | Season order (0 = current)                       |
-| $\Phi(x)$                          | Standard normal CDF                              |
-| $\phi(x)$                          | Standard normal PDF                              |
+| Symbol               | Description                              |
+| -------------------- | ---------------------------------------- |
+| $\mu$                | Player skill estimate (mean of Gaussian) |
+| $\sigma$             | Skill uncertainty (standard deviation)   |
+| $\mu_0$              | Initial skill estimate (25.0)            |
+| $\sigma_0$           | Initial uncertainty (8.333)              |
+| $\beta$              | Performance variance (4.167)             |
+| $\tau$               | Dynamics factor (0.0833)                 |
+| $\epsilon$           | Draw probability margin                  |
+| $\kappa$             | Season carry-over (0.95)                 |
+| $\gamma$             | Gravity well decay per round (0.998)     |
+| $\delta$             | Inactivity decay per round (0.992)       |
+| $f_{\text{playoff}}$ | Playoff multiplier (2.0)                 |
+| $\Phi(x)$            | Standard normal CDF                      |
+| $\phi(x)$            | Standard normal PDF                      |
 
 ## Overview
 
@@ -59,39 +58,39 @@ The Minneapolis Winter League employs **TrueSkill**, a Bayesian skill rating sys
 
 The following constants define the behavior of the rating system:
 
-| Constant                         | Symbol               | Value   | Description                              |
-| -------------------------------- | -------------------- | ------- | ---------------------------------------- |
-| `INITIAL_MU`                     | $\mu_0$              | 25.0    | Initial skill estimate for new players   |
-| `INITIAL_SIGMA`                  | $\sigma_0$           | 8.333   | Initial uncertainty (μ/3)                |
-| `BETA`                           | $\beta$              | 4.167   | Performance variance (σ/2)               |
-| `TAU`                            | $\tau$               | 0.0833  | Dynamics factor (σ/100)                  |
-| `DRAW_PROBABILITY_EPSILON`       | $\epsilon$           | 0.001   | Draw probability margin                  |
-| `MIN_SIGMA`                      | $\sigma_{\min}$      | 0.01    | Minimum sigma floor                      |
-| `MAX_SIGMA`                      | $\sigma_{\max}$      | 8.333   | Maximum sigma (cannot exceed initial)    |
-| `PLAYOFF_MULTIPLIER`             | $f_p$                | 2.0     | Playoff games have 2x impact             |
-| `SEASON_DECAY_FACTOR`            | $\alpha$             | 0.8     | Each past season weighted at 80%         |
-| `GRAVITY_WELL_PER_ROUND`         | $\gamma$             | 0.998   | 0.2% drift toward baseline per round     |
-| `INACTIVITY_DECAY_PER_ROUND`     | $\delta$             | 0.992   | 0.8% decay per inactive round            |
-| `SIGMA_INCREASE_PER_INACTIVE_ROUND` | -                 | 1.002   | 0.2% uncertainty increase when inactive  |
+| Constant                            | Symbol          | Value  | Description                             |
+| ----------------------------------- | --------------- | ------ | --------------------------------------- |
+| `INITIAL_MU`                        | $\mu_0$         | 25.0   | Initial skill estimate for new players  |
+| `INITIAL_SIGMA`                     | $\sigma_0$      | 8.333  | Initial uncertainty (μ/3)               |
+| `BETA`                              | $\beta$         | 4.167  | Performance variance (σ/2)              |
+| `TAU`                               | $\tau$          | 0.0833 | Dynamics factor (σ/100)                 |
+| `DRAW_PROBABILITY_EPSILON`          | $\epsilon$      | 0.001  | Draw probability margin                 |
+| `MIN_SIGMA`                         | $\sigma_{\min}$ | 0.01   | Minimum sigma floor                     |
+| `MAX_SIGMA`                         | $\sigma_{\max}$ | 8.333  | Maximum sigma (cannot exceed initial)   |
+| `PLAYOFF_MULTIPLIER`                | $f_p$           | 2.0    | Playoff games have 2x impact            |
+| `SEASON_CARRY_OVER`                 | $\kappa$        | 0.95   | Share of a rating carried into a season |
+| `GRAVITY_WELL_PER_ROUND`            | $\gamma$        | 0.998  | 0.2% drift toward baseline per round    |
+| `INACTIVITY_DECAY_PER_ROUND`        | $\delta$        | 0.992  | 0.8% decay per inactive round           |
+| `SIGMA_INCREASE_PER_INACTIVE_ROUND` | -               | 1.002  | 0.2% uncertainty increase when inactive |
 
 ```typescript
 TRUESKILL_CONSTANTS = {
 	// Core TrueSkill Parameters
-	INITIAL_MU: 25.0,                      // μ₀
-	INITIAL_SIGMA: 25.0 / 3.0,             // σ₀ = μ/3
-	BETA: 25.0 / 6.0,                      // β = σ/2
-	TAU: 25.0 / 300.0,                     // τ = σ/100
-	DRAW_PROBABILITY_EPSILON: 0.001,       // ε
-	MIN_SIGMA: 0.01,                       // σ_min
-	MAX_SIGMA: 25.0 / 3.0,                 // σ_max
+	INITIAL_MU: 25.0, // μ₀
+	INITIAL_SIGMA: 25.0 / 3.0, // σ₀ = μ/3
+	BETA: 25.0 / 6.0, // β = σ/2
+	TAU: 25.0 / 300.0, // τ = σ/100
+	DRAW_PROBABILITY_EPSILON: 0.001, // ε
+	MIN_SIGMA: 0.01, // σ_min
+	MAX_SIGMA: 25.0 / 3.0, // σ_max
 
 	// Game Type Multipliers
-	PLAYOFF_MULTIPLIER: 2.0,               // f_p
+	PLAYOFF_MULTIPLIER: 2.0, // f_p
 
 	// Temporal Decay Factors
-	SEASON_DECAY_FACTOR: 0.8,              // α
-	GRAVITY_WELL_PER_ROUND: 0.998,         // γ
-	INACTIVITY_DECAY_PER_ROUND: 0.992,     // δ
+	SEASON_CARRY_OVER: 0.95, // κ
+	GRAVITY_WELL_PER_ROUND: 0.998, // γ
+	INACTIVITY_DECAY_PER_ROUND: 0.992, // δ
 	SIGMA_INCREASE_PER_INACTIVE_ROUND: 1.002,
 }
 ```
@@ -104,16 +103,16 @@ Each player maintains the following state throughout calculations:
 
 ```typescript
 interface PlayerRatingState {
-	playerId: string                   // Unique player identifier
-	playerName: string                 // Display name (cached)
-	mu: number                         // Skill estimate (mean of Gaussian)
-	sigma: number                      // Uncertainty (standard deviation)
-	totalGames: number                 // Lifetime games played
-	totalSeasons: number               // Total seasons participated in
-	seasonsPlayed: Set<string>         // Which seasons player participated in
-	lastSeasonId: string | null        // Most recent season participated
-	lastGameDate: Date | null          // When player last played
-	roundsSinceLastGame: number        // Rounds of inactivity
+	playerId: string // Unique player identifier
+	playerName: string // Display name (cached)
+	mu: number // Skill estimate (mean of Gaussian)
+	sigma: number // Uncertainty (standard deviation)
+	totalGames: number // Lifetime games played
+	totalSeasons: number // Total seasons participated in
+	seasonsPlayed: Set<string> // Which seasons player participated in
+	lastSeasonId: string | null // Most recent season participated
+	lastGameDate: Date | null // When player last played
+	roundsSinceLastGame: number // Rounds of inactivity
 }
 ```
 
@@ -123,28 +122,28 @@ The fundamental unit of skill measurement:
 
 ```typescript
 interface TrueSkillRating {
-	mu: number      // Mean (estimated skill) - higher is better
-	sigma: number   // Standard deviation (uncertainty) - lower is more confident
+	mu: number // Mean (estimated skill) - higher is better
+	sigma: number // Standard deviation (uncertainty) - lower is more confident
 }
 ```
 
-### 3. Game Processing Data
+### 3. Engine Input
 
-Games are processed with enhanced context information:
+The engine (`engine/rankingEngine.ts`) never reads Firestore. The rebuild
+loads every game, every roster entry and every rostered player's name, then
+hands the engine plain data:
 
 ```typescript
-interface GameProcessingData {
-	id: string                     // Game identifier
-	homeScore: number | null       // Home team final score
-	awayScore: number | null       // Away team final score
-	type: 'regular' | 'playoff'    // Game type classification
-	seasonOrder: number            // 0 = current, 1 = previous, etc.
-	gameDate: Date                 // When the game occurred
-	season: DocumentReference      // Season reference
-	home: DocumentReference        // Home team reference
-	away: DocumentReference        // Away team reference
+interface EngineInput {
+	games: EngineGame[] // id, seasonId, date, type, home/away team ids, scores
+	rosters: Map<string, string[]> // `${teamId}/${seasonId}` -> player ids
+	playerNames: Map<string, string> // a rostered player without one is skipped
 }
 ```
+
+A game credits every player on each team's roster for that season. There is
+no per-game attendance, so teammates who have always played together have
+identical histories and identical ratings.
 
 ## TrueSkill Rating Calculation
 
@@ -192,30 +191,44 @@ $$\sigma_{\text{team}} = \sqrt{\sum_{i=1}^{n} \sigma_i^2 + n \cdot \beta^2}$$
 
 ## Season and Time-Based Factors
 
-### Season Decay Factor
+### Season Carry-Over
 
-Games from older seasons have reduced impact:
+At the first round of each new season, every rating moves part of the way back
+toward the baseline:
 
-$$\text{Combined Multiplier} = f_{\text{playoff}} \times \alpha^n$$
+$$\mu^{\text{new}} = \mu_0 + (\mu - \mu_0) \times \kappa$$
 
-Where:
-- $f_{\text{playoff}}$ = 2.0 for playoff games, 1.0 otherwise
-- $\alpha$ = 0.8 (season decay factor)
-- $n$ = season order (0 = current, 1 = previous, etc.)
+With $\kappa = 0.95$, a rating keeps 95% of its distance from 25.0 into the
+next season. Recent seasons therefore count for more, and a rating is still
+computed only from what came before it.
 
-| Season            | Decay Factor | Regular Game | Playoff Game |
-| ----------------- | ------------ | ------------ | ------------ |
-| Current (0)       | 1.00x        | 1.0x         | 2.0x         |
-| Previous (1)      | 0.80x        | 0.8x         | 1.6x         |
-| 2 Seasons Ago (2) | 0.64x        | 0.64x        | 1.28x        |
-| 3 Seasons Ago (3) | 0.51x        | 0.51x        | 1.02x        |
+**Why not discount old games?** Until v6 each game's rating movement was
+scaled by $0.8^n$, where $n$ counted seasons back from the newest one when the
+rebuild ran. Adding a season, even one with no games yet, changed $n$ for every
+past game, so every past rating and ranking shifted. Measured on production
+data, creating 2026 Fall moved 396 of 444 players, and 2025 Fall's final
+standings changed for 140 of its 189 players when 2026 Spring was added. The
+discount also scaled only the rating movement, not the drop in uncertainty, so
+an old game still counted in full toward confidence.
+
+$\kappa = 0.95$ was chosen as the value that kept v6 closest to the v5
+leaderboard it replaced: rank correlation 0.989, half of all players within
+five places. An uncertainty increase at each season boundary was tried first
+and does almost nothing here: with twelve-player teams, $\sigma$ stays near
+its maximum (median 8.19 of 8.33), so there is no room for it to grow.
+
+### Playoff Multiplier
+
+Playoff games move ratings twice as far: the TrueSkill $v$ term is multiplied
+by $f_p = 2.0$.
 
 ### Chronological Processing
 
 Games are processed in strict chronological order to ensure:
+
 1. Player ratings evolve naturally over time
 2. Uncertainty decreases appropriately with games played
-3. Round snapshots capture true progression
+3. Each round's ratings are exactly what they were at the time
 4. No future information leaks into past calculations
 
 ## Round-Based Decay Mechanics
@@ -225,14 +238,17 @@ Games are processed in strict chronological order to ensure:
 All ratings drift toward the initial baseline ($\mu_0 = 25$) over time, but the rate differs based on activity and position:
 
 **Players Above Baseline** ($\mu > \mu_0$):
+
 - Active: Slow decay ($\gamma = 0.998$) - reward for playing
 - Inactive: Fast decay ($\delta = 0.992$) - penalty for absence
 
 **Players Below Baseline** ($\mu < \mu_0$):
+
 - Active: Fast recovery ($\delta = 0.992$) - reward for playing
 - Inactive: Slow recovery ($\gamma = 0.998$) - penalty for absence
 
 This creates a "gravity well" that:
+
 - Keeps active high-performers near their earned ratings
 - Allows inactive players to slowly regress toward average
 - Encourages participation for players below average
@@ -259,109 +275,70 @@ for each round:
             increase sigma slightly
 ```
 
-## Round Snapshots and History
+## What a Rebuild Saves
 
-### Snapshot Structure
+The engine returns every rated player's state after every round.
+`engine/projections.ts` turns that into four outputs, and
+`persistence/rankingsSaver.ts` writes them, deleting anything the rebuild no
+longer produces:
 
-Round-based snapshots capture the state after each game round:
+| Collection                               | One document per | Holds                                                                     |
+| ---------------------------------------- | ---------------- | ------------------------------------------------------------------------- |
+| `rankings/{playerId}`                    | player           | All-time rating and rank, games, seasons, change over the last game night |
+| `player-ranking-history/{playerId}`      | player           | Every round since their first game: rating, all-time rank, season rank    |
+| `seasons/{seasonId}/rankings/{playerId}` | rostered player  | Rank that season, rating, rating change, games, wins, losses              |
+| `rankings-history/{roundId}_{seasonId}`  | round            | Every player's rating after the round (retiring)                          |
 
-```typescript
-interface TimeBasedPlayerRanking {
-	playerId: string
-	playerName: string
-	rating: number             // TrueSkill μ (skill estimate)
-	rank: number
-	totalGames: number
-	totalSeasons: number
-	change?: number            // Rating change from previous
-	previousRating?: number    // Rating before this round
-}
-```
+**Season rank** ranks a round's players among everyone on a roster that season
+who has a rating. Ranking only those who had played so far would leave half the
+league unranked after the first 6:00 games. A player not rostered that season
+has no season rank.
 
-### Historical Tracking
+**Rating change in a season** is measured from the rating carried into it, or
+from 25.0 for a new player.
 
-Round snapshots enable:
-1. **Progress visualization**: See rating evolution over time
-2. **Performance analysis**: Identify trends and patterns
-3. **Verification**: Audit trail for rating calculations
-4. **Statistics**: Round-by-round performance metrics
+**Last rating change**, on the leaderboard, is the change over the most recent
+game night: every round on that calendar day in Minneapolis. It is computed
+from the games, so a rebuild with nothing new to count leaves it unchanged.
 
 ## Calculation Flow
 
-### Rebuild Process (Full)
+`services/playerRankings/rebuild.ts` runs a rebuild, from the admin's Rebuild
+button (`rebuildPlayerRankings`) or every night at 23:00 Central
+(`rebuildRankingsNightly`). A rebuild is refused while another is running;
+one running for more than 15 minutes is taken to have died.
 
-1. **Initialize**: Load all seasons in chronological order
-2. **Reset**: Clear all player ratings to initial values ($\mu_0$, $\sigma_0$)
-3. **Group**: Organize games by round (date/time)
-4. **Process Each Round**:
-   - Apply decay to all players
-   - Process each game in the round
-   - Create round snapshot
-5. **Rank**: Sort players by final μ value
-6. **Save**: Store final rankings to database
+1. **Load**: every season, game and roster entry, and every rostered player's name
+2. **Group**: completed games into rounds by exact start time
+3. **Process each round**:
+   - At a new season, apply the carry-over
+   - Apply round decay to every rated player
+   - Play each game: TrueSkill update, games and wins counted
+   - Record every player's state
+4. **Project**: leaderboard, histories, season standings
+5. **Save**: through a BulkWriter, failing the rebuild if any write fails
 
-### Game Processing Logic
-
-```typescript
-for each game in round:
-    1. Get rosters for home and away teams
-    2. Determine outcome (home win, away win, or draw)
-    3. Calculate multiplier (playoff × season decay)
-    4. Call TrueSkill updateRatings()
-    5. Apply new μ and σ to player states
-    6. Update game counts and season tracking
-```
-
-### Processing Order
-
-Games must be processed in strict chronological order because:
-- **Uncertainty Evolution**: Sigma must decrease appropriately over games
-- **Historical Accuracy**: Player ratings evolve naturally
-- **Snapshot Integrity**: Round snapshots reflect true progression
-- **Consistency**: Results are deterministic and reproducible
+The output depends only on the games and rosters, so rebuilding twice gives the
+same result.
 
 ## Technical Implementation
 
-### Data Structures
+| Module                            | Does                                                        |
+| --------------------------------- | ----------------------------------------------------------- |
+| `algorithms/trueskill.ts`         | `updateRatings(winners, losers, multiplier)`                |
+| `algorithms/decay.ts`             | `applyRoundBasedDecay`: the gravity well and inactivity     |
+| `engine/rankingEngine.ts`         | `runRankings(input)`: every round, from plain data          |
+| `engine/projections.ts`           | `projectRankings`: leaderboard, histories, season standings |
+| `utils/rankCalculator.ts`         | Ranks with ties: equal ratings share a rank (1, 1, 3)       |
+| `persistence/inputLoader.ts`      | Reads the engine's input from Firestore                     |
+| `persistence/rankingsSaver.ts`    | Writes the outputs and deletes what is no longer produced   |
+| `persistence/calculationState.ts` | The `rankings-calculations` progress document               |
+| `rebuild.ts`                      | One rebuild, end to end                                     |
 
-#### Player Rating Map
-```typescript
-Map<string, PlayerRatingState>  // playerId -> current state
-```
-
-#### TrueSkill Rating Operations
-```typescript
-// Create new rating
-createRating(mu?, sigma?) -> TrueSkillRating
-
-// Update ratings after game
-updateRatings(winners[], losers[], isDraw, multiplier)
-    -> { winners: TrueSkillRating[], losers: TrueSkillRating[] }
-
-// Win probability calculation
-winProbability(teamA[], teamB[]) -> number (0-1)
-```
-
-### Performance Optimizations
-
-1. **Batch Processing**: Games processed in batches per round
-2. **Rating Caching**: Player ratings cached during calculation
-3. **Database Batching**: Final rankings saved in batched writes
-4. **Precision Handling**: Ratings compared with multiplier (1,000,000) to handle floating point
-
-### Error Handling
-
-- **Missing Data**: Graceful fallbacks for incomplete game data
-- **Invalid Scores**: Skip games with null/invalid scores
-- **Player Creation**: Automatic player state creation for new participants
-- **Sigma Bounds**: Sigma clamped between MIN_SIGMA and MAX_SIGMA
-
-### Validation and Integrity
-
-- **Input Validation**: All game data validated before processing
-- **Consistency Checks**: Verify calculation results match expectations
-- **Audit Logging**: Comprehensive logging for debugging and verification
-- **Full Precision Storage**: Ratings stored as floating-point numbers
+Ratings are compared at a precision of $10^{-6}$ when ranking, so floating
+point noise cannot split a tie. Games without both scores are ignored, a game
+with an empty roster on either side is skipped, and $\sigma$ is clamped between
+`MIN_SIGMA` and `MAX_SIGMA`.
 
 ---
 
@@ -374,11 +351,11 @@ The Minneapolis Winter League Player Ranking Algorithm uses Microsoft's TrueSkil
 - **Team-Based Inference**: Individual skill inferred from team outcomes
 - **Asymmetric Gravity Well**: Rewards active participation, penalizes inactivity
 - **Playoff Amplification**: 2x impact for postseason games
-- **Season Decay**: Recent seasons weighted more heavily (80% decay)
-- **Comprehensive Snapshots**: Round-by-round historical tracking
+- **Season Carry-Over**: Recent seasons count for more, without rewriting the past
+- **Per-Player History and Season Standings**: Every round, all-time and within each season
 
 This algorithm serves as both a competitive ranking system and a historical record of player development within the Minneapolis Winter League community.
 
 ---
 
-*Reference: [TrueSkill Rating System](https://trueskill.org/) by Microsoft Research*
+_Reference: [TrueSkill Rating System](https://trueskill.org/) by Microsoft Research_

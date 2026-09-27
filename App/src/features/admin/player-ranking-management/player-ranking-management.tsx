@@ -335,12 +335,6 @@ export const PlayerRankingManagement = () => {
 														className='h-2'
 														aria-label={`${calc.progress.percentComplete}% complete`}
 													/>
-													{calc.progress.currentSeason && (
-														<div className='text-xs text-muted-foreground'>
-															Season {calc.progress.seasonsProcessed + 1}/
-															{calc.progress.totalSeasons}
-														</div>
-													)}
 												</div>
 											</TableCell>
 											<TableCell className='text-sm'>

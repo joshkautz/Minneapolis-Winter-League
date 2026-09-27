@@ -39,10 +39,11 @@ export const TRUESKILL_CONSTANTS = {
 	// Playoff game multiplier (2x impact for playoff games)
 	PLAYOFF_MULTIPLIER: 2.0,
 
-	// Exponential decay factor per season
-	// Each older season's games are weighted by this factor
-	// 0.8 means: current season = 100%, previous = 80%, before that = 64%, etc.
-	SEASON_DECAY_FACTOR: 0.8,
+	// How much of a rating's distance from INITIAL_MU carries into the next
+	// season. Applied once, at the season's first round, so older seasons
+	// count for less without ever re-writing a past rating. 0.95 is the value
+	// that kept v6 closest to the v5 leaderboard it replaced.
+	SEASON_CARRY_OVER: 0.95,
 
 	// Gravity well - all ratings drift toward INITIAL_MU over time
 	// Applied per round to both μ and σ

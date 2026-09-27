@@ -46,10 +46,14 @@ export enum Collections {
 	 */
 	PLAYER_CONTACTS = 'playerContacts',
 	PLAYERS = 'players',
+	/**
+	 * `player-ranking-history/{playerId}` — every round of one player's
+	 * rating, all-time rank and season rank, for their charts.
+	 */
+	PLAYER_RANKING_HISTORY = 'player-ranking-history',
 	RANKINGS = 'rankings',
 	RANKINGS_HISTORY = 'rankings-history',
 	RANKINGS_CALCULATIONS = 'rankings-calculations',
-	// RANKINGS_CALCULATED_ROUNDS removed - incremental updates deprecated in favor of full rebuilds
 	SEASONS = 'seasons',
 	SITE_SETTINGS = 'siteSettings',
 	STRIPE = 'stripe',
@@ -62,6 +66,12 @@ export enum Collections {
  * disambiguate `collectionGroup()` queries from the team-side subcollection.
  */
 export const PLAYER_SEASONS_SUBCOLLECTION = 'playerSeasons'
+
+/**
+ * Subcollection name for a season's player standings, living under
+ * `seasons/{seasonId}/rankings/{playerId}`. Written by the rankings rebuild.
+ */
+export const SEASON_RANKINGS_SUBCOLLECTION = 'rankings'
 
 /**
  * Subcollection name for a player's waiver signatures, living under
@@ -660,8 +670,60 @@ export interface PlayerRankingDocument extends DocumentData {
 	lastUpdated: Timestamp
 	/** Last season the player participated in */
 	lastSeasonId: string | null
-	/** Rating change in the last calculation */
+	/** Rating change over the most recent game night */
 	lastRatingChange: number
+}
+
+/** One round of a player's rating history. */
+export interface PlayerRankingRound {
+	/** The round's start time in milliseconds, as a string */
+	roundId: string
+	seasonId: string
+	date: Timestamp
+	/** Skill rating after the round (TrueSkill μ) */
+	rating: number
+	/** Rank among every rated player */
+	rank: number
+	/** Rank among that season's rostered players; null when not on a roster */
+	seasonRank: number | null
+	/** Rating change since the previous round */
+	change: number
+	totalGames: number
+}
+
+/**
+ * `player-ranking-history/{playerId}`: a player's rating after every round
+ * since their first game, oldest first. One document, so a player's charts
+ * are a single read.
+ */
+export interface PlayerRankingHistoryDocument extends DocumentData {
+	player: DocumentReference<PlayerDocument>
+	playerId: string
+	playerName: string
+	rounds: PlayerRankingRound[]
+	calculationId: string
+	lastUpdated: Timestamp
+}
+
+/**
+ * `seasons/{seasonId}/rankings/{playerId}`: a rostered player's standing in
+ * one season, as of its latest round.
+ */
+export interface SeasonRankingDocument extends DocumentData {
+	player: DocumentReference<PlayerDocument>
+	playerId: string
+	playerName: string
+	/** Skill rating at the season's latest round (TrueSkill μ) */
+	rating: number
+	/** Rank among the season's rostered players */
+	rank: number
+	/** Rating change since the season began */
+	ratingChange: number
+	games: number
+	wins: number
+	losses: number
+	calculationId: string
+	lastUpdated: Timestamp
 }
 
 /**
@@ -725,7 +787,7 @@ export interface RankingsCalculationDocument extends DocumentData {
 	startedAt: Timestamp
 	/** Timestamp when calculation completed */
 	completedAt: Timestamp | null
-	/** User who triggered the calculation */
+	/** The admin who started it, or 'schedule' for the nightly rebuild */
 	triggeredBy: string
 	/** Current progress information */
 	progress: {
@@ -733,35 +795,24 @@ export interface RankingsCalculationDocument extends DocumentData {
 		currentStep: string
 		/** Percentage complete (0-100) */
 		percentComplete: number
-		/** Current season being processed */
-		currentSeason?: string
-		/** Total seasons to process */
+		/** Seasons in the calculation */
 		totalSeasons: number
-		/** Seasons processed so far */
-		seasonsProcessed: number
+		/** Completed games in the calculation */
+		totalGames: number
 	}
 	/** Error information if calculation failed */
 	error?: {
 		/** Error message */
 		message: string
-		/** Stack trace */
-		stack?: string
 		/** Timestamp when error occurred */
-		timestamp: Timestamp
-	}
-	/** Last successfully processed snapshot */
-	lastProcessedSnapshot?: {
-		seasonId: string
 		timestamp: Timestamp
 	}
 	/** Calculation parameters used */
 	parameters: {
-		/** Starting season for calculation */
-		startSeasonId?: string
-		/** Whether to apply rating decay */
-		applyDecay: boolean
-		/** Season decay factor */
-		seasonDecayFactor: number
+		/** Ranking algorithm version, e.g. 'v6' */
+		algorithmVersion: string
+		/** Share of a rating's distance from baseline kept into a new season */
+		seasonCarryOver: number
 		/** Playoff multiplier */
 		playoffMultiplier: number
 	}

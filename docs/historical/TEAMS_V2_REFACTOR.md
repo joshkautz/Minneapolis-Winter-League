@@ -106,6 +106,7 @@ season subdoc. The team's roster subcollection carries only `player` +
 ## Done
 
 ### Layer 1: types + helpers
+
 - `Functions/src/types.ts` + `App/src/types.ts` (new shapes)
 - `App/src/shared/utils/interfaces.ts` (re-exports updated)
 - `Functions/src/shared/database.ts` (helpers: `teamRef`, `teamSeasonRef`,
@@ -114,11 +115,13 @@ season subdoc. The team's roster subcollection carries only `player` +
 - `Functions/src/shared/auth.ts` (`validateNotBanned` / `isPlayerBanned` async)
 
 ### Layer 2: services
+
 - `Functions/src/services/teamRegistrationService.ts`
 - `Functions/src/services/teamDeletionService.ts` (now
   `deleteTeamSeasonWithCleanup`)
 
 ### Layer 3: Functions callables
+
 - `user/teams/{create,rollover,update,updateRoster,delete}.ts`
 - `user/offers/{create,update}.ts`
 - `user/players/{create,update,delete}.ts`
@@ -135,6 +138,7 @@ season subdoc. The team's roster subcollection carries only `player` +
 - `admin/waivers/sendWaiverAdmin.ts`
 
 ### Layer 4: triggers + webhooks
+
 - `triggers/documents/teamUpdated.ts` (now subscribes to roster subcollection)
 - `triggers/documents/teamRegistrationLock.ts` (subscribes to team season subdoc)
 - `triggers/documents/playerUpdated.ts` (subscribes to player season subdoc)
@@ -144,11 +148,13 @@ season subdoc. The team's roster subcollection carries only `player` +
 - `api/webhooks/dropboxSign.ts` (writes player season subdoc)
 
 ### Layer 5: config
+
 - `firestore.rules` (adds /seasons + /roster + /player seasons rules)
 - `firestore.indexes.json` (adds collection-group indexes for new shape;
   drops legacy team composite indexes)
 
 ### Layer 6: App firebase + providers + shared
+
 - `App/src/firebase/collections/teams.ts` (full rewrite)
 - `App/src/firebase/collections/players.ts` (gains player season helpers)
 - `App/src/providers/teams-context.tsx` (collection-group based)
@@ -159,10 +165,12 @@ season subdoc. The team's roster subcollection carries only `player` +
 - `App/src/shared/hooks/use-top-navigation.ts`
 
 ### Layer 7: App pages (partial — only the player-profile and team-profile/roster paths)
+
 - `App/src/features/player/profile/{profile,profile-actions,payment-section}.tsx`
 - `App/src/features/public/teams/team-profile/team-roster-player.tsx`
 
 ### Migration script
+
 `scripts/migrations/2026-teams-v2/run.js` — production-ready, all 5 modes
 implemented and verified end-to-end on emulator.
 
@@ -196,6 +204,7 @@ field renames and snapshot type adjustments.
 ### App files that need updating (from current typecheck errors)
 
 #### admin pages
+
 - `App/src/features/admin/team-management/team-management.tsx` — biggest
   single file. The legacy code maps over a flat `teams` collection with
   `{ id, ref, ...TeamDocument }` shape; needs to switch to
@@ -218,6 +227,7 @@ field renames and snapshot type adjustments.
 - `App/src/features/admin/registration-management/registration-management.tsx`
 
 #### player pages
+
 - `App/src/features/player/team/manage-team-detail.tsx`
 - `App/src/features/player/team/manage-team-roster-card.tsx`
 - `App/src/features/player/team/manage-team-roster-player.tsx`
@@ -236,6 +246,7 @@ field renames and snapshot type adjustments.
 - `App/src/features/player/team/hooks/use-manage-edit-team-form.ts`
 
 #### public pages
+
 - `App/src/features/public/teams/teams.tsx`
 - `App/src/features/public/teams/team-card.tsx`
 - `App/src/features/public/teams/team-profile/team-profile.tsx` (largest
@@ -250,6 +261,7 @@ field renames and snapshot type adjustments.
 - `App/src/features/public/create/hooks/use-team-creation.ts`
 
 #### shared hooks not yet touched
+
 - `App/src/shared/hooks/use-standings.ts`
 - `App/src/shared/hooks/use-swiss-standings.ts`
 - `App/src/shared/hooks/use-monrad-pairings.ts`
@@ -444,7 +456,7 @@ These need to switch from `playerData.seasons[].find(...)` to
   - `roster` (collection group): `player ASC` (for the userDeleted cleanup)
   - `badges` (collection group): `seasonId` field override
   - `offers`: `(team ASC, season ASC, status ASC)`
-  Drop:
+    Drop:
   - `teams.(teamId, season)`
   - any other indexes that mention dropped fields
 
@@ -527,8 +539,8 @@ After Functions compiles, switch to App.
 - `App/src/features/player/profile/*` — read player season status from
   subcollection.
 - `App/src/features/player/team/manage-team-detail.tsx` and ~10 sibling files
-  + `hooks/` — replace `teamDoc.data().roster` with roster subcollection
-  query joined with player + player season subdocs.
+  - `hooks/` — replace `teamDoc.data().roster` with roster subcollection
+    query joined with player + player season subdocs.
 
 ### Layer S — App admin pages
 

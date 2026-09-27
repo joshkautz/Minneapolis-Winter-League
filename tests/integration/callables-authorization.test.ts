@@ -91,6 +91,7 @@ const ALLOWS_UNVERIFIED_EMAIL = new Set([
 /** Triggers, webhooks and schedules: not callables, excluded from the sweep. */
 const NON_CALLABLES = new Set([
 	'reconcileTeamPaymentsDaily',
+	'rebuildRankingsNightly',
 	'sweepTeamPaymentsHourly',
 	'stripeWebhook',
 	'onOfferUpdated',

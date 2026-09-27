@@ -1,7 +1,15 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
-import { authed, initTestApp, resetFirestore } from './helpers.js'
-import { rebuildPlayerRankings } from '../../Functions/src/index.js'
+import {
+	authed,
+	errorCodeFrom,
+	initTestApp,
+	resetFirestore,
+} from './helpers.js'
+import {
+	rebuildPlayerRankings,
+	rebuildRankingsNightly,
+} from '../../Functions/src/index.js'
 import {
 	teamRosterEntryRef,
 	teamSeasonRef,
@@ -10,9 +18,10 @@ import { TRUESKILL_CONSTANTS } from '../../Functions/src/services/playerRankings
 import type { CallableRequest } from 'firebase-functions/v2/https'
 
 /**
- * The rankings rebuild is the longest chain in the codebase: load seasons,
- * load and filter games, group them into rounds, decay, run TrueSkill, write
- * per-round history and a final leaderboard. The TrueSkill maths has unit
+ * The rankings rebuild is the longest chain in the codebase: load games and
+ * rosters, group games into rounds, decay, run TrueSkill, then write the
+ * leaderboard, every player's history, every season's standings and the
+ * per-round snapshots. The TrueSkill maths has unit
  * tests; everything wrapped around it did not, which is how the pipeline came
  * to be reading rosters from a field the 2026 migration deleted — producing
  * empty rankings without failing.
@@ -122,6 +131,16 @@ const rankings = async () => {
 const history = async () => {
 	const snapshot = await firestore.collection('rankings-history').get()
 	return snapshot.docs
+}
+
+const playerHistory = async (playerId: string) =>
+	(
+		await firestore.collection('player-ranking-history').doc(playerId).get()
+	).data()
+
+const seasonStandings = async (seasonId: string) => {
+	const snapshot = await seasonRef(seasonId).collection('rankings').get()
+	return new Map(snapshot.docs.map((doc) => [doc.id, doc.data()]))
 }
 
 /**
@@ -406,8 +425,9 @@ describe('rebuildPlayerRankings', () => {
 		await rebuild()
 		const saved = await rankings()
 
-		// SEASON_DECAY_FACTOR shrinks the update from the older season. The old
-		// winner also sits through the later round, which decays them further.
+		// SEASON_CARRY_OVER moves the old winner part of the way back to the
+		// baseline as the new season begins, and the later round they sit out
+		// decays them further.
 		expect(saved.get('new')?.rating).toBeGreaterThan(saved.get('old')!.rating)
 	})
 
@@ -451,12 +471,10 @@ describe('rebuildPlayerRankings', () => {
 		)
 	})
 
-	it('reports no rating change on a first rebuild and a real one after', async () => {
+	it('reports the rating change over the latest game night', async () => {
+		// Measured from the games, not from the previous rebuild, so the
+		// nightly rebuild with nothing new cannot reset it to zero.
 		await seedOneRoundSeason()
-
-		await rebuild()
-		expect((await rankings()).get('w1')?.lastRatingChange).toBe(0)
-
 		await seedGame('game-2', {
 			seasonId: 'season-1',
 			home: 'winners',
@@ -465,9 +483,20 @@ describe('rebuildPlayerRankings', () => {
 			awayScore: 12,
 			date: '2030-01-12T18:00:00.000Z',
 		})
-		await rebuild()
 
-		expect((await rankings()).get('w1')?.lastRatingChange).toBeGreaterThan(0)
+		await rebuild()
+		const points = (await playerHistory('w1'))!.rounds
+		const w1 = (await rankings()).get('w1')!
+
+		expect(w1.lastRatingChange).toBeCloseTo(
+			points[1].rating - points[0].rating,
+			10
+		)
+		await rebuild()
+		expect((await rankings()).get('w1')?.lastRatingChange).toBeCloseTo(
+			w1.lastRatingChange,
+			10
+		)
 	})
 
 	it('records the calculation as completed with full progress', async () => {
@@ -672,5 +701,188 @@ describe('rebuildPlayerRankings', () => {
 			expect(ranking.rank).toBe(first.get(playerId)!.rank)
 			expect(ranking.totalGames).toBe(first.get(playerId)!.totalGames)
 		}
+	})
+})
+
+describe('rebuildPlayerRankings: histories and season standings', () => {
+	/** Two seasons: winners beat losers in each, and w1 sits out season 2. */
+	const seedTwoSeasons = async () => {
+		await seedSeason('season-1', '2029-01-01T00:00:00.000Z')
+		await seedSeason('season-2', '2030-01-01T00:00:00.000Z')
+		await seedTeamWithRoster('winners', 'season-1', ['w1', 'w2'])
+		await seedTeamWithRoster('losers', 'season-1', ['l1', 'l2'])
+		await seedTeamWithRoster('winners', 'season-2', ['w2'])
+		await seedTeamWithRoster('losers', 'season-2', ['l1', 'l2'])
+		for (const [id, seasonId, date] of [
+			['old-game', 'season-1', '2029-01-05T18:00:00.000Z'],
+			['new-game', 'season-2', '2030-01-05T18:00:00.000Z'],
+		]) {
+			await seedGame(id, {
+				seasonId,
+				home: 'winners',
+				away: 'losers',
+				homeScore: 15,
+				awayScore: 10,
+				date,
+			})
+		}
+	}
+
+	it("writes every player's history, one point per round", async () => {
+		await seedTwoSeasons()
+
+		const result = await rebuild()
+		const w2 = (await playerHistory('w2'))!
+
+		expect(w2.playerName).toBe('w2 Player')
+		expect(w2.player.path).toBe('players/w2')
+		expect(w2.calculationId).toBe(result.calculationId)
+		expect(
+			w2.rounds.map((point: { seasonId: string }) => point.seasonId)
+		).toEqual(['season-1', 'season-2'])
+		expect(w2.rounds[1].date).toBeInstanceOf(Timestamp)
+		expect(w2.rounds[1]).toMatchObject({
+			rank: 1,
+			seasonRank: 1,
+			totalGames: 2,
+		})
+	})
+
+	it('gives no season rank for a season the player was not rostered in', async () => {
+		await seedTwoSeasons()
+
+		await rebuild()
+		const w1 = (await playerHistory('w1'))!
+
+		expect(w1.rounds[1].seasonId).toBe('season-2')
+		expect(w1.rounds[1].seasonRank).toBeNull()
+	})
+
+	it("writes each season's standings for its rostered players", async () => {
+		await seedTwoSeasons()
+
+		await rebuild()
+		const standings = await seasonStandings('season-2')
+
+		expect([...standings.keys()].sort()).toEqual(['l1', 'l2', 'w2'])
+		expect(standings.get('w2')).toMatchObject({
+			rank: 1,
+			games: 1,
+			wins: 1,
+			losses: 0,
+			playerName: 'w2 Player',
+		})
+		expect(standings.get('l1')).toMatchObject({ rank: 2, wins: 0, losses: 1 })
+		expect(standings.get('w2')?.ratingChange).toBeGreaterThan(0)
+	})
+
+	it('clears what a rebuild no longer produces', async () => {
+		await seedTwoSeasons()
+		await rebuild()
+
+		// l2 leaves season 2's roster, and season 2's only game moves a week.
+		await firestore.doc('teams/losers/teamSeasons/season-2/roster/l2').delete()
+		await firestore
+			.collection('games')
+			.doc('new-game')
+			.update({
+				date: Timestamp.fromDate(new Date('2030-01-12T18:00:00.000Z')),
+			})
+		await rebuild()
+
+		expect((await seasonStandings('season-2')).has('l2')).toBe(false)
+		expect((await history()).map((doc) => doc.id)).toEqual([
+			`${new Date('2029-01-05T18:00:00.000Z').getTime()}_season-1`,
+			`${new Date('2030-01-12T18:00:00.000Z').getTime()}_season-2`,
+		])
+	})
+
+	it('clears the standings and histories of a season whose games are gone', async () => {
+		await seedTwoSeasons()
+		await rebuild()
+
+		await firestore.collection('games').doc('old-game').delete()
+		await rebuild()
+
+		expect((await seasonStandings('season-1')).size).toBe(0)
+		// w1 only ever played season 1.
+		expect(await playerHistory('w1')).toBeUndefined()
+		expect((await rankings()).has('w1')).toBe(false)
+	})
+})
+
+describe('rebuildPlayerRankings: one at a time', () => {
+	const seedCalculation = async (status: string, startedAt: Date) => {
+		await firestore
+			.collection('rankings-calculations')
+			.doc('earlier')
+			.set({
+				calculationType: 'fresh',
+				status,
+				startedAt: Timestamp.fromDate(startedAt),
+				triggeredBy: 'someone',
+			})
+	}
+
+	it('refuses while another rebuild is running', async () => {
+		await seedOneRoundSeason()
+		await seedCalculation('running', new Date())
+
+		const code = await errorCodeFrom(rebuildPlayerRankings, {
+			auth: authed(ADMIN),
+			data: {},
+		})
+
+		expect(code).toBe('failed-precondition')
+		expect((await rankings()).size).toBe(0)
+	})
+
+	it('ignores a rebuild that died without finishing', async () => {
+		await seedOneRoundSeason()
+		await seedCalculation('running', new Date(Date.now() - 60 * 60 * 1000))
+
+		expect((await rebuild()).status).toBe('completed')
+	})
+})
+
+describe('rebuildRankingsNightly', () => {
+	const runNightly = async () =>
+		await rebuildRankingsNightly.run({
+			scheduleTime: new Date().toISOString(),
+		} as never)
+
+	it('rebuilds the rankings, recorded as the schedule', async () => {
+		await seedOneRoundSeason()
+
+		await runNightly()
+
+		expect((await rankings()).size).toBe(4)
+		const calculations = await firestore
+			.collection('rankings-calculations')
+			.get()
+		expect(calculations.docs.map((doc) => doc.data().triggeredBy)).toEqual([
+			'schedule',
+		])
+	})
+
+	it('skips a night when a rebuild is already running', async () => {
+		await seedOneRoundSeason()
+		await firestore.collection('rankings-calculations').doc('manual').set({
+			status: 'running',
+			startedAt: Timestamp.now(),
+		})
+
+		await runNightly()
+
+		expect((await rankings()).size).toBe(0)
+	})
+
+	it('does nothing while a migration is in progress', async () => {
+		await seedOneRoundSeason()
+		await firestore.doc('system/maintenance').set({ migrationInProgress: true })
+
+		await runNightly()
+
+		expect((await rankings()).size).toBe(0)
 	})
 })
