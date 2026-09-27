@@ -47,7 +47,9 @@ export const EmailLayout = ({
 		<Preview>{preview}</Preview>
 		<Body style={body}>
 			<Container style={container}>
-				<Section style={header}>
+				{/* Skipped in the plain text, where only its address would show:
+				    the footer already links the site. */}
+				<Section style={header} data-skip-in-text>
 					<Link href={siteUrl}>
 						<Img
 							src={LOGO.src}
