@@ -12,6 +12,7 @@ import {
 	PlayerRankingManagement,
 	News,
 	Posts,
+	EmailPreferences,
 	AdminDashboard,
 	PlayerManagement,
 	OfferManagement,
@@ -126,6 +127,15 @@ export const AppRoutes = () => {
 					element={
 						<PublicRoute>
 							<Posts />
+						</PublicRoute>
+					}
+				/>
+				{/* Reached from the Unsubscribe link in every email: no sign-in. */}
+				<Route
+					path='/email-preferences'
+					element={
+						<PublicRoute>
+							<EmailPreferences />
 						</PublicRoute>
 					}
 				/>
