@@ -53,27 +53,58 @@ once emailed real players through Dropbox Sign this way.)
 
 Each template has a category (`Functions/src/email/templates.tsx`):
 
-| Category        | Can be turned off | Unsubscribe link | Postal address |
-| --------------- | ----------------- | ---------------- | -------------- |
-| `account`       | No                | No               | No             |
-| `teams`         | Yes               | Yes              | No             |
-| `registration`  | Yes               | Yes              | No             |
-| `announcements` | Yes               | Yes              | Yes            |
+| Category        | Can be turned off | Unsubscribe link and header | Postal address |
+| --------------- | ----------------- | --------------------------- | -------------- |
+| `account`       | No                | No                          | No             |
+| `teams`         | Yes               | Yes                         | No             |
+| `registration`  | Yes               | Yes                         | No             |
+| `announcements` | Yes               | Yes                         | Yes            |
 
 A player's choices live on their private `playerContacts/{uid}` document as
-`emailPreferences`. Unsubscribe links go to `mplswinterleague.com/unsubscribe`
-(a Hosting rewrite to `emailUnsubscribe`) and carry the player's id, a random
-per-player token and the category. The link shows a confirmation button rather
-than unsubscribing on sight, because mail scanners open every link in a
-message. Email that can be turned off also carries a one-click
-`List-Unsubscribe` header, as Gmail and Yahoo expect.
+`emailPreferences` (absent means on), with `emailPreferencesUpdatedAt`. Every
+link carries the player's id and a random per-player `unsubscribeToken`, so
+changing preferences needs no sign-in; the token is compared in constant time,
+and one player's link never opens another's preferences.
 
-**Announcements are commercial email under CAN-SPAM.** They must carry the
-league's physical postal address — a street address, a USPS PO box, or a
-private mailbox from a commercial mail receiving agency — and the sender
-refuses announcements while `EMAIL_CONFIG.POSTAL_ADDRESS`
-(`Functions/src/config/constants.ts`) is unset. Opt-outs must be honoured
-within 10 business days; ours take effect at once.
+### Two ways out of every email
+
+1. **The footer link**, "Don't want these emails? Unsubscribe", opens
+   `mplswinterleague.com/email-preferences` (the App's
+   `features/public/email-preferences`). One button unsubscribes from the kind
+   of email the link came from, with Undo; switches below change the rest, and
+   "Unsubscribe from all" turns every optional kind off. Signed in, a player
+   finds the same switches on their profile.
+2. **The `List-Unsubscribe` header** points at `mplswinterleague.com/unsubscribe`
+   (a Hosting rewrite to `emailUnsubscribe`), with
+   `List-Unsubscribe-Post: List-Unsubscribe=One-Click`. Gmail, Yahoo and
+   Outlook show their own Unsubscribe button from it. A POST unsubscribes
+   straight away and answers 200 — never a redirect; a GET (a mail app opening
+   the address in a browser) changes nothing and redirects to the preferences
+   page, because link scanners fetch every URL in a message.
+
+Both read and write preferences through `getEmailPreferences` and
+`updateEmailPreferences`, which accept either a link or the signed-in player.
+
+### What each provider requires, and how it is met
+
+| Source            | Requirement                                                                                  | Met by                                                   |
+| ----------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Gmail             | One-click `List-Unsubscribe` (RFC 8058) on promotional mail; honour within 48 hours          | The header; unsubscribing takes effect at once           |
+| Yahoo             | One-click header; a clearly visible body link, which may go to a preferences page; 2 days    | Both links                                               |
+| Microsoft Outlook | A visible, working unsubscribe in bulk mail; SPF, DKIM and DMARC                             | The footer link; the domain's records                    |
+| RFC 8058          | One HTTPS URI; POST works without cookies or credentials, any body; no redirect; DKIM-signed | `emailUnsubscribe`; see below for checking DKIM coverage |
+| CAN-SPAM          | No login, fee or more than one page; a way to stop all marketing; 10 business days; address  | The preferences page; "Unsubscribe from all"; the footer |
+| Apple Mail        | Its Unsubscribe banner uses only a `mailto:` address                                         | Not offered yet; Apple Mail users use the footer link    |
+
+**Checking DKIM covers the headers.** Gmail offers one-click only when the
+DKIM signature covers `List-Unsubscribe` and `List-Unsubscribe-Post`. In Gmail,
+open a received announcement, choose **Show original**, and check that the
+`DKIM-Signature` header's `h=` list includes both.
+
+**Announcements are commercial email under CAN-SPAM.** They carry the league's
+postal address (`EMAIL_CONFIG.POSTAL_ADDRESS` in
+`Functions/src/config/constants.ts`), and the sender refuses them while it is
+unset. Unsubscribe links work indefinitely.
 
 ## Templates
 
