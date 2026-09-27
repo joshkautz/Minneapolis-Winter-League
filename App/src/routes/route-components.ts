@@ -48,6 +48,12 @@ export const Posts = lazyImport(
 	'Posts'
 )
 
+// The feature's index also exports a hook, so this loads the page file.
+export const EmailPreferences = lazyImport(
+	() => import('@/features/public/email-preferences/email-preferences-page'),
+	'EmailPreferencesPage'
+)
+
 // ==================== PLAYER ROUTES ====================
 // Require authentication
 

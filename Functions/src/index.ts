@@ -124,6 +124,10 @@ export { rebuildPlayerRankings } from './functions/admin/rankings/rebuildPlayerR
 export { sendSeasonAnnouncement } from './functions/admin/email/sendSeasonAnnouncement.js'
 export { sendEmailPreview } from './functions/admin/email/sendEmailPreview.js'
 
+// Email preferences: a link from the player's email, or signed in
+export { getEmailPreferences } from './functions/user/email/getEmailPreferences.js'
+export { updateEmailPreferences } from './functions/user/email/updateEmailPreferences.js'
+
 // Waiver functions (user-accessible)
 export { signWaiver } from './functions/user/waivers/sign.js'
 

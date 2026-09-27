@@ -34,10 +34,11 @@ export const EMAIL_CONFIG = {
 	SITE_URL: 'https://mplswinterleague.com',
 	/**
 	 * The postal address CAN-SPAM requires in every announcement: a street
-	 * address, a USPS PO box or a private mailbox. Announcements to players
-	 * are refused until it is set.
+	 * address, a USPS PO box or a private mailbox. Announcements are refused
+	 * while it is unset.
 	 */
-	POSTAL_ADDRESS: null as string | null,
+	POSTAL_ADDRESS: '4316 Glencrest Road, Golden Valley, MN 55416' as
+		string | null,
 } as const
 
 // Game Configuration

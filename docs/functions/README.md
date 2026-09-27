@@ -42,6 +42,7 @@ Functions/src/
 | Offers        | `createOffer`, `updateOffer`                                                               |                                                                                       |
 | Payments      | `createStripeCheckout`, `createTeamContributionCheckout`, `cancelTeamContributionCheckout` | `refundTeamContribution`                                                              |
 | Waivers       | `signWaiver`                                                                               |                                                                                       |
+| Email         | `getEmailPreferences`, `updateEmailPreferences` (also by the link in an email, signed out) |                                                                                       |
 | Posts         | `createPost`, `updatePost`, `createReply`, `updateReply`                                   | `deletePost`, `deleteReply`                                                           |
 | Seasons       |                                                                                            | `createSeason`, `updateSeason`, `deleteSeason`, `setSwissSeeding`, `getSwissRankings` |
 | Games         |                                                                                            | `createGame`, `updateGame`, `deleteGame`                                              |

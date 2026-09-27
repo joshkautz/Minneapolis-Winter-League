@@ -1120,6 +1120,7 @@ export const removeFromTeam = async (
 import {
 	OfferStatus,
 	OfferType,
+	type OptionalEmailCategory,
 	type ThemeVariant,
 	type SeasonFormat,
 } from '@/types'
@@ -1535,3 +1536,40 @@ export const cancelTeamContributionCheckoutViaFunction =
 		const result = await cancelTeamContributionCheckout({})
 		return result.data
 	}
+
+/** A link from one of the player's emails; omit when signed in. */
+export interface EmailPreferenceLink {
+	playerId?: string
+	token?: string
+}
+
+export type EmailPreferences = Record<OptionalEmailCategory, boolean>
+
+export interface EmailPreferencesResponse {
+	/** The player's address, masked: "j•••@example.com". */
+	email: string
+	preferences: EmailPreferences
+}
+
+/** Which emails a player receives: by link from an email, or signed in. */
+export const getEmailPreferencesViaFunction = async (
+	link: EmailPreferenceLink
+): Promise<EmailPreferencesResponse> => {
+	const getEmailPreferences = httpsCallable<
+		EmailPreferenceLink,
+		EmailPreferencesResponse
+	>(functions, 'getEmailPreferences')
+	return (await getEmailPreferences(link)).data
+}
+
+/** Turns kinds of email on or off; unmentioned ones keep their setting. */
+export const updateEmailPreferencesViaFunction = async (
+	link: EmailPreferenceLink,
+	preferences: Partial<EmailPreferences>
+): Promise<EmailPreferencesResponse> => {
+	const updateEmailPreferences = httpsCallable<
+		EmailPreferenceLink & { preferences: Partial<EmailPreferences> },
+		EmailPreferencesResponse
+	>(functions, 'updateEmailPreferences')
+	return (await updateEmailPreferences({ ...link, preferences })).data
+}

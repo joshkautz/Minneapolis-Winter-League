@@ -223,7 +223,9 @@ id when the same email must not be queued twice. `sendQueuedEmail` does the
 rest, gated by `system/email` and never from the emulator. A new email is a
 React template registered in `email/templates.tsx` with a category, which
 decides whether it can be turned off and whether it carries an unsubscribe
-link and the postal address. See docs/EMAIL.md.
+link, the one-click header and the postal address. Unsubscribing is
+covered for every provider's rules in docs/EMAIL.md; keep the one-click
+endpoint answering POST with 200 and no redirect.
 
 ## Registering
 

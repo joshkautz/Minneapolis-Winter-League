@@ -26,7 +26,7 @@ mkdirSync(out, { recursive: true })
 for (const [name, definition] of Object.entries(TEMPLATES)) {
 	const email = await renderEmail(name, definition.sample, {
 		recipientFirstName: 'Josh',
-		unsubscribeUrl: 'https://mplswinterleague.com/unsubscribe?preview=1',
+		unsubscribeUrl: 'https://mplswinterleague.com/email-preferences',
 	})
 	writeFileSync(join(out, `${name}.html`), email.html)
 	writeFileSync(

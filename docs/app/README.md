@@ -120,6 +120,11 @@ the November DST change. A game's teams can be left empty as a placeholder;
 the team names are copied onto the game (`homeName`, `awayName`) so the
 schedule renders without a join.
 
+**Email preferences** (`features/public/email-preferences`). The page every
+email's Unsubscribe link opens, at `/email-preferences`, public: the link's
+player id and token stand in for signing in. The same switches appear on the
+profile. See [EMAIL.md](../EMAIL.md).
+
 **Team payments and waivers** have their own documents:
 [TEAM_PAYMENTS.md](../TEAM_PAYMENTS.md) and [WAIVERS.md](../WAIVERS.md).
 

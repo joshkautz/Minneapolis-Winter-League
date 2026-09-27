@@ -62,6 +62,8 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	// --- admin: rankings ---------------------------------------------------
 	rebuildPlayerRankings: {},
 	sendEmailPreview: { template: 'testEmail' },
+	getEmailPreferences: {},
+	updateEmailPreferences: { preferences: { announcements: false } },
 	sendSeasonAnnouncement: {
 		seasonId: 'season-1',
 		audience: 'players',

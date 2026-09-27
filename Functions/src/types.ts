@@ -188,6 +188,8 @@ export interface PlayerContactDocument extends DocumentData {
 	 * sign-in, receipts — cannot be turned off.
 	 */
 	emailPreferences?: Partial<Record<OptionalEmailCategory, boolean>>
+	/** When the player last changed `emailPreferences`. */
+	emailPreferencesUpdatedAt?: Timestamp
 	/** Proves an unsubscribe link came from an email sent to this player. */
 	unsubscribeToken?: string
 }

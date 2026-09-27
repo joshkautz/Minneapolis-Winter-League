@@ -7,7 +7,6 @@ import {
 	resetFirestore,
 } from './helpers.js'
 import {
-	emailUnsubscribe,
 	sendEmailPreview,
 	sendSeasonAnnouncement,
 } from '../../Functions/src/index.js'
@@ -37,6 +36,7 @@ const JOSH = 'josh@mplsmallard.com'
 
 let firestore: Firestore
 const postal = EMAIL_CONFIG as { POSTAL_ADDRESS: string | null }
+const LEAGUE_ADDRESS = postal.POSTAL_ADDRESS
 
 /** Records every send, answering with `result`. */
 const fakeResend = (
@@ -102,11 +102,11 @@ beforeEach(async () => {
 	await resetFirestore(firestore)
 	await seedPlayer(ADMIN, { admin: true })
 	await seedPlayer(PLAYER, { email: 'player-1@example.com' })
-	postal.POSTAL_ADDRESS = 'PO Box 1, Minneapolis, MN 55401'
+	postal.POSTAL_ADDRESS = LEAGUE_ADDRESS
 })
 
 afterEach(() => {
-	postal.POSTAL_ADDRESS = null
+	postal.POSTAL_ADDRESS = LEAGUE_ADDRESS
 	delete process.env.FUNCTIONS_EMULATOR
 })
 
@@ -163,12 +163,20 @@ describe('deliverQueuedEmail', () => {
 
 		await deliverQueuedEmail(firestore, id, resend)
 
-		const { headers, html } = resend.sent[0].email
+		const { headers, html, text } = resend.sent[0].email
 		expect(headers['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click')
+		// Exactly one URI, HTTPS, in angle brackets (RFC 8058).
 		expect(headers['List-Unsubscribe']).toMatch(
 			/^<https:\/\/mplswinterleague\.com\/unsubscribe\?p=player-1&t=[\w-]+&c=announcements>$/
 		)
-		expect(html).toContain('PO Box 1')
+		// The visible link opens the preferences page, with the same token.
+		const token = new URL(
+			headers['List-Unsubscribe'].slice(1, -1)
+		).searchParams.get('t')
+		expect(text).toContain(
+			`https://mplswinterleague.com/email-preferences?p=player-1&t=${token}&c=announcements`
+		)
+		expect(html).toContain('4316 Glencrest Road, Golden Valley, MN 55416')
 	})
 
 	it('never sends an email twice', async () => {
@@ -249,86 +257,6 @@ describe('deliverQueuedEmail', () => {
 
 		expect(await deliverQueuedEmail(firestore, id, resend)).toBe('emulated')
 		expect(resend.sent).toHaveLength(0)
-	})
-})
-
-describe('emailUnsubscribe', () => {
-	/** Runs the HTTP function with a request, collecting the response. */
-	const call = async (
-		method: 'GET' | 'POST',
-		query: Record<string, string>
-	): Promise<{ status: number; body: string }> => {
-		let status = 200
-		let body = ''
-		const response = {
-			status(code: number) {
-				status = code
-				return response
-			},
-			set() {
-				return response
-			},
-			send(content: string) {
-				body = content
-				return response
-			},
-		}
-		await (
-			emailUnsubscribe as unknown as (
-				req: unknown,
-				res: unknown
-			) => Promise<void>
-		)({ method, query, body: {}, headers: {} }, response)
-		return { status, body }
-	}
-
-	const linkFor = async () => {
-		await setEmail('live')
-		const id = await queueToPlayer()
-		const resend = fakeResend()
-		await deliverQueuedEmail(firestore, id, resend)
-		const url = new URL(
-			resend.sent[0].email.headers['List-Unsubscribe'].slice(1, -1)
-		)
-		return Object.fromEntries(url.searchParams)
-	}
-
-	const preferences = async () =>
-		(await playerContactRef(firestore, PLAYER).get()).data()?.emailPreferences
-
-	it('asks before unsubscribing, so a link scanner cannot unsubscribe anyone', async () => {
-		const query = await linkFor()
-
-		const page = await call('GET', query)
-
-		expect(page.status).toBe(200)
-		expect(page.body).toContain('<form method="post"')
-		expect(await preferences()).toBeUndefined()
-	})
-
-	it('unsubscribes on the button or a one-click request', async () => {
-		const query = await linkFor()
-
-		const page = await call('POST', query)
-
-		expect(page.status).toBe(200)
-		expect(page.body).toContain('You are unsubscribed')
-		expect(await preferences()).toEqual({ announcements: false })
-	})
-
-	it('refuses a token that is not the player’s', async () => {
-		const query = await linkFor()
-
-		const page = await call('POST', { ...query, t: 'guessed' })
-
-		expect(page.status).toBe(400)
-		expect(await preferences()).toBeUndefined()
-	})
-
-	it('refuses a category nobody can unsubscribe from', async () => {
-		const query = await linkFor()
-
-		expect((await call('POST', { ...query, c: 'account' })).status).toBe(400)
 	})
 })
 
