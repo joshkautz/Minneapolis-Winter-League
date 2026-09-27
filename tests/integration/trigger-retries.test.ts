@@ -26,6 +26,9 @@ const RETRIED = [
 	'onPaymentCreated',
 	// Captures a registered team's money and releases everyone else's.
 	'onTeamRegistrationChange',
+	// Sends queued email; the mail id is Resend's idempotency key, so a retry
+	// after an unrecorded send does not deliver twice.
+	'sendQueuedEmail',
 ]
 
 /** Not retried, each for a stated reason. */

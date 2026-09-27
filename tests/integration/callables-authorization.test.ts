@@ -43,6 +43,8 @@ const ADMIN_CALLABLES = [
 	'getSwissRankings',
 	'mergeTeams',
 	'rebuildPlayerRankings',
+	'sendEmailPreview',
+	'sendSeasonAnnouncement',
 	'refundTeamContribution',
 	'revokeBadge',
 	'setSwissSeeding',
@@ -91,6 +93,8 @@ const ALLOWS_UNVERIFIED_EMAIL = new Set([
 /** Triggers, webhooks and schedules: not callables, excluded from the sweep. */
 const NON_CALLABLES = new Set([
 	'reconcileTeamPaymentsDaily',
+	'emailUnsubscribe',
+	'sendQueuedEmail',
 	'rebuildRankingsNightly',
 	'sweepTeamPaymentsHourly',
 	'stripeWebhook',
@@ -177,8 +181,8 @@ describe('the sweep covers every callable in the deploy manifest', () => {
 		expect(missing).toEqual([])
 	})
 
-	it('covers all 44 callables', () => {
-		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(44)
+	it('covers all 46 callables', () => {
+		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(46)
 	})
 
 	it('has a valid payload for every callable', () => {

@@ -55,6 +55,7 @@ export { updateTeamRegistrationOnPlayerChange } from './triggers/documents/playe
 export { updateTeamRegistrationOnRosterChange } from './triggers/documents/teamUpdated.js'
 export { updateTeamRegistrationOnContributionChange } from './triggers/documents/contributionWritten.js'
 export { onTeamRegistrationChange } from './triggers/documents/teamRegistrationLock.js'
+export { sendQueuedEmail } from './triggers/documents/mailQueued.js'
 
 // Payment triggers
 export { onPaymentCreated } from './triggers/payments/paymentCreated.js'
@@ -70,6 +71,7 @@ export { rebuildRankingsNightly } from './triggers/scheduled/rebuildRankingsNigh
 
 // Webhooks
 export { stripeWebhook } from './api/webhooks/stripe.js'
+export { emailUnsubscribe } from './api/emailUnsubscribe.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // CALLABLE FUNCTIONS
@@ -117,6 +119,10 @@ export { getSwissRankings } from './functions/admin/swiss/getRankings.js'
 // Player Rankings (admin-only). A full rebuild every time: TrueSkill carries
 // uncertainty through every game, so there is no incremental update.
 export { rebuildPlayerRankings } from './functions/admin/rankings/rebuildPlayerRankings.js'
+
+// Email (admin-only)
+export { sendSeasonAnnouncement } from './functions/admin/email/sendSeasonAnnouncement.js'
+export { sendEmailPreview } from './functions/admin/email/sendEmailPreview.js'
 
 // Waiver functions (user-accessible)
 export { signWaiver } from './functions/user/waivers/sign.js'

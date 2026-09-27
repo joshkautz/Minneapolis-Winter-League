@@ -46,6 +46,7 @@ Functions/src/
 | Seasons       |                                                                                            | `createSeason`, `updateSeason`, `deleteSeason`, `setSwissSeeding`, `getSwissRankings` |
 | Games         |                                                                                            | `createGame`, `updateGame`, `deleteGame`                                              |
 | Rankings      |                                                                                            | `rebuildPlayerRankings`                                                               |
+| Email         |                                                                                            | `sendSeasonAnnouncement`, `sendEmailPreview`                                          |
 | News          |                                                                                            | `createNews`, `updateNews`, `deleteNews`                                              |
 | Badges        |                                                                                            | `createBadge`, `updateBadge`, `deleteBadge`, `awardBadge`, `revokeBadge`              |
 | Site settings |                                                                                            | `updateSiteSettings`                                                                  |
@@ -113,8 +114,15 @@ Paying is different: only admins may pay before registration opens (see
 | `reconcileTeamPaymentsDaily` | 04:00 America/Chicago | Repairs any disagreement between Stripe and the contribution ledger    |
 | `rebuildRankingsNightly`     | 23:00 America/Chicago | Rebuilds every ranking, so standings follow the evening's scores       |
 
-Both honour the kill-switch too. A failed run is not retried by the
+All honour the kill-switch too. A failed run is not retried by the
 scheduler; the next run is the retry.
+
+## Email
+
+`sendQueuedEmail` sends each email queued in `mail/{id}`, and
+`emailUnsubscribe` serves `mplswinterleague.com/unsubscribe`. Nothing is
+sent unless `system/email` allows it, and never from the emulator. See
+[EMAIL.md](../EMAIL.md).
 
 ## Webhooks
 
