@@ -44,7 +44,7 @@ export const seasonAnnouncementSubject = ({
 	seasonName,
 	registrationOpens,
 }: SeasonAnnouncementProps): string =>
-	`${seasonName} registration opens ${registrationOpens}`
+	`${seasonName} Season registration opens ${registrationOpens}`
 
 export const SeasonAnnouncement = ({
 	seasonName,
@@ -59,11 +59,11 @@ export const SeasonAnnouncement = ({
 	footer,
 }: SeasonAnnouncementEmailProps): ReactElement => (
 	<EmailLayout
-		preview={`Registration opens ${registrationOpens}. Get your team together for ${seasonName}.`}
+		preview={`Registration opens ${registrationOpens}. Get your team together for the ${seasonName} Season.`}
 		siteUrl={siteUrl}
 		footer={footer}
 	>
-		<Heading>{seasonName} is almost here</Heading>
+		<Heading>{seasonName} Season is almost here</Heading>
 		<Paragraph>
 			{recipientFirstName ? `Hi ${recipientFirstName},` : 'Hi,'}
 		</Paragraph>

@@ -150,7 +150,7 @@ describe('deliverQueuedEmail', () => {
 		expect(key).toBe(id)
 		expect(email.to).toBe('player-1@example.com')
 		expect(email.subject).toBe(
-			'2026 Fall registration opens Thursday, October 1'
+			'2026 Fall Season registration opens Thursday, October 1'
 		)
 		expect(email.text).toContain('Hi Firstplayer-1,')
 		expect((await mail(id))?.providerId).toBe('resend-1')
