@@ -41,6 +41,12 @@ export const EMAIL_CONFIG = {
 		string | null,
 } as const
 
+// Where the league plays. The home page links the same map.
+export const VENUE = {
+	NAME: 'URW Sports Field Complex',
+	MAP_URL: 'https://maps.app.goo.gl/avAamyReCbGmz8jWA',
+} as const
+
 // Game Configuration
 export const GAME_CONFIG = {
 	ALLOWED_TIME_SLOTS: ['18:00', '18:45', '19:30', '20:15'],

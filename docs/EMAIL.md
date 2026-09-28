@@ -180,7 +180,12 @@ by an admin, does the same through `cancelPendingOffersForPlayer`
 ## The new-season announcement
 
 `sendSeasonAnnouncement({ seasonId, audience, dryRun })`, admin only, builds
-the email from the season's own dates and fee.
+the email from the season's own dates. It says teams pay one fee together but
+not how much: players see the amount on the site. Its game nights are every
+Saturday from the season's first day to its last except the Saturday after
+Thanksgiving (`gameNightsOf` in `email/announcement.ts`); there is no other
+record of them until games are scheduled, so keep the home page's list in
+step. The venue links to `VENUE.MAP_URL`, the map the home page uses.
 
 - `audience: 'test'` sends it to the test recipients.
 - `audience: 'players', dryRun: true` counts who would receive it: everyone

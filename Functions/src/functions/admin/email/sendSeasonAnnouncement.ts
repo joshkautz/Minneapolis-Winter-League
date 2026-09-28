@@ -1,7 +1,7 @@
 /**
  * Send the new-season announcement callable function
  *
- * Queues the announcement for a season, built from its own dates and fee,
+ * Queues the announcement for a season, built from its own dates,
  * to the test recipients or to everyone who has ever played.
  *
  * Security validations:

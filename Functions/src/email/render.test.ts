@@ -38,10 +38,24 @@ describe('renderEmail', () => {
 	it('builds the announcement from its season', async () => {
 		const email = await render('seasonAnnouncement')
 		expect(email.subject).toBe(
-			'2026 Fall registration opens Thursday, October 1'
+			'2026 Fall Season registration opens Thursday, October 1'
 		)
+		expect(email.text).toContain('2026 Fall Season is almost here')
 		expect(email.text).toContain('Hi Josh,')
-		expect(email.text).toContain('$1,000')
+		// The fee is left for the site, where players see it in context.
+		expect(email.text).toContain('each team pays one fee')
+		expect(email.text).not.toMatch(/\$\d/)
+		expect(email.html).not.toMatch(/\$\d/)
+		expect(email.text).toContain(
+			'Saturdays from 6:00pm: November 7, 14 and 21, and December 5, 12 and 19. No games Thanksgiving weekend.'
+		)
+		// The venue links to the same map as the home page.
+		expect(email.html).toContain(
+			'href="https://maps.app.goo.gl/avAamyReCbGmz8jWA"'
+		)
+		expect(email.text).toContain(
+			'URW Sports Field Complex https://maps.app.goo.gl/avAamyReCbGmz8jWA'
+		)
 		// Teams form before registration, which is when they pay.
 		expect(email.text).toContain('start building your team today')
 		expect(email.text).toContain(
