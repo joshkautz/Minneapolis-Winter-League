@@ -62,11 +62,14 @@ export const SeasonAnnouncement = ({
 			{recipientFirstName ? `Hi ${recipientFirstName},` : 'Hi,'}
 		</Paragraph>
 		<Paragraph>
-			Winter League is back. Registration opens {registrationOpens}, and there
-			are {teamSpots} team spots, so now is the time to get your team together.
+			Winter League is back, and you can start building your team today: create
+			one, invite players, or ask to join a team on the league site.
+			Registration, when teams pay, opens {registrationOpens}, and there are{' '}
+			{teamSpots} team spots.
 		</Paragraph>
 		<Facts
 			rows={[
+				['Build your team', 'Now'],
 				['Registration', `${registrationOpens} – ${registrationCloses}`],
 				['First games', `${firstGame}, from 6:00pm`],
 				['Where', 'URW Sports Field Complex'],
@@ -83,7 +86,7 @@ export const SeasonAnnouncement = ({
 			teams to do both are in. You can sign your waiver today, before you even
 			join a team.
 		</Paragraph>
-		<PrimaryButton href={siteUrl}>See the season details</PrimaryButton>
+		<PrimaryButton href={siteUrl}>Build your team</PrimaryButton>
 		<Paragraph>See you on the field.</Paragraph>
 	</EmailLayout>
 )
