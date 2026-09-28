@@ -15,7 +15,8 @@ else emails players.
    looks up the recipient, checks their preferences and the delivery switch,
    renders the template and sends it (`email/sender.ts`, `email/resend.ts`).
 3. **Record.** The mail document keeps the outcome: `sent` with Resend's id,
-   or why not — `held`, `skipped`, `unsubscribed`, `emulated`, `failed`.
+   or why not — `held`, `skipped`, `unsubscribed`, `banned`, `emulated`,
+   `failed`.
 
 It is retried for failures that may pass (rate limits, Resend outages) and is
 idempotent: an email that is no longer `queued` is left alone, and the mail id
@@ -26,6 +27,12 @@ second time instead of sending it twice.
 
 `mail/` is readable by nobody but Functions, admins included: it holds
 addresses and what is being sent to them.
+
+**A banned player is never emailed**, whatever the email: an invitation, a
+team update or an announcement would all suggest they can still play. The
+sender checks `players/{uid}.banned` as it sends, so email queued before a
+ban is stopped too, and records it as `banned`. Lifting the ban lets email
+through again.
 
 ## The switch: `system/email`
 

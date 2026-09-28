@@ -18,7 +18,15 @@ import {
 	type SendEmail,
 	type SendResult,
 } from '../../Functions/src/email/sender.js'
-import { queueEmail } from '../../Functions/src/email/outbox.js'
+import {
+	mailDocument,
+	mailRef,
+	queueEmail,
+} from '../../Functions/src/email/outbox.js'
+import {
+	TEMPLATES,
+	type TemplateName,
+} from '../../Functions/src/email/templates.js'
 import {
 	playerContactRef,
 	teamRosterEntryRef,
@@ -257,6 +265,88 @@ describe('deliverQueuedEmail', () => {
 
 		expect(await deliverQueuedEmail(firestore, id, resend)).toBe('emulated')
 		expect(resend.sent).toHaveLength(0)
+	})
+})
+
+describe('banned players', () => {
+	// A banned player is never emailed: an invitation, a team update or an
+	// announcement would all suggest they can still play.
+	const BANNED = 'banned-player'
+
+	/** Queues `template`'s sample to the banned player. */
+	const queueTo = async (
+		playerId: string,
+		template: TemplateName
+	): Promise<string> => {
+		const ref = mailRef(firestore)
+		await ref.create(
+			mailDocument({
+				to: { playerId },
+				template,
+				props: TEMPLATES[template].sample as never,
+			})
+		)
+		return ref.id
+	}
+
+	const mailOf = async (id: string) =>
+		(await firestore.collection('mail').doc(id).get()).data()
+
+	beforeEach(async () => {
+		await setEmail('live')
+		await seedPlayer(BANNED, { banned: true })
+	})
+
+	it.each(Object.keys(TEMPLATES) as TemplateName[])(
+		'never sends a banned player %s',
+		async (template) => {
+			const id = await queueTo(BANNED, template)
+			const resend = fakeResend()
+
+			expect(await deliverQueuedEmail(firestore, id, resend)).toBe('banned')
+
+			expect(resend.sent).toHaveLength(0)
+			expect(await mailOf(id)).toMatchObject({
+				status: 'banned',
+				reason: 'The player is banned from the league.',
+			})
+		}
+	)
+
+	it('stops email queued before the player was banned', async () => {
+		const id = await queueTo(PLAYER, 'teamInvitation')
+		await firestore.doc(`players/${PLAYER}`).update({ banned: true })
+		const resend = fakeResend()
+
+		expect(await deliverQueuedEmail(firestore, id, resend)).toBe('banned')
+		expect(resend.sent).toHaveLength(0)
+	})
+
+	it('gives a banned player no unsubscribe link either', async () => {
+		// Making one would write a token to their contact document.
+		await deliverQueuedEmail(
+			firestore,
+			await queueTo(BANNED, 'seasonAnnouncement'),
+			fakeResend()
+		)
+
+		expect(
+			(await playerContactRef(firestore, BANNED).get()).data()
+		).not.toHaveProperty('unsubscribeToken')
+	})
+
+	it('emails the player again once the ban is lifted', async () => {
+		await firestore.doc(`players/${BANNED}`).update({ banned: false })
+		const resend = fakeResend()
+
+		expect(
+			await deliverQueuedEmail(
+				firestore,
+				await queueTo(BANNED, 'teamInvitation'),
+				resend
+			)
+		).toBe('sent')
+		expect(resend.sent).toHaveLength(1)
 	})
 })
 
