@@ -66,8 +66,8 @@ const queueToPlayer = async () =>
 				seasonName: '2026 Fall',
 				registrationOpens: 'Thursday, October 1',
 				registrationCloses: 'Saturday, October 31',
-				firstGame: 'Saturday, November 7',
-				teamFee: '$1,000',
+				gameNights: 'November 7, 14 and 21, and December 5, 12 and 19',
+				skipsThanksgiving: true,
 				teamSpots: 12,
 				minimumSignedPlayers: 10,
 			},
@@ -150,7 +150,7 @@ describe('deliverQueuedEmail', () => {
 		expect(key).toBe(id)
 		expect(email.to).toBe('player-1@example.com')
 		expect(email.subject).toBe(
-			'2026 Fall registration opens Thursday, October 1'
+			'2026 Fall Season registration opens Thursday, October 1'
 		)
 		expect(email.text).toContain('Hi Firstplayer-1,')
 		expect((await mail(id))?.providerId).toBe('resend-1')
@@ -352,9 +352,10 @@ describe('sendSeasonAnnouncement', () => {
 			seasonName: '2026 Fall',
 			registrationOpens: 'Thursday, October 1',
 			registrationCloses: 'Saturday, October 31',
-			firstGame: 'Saturday, November 7',
-			teamFee: '$1,000',
+			gameNights: 'November 7, 14 and 21, and December 5, 12 and 19',
+			skipsThanksgiving: true,
 		})
+		expect(mails[0].props).not.toHaveProperty('teamFee')
 	})
 
 	it('sends only to the test recipients when asked', async () => {

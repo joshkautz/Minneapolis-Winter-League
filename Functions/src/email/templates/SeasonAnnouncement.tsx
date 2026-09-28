@@ -1,6 +1,7 @@
 /**
- * The new-season announcement, sent to everyone who has ever played, the
- * day before registration opens.
+ * The new-season announcement, sent to everyone who has ever played before
+ * registration opens. It says teams pay together but not how much: the fee
+ * is for the site to explain, where players see it in context.
  */
 
 import type { ReactElement } from 'react'
@@ -11,8 +12,10 @@ import {
 	Heading,
 	Paragraph,
 	PrimaryButton,
+	TextLink,
 	type EmailFooter,
 } from './EmailLayout.js'
+import { VENUE } from '../../config/constants.js'
 
 export interface SeasonAnnouncementProps {
 	seasonName: string
@@ -20,10 +23,13 @@ export interface SeasonAnnouncementProps {
 	registrationOpens: string
 	/** e.g. "Saturday, October 31" */
 	registrationCloses: string
-	/** e.g. "Saturday, November 7" */
-	firstGame: string
-	/** e.g. "$1,000" */
-	teamFee: string
+	/**
+	 * Every game night, e.g. "November 7, 14 and 21, and December 5, 12
+	 * and 19"; see gameNightsOf.
+	 */
+	gameNights: string
+	/** Whether a Thanksgiving Saturday falls inside the season, and is off. */
+	skipsThanksgiving: boolean
 	teamSpots: number
 	minimumSignedPlayers: number
 }
@@ -38,14 +44,14 @@ export const seasonAnnouncementSubject = ({
 	seasonName,
 	registrationOpens,
 }: SeasonAnnouncementProps): string =>
-	`${seasonName} registration opens ${registrationOpens}`
+	`${seasonName} Season registration opens ${registrationOpens}`
 
 export const SeasonAnnouncement = ({
 	seasonName,
 	registrationOpens,
 	registrationCloses,
-	firstGame,
-	teamFee,
+	gameNights,
+	skipsThanksgiving,
 	teamSpots,
 	minimumSignedPlayers,
 	recipientFirstName,
@@ -53,11 +59,11 @@ export const SeasonAnnouncement = ({
 	footer,
 }: SeasonAnnouncementEmailProps): ReactElement => (
 	<EmailLayout
-		preview={`Registration opens ${registrationOpens}. Get your team together for ${seasonName}.`}
+		preview={`Registration opens ${registrationOpens}. Get your team together for the ${seasonName} Season.`}
 		siteUrl={siteUrl}
 		footer={footer}
 	>
-		<Heading>{seasonName} is almost here</Heading>
+		<Heading>{seasonName} Season is almost here</Heading>
 		<Paragraph>
 			{recipientFirstName ? `Hi ${recipientFirstName},` : 'Hi,'}
 		</Paragraph>
@@ -71,20 +77,23 @@ export const SeasonAnnouncement = ({
 			rows={[
 				['Build your team', 'Now'],
 				['Registration', `${registrationOpens} – ${registrationCloses}`],
-				['First games', `${firstGame}, from 6:00pm`],
-				['Where', 'URW Sports Field Complex'],
+				[
+					'Game nights',
+					`Saturdays from 6:00pm: ${gameNights}${skipsThanksgiving ? '. No games Thanksgiving weekend.' : ''}`,
+				],
+				['Where', <TextLink href={VENUE.MAP_URL}>{VENUE.NAME}</TextLink>],
 			]}
 		/>
 		<Callout title='New this fall: teams pay together'>
-			Instead of every player paying separately, each team pays one {teamFee}{' '}
-			fee, split however it likes. Adding players lowers everyone&apos;s share,
-			so carry the depth you need to show up every week.
+			Instead of every player paying separately, each team pays one fee, split
+			however it likes. Adding players lowers everyone&apos;s share, so carry
+			the depth you need to show up every week.
 		</Callout>
 		<Paragraph>
 			A team is registered once {minimumSignedPlayers} of its players have
-			signed their waiver and the full {teamFee} is paid. The first {teamSpots}{' '}
-			teams to do both are in. You can sign your waiver today, before you even
-			join a team.
+			signed their waiver and the team fee is paid. The first {teamSpots} teams
+			to do both are in. You can sign your waiver today, before you even join a
+			team.
 		</Paragraph>
 		<PrimaryButton href={siteUrl}>Build your team</PrimaryButton>
 		<Paragraph>See you on the field.</Paragraph>
