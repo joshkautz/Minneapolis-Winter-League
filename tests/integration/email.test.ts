@@ -66,8 +66,8 @@ const queueToPlayer = async () =>
 				seasonName: '2026 Fall',
 				registrationOpens: 'Thursday, October 1',
 				registrationCloses: 'Saturday, October 31',
-				firstGame: 'Saturday, November 7',
-				teamFee: '$1,000',
+				gameNights: 'November 7, 14 and 21, and December 5, 12 and 19',
+				skipsThanksgiving: true,
 				teamSpots: 12,
 				minimumSignedPlayers: 10,
 			},
@@ -352,9 +352,10 @@ describe('sendSeasonAnnouncement', () => {
 			seasonName: '2026 Fall',
 			registrationOpens: 'Thursday, October 1',
 			registrationCloses: 'Saturday, October 31',
-			firstGame: 'Saturday, November 7',
-			teamFee: '$1,000',
+			gameNights: 'November 7, 14 and 21, and December 5, 12 and 19',
+			skipsThanksgiving: true,
 		})
+		expect(mails[0].props).not.toHaveProperty('teamFee')
 	})
 
 	it('sends only to the test recipients when asked', async () => {

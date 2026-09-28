@@ -133,7 +133,7 @@ export const Callout = ({
 export const Facts = ({
 	rows,
 }: {
-	rows: [label: string, value: string][]
+	rows: [label: string, value: ReactNode][]
 }): ReactElement => (
 	<Section style={facts}>
 		{rows.map(([label, value]) => (
@@ -144,6 +144,19 @@ export const Facts = ({
 			</Text>
 		))}
 	</Section>
+)
+
+/** A link within body copy or a fact, underlined in the text's own color. */
+export const TextLink = ({
+	href,
+	children,
+}: {
+	href: string
+	children: ReactNode
+}): ReactElement => (
+	<Link href={href} style={textLink}>
+		{children}
+	</Link>
 )
 
 export const Divider = (): ReactElement => <Hr style={divider} />
@@ -253,3 +266,5 @@ const footerText = {
 }
 
 const footerLink = { color: COLORS.muted, textDecoration: 'underline' }
+
+const textLink = { color: COLORS.navy, textDecoration: 'underline' }
