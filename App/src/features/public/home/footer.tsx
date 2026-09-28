@@ -52,15 +52,15 @@ export const Footer = () => {
 						</h3>
 						<div className='flex items-center justify-center gap-6'>
 							<a
-								href='http://mplsmallard.com/'
+								href='https://umnmensulti.com/'
 								target='_blank'
 								rel='noopener noreferrer'
 								className='inline-block transition-transform duration-200 hover:scale-105 focus:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded'
-								aria-label='Visit Minneapolis Mallard website'
+								aria-label='Visit Greyed Duck website'
 							>
 								<img
-									src='/mallard.png'
-									alt='Minneapolis Mallard logo'
+									src='/greyed-duck.webp'
+									alt='Greyed Duck logo'
 									width={80}
 									height={80}
 									className='w-20 h-auto'
