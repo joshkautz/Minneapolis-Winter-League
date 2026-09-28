@@ -42,6 +42,11 @@ describe('renderEmail', () => {
 		)
 		expect(email.text).toContain('Hi Josh,')
 		expect(email.text).toContain('$1,000')
+		// Teams form before registration, which is when they pay.
+		expect(email.text).toContain('start building your team today')
+		expect(email.text).toContain(
+			'Registration, when teams pay, opens Thursday, October 1'
+		)
 		expect(email.category).toBe('announcements')
 	})
 
