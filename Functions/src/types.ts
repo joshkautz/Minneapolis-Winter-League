@@ -869,6 +869,8 @@ export type MailStatus =
 	| 'held'
 	| 'skipped'
 	| 'unsubscribed'
+	/** To a banned player, who is never emailed. */
+	| 'banned'
 	| 'emulated'
 	| 'failed'
 

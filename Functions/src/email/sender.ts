@@ -67,6 +67,12 @@ export async function deliverQueuedEmail(
 	}
 
 	const recipient = await resolveRecipient(firestore, mail)
+	// A banned player is never emailed, whatever the email: an invitation or
+	// an announcement would suggest they can still play. Checked here, as it
+	// is sent, so it also stops email queued before the ban.
+	if (recipient === 'banned') {
+		return finish('banned', { reason: 'The player is banned from the league.' })
+	}
 	if (!recipient) {
 		return finish('failed', { reason: 'The recipient has no email address.' })
 	}
@@ -147,7 +153,7 @@ interface ResolvedRecipient {
 async function resolveRecipient(
 	firestore: Firestore,
 	mail: MailDocument
-): Promise<ResolvedRecipient | null> {
+): Promise<ResolvedRecipient | 'banned' | null> {
 	if (mail.toAddress) {
 		return {
 			address: mail.toAddress,
@@ -160,6 +166,7 @@ async function resolveRecipient(
 		playerContactRef(firestore, mail.toPlayerId).get(),
 		playerRef(firestore, mail.toPlayerId).get(),
 	])
+	if (player.data()?.banned === true) return 'banned'
 	const address = contact.data()?.email
 	if (!address) return null
 	return {
