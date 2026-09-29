@@ -203,6 +203,28 @@ by an admin, does the same through `cancelPendingOffersForPlayer`
 - **Admin roster edits send nothing** about the roster itself: they are as
   often corrections to past seasons. Only the offers they close are told.
 
+## Payment receipts
+
+The league sends its own receipts for team payments and refunds, from
+`notifications@mplswinterleague.com`, in place of Stripe's (turned off in
+Stripe's Dashboard). They are `account` email, so they cannot be turned off.
+
+- **When.** Every payment and refund lands in a team's contribution ledger,
+  whichever route it took: Checkout, the daily reconciliation, settlement,
+  an admin's refund, or one made in the Stripe Dashboard.
+  `emailContributionReceipt` (`triggers/documents/contributionReceipt.ts`)
+  reads each ledger change and sends `teamPaymentReceipt` for a new payment
+  and `teamRefundReceipt` for a refund, whole or partial
+  (`email/receipts.ts`). A payment Stripe took for a team that no longer
+  existed never reaches the ledger; the intake refunds it and sends that
+  refund receipt itself.
+- **What.** The amount, date, card, and where the team stands: its paid total
+  against the fee, and how many of the ten players it needs have signed,
+  counted as registration counts them. Each links to Stripe's receipt page
+  for the official record.
+- **Once only.** Each receipt has a stable mail id (`receipt-{pi}`,
+  `refund-{pi}-{status}-{amount}`), so a retried trigger sends nothing new.
+
 ## The new-season announcement
 
 `sendSeasonAnnouncement({ seasonId, audience, dryRun })`, admin only, builds

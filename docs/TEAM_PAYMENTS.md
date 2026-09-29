@@ -436,6 +436,11 @@ What the Stripe account needed, and where each item stands.
   permissions are listed in `.claude/rules/functions.md`.
 - **The statement descriptor — done.** It reads "MINNEAPOLIS MALLARD"; a
   charge nobody recognises becomes a dispute.
+- **Receipts are the league's, not Stripe's.** Stripe's customer emails for
+  successful payments and refunds are turned off (Dashboard → Settings →
+  Customer emails); `emailContributionReceipt` sends the league's own for
+  every payment and refund, with where the team stands and a link to
+  Stripe's receipt page. See "Payment receipts" in [EMAIL.md](EMAIL.md).
 
 The two design questions this section once listed — whether registration can
 be reversed, and what deleting a team does to its money — are settled:

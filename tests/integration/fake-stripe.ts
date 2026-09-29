@@ -31,6 +31,12 @@ export interface FakePaymentIntent {
 	latest_charge: {
 		id: string
 		amount_refunded: number
+		/** Stripe's hosted receipt page, which receipts link to. */
+		receipt_url: string
+		payment_method_details: {
+			type: string
+			card?: { brand: string; last4: string; wallet: { type: string } | null }
+		}
 	}
 }
 
@@ -189,7 +195,15 @@ export function addPayment(
 		amount,
 		amount_received: amount,
 		metadata,
-		latest_charge: { id: `ch_${id}`, amount_refunded: 0 },
+		latest_charge: {
+			id: `ch_${id}`,
+			amount_refunded: 0,
+			receipt_url: `https://pay.stripe.com/receipts/${id}`,
+			payment_method_details: {
+				type: 'card',
+				card: { brand: 'visa', last4: '4242', wallet: null },
+			},
+		},
 	}
 	fakeStripe.intents.set(id, intent)
 	return intent
