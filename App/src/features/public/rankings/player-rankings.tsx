@@ -1,18 +1,22 @@
 /**
  * Players page component
  *
- * Displays players in a ranked leaderboard format based on skill ratings.
- * Currently uses TrueSkill (v6.0), a Bayesian rating algorithm.
+ * Displays players in a ranked leaderboard format based on skill ratings,
+ * all time or for one season (see ranking-scope.tsx). Currently uses
+ * TrueSkill (v6.0), a Bayesian rating algorithm.
  */
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { InlineMath, BlockMath } from 'react-katex'
 import 'katex/dist/katex.min.css'
 
-import { currentPlayerRankingsQuery } from '@/firebase/collections/player-rankings'
-import { PlayerRankingDocument, RATING_PRECISION_MULTIPLIER } from '@/types'
+import {
+	currentPlayerRankingsQuery,
+	seasonRankingsQuery,
+} from '@/firebase/collections/player-rankings'
+import { PlayerRankingDocument, SeasonRankingDocument } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -51,10 +55,14 @@ import {
 	User,
 	Search,
 } from 'lucide-react'
-import { cn, errorMessage } from '@/shared/utils'
+import { cn, errorMessage, sortBySeasonStartDesc } from '@/shared/utils'
 import { PageContainer, PageHeader } from '@/shared/components'
 import { Input } from '@/components/ui/input'
 import { useQueryErrorHandler } from '@/shared/hooks'
+import { useSeasonsContext } from '@/providers'
+import { rankWithTies } from './ranking-helpers'
+import { RankingScopeSelect } from './ranking-scope'
+import { scopeQuery, useRankingScope } from './use-ranking-scope'
 
 interface PlayerRankingsProps {
 	showAdminControls?: boolean
@@ -951,6 +959,48 @@ const TrueSkillContent = ({ version }: { version: 'v5.0' | 'v6.0' }) => (
 	</>
 )
 
+/** A leaderboard row, whichever rankings it comes from. */
+interface LeaderboardRow {
+	id: string
+	playerName: string
+	rating: number
+	/** All time: over the latest game night. A season: since it began. */
+	change: number
+	games: number
+	/** All time: seasons played. A season: its win-loss record. */
+	detail: string
+}
+
+const allTimeRows = (
+	docs: { id: string; data: () => PlayerRankingDocument }[]
+): LeaderboardRow[] =>
+	docs.map((doc) => {
+		const data = doc.data()
+		return {
+			id: doc.id,
+			playerName: data.playerName,
+			rating: data.rating,
+			change: data.lastRatingChange,
+			games: data.totalGames,
+			detail: String(data.totalSeasons),
+		}
+	})
+
+const seasonRows = (
+	docs: { id: string; data: () => SeasonRankingDocument }[]
+): LeaderboardRow[] =>
+	docs.map((doc) => {
+		const data = doc.data()
+		return {
+			id: doc.id,
+			playerName: data.playerName,
+			rating: data.rating,
+			change: data.ratingChange,
+			games: data.games,
+			detail: `${data.wins}–${data.losses}`,
+		}
+	})
+
 export const PlayerRankings = ({
 	showAdminControls = false,
 }: PlayerRankingsProps) => {
@@ -958,9 +1008,26 @@ export const PlayerRankings = ({
 	const [isDialogOpen, setIsDialogOpen] = useState(false)
 	const [selectedVersion, setSelectedVersion] = useState(CURRENT_VERSION)
 	const [searchQuery, setSearchQuery] = useState('')
-	const [rankingsSnapshot, loading, error] = useCollection(
-		currentPlayerRankingsQuery()
+	const { seasonId, setSeasonId } = useRankingScope()
+	const { seasonsQuerySnapshot } = useSeasonsContext()
+
+	const seasons = useMemo(
+		() =>
+			sortBySeasonStartDesc(seasonsQuerySnapshot?.docs ?? [], (doc) =>
+				doc.data().dateStart?.toMillis()
+			).map((doc) => ({ id: doc.id, name: doc.data().name })),
+		[seasonsQuerySnapshot]
 	)
+	const season = seasons.find((candidate) => candidate.id === seasonId)
+
+	const [allTimeSnapshot, allTimeLoading, allTimeError] = useCollection(
+		seasonId ? null : currentPlayerRankingsQuery()
+	)
+	const [seasonSnapshot, seasonLoading, seasonError] = useCollection(
+		seasonId ? seasonRankingsQuery(seasonId) : null
+	)
+	const loading = seasonId ? seasonLoading : allTimeLoading
+	const error = seasonId ? seasonError : allTimeError
 
 	useQueryErrorHandler({
 		error,
@@ -968,131 +1035,21 @@ export const PlayerRankings = ({
 		errorLabel: 'players',
 	})
 
-	// Type guard to validate ranking document has required properties
-	const isValidRankingDoc = (
-		data: unknown
-	): data is PlayerRankingDocument & { id: string } => {
-		if (!data || typeof data !== 'object') return false
-		const doc = data as Record<string, unknown>
-		return (
-			typeof doc.id === 'string' &&
-			typeof doc.playerName === 'string' &&
-			typeof doc.rating === 'number' &&
-			typeof doc.rank === 'number'
-		)
-	}
-
-	const rankings = rankingsSnapshot?.docs
-		.map((doc) => ({
-			id: doc.id,
-			...doc.data(),
-		}))
-		.filter(isValidRankingDoc)
-
-	// Helper function to process rankings with proper tie handling
-	const processRankingsWithTies = (
-		rankings: (PlayerRankingDocument & { id: string })[]
-	) => {
-		const tiedGroups = new Map<number, string[]>()
-		const tiedPlayerIds = new Set<string>()
-		const trueRankMap = new Map<string, number>()
-		const medalEligibilityMap = new Map<string, boolean>()
-
-		// Create player lookup map for sorting by name
-		const playerLookup = new Map<
-			string,
-			PlayerRankingDocument & { id: string }
-		>()
-		rankings.forEach((player) => {
-			playerLookup.set(player.id, player)
-		})
-
-		// Group players by their rounded rating
-		rankings.forEach((player) => {
-			const roundedRating =
-				Math.round(player.rating * RATING_PRECISION_MULTIPLIER) /
-				RATING_PRECISION_MULTIPLIER
-
-			const existing = tiedGroups.get(roundedRating)
-			if (existing) {
-				existing.push(player.id)
-			} else {
-				tiedGroups.set(roundedRating, [player.id])
-			}
-		})
-
-		// Sort players within each rating group alphabetically by name
-		tiedGroups.forEach((playerIds, rating) => {
-			if (playerIds.length > 1) {
-				playerIds.sort((a, b) => {
-					const playerA = playerLookup.get(a)
-					const playerB = playerLookup.get(b)
-					if (!playerA || !playerB) return 0
-					return playerA.playerName.localeCompare(playerB.playerName)
-				})
-				tiedGroups.set(rating, playerIds)
-			}
-		})
-
-		// Identify tied players and calculate true ranks
-		let currentTrueRank = 1
-		const sortedRatings = Array.from(tiedGroups.keys()).sort((a, b) => b - a) // Highest first
-
-		sortedRatings.forEach((rating) => {
-			const playerIds = tiedGroups.get(rating)
-			if (!playerIds) return
-
-			if (playerIds.length > 1) {
-				// These players are tied
-				playerIds.forEach((id) => {
-					tiedPlayerIds.add(id)
-					trueRankMap.set(id, currentTrueRank)
-					// Medal eligibility if any position in the tie group is <= 3
-					medalEligibilityMap.set(id, currentTrueRank <= 3)
-				})
-			} else {
-				// Single player at this rating
-				const playerId = playerIds[0]
-				trueRankMap.set(playerId, currentTrueRank)
-				medalEligibilityMap.set(playerId, currentTrueRank <= 3)
-			}
-
-			// Advance rank by the number of players at this rating level
-			currentTrueRank += playerIds.length
-		})
-
-		return {
-			tiedPlayerIds,
-			trueRankMap,
-			medalEligibilityMap,
-			sortedRankings: sortedRatings.flatMap((rating) => {
-				const playerIds = tiedGroups.get(rating) ?? []
-				return playerIds
-					.map((id) => playerLookup.get(id))
-					.filter(
-						(player): player is PlayerRankingDocument & { id: string } =>
-							player !== undefined
-					)
-			}),
-		}
-	}
-
-	const { trueRankMap, medalEligibilityMap, sortedRankings } = rankings
-		? processRankingsWithTies(rankings)
-		: {
-				trueRankMap: new Map<string, number>(),
-				medalEligibilityMap: new Map<string, boolean>(),
-				sortedRankings: [],
-			}
+	const rows = seasonId
+		? seasonRows(seasonSnapshot?.docs ?? [])
+		: allTimeRows(allTimeSnapshot?.docs ?? [])
+	const ranked = rankWithTies(rows)
 
 	const handlePlayerClick = (playerId: string) => {
-		navigate(`/players/${playerId}`)
+		navigate(`/players/${playerId}${scopeQuery(seasonId)}`)
 	}
 
 	// Filter rankings by search query
-	const filteredRankings = sortedRankings.filter((player) =>
-		player.playerName.toLowerCase().includes(searchQuery.toLowerCase())
+	const filteredRankings = ranked.filter(({ row }) =>
+		row.playerName.toLowerCase().includes(searchQuery.toLowerCase())
 	)
+	const detailHeading = seasonId ? 'Record' : 'Seasons'
+	const changeHeading = seasonId ? 'Season change' : 'Change'
 
 	if (error) {
 		return (
@@ -1218,21 +1175,28 @@ export const PlayerRankings = ({
 					<div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
 						<CardTitle className='flex items-center gap-2'>
 							<User className='h-5 w-5' aria-hidden='true' />
-							Players
+							{season ? `${season.name} rankings` : 'All-time rankings'}
 						</CardTitle>
-						<div className='relative w-full sm:w-64'>
-							<Search
-								className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground'
-								aria-hidden='true'
+						<div className='flex w-full flex-col gap-2 sm:w-auto sm:flex-row'>
+							<RankingScopeSelect
+								seasonId={seasonId}
+								seasons={seasons}
+								onChange={setSeasonId}
 							/>
-							<Input
-								type='search'
-								placeholder='Search players...'
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-								className='pl-9'
-								aria-label='Search players by name'
-							/>
+							<div className='relative w-full sm:w-64'>
+								<Search
+									className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground'
+									aria-hidden='true'
+								/>
+								<Input
+									type='search'
+									placeholder='Search players...'
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+									className='pl-9'
+									aria-label='Search players by name'
+								/>
+							</div>
 						</div>
 					</div>
 				</CardHeader>
@@ -1252,13 +1216,13 @@ export const PlayerRankings = ({
 											Skill
 										</TableHead>
 										<TableHead scope='col' className='w-16 sm:w-24 text-center'>
-											Change
+											{changeHeading}
 										</TableHead>
 										<TableHead scope='col' className='w-12 sm:w-20 text-center'>
 											Games
 										</TableHead>
 										<TableHead scope='col' className='w-12 sm:w-20 text-center'>
-											Seasons
+											{detailHeading}
 										</TableHead>
 									</TableRow>
 								</TableHeader>
@@ -1293,7 +1257,7 @@ export const PlayerRankings = ({
 								</TableBody>
 							</Table>
 						</div>
-					) : rankings && rankings.length > 0 && sortedRankings.length > 0 ? (
+					) : ranked.length > 0 ? (
 						<div className='overflow-x-auto'>
 							<Table aria-label='Player rankings'>
 								<TableHeader>
@@ -1308,13 +1272,13 @@ export const PlayerRankings = ({
 											Skill
 										</TableHead>
 										<TableHead scope='col' className='w-16 sm:w-24 text-center'>
-											Change
+											{changeHeading}
 										</TableHead>
 										<TableHead scope='col' className='w-12 sm:w-20 text-center'>
 											Games
 										</TableHead>
 										<TableHead scope='col' className='w-12 sm:w-20 text-center'>
-											Seasons
+											{detailHeading}
 										</TableHead>
 									</TableRow>
 								</TableHeader>
@@ -1331,106 +1295,106 @@ export const PlayerRankings = ({
 											</TableCell>
 										</TableRow>
 									) : (
-										filteredRankings.map((player) => {
-											const trueRank = trueRankMap.get(player.id) || player.rank
-											const isMedalEligible =
-												medalEligibilityMap.get(player.id) || false
+										filteredRankings.map(
+											({ row: player, rank: trueRank, medal }) => {
+												const isMedalEligible = medal
 
-											return (
-												<TableRow
-													key={player.id}
-													onClick={() => handlePlayerClick(player.id)}
-													onKeyDown={(e) => {
-														if (e.key === 'Enter' || e.key === ' ') {
-															e.preventDefault()
-															handlePlayerClick(player.id)
-														}
-													}}
-													tabIndex={0}
-													aria-label={`View ${player.playerName}'s ranking history, rank ${trueRank}, rating ${player.rating.toFixed(2)}`}
-													className={cn(
-														'hover:bg-muted/50 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
-														isMedalEligible &&
-															'bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-900/20'
-													)}
-												>
-													<TableCell className='font-medium'>
-														<div className='flex items-center gap-2'>
-															{trueRank === 1 && (
-																<Crown
-																	className='h-4 w-4 text-yellow-500'
-																	aria-hidden='true'
-																/>
-															)}
-															{trueRank === 2 && (
-																<Award
-																	className='h-4 w-4 text-gray-400'
-																	aria-hidden='true'
-																/>
-															)}
-															{trueRank === 3 && (
-																<Medal
-																	className='h-4 w-4 text-amber-600'
-																	aria-hidden='true'
-																/>
-															)}
-															<span>#{trueRank}</span>
-														</div>
-													</TableCell>
-													<TableCell>
-														<div className='space-y-1'>
-															<div
-																className={cn(
-																	'font-medium',
-																	trueRank <= 3 && 'dark:text-foreground'
-																)}
-															>
-																{player.playerName}
-															</div>
-														</div>
-													</TableCell>
-													<TableCell className='text-center font-mono'>
-														{player.rating.toFixed(2)}
-													</TableCell>
-													<TableCell className='text-center'>
-														{player.lastRatingChange !== 0 && (
-															<div
-																className={cn(
-																	'flex items-center justify-center gap-1',
-																	player.lastRatingChange > 0
-																		? 'text-green-600'
-																		: 'text-red-600'
-																)}
-															>
-																{player.lastRatingChange > 0 ? (
-																	<TrendingUp
-																		className='h-3 w-3'
-																		aria-hidden='true'
-																	/>
-																) : (
-																	<TrendingDown
-																		className='h-3 w-3'
-																		aria-hidden='true'
-																	/>
-																)}
-																<span className='sr-only'>
-																	{player.lastRatingChange > 0
-																		? 'increased by'
-																		: 'decreased by'}
-																</span>
-																{Math.abs(player.lastRatingChange).toFixed(2)}
-															</div>
+												return (
+													<TableRow
+														key={player.id}
+														onClick={() => handlePlayerClick(player.id)}
+														onKeyDown={(e) => {
+															if (e.key === 'Enter' || e.key === ' ') {
+																e.preventDefault()
+																handlePlayerClick(player.id)
+															}
+														}}
+														tabIndex={0}
+														aria-label={`View ${player.playerName}'s ranking history, rank ${trueRank}, rating ${player.rating.toFixed(2)}`}
+														className={cn(
+															'hover:bg-muted/50 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset',
+															isMedalEligible &&
+																'bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-900/20'
 														)}
-													</TableCell>
-													<TableCell className='text-center'>
-														{player.totalGames}
-													</TableCell>
-													<TableCell className='text-center'>
-														{player.totalSeasons}
-													</TableCell>
-												</TableRow>
-											)
-										})
+													>
+														<TableCell className='font-medium'>
+															<div className='flex items-center gap-2'>
+																{trueRank === 1 && (
+																	<Crown
+																		className='h-4 w-4 text-yellow-500'
+																		aria-hidden='true'
+																	/>
+																)}
+																{trueRank === 2 && (
+																	<Award
+																		className='h-4 w-4 text-gray-400'
+																		aria-hidden='true'
+																	/>
+																)}
+																{trueRank === 3 && (
+																	<Medal
+																		className='h-4 w-4 text-amber-600'
+																		aria-hidden='true'
+																	/>
+																)}
+																<span>#{trueRank}</span>
+															</div>
+														</TableCell>
+														<TableCell>
+															<div className='space-y-1'>
+																<div
+																	className={cn(
+																		'font-medium',
+																		trueRank <= 3 && 'dark:text-foreground'
+																	)}
+																>
+																	{player.playerName}
+																</div>
+															</div>
+														</TableCell>
+														<TableCell className='text-center font-mono'>
+															{player.rating.toFixed(2)}
+														</TableCell>
+														<TableCell className='text-center'>
+															{player.change !== 0 && (
+																<div
+																	className={cn(
+																		'flex items-center justify-center gap-1',
+																		player.change > 0
+																			? 'text-green-600'
+																			: 'text-red-600'
+																	)}
+																>
+																	{player.change > 0 ? (
+																		<TrendingUp
+																			className='h-3 w-3'
+																			aria-hidden='true'
+																		/>
+																	) : (
+																		<TrendingDown
+																			className='h-3 w-3'
+																			aria-hidden='true'
+																		/>
+																	)}
+																	<span className='sr-only'>
+																		{player.change > 0
+																			? 'increased by'
+																			: 'decreased by'}
+																	</span>
+																	{Math.abs(player.change).toFixed(2)}
+																</div>
+															)}
+														</TableCell>
+														<TableCell className='text-center'>
+															{player.games}
+														</TableCell>
+														<TableCell className='text-center'>
+															{player.detail}
+														</TableCell>
+													</TableRow>
+												)
+											}
+										)
 									)}
 								</TableBody>
 							</Table>
@@ -1441,9 +1405,15 @@ export const PlayerRankings = ({
 								className='h-12 w-12 text-muted-foreground mx-auto mb-4'
 								aria-hidden='true'
 							/>
-							<p className='text-muted-foreground'>No players available yet.</p>
+							<p className='text-muted-foreground'>
+								{seasonId
+									? `No rankings for ${season?.name ?? 'this season'} yet.`
+									: 'No players available yet.'}
+							</p>
 							<p className='text-sm text-muted-foreground mt-2'>
-								Rankings will appear after the first calculation is completed.
+								{seasonId
+									? 'They appear the night after its first games are played.'
+									: 'Rankings will appear after the first calculation is completed.'}
 							</p>
 						</div>
 					)}

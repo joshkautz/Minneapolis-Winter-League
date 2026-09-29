@@ -1,14 +1,17 @@
 /**
  * PlayerRankingHistory component
  *
- * Displays a player's rankings history throughout their career using interactive charts
- * Accessible at /players/{playerId}
+ * A player's rank and rating over their career, or over one season with
+ * that season's rank, record and every game's effect (the switch is
+ * `?season=`, see ranking-scope.tsx). Accessible at /players/{playerId}.
+ *
+ * All of it comes from the player's one `player-ranking-history` document
+ * and their season standing, plus their teams' games for the results.
  */
 
 import { useMemo, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useCollection } from 'react-firebase-hooks/firestore'
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { getDoc, getDocs } from 'firebase/firestore'
 
 import {
@@ -18,21 +21,11 @@ import {
 	type SeasonRecord,
 } from '@/shared/utils'
 import { GameDocument, PlayerSeasonDocument, TeamSeasonDocument } from '@/types'
-import {
-	playerSeasonsSubcollection,
-	allPlayersQuery,
-} from '@/firebase/collections/players'
+import { playerSeasonsSubcollection } from '@/firebase/collections/players'
 import { teamSeasonRef } from '@/firebase/collections/teams'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import {
-	ChartConfig,
-	ChartContainer,
-	ChartLegend,
-	ChartLegendContent,
-	ChartTooltip,
-} from '@/components/ui/chart'
 import {
 	Select,
 	SelectContent,
@@ -40,43 +33,26 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { Trophy, ArrowLeft, Users } from 'lucide-react'
+import { Trophy, ArrowLeft, Users, CalendarDays } from 'lucide-react'
 import { useSeasonsContext } from '@/providers'
 import { gamesByTeamQuery } from '@/firebase/collections/games'
 import { useQueryErrorHandler } from '@/shared/hooks'
-import { rankingsHistoryQuery } from '@/firebase/collections/player-rankings'
+import {
+	currentPlayerRankingsQuery,
+	playerRankingHistoryRef,
+	seasonRankingRef,
+} from '@/firebase/collections/player-rankings'
 import { SeasonHistoryRow } from '@/shared/components'
+import { seasonIdsOf, seasonSlots } from './ranking-helpers'
+import { RatingHistoryChart, type ChartPoint } from './rating-history-chart'
+import { PlayerSeasonSummary } from './player-season-summary'
+import { RankingScopeSelect } from './ranking-scope'
+import { scopeQuery, useRankingScope } from './use-ranking-scope'
 
 interface PlayerRankingHistoryProps {
 	/** Optional class name for styling */
 	className?: string
 }
-
-interface ChartDataPoint {
-	/** Date in ISO timestamp format for display */
-	date: string
-	/** Player's rank position (inverted for display) */
-	ranking: number
-	/** Player's skill rating (TrueSkill μ) */
-	rating: number
-	/** Player's actual rank position */
-	rank: number
-	/** Season identifier */
-	season: string
-	/** Unix timestamp for sorting */
-	timestamp: number
-}
-
-const chartConfig = {
-	ranking: {
-		label: 'Rank Position',
-		color: 'var(--chart-1)',
-	},
-	rating: {
-		label: 'Skill Rating',
-		color: 'var(--chart-2)',
-	},
-} satisfies ChartConfig
 
 // Interface for processed team history entry
 interface TeamHistoryEntry {
@@ -115,17 +91,23 @@ export const PlayerRankingHistory = ({
 		}
 	}, [playerSeasonsError, playerId])
 
-	// Fetch all players for the dropdown
-	const [allPlayersSnapshot, allPlayersLoading, allPlayersError] =
-		useCollection(allPlayersQuery())
+	const { seasonId, setSeasonId } = useRankingScope()
 
-	// Fetch all rankings history data from rankings-history collection
-	const [rankingHistorySnapshot, historyLoading, error] = useCollection(
-		rankingsHistoryQuery()
+	// Everyone ranked, for the player picker: names are on the rankings.
+	const [rankingsSnapshot, rankingsLoading, rankingsError] = useCollection(
+		currentPlayerRankingsQuery()
+	)
+	// The player's rating and ranks after every round, in one document.
+	const [historySnapshot, historyLoading, error] = useDocument(
+		playerId ? playerRankingHistoryRef(playerId) : null
+	)
+	// Their standing in the season being looked at.
+	const [standingSnapshot, , standingError] = useDocument(
+		playerId && seasonId ? seasonRankingRef(seasonId, playerId) : null
 	)
 
 	useQueryErrorHandler({
-		error: allPlayersError,
+		error: rankingsError,
 		component: 'PlayerRankingHistory',
 		errorLabel: 'players',
 	})
@@ -137,96 +119,56 @@ export const PlayerRankingHistory = ({
 		context: { playerId },
 	})
 
-	const loading = historyLoading || allPlayersLoading
+	useQueryErrorHandler({
+		error: standingError,
+		component: 'PlayerRankingHistory',
+		errorLabel: 'season standing',
+		context: { playerId, seasonId },
+	})
 
-	// Get all players for dropdown - only include players with rankings history data
-	const allPlayers = useMemo(() => {
-		if (!allPlayersSnapshot?.docs || !rankingHistorySnapshot?.docs) return []
+	const loading = historyLoading || rankingsLoading
 
-		// Get unique player IDs from rankings history data
-		const playersWithHistory = new Set<string>()
+	const allPlayers = useMemo(
+		() =>
+			(rankingsSnapshot?.docs ?? [])
+				.map((doc) => ({ id: doc.id, name: doc.data().playerName }))
+				.sort((a, b) => a.name.localeCompare(b.name)),
+		[rankingsSnapshot]
+	)
+	const playerName =
+		historySnapshot?.data()?.playerName ??
+		allPlayers.find((player) => player.id === playerId)?.name ??
+		'Unknown Player'
 
-		rankingHistorySnapshot.docs.forEach((doc) => {
-			const data = doc.data()
-			const rankings = data.rankings || []
-			if (Array.isArray(rankings)) {
-				rankings.forEach((player: { playerId?: string }) => {
-					if (player.playerId) {
-						playersWithHistory.add(player.playerId)
-					}
-				})
-			}
-		})
+	const rounds = useMemo(
+		() => historySnapshot?.data()?.rounds ?? [],
+		[historySnapshot]
+	)
 
-		// Filter players to only include those with rankings history
-		return allPlayersSnapshot.docs
-			.filter((doc) => playersWithHistory.has(doc.id))
-			.map((doc) => ({
-				id: doc.id,
-				name:
-					`${doc.data().firstname || ''} ${doc.data().lastname || ''}`.trim() ||
-					'Unknown Player',
-			}))
-			.sort((a, b) => a.name.localeCompare(b.name))
-	}, [allPlayersSnapshot, rankingHistorySnapshot])
+	const seasonsById = useMemo(
+		() =>
+			new Map(
+				seasonsQuerySnapshot?.docs.map((doc) => [doc.id, doc.data()]) ?? []
+			),
+		[seasonsQuerySnapshot]
+	)
 
-	// Process data to extract player's history
-	const chartData = useMemo(() => {
-		if (!rankingHistorySnapshot?.docs) return []
-
-		const playerHistory: ChartDataPoint[] = []
-
-		rankingHistorySnapshot.docs.forEach((doc) => {
-			const docId = doc.id
-			const data = doc.data()
-
-			// Only process round-based snapshots (with roundMeta)
-			// Skip any legacy weekly snapshots that might still exist
-			if (!data.roundMeta) return
-
-			// Parse document ID format: {timestamp}_{seasonId}
-			const idParts = docId.split('_')
-			if (idParts.length < 2) return
-
-			const timestamp = parseInt(idParts[0])
-			const seasonId = idParts[1]
-
-			if (isNaN(timestamp)) return
-
-			// Find player in the rankings array
-			const rankings = data.rankings || []
-			if (!Array.isArray(rankings)) return
-
-			const playerData = rankings.find(
-				(player: { playerId?: string; rank?: number; rating?: number }) =>
-					player.playerId === playerId
-			)
-
-			if (!playerData) return
-
-			const playerRank = playerData.rank
-			if (typeof playerRank !== 'number' || playerRank <= 0) return
-
-			// When the round was played; the id's timestamp if it was not
-			// recorded.
-			const roundDate =
-				data.roundMeta.roundStartTime?.toDate() ?? new Date(timestamp)
-			if (isNaN(roundDate.getTime())) return
-
-			// Create one data point per round
-			playerHistory.push({
-				date: roundDate.toISOString(),
-				rank: playerRank,
-				ranking: playerRank,
-				rating: parseFloat((playerData.rating || 0).toFixed(5)),
-				season: seasonId,
-				timestamp: roundDate.getTime(),
-			})
-		})
-
-		// Sort by timestamp to ensure proper chronological order
-		return playerHistory.sort((a, b) => a.timestamp - b.timestamp)
-	}, [rankingHistorySnapshot, playerId])
+	// The seasons this player was rated in, newest first, for the switch.
+	const playerSeasons = useMemo(
+		() =>
+			sortBySeasonStartDesc(seasonIdsOf(rounds), (id) =>
+				seasonsById.get(id)?.dateStart?.toMillis()
+			).map((id) => ({
+				id,
+				name: seasonsById.get(id)?.name ?? 'Unknown Season',
+			})),
+		[rounds, seasonsById]
+	)
+	const season = playerSeasons.find((candidate) => candidate.id === seasonId)
+	const seasonName =
+		season?.name ??
+		(seasonId ? seasonsById.get(seasonId)?.name : undefined) ??
+		'this season'
 
 	// The games of every team the player has been on, fetched per team:
 	// the page used to read every game ever played for this. A game between
@@ -343,10 +285,6 @@ export const PlayerRankingHistory = ({
 	const teamHistory = useMemo((): TeamHistoryEntry[] => {
 		if (!playerSeasonsSnapshot?.docs || !playerId) return []
 
-		const seasonsById = new Map(
-			seasonsQuerySnapshot?.docs.map((doc) => [doc.id, doc.data()]) ?? []
-		)
-
 		const entries = playerSeasonsSnapshot.docs.flatMap((psDoc) => {
 			const seasonId = psDoc.id
 			const playerSeason = psDoc.data() as PlayerSeasonDocument
@@ -376,14 +314,52 @@ export const PlayerRankingHistory = ({
 	}, [
 		playerSeasonsSnapshot,
 		playerId,
-		seasonsQuerySnapshot,
+		seasonsById,
 		teamSeasonByKey,
 		teamRecords,
 	])
 
-	// Handle player selection change
+	// The season's rounds, each with the game the player's team played.
+	const slots = useMemo(() => {
+		if (!seasonId) return []
+		const teamId =
+			(
+				playerSeasonsSnapshot?.docs
+					.find((doc) => doc.id === seasonId)
+					?.data() as PlayerSeasonDocument | undefined
+			)?.team?.id ?? null
+		return seasonSlots(rounds, seasonId, teamGames, teamId)
+	}, [seasonId, rounds, teamGames, playerSeasonsSnapshot])
+
+	// All time: overall rank. A season: rank among its players.
+	const chartData = useMemo((): ChartPoint[] => {
+		if (!seasonId) {
+			return rounds.map((round) => ({
+				date: round.date.toDate().toISOString(),
+				ranking: round.rank,
+				rating: round.rating,
+			}))
+		}
+		return slots.flatMap(({ round, game }) =>
+			round.seasonRank === null
+				? []
+				: [
+						{
+							date: round.date.toDate().toISOString(),
+							ranking: round.seasonRank,
+							rating: round.rating,
+							game,
+						},
+					]
+		)
+	}, [seasonId, rounds, slots])
+
+	const shownTeamHistory = seasonId
+		? teamHistory.filter((entry) => entry.seasonId === seasonId)
+		: teamHistory
+
 	const handlePlayerChange = (newPlayerId: string) => {
-		navigate(`/players/${newPlayerId}`)
+		navigate(`/players/${newPlayerId}${scopeQuery(seasonId)}`)
 	}
 
 	// Handle missing playerId
@@ -400,395 +376,150 @@ export const PlayerRankingHistory = ({
 	}
 
 	if (loading) {
-		return (
-			<div className='container max-w-6xl mx-auto py-8 space-y-6'>
-				{/* Back button skeleton */}
-				<div className='flex items-center gap-4'>
-					<div className='h-8 w-32 rounded-md bg-gray-200 animate-pulse relative overflow-hidden'>
-						<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
-					</div>
-				</div>
-
-				<Card className={`${className} pt-0`}>
-					{/* Header skeleton that matches the real layout */}
-					<CardHeader className='flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row'>
-						<div className='grid flex-1 gap-1'>
-							<div className='flex items-center gap-2'>
-								<Trophy className='h-5 w-5 text-gray-300' />
-								<div className='h-6 w-32 rounded bg-gray-200 animate-pulse relative overflow-hidden'>
-									<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
-								</div>
-							</div>
-						</div>
-						{/* Player selector skeleton */}
-						<div className='hidden h-9 w-[200px] rounded-lg bg-gray-200 animate-pulse sm:ml-auto sm:flex relative overflow-hidden'>
-							<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
-						</div>
-					</CardHeader>
-
-					{/* Chart content skeleton */}
-					<CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-						<div className='aspect-auto h-[250px] w-full'>
-							{/* Chart area with subtle grid pattern to simulate chart */}
-							<div className='h-full w-full rounded-lg border bg-gray-50 relative overflow-hidden'>
-								{/* Simulate chart grid lines */}
-								<div className='absolute inset-0 opacity-30'>
-									{/* Horizontal lines */}
-									{Array.from({ length: 5 }).map((_, i) => (
-										<div
-											key={`h-${i}`}
-											className='absolute w-full border-t border-gray-300'
-											style={{ top: `${(i + 1) * 20}%` }}
-										/>
-									))}
-									{/* Vertical lines */}
-									{Array.from({ length: 6 }).map((_, i) => (
-										<div
-											key={`v-${i}`}
-											className='absolute h-full border-l border-gray-300'
-											style={{ left: `${(i + 1) * 16.66}%` }}
-										/>
-									))}
-								</div>
-
-								{/* Simulate chart curves */}
-								<div className='absolute inset-4 flex items-end justify-between'>
-									{Array.from({ length: 8 }).map((_, i) => {
-										// Generate height once per render using a deterministic value
-										const height = ((i * 7 + 13) % 60) + 20
-										return (
-											<div
-												key={i}
-												className='flex flex-col items-center space-y-1'
-											>
-												<div
-													className='w-2 bg-gray-300 animate-pulse relative overflow-hidden'
-													style={{ height: `${height}%` }}
-												>
-													<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
-												</div>
-											</div>
-										)
-									})}
-								</div>
-
-								{/* Main shimmer overlay for the entire chart area */}
-								<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer' />
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-			</div>
-		)
+		return <PlayerHistorySkeleton className={className} />
 	}
+
+	const latest = chartData[chartData.length - 1]
+	const header = (
+		<CardHeader className='flex flex-col gap-3 space-y-0 border-b py-5 sm:flex-row sm:items-center'>
+			<div className='grid flex-1 gap-1'>
+				<CardTitle className='flex items-center gap-2'>
+					<Trophy className='h-5 w-5' />
+					{seasonId ? `${seasonName} rankings` : 'Rankings history'}
+				</CardTitle>
+			</div>
+			<div className='flex flex-col gap-2 sm:flex-row sm:items-center'>
+				<RankingScopeSelect
+					seasonId={seasonId}
+					seasons={playerSeasons}
+					onChange={setSeasonId}
+				/>
+				<Select value={playerId} onValueChange={handlePlayerChange}>
+					<SelectTrigger
+						className='w-full rounded-lg sm:w-[200px]'
+						aria-label='Select a player'
+					>
+						<SelectValue placeholder='Select player' />
+					</SelectTrigger>
+					<SelectContent className='rounded-xl'>
+						{allPlayers.map((player) => (
+							<SelectItem
+								key={player.id}
+								value={player.id}
+								className='rounded-lg'
+							>
+								{player.name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</div>
+		</CardHeader>
+	)
+
+	const backButton = (
+		<div className='flex items-center gap-4'>
+			<Button
+				variant='outline'
+				size='sm'
+				onClick={() => navigate(-1)}
+				className='flex items-center gap-2'
+			>
+				<ArrowLeft className='h-4 w-4' />
+				Back
+			</Button>
+		</div>
+	)
+
+	const notice = (children: React.ReactNode, destructive = false) => (
+		<div className='container max-w-6xl mx-auto py-8 space-y-6'>
+			{backButton}
+			<Card className={`${className} pt-0`}>
+				{header}
+				<CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
+					<Alert
+						variant={destructive ? 'destructive' : 'default'}
+						role={destructive ? undefined : 'status'}
+						aria-live={destructive ? undefined : 'polite'}
+					>
+						<AlertDescription>{children}</AlertDescription>
+					</Alert>
+				</CardContent>
+			</Card>
+		</div>
+	)
 
 	if (error) {
-		return (
-			<div className='container max-w-6xl mx-auto py-8 space-y-6'>
-				{/* Back button */}
-				<div className='flex items-center gap-4'>
-					<Button
-						variant='outline'
-						size='sm'
-						onClick={() => navigate(-1)}
-						className='flex items-center gap-2'
-					>
-						<ArrowLeft className='h-4 w-4' />
-						Back
-					</Button>
-				</div>
-
-				<Card className={`${className} pt-0`}>
-					<CardHeader className='flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row'>
-						<div className='grid flex-1 gap-1'>
-							<CardTitle className='flex items-center gap-2'>
-								<Trophy className='h-5 w-5' />
-								Rankings history
-							</CardTitle>
-						</div>
-						<div className='flex items-center gap-2'>
-							<Select value={playerId} onValueChange={handlePlayerChange}>
-								<SelectTrigger
-									className='hidden w-[200px] rounded-lg sm:ml-auto sm:flex'
-									aria-label='Select a player'
-								>
-									<SelectValue placeholder='Select player' />
-								</SelectTrigger>
-								<SelectContent className='rounded-xl'>
-									{allPlayers.map((player) => (
-										<SelectItem
-											key={player.id}
-											value={player.id}
-											className='rounded-lg'
-										>
-											{player.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-					</CardHeader>
-					<CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-						<Alert variant='destructive'>
-							<AlertDescription>
-								Failed to load rankings history. Please try again later.
-							</AlertDescription>
-						</Alert>
-					</CardContent>
-				</Card>
-			</div>
+		return notice(
+			'Failed to load rankings history. Please try again later.',
+			true
 		)
 	}
 
-	if (chartData.length === 0) {
-		return (
-			<div className='container max-w-6xl mx-auto py-8 space-y-6'>
-				{/* Back button */}
-				<div className='flex items-center gap-4'>
-					<Button
-						variant='outline'
-						size='sm'
-						onClick={() => navigate(-1)}
-						className='flex items-center gap-2'
-					>
-						<ArrowLeft className='h-4 w-4' />
-						Back
-					</Button>
-				</div>
+	if (rounds.length === 0) {
+		return notice('No rankings history data available for this player.')
+	}
 
-				<Card className={`${className} pt-0`}>
-					<CardHeader className='flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row'>
-						<div className='grid flex-1 gap-1'>
-							<CardTitle className='flex items-center gap-2'>
-								<Trophy className='h-5 w-5' />
-								Rankings history
-							</CardTitle>
-						</div>
-						<div className='flex items-center gap-2'>
-							<Select value={playerId} onValueChange={handlePlayerChange}>
-								<SelectTrigger
-									className='hidden w-[200px] rounded-lg sm:ml-auto sm:flex'
-									aria-label='Select a player'
-								>
-									<SelectValue placeholder='Select player' />
-								</SelectTrigger>
-								<SelectContent className='rounded-xl'>
-									{allPlayers.map((player) => (
-										<SelectItem
-											key={player.id}
-											value={player.id}
-											className='rounded-lg'
-										>
-											{player.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-					</CardHeader>
-					<CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-						<Alert role='status' aria-live='polite'>
-							<AlertDescription>
-								No rankings history data available for this player.
-							</AlertDescription>
-						</Alert>
-					</CardContent>
-				</Card>
-			</div>
+	if (seasonId && chartData.length === 0) {
+		return notice(
+			<>
+				{playerName} was not on a team in {seasonName}.{' '}
+				<button
+					type='button'
+					className='underline'
+					onClick={() => setSeasonId(null)}
+				>
+					See all time
+				</button>
+			</>
 		)
 	}
 
 	return (
 		<div className='container max-w-6xl mx-auto py-8 space-y-6'>
-			{/* Back button */}
-			<div className='flex items-center gap-4'>
-				<Button
-					variant='outline'
-					size='sm'
-					onClick={() => navigate(-1)}
-					className='flex items-center gap-2'
-				>
-					<ArrowLeft className='h-4 w-4' />
-					Back
-				</Button>
-			</div>
+			{backButton}
 
 			<Card className={`${className} pt-0`}>
-				<CardHeader className='flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row'>
-					<div className='grid flex-1 gap-1'>
-						<CardTitle className='flex items-center gap-2'>
-							<Trophy className='h-5 w-5' />
-							Rankings history
-						</CardTitle>
-					</div>
-					<div className='flex items-center gap-2'>
-						<Select value={playerId} onValueChange={handlePlayerChange}>
-							<SelectTrigger
-								className='hidden w-[200px] rounded-lg sm:ml-auto sm:flex'
-								aria-label='Select a player'
-							>
-								<SelectValue placeholder='Select player' />
-							</SelectTrigger>
-							<SelectContent className='rounded-xl'>
-								{allPlayers.map((player) => (
-									<SelectItem
-										key={player.id}
-										value={player.id}
-										className='rounded-lg'
-									>
-										{player.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-				</CardHeader>
+				{header}
 				<CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-					<ChartContainer
-						config={chartConfig}
-						className='aspect-auto h-[250px] w-full'
-						role='img'
-						aria-label={`Player ranking history chart showing ${allPlayers.find((p) => p.id === playerId)?.name ?? 'Unknown Player'}'s ranking and rating progression over time. Current rank: ${chartData.length > 0 ? chartData[chartData.length - 1]?.ranking : 'N/A'}, Current rating: ${chartData.length > 0 ? chartData[chartData.length - 1]?.rating?.toFixed(2) : 'N/A'}`}
-					>
-						<AreaChart data={chartData} aria-hidden='true'>
-							<defs>
-								<linearGradient id='fillRanking' x1='0' y1='0' x2='0' y2='1'>
-									<stop
-										offset='5%'
-										stopColor='var(--color-ranking)'
-										stopOpacity={0.8}
-									/>
-									<stop
-										offset='95%'
-										stopColor='var(--color-ranking)'
-										stopOpacity={0.1}
-									/>
-								</linearGradient>
-								<linearGradient id='fillRating' x1='0' y1='0' x2='0' y2='1'>
-									<stop
-										offset='5%'
-										stopColor='var(--color-rating)'
-										stopOpacity={0.8}
-									/>
-									<stop
-										offset='95%'
-										stopColor='var(--color-rating)'
-										stopOpacity={0.1}
-									/>
-								</linearGradient>
-							</defs>
-							<CartesianGrid vertical={true} />
-							<XAxis
-								dataKey='date'
-								tickLine={true}
-								axisLine={true}
-								tickMargin={8}
-								minTickGap={32}
-								tickFormatter={(value) => {
-									const date = new Date(value)
-									return date.toLocaleDateString('en-US', {
-										month: 'short',
-										day: 'numeric',
-										year: 'numeric',
-									})
-								}}
-							/>
-							<YAxis
-								yAxisId='ranking'
-								orientation='left'
-								tickLine={true}
-								axisLine={true}
-								domain={[0, 'dataMax + 5']}
-							/>
-							<YAxis
-								yAxisId='rating'
-								orientation='right'
-								tickLine={true}
-								axisLine={true}
-								domain={['dataMin - 5', 'dataMax + 5']}
-								tickFormatter={(value) => Math.round(value).toString()}
-							/>
-							<ChartTooltip
-								cursor={false}
-								content={(props) => {
-									if (
-										!props.active ||
-										!props.payload ||
-										props.payload.length === 0 ||
-										!props.label
-									) {
-										return null
-									}
-
-									const data = props.payload[0].payload
-
-									// Format the date and time from the data point
-									const dateTime = new Date(data.date)
-									const formattedDate = dateTime.toLocaleDateString('en-US', {
-										weekday: 'short',
-										month: 'short',
-										day: 'numeric',
-										year: 'numeric',
-									})
-									const formattedTime = dateTime.toLocaleTimeString('en-US', {
-										hour: 'numeric',
-										minute: '2-digit',
-										hour12: true,
-									})
-
-									return (
-										<div className='rounded-lg border bg-background p-3 shadow-md'>
-											<div className='mb-2'>
-												<p className='text-sm font-medium'>
-													{formattedDate} • {formattedTime}
-												</p>
-											</div>
-											<div className='space-y-1 text-sm'>
-												<div className='flex items-center gap-2'>
-													<span className='text-muted-foreground'>Rank</span>
-													<span className='font-medium'>#{data.rank}</span>
-												</div>
-												<div className='flex items-center gap-2'>
-													<span className='text-muted-foreground'>Rating</span>
-													<span className='font-medium'>{data.rating}</span>
-												</div>
-											</div>
-										</div>
-									)
-								}}
-							/>
-							<Area
-								dataKey='rating'
-								type='natural'
-								fill='url(#fillRating)'
-								stroke='var(--color-rating)'
-								yAxisId='rating'
-							/>
-							<Area
-								dataKey='ranking'
-								type='natural'
-								fill='url(#fillRanking)'
-								stroke='var(--color-ranking)'
-								yAxisId='ranking'
-							/>
-							<ChartLegend content={<ChartLegendContent />} />
-						</AreaChart>
-					</ChartContainer>
+					<RatingHistoryChart
+						data={chartData}
+						rankLabel={seasonId ? 'Season Rank' : 'Rank Position'}
+						description={`${playerName}'s ${seasonId ? `season rank and rating through ${seasonName}` : 'ranking and rating over time'}. ${seasonId ? 'Season rank' : 'Current rank'}: ${latest?.ranking ?? 'N/A'}, rating: ${latest?.rating.toFixed(2) ?? 'N/A'}.`}
+					/>
 				</CardContent>
 			</Card>
+
+			{seasonId && (
+				<Card>
+					<CardHeader className='pb-3'>
+						<CardTitle className='flex items-center gap-2 text-lg'>
+							<CalendarDays className='h-5 w-5' />
+							{seasonName} games
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<PlayerSeasonSummary
+							seasonName={seasonName}
+							standing={standingSnapshot?.data()}
+							slots={slots}
+						/>
+					</CardContent>
+				</Card>
+			)}
 
 			{/* Team History Card */}
 			<Card>
 				<CardHeader className='pb-3'>
 					<CardTitle className='flex items-center gap-2 text-lg'>
 						<Users className='h-5 w-5' />
-						Team History
+						{seasonId ? 'Team' : 'Team History'}
 					</CardTitle>
 				</CardHeader>
 				<CardContent className='p-0'>
-					{teamHistory.length > 0 ? (
+					{shownTeamHistory.length > 0 ? (
 						<ul aria-label='Team history' className='list-none m-0 p-0'>
-							{teamHistory.map((entry, index) => (
+							{shownTeamHistory.map((entry, index) => (
 								<li key={`${entry.seasonId}-${entry.teamId}-${index}`}>
 									<SeasonHistoryRow
 										to={`/teams/${entry.teamId}/${entry.seasonId}`}
@@ -814,3 +545,82 @@ export const PlayerRankingHistory = ({
 		</div>
 	)
 }
+
+/** The page's shape while the history loads. */
+const PlayerHistorySkeleton = ({ className }: { className?: string }) => (
+	<div className='container max-w-6xl mx-auto py-8 space-y-6'>
+		{/* Back button skeleton */}
+		<div className='flex items-center gap-4'>
+			<div className='h-8 w-32 rounded-md bg-gray-200 animate-pulse relative overflow-hidden'>
+				<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
+			</div>
+		</div>
+
+		<Card className={`${className} pt-0`}>
+			{/* Header skeleton that matches the real layout */}
+			<CardHeader className='flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row'>
+				<div className='grid flex-1 gap-1'>
+					<div className='flex items-center gap-2'>
+						<Trophy className='h-5 w-5 text-gray-300' />
+						<div className='h-6 w-32 rounded bg-gray-200 animate-pulse relative overflow-hidden'>
+							<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
+						</div>
+					</div>
+				</div>
+				{/* Player selector skeleton */}
+				<div className='hidden h-9 w-[200px] rounded-lg bg-gray-200 animate-pulse sm:ml-auto sm:flex relative overflow-hidden'>
+					<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
+				</div>
+			</CardHeader>
+
+			{/* Chart content skeleton */}
+			<CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
+				<div className='aspect-auto h-[250px] w-full'>
+					{/* Chart area with subtle grid pattern to simulate chart */}
+					<div className='h-full w-full rounded-lg border bg-gray-50 relative overflow-hidden'>
+						{/* Simulate chart grid lines */}
+						<div className='absolute inset-0 opacity-30'>
+							{/* Horizontal lines */}
+							{Array.from({ length: 5 }).map((_, i) => (
+								<div
+									key={`h-${i}`}
+									className='absolute w-full border-t border-gray-300'
+									style={{ top: `${(i + 1) * 20}%` }}
+								/>
+							))}
+							{/* Vertical lines */}
+							{Array.from({ length: 6 }).map((_, i) => (
+								<div
+									key={`v-${i}`}
+									className='absolute h-full border-l border-gray-300'
+									style={{ left: `${(i + 1) * 16.66}%` }}
+								/>
+							))}
+						</div>
+
+						{/* Simulate chart curves */}
+						<div className='absolute inset-4 flex items-end justify-between'>
+							{Array.from({ length: 8 }).map((_, i) => {
+								// Generate height once per render using a deterministic value
+								const height = ((i * 7 + 13) % 60) + 20
+								return (
+									<div key={i} className='flex flex-col items-center space-y-1'>
+										<div
+											className='w-2 bg-gray-300 animate-pulse relative overflow-hidden'
+											style={{ height: `${height}%` }}
+										>
+											<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 animate-shimmer' />
+										</div>
+									</div>
+								)
+							})}
+						</div>
+
+						{/* Main shimmer overlay for the entire chart area */}
+						<div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer' />
+					</div>
+				</div>
+			</CardContent>
+		</Card>
+	</div>
+)
