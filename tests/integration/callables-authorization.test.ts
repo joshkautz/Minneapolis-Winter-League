@@ -101,6 +101,7 @@ const NON_CALLABLES = new Set([
 	'reconcileTeamPaymentsDaily',
 	'emailUnsubscribe',
 	'sendQueuedEmail',
+	'emailContributionReceipt',
 	'rebuildRankingsNightly',
 	'sweepTeamPaymentsHourly',
 	'stripeWebhook',

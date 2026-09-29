@@ -29,6 +29,9 @@ const RETRIED = [
 	// Sends queued email; the mail id is Resend's idempotency key, so a retry
 	// after an unrecorded send does not deliver twice.
 	'sendQueuedEmail',
+	// Queues a payment's or refund's receipt, under a stable mail id, so a
+	// retry after it was queued queues nothing.
+	'emailContributionReceipt',
 ]
 
 /** Not retried, each for a stated reason. */

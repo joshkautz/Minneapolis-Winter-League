@@ -54,6 +54,7 @@ export { onOfferUpdated } from './triggers/documents/offerUpdated.js'
 export { updateTeamRegistrationOnPlayerChange } from './triggers/documents/playerUpdated.js'
 export { updateTeamRegistrationOnRosterChange } from './triggers/documents/teamUpdated.js'
 export { updateTeamRegistrationOnContributionChange } from './triggers/documents/contributionWritten.js'
+export { emailContributionReceipt } from './triggers/documents/contributionReceipt.js'
 export { onTeamRegistrationChange } from './triggers/documents/teamRegistrationLock.js'
 export { sendQueuedEmail } from './triggers/documents/mailQueued.js'
 

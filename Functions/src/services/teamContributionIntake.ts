@@ -21,6 +21,7 @@ import {
 } from '../shared/contributions.js'
 import { contributionStateFromPaymentIntent } from '../shared/settlement.js'
 import { removeReservation } from '../shared/checkoutReservations.js'
+import { queueUnattributableRefundReceipt } from '../email/receipts.js'
 
 export type IntakeOutcome =
 	'recorded' | 'already-recorded' | 'not-paid' | 'refunded-unattributable'
@@ -77,12 +78,23 @@ async function takeIn(
 	}
 
 	const { firebaseUID, teamId, seasonId } = metadata ?? {}
+	// The payer, told their money came back; Stripe's own emails are off.
+	const tellPayer = async (): Promise<void> => {
+		if (!firebaseUID) return
+		await queueUnattributableRefundReceipt(firestore, {
+			playerId: firebaseUID,
+			seasonId,
+			paymentIntent,
+			amountCents: state.amountCents,
+		})
+	}
 	if (!firebaseUID || !teamId || !seasonId) {
 		logger.error('Team contribution is missing its metadata; refunding it', {
 			paymentIntentId,
 			metadata,
 		})
 		await refundUnattributableMoney(stripe, paymentIntentId)
+		await tellPayer()
 		return 'refunded-unattributable'
 	}
 
@@ -112,6 +124,7 @@ async function takeIn(
 				paymentIntentId,
 			})
 			await refundUnattributableMoney(stripe, paymentIntentId)
+			await tellPayer()
 			return 'refunded-unattributable'
 		}
 		throw error

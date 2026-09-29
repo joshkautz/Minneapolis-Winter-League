@@ -14,6 +14,14 @@ import {
 } from './templates/SeasonAnnouncement.js'
 import { TestEmail, type TestEmailProps } from './templates/TestEmail.js'
 import {
+	TeamPaymentReceipt,
+	teamPaymentReceiptSubject,
+	TeamRefundReceipt,
+	teamRefundReceiptSubject,
+	type TeamPaymentReceiptProps,
+	type TeamRefundReceiptProps,
+} from './templates/Receipts.js'
+import {
 	TeamInvitation,
 	TeamInvitationAccepted,
 	teamInvitationAcceptedSubject,
@@ -153,6 +161,52 @@ export const TEMPLATES = {
 			playerName: 'Alex Chen',
 			joinedTeamName: 'Snow Owls',
 			offerType: 'invitation',
+		},
+	}),
+	teamPaymentReceipt: define<TeamPaymentReceiptProps>({
+		// A receipt is part of the payment, so it cannot be turned off.
+		category: 'account',
+		subject: teamPaymentReceiptSubject,
+		footerReason:
+			'You are receiving this receipt because you paid toward a team’s registration.',
+		component: TeamPaymentReceipt,
+		sample: {
+			teamName: 'Frost Giants',
+			seasonName: '2026 Fall',
+			amount: '$250.00',
+			paidOn: 'Thursday, October 1, 2026',
+			paymentMethod: 'Visa •••• 4242',
+			receiptUrl: 'https://pay.stripe.com/receipts/sample',
+			standing: {
+				paid: '$750.00',
+				fee: '$1,000.00',
+				remaining: '$250.00',
+				signedPlayers: 8,
+				signedPlayersNeeded: 10,
+			},
+		},
+	}),
+	teamRefundReceipt: define<TeamRefundReceiptProps>({
+		category: 'account',
+		subject: teamRefundReceiptSubject,
+		footerReason:
+			'You are receiving this receipt because you paid toward a team’s registration.',
+		component: TeamRefundReceipt,
+		sample: {
+			teamName: 'Frost Giants',
+			seasonName: '2026 Fall',
+			amount: '$250.00',
+			refundedOn: 'Saturday, October 31, 2026',
+			originallyPaid: '$250.00',
+			fullRefund: true,
+			receiptUrl: 'https://pay.stripe.com/receipts/sample',
+			standing: {
+				paid: '$500.00',
+				fee: '$1,000.00',
+				remaining: '$500.00',
+				signedPlayers: 10,
+				signedPlayersNeeded: 10,
+			},
 		},
 	}),
 	testEmail: define<TestEmailProps>({
