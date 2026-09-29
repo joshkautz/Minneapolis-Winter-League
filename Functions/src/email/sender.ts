@@ -14,6 +14,7 @@ import { EMAIL_CONFIG } from '../config/constants.js'
 import { isRunningInEmulator } from '../config/environment.js'
 import { playerContactRef, playerRef } from '../shared/database.js'
 import { Collections, type MailDocument, type MailStatus } from '../types.js'
+import { isUndeliverable } from './delivery.js'
 import { renderEmail, type RenderedEmail } from './render.js'
 import { deliveryFor, readEmailSettings } from './settings.js'
 import { isTemplateName, type TemplateName } from './templates.js'
@@ -72,6 +73,14 @@ export async function deliverQueuedEmail(
 	// is sent, so it also stops email queued before the ban.
 	if (recipient === 'banned') {
 		return finish('banned', { reason: 'The player is banned from the league.' })
+	}
+	// Mailing an address that bounced for good hurts the league's standing
+	// with every mailbox provider; an admin has to change it first.
+	if (recipient === 'undeliverable') {
+		return finish('undeliverable', {
+			reason:
+				'Email to this address bounced or is blocked. An admin can change it in player management.',
+		})
 	}
 	if (!recipient) {
 		return finish('failed', { reason: 'The recipient has no email address.' })
@@ -153,7 +162,7 @@ interface ResolvedRecipient {
 async function resolveRecipient(
 	firestore: Firestore,
 	mail: MailDocument
-): Promise<ResolvedRecipient | 'banned' | null> {
+): Promise<ResolvedRecipient | 'banned' | 'undeliverable' | null> {
 	if (mail.toAddress) {
 		return {
 			address: mail.toAddress,
@@ -169,6 +178,9 @@ async function resolveRecipient(
 	if (player.data()?.banned === true) return 'banned'
 	const address = contact.data()?.email
 	if (!address) return null
+	if (isUndeliverable({ ...contact.data(), email: address })) {
+		return 'undeliverable'
+	}
 	return {
 		address,
 		firstName: player.data()?.firstname ?? null,

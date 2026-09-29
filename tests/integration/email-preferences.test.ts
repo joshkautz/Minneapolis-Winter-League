@@ -47,6 +47,7 @@ const call = async (
 	(await (fn as Callable).run({ auth, data })) as {
 		email: string
 		preferences: typeof ALL_ON
+		undeliverable: boolean
 	}
 
 const codeOf = (
@@ -77,6 +78,7 @@ describe('getEmailPreferences', () => {
 		expect(await call(getEmailPreferences, withLink())).toEqual({
 			email: 'p•••@example.com',
 			preferences: ALL_ON,
+			undeliverable: false,
 		})
 	})
 
@@ -137,6 +139,28 @@ describe('getEmailPreferences', () => {
 		await firestore.collection('playerContacts').doc(PLAYER).delete()
 		expect(await codeOf(getEmailPreferences, {}, authed(PLAYER))).toBe(
 			'not-found'
+		)
+	})
+
+	it('says whether the address is bouncing, so the profile can warn', async () => {
+		expect((await call(getEmailPreferences, withLink())).undeliverable).toBe(
+			false
+		)
+
+		await firestore
+			.collection('playerContacts')
+			.doc(PLAYER)
+			.update({
+				emailUndeliverable: {
+					address: 'pat@example.com',
+					reason: 'bounced',
+					detail: 'No such mailbox',
+					at: new Date(),
+				},
+			})
+
+		expect((await call(getEmailPreferences, withLink())).undeliverable).toBe(
+			true
 		)
 	})
 

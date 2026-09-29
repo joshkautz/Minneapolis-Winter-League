@@ -35,6 +35,13 @@
 				}
 			},
 			{
+				"source": "/resendWebhook",
+				"function": {
+					"functionId": "resendWebhook",
+					"region": "us-central1"
+				}
+			},
+			{
 				"source": "/unsubscribe",
 				"function": {
 					"functionId": "emailUnsubscribe",

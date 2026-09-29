@@ -15,8 +15,10 @@ else emails players.
    looks up the recipient, checks their preferences and the delivery switch,
    renders the template and sends it (`email/sender.ts`, `email/resend.ts`).
 3. **Record.** The mail document keeps the outcome: `sent` with Resend's id,
-   or why not — `held`, `skipped`, `unsubscribed`, `banned`, `emulated`,
-   `failed`.
+   or why not — `held`, `skipped`, `unsubscribed`, `banned`, `undeliverable`,
+   `emulated`, `failed`.
+4. **Deliver.** Resend's webhook then reports what became of a sent email,
+   recorded as the mail document's `delivery` (see below).
 
 It is retried for failures that may pass (rate limits, Resend outages) and is
 idempotent: an email that is no longer `queued` is left alone, and the mail id
@@ -33,6 +35,30 @@ team update or an announcement would all suggest they can still play. The
 sender checks `players/{uid}.banned` as it sends, so email queued before a
 ban is stopped too, and records it as `banned`. Lifting the ban lets email
 through again.
+
+## Delivery reports: `resendWebhook`
+
+Sent is not delivered: Resend accepts an email and then delivers it, or it
+bounces, is blocked, or is marked as spam. Its webhook reports each of these
+to `resendWebhook` (`api/webhooks/resend.ts`, at
+`mplswinterleague.com/resendWebhook`), which checks the signature against
+`RESEND_WEBHOOK_SECRET` before anything else and records the report on the
+mail document with that `providerId` as `delivery`: `delivered`, `delayed`,
+`bounced`, `complained`, `suppressed` or `failed`, with when and why. Reports
+arrive late and out of order; a later delay never replaces a delivery, and
+nothing replaces a complaint (`supersedes` in `email/delivery.ts`).
+
+It also protects the league's standing with mailbox providers:
+
+- **A permanent bounce, or Resend blocking an address** that bounced before,
+  sets `emailUndeliverable` on the player's contact. The sender stops
+  emailing that address (`undeliverable`), player management warns the
+  admin, and the player's profile says to email leadership. Players cannot
+  change their own email; once an admin changes it, the flag no longer
+  applies. A temporary bounce (a full mailbox, a server down) is recorded
+  but gives the address another chance.
+- **A spam complaint** turns off that kind of email for the player, as Gmail
+  and Yahoo expect. Account email cannot be turned off.
 
 ## The switch: `system/email`
 
@@ -230,4 +256,5 @@ with that key.
 resend doctor                    # CLI, sign-in and domain status
 resend emails list               # recent sends
 resend emails get <id>           # one email's delivery events
+resend webhooks list             # the delivery-report webhook
 ```

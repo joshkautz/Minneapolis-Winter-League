@@ -16,7 +16,7 @@ Functions/src/
   triggers/{auth,documents,payments}/   Firestore and lifecycle triggers
   triggers/scheduled/   onSchedule functions (the team payments sweep and
                         reconciliation, the nightly rankings rebuild)
-  api/webhooks/         the Stripe HTTP endpoint
+  api/webhooks/         the Stripe and Resend HTTP endpoints
   services/             multi-step domain logic: team registration, team payments
                         (checkout reservations, intake, settlement, sweep,
                         reconciliation), team and account deletion, rankings

@@ -192,6 +192,22 @@ export interface PlayerContactDocument extends DocumentData {
 	emailPreferencesUpdatedAt?: Timestamp
 	/** Proves an unsubscribe link came from an email sent to this player. */
 	unsubscribeToken?: string
+	/**
+	 * Set when email to `address` bounced for good or was blocked by Resend,
+	 * reported by its webhook. It applies while `email` is still that
+	 * address: nothing is sent to it, and admins are asked to change it.
+	 */
+	emailUndeliverable?: EmailUndeliverable
+}
+
+/** Why a player's address cannot be emailed; see emailUndeliverable. */
+export interface EmailUndeliverable {
+	/** The address that failed, lowercased. */
+	address: string
+	reason: 'bounced' | 'suppressed'
+	/** The receiving server's or Resend's explanation. */
+	detail: string
+	at: Timestamp
 }
 
 /**
@@ -871,8 +887,22 @@ export type MailStatus =
 	| 'unsubscribed'
 	/** To a banned player, who is never emailed. */
 	| 'banned'
+	/** To an address that bounced for good or is blocked; see emailUndeliverable. */
+	| 'undeliverable'
 	| 'emulated'
 	| 'failed'
+
+/** What became of a sent email, from Resend's webhook. */
+export type DeliveryStatus =
+	'delivered' | 'delayed' | 'bounced' | 'complained' | 'suppressed' | 'failed'
+
+export interface MailDelivery {
+	status: DeliveryStatus
+	/** When Resend saw it happen. */
+	at: Timestamp
+	/** The bounce, block or failure message, when there is one. */
+	detail?: string
+}
 
 /** `mail/{id}`: one email, from queueing to its outcome. */
 export interface MailDocument extends DocumentData {
@@ -891,5 +921,7 @@ export interface MailDocument extends DocumentData {
 	providerId?: string
 	/** Why it was not sent: the setting that held it, or the error. */
 	reason?: string
+	/** What happened after it was sent, as Resend's webhook reports it. */
+	delivery?: MailDelivery
 	attempts: number
 }

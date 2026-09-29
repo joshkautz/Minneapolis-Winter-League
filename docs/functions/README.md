@@ -130,6 +130,9 @@ sent unless `system/email` allows it, and never from the emulator. See
 Both are public HTTP endpoints. The signature check is the only thing between
 them and a forged request, and it runs before any read or write.
 
+- **`resendWebhook`** — Resend's delivery reports: records what became of
+  each sent email, flags addresses that bounce for good and honours spam
+  complaints; see [EMAIL.md](../EMAIL.md).
 - **`stripeWebhook`** — `checkout.session.completed`. A per-player checkout
   writes `stripe/{uid}/payments/{sessionId}`, which fires `onPaymentCreated`.
   A team contribution is recorded in the team's contribution ledger instead;

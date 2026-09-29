@@ -1549,6 +1549,8 @@ export interface EmailPreferencesResponse {
 	/** The player's address, masked: "j•••@example.com". */
 	email: string
 	preferences: EmailPreferences
+	/** Email to this address bounced or is blocked, so none is being sent. */
+	undeliverable: boolean
 }
 
 /** Which emails a player receives: by link from an email, or signed in. */
