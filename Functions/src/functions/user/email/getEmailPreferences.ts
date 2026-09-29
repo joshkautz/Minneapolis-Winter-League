@@ -8,7 +8,8 @@
  * - A link from the player's email (player id and matching token), or the
  *   player signed in as themselves; no sign-in needed with a link, as
  *   CAN-SPAM requires
- * - Only preferences and a masked address are returned
+ * - Only preferences, a masked address and whether it is bouncing are
+ *   returned
  */
 
 import { onCall } from 'firebase-functions/v2/https'
@@ -18,6 +19,7 @@ import {
 	resolvePreferenceAccess,
 	type PreferenceLink,
 } from '../../../email/preferenceAccess.js'
+import { isUndeliverable } from '../../../email/delivery.js'
 import {
 	maskEmail,
 	preferencesOf,
@@ -27,6 +29,8 @@ import {
 export interface EmailPreferencesResponse {
 	email: string
 	preferences: EmailPreferences
+	/** Email to this address bounced or is blocked, so none is being sent. */
+	undeliverable: boolean
 }
 
 export const getEmailPreferences = onCall<PreferenceLink>(
@@ -40,6 +44,7 @@ export const getEmailPreferences = onCall<PreferenceLink>(
 		return {
 			email: maskEmail(contact.email),
 			preferences: preferencesOf(contact),
+			undeliverable: isUndeliverable(contact),
 		}
 	}
 )

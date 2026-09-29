@@ -192,6 +192,22 @@ export interface PlayerContactDocument extends DocumentData {
 	emailPreferencesUpdatedAt?: Timestamp
 	/** Proves an unsubscribe link came from an email sent to this player. */
 	unsubscribeToken?: string
+	/**
+	 * Set when email to `address` bounced for good or was blocked by Resend,
+	 * reported by its webhook. It applies while `email` is still that
+	 * address: nothing is sent to it, and admins are asked to change it.
+	 */
+	emailUndeliverable?: EmailUndeliverable
+}
+
+/** Why a player's address cannot be emailed; see emailUndeliverable. */
+export interface EmailUndeliverable {
+	/** The address that failed, lowercased. */
+	address: string
+	reason: 'bounced' | 'suppressed'
+	/** The receiving server's or Resend's explanation. */
+	detail: string
+	at: Timestamp
 }
 
 /**

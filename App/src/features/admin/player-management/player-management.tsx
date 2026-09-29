@@ -64,6 +64,7 @@ import { Switch } from '@/components/ui/switch'
 import { PageContainer, PageHeader, QueryError } from '@/shared/components'
 import { logger, errorMessage } from '@/shared/utils'
 import {
+	type EmailUndeliverable,
 	type PlayerDocument,
 	type SeasonDocument,
 	type TeamSeasonDocument,
@@ -118,6 +119,10 @@ export const PlayerManagement = () => {
 		useState<PlayerFormData | null>(null)
 
 	const [showAllSeasons, setShowAllSeasons] = useState(false)
+	// The player's address bounced for good or is blocked, per Resend. Kept
+	// out of formData: it is not something the admin edits.
+	const [emailUndeliverable, setEmailUndeliverable] =
+		useState<EmailUndeliverable | null>(null)
 
 	// Check if form has changes compared to original data
 	const hasChanges = useMemo(() => {
@@ -215,6 +220,7 @@ export const PlayerManagement = () => {
 			// Clear old form data and start loading
 			setFormData(null)
 			setOriginalFormData(null)
+			setEmailUndeliverable(null)
 			setIsLoadingPlayerDetails(true)
 
 			try {
@@ -272,6 +278,7 @@ export const PlayerManagement = () => {
 				}
 				setFormData(newFormData)
 				setOriginalFormData(newFormData)
+				setEmailUndeliverable(contactSnap.data()?.emailUndeliverable ?? null)
 			} finally {
 				if (!isCancelled) {
 					setIsLoadingPlayerDetails(false)
@@ -706,6 +713,31 @@ export const PlayerManagement = () => {
 											<p className='text-xs text-muted-foreground'>
 												Changing email updates Firebase Auth
 											</p>
+											{emailUndeliverable &&
+												emailUndeliverable.address ===
+													formData.email.trim().toLowerCase() && (
+													<Alert variant='destructive'>
+														<AlertTriangle className='h-4 w-4' />
+														<AlertTitle>
+															This address cannot get email
+														</AlertTitle>
+														<AlertDescription>
+															Email to it{' '}
+															{emailUndeliverable.reason === 'bounced'
+																? 'bounced'
+																: 'is blocked after bouncing'}{' '}
+															on{' '}
+															{emailUndeliverable.at
+																.toDate()
+																.toLocaleDateString()}
+															{emailUndeliverable.detail
+																? `: ${emailUndeliverable.detail}`
+																: '.'}{' '}
+															No league email is sent to it. Change it to reach
+															this player.
+														</AlertDescription>
+													</Alert>
+												)}
 										</div>
 
 										<div className='space-y-2'>

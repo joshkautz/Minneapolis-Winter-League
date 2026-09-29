@@ -5,7 +5,10 @@
 import { logger } from 'firebase-functions/v2'
 
 export type SecretName =
-	'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET' | 'RESEND_API_KEY'
+	| 'STRIPE_SECRET_KEY'
+	| 'STRIPE_WEBHOOK_SECRET'
+	| 'RESEND_API_KEY'
+	| 'RESEND_WEBHOOK_SECRET'
 
 /**
  * Returned in place of a missing secret so functions still load without one.
@@ -15,6 +18,7 @@ const SECRET_PLACEHOLDERS: Record<SecretName, string> = {
 	STRIPE_SECRET_KEY: 'DEVELOPMENT_PLACEHOLDER_STRIPE',
 	STRIPE_WEBHOOK_SECRET: 'DEVELOPMENT_PLACEHOLDER_STRIPE_WEBHOOK',
 	RESEND_API_KEY: 'DEVELOPMENT_PLACEHOLDER_RESEND',
+	RESEND_WEBHOOK_SECRET: 'DEVELOPMENT_PLACEHOLDER_RESEND_WEBHOOK',
 }
 
 const warnedMissingSecrets = new Set<SecretName>()

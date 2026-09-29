@@ -62,9 +62,9 @@ Top-level collections are listed in the `Collections` enum, which is duplicated
 in `Functions/src/types.ts` and `App/src/types.ts` — **keep both in sync**.
 Per-season state hangs off subcollections rather than the parent document:
 
-- `playerContacts/{uid}` — the player's email and email preferences;
-  **private** to the player and admins, because `players/{uid}` is public.
-  Never put an email back on the player document.
+- `playerContacts/{uid}` — the player's email, email preferences and any
+  bounce flag; **private** to the player and admins, because `players/{uid}`
+  is public. Never put an email back on the player document.
 - `mail/{id}` — the email outbox, readable by Functions only; sending is
   gated by `system/email` (see `docs/EMAIL.md`)
 - `players/{uid}/playerSeasons/{seasonId}` — paid, signed, captain, team

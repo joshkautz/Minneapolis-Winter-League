@@ -72,6 +72,7 @@ export { rebuildRankingsNightly } from './triggers/scheduled/rebuildRankingsNigh
 // Webhooks
 export { stripeWebhook } from './api/webhooks/stripe.js'
 export { emailUnsubscribe } from './api/emailUnsubscribe.js'
+export { resendWebhook } from './api/webhooks/resend.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // CALLABLE FUNCTIONS

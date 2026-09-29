@@ -8,6 +8,7 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { LoadingSpinner } from '@/shared/components'
+import { LEAGUE_CONTACT } from '@/shared/utils'
 import {
 	EmailPreferencesForm,
 	useEmailPreferences,
@@ -35,6 +36,14 @@ export const EmailPreferencesSection = () => {
 				{state.status === 'error' && (
 					<Alert variant='destructive'>
 						<AlertDescription>{state.message}</AlertDescription>
+					</Alert>
+				)}
+				{state.status === 'ready' && state.undeliverable && (
+					<Alert variant='destructive' className='mb-4'>
+						<AlertDescription>
+							Email to {state.email} is bouncing, so the league cannot reach
+							you. Email {LEAGUE_CONTACT} to change your address.
+						</AlertDescription>
 					</Alert>
 				)}
 				{state.status === 'ready' && (

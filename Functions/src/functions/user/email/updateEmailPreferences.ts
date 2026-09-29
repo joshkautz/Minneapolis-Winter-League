@@ -12,6 +12,7 @@
  *   (sign-in, receipts) cannot be turned off
  */
 
+import { isUndeliverable } from '../../../email/delivery.js'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
@@ -69,6 +70,10 @@ export const updateEmailPreferences = onCall<UpdateEmailPreferencesRequest>(
 		)
 		const preferences = await savePreferences(firestore, playerId, changes)
 		logger.info('Email preferences updated', { playerId, changes })
-		return { email: maskEmail(contact.email), preferences }
+		return {
+			email: maskEmail(contact.email),
+			preferences,
+			undeliverable: isUndeliverable(contact),
+		}
 	}
 )

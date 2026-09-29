@@ -10,7 +10,13 @@ import { errorMessage, logger } from '@/shared/utils'
 export type EmailPreferencesState =
 	| { status: 'loading' }
 	| { status: 'error'; message: string }
-	| { status: 'ready'; email: string; preferences: EmailPreferences }
+	| {
+			status: 'ready'
+			email: string
+			preferences: EmailPreferences
+			/** The league cannot email this address: it bounced or is blocked. */
+			undeliverable: boolean
+	  }
 
 /**
  * A player's email preferences, and a way to change them.
@@ -31,8 +37,10 @@ export const useEmailPreferences = (link: EmailPreferenceLink | null) => {
 		getEmailPreferencesViaFunction(
 			playerId !== undefined ? { playerId, token } : {}
 		)
-			.then(({ email, preferences }) => {
-				if (!cancelled) setState({ status: 'ready', email, preferences })
+			.then(({ email, preferences, undeliverable }) => {
+				if (!cancelled) {
+					setState({ status: 'ready', email, preferences, undeliverable })
+				}
 			})
 			.catch((error: unknown) => {
 				logger.error('Failed to load email preferences', error)
@@ -58,11 +66,12 @@ export const useEmailPreferences = (link: EmailPreferenceLink | null) => {
 			savingRef.current = true
 			setSaving(true)
 			try {
-				const { email, preferences } = await updateEmailPreferencesViaFunction(
-					playerId !== undefined ? { playerId, token } : {},
-					changes
-				)
-				setState({ status: 'ready', email, preferences })
+				const { email, preferences, undeliverable } =
+					await updateEmailPreferencesViaFunction(
+						playerId !== undefined ? { playerId, token } : {},
+						changes
+					)
+				setState({ status: 'ready', email, preferences, undeliverable })
 				return true
 			} catch (error) {
 				logger.error('Failed to update email preferences', error)

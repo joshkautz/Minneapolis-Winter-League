@@ -104,6 +104,7 @@ const NON_CALLABLES = new Set([
 	'rebuildRankingsNightly',
 	'sweepTeamPaymentsHourly',
 	'stripeWebhook',
+	'resendWebhook',
 	'onOfferUpdated',
 	'onPaymentCreated',
 	'onTeamRegistrationChange',
