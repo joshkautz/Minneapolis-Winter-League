@@ -287,7 +287,14 @@ longer produces:
 | `rankings/{playerId}`                    | player           | All-time rating and rank, games, seasons, change over the last game night |
 | `player-ranking-history/{playerId}`      | player           | Every round since their first game: rating, all-time rank, season rank    |
 | `seasons/{seasonId}/rankings/{playerId}` | rostered player  | Rank that season, rating, rating change, games, wins, losses              |
-| `rankings-history/{roundId}_{seasonId}`  | round            | Every player's rating after the round (retiring)                          |
+| `rankings-history/{roundId}_{seasonId}`  | round            | Every player's rating after the round; no longer read (retiring)          |
+
+**On the site**, `/players` and `/players/{id}` switch between all time and
+one season with `?season=<id>` (`features/public/rankings/`). All time reads
+`rankings`; a season reads `seasons/{seasonId}/rankings`. A player's page reads
+their one `player-ranking-history` document and charts all-time rank, or,
+for a season, season rank, and pairs each round with the game their team
+played at that kickoff to show the result and what it did to their rating.
 
 **Season rank** ranks a round's players among everyone on a roster that season
 who has a rating. Ranking only those who had played so far would leave half the
