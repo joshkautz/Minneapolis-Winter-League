@@ -32,8 +32,8 @@ import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	getCurrentSeason,
 } from '../../shared/database.js'
-import { deleteUnregisteredTeamsForSeasonLock } from '../../services/teamDeletionService.js'
-import { settleTeamSeason } from '../../services/teamSettlementService.js'
+import { deleteUnregisteredTeamsForSeasonLock } from '../../services/teamDeletion.js'
+import { settleTeamSeason } from '../../services/teamSettlement.js'
 import { closeOpenCheckouts } from '../../services/teamCheckoutReservations.js'
 import { createStripeClient } from '../../shared/stripe.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'

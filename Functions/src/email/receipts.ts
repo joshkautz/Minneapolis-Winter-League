@@ -28,7 +28,7 @@ import {
 	paidByRosterCents,
 	teamContributionsCollection,
 } from '../shared/contributions.js'
-import { countsTowardRegistration } from '../services/teamRegistrationService.js'
+import { countsTowardRegistration } from '../services/teamRegistration.js'
 import { queueEmailOnce } from './outbox.js'
 import type { TeamStanding } from './templates/Receipts.js'
 

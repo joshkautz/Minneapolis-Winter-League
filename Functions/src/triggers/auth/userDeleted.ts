@@ -15,7 +15,7 @@ import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { handleFunctionError } from '../../shared/errors.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
-import { deletePlayerAccountData } from '../../services/accountDeletionService.js'
+import { deletePlayerAccountData } from '../../services/accountDeletion.js'
 
 export const userDeleted = region(FIREBASE_CONFIG.REGION)
 	// A v1 trigger retries a throw only with this set, as a Gen 2 one does

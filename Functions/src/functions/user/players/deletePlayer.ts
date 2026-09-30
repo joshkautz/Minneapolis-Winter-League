@@ -28,7 +28,7 @@ import { Collections, type SeasonDocument } from '../../../types.js'
 import { validateBasicAuthentication } from '../../../shared/auth.js'
 import { getCurrentSeason, playerSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { deletePlayerAccountData } from '../../../services/accountDeletionService.js'
+import { deletePlayerAccountData } from '../../../services/accountDeletion.js'
 
 /** How recently the caller must have signed in to delete their account. */
 const RECENT_SIGN_IN_SECONDS = 5 * 60

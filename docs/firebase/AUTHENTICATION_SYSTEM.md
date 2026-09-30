@@ -60,6 +60,6 @@ player and admin pages back to the home page.
 A player deletes their own account with `deletePlayer`, which refuses while
 they are on a team this season, banned, or the only admin. Deleting the Auth
 user from the console fires the `userDeleted` trigger instead. Both run
-`services/accountDeletionService`, which removes the player's data but keeps
+`services/accountDeletion`, which removes the player's data but keeps
 their waiver signatures, their team contributions and their posts. See the
 [Functions reference](../functions/README.md#account-deletion).

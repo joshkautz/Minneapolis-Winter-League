@@ -12,7 +12,7 @@ import type {
  *
  * The limits come from `Functions/src/shared/teamPaymentRules.ts`, the file
  * the server uses. The arithmetic mirrors `Functions/src/shared/contributions.ts`
- * and `teamRegistrationService.ts`, so the page can explain itself and
+ * and `teamRegistration.ts`, so the page can explain itself and
  * validate a form before a round trip — the server is still the only check
  * that counts. Change that arithmetic there and here together.
  */

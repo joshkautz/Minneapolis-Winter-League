@@ -44,7 +44,7 @@
  * # Why this module exists
  *
  * The 2026 v2 refactor introduced this dual-write pattern. Before
- * centralizing here, five different files (`offerUpdated.ts`,
+ * centralizing here, five different files (`onOfferUpdated.ts`,
  * `updateRoster.ts`, `updatePlayerAdmin.ts`, `updateTeamAdmin.ts`,
  * `userDeleted.ts`) each implemented their own version of the dual-write,
  * and one drifted (a missing `team: null` reset on remove). Centralizing

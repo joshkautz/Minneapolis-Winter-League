@@ -23,7 +23,7 @@ import { recordContributionFromStripe } from '../../Functions/src/services/teamC
 import {
 	refundContribution,
 	settleTeamSeason,
-} from '../../Functions/src/services/teamSettlementService.js'
+} from '../../Functions/src/services/teamSettlement.js'
 import { deliverQueuedEmail } from '../../Functions/src/email/sender.js'
 
 /**

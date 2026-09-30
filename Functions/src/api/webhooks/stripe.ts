@@ -16,7 +16,7 @@ import {
 	createStripeClient,
 	TEAM_CONTRIBUTION_KIND,
 } from '../../shared/stripe.js'
-import { reconcileContribution } from '../../services/teamSettlementService.js'
+import { reconcileContribution } from '../../services/teamSettlement.js'
 import { recordContributionFromStripe } from '../../services/teamContributionIntake.js'
 import Stripe from 'stripe'
 

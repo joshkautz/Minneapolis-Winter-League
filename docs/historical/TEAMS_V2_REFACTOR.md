@@ -4,7 +4,8 @@
 > as the design record behind the `playerSeasons` / `teamSeasons` / `roster`
 > data model. The scripts it names under `scripts/migrations/` have since
 > been deleted (git history has them), and the maintenance switch is now
-> `scripts/production/set-maintenance.js`.
+> `scripts/production/set-maintenance.js`. The Functions file names below
+> predate the September 2026 rename that named each file after its export.
 
 ## Seasons subcollection rename (pre-cutover cleanup)
 

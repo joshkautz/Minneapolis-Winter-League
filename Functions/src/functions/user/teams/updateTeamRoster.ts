@@ -35,7 +35,7 @@ import {
 	type SeasonDocument,
 	ROSTER_SUBCOLLECTION,
 } from '../../../types.js'
-import { countsTowardRegistration } from '../../../services/teamRegistrationService.js'
+import { countsTowardRegistration } from '../../../services/teamRegistration.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
 

@@ -32,8 +32,8 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
-import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'
-import { settleTeamSeason } from '../../services/teamSettlementService.js'
+import { updateTeamRegistrationStatus } from '../../services/teamRegistration.js'
+import { settleTeamSeason } from '../../services/teamSettlement.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 export const updateTeamRegistrationOnContributionChange = onDocumentWritten(

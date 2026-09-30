@@ -39,7 +39,7 @@ import { TEXT_RULES, textProblem } from '@/shared/text-rules'
 
 /**
  * Posts outlive the account that wrote them, so a deleted player's posts and
- * replies stay up under this name; see services/accountDeletionService.ts.
+ * replies stay up under this name; see services/accountDeletion.ts.
  */
 const DELETED_AUTHOR_NAME = 'Former player'
 

@@ -13,7 +13,7 @@ import {
 	setContributionStatus,
 	teamContributionsCollection,
 } from '../../Functions/src/shared/contributions.js'
-import { deleteTeamSeasonWithCleanup } from '../../Functions/src/services/teamDeletionService.js'
+import { deleteTeamSeasonWithCleanup } from '../../Functions/src/services/teamDeletion.js'
 import { mergeTeams } from '../../Functions/src/index.js'
 import { teamSeasonRef } from '../../Functions/src/shared/database.js'
 

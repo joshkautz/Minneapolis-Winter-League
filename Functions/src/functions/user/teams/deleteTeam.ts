@@ -13,7 +13,7 @@ import { SeasonDocument } from '../../../types.js'
 import { validateAuthentication } from '../../../shared/auth.js'
 import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletionService.js'
+import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletion.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
 

@@ -250,7 +250,7 @@ export interface PlayerSeasonDocument extends DocumentData {
 	 * because Firestore has no joins and both reads are hot paths. The App
 	 * never writes either side directly — all membership changes flow
 	 * through Functions callables (`updateTeamRoster`, `updateTeamAdmin`,
-	 * `updatePlayerAdmin`) and triggers (`offerUpdated`), which use the
+	 * `updatePlayerAdmin`) and triggers (`onOfferUpdated`), which use the
 	 * `shared/membership.ts` helpers to write both sides atomically.
 	 */
 	team: DocumentReference<TeamDocument> | null

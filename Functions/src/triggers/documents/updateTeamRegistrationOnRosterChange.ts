@@ -12,8 +12,8 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore'
 import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
-import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'
-import { settleTeamSeason } from '../../services/teamSettlementService.js'
+import { updateTeamRegistrationStatus } from '../../services/teamRegistration.js'
+import { settleTeamSeason } from '../../services/teamSettlement.js'
 import { closeOpenCheckouts } from '../../services/teamCheckoutReservations.js'
 import { createStripeClient } from '../../shared/stripe.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
@@ -64,7 +64,7 @@ export const updateTeamRegistrationOnRosterChange = onDocumentWritten(
 				await settleTeamSeason(teamId, seasonId)
 			}
 		} catch (error) {
-			// Rethrown so the platform retries; see playerUpdated.ts.
+			// Rethrown so the platform retries; see updateTeamRegistrationOnPlayerChange.ts.
 			logger.error('Error updating team registration on roster change:', {
 				teamId,
 				seasonId,

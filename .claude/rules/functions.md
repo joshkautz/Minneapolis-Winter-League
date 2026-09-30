@@ -31,7 +31,14 @@ Functions/src/
   types.ts              Collections enum and document interfaces
 ```
 
-One callable per file, named after the operation (`create.ts`, `updateStatus.ts`).
+One function per file, and the file is named after its export:
+`functions/user/teams/createTeam.ts` exports `createTeam`,
+`triggers/documents/onOfferUpdated.ts` exports `onOfferUpdated`. A
+deployed function's name is its export, so a grep for the name finds the
+file. Rename a file freely; never rename an export — that deletes the
+deployed function and creates a new one, which the CI deploy guard
+refuses. A service module is named for what it does, without a `Service`
+suffix (`services/teamSettlement.ts`).
 
 ## Writing a callable
 

@@ -11,7 +11,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { PlayerSeasonDocument } from '../../types.js'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
-import { updateTeamRegistrationStatus } from '../../services/teamRegistrationService.js'
+import { updateTeamRegistrationStatus } from '../../services/teamRegistration.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
 
 export const updateTeamRegistrationOnPlayerChange = onDocumentUpdated(

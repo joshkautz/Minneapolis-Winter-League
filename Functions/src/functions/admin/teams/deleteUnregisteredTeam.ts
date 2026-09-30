@@ -20,7 +20,7 @@ import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { getCurrentSeason, teamSeasonRef } from '../../../shared/database.js'
-import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletionService.js'
+import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletion.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface DeleteUnregisteredTeamRequest {

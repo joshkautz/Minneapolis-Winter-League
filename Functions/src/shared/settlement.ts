@@ -6,7 +6,7 @@
  * of a team's money beyond its total, a payer who left before the team
  * registered. Deciding which is pure, and kept apart from the code that calls
  * Stripe, so every decision can be tested exhaustively without a payment
- * processor. `services/teamSettlementService.ts` applies a plan; nothing here
+ * processor. `services/teamSettlement.ts` applies a plan; nothing here
  * has side effects.
  *
  * See docs/TEAM_PAYMENTS.md, "Returning money that should not be kept".

@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
 import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
-import { updateTeamRegistrationStatus } from '../../Functions/src/services/teamRegistrationService.js'
+import { updateTeamRegistrationStatus } from '../../Functions/src/services/teamRegistration.js'
 import {
 	recordContribution,
 	setContributionStatus,
