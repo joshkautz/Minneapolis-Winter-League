@@ -6,6 +6,7 @@ import { updateTeamRegistrationStatus } from '../../Functions/src/services/teamR
 import {
 	recordContribution,
 	setContributionStatus,
+	teamContributionsCollection,
 } from '../../Functions/src/shared/contributions.js'
 import { updateTeamRegistrationOnContributionChange } from '../../Functions/src/index.js'
 import {
@@ -364,5 +365,85 @@ describe('money arriving last', () => {
 		})
 
 		expect(await isRegistered()).toBe(false)
+	})
+})
+
+describe('registration closing', () => {
+	const MINUTE = 60_000
+	const CLOSE = Date.now() - 5 * MINUTE
+
+	beforeEach(async () => {
+		await seasonRef().update({
+			registrationEnd: Timestamp.fromMillis(CLOSE),
+		})
+	})
+
+	it('does not register a team whose tenth waiver comes after the close', async () => {
+		await seedSignedRoster(MIN)
+		await contribute('pi_1', TOTAL)
+
+		await updateTeamRegistrationStatus(TEAM, SEASON, { trigger: 'other' })
+
+		expect(await isRegistered()).toBe(false)
+	})
+
+	it('registers a team whose last payment comes from a checkout opened in time', async () => {
+		// Five minutes after the close: a checkout opened just before it can
+		// still be being paid.
+		await seedSignedRoster(MIN)
+		await contribute('pi_1', TOTAL)
+
+		await updateTeamRegistrationStatus(TEAM, SEASON, { trigger: 'payment' })
+
+		expect(await isRegistered()).toBe(true)
+	})
+
+	it('does not register a team on a payment once no checkout could still be open', async () => {
+		await seedSignedRoster(MIN)
+		await contribute('pi_1', TOTAL)
+
+		await updateTeamRegistrationStatus(TEAM, SEASON, {
+			trigger: 'payment',
+			now: new Date(CLOSE + 32 * MINUTE),
+		})
+
+		expect(await isRegistered()).toBe(false)
+	})
+
+	it('passes a new payment through the contribution trigger as a payment', async () => {
+		await seedSignedRoster(MIN)
+		await contribute('pi_1', TOTAL)
+		const after = (
+			await teamContributionsCollection(firestore, TEAM, SEASON)
+				.doc('pi_1')
+				.get()
+		).data()
+
+		await (
+			updateTeamRegistrationOnContributionChange as unknown as {
+				run: (event: unknown) => Promise<void>
+			}
+		).run({
+			id: 'evt-late',
+			params: { teamId: TEAM, seasonId: SEASON, paymentIntentId: 'pi_1' },
+			data: {
+				before: { exists: false, data: () => undefined },
+				after: { exists: true, data: () => after },
+			},
+		})
+
+		expect(await isRegistered()).toBe(true)
+	})
+
+	it('still lets an admin fix an earlier, per-player season after its close', async () => {
+		await seedSeason()
+		await seasonRef().update({ registrationEnd: Timestamp.fromMillis(CLOSE) })
+		for (let i = 0; i < MIN; i++) {
+			await seedPlayer(`paid-${i}`, { signed: true, paid: true })
+		}
+
+		await updateTeamRegistrationStatus(TEAM, SEASON)
+
+		expect(await isRegistered()).toBe(true)
 	})
 })

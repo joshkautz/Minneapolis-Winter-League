@@ -25,6 +25,7 @@ import {
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
 import { sweepTeamPayments } from '../../Functions/src/services/teamPaymentsSweep.js'
+import { LATE_PAYMENT_GRACE_MS } from '../../Functions/src/shared/registrationWindow.js'
 import {
 	RECONCILIATION_LOOKBACK_DAYS,
 	reconcileTeamPayments,
@@ -50,7 +51,8 @@ const LOCK = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
 const SEASON = 'season-1'
 const DAY_MS = 24 * 60 * 60 * 1000
 const REGISTRATION_END = Date.now() + 10 * DAY_MS
-const AFTER_CLOSE = new Date(REGISTRATION_END + 1000)
+// Once a checkout opened before the close could no longer complete a team.
+const AFTER_CLOSE = new Date(REGISTRATION_END + LATE_PAYMENT_GRACE_MS + 1000)
 
 let firestore: Firestore
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -167,6 +169,32 @@ describe('the hourly sweep', () => {
 		expect(result).toEqual({ teamsChecked: 2, teamsActedOn: 2, failures: [] })
 	})
 
+	it('waits out the grace a checkout opened before the close needs', async () => {
+		await seedTeam('team-a')
+		await pay('pi_a', 60_000, 'team-a')
+
+		await sweepTeamPayments({ now: new Date(REGISTRATION_END + 1000) })
+
+		expect(stripeCalls()).toEqual([])
+	})
+
+	it('tells the players of a team left when registration closes', async () => {
+		await seedTeam('team-a')
+		await pay('pi_a', 60_000, 'team-a')
+
+		await sweepTeamPayments({ now: AFTER_CLOSE })
+		await sweepTeamPayments({ now: AFTER_CLOSE })
+
+		const told = (await firestore.collection('mail').get()).docs.filter(
+			(doc) => doc.get('template') === 'teamMissedOut'
+		)
+		expect(told).toHaveLength(1)
+		expect(told[0].get('props')).toMatchObject({
+			reason: 'registration-closed',
+			refunding: true,
+		})
+	})
+
 	it('does nothing to a team still in the running', async () => {
 		await seedTeam('team-a')
 		await pay('pi_a', 60_000, 'team-a')
@@ -251,7 +279,10 @@ describe('the hourly sweep', () => {
 		beforeEach(async () => {
 			// Registration has closed, so any unregistered money is refunded.
 			await seasonRef().update({
-				registrationEnd: Timestamp.fromMillis(Date.now() - 1000),
+				// Closed, and past the grace a late checkout gets.
+				registrationEnd: Timestamp.fromMillis(
+					Date.now() - LATE_PAYMENT_GRACE_MS - 1000
+				),
 			})
 			await seedTeam('team-a')
 			await pay('pi_a', 60_000, 'team-a')

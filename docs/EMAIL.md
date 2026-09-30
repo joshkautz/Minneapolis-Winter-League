@@ -203,6 +203,23 @@ by an admin, does the same through `cancelPendingOffersForPlayer`
 - **Admin roster edits send nothing** about the roster itself: they are as
   often corrections to past seasons. Only the offers they close are told.
 
+## Registration emails
+
+A team's roster hears how its registration ended
+(`email/teamRegistrationEmails.ts`, `templates/TeamRegistration.tsx`), in the
+`teams` category:
+
+- **`teamRegistered`**, when the team claims a spot, from
+  `onTeamRegistrationChange`; only for the current season, so an admin
+  correcting an old season emails nobody.
+- **`teamMissedOut`**, when the team will not play: sent by the lock to each
+  team the full season left out, before it is deleted, and by the hourly
+  sweep to each team refunded when registration closed. It says whether
+  payments are being refunded; each payer also gets a refund receipt.
+
+Each has a stable id per season, team and player, so neither the lock's
+retries nor a later sweep sends a second.
+
 ## Payment receipts
 
 The league sends its own receipts for team payments and refunds, from

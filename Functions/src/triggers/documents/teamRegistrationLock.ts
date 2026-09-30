@@ -37,6 +37,23 @@ import { settleTeamSeason } from '../../services/teamSettlementService.js'
 import { closeOpenCheckouts } from '../../services/teamCheckoutReservations.js'
 import { createStripeClient } from '../../shared/stripe.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
+import {
+	queueTeamMissedOutEmails,
+	queueTeamRegisteredEmails,
+} from '../../email/teamRegistrationEmails.js'
+import { teamContributionsCollection } from '../../shared/contributions.js'
+
+/** Whether anyone's money is still paid toward the team. */
+async function holdsPaidMoney(
+	firestore: FirebaseFirestore.Firestore,
+	{ teamId, seasonId }: { teamId: string; seasonId: string }
+): Promise<boolean> {
+	const paid = await teamContributionsCollection(firestore, teamId, seasonId)
+		.where('status', '==', 'paid')
+		.limit(1)
+		.get()
+	return !paid.empty
+}
 
 const LOCK_THRESHOLD = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
 
@@ -78,11 +95,19 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 		try {
 			const firestore = getFirestore()
 
-			// The team is in, so its money is kept. A no-op for a season on
-			// per-player pricing. A failure here is thrown at the end, after
-			// the cascade, so it cannot hold up the other teams' refunds.
+			// The team is in: its players are told, and its money is kept (a
+			// no-op for a season on per-player pricing). A failure in either is
+			// thrown at the end, after the cascade, so it cannot hold up the
+			// other teams' refunds.
+			// Only the current season's registrations are news; an admin
+			// correcting an old season must not email its roster.
+			const currentSeason = await getCurrentSeason()
+			const isCurrentSeason = currentSeason?.id === seasonId
 			let ownSettlementError: unknown = null
 			try {
+				if (isCurrentSeason) {
+					await queueTeamRegisteredEmails(firestore, { teamId, seasonId })
+				}
 				await settleTeamSeason(teamId, seasonId)
 			} catch (error) {
 				ownSettlementError = error
@@ -91,8 +116,7 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 				if (ownSettlementError) throw ownSettlementError
 			}
 
-			const currentSeason = await getCurrentSeason()
-			if (!currentSeason || currentSeason.id !== seasonId) {
+			if (!currentSeason || !isCurrentSeason) {
 				// Only the current season triggers the lock cascade.
 				return rethrowOwn()
 			}
@@ -140,7 +164,14 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 			for (const pair of pairs) {
 				try {
 					await closeOpenCheckouts(firestore, stripe, pair)
+					const refunding = await holdsPaidMoney(firestore, pair)
 					await settleTeamSeason(pair.teamId, seasonId)
+					// Told before the team is deleted, while its roster is there.
+					await queueTeamMissedOutEmails(firestore, {
+						...pair,
+						reason: 'season-full',
+						refunding,
+					})
 					settled.push(pair)
 				} catch (error) {
 					settlementFailures.push({
