@@ -10,17 +10,14 @@ import { Timestamp } from 'firebase/firestore'
  * explains it honestly and never offers what the server would refuse.
  */
 
-const { startTeamContribution, cancelTeamContribution, toastError } =
-	vi.hoisted(() => ({
-		startTeamContribution: vi.fn(),
-		cancelTeamContribution: vi.fn(),
-		toastError: vi.fn(),
-	}))
+const { startTeamContribution, toastError } = vi.hoisted(() => ({
+	startTeamContribution: vi.fn(),
+	toastError: vi.fn(),
+}))
 
 vi.mock('@/firebase/collections/payments', async (importOriginal) => ({
 	...(await importOriginal<typeof import('@/firebase/collections/payments')>()),
 	startTeamContribution,
-	cancelTeamContribution,
 }))
 
 vi.mock('sonner', () => ({
@@ -363,21 +360,6 @@ describe('TeamPaymentCard', () => {
 			expect(
 				screen.getByRole('button', { name: 'All $1,000' })
 			).toBeInTheDocument()
-		})
-
-		it('frees the payer’s reservation when they come back without paying', () => {
-			window.history.replaceState({}, '', '/manage?payment=cancel')
-			render(<TeamPaymentCard />)
-
-			expect(cancelTeamContribution).toHaveBeenCalledTimes(1)
-			expect(window.location.search).toBe('')
-		})
-
-		it('frees nothing when the payment went through', () => {
-			window.history.replaceState({}, '', '/manage?payment=success')
-			render(<TeamPaymentCard />)
-
-			expect(cancelTeamContribution).not.toHaveBeenCalled()
 		})
 	})
 

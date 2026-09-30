@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { CheckCircle, CreditCard, Info } from 'lucide-react'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
 import { useUserStatus } from '@/shared/hooks/use-user-status'
+import { useRerenderAt } from '@/shared/hooks/use-rerender-at'
 import {
 	LoadingButton,
 	LoadingSpinner,
@@ -16,10 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import {
-	cancelTeamContribution,
-	startTeamContribution,
-} from '@/firebase/collections/payments'
+import { startTeamContribution } from '@/firebase/collections/payments'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	teamContributionsQuery,
@@ -52,36 +50,6 @@ const PAYMENT_EXPLANATION =
 	`Your card is charged now. If you leave the team before it registers, or ` +
 	`it does not get one of the ${REGISTRATION_SPOTS} spots, you are refunded ` +
 	`in full. Refunds take 5 to 10 business days to reach your card.`
-
-/** Tells the payer how Checkout went, once, when Stripe sends them back. */
-const usePaymentReturnToast = (): void => {
-	useEffect(() => {
-		const params = new URLSearchParams(window.location.search)
-		const status = params.get('payment')
-		if (status !== 'success' && status !== 'cancel') return
-
-		if (status === 'success') {
-			toast.success('Payment received', {
-				description:
-					'Your contribution will appear here in a moment. Thank you!',
-			})
-		} else {
-			// Free the amount the checkout set aside, so teammates can pay it
-			// now rather than when the session times out.
-			void cancelTeamContribution()
-			toast.info('Payment cancelled', {
-				description: 'Nothing was charged. You can try again when ready.',
-			})
-		}
-		params.delete('payment')
-		const query = params.toString()
-		window.history.replaceState(
-			{},
-			'',
-			window.location.pathname + (query ? `?${query}` : '')
-		)
-	}, [])
-}
 
 const ContributeForm = ({ remainingCents }: { remainingCents: number }) => {
 	const suggestions = useMemo(
@@ -183,8 +151,6 @@ const ContributeForm = ({ remainingCents }: { remainingCents: number }) => {
  * only readable by the team's own roster.
  */
 export const TeamPaymentCard = () => {
-	usePaymentReturnToast()
-
 	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()
 	const { currentSeasonData, isBanned, isAdmin, authStateUser } =
@@ -232,6 +198,16 @@ export const TeamPaymentCard = () => {
 	)
 	const signedPlayers =
 		rosterSeasons?.filter((doc) => doc.data().signed).length ?? 0
+
+	// Opening, closing and a teammate's checkout expiring change what the
+	// card shows with no document changing, so it redraws itself then.
+	useRerenderAt([
+		season?.registrationStart?.toMillis() ?? 0,
+		season?.registrationEnd?.toMillis() ?? 0,
+		...Object.values(openCheckoutsSnapshot?.data()?.reservations ?? {}).map(
+			(reservation) => reservation.expiresAt.toMillis()
+		),
+	])
 
 	useEffect(() => {
 		if (contributionsError) {

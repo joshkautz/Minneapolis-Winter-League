@@ -22,6 +22,7 @@ import {
 	type ContributionStatus,
 	type SeasonDocument,
 	type TeamSeasonDocument,
+	type TeamContributionDocument,
 } from '../types.js'
 import { CONTRIBUTIONS_SUBCOLLECTION } from '../shared/contributions.js'
 import { canonicalTeamIdFromTeamSeasonDoc } from '../shared/database.js'
@@ -35,6 +36,8 @@ export interface TeamWithMoney {
 
 type TeamSeasonVisit = TeamWithMoney & {
 	registered: boolean
+	/** The season's team fee. */
+	totalCents: number
 	contributions: FirebaseFirestore.CollectionReference
 }
 
@@ -67,6 +70,8 @@ async function teamSeasonsOnTeamPayments(
 				),
 				seasonId: seasonDoc.id,
 				registered: (teamSeasonDoc.data() as TeamSeasonDocument).registered,
+				totalCents: (seasonDoc.data() as SeasonDocument)
+					.teamRegistrationTotalCents as number,
 				contributions: teamSeasonDoc.ref.collection(
 					CONTRIBUTIONS_SUBCOLLECTION
 				),
@@ -86,21 +91,34 @@ async function holdsPaidMoney(
 
 /**
  * The teams time can change anything for: unregistered teams holding money,
- * which are refunded if registration closes without them. A registered
- * team's money is settled when it registers, and again whenever a payment
- * lands on it, so past seasons cost a query per team and no more.
+ * which are refunded if registration closes without them; and registered
+ * teams still holding more than their fee, whose refund of the excess
+ * failed past the triggers' own retries. A registered team's money is
+ * otherwise settled when it registers and whenever a payment lands on it.
  */
 async function findTeamsToSettle(
 	firestore: Firestore
 ): Promise<TeamWithMoney[]> {
 	const teams: TeamWithMoney[] = []
 	for (const visit of await teamSeasonsOnTeamPayments(firestore)) {
-		if (visit.registered) continue
-		if (await holdsPaidMoney(visit.contributions)) {
-			teams.push({ teamId: visit.teamId, seasonId: visit.seasonId })
-		}
+		const settle = visit.registered
+			? (await paidTotalCents(visit.contributions)) > visit.totalCents
+			: await holdsPaidMoney(visit.contributions)
+		if (settle) teams.push({ teamId: visit.teamId, seasonId: visit.seasonId })
 	}
 	return teams
+}
+
+/** What a team holds, in cents. */
+async function paidTotalCents(
+	contributions: FirebaseFirestore.CollectionReference
+): Promise<number> {
+	const status: ContributionStatus = 'paid'
+	const snap = await contributions.where('status', '==', status).get()
+	return snap.docs.reduce(
+		(sum, doc) => sum + (doc.data() as TeamContributionDocument).amountCents,
+		0
+	)
 }
 
 /**

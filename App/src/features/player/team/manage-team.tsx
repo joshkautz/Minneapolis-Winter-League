@@ -1,5 +1,6 @@
 import { useUserStatus } from '@/shared/hooks'
 import { TeamManagementView, TeamOptionsView } from './components'
+import { usePaymentReturnToast } from './use-payment-return-toast'
 
 /**
  * Main component for team management
@@ -7,6 +8,7 @@ import { TeamManagementView, TeamOptionsView } from './components'
  */
 export const ManageTeam = () => {
 	const { isLoading, isRostered, isCaptain } = useUserStatus()
+	usePaymentReturnToast({ isLoading, onTeam: isRostered })
 
 	// If user is already rostered, show team management interface
 	if (isRostered) {

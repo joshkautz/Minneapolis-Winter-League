@@ -7,6 +7,7 @@ import { JoinTeam } from '@/features/public/join'
 import { CreateTeam } from '@/features/public/create'
 import { useIsTeamRegistrationFull } from '@/shared/hooks'
 import { WaiverPrompt } from '@/features/player/waiver'
+import { REGISTRATION_SPOTS } from '@/shared/utils'
 
 interface TeamOptionsViewProps {
 	isLoading: boolean
@@ -34,6 +35,18 @@ export const TeamOptionsView = ({ isLoading }: TeamOptionsViewProps) => {
 
 			<WaiverPrompt />
 
+			{/* Above both tabs: Join is the one a player lands on. */}
+			{isTeamRegistrationFull && (
+				<Alert>
+					<AlertCircle className='h-4 w-4' />
+					<AlertTitle>This season is full</AlertTitle>
+					<AlertDescription>
+						All {REGISTRATION_SPOTS} team spots are taken. Teams that did not
+						register in time have been removed, and anything paid toward them is
+						being refunded. New teams cannot be created.
+					</AlertDescription>
+				</Alert>
+			)}
 			<Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
 				<div className='flex justify-center'>
 					<TabsList className='grid w-full max-w-md grid-cols-2'>
@@ -53,18 +66,6 @@ export const TeamOptionsView = ({ isLoading }: TeamOptionsViewProps) => {
 				</TabsContent>
 
 				<TabsContent value='create' className='mt-6 w-full'>
-					{isTeamRegistrationFull && (
-						<div className='mb-6'>
-							<Alert>
-								<AlertCircle className='h-4 w-4' />
-								<AlertTitle>Team Registration Full</AlertTitle>
-								<AlertDescription>
-									The league has reached the maximum of 12 fully registered
-									teams for this season. Team creation is currently disabled.
-								</AlertDescription>
-							</Alert>
-						</div>
-					)}
 					<CreateTeam />
 				</TabsContent>
 			</Tabs>
