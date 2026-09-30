@@ -57,7 +57,6 @@ export enum Collections {
 	 */
 	PLAYER_RANKING_HISTORY = 'player-ranking-history',
 	RANKINGS = 'rankings',
-	RANKINGS_HISTORY = 'rankings-history',
 	RANKINGS_CALCULATIONS = 'rankings-calculations',
 	SEASONS = 'seasons',
 	SITE_SETTINGS = 'siteSettings',
@@ -786,55 +785,6 @@ export interface SeasonRankingDocument extends DocumentData {
 	losses: number
 	calculationId: string
 	lastUpdated: Timestamp
-}
-
-/**
- * Rankings history snapshot document structure
- * Stores a snapshot of all player rankings after each round of games
- */
-export interface RankingHistoryDocument extends DocumentData {
-	/** Reference to the season */
-	season: DocumentReference<SeasonDocument>
-	/** Date of the snapshot */
-	snapshotDate: Timestamp
-	/** Array of player rankings at this point in time */
-	rankings: TimeBasedPlayerRanking[]
-	/** Round-specific metadata for game-by-game tracking */
-	roundMeta: {
-		/** Unique round identifier */
-		roundId: string
-		/** Timestamp when this round started */
-		roundStartTime: Timestamp
-		/** Number of games in this round */
-		gameCount: number
-		/** IDs of games processed in this round */
-		gameIds: string[]
-		/** ID of the calculation that processed this round */
-		calculationId: string
-	}
-}
-
-/**
- * Individual player ranking within a time-based snapshot
- * Uses TrueSkill μ (skill estimate) for rating
- */
-export interface TimeBasedPlayerRanking {
-	/** Player ID */
-	playerId: string
-	/** Player name (cached) */
-	playerName: string
-	/** Skill rating at this point (TrueSkill μ) */
-	rating: number
-	/** Rank position */
-	rank: number
-	/** Total games played up to this point */
-	totalGames: number
-	/** Total seasons participated in up to this point */
-	totalSeasons: number
-	/** Rating change since previous rating (for round-based tracking) */
-	change?: number
-	/** Previous rating before this snapshot (for round-based tracking) */
-	previousRating?: number
 }
 
 /**

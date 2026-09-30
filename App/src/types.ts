@@ -65,7 +65,6 @@ export enum Collections {
 	 */
 	PLAYER_RANKING_HISTORY = 'player-ranking-history',
 	RANKINGS = 'rankings',
-	RANKINGS_HISTORY = 'rankings-history',
 	RANKINGS_CALCULATIONS = 'rankings-calculations',
 	SEASONS = 'seasons',
 	SITE_SETTINGS = 'siteSettings',

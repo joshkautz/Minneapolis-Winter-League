@@ -122,7 +122,6 @@ const Collections = {
 	SEASONS: 'seasons',
 	TEAMS: 'teams',
 	RANKINGS: 'rankings',
-	RANKINGS_HISTORY: 'rankings-history',
 	RANKINGS_CALCULATIONS: 'rankings-calculations',
 }
 
