@@ -1,11 +1,10 @@
 /**
- * Saves a rebuild: the all-time leaderboard, each player's history, each
- * season's standings, and the round snapshots the player page still reads.
+ * Saves a rebuild: the all-time leaderboard, each player's history and each
+ * season's standings.
  *
  * Rankings are a pure projection of the games in the database, so anything
  * a rebuild no longer produces is deleted rather than left behind — a stale
- * leaderboard entry keeps its old rank and can outrank current players, and
- * a snapshot for a moved game describes an evening that never happened.
+ * leaderboard entry keeps its old rank and can outrank current players.
  *
  * Writes go through a BulkWriter: their number grows with the league and
  * each history grows every round, so a WriteBatch would eventually exceed
@@ -21,20 +20,11 @@ import {
 	type Firestore,
 } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
-import {
-	Collections,
-	SEASON_RANKINGS_SUBCOLLECTION,
-	type TimeBasedPlayerRanking,
-} from '../../../types.js'
-import type {
-	PlayerHistoryPoint,
-	RankingProjections,
-} from '../engine/projections.js'
-import type { RoundResult } from '../engine/rankingEngine.js'
+import { Collections, SEASON_RANKINGS_SUBCOLLECTION } from '../../../types.js'
+import type { RankingProjections } from '../engine/projections.js'
 
 interface SaveParams {
 	projections: RankingProjections
-	rounds: RoundResult[]
 	playerNames: ReadonlyMap<string, string>
 	/** Every season, so one whose games are all gone is cleared too. */
 	seasonIds: string[]
@@ -89,7 +79,7 @@ export async function saveRankings(
 	firestore: Firestore,
 	params: SaveParams
 ): Promise<void> {
-	const { projections, rounds, playerNames, calculationId } = params
+	const { projections, playerNames, calculationId } = params
 	const writer = trackedWriter(firestore)
 	const lastUpdated = FieldValue.serverTimestamp()
 	const nameOf = (playerId: string): string => playerNames.get(playerId) ?? ''
@@ -152,69 +142,9 @@ export async function saveRankings(
 		)
 	}
 
-	// ---- Round snapshots, read by the player page until it moves to the
-	// per-player histories above.
-	const snapshots = firestore.collection(Collections.RANKINGS_HISTORY)
-	const snapshotIds = new Set<string>()
-	const pointsByRound = new Map<string, Map<string, PlayerHistoryPoint>>()
-	for (const [playerId, points] of projections.histories) {
-		for (const point of points) {
-			const round = pointsByRound.get(point.roundId) ?? new Map()
-			pointsByRound.set(point.roundId, round.set(playerId, point))
-		}
-	}
-	for (const round of rounds) {
-		const snapshotId = `${round.roundId}_${round.seasonId}`
-		snapshotIds.add(snapshotId)
-		writer.set(snapshots.doc(snapshotId), {
-			season: firestore.collection(Collections.SEASONS).doc(round.seasonId),
-			snapshotDate: Timestamp.fromDate(round.startTime),
-			rankings: snapshotRankings(
-				round,
-				pointsByRound.get(round.roundId) ?? new Map(),
-				nameOf
-			),
-			roundMeta: {
-				roundId: round.roundId,
-				roundStartTime: Timestamp.fromDate(round.startTime),
-				gameCount: round.gameIds.length,
-				gameIds: round.gameIds,
-				calculationId,
-			},
-		})
-	}
-	await deleteAllBut(writer, snapshots, snapshotIds)
-
 	await writer.finish()
 	logger.info(`Saved rankings for ${projections.final.length} players`, {
 		removed: removedRankings,
 		seasons: projections.seasons.size,
-		rounds: rounds.length,
 	})
-}
-
-function snapshotRankings(
-	round: RoundResult,
-	points: ReadonlyMap<string, PlayerHistoryPoint>,
-	nameOf: (playerId: string) => string
-): TimeBasedPlayerRanking[] {
-	return [...round.ratings.keys()]
-		.flatMap((playerId) => {
-			const point = points.get(playerId)
-			if (!point) return []
-			const rating = round.ratings.get(playerId)
-			return [
-				{
-					playerId,
-					playerName: nameOf(playerId),
-					rating: point.rating,
-					rank: point.rank,
-					totalGames: rating?.totalGames ?? 0,
-					totalSeasons: rating?.totalSeasons ?? 0,
-					change: point.change,
-					previousRating: point.rating - point.change,
-				},
-			]
-		})
-		.sort((a, b) => a.rank - b.rank)
 }

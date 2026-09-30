@@ -17,7 +17,7 @@ permissions:
 jobs:
   App:
     name: Deploy to Firebase Hosting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
@@ -66,7 +66,7 @@ jobs:
 
   Functions:
     name: Deploy to Firebase Functions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
@@ -91,6 +91,10 @@ jobs:
       - name: Typecheck Functions
         working-directory: ./Functions
         run: npm run typecheck
+
+      - name: Test Functions
+        working-directory: ./Functions
+        run: npm run test
 
       - name: Build Functions
         working-directory: ./Functions
@@ -136,7 +140,7 @@ jobs:
 
   Rules:
     name: Emulator Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
@@ -181,7 +185,7 @@ jobs:
   Firestore:
     name: Deploy Firestore Rules and Indexes
     needs: Rules
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7

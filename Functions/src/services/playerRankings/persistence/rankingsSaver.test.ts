@@ -57,7 +57,6 @@ const projections: RankingProjections = {
 const save = (firestore: Firestore): Promise<void> =>
 	saveRankings(firestore, {
 		projections,
-		rounds: [],
 		playerNames: new Map([['p1', 'Player One']]),
 		seasonIds: ['s1'],
 		calculationId: 'calc-1',

@@ -19,8 +19,8 @@ import Stripe from 'stripe'
 /**
  * Webhook handler for Stripe events
  *
- * Processes checkout.session.completed events to create payment documents.
- * Optionally handles product/price sync events for admin UI.
+ * Processes completed checkouts and refunds. Any other event is acknowledged
+ * and ignored.
  *
  * @see https://stripe.com/docs/webhooks
  */
@@ -103,21 +103,6 @@ export const stripeWebhook = onRequest(
 					}
 					break
 				}
-
-				case 'product.created':
-				case 'product.updated':
-				case 'product.deleted':
-					await handleProductEvent(
-						event.type,
-						event.data.object as Stripe.Product
-					)
-					break
-
-				case 'price.created':
-				case 'price.updated':
-				case 'price.deleted':
-					await handlePriceEvent(event.type, event.data.object as Stripe.Price)
-					break
 
 				default:
 					logger.info(`Unhandled event type: ${event.type}`)
@@ -274,101 +259,6 @@ async function handleTeamPaymentIntentChange(
 			paymentIntentId,
 			teamId,
 			seasonId,
-		})
-	}
-}
-
-/**
- * Handle product events for admin UI sync (optional enhancement)
- *
- * Syncs Stripe products to Firestore so admin UI can display them.
- */
-async function handleProductEvent(
-	eventType: string,
-	product: Stripe.Product
-): Promise<void> {
-	const firestore = getFirestore()
-
-	try {
-		const productRef = firestore
-			.collection('stripe')
-			.doc('products')
-			.collection('items')
-			.doc(product.id)
-
-		if (eventType === 'product.deleted') {
-			await productRef.delete()
-			logger.info(`Deleted product: ${product.id}`)
-		} else {
-			await productRef.set(
-				{
-					name: product.name,
-					description: product.description,
-					active: product.active,
-					metadata: product.metadata,
-					images: product.images,
-					updated: FieldValue.serverTimestamp(),
-				},
-				{ merge: true }
-			)
-			logger.info(
-				`${eventType === 'product.created' ? 'Created' : 'Updated'} product: ${product.id}`
-			)
-		}
-	} catch (error) {
-		throw handleFunctionError(error, 'handleProductEvent', {
-			productId: product.id,
-			eventType,
-		})
-	}
-}
-
-/**
- * Handle price events for admin UI sync (optional enhancement)
- *
- * Syncs Stripe prices to Firestore so admin UI can display them.
- */
-async function handlePriceEvent(
-	eventType: string,
-	price: Stripe.Price
-): Promise<void> {
-	const firestore = getFirestore()
-
-	try {
-		const priceRef = firestore
-			.collection('stripe')
-			.doc('prices')
-			.collection('items')
-			.doc(price.id)
-
-		if (eventType === 'price.deleted') {
-			await priceRef.delete()
-			logger.info(`Deleted price: ${price.id}`)
-		} else {
-			await priceRef.set(
-				{
-					productId:
-						typeof price.product === 'string'
-							? price.product
-							: price.product?.id,
-					unitAmount: price.unit_amount,
-					currency: price.currency,
-					active: price.active,
-					type: price.type,
-					nickname: price.nickname,
-					metadata: price.metadata,
-					updated: FieldValue.serverTimestamp(),
-				},
-				{ merge: true }
-			)
-			logger.info(
-				`${eventType === 'price.created' ? 'Created' : 'Updated'} price: ${price.id}`
-			)
-		}
-	} catch (error) {
-		throw handleFunctionError(error, 'handlePriceEvent', {
-			priceId: price.id,
-			eventType,
 		})
 	}
 }

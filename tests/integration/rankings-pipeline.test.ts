@@ -128,10 +128,9 @@ const rankings = async () => {
 	return new Map(snapshot.docs.map((doc) => [doc.id, doc.data()]))
 }
 
-const history = async () => {
-	const snapshot = await firestore.collection('rankings-history').get()
-	return snapshot.docs
-}
+const historyCount = async () =>
+	(await firestore.collection('player-ranking-history').count().get()).data()
+		.count
 
 const playerHistory = async (playerId: string) =>
 	(
@@ -252,10 +251,10 @@ describe('rebuildPlayerRankings', () => {
 		expect(saved.get('w1')?.rating).toBeGreaterThan(saved.get('l1')!.rating)
 		// It must also not reach the round grouper. processGame skips a game
 		// with no score, so ratings would come out right either way — but an
-		// unfiltered game still forms a round, which writes a history snapshot
-		// for an evening that was never played and decays everyone a step for
-		// it. Asserting on the snapshot count is what pins the filter down.
-		expect(await history()).toHaveLength(1)
+		// unfiltered game still forms a round, which adds a history point for
+		// an evening that was never played and decays everyone a step for it.
+		// Asserting on the round count is what pins the filter down.
+		expect((await playerHistory('w1'))!.rounds).toHaveLength(1)
 	})
 
 	it('counts a game in each season a player appears in', async () => {
@@ -314,56 +313,12 @@ describe('rebuildPlayerRankings', () => {
 		})
 
 		await rebuild()
-		const snapshots = await history()
+		const a1 = (await playerHistory('a1'))!.rounds
+		const c1 = (await playerHistory('c1'))!.rounds
 
-		expect(snapshots).toHaveLength(1)
-		expect(snapshots[0].data().roundMeta.gameCount).toBe(2)
-		expect(snapshots[0].data().roundMeta.gameIds.sort()).toEqual([
-			'game-1',
-			'game-2',
-		])
-	})
-
-	it('writes one history snapshot per round, tagged with the calculation', async () => {
-		await seedOneRoundSeason()
-		await seedGame('game-2', {
-			seasonId: 'season-1',
-			home: 'winners',
-			away: 'losers',
-			homeScore: 15,
-			awayScore: 12,
-			date: '2030-01-12T18:00:00.000Z',
-		})
-
-		const result = await rebuild()
-		const snapshots = await history()
-
-		expect(snapshots).toHaveLength(2)
-		for (const snapshot of snapshots) {
-			expect(snapshot.data().roundMeta.calculationId).toBe(result.calculationId)
-			expect(snapshot.data().season.path).toBe('seasons/season-1')
-			expect(snapshot.data().rankings).toHaveLength(4)
-		}
-	})
-
-	it('names history snapshots by round start so they sort chronologically', async () => {
-		await seedOneRoundSeason()
-		await seedGame('game-2', {
-			seasonId: 'season-1',
-			home: 'winners',
-			away: 'losers',
-			homeScore: 15,
-			awayScore: 12,
-			date: '2030-01-12T18:00:00.000Z',
-		})
-
-		await rebuild()
-		const ids = (await history()).map((doc) => doc.id)
-
-		expect(ids).toEqual([
-			`${new Date('2030-01-05T18:00:00.000Z').getTime()}_season-1`,
-			`${new Date('2030-01-12T18:00:00.000Z').getTime()}_season-1`,
-		])
+		expect(a1).toHaveLength(1)
+		expect(c1).toHaveLength(1)
+		expect(c1[0].roundId).toBe(a1[0].roundId)
 	})
 
 	it('weights a playoff win more heavily than a regular season win', async () => {
@@ -526,7 +481,7 @@ describe('rebuildPlayerRankings', () => {
 
 		expect(result.status).toBe('completed')
 		expect((await rankings()).size).toBe(0)
-		expect(await history()).toHaveLength(0)
+		expect(await historyCount()).toBe(0)
 	})
 
 	it('skips a game whose team has no roster for that season', async () => {
@@ -791,10 +746,12 @@ describe('rebuildPlayerRankings: histories and season standings', () => {
 		await rebuild()
 
 		expect((await seasonStandings('season-2')).has('l2')).toBe(false)
-		expect((await history()).map((doc) => doc.id)).toEqual([
-			`${new Date('2029-01-05T18:00:00.000Z').getTime()}_season-1`,
-			`${new Date('2030-01-12T18:00:00.000Z').getTime()}_season-2`,
-		])
+		// l1 played both seasons, so their history shows the game's new date.
+		expect(
+			(await playerHistory('l1'))!.rounds.map(
+				(round: { date: Timestamp }) => round.date.toDate().toISOString()
+			)
+		).toEqual(['2029-01-05T18:00:00.000Z', '2030-01-12T18:00:00.000Z'])
 	})
 
 	it('clears the standings and histories of a season whose games are gone', async () => {

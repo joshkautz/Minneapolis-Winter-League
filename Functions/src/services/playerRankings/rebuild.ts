@@ -95,7 +95,6 @@ export async function rebuildRankings(
 		})
 		await saveRankings(firestore, {
 			projections,
-			rounds: result.rounds,
 			playerNames: loaded.input.playerNames,
 			seasonIds: loaded.seasonIds,
 			calculationId,
