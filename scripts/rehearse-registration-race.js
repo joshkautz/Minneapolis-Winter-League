@@ -3,6 +3,11 @@
  * each with its $1,000 paid, and the tenth waiver on all fifteen signed
  * at the same instant. Exactly 12 may register.
  *
+ * With --payment-last the order is reversed, as when captains pay once their
+ * roster has signed: every team signs all ten waivers first, then all fifteen
+ * teams' money lands at the same instant. Team Alpha pays in two parts, $600
+ * and then $400, so the payment that completes it is a second one.
+ *
  * Everything goes through the real callables over HTTP, as the App would, so
  * the triggers run in the Functions emulator as deployed. Each team paid
  * exactly its total, so the twelve that register need no refund. Settlement
@@ -15,7 +20,7 @@
  *   npm run build --workspace=Functions
  *   npx firebase emulators:start --only auth,firestore,functions --project minnesota-winter-league
  *   FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
- *     node scripts/rehearse-registration-race.js
+ *     node scripts/rehearse-registration-race.js [--payment-last]
  *
  * Refuses to run unless the emulator hosts are set.
  */
@@ -29,6 +34,7 @@ if (
 ) {
 	throw new Error('Refusing to run: emulator hosts are not set')
 }
+const PAYMENT_LAST = process.argv.includes('--payment-last')
 const PROJECT = 'minnesota-winter-league'
 const FN = `http://127.0.0.1:5001/${PROJECT}/us-central1`
 initializeApp({ projectId: PROJECT })
@@ -185,24 +191,29 @@ await inParallel(teams, 5, async (team) => {
 })
 stamp('15 teams of 10')
 
-// 4. Each team's $1,000, paid in one payment. Written as the Stripe webhook
-//    would; no Stripe is involved.
-for (const team of teams) {
-	const id = `pi_rehearsal_${team.name.toLowerCase()}`
-	await db
+// A team's payments: one of $1,000, or for Alpha when the payment comes last,
+// $600 and then the $400 that completes it.
+const paymentsFor = (team) =>
+	PAYMENT_LAST && team.name === 'Alpha'
+		? [
+				[`pi_rehearsal_${team.name.toLowerCase()}_1`, 60_000],
+				[`pi_rehearsal_${team.name.toLowerCase()}_2`, 40_000],
+			]
+		: [[`pi_rehearsal_${team.name.toLowerCase()}`, 100_000]]
+
+/** Writes a payment as the Stripe webhook would; no Stripe is involved. */
+const pay = (team, [id, amountCents]) =>
+	db
 		.doc(`teams/${team.teamId}/teamSeasons/${seasonId}/contributions/${id}`)
 		.set({
 			player: db.doc(`players/${team.captain.uid}`),
-			amountCents: 100_000,
+			amountCents,
 			status: 'paid',
 			paymentIntentId: id,
 			createdAt: Timestamp.now(),
 			updatedAt: Timestamp.now(),
 		})
-}
-stamp('every team committed $1,000')
 
-// 5. Nine waivers per team, through signWaiver.
 const waiver = (person) => ({
 	versionId: '2026-09-original',
 	dateOfBirth: '1992-04-12',
@@ -213,26 +224,53 @@ const waiver = (person) => ({
 	signerName: `${person.first} ${person.last}`,
 	agreed: true,
 })
-const lastSigners = []
-await inParallel(teams, 5, async (team, t) => {
-	const roster = people.filter((p) => p.team === t)
-	lastSigners[t] = roster[roster.length - 1]
-	for (const person of roster.slice(0, -1))
-		await call(person.token, 'signWaiver', waiver(person))
-})
-await sleep(8000)
-const before =
-	(await db.doc(`seasons/${seasonId}`).get()).data().registeredTeamCount ?? 0
-stamp(`nine signed on every team; registered so far: ${before}`)
 
-// 6. The race: every team's tenth signature at once.
+const registeredSoFar = async () =>
+	(await db.doc(`seasons/${seasonId}`).get()).data().registeredTeamCount ?? 0
+
 const raceStart = Date.now()
-const raced = await Promise.allSettled(
-	lastSigners.map((person) => call(person.token, 'signWaiver', waiver(person)))
-)
-stamp(
-	`15 simultaneous signatures: ${raced.filter((r) => r.status === 'fulfilled').length} accepted in ${Date.now() - raceStart} ms`
-)
+if (PAYMENT_LAST) {
+	// 4. All ten waivers on every team, through signWaiver.
+	await inParallel(teams, 5, async (team, t) => {
+		for (const person of people.filter((p) => p.team === t))
+			await call(person.token, 'signWaiver', waiver(person))
+	})
+	// Alpha's first part: short of the total, so it cannot register yet.
+	await pay(teams[0], paymentsFor(teams[0])[0])
+	await sleep(8000)
+	stamp(`every team signed; registered so far: ${await registeredSoFar()}`)
+
+	// 5–6. The race: every team's completing payment at once.
+	await Promise.all(teams.map((team) => pay(team, paymentsFor(team).at(-1))))
+	stamp(`15 completing payments written in ${Date.now() - raceStart} ms`)
+} else {
+	// 4. Each team's $1,000, paid in one payment.
+	for (const team of teams) await pay(team, paymentsFor(team)[0])
+	stamp('every team committed $1,000')
+
+	// 5. Nine waivers per team, through signWaiver.
+	const lastSigners = []
+	await inParallel(teams, 5, async (team, t) => {
+		const roster = people.filter((p) => p.team === t)
+		lastSigners[t] = roster[roster.length - 1]
+		for (const person of roster.slice(0, -1))
+			await call(person.token, 'signWaiver', waiver(person))
+	})
+	await sleep(8000)
+	stamp(
+		`nine signed on every team; registered so far: ${await registeredSoFar()}`
+	)
+
+	// 6. The race: every team's tenth signature at once.
+	const raced = await Promise.allSettled(
+		lastSigners.map((person) =>
+			call(person.token, 'signWaiver', waiver(person))
+		)
+	)
+	stamp(
+		`15 simultaneous signatures: ${raced.filter((r) => r.status === 'fulfilled').length} accepted in ${Date.now() - raceStart} ms`
+	)
+}
 
 // 7. Wait for the triggers to settle, then check the invariant.
 let last = -1,
@@ -260,15 +298,21 @@ const remaining = teamSeasons.filter(
 )
 const deleted = teamSeasons.filter((t) => !t.doc.exists)
 const contributions = await Promise.all(
-	teams.map(
-		async (team) =>
-			(
-				await db
-					.doc(
-						`teams/${team.teamId}/teamSeasons/${seasonId}/contributions/pi_rehearsal_${team.name.toLowerCase()}`
-					)
-					.get()
-			).data()?.status ?? 'gone'
+	teams.map(async (team) =>
+		(
+			await Promise.all(
+				paymentsFor(team).map(
+					async ([id]) =>
+						(
+							await db
+								.doc(
+									`teams/${team.teamId}/teamSeasons/${seasonId}/contributions/${id}`
+								)
+								.get()
+						).data()?.status ?? 'gone'
+				)
+			)
+		).join(', ')
 	)
 )
 stamp('settled')
@@ -282,6 +326,7 @@ console.log(
 			contributionStatuses: Object.fromEntries(
 				teams.map((t, i) => [t.name, contributions[i]])
 			),
+			raceOn: PAYMENT_LAST ? 'payment' : 'waiver',
 			invariantHolds: last === 12 && registered.length === 12,
 		},
 		null,
