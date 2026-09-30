@@ -148,4 +148,3 @@ export async function saveRankings(
 		seasons: projections.seasons.size,
 	})
 }
-
