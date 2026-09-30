@@ -33,6 +33,8 @@ import {
 	type DocumentReference,
 	type PlayerDocument,
 	type SeasonDocument,
+	Collections,
+	ROSTER_SUBCOLLECTION,
 } from '../../../types.js'
 
 interface AddPlayerRequest {
@@ -136,7 +138,9 @@ export const updateTeamAdmin = onCall<
 				const seasonDocRef =
 					teamSeasonData.season as DocumentReference<SeasonDocument>
 
-				const rosterSnap = await txn.get(teamSeasonDocRef.collection('roster'))
+				const rosterSnap = await txn.get(
+					teamSeasonDocRef.collection(ROSTER_SUBCOLLECTION)
+				)
 				const rosterIds = rosterSnap.docs.map((doc) => doc.id)
 				const addIds = addPlayers.map(({ playerId }) => playerId)
 				const [rosterSeasonSnaps, addSeasonSnaps, addPlayerSnaps] =
@@ -153,7 +157,7 @@ export const updateTeamAdmin = onCall<
 						),
 						Promise.all(
 							addIds.map((id) =>
-								txn.get(firestore.collection('players').doc(id))
+								txn.get(firestore.collection(Collections.PLAYERS).doc(id))
 							)
 						),
 					])
@@ -266,7 +270,7 @@ export const updateTeamAdmin = onCall<
 		// Cancel pending offers for added players (outside any transaction).
 		for (const playerId of addedPlayerIds) {
 			const playerDocRef = firestore
-				.collection('players')
+				.collection(Collections.PLAYERS)
 				.doc(playerId) as DocumentReference<PlayerDocument>
 			try {
 				await cancelPendingOffersForPlayer(

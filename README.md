@@ -12,8 +12,8 @@ player rankings and signed waivers.
 
 ## Quick start
 
-Requires **Node 22** (see `.nvmrc`) and a JDK on your PATH for the Firebase
-emulators.
+Requires **Node 22** (see `.nvmrc`) and **JDK 21 or later** on your PATH for
+the Firebase emulators.
 
 ```bash
 git clone https://github.com/joshkautz/Minneapolis-Winter-League.git
@@ -39,6 +39,8 @@ for day-to-day development.
 - **Data**: Cloud Firestore, Firebase Auth, Cloud Storage, Firebase Hosting
 - **Payments**: Stripe (custom integration, not the Firebase extension)
 - **Waivers**: signed in the app (see `docs/WAIVERS.md`)
+- **Email**: Resend, with React Email templates and a Firestore outbox (see
+  `docs/EMAIL.md`)
 - **Testing**: Vitest + Testing Library
 
 ## Repository layout
@@ -104,6 +106,7 @@ subcollection under the latter.
 | Functions          | [Functions overview](./docs/functions/README.md) · [Player rankings](./docs/functions/PLAYER_RANKING_ALGORITHM.md)      |
 | Front end          | [App overview](./docs/app/README.md)                                                                                    |
 | Payments, waivers  | [Team payments](./docs/TEAM_PAYMENTS.md) · [Waivers](./docs/WAIVERS.md)                                                 |
+| Email              | [Email](./docs/EMAIL.md)                                                                                                |
 | Planned work       | [Roadmap](./docs/ROADMAP.md)                                                                                            |
 
 Working in this repo with Claude Code? [`CLAUDE.md`](./CLAUDE.md) carries the

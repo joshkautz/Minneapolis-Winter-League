@@ -1,5 +1,5 @@
 import { Users as UsersIcon } from 'lucide-react'
-import { useRosterSize } from './use-roster-size'
+import { useRosterSize } from '../hooks/use-roster-size'
 
 /** A team-season's roster size, for a table cell. */
 export const RosterSize = ({

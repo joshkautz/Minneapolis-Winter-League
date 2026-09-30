@@ -23,7 +23,7 @@ import { openCheckoutsRef } from '../../Functions/src/shared/checkoutReservation
 import {
 	SettlementIncompleteError,
 	settleTeamSeason,
-} from '../../Functions/src/services/teamSettlementService.js'
+} from '../../Functions/src/services/teamSettlement.js'
 
 /**
  * Settlement against a Stripe that keeps state.

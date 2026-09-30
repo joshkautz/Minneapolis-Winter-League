@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
-import { updateTeamRegistrationStatus } from '../../Functions/src/services/teamRegistrationService.js'
+import { updateTeamRegistrationStatus } from '../../Functions/src/services/teamRegistration.js'
 import { isMigrationInProgress } from '../../Functions/src/shared/maintenance.js'
 import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import {
@@ -36,10 +36,7 @@ const seedRoster = async (
 	for (let i = 0; i < count; i++) {
 		const playerId = `player-${i}`
 		ids.push(playerId)
-		await firestore
-			.collection('players')
-			.doc(playerId)
-			.set({ admin: false, email: `${playerId}@example.com` })
+		await firestore.collection('players').doc(playerId).set({ admin: false })
 		await teamRosterEntryRef(firestore, TEAM, SEASON, playerId).set({
 			player: firestore.collection('players').doc(playerId),
 			dateJoined: Timestamp.now(),

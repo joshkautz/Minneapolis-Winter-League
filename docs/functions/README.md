@@ -22,7 +22,9 @@ Functions/src/
   triggers/auth/            Auth lifecycle triggers
   triggers/documents/       Firestore document triggers
   triggers/payments/        the per-player payment trigger
-  api/webhooks/             the Stripe HTTP endpoint
+  triggers/scheduled/       the payments sweep and reconciliation, the nightly rankings rebuild
+  api/                      HTTP endpoints: one-click unsubscribe, and the Stripe and Resend webhooks
+  email/                    the outbox, sender, delivery reports, receipts and React templates
   waiver/                   the waiver's text and signing rules, also imported by the App
   services/                 multi-step domain logic
   shared/                   helpers used across functions
@@ -32,8 +34,9 @@ Functions/src/
 
 ## Callables
 
-44 in total, every one covered by the authorization sweep in
-`tests/integration/callables-authorization.test.ts`.
+48 in total, every one covered by the authorization sweep in
+`tests/integration/callables-authorization.test.ts`, which fails when one is
+missing from it. Each lives in the file named after it.
 
 | Domain        | User                                                                                       | Admin                                                                                 |
 | ------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
@@ -52,21 +55,24 @@ Functions/src/
 | Badges        |                                                                                            | `createBadge`, `updateBadge`, `deleteBadge`, `awardBadge`, `revokeBadge`              |
 | Site settings |                                                                                            | `updateSiteSettings`                                                                  |
 
-`createPlayer` and `updatePlayer` accept an unverified email, because they run
-during account setup. Everything else requires a verified one.
+`createPlayer`, `updatePlayer` and `deletePlayer` accept an unverified email,
+because they run during or before account setup, and so do
+`getEmailPreferences` and `updateEmailPreferences`, which the link in an email
+opens. Everything else requires a verified one (`ALLOWS_UNVERIFIED_EMAIL` in
+the sweep).
 
 ## Triggers
 
-| Function                                     | Fires on                                               | Does                                                                                                                                                                           |
-| -------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `userDeleted`                                | Auth account deleted                                   | Deletes the player's data, keeping waivers; see [Account deletion](#account-deletion)                                                                                          |
-| `onOfferUpdated`                             | `offers/{offerId}` updated                             | On acceptance, adds the player to the roster, points their season record at the team emails whoever sent the offer, and cancels the player's other offers, telling those teams |
-| `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes registration; refunds a leaver's money on an unregistered team                                                                                                      |
-| `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                                                                                                        |
-| `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes, and settles a new payment                                                                                                 |
-| `emailContributionReceipt`                   | the same contributions path, written                   | Emails the payer a receipt for each payment and refund                                                                                                                         |
-| `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Tells the new team's roster, refunds its excess; at twelve, refunds, tells and removes the unregistered ones                                                                   |
-| `onPaymentCreated`                           | `stripe/{uid}/payments/{id}` created                   | Marks a per-player registration paid                                                                                                                                           |
+| Function                                     | Fires on                                               | Does                                                                                                                                                                            |
+| -------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `userDeleted`                                | Auth account deleted                                   | Deletes the player's data, keeping waivers; see [Account deletion](#account-deletion)                                                                                           |
+| `onOfferUpdated`                             | `offers/{offerId}` updated                             | On acceptance, adds the player to the roster, points their season record at the team, emails whoever sent the offer, and cancels the player's other offers, telling those teams |
+| `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes registration; refunds a leaver's money on an unregistered team                                                                                                       |
+| `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                                                                                                         |
+| `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes, and settles a new payment                                                                                                  |
+| `emailContributionReceipt`                   | the same contributions path, written                   | Emails the payer a receipt for each payment and refund                                                                                                                          |
+| `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Tells the new team's roster, refunds its excess; at twelve, refunds, tells and removes the unregistered ones                                                                    |
+| `onPaymentCreated`                           | `stripe/{uid}/payments/{id}` created                   | Marks a per-player registration paid                                                                                                                                            |
 
 Every trigger honours the migration kill-switch,
 `system/maintenance.migrationInProgress`, and returns without writing while it
@@ -83,7 +89,7 @@ sign-in. An admin deleting a user from the Firebase console gets the same
 cleanup through `userDeleted`; the callable's deletion fires that trigger
 too, which finds nothing left.
 
-Both run `services/accountDeletionService`. It deletes the player document,
+Both run `services/accountDeletion`. It deletes the player document,
 their player-seasons, their roster entries in every season, their open
 offers, their leaderboard entry and the site's copy of their Stripe records.
 It keeps their waiver signatures ([WAIVERS.md](../WAIVERS.md)), their team
@@ -97,13 +103,13 @@ after the season's `registrationEnd` with `failed-precondition`, and none is
 blocked before registration opens. Admins are exempt, except from
 `deleteTeam`'s check; they delete with `deleteUnregisteredTeam` instead.
 
-| Callable                     | File                                   |
-| ---------------------------- | -------------------------------------- |
-| `createTeam`                 | `functions/user/teams/create.ts`       |
-| `rolloverTeam`               | `functions/user/teams/rollover.ts`     |
-| `deleteTeam`                 | `functions/user/teams/delete.ts`       |
-| `updateTeamRoster`           | `functions/user/teams/updateRoster.ts` |
-| `createOffer`, `updateOffer` | `functions/user/offers/`               |
+| Callable                     | File                                       |
+| ---------------------------- | ------------------------------------------ |
+| `createTeam`                 | `functions/user/teams/createTeam.ts`       |
+| `rolloverTeam`               | `functions/user/teams/rolloverTeam.ts`     |
+| `deleteTeam`                 | `functions/user/teams/deleteTeam.ts`       |
+| `updateTeamRoster`           | `functions/user/teams/updateTeamRoster.ts` |
+| `createOffer`, `updateOffer` | `functions/user/offers/`                   |
 
 Paying is different: only admins may pay before registration opens (see
 [TEAM_PAYMENTS.md](../TEAM_PAYMENTS.md)).
@@ -138,17 +144,17 @@ them and a forged request, and it runs before any read or write.
   writes `stripe/{uid}/payments/{sessionId}`, which fires `onPaymentCreated`.
   A team contribution is recorded in the team's contribution ledger instead;
   see [TEAM_PAYMENTS.md](../TEAM_PAYMENTS.md). `charge.refunded` keeps that
-  ledger in step with refunds made outside the code. Also mirrors Products
-  and Prices into Firestore.
+  ledger in step with refunds made outside the code. Any other event is
+  acknowledged and ignored.
 
 ## Services and shared helpers
 
 | Module                                  | Holds                                                                                                                                                          |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `services/accountDeletionService`       | What deleting an account removes, and what it keeps; shared by `deletePlayer` and `userDeleted`                                                                |
-| `services/teamRegistrationService`      | The registration rule and the transactional twelve-team cap                                                                                                    |
-| `services/teamDeletionService`          | Deleting a team-season, refusing while it holds money                                                                                                          |
-| `services/teamSettlementService`        | Refunding and reconciling a team's money with Stripe                                                                                                           |
+| `services/accountDeletion`              | What deleting an account removes, and what it keeps; shared by `deletePlayer` and `userDeleted`                                                                |
+| `services/teamRegistration`             | The registration rule and the transactional twelve-team cap                                                                                                    |
+| `services/teamDeletion`                 | Deleting a team-season, refusing while it holds money                                                                                                          |
+| `services/teamSettlement`               | Refunding and reconciling a team's money with Stripe                                                                                                           |
 | `services/teamContributionIntake`       | Taking a PaymentIntent into the ledger, or refunding it if it cannot be attributed                                                                             |
 | `services/teamCheckoutReservations`     | Reserving a contribution while its payer is on Stripe's page, and ending the reservation                                                                       |
 | `services/teamPaymentsSweep`            | Finding and settling every unregistered team holding money                                                                                                     |
@@ -173,7 +179,10 @@ them and a forged request, and it runs before any read or write.
 | `shared/offers`                         | Cancelling a player's pending offers once they join a team                                                                                                     |
 | `shared/storage`                        | Public URLs for stored files, pointing at the emulator when running under it                                                                                   |
 | `shared/format`                         | Dates in user-facing messages, in the reader's zone or Minneapolis's                                                                                           |
-| `shared/errors`                         | Logging a trigger's or webhook's failure before rethrowing it                                                                                                  |
+| `shared/errors`                         | `rethrowAsHttpsError`, every callable's catch-all; `handleFunctionError` for a trigger's or webhook's failure                                                  |
+| `shared/teamPaymentRules`               | The smallest contribution, signed players and registration spots; the App imports them                                                                         |
+| `shared/batches`                        | Deleting a collection in `WriteBatch`es small enough for production                                                                                            |
+| `email/*`                               | The outbox, sender, delivery reports, receipts and templates — see [EMAIL.md](../EMAIL.md)                                                                     |
 | `shared/maintenance`                    | The migration kill-switch every trigger checks first                                                                                                           |
 
 ## Configuration
@@ -182,6 +191,7 @@ Secrets are Firebase secrets in production and `Functions/.secret.local` under
 the emulator:
 
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`
 
 Firebase injects only the secrets a function lists in its `secrets` option.
 `config/environment.ts` therefore reads each secret when code first uses it

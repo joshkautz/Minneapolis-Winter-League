@@ -1,3 +1,4 @@
+import { useUserStatus } from '@/shared/hooks'
 import { useCallback, useMemo, useState } from 'react'
 import {
 	deleteTeamViaFunction,
@@ -7,7 +8,6 @@ import { toast } from 'sonner'
 import { logger, errorMessage } from '@/shared/utils'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
-import { useUserStatus } from '@/shared/hooks/use-user-status'
 
 /**
  * Custom hook for managing captain actions (edit, leave, delete team)

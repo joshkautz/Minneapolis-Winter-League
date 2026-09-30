@@ -1,6 +1,6 @@
+import { useUserStatus } from '@/shared/hooks'
 import { useMemo } from 'react'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
-import { useUserStatus } from '@/shared/hooks/use-user-status'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { usesTeamPayments } from '@/shared/utils'
 

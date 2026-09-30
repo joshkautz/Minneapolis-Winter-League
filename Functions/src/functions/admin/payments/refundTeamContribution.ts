@@ -24,7 +24,7 @@ import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { Collections } from '../../../types.js'
 import { teamContributionsCollection } from '../../../shared/contributions.js'
 import { createStripeClient } from '../../../shared/stripe.js'
-import { refundContribution } from '../../../services/teamSettlementService.js'
+import { refundContribution } from '../../../services/teamSettlement.js'
 
 interface RefundTeamContributionRequest {
 	teamId: string

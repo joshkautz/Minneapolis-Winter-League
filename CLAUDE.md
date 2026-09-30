@@ -35,9 +35,11 @@ npm run typecheck      # tsc --noEmit across both workspaces
 npm run lint:fix       # eslint --fix across both workspaces
 ```
 
-Run `npm run verify` before declaring work finished — both GitHub Actions
-workflows gate on `format:check`, `lint:check` and `build`, so a formatting
-slip fails the build.
+Run `npm run verify` before declaring work finished, and check its exit
+status rather than the tail of its output. CI runs the same checks: both
+workflows run format, lint, typecheck, unit tests and build for each
+workspace, then the rules and integration suites, so a formatting slip
+fails the deploy.
 
 ## Architecture: Functions-first
 
@@ -71,6 +73,8 @@ Per-season state hangs off subcollections rather than the parent document:
   (a ban is **not** season state — it lives on `players/{uid}.banned`)
 - `players/{uid}/waiverSignatures/{id}` — the evidence behind `signed`;
   **private** to the player and admins (see `docs/WAIVERS.md`)
+- `rankings/{playerId}` — the all-time leaderboard, written by the rankings
+  rebuild
 - `seasons/{seasonId}/rankings/{playerId}` — a rostered player's standing in
   that season, written by the rankings rebuild
 - `player-ranking-history/{playerId}` — one player's rating, rank and season
@@ -141,7 +145,7 @@ already allowed.
 
 ## Tests
 
-Four suites (~1,700 tests), all run by `npm run verify`:
+Four suites (~1,900 tests), all run by `npm run verify`:
 
 | Suite           | Location                      | Covers                                                  |
 | --------------- | ----------------------------- | ------------------------------------------------------- |
@@ -168,9 +172,10 @@ both sides of the player/team relationship, add a test in the same change.
 **Mutation-test what you add.** Break the thing the test exists for and
 confirm that test fails. Several suites here gained a test only because a
 mutation survived: the payment trigger's already-paid short-circuit was
-masked by its waiver-exists check, and `gameLoader`'s completed-games filter
-was masked by a redundant guard in `processGame` — the filter's real effect is
-that an unplayed game forms no round, so the test counts snapshots.
+masked by its waiver-exists check, and the rankings input loader's
+completed-games filter was masked by a redundant guard in the engine — the
+filter's real effect is that an unplayed game forms no round, so the test
+counts a player's history rounds.
 
 **Emulator ≠ production.** The Firestore emulator does not enforce the 500-op
 `WriteBatch` limit; a 600-op batch commits there and fails in production.

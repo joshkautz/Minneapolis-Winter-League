@@ -5,3 +5,5 @@
  */
 
 export { QueryError } from './query-error'
+export { ErrorBoundary } from './error-boundary'
+export { GlobalErrorBoundary } from './global-error-boundary'

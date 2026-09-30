@@ -3,16 +3,17 @@
 import type { Firestore } from 'firebase-admin/firestore'
 import { FIREBASE_CONFIG, TEAM_CONFIG } from '../config/constants.js'
 import { playerContactRef, playerRef } from '../shared/database.js'
-import type {
-	PlayerContactDocument,
-	PlayerDocument,
-	SeasonDocument,
-	TeamRosterDocument,
+import {
+	ROSTER_SUBCOLLECTION,
+	type PlayerContactDocument,
+	type PlayerDocument,
+	type SeasonDocument,
+	type TeamRosterDocument,
 } from '../types.js'
 import type { SeasonAnnouncementProps } from './templates/SeasonAnnouncement.js'
 
 /** "Thursday, October 1", on Minneapolis's calendar. */
-export const leagueDay = (date: Date): string =>
+const leagueDay = (date: Date): string =>
 	new Intl.DateTimeFormat('en-US', {
 		weekday: 'long',
 		month: 'long',
@@ -104,12 +105,20 @@ export function describeGameNights(nights: Date[]): string {
 		: `${groups.slice(0, -1).join(', ')}, and ${groups[groups.length - 1]}`
 }
 
+/**
+ * The season is not ready to announce. Its message is written for the admin
+ * sending the announcement, so the callable passes it on as written.
+ */
+export class AnnouncementNotReadyError extends Error {
+	override name = 'AnnouncementNotReadyError'
+}
+
 export function seasonAnnouncementProps(
 	season: SeasonDocument
 ): SeasonAnnouncementProps {
 	// It tells players teams pay together; the amount is left to the site.
 	if (typeof season.teamRegistrationTotalCents !== 'number') {
-		throw new Error(
+		throw new AnnouncementNotReadyError(
 			'The announcement describes team pricing, and this season has none.'
 		)
 	}
@@ -118,7 +127,7 @@ export function seasonAnnouncementProps(
 		season.dateEnd.toDate()
 	)
 	if (nights.length === 0) {
-		throw new Error(
+		throw new AnnouncementNotReadyError(
 			'The season has no Saturday between its first and last day.'
 		)
 	}
@@ -140,7 +149,7 @@ export function seasonAnnouncementProps(
 export async function announcementRecipients(
 	firestore: Firestore
 ): Promise<string[]> {
-	const rosters = await firestore.collectionGroup('roster').get()
+	const rosters = await firestore.collectionGroup(ROSTER_SUBCOLLECTION).get()
 	const playerIds = [
 		...new Set(
 			rosters.docs.flatMap((doc) => {

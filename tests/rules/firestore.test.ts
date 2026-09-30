@@ -111,11 +111,9 @@ beforeEach(async () => {
 		)
 		await setDoc(doc(db, 'players/user-2'), {
 			admin: false,
-			email: 'b@example.com',
 		})
 		await setDoc(doc(db, 'players/admin-1'), {
 			admin: true,
-			email: 'admin@example.com',
 		})
 	})
 })
@@ -350,7 +348,6 @@ describe('system maintenance flag', () => {
 			const db = ctx.firestore() as unknown as Firestore
 			await setDoc(doc(db, 'players/admin-1'), {
 				admin: true,
-				email: 'admin@example.com',
 			})
 		})
 		const db = verified('admin-1')
@@ -368,7 +365,6 @@ describe('the email outbox', () => {
 			await setDoc(doc(db, 'mail/mail-1'), { toAddress: 'a@example.com' })
 			await setDoc(doc(db, 'players/admin-1'), {
 				admin: true,
-				email: 'admin@example.com',
 			})
 		})
 		for (const db of [anonymous(), verified('user-1'), verified('admin-1')]) {

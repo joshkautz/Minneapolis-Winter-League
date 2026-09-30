@@ -10,23 +10,23 @@ import type {
  * a player's registration, and the money arithmetic the team payment card
  * shows.
  *
- * The rules mirror `Functions/src/shared/contributions.ts` and
- * `teamRegistrationService.ts`. They are here so the page can explain itself
- * and validate a form before a round trip — the server is still the only
- * check that counts. Change the rules there and here together.
+ * The limits come from `Functions/src/shared/teamPaymentRules.ts`, the file
+ * the server uses. The arithmetic mirrors `Functions/src/shared/contributions.ts`
+ * and `teamRegistration.ts`, so the page can explain itself and
+ * validate a form before a round trip — the server is still the only check
+ * that counts. Change that arithmetic there and here together.
  */
 
 /** Stripe's contributions and a season's total are whole dollars. */
 export const CENTS_PER_DOLLAR = 100
 
-/** The smallest contribution, unless less than this is still owed. */
-export const MIN_CONTRIBUTION_CENTS = 1_000
+import {
+	MIN_CONTRIBUTION_CENTS,
+	MIN_SIGNED_PLAYERS,
+	REGISTRATION_SPOTS,
+} from '../../../../Functions/src/shared/teamPaymentRules'
 
-/** Players each team needs to have signed their waiver. */
-export const MIN_SIGNED_PLAYERS = 10
-
-/** Teams that can register in a season. */
-export const REGISTRATION_SPOTS = 12
+export { MIN_CONTRIBUTION_CENTS, MIN_SIGNED_PLAYERS, REGISTRATION_SPOTS }
 
 /**
  * Whether a season uses team-level pricing. Checked by type rather than

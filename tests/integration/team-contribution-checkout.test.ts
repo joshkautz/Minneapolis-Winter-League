@@ -119,7 +119,6 @@ const seedMember = async (
 		.set({
 			admin: false,
 			banned: options.banned ?? false,
-			email: `${playerId}@example.com`,
 			firstname: 'Test',
 			lastname: 'Player',
 		})
@@ -401,7 +400,6 @@ describe('createTeamContributionCheckout', () => {
 			await firestore.collection('players').doc('free-agent').set({
 				admin: false,
 				banned: false,
-				email: 'free-agent@example.com',
 			})
 			expect(await codeOf({}, 'free-agent')).toBe('failed-precondition')
 		})
@@ -424,7 +422,6 @@ describe('createTeamContributionCheckout', () => {
 			await firestore.collection('players').doc('admin-1').set({
 				admin: true,
 				banned: false,
-				email: 'admin-1@example.com',
 			})
 			expect(await codeOf({}, 'admin-1')).toBe('failed-precondition')
 		})

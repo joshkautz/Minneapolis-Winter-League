@@ -8,11 +8,7 @@
  * to prevent "app already exists" errors during hot reloads, cold starts,
  * and multiple function imports.
  */
-import {
-	initializeApp as _initializeApp,
-	getApps,
-	getApp,
-} from 'firebase-admin/app'
+import { initializeApp as _initializeApp, getApps } from 'firebase-admin/app'
 
 /**
  * Creates and initializes a Firebase Admin app instance safely.
@@ -29,7 +25,7 @@ import {
  * **How it works:**
  * 1. Check if any Firebase apps are already initialized (`getApps().length === 0`)
  * 2. If no apps exist, initialize a new default app with `_initializeApp()`
- * 3. If an app already exists, get the existing default app with `getApp()`
+ * 3. If one already exists, do nothing: every service uses the default app
  *
  * This makes Firebase initialization **idempotent** - safe to call multiple times.
  *
@@ -49,7 +45,5 @@ import {
 export const initializeApp = (): void => {
 	if (getApps().length === 0) {
 		_initializeApp()
-	} else {
-		getApp()
 	}
 }

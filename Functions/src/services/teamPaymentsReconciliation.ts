@@ -31,7 +31,7 @@ import {
 	recordContributionFromStripe,
 	type IntakeOutcome,
 } from './teamContributionIntake.js'
-import { reconcileContribution } from './teamSettlementService.js'
+import { reconcileContribution } from './teamSettlement.js'
 import { contributionStateFromPaymentIntent } from '../shared/settlement.js'
 
 /**

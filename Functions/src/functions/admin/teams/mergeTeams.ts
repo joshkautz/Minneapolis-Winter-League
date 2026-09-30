@@ -54,7 +54,10 @@ import {
 	type TeamBadgeDocument,
 	type TeamContributionDocument,
 	type TeamSeasonDocument,
+	ROSTER_SUBCOLLECTION,
+	TEAM_BADGES_SUBCOLLECTION,
 } from '../../../types.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface MergeTeamsRequest {
 	/** Canonical id of the team to keep */
@@ -196,16 +199,18 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				FirebaseFirestore.QueryDocumentSnapshot[]
 			>()
 			for (const teamSeasonDoc of losingTeamSeasonsSnap.docs) {
-				const rosterSnap = await teamSeasonDoc.ref.collection('roster').get()
+				const rosterSnap = await teamSeasonDoc.ref
+					.collection(ROSTER_SUBCOLLECTION)
+					.get()
 				rosterByLosingSeasonId.set(teamSeasonDoc.id, rosterSnap.docs)
 			}
 
 			// ---- Pre-load badges from both teams ----------------------------
 			const [losingBadgesSnap, winningBadgesSnap] = await Promise.all([
-				losingTeamRef.collection('badges').get() as Promise<
+				losingTeamRef.collection(TEAM_BADGES_SUBCOLLECTION).get() as Promise<
 					FirebaseFirestore.QuerySnapshot<TeamBadgeDocument>
 				>,
-				winningTeamRef.collection('badges').get() as Promise<
+				winningTeamRef.collection(TEAM_BADGES_SUBCOLLECTION).get() as Promise<
 					FirebaseFirestore.QuerySnapshot<TeamBadgeDocument>
 				>,
 			])
@@ -469,18 +474,14 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				rewrittenPlayerSeasons,
 			}
 		} catch (error) {
-			if (error instanceof HttpsError) throw error
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-			logger.error('Error merging teams:', {
-				winningTeamId: request.data?.winningTeamId,
-				losingTeamId: request.data?.losingTeamId,
-				adminUserId: request.auth?.uid,
-				error: errorMessage,
-			})
-			throw new HttpsError(
-				'internal',
-				'The teams could not be merged. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The teams could not be merged. Please try again.',
+				{
+					winningTeamId: request.data?.winningTeamId,
+					losingTeamId: request.data?.losingTeamId,
+					adminUserId: request.auth?.uid,
+				}
 			)
 		}
 	}

@@ -3,7 +3,7 @@ import { Collections } from '../../../types.js'
 import { TRUESKILL_CONSTANTS } from '../constants.js'
 
 /** Recorded on each calculation, so a result can be traced to its rules. */
-export const ALGORITHM_VERSION = 'v6'
+const ALGORITHM_VERSION = 'v6'
 
 /**
  * Creates a new calculation state document

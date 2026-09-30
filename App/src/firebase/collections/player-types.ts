@@ -1,12 +1,12 @@
 /**
  * Shared type definitions for player-related Firebase functions
  * These types must match exactly with the Firebase function implementations
- * in Functions/src/functions/players/
+ * in Functions/src/functions/user/players/
  */
 
 /**
  * Request interface for creating a player
- * Must match Functions/src/functions/user/players/create.ts CreatePlayerRequest exactly
+ * Must match Functions/src/functions/user/players/createPlayer.ts CreatePlayerRequest exactly
  *
  * Note: seasonId is no longer required - the backend automatically adds all
  * seasons where registration is still open (registrationEnd > now)
@@ -19,7 +19,7 @@ export interface CreatePlayerRequest {
 
 /**
  * Response interface for creating a player
- * Must match Functions/src/functions/players/create.ts success response exactly
+ * Must match Functions/src/functions/user/players/createPlayer.ts success response exactly
  */
 export interface CreatePlayerResponse {
 	success: boolean
@@ -29,7 +29,7 @@ export interface CreatePlayerResponse {
 
 /**
  * Request interface for updating a player
- * Must match Functions/src/functions/players/update.ts UpdatePlayerRequest exactly
+ * Must match Functions/src/functions/user/players/updatePlayer.ts UpdatePlayerRequest exactly
  */
 export interface UpdatePlayerRequest {
 	playerId?: string // Optional - defaults to authenticated user
@@ -39,7 +39,7 @@ export interface UpdatePlayerRequest {
 
 /**
  * Response interface for updating a player
- * Must match Functions/src/functions/players/update.ts success response exactly
+ * Must match Functions/src/functions/user/players/updatePlayer.ts success response exactly
  */
 export interface UpdatePlayerResponse {
 	success: boolean
@@ -49,7 +49,7 @@ export interface UpdatePlayerResponse {
 
 /**
  * Response interface for a player deleting their own account
- * Must match Functions/src/functions/user/players/delete.ts DeletePlayerResponse
+ * Must match Functions/src/functions/user/players/deletePlayer.ts DeletePlayerResponse
  */
 export interface DeletePlayerResponse {
 	success: true

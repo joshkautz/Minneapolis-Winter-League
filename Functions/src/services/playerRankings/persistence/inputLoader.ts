@@ -10,6 +10,7 @@ import {
 	type GameDocument,
 	type PlayerDocument,
 	type TeamRosterDocument,
+	ROSTER_SUBCOLLECTION,
 } from '../../../types.js'
 import {
 	rosterKey,
@@ -34,7 +35,7 @@ export async function loadRankingInput(
 		firestore.collection(Collections.SEASONS).get(),
 		firestore.collection(Collections.GAMES).get(),
 		// Every `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}`.
-		firestore.collectionGroup('roster').get(),
+		firestore.collectionGroup(ROSTER_SUBCOLLECTION).get(),
 	])
 
 	const games: EngineGame[] = gamesSnapshot.docs.map((doc) => {

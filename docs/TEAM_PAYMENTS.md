@@ -618,7 +618,7 @@ the team stands, and everything that can change that calls it:
 | the webhook, on Dashboard or bank changes    | Corrects the ledger to what Stripe says                       |
 
 The decisions are a pure planner (`shared/settlement.ts`) with no Stripe in
-it; the executor (`services/teamSettlementService.ts`) reads each
+it; the executor (`services/teamSettlement.ts`) reads each
 PaymentIntent before acting, keys every write, and records what Stripe
 reports afterwards rather than what it asked for.
 

@@ -10,6 +10,7 @@ import {
 	Collections,
 	type SeasonDocument,
 	type TeamSeasonDocument,
+	ROSTER_SUBCOLLECTION,
 } from '../types.js'
 import { teamSeasonRef } from '../shared/database.js'
 import { describeGameNights, gameNightsOf } from './announcement.js'
@@ -30,7 +31,7 @@ async function teamContext(
 	const [teamSeason, season, roster] = await Promise.all([
 		teamSeasonDoc.get(),
 		firestore.collection(Collections.SEASONS).doc(seasonId).get(),
-		teamSeasonDoc.collection('roster').get(),
+		teamSeasonDoc.collection(ROSTER_SUBCOLLECTION).get(),
 	])
 	if (!teamSeason.exists) return null
 	return {

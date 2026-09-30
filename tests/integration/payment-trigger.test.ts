@@ -67,7 +67,6 @@ beforeEach(async () => {
 
 	await firestore.collection('players').doc(UID).set({
 		admin: false,
-		email: 'player@example.com',
 		firstname: 'Test',
 		lastname: 'Player',
 	})

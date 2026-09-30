@@ -15,6 +15,7 @@ import {
 } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface DeleteReplyRequest {
 	postId: string
@@ -104,23 +105,10 @@ export const deleteReply = onCall<
 				message: 'Reply deleted successfully',
 			}
 		} catch (error) {
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error deleting reply:', {
-				userId: auth?.uid,
-				postId: data.postId,
-				replyId: data.replyId,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The reply could not be deleted. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The reply could not be deleted. Please try again.',
+				{ userId: auth?.uid, postId: data.postId, replyId: data.replyId }
 			)
 		}
 	}

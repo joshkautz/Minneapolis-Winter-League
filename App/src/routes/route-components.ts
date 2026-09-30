@@ -135,6 +135,6 @@ export const PostsManagement = lazyImport(
 // ==================== ERROR PAGES ====================
 
 export const NotFound = lazyImport(
-	() => import('@/features/not-found'),
+	() => import('@/features/public/not-found'),
 	'NotFound'
 )

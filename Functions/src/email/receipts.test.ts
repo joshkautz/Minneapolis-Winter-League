@@ -6,6 +6,7 @@ import {
 	paymentMethodOf,
 	receiptFor,
 	receiptMailId,
+	teamNameFromDescription,
 } from './receipts.js'
 import { possessive } from './templates/Receipts.js'
 
@@ -163,5 +164,27 @@ describe('possessive', () => {
 		['TOUCANS', 'TOUCANS’'],
 	])('writes %s as %s', (name, text) => {
 		expect(possessive(name)).toBe(text)
+	})
+})
+
+describe('teamNameFromDescription', () => {
+	// createTeamContributionCheckout writes the description this way; a
+	// receipt falls back to it when the team-season has since been deleted.
+	it('reads the team from a team registration payment', () => {
+		expect(
+			teamNameFromDescription('Team registration: Chao World, 2026 Fall')
+		).toBe('Chao World')
+	})
+
+	it('keeps a comma inside the team name', () => {
+		expect(
+			teamNameFromDescription('Team registration: Hucks, Inc., 2026 Fall')
+		).toBe('Hucks, Inc.')
+	})
+
+	it('returns null for any other description', () => {
+		expect(teamNameFromDescription('Winter League registration')).toBeNull()
+		expect(teamNameFromDescription(null)).toBeNull()
+		expect(teamNameFromDescription(undefined)).toBeNull()
 	})
 })

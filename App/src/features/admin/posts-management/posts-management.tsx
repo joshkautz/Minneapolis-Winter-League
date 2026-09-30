@@ -19,7 +19,6 @@ import {
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { formatDistanceToNow } from 'date-fns'
 
 import {
 	allPostsQueryBySeason,
@@ -525,14 +524,6 @@ const RepliesRow = ({ postId, onDeleteReply }: RepliesRowProps) => {
 			isCancelled = true
 		}
 	}, [repliesSnapshot])
-
-	const formatRelativeTime = (date: Date) => {
-		try {
-			return formatDistanceToNow(date, { addSuffix: true })
-		} catch {
-			return 'Recently'
-		}
-	}
 
 	if (repliesLoading || isProcessing) {
 		return (

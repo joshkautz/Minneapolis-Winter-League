@@ -152,14 +152,12 @@ beforeEach(async () => {
 	// A signed-in, non-admin player.
 	await firestore.collection('players').doc('player-1').set({
 		admin: false,
-		email: 'p@example.com',
 		firstname: 'P',
 		lastname: 'One',
 	})
 	// A signed-in admin.
 	await firestore.collection('players').doc('admin-1').set({
 		admin: true,
-		email: 'a@example.com',
 		firstname: 'A',
 		lastname: 'One',
 	})

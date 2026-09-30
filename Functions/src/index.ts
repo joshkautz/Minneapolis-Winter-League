@@ -1,40 +1,10 @@
 /**
- * Firebase Functions Entry Point
+ * The deploy manifest: every Cloud Function is exported from here, and a
+ * function that is not exported is not deployed.
  *
- * This file serves as the main entry point for all Firebase Functions.
- * Functions are organized by access level and domain:
- *
- * TRIGGERS:
- * - Authentication triggers (user lifecycle events)
- * - Document triggers (Firestore document changes)
- * - Payment triggers (payment processing events)
- *
- * API ENDPOINTS:
- * - Webhooks (external service callbacks)
- *
- * CALLABLE FUNCTIONS (ADMIN-ONLY):
- * - Player management (email updates, admin status, verification)
- * - Team management (unregistered team deletion)
- * - Game management (CRUD operations)
- * - News management (CRUD operations)
- * - Season management (CRUD operations with auto player integration)
- * - Player rankings (rebuild and update)
- * - Badge management (CRUD operations, award/revoke badges)
- * - Posts management (delete posts and replies)
- *
- * CALLABLE FUNCTIONS (USER-ACCESSIBLE):
- * - Player management (CRUD operations)
- * - Team management (CRUD operations)
- * - Offer management (invitation/request system)
- * - Storage management (file upload/download)
- * - Waivers (signing in the app)
- * - Posts management (create/update posts and replies)
- *
- * This organization provides:
- * - Clear separation between admin and user functions
- * - Easy to find and maintain functions
- * - Consistent naming conventions
- * - Type safety and error handling
+ * Exports are grouped by kind (triggers, HTTP endpoints, admin callables,
+ * player callables) under the banners below. docs/functions/README.md lists
+ * what each one does.
  */
 
 import { initializeApp } from './initializeApp.js'
@@ -50,20 +20,20 @@ initializeApp()
 export { userDeleted } from './triggers/auth/userDeleted.js'
 
 // Document triggers
-export { onOfferUpdated } from './triggers/documents/offerUpdated.js'
-export { updateTeamRegistrationOnPlayerChange } from './triggers/documents/playerUpdated.js'
-export { updateTeamRegistrationOnRosterChange } from './triggers/documents/teamUpdated.js'
-export { updateTeamRegistrationOnContributionChange } from './triggers/documents/contributionWritten.js'
-export { emailContributionReceipt } from './triggers/documents/contributionReceipt.js'
-export { onTeamRegistrationChange } from './triggers/documents/teamRegistrationLock.js'
-export { sendQueuedEmail } from './triggers/documents/mailQueued.js'
+export { onOfferUpdated } from './triggers/documents/onOfferUpdated.js'
+export { updateTeamRegistrationOnPlayerChange } from './triggers/documents/updateTeamRegistrationOnPlayerChange.js'
+export { updateTeamRegistrationOnRosterChange } from './triggers/documents/updateTeamRegistrationOnRosterChange.js'
+export { updateTeamRegistrationOnContributionChange } from './triggers/documents/updateTeamRegistrationOnContributionChange.js'
+export { emailContributionReceipt } from './triggers/documents/emailContributionReceipt.js'
+export { onTeamRegistrationChange } from './triggers/documents/onTeamRegistrationChange.js'
+export { sendQueuedEmail } from './triggers/documents/sendQueuedEmail.js'
 
 // Payment triggers
-export { onPaymentCreated } from './triggers/payments/paymentCreated.js'
+export { onPaymentCreated } from './triggers/payments/onPaymentCreated.js'
 
 // Scheduled functions
-export { sweepTeamPaymentsHourly } from './triggers/scheduled/sweepTeamPayments.js'
-export { reconcileTeamPaymentsDaily } from './triggers/scheduled/reconcileTeamPayments.js'
+export { sweepTeamPaymentsHourly } from './triggers/scheduled/sweepTeamPaymentsHourly.js'
+export { reconcileTeamPaymentsDaily } from './triggers/scheduled/reconcileTeamPaymentsDaily.js'
 export { rebuildRankingsNightly } from './triggers/scheduled/rebuildRankingsNightly.js'
 
 //////////////////////////////////////////////////////////////////////////////
@@ -80,20 +50,20 @@ export { resendWebhook } from './api/webhooks/resend.js'
 //////////////////////////////////////////////////////////////////////////////
 
 // Player management functions (user-accessible)
-export { createPlayer } from './functions/user/players/create.js'
-export { updatePlayer } from './functions/user/players/update.js'
-export { deletePlayer } from './functions/user/players/delete.js'
+export { createPlayer } from './functions/user/players/createPlayer.js'
+export { updatePlayer } from './functions/user/players/updatePlayer.js'
+export { deletePlayer } from './functions/user/players/deletePlayer.js'
 
 // Player management functions (admin-only)
 export { updatePlayerAdmin } from './functions/admin/players/updatePlayerAdmin.js'
 export { getPlayerAuthInfo } from './functions/admin/players/getPlayerAuthInfo.js'
 
 // Team management functions (user-accessible)
-export { createTeam } from './functions/user/teams/create.js'
-export { rolloverTeam } from './functions/user/teams/rollover.js'
-export { updateTeam } from './functions/user/teams/update.js'
-export { deleteTeam } from './functions/user/teams/delete.js'
-export { updateTeamRoster } from './functions/user/teams/updateRoster.js'
+export { createTeam } from './functions/user/teams/createTeam.js'
+export { rolloverTeam } from './functions/user/teams/rolloverTeam.js'
+export { updateTeam } from './functions/user/teams/updateTeam.js'
+export { deleteTeam } from './functions/user/teams/deleteTeam.js'
+export { updateTeamRoster } from './functions/user/teams/updateTeamRoster.js'
 
 // Team management functions (admin-only)
 export { deleteUnregisteredTeam } from './functions/admin/teams/deleteUnregisteredTeam.js'
@@ -101,22 +71,22 @@ export { updateTeamAdmin } from './functions/admin/teams/updateTeamAdmin.js'
 export { mergeTeams } from './functions/admin/teams/mergeTeams.js'
 
 // Offer management functions (user-accessible)
-export { createOffer } from './functions/user/offers/create.js'
-export { updateOffer } from './functions/user/offers/update.js'
+export { createOffer } from './functions/user/offers/createOffer.js'
+export { updateOffer } from './functions/user/offers/updateOffer.js'
 
 // News management functions (admin-only)
-export { createNews } from './functions/admin/news/create.js'
-export { updateNews } from './functions/admin/news/update.js'
-export { deleteNews } from './functions/admin/news/delete.js'
+export { createNews } from './functions/admin/news/createNews.js'
+export { updateNews } from './functions/admin/news/updateNews.js'
+export { deleteNews } from './functions/admin/news/deleteNews.js'
 
 // Season management functions (admin-only)
-export { createSeason } from './functions/admin/seasons/create.js'
-export { updateSeason } from './functions/admin/seasons/update.js'
-export { deleteSeason } from './functions/admin/seasons/delete.js'
+export { createSeason } from './functions/admin/seasons/createSeason.js'
+export { updateSeason } from './functions/admin/seasons/updateSeason.js'
+export { deleteSeason } from './functions/admin/seasons/deleteSeason.js'
 
 // Swiss season management functions (admin-only)
-export { setSwissSeeding } from './functions/admin/swiss/setSeeding.js'
-export { getSwissRankings } from './functions/admin/swiss/getRankings.js'
+export { setSwissSeeding } from './functions/admin/swiss/setSwissSeeding.js'
+export { getSwissRankings } from './functions/admin/swiss/getSwissRankings.js'
 
 // Player Rankings (admin-only). A full rebuild every time: TrueSkill carries
 // uncertainty through every game, so there is no incremental update.
@@ -131,7 +101,7 @@ export { getEmailPreferences } from './functions/user/email/getEmailPreferences.
 export { updateEmailPreferences } from './functions/user/email/updateEmailPreferences.js'
 
 // Waiver functions (user-accessible)
-export { signWaiver } from './functions/user/waivers/sign.js'
+export { signWaiver } from './functions/user/waivers/signWaiver.js'
 
 // Payment functions (user-accessible)
 export { createStripeCheckout } from './functions/user/payments/createStripeCheckout.js'
@@ -142,19 +112,19 @@ export { cancelTeamContributionCheckout } from './functions/user/payments/cancel
 export { refundTeamContribution } from './functions/admin/payments/refundTeamContribution.js'
 
 // Game management functions (admin-only)
-export { createGame } from './functions/admin/games/create.js'
-export { updateGame } from './functions/admin/games/update.js'
-export { deleteGame } from './functions/admin/games/delete.js'
+export { createGame } from './functions/admin/games/createGame.js'
+export { updateGame } from './functions/admin/games/updateGame.js'
+export { deleteGame } from './functions/admin/games/deleteGame.js'
 
 // Badge management functions (admin-only)
-export { createBadge } from './functions/admin/badges/create.js'
-export { updateBadge } from './functions/admin/badges/update.js'
-export { deleteBadge } from './functions/admin/badges/delete.js'
+export { createBadge } from './functions/admin/badges/createBadge.js'
+export { updateBadge } from './functions/admin/badges/updateBadge.js'
+export { deleteBadge } from './functions/admin/badges/deleteBadge.js'
 export { awardBadge } from './functions/admin/badges/awardBadge.js'
 export { revokeBadge } from './functions/admin/badges/revokeBadge.js'
 
 // Site settings functions (admin-only)
-export { updateSiteSettings } from './functions/admin/site-settings/updateSiteSettings.js'
+export { updateSiteSettings } from './functions/admin/siteSettings/updateSiteSettings.js'
 
 // Posts functions (user-accessible)
 export { createPost } from './functions/user/posts/createPost.js'

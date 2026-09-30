@@ -466,11 +466,11 @@ describe('refundTeamContribution', () => {
 		await firestore
 			.collection('players')
 			.doc(ADMIN)
-			.set({ admin: true, banned: false, email: 'a@example.com' })
+			.set({ admin: true, banned: false })
 		await firestore
 			.collection('players')
 			.doc('player-1')
-			.set({ admin: false, banned: false, email: 'p@example.com' })
+			.set({ admin: false, banned: false })
 		await seedTeam('team-a')
 		await pay('pi_a', 50_000, 'team-a')
 	})

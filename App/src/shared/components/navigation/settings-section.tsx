@@ -5,7 +5,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '@/components/ui/popover'
-import { SeparatorWithText } from '@/components/ui/separator-with-text'
+import { SeparatorWithText } from '../separator-with-text'
 import { Settings } from 'lucide-react'
 import { SeasonSelect } from '../season-select'
 import { ThemeSelect } from '../theme-select'

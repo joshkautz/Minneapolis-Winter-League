@@ -18,10 +18,8 @@ authorization themselves, with the validators in
 `Functions/src/shared/auth.ts`. Admin status is the `admin` boolean on the
 player document, not an Auth custom claim. See [SECURITY.md](../SECURITY.md).
 
-Most league data is public to read. The exceptions are a player's Stripe
-records and Dropbox Sign history (that player only), their email and waiver
-signatures (that player and admins), and a team's payments and open checkouts (that
-season's roster and admins). `tests/rules/firestore.test.ts` pins each.
+Most league data is public to read; SECURITY.md lists the exceptions, and
+`tests/rules/firestore.test.ts` pins each.
 
 Storage holds public images — team logos and badges — written by Functions
 and served by public URL; `storage.rules` denies every client write.

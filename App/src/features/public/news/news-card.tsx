@@ -1,6 +1,3 @@
-import { useEffect, useState } from 'react'
-import { getDoc } from 'firebase/firestore'
-import { formatDistanceToNow } from 'date-fns'
 import { User, Calendar } from 'lucide-react'
 import {
 	Card,
@@ -11,8 +8,9 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { NewsDocument, PlayerDocument } from '@/types'
-import { logger } from '@/shared/utils'
+import { NewsDocument } from '@/types'
+import { formatRelativeTimestamp } from '@/shared/utils'
+import { useAuthorName } from '@/shared/hooks'
 
 interface NewsCardProps {
 	post: NewsDocument
@@ -24,38 +22,9 @@ interface NewsCardProps {
  * Displays a single news post with author info and timestamp
  */
 export const NewsCard = ({ post }: NewsCardProps) => {
-	const [authorName, setAuthorName] = useState<string>('Loading...')
-
-	// Fetch author name
-	useEffect(() => {
-		const fetchAuthor = async () => {
-			try {
-				const authorDoc = await getDoc(post.author)
-				if (authorDoc.exists()) {
-					const authorData = authorDoc.data() as PlayerDocument
-					setAuthorName(`${authorData.firstname} ${authorData.lastname}`)
-				} else {
-					// News is the league's; an admin who wrote it may since have
-					// deleted their account.
-					setAuthorName('Minneapolis Winter League')
-				}
-			} catch (error) {
-				logger.error('Error fetching author', error)
-				setAuthorName('Unknown Author')
-			}
-		}
-
-		fetchAuthor()
-	}, [post.author])
-
-	const formatDate = (timestamp: NewsDocument['createdAt']) => {
-		try {
-			const date = timestamp.toDate()
-			return formatDistanceToNow(date, { addSuffix: true })
-		} catch {
-			return 'Recently'
-		}
-	}
+	// News is the league's; an admin who wrote it may since have deleted
+	// their account.
+	const authorName = useAuthorName(post.author, 'Minneapolis Winter League')
 
 	return (
 		<Card className='transition-all hover:shadow-md'>
@@ -74,7 +43,7 @@ export const NewsCard = ({ post }: NewsCardProps) => {
 							<span className='flex items-center gap-1.5'>
 								<Calendar className='h-4 w-4' aria-hidden='true' />
 								<time dateTime={post.createdAt.toDate().toISOString()}>
-									{formatDate(post.createdAt)}
+									{formatRelativeTimestamp(post.createdAt)}
 								</time>
 							</span>
 							{post.updatedAt.seconds !== post.createdAt.seconds && (

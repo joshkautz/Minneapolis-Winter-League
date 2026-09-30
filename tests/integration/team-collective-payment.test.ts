@@ -341,7 +341,6 @@ beforeEach(async () => {
 			.set({
 				admin: false,
 				banned: false,
-				email: `${playerId}@example.com`,
 				firstname: 'Test',
 				lastname: nameOf(playerId),
 			})

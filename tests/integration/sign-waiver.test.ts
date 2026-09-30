@@ -114,7 +114,6 @@ const seedPlayer = async (
 		.set({
 			admin: false,
 			banned: false,
-			email: `${uid}@example.com`,
 			firstname: 'Test',
 			lastname: 'Player',
 			...overrides,

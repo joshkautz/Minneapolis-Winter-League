@@ -136,7 +136,7 @@ service cloud.firestore {
     match /playerContacts/{playerId} {
       allow read: if isAuthenticated()
         && (request.auth.uid == playerId || isAdmin());
-      allow write: if false; // Use createPlayer, updatePlayerAdmin
+      allow write: if false; // Functions only (sign-up, admin edits, email preferences, the delivery webhook)
     }
 
     match /offers/{offerId} {
@@ -236,10 +236,11 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/players/$(request.auth.uid)).data.admin == true;
     }
 
-    // Maintenance / migration kill-switch flag. Setting it stops every
-    // trigger, so no client may write it, admins included:
-    // scripts/production/set-maintenance.js flips it with the Admin SDK,
-    // which bypasses these rules.
+    // system/maintenance (the migration kill-switch) and system/email (the
+    // sending mode and test recipients). Either can stop or start things
+    // league-wide, so no client may write them, admins included: the
+    // scripts in scripts/production/ set them with the Admin SDK, which
+    // bypasses these rules.
     match /system/{document} {
       allow read: if isAdmin();
       allow write: if false;

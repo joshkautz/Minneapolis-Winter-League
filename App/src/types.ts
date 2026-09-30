@@ -100,6 +100,15 @@ export const WAIVER_SIGNATURES_SUBCOLLECTION = 'waiverSignatures'
 export const TEAM_SEASONS_SUBCOLLECTION = 'teamSeasons'
 
 /**
+ * Subcollection name for a team's roster in a season, the membership join:
+ * `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}`.
+ */
+export const ROSTER_SUBCOLLECTION = 'roster'
+
+/** Subcollection name for a team's awarded badges: `teams/{teamId}/badges`. */
+export const TEAM_BADGES_SUBCOLLECTION = 'badges'
+
+/**
  * Available theme variants for the site
  * Add new themes here - they will automatically appear in the admin settings
  */
@@ -224,8 +233,8 @@ export type OptionalEmailCategory = Exclude<EmailCategory, 'account'>
  * Stored at `players/{uid}/playerSeasons/{seasonId}`. The doc id matches the season
  * document's id, so there is at most one doc per (player, season) pair.
  *
- * Captain status, payment status, waiver status, and ban status all live here
- * (single source of truth). The team's roster subcollection contains only the
+ * Captain, payment and waiver status live here (single source of truth); a
+ * ban is not season state and lives on `players/{uid}.banned`. The team's roster subcollection contains only the
  * membership join, never status fields.
  */
 export interface PlayerSeasonDocument extends DocumentData {
@@ -241,7 +250,7 @@ export interface PlayerSeasonDocument extends DocumentData {
 	 * because Firestore has no joins and both reads are hot paths. The App
 	 * never writes either side directly — all membership changes flow
 	 * through Functions callables (`updateTeamRoster`, `updateTeamAdmin`,
-	 * `updatePlayerAdmin`) and triggers (`offerUpdated`), which use the
+	 * `updatePlayerAdmin`) and triggers (`onOfferUpdated`), which use the
 	 * `shared/membership.ts` helpers to write both sides atomically.
 	 */
 	team: DocumentReference<TeamDocument> | null
@@ -627,7 +636,7 @@ export interface PostDocument extends DocumentData {
 	author: DocumentReference<PlayerDocument>
 	/** Reference to the season this post belongs to */
 	season: DocumentReference<SeasonDocument>
-	/** Post content/message (10-2000 characters) */
+	/** Post content; its length rules are TEXT_RULES.postContent */
 	content: string
 	/** Timestamp when the post was created */
 	createdAt: Timestamp
@@ -644,7 +653,7 @@ export interface PostDocument extends DocumentData {
 export interface ReplyDocument extends DocumentData {
 	/** Reference to the player who created the reply */
 	author: DocumentReference<PlayerDocument>
-	/** Reply content/message (10-1000 characters) */
+	/** Reply content; its length rules are TEXT_RULES.replyContent */
 	content: string
 	/** Timestamp when the reply was created */
 	createdAt: Timestamp

@@ -1,13 +1,19 @@
 /**
  * Client-side wrappers for Firebase Functions
  *
- * These functions provide a clean interface to call Firebase Functions
- * from the client-side application, replacing the complex client-side
- * Firestore operations.
+ * Every write goes through one of these: firestore.rules denies client
+ * writes, so each wrapper calls the callable of the same name.
  */
 
 import { httpsCallable } from 'firebase/functions'
 import { functions } from '../app'
+import {
+	OfferStatus,
+	OfferType,
+	type OptionalEmailCategory,
+	type ThemeVariant,
+	type SeasonFormat,
+} from '@/types'
 import type { WaiverSubmission } from '@/shared/waiver'
 import type {
 	CreatePlayerRequest,
@@ -19,7 +25,6 @@ import type {
 
 /**
  * Creates a new player profile via Firebase Function
- * Replaces the complex client-side createPlayer function
  *
  * This function ensures all security validations are performed server-side:
  * - Authentication verification
@@ -466,8 +471,7 @@ interface DeleteTeamResponse {
 }
 
 /**
- * Deletes a team via Firebase Function
- * Replaces the complex client-side deleteTeam function
+ * Deletes a team from one season via Firebase Function
  */
 export const deleteTeamViaFunction = async (
 	data: DeleteTeamRequest
@@ -494,8 +498,7 @@ interface UpdateTeamRosterResponse {
 }
 
 /**
- * Updates team roster (promote/demote/remove) via Firebase Function
- * Replaces promoteToCaptain, demoteFromCaptain, removeFromTeam functions
+ * Promotes, demotes or removes a rostered player via Firebase Function
  */
 export const updateTeamRosterViaFunction = async (
 	data: ManageTeamPlayerRequest
@@ -508,7 +511,7 @@ export const updateTeamRosterViaFunction = async (
 	return result.data
 }
 
-interface EditTeamRequest {
+interface UpdateTeamRequest {
 	teamId: string
 	seasonId: string
 	name?: string
@@ -516,20 +519,19 @@ interface EditTeamRequest {
 	logoContentType?: string // MIME type of the image
 }
 
-interface EditTeamResponse {
+interface UpdateTeamResponse {
 	success: boolean
 	message: string
 	teamId: string
 }
 
 /**
- * Edits team information via Firebase Function
- * Replaces the client-side editTeam function
+ * Updates a team's name or logo for a season via Firebase Function
  */
-export const editTeamViaFunction = async (
-	data: EditTeamRequest
-): Promise<EditTeamResponse> => {
-	const updateTeam = httpsCallable<EditTeamRequest, EditTeamResponse>(
+export const updateTeamViaFunction = async (
+	data: UpdateTeamRequest
+): Promise<UpdateTeamResponse> => {
+	const updateTeam = httpsCallable<UpdateTeamRequest, UpdateTeamResponse>(
 		functions,
 		'updateTeam'
 	)
@@ -554,7 +556,6 @@ interface CreateOfferResponse {
 
 /**
  * Creates an offer (invitation or request) via Firebase Function
- * Replaces invitePlayer and requestToJoinTeam functions
  */
 export const createOfferViaFunction = async (
 	data: CreateOfferRequest
@@ -580,7 +581,6 @@ interface UpdateOfferResponse {
 
 /**
  * Updates an offer (accept/reject/cancel) via Firebase Function
- * Replaces acceptOffer and rejectOffer functions
  */
 export const updateOfferViaFunction = async (
 	data: UpdateOfferRequest
@@ -597,13 +597,7 @@ export const updateOfferViaFunction = async (
 // GAME MANAGEMENT FUNCTIONS
 //////////////////////////////////////////////////////////////////////////////
 
-/**
- * Create a new game via Firebase Function
- *
- * @param data Game creation parameters
- * @returns Success response with game ID
- */
-export const createGameViaFunction = async (data: {
+interface CreateGameRequest {
 	homeTeamId: string | null
 	awayTeamId: string | null
 	homeScore: number | null
@@ -612,10 +606,31 @@ export const createGameViaFunction = async (data: {
 	type: 'regular' | 'playoff'
 	timestamp: string
 	seasonId: string
-}): Promise<{ success: true; gameId: string; message: string }> => {
-	const createGame = httpsCallable(functions, 'createGame')
+}
+
+type UpdateGameRequest = { gameId: string } & Partial<CreateGameRequest>
+
+interface GameMutationResponse {
+	success: true
+	gameId: string
+	message: string
+}
+
+/**
+ * Create a new game via Firebase Function
+ *
+ * @param data Game creation parameters
+ * @returns Success response with game ID
+ */
+export const createGameViaFunction = async (
+	data: CreateGameRequest
+): Promise<GameMutationResponse> => {
+	const createGame = httpsCallable<CreateGameRequest, GameMutationResponse>(
+		functions,
+		'createGame'
+	)
 	const result = await createGame(data)
-	return result.data as { success: true; gameId: string; message: string }
+	return result.data
 }
 
 /**
@@ -624,20 +639,15 @@ export const createGameViaFunction = async (data: {
  * @param data Game update parameters
  * @returns Success response
  */
-export const updateGameViaFunction = async (data: {
-	gameId: string
-	homeTeamId?: string | null
-	awayTeamId?: string | null
-	homeScore?: number | null
-	awayScore?: number | null
-	field?: number
-	type?: 'regular' | 'playoff'
-	timestamp?: string
-	seasonId?: string
-}): Promise<{ success: true; gameId: string; message: string }> => {
-	const updateGame = httpsCallable(functions, 'updateGame')
+export const updateGameViaFunction = async (
+	data: UpdateGameRequest
+): Promise<GameMutationResponse> => {
+	const updateGame = httpsCallable<UpdateGameRequest, GameMutationResponse>(
+		functions,
+		'updateGame'
+	)
 	const result = await updateGame(data)
-	return result.data as { success: true; gameId: string; message: string }
+	return result.data
 }
 
 /**
@@ -648,10 +658,13 @@ export const updateGameViaFunction = async (data: {
  */
 export const deleteGameViaFunction = async (data: {
 	gameId: string
-}): Promise<{ success: true; gameId: string; message: string }> => {
-	const deleteGame = httpsCallable(functions, 'deleteGame')
+}): Promise<GameMutationResponse> => {
+	const deleteGame = httpsCallable<{ gameId: string }, GameMutationResponse>(
+		functions,
+		'deleteGame'
+	)
 	const result = await deleteGame(data)
-	return result.data as { success: true; gameId: string; message: string }
+	return result.data
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1069,61 +1082,8 @@ export const signWaiverViaFunction = async (
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// MIGRATION HELPERS
-//////////////////////////////////////////////////////////////////////////////
-
-/**
- * Wrapper functions to maintain backward compatibility during migration
- * These can be used as drop-in replacements for existing client-side functions
- */
-
-export const createTeam = createTeamViaFunction
-export const deleteTeam = deleteTeamViaFunction
-
-export const promoteToCaptain = async (
-	playerRef: { id: string },
-	teamRef: { id: string }
-) => {
-	return updateTeamRosterViaFunction({
-		teamId: teamRef.id,
-		playerId: playerRef.id,
-		action: 'promote',
-	})
-}
-
-export const demoteFromCaptain = async (
-	playerRef: { id: string },
-	teamRef: { id: string }
-) => {
-	return updateTeamRosterViaFunction({
-		teamId: teamRef.id,
-		playerId: playerRef.id,
-		action: 'demote',
-	})
-}
-
-export const removeFromTeam = async (
-	playerRef: { id: string },
-	teamRef: { id: string }
-) => {
-	return updateTeamRosterViaFunction({
-		teamId: teamRef.id,
-		playerId: playerRef.id,
-		action: 'remove',
-	})
-}
-
-//////////////////////////////////////////////////////////////////////////////
 // SITE SETTINGS FUNCTIONS (ADMIN ONLY)
 //////////////////////////////////////////////////////////////////////////////
-
-import {
-	OfferStatus,
-	OfferType,
-	type OptionalEmailCategory,
-	type ThemeVariant,
-	type SeasonFormat,
-} from '@/types'
 
 interface UpdateSiteSettingsRequest {
 	themeVariant: ThemeVariant
@@ -1575,3 +1535,29 @@ export const updateEmailPreferencesViaFunction = async (
 	>(functions, 'updateEmailPreferences')
 	return (await updateEmailPreferences({ ...link, preferences })).data
 }
+
+//////////////////////////////////////////////////////////////////////////////
+// PLAYER RANKINGS (ADMIN ONLY)
+//////////////////////////////////////////////////////////////////////////////
+
+interface RebuildPlayerRankingsResponse {
+	calculationId: string
+	status: string
+	message: string
+}
+
+/**
+ * Rebuilds every player's rankings from scratch: all games, grouped into
+ * rounds in chronological order, through TrueSkill. There is no incremental
+ * update, because TrueSkill's uncertainty is only right when every game is
+ * replayed in order.
+ */
+export const rebuildPlayerRankingsViaFunction =
+	async (): Promise<RebuildPlayerRankingsResponse> => {
+		const rebuild = httpsCallable<
+			Record<string, never>,
+			RebuildPlayerRankingsResponse
+		>(functions, 'rebuildPlayerRankings')
+		const result = await rebuild({})
+		return result.data
+	}

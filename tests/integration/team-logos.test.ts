@@ -16,7 +16,7 @@ import {
 	playerSeasonRef,
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
-import { deleteTeamSeasonWithCleanup } from '../../Functions/src/services/teamDeletionService.js'
+import { deleteTeamSeasonWithCleanup } from '../../Functions/src/services/teamDeletion.js'
 
 /**
  * Team logos through the Storage emulator: the size and type rules, that a

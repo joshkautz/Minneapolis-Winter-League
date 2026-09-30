@@ -15,6 +15,7 @@ import {
 import { validateAuthentication } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface UpdatePostRequest {
 	postId: string
@@ -103,22 +104,10 @@ export const updatePost = onCall<
 				message: 'Post updated successfully',
 			}
 		} catch (error) {
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error updating post:', {
-				userId: auth?.uid,
-				postId: data.postId,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'Your post could not be saved. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'Your post could not be saved. Please try again.',
+				{ userId: auth?.uid, postId: data.postId }
 			)
 		}
 	}

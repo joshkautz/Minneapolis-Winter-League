@@ -75,8 +75,10 @@ import {
 	type SeasonDocument,
 	type TeamContributionDocument,
 	type TeamSeasonDocument,
+	ROSTER_SUBCOLLECTION,
 } from '../../../types.js'
 import type Stripe from 'stripe'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface CreateTeamContributionCheckoutRequest {
 	/** Proposed contribution, in cents. Validated against the live balance. */
@@ -233,7 +235,9 @@ export const createTeamContributionCheckout = onCall<
 
 		const [rosterSnap, teamSeasonSnap, contributionsSnap, userRecord] =
 			await Promise.all([
-				teamSeasonRef(firestore, teamId, seasonId).collection('roster').get(),
+				teamSeasonRef(firestore, teamId, seasonId)
+					.collection(ROSTER_SUBCOLLECTION)
+					.get(),
 				teamSeasonRef(firestore, teamId, seasonId).get(),
 				teamContributionsCollection(firestore, teamId, seasonId).get(),
 				getAuth().getUser(userId),
@@ -440,20 +444,10 @@ export const createTeamContributionCheckout = onCall<
 				)
 			}
 
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			logger.error('Error creating team contribution checkout session:', {
-				userId,
-				teamId,
-				seasonId,
-				error: error instanceof Error ? error.message : 'Unknown error',
-			})
-
-			throw new HttpsError(
-				'internal',
-				'Checkout could not be opened. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'Checkout could not be opened. Please try again.',
+				{ userId, teamId, seasonId }
 			)
 		}
 	}

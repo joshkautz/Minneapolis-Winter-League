@@ -29,12 +29,15 @@ Firestore query builders in `src/firebase/collections/`. See the
 
 **`Functions/`** — one callable per file under
 `src/functions/{user,admin}/<domain>/`, triggers under `src/triggers/`, the
-Stripe webhook under `src/api/`, and multi-step logic under `src/services/`.
+HTTP endpoints (the Stripe and Resend webhooks, one-click unsubscribe) under
+`src/api/`, the email outbox and templates under `src/email/`, and multi-step
+logic under `src/services/`.
 `src/index.ts` is the deploy manifest: a function not exported there is not
 deployed. See the [Functions reference](./functions/README.md).
 
 The two share code in one direction only: the App imports the waiver's text
-and signing rules from `Functions/src/waiver/`, which is why
+and signing rules from `Functions/src/waiver/`, and the upload, name, text and
+team-payment limits from `Functions/src/shared/*Rules.ts`, which is why
 `App/tsconfig.json` sets `rootDir` to the repository root. The `Collections`
 enum and document types are deliberately duplicated in `App/src/types.ts`
 and `Functions/src/types.ts`, and must be kept in step by hand.
@@ -60,8 +63,8 @@ project ids, so they never touch the development emulators' data.
 
 `scripts/seed-emulator.sh` builds a synthetic dataset offline and is the
 normal way to get local data. `scripts/production/` reads and writes the live
-project and needs gcloud credentials. `scripts/migrations/` holds one-off
-data migrations that have already run in production. `scripts/ci/` holds the
+project and needs gcloud credentials. One-off data migrations are deleted
+once they have run; git history keeps them. `scripts/ci/` holds the
 deploy guard CI runs before deploying Functions. Conventions are in
 `.claude/rules/scripts.md`.
 

@@ -1,5 +1,7 @@
-import { ManageTeamRequestCard } from '@/features/player/team/manage-team-request-card'
-import { ManageNonCaptainsOffersPanel } from '@/features/player/team/manage-non-captains-offers-panel'
+import {
+	ManageNonCaptainsOffersPanel,
+	ManageTeamRequestCard,
+} from '@/features/player/team'
 
 /**
  * JoinTeam component for users to join existing teams

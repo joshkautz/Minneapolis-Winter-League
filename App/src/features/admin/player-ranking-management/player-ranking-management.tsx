@@ -8,10 +8,8 @@
 import { useState } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 
-import {
-	playerRankingsCalculationsQuery,
-	rebuildPlayerRankings,
-} from '@/firebase/collections/player-rankings'
+import { playerRankingsCalculationsQuery } from '@/firebase/collections/player-rankings'
+import { rebuildPlayerRankingsViaFunction } from '@/firebase/collections/functions'
 import { RankingsCalculationDocument, Timestamp } from '@/types'
 import { logger, errorMessage } from '@/shared/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -73,10 +71,10 @@ export const PlayerRankingManagement = () => {
 		setCalculationSuccess(null)
 
 		try {
-			const result = await rebuildPlayerRankings({})
+			const result = await rebuildPlayerRankingsViaFunction()
 
 			setCalculationSuccess(
-				`Full TrueSkill recalculation started successfully! ID: ${result.data.calculationId}`
+				`Full TrueSkill recalculation started successfully! ID: ${result.calculationId}`
 			)
 		} catch (err) {
 			setCalculationError(
@@ -370,5 +368,3 @@ export const PlayerRankingManagement = () => {
 		</div>
 	)
 }
-
-export default PlayerRankingManagement

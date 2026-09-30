@@ -1,0 +1,263 @@
+/**
+ * Create game callable function
+ *
+ * This function allows admins to create new game documents with validation
+ * for duplicate games (same time slot and field) and business logic constraints.
+ */
+
+import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
+import { logger } from 'firebase-functions/v2'
+import { validateAdminUser } from '../../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { isGameField, parseGameKickoff } from '../../../shared/gameSchedule.js'
+import {
+	Collections,
+	GameType,
+	TEAM_SEASONS_SUBCOLLECTION,
+} from '../../../types.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
+
+/**
+ * Request interface for creating a game
+ */
+interface CreateGameRequest {
+	/** Reference to the home team document ID (nullable) */
+	homeTeamId: string | null
+	/** Reference to the away team document ID (nullable) */
+	awayTeamId: string | null
+	/** Home team's score (nullable if score not yet recorded) */
+	homeScore: number | null
+	/** Away team's score (nullable if score not yet recorded) */
+	awayScore: number | null
+	/** Field number (1, 2, or 3) */
+	field: number
+	/** Game type (regular or playoff) */
+	type: GameType
+	/** ISO 8601 timestamp for the game date/time */
+	timestamp: string
+	/** Season ID for the game */
+	seasonId: string
+}
+
+/**
+ * Response interface for successful game creation
+ */
+interface CreateGameResponse {
+	success: true
+	gameId: string
+	message: string
+}
+
+/**
+ * Creates a new game document in Firestore
+ *
+ * Security validations:
+ * - User must be authenticated with verified email
+ * - User must have admin privileges (admin: true in player document)
+ * - Field must be 1, 2, or 3
+ * - Scores must be non-negative numbers
+ * - Season must exist
+ * - Teams must exist (if provided)
+ * - No duplicate game at same time and field
+ *
+ * Business logic:
+ * - Games are only allowed on Saturdays
+ * - Games are only allowed at 6:00pm, 6:45pm, 7:30pm, or 8:15pm CT
+ * - Each field can only have one game per time slot
+ */
+export const createGame = onCall<
+	CreateGameRequest,
+	Promise<CreateGameResponse>
+>(
+	{ region: FIREBASE_CONFIG.REGION },
+	async (request): Promise<CreateGameResponse> => {
+		const { auth, data } = request
+
+		logger.info('createGame called', {
+			adminUserId: auth?.uid,
+			field: data.field,
+			timestamp: data.timestamp,
+		})
+
+		// Validate admin authentication
+		const firestore = getFirestore()
+		await validateAdminUser(auth, firestore)
+
+		const {
+			homeTeamId,
+			awayTeamId,
+			homeScore,
+			awayScore,
+			field,
+			type,
+			timestamp,
+			seasonId,
+		} = data
+
+		// Validate required fields
+		if (
+			homeScore !== null &&
+			(typeof homeScore !== 'number' || homeScore < 0)
+		) {
+			logger.warn('Invalid homeScore provided', { homeScore })
+			throw new HttpsError(
+				'invalid-argument',
+				'Home score must be null or a non-negative number'
+			)
+		}
+
+		if (
+			awayScore !== null &&
+			(typeof awayScore !== 'number' || awayScore < 0)
+		) {
+			logger.warn('Invalid awayScore provided', { awayScore })
+			throw new HttpsError(
+				'invalid-argument',
+				'Away score must be null or a non-negative number'
+			)
+		}
+
+		if (!isGameField(field)) {
+			logger.warn('Invalid field provided', { field })
+			throw new HttpsError('invalid-argument', 'Field must be 1, 2, or 3')
+		}
+
+		if (![GameType.REGULAR, GameType.PLAYOFF].includes(type)) {
+			logger.warn('Invalid game type provided', { type })
+			throw new HttpsError(
+				'invalid-argument',
+				'Game type must be "regular" or "playoff"'
+			)
+		}
+
+		if (!timestamp || typeof timestamp !== 'string') {
+			logger.warn('Invalid timestamp provided', { timestamp })
+			throw new HttpsError(
+				'invalid-argument',
+				'Timestamp is required and must be a valid ISO 8601 string'
+			)
+		}
+
+		if (!seasonId || typeof seasonId !== 'string') {
+			logger.warn('Invalid seasonId provided', { seasonId })
+			throw new HttpsError(
+				'invalid-argument',
+				'Season ID is required and must be a valid string'
+			)
+		}
+
+		try {
+			const gameDate = parseGameKickoff(timestamp)
+
+			// Validate season exists
+			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)
+			const seasonDoc = await seasonRef.get()
+			if (!seasonDoc.exists) {
+				logger.warn('Season not found', { seasonId })
+				throw new HttpsError(
+					'not-found',
+					'Season not found. Please verify the season ID is correct.'
+				)
+			}
+
+			// Validate teams exist and have a season subdoc for this game's season.
+			// Also capture the team-season name to denormalize onto the game doc
+			// (so reads can render the team name without a join — see the
+			// `homeName`/`awayName` field doc on GameDocument).
+			let homeTeamRef = null
+			let homeName: string | null = null
+			if (homeTeamId) {
+				homeTeamRef = firestore.collection(Collections.TEAMS).doc(homeTeamId)
+				const homeSeasonSubdoc = await homeTeamRef
+					.collection(TEAM_SEASONS_SUBCOLLECTION)
+					.doc(seasonId)
+					.get()
+				if (!homeSeasonSubdoc.exists) {
+					logger.warn('Home team not in season', { homeTeamId, seasonId })
+					throw new HttpsError(
+						'not-found',
+						'Home team is not participating in this season.'
+					)
+				}
+				homeName = (homeSeasonSubdoc.data()?.name as string) ?? null
+			}
+
+			let awayTeamRef = null
+			let awayName: string | null = null
+			if (awayTeamId) {
+				awayTeamRef = firestore.collection(Collections.TEAMS).doc(awayTeamId)
+				const awaySeasonSubdoc = await awayTeamRef
+					.collection(TEAM_SEASONS_SUBCOLLECTION)
+					.doc(seasonId)
+					.get()
+				if (!awaySeasonSubdoc.exists) {
+					logger.warn('Away team not in season', { awayTeamId, seasonId })
+					throw new HttpsError(
+						'not-found',
+						'Away team is not participating in this season.'
+					)
+				}
+				awayName = (awaySeasonSubdoc.data()?.name as string) ?? null
+			}
+
+			// Create game document with deterministic ID to prevent race conditions
+			// ID format: {seasonId}_{timestamp}_{field} ensures uniqueness per slot
+			const gamesRef = firestore.collection(Collections.GAMES)
+			const gameId = `${seasonId}_${gameDate.toISOString()}_${field}`
+			const gameRef = gamesRef.doc(gameId)
+
+			const gameData = {
+				home: homeTeamRef,
+				homeName,
+				away: awayTeamRef,
+				awayName,
+				homeScore,
+				awayScore,
+				field,
+				type,
+				date: Timestamp.fromDate(gameDate),
+				season: seasonRef,
+			}
+
+			// Use transaction to atomically check-and-create
+			await firestore.runTransaction(async (transaction) => {
+				const existingGame = await transaction.get(gameRef)
+
+				if (existingGame.exists) {
+					logger.warn('Duplicate game detected', {
+						existingGameId: gameRef.id,
+						field,
+						timestamp,
+					})
+					throw new HttpsError(
+						'already-exists',
+						`A game already exists at this time slot on Field ${field}. Please choose a different time or field.`
+					)
+				}
+
+				logger.info('Creating game document', { gameData })
+				transaction.set(gameRef, gameData)
+			})
+
+			logger.info('Game created successfully', {
+				gameId: gameRef.id,
+				field,
+				timestamp,
+				createdBy: auth?.uid,
+			})
+
+			return {
+				success: true,
+				gameId: gameRef.id,
+				message: `Game created successfully on Field ${field}`,
+			}
+		} catch (error) {
+			rethrowAsHttpsError(
+				error,
+				'The game could not be created. Please try again.',
+				{ adminUserId: auth?.uid }
+			)
+		}
+	}
+)

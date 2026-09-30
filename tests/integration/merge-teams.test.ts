@@ -92,7 +92,6 @@ const seedMembership = async (
 ) => {
 	await playerRef(playerId).set({
 		admin: false,
-		email: `${playerId}@example.com`,
 		firstname: playerId,
 		lastname: 'Player',
 	})

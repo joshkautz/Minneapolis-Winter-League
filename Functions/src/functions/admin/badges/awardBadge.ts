@@ -21,6 +21,7 @@ import {
 	teamRef as canonicalTeamRef,
 } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface AwardBadgeRequest {
 	badgeId: string
@@ -136,18 +137,10 @@ export const awardBadge = onCall<AwardBadgeRequest>(
 				message: `Badge "${result.badgeName}" awarded to team successfully`,
 			}
 		} catch (error) {
-			if (error instanceof HttpsError) throw error
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-			logger.error('Error awarding badge to team:', {
-				userId: auth?.uid,
-				badgeId: data.badgeId,
-				teamId: data.teamId,
-				error: errorMessage,
-			})
-			throw new HttpsError(
-				'internal',
-				'The badge could not be awarded. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The badge could not be awarded. Please try again.',
+				{ userId: auth?.uid, badgeId: data.badgeId, teamId: data.teamId }
 			)
 		}
 	}

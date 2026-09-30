@@ -31,6 +31,7 @@ import {
 import { Collections, PlayerDocument, SeasonDocument } from '../../../types.js'
 import { formatDateForUser } from '../../../shared/format.js'
 import type Stripe from 'stripe'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface CreateStripeCheckoutRequest {
 	priceId: string
@@ -184,19 +185,10 @@ export const createStripeCheckout = onCall<
 				sessionId: stripeSession.id,
 			}
 		} catch (error) {
-			// Re-throw HttpsErrors directly
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			logger.error('Error creating Stripe checkout session:', {
-				userId,
-				error: error instanceof Error ? error.message : 'Unknown error',
-			})
-
-			throw new HttpsError(
-				'internal',
-				'Checkout could not be opened. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'Checkout could not be opened. Please try again.',
+				{ userId }
 			)
 		}
 	}

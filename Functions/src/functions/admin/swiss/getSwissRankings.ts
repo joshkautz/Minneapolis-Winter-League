@@ -1,0 +1,149 @@
+/**
+ * Get Swiss Rankings callable function
+ *
+ * Returns current Swiss rankings for a season with full Buchholz breakdown
+ */
+
+import { onCall, HttpsError } from 'firebase-functions/v2/https'
+import { getFirestore } from 'firebase-admin/firestore'
+import { logger } from 'firebase-functions/v2'
+import {
+	Collections,
+	SeasonDocument,
+	SeasonFormat,
+	GameDocument,
+	GameType,
+	TEAM_SEASONS_SUBCOLLECTION,
+	TeamSeasonDocument,
+} from '../../../types.js'
+import { canonicalTeamIdFromTeamSeasonDoc } from '../../../shared/database.js'
+import { validateAdminUser } from '../../../shared/auth.js'
+import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { calculateSwissRankings } from '../../../services/swissRankings/calculator.js'
+import type { SwissRanking } from '../../../services/swissRankings/types.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
+
+interface GetSwissRankingsRequest {
+	/** Season document ID */
+	seasonId: string
+}
+
+interface GetSwissRankingsResponse {
+	success: boolean
+	seasonId: string
+	seasonName: string
+	format: SeasonFormat
+	rankings: SwissRanking[]
+	/** Initial seeding if set */
+	swissInitialSeeding: string[] | null
+	/** Number of games played */
+	gamesPlayed: number
+	/** Total number of teams */
+	totalTeams: number
+}
+
+/**
+ * Get current Swiss rankings for a season
+ *
+ * Returns full ranking data including Buchholz breakdown for admin UI
+ *
+ * Security validations:
+ * - User must be authenticated and email verified
+ * - User must be an admin
+ * - Season must exist
+ */
+export const getSwissRankings = onCall<GetSwissRankingsRequest>(
+	{ region: FIREBASE_CONFIG.REGION },
+	async (request) => {
+		const { data, auth } = request
+		const { seasonId } = data
+
+		// Validate inputs
+		if (!seasonId) {
+			throw new HttpsError('invalid-argument', 'Season ID is required')
+		}
+
+		try {
+			const firestore = getFirestore()
+
+			// Validate admin authentication
+			await validateAdminUser(auth, firestore)
+
+			// Get the season document
+			const seasonRef = firestore.collection(Collections.SEASONS).doc(seasonId)
+			const seasonDoc = await seasonRef.get()
+
+			if (!seasonDoc.exists) {
+				throw new HttpsError('not-found', 'Season not found')
+			}
+
+			const seasonData = seasonDoc.data() as SeasonDocument
+
+			// Discover all teams participating in this season via collection-group
+			// query against the per-team season subcollection.
+			const teamSeasonsSnapshot = await firestore
+				.collectionGroup(TEAM_SEASONS_SUBCOLLECTION)
+				.where('season', '==', seasonRef)
+				.get()
+			const teamSeasonsForSeason =
+				teamSeasonsSnapshot.docs as FirebaseFirestore.QueryDocumentSnapshot<TeamSeasonDocument>[]
+			const teamIds = teamSeasonsForSeason.map((d) =>
+				canonicalTeamIdFromTeamSeasonDoc(d)
+			)
+
+			// Reconstruct initial seeding (if any) by reading swissSeed from each
+			// team-season subdoc.
+			const seededEntries = teamSeasonsForSeason
+				.map((d) => ({
+					teamId: canonicalTeamIdFromTeamSeasonDoc(d),
+					swissSeed: d.data().swissSeed as number | null | undefined,
+				}))
+				.filter((e) => typeof e.swissSeed === 'number')
+				.sort((a, b) => (a.swissSeed as number) - (b.swissSeed as number))
+			const swissInitialSeeding =
+				seededEntries.length > 0 ? seededEntries.map((e) => e.teamId) : null
+
+			const gamesSnapshot = await firestore
+				.collection(Collections.GAMES)
+				.where('season', '==', seasonRef)
+				.where('type', '==', GameType.REGULAR)
+				.get()
+
+			const games = gamesSnapshot.docs.map((doc) => doc.data() as GameDocument)
+			const completedGames = games.filter(
+				(game) =>
+					game.home &&
+					game.away &&
+					game.homeScore !== null &&
+					game.awayScore !== null
+			)
+
+			const { rankings } = calculateSwissRankings(games, teamIds)
+
+			logger.info('Swiss rankings retrieved', {
+				seasonId,
+				seasonName: seasonData.name,
+				totalTeams: teamIds.length,
+				gamesPlayed: completedGames.length,
+				requestedBy: auth?.uid,
+			})
+
+			return {
+				success: true,
+				seasonId,
+				seasonName: seasonData.name,
+				format: seasonData.format || SeasonFormat.TRADITIONAL,
+				rankings,
+				swissInitialSeeding,
+				gamesPlayed: completedGames.length,
+				totalTeams: teamIds.length,
+			} as GetSwissRankingsResponse
+		} catch (error) {
+			rethrowAsHttpsError(
+				error,
+				'The Swiss rankings could not be worked out. Please try again.',
+				{ seasonId, userId: auth?.uid }
+			)
+		}
+	}
+)

@@ -16,7 +16,7 @@ reads, so nothing downstream changed.
 | ---------------------------------- | ----------------------------------------------------- |
 | The text, as versioned data        | `Functions/src/waiver/versions.ts`                    |
 | The rules a submission must meet   | `Functions/src/waiver/rules.ts`                       |
-| Recording a signature              | `signWaiver` (`functions/user/waivers/sign.ts`)       |
+| Recording a signature              | `signWaiver` (`functions/user/waivers/signWaiver.ts`) |
 | An admin marking someone signed    | `updatePlayerAdmin`, which also writes a record       |
 | The signature records              | `players/{uid}/waiverSignatures/{id}`                 |
 | Signing page, and the printed copy | `App/src/features/player/waiver/`                     |

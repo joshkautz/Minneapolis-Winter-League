@@ -85,3 +85,11 @@ export const formatRelativeTime = (date: Date): string => {
 		return 'Recently'
 	}
 }
+
+/**
+ * `formatRelativeTime` for a Firestore timestamp, which reads as null while
+ * the server has yet to fill it in.
+ */
+export const formatRelativeTimestamp = (
+	timestamp: Timestamp | null | undefined
+): string => (timestamp ? formatRelativeTime(timestamp.toDate()) : 'Recently')

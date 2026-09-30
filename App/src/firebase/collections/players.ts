@@ -229,21 +229,6 @@ export const canonicalPlayerIdFromPlayerSeasonDoc = (
 }
 
 /**
- * Derive the canonical player document reference from a player-season
- * subdoc snapshot. Use this at every collection-group call site instead
- * of reaching into `doc.ref.parent.parent`.
- */
-export const canonicalPlayerRefFromPlayerSeasonDoc = (
-	doc:
-		| QueryDocumentSnapshot<PlayerSeasonDocument>
-		| DocumentSnapshot<PlayerSeasonDocument>
-): DocumentReference<PlayerDocument> => {
-	const playerRef = doc.ref.parent.parent
-	if (!playerRef) throw new Error('PlayerSeasonDocument has no parent player')
-	return playerRef as DocumentReference<PlayerDocument>
-}
-
-/**
  * Creates a query to search for players by name
  */
 export const getPlayersQuery = (
@@ -362,7 +347,7 @@ export const adminPlayerSearchQuery = (
 }
 
 /** The most ids Firestore accepts in one `in` filter. */
-export const MAX_IDS_PER_QUERY = 30
+const MAX_IDS_PER_QUERY = 30
 
 /**
  * The players with these ids, for turning an email match in the private

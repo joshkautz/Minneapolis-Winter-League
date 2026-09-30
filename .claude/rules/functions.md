@@ -31,7 +31,14 @@ Functions/src/
   types.ts              Collections enum and document interfaces
 ```
 
-One callable per file, named after the operation (`create.ts`, `updateStatus.ts`).
+One function per file, and the file is named after its export:
+`functions/user/teams/createTeam.ts` exports `createTeam`,
+`triggers/documents/onOfferUpdated.ts` exports `onOfferUpdated`. A
+deployed function's name is its export, so a grep for the name finds the
+file. Rename a file freely; never rename an export — that deletes the
+deployed function and creates a new one, which the CI deploy guard
+refuses. A service module is named for what it does, without a `Service`
+suffix (`services/teamSettlement.ts`).
 
 ## Writing a callable
 
@@ -302,7 +309,8 @@ imports by relative path: `shared/imageRules.ts` for uploads,
 `shared/nameRules.ts` for player and team names (checked with
 `validateAndNormalizeName` and `validateTeamName` from `shared/names.ts`),
 `shared/textRules.ts` for the length of badge, news, post and reply text
-(checked with `requireText` from `shared/textFields.ts`), and `waiver/`.
+(checked with `requireText` from `shared/textFields.ts`),
+`shared/teamPaymentRules.ts` for the team-payment limits, and `waiver/`.
 Add a new field's limits there rather than restating them. The profanity
 filter is a dependency, so each side builds its own from the shared
 exceptions list; admins skip it, never the length rules.

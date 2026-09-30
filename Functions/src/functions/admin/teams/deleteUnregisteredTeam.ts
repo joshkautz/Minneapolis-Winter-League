@@ -20,7 +20,8 @@ import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { getCurrentSeason, teamSeasonRef } from '../../../shared/database.js'
-import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletionService.js'
+import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletion.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface DeleteUnregisteredTeamRequest {
 	teamId: string
@@ -125,17 +126,10 @@ export const deleteUnregisteredTeam = onCall<DeleteUnregisteredTeamRequest>(
 				playersRemoved: result.playersUpdated,
 			}
 		} catch (error) {
-			if (error instanceof HttpsError) throw error
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-			logger.error('Error deleting unregistered team:', {
-				teamId: request.data.teamId,
-				adminUserId: request.auth?.uid,
-				error: errorMessage,
-			})
-			throw new HttpsError(
-				'internal',
-				'The team could not be deleted. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The team could not be deleted. Please try again.',
+				{ teamId: request.data.teamId, adminUserId: request.auth?.uid }
 			)
 		}
 	}

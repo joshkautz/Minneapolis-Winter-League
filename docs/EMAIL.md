@@ -11,7 +11,7 @@ else emails players.
    `queueEmail` or `queueEmailInTransaction` in `Functions/src/email/outbox.ts`
    — in the same transaction as the change it describes, where there is one.
    An email then goes out only if that change was saved.
-2. **Send.** The `sendQueuedEmail` trigger (`triggers/documents/mailQueued.ts`)
+2. **Send.** The `sendQueuedEmail` trigger (`triggers/documents/sendQueuedEmail.ts`)
    looks up the recipient, checks their preferences and the delivery switch,
    renders the template and sends it (`email/sender.ts`, `email/resend.ts`).
 3. **Record.** The mail document keeps the outcome: `sent` with Resend's id,
@@ -229,7 +229,7 @@ Stripe's Dashboard). They are `account` email, so they cannot be turned off.
 - **When.** Every payment and refund lands in a team's contribution ledger,
   whichever route it took: Checkout, the daily reconciliation, settlement,
   an admin's refund, or one made in the Stripe Dashboard.
-  `emailContributionReceipt` (`triggers/documents/contributionReceipt.ts`)
+  `emailContributionReceipt` (`triggers/documents/emailContributionReceipt.ts`)
   reads each ledger change and sends `teamPaymentReceipt` for a new payment
   and `teamRefundReceipt` for a refund, whole or partial
   (`email/receipts.ts`). A payment Stripe took for a team that no longer

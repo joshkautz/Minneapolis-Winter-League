@@ -26,7 +26,7 @@ import {
 } from '../types.js'
 import { CONTRIBUTIONS_SUBCOLLECTION } from '../shared/contributions.js'
 import { canonicalTeamIdFromTeamSeasonDoc } from '../shared/database.js'
-import { settleTeamSeason } from './teamSettlementService.js'
+import { settleTeamSeason } from './teamSettlement.js'
 import { queueTeamMissedOutEmails } from '../email/teamRegistrationEmails.js'
 
 export interface TeamWithMoney {

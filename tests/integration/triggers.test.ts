@@ -46,10 +46,7 @@ const readTeamSeason = async () =>
 const seedAlmostRegistered = async (): Promise<void> => {
 	for (let i = 0; i < MIN; i++) {
 		const playerId = `player-${i}`
-		await firestore
-			.collection('players')
-			.doc(playerId)
-			.set({ admin: false, email: `${playerId}@example.com` })
+		await firestore.collection('players').doc(playerId).set({ admin: false })
 		await teamRosterEntryRef(firestore, TEAM, SEASON, playerId).set({
 			player: firestore.collection('players').doc(playerId),
 			dateJoined: Timestamp.now(),

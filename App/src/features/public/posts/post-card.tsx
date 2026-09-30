@@ -1,7 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
-import { getDoc } from 'firebase/firestore'
+import { useState, useCallback } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { formatDistanceToNow } from 'date-fns'
 import {
 	User,
 	Calendar,
@@ -28,19 +26,20 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { PostDocument, ReplyDocument, PlayerDocument } from '@/types'
+import { PostDocument, ReplyDocument } from '@/types'
 import { repliesQuery } from '@/firebase/collections/posts'
 import {
 	updatePostViaFunction,
 	createReplyViaFunction,
 	updateReplyViaFunction,
 } from '@/firebase/collections/functions'
-import { logger, errorMessage } from '@/shared/utils'
+import { logger, errorMessage, formatRelativeTimestamp } from '@/shared/utils'
+import { useAuthorName } from '@/shared/hooks'
 import { TEXT_RULES, textProblem } from '@/shared/text-rules'
 
 /**
  * Posts outlive the account that wrote them, so a deleted player's posts and
- * replies stay up under this name; see services/accountDeletionService.ts.
+ * replies stay up under this name; see services/accountDeletion.ts.
  */
 const DELETED_AUTHOR_NAME = 'Former player'
 
@@ -58,7 +57,7 @@ const MAX_REPLY_LENGTH = TEXT_RULES.replyContent.max
  * Displays a post with author info, edit capability, and collapsible replies
  */
 export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
-	const [authorName, setAuthorName] = useState<string>('Loading...')
+	const authorName = useAuthorName(post.author, DELETED_AUTHOR_NAME)
 	const [isRepliesOpen, setIsRepliesOpen] = useState(false)
 	const [isEditing, setIsEditing] = useState(false)
 	const [editContent, setEditContent] = useState(post.content)
@@ -73,35 +72,6 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 
 	const isAuthor = currentUserId && post.author.id === currentUserId
 	const canInteract = !!currentUserId
-
-	// Fetch author name
-	useEffect(() => {
-		const fetchAuthor = async () => {
-			try {
-				const authorDoc = await getDoc(post.author)
-				if (authorDoc.exists()) {
-					const authorData = authorDoc.data() as PlayerDocument
-					setAuthorName(`${authorData.firstname} ${authorData.lastname}`)
-				} else {
-					setAuthorName(DELETED_AUTHOR_NAME)
-				}
-			} catch (error) {
-				logger.error('Error fetching author', error)
-				setAuthorName('Unknown')
-			}
-		}
-
-		fetchAuthor()
-	}, [post.author])
-
-	const formatDate = (timestamp: PostDocument['createdAt']) => {
-		try {
-			const date = timestamp.toDate()
-			return formatDistanceToNow(date, { addSuffix: true })
-		} catch {
-			return 'Recently'
-		}
-	}
 
 	const isEditValid = textProblem(editContent, TEXT_RULES.postContent) === null
 	const isReplyValid =
@@ -174,7 +144,7 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 						<span className='flex items-center gap-1.5'>
 							<Calendar className='h-4 w-4' aria-hidden='true' />
 							<time dateTime={post.createdAt.toDate().toISOString()}>
-								{formatDate(post.createdAt)}
+								{formatRelativeTimestamp(post.createdAt)}
 							</time>
 						</span>
 						{post.updatedAt.seconds !== post.createdAt.seconds && (
@@ -344,40 +314,12 @@ const ReplyItem = ({
 	postId,
 	currentUserId,
 }: ReplyItemProps) => {
-	const [authorName, setAuthorName] = useState<string>('Loading...')
+	const authorName = useAuthorName(reply.author, DELETED_AUTHOR_NAME)
 	const [isEditing, setIsEditing] = useState(false)
 	const [editContent, setEditContent] = useState(reply.content)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	const isAuthor = currentUserId && reply.author.id === currentUserId
-
-	useEffect(() => {
-		const fetchAuthor = async () => {
-			try {
-				const authorDoc = await getDoc(reply.author)
-				if (authorDoc.exists()) {
-					const authorData = authorDoc.data() as PlayerDocument
-					setAuthorName(`${authorData.firstname} ${authorData.lastname}`)
-				} else {
-					setAuthorName(DELETED_AUTHOR_NAME)
-				}
-			} catch (error) {
-				logger.error('Error fetching reply author', error)
-				setAuthorName('Unknown')
-			}
-		}
-
-		fetchAuthor()
-	}, [reply.author])
-
-	const formatDate = (timestamp: ReplyDocument['createdAt']) => {
-		try {
-			const date = timestamp.toDate()
-			return formatDistanceToNow(date, { addSuffix: true })
-		} catch {
-			return 'Recently'
-		}
-	}
 
 	const isEditValid = textProblem(editContent, TEXT_RULES.replyContent) === null
 
@@ -416,7 +358,7 @@ const ReplyItem = ({
 					</Link>
 					<span>·</span>
 					<time dateTime={reply.createdAt.toDate().toISOString()}>
-						{formatDate(reply.createdAt)}
+						{formatRelativeTimestamp(reply.createdAt)}
 					</time>
 					{reply.updatedAt.seconds !== reply.createdAt.seconds && (
 						<Badge variant='outline' className='text-xs'>

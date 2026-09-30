@@ -30,14 +30,17 @@
 		"deploy:hosting": "firebase deploy --only hosting",
 		"deploy:functions": "firebase deploy --only functions",
 		"deploy:firestore": "firebase deploy --only firestore",
-		"email:preview": "npm run build --workspace=Functions && node scripts/email-preview.mjs"
+		"email:preview": "npm run build --workspace=Functions && node scripts/email-preview.js"
 	},
 	"devDependencies": {
+		"@eslint/js": "^9.39.5",
 		"@firebase/rules-unit-testing": "^5.0.2",
 		"concurrently": "^10.0.5",
 		"firebase-tools": "^15.14.0",
+		"globals": "^14.0.0",
 		"jsdom": "^30.1.0",
 		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.58.1",
 		"vitest": "^5.0.1"
 	},
 	"engines": {

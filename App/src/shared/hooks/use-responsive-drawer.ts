@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useIsMobile } from '@/shared/hooks'
+import { useIsMobile } from './use-mobile'
 
 /**
  * Custom hook for managing responsive drawer state with viewport-aware animations

@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { ErrorBoundary } from '@/components/ui/error-boundary'
+import { ErrorBoundary } from '@/shared/components/errors'
 import { AdminGate, LazyWrapper, ProtectedRoute } from '@/shared/components'
 
 /**

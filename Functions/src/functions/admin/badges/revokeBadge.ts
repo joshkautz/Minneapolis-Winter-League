@@ -15,6 +15,7 @@ import {
 	teamRef as canonicalTeamRef,
 } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface RevokeBadgeRequest {
 	badgeId: string
@@ -98,18 +99,10 @@ export const revokeBadge = onCall<RevokeBadgeRequest>(
 				message: `Badge "${result.badgeName}" revoked successfully`,
 			}
 		} catch (error) {
-			if (error instanceof HttpsError) throw error
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-			logger.error('Error revoking badge from team:', {
-				userId: auth?.uid,
-				badgeId: data.badgeId,
-				teamId: data.teamId,
-				error: errorMessage,
-			})
-			throw new HttpsError(
-				'internal',
-				'The badge could not be taken back from the team. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The badge could not be taken back from the team. Please try again.',
+				{ userId: auth?.uid, badgeId: data.badgeId, teamId: data.teamId }
 			)
 		}
 	}

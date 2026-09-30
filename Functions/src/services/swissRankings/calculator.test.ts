@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GameDocument } from '../../types.js'
-import { calculateSwissRankings, getInitialSeedingRank } from './calculator.js'
+import { calculateSwissRankings } from './calculator.js'
 
 /**
  * Swiss standings are what the public standings page shows and what seeds the
@@ -173,20 +173,5 @@ describe('calculateSwissRankings', () => {
 		)
 		expect(result.rankings.map((r) => r.teamId)).toEqual(['a', 'b', 'c'])
 		expect(result.rankings.map((r) => r.rank)).toEqual([1, 2, 3])
-	})
-})
-
-describe('getInitialSeedingRank', () => {
-	it('returns a 1-based seed position', () => {
-		expect(getInitialSeedingRank('b', ['a', 'b', 'c'])).toBe(2)
-	})
-
-	it('returns null for a team that is not seeded', () => {
-		expect(getInitialSeedingRank('z', ['a', 'b'])).toBeNull()
-	})
-
-	it('returns null when no seeding exists', () => {
-		expect(getInitialSeedingRank('a', undefined)).toBeNull()
-		expect(getInitialSeedingRank('a', [])).toBeNull()
 	})
 })
