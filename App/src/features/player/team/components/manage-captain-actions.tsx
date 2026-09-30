@@ -9,8 +9,8 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ManageEditTeamDialog } from './manage-edit-team-dialog'
-import { useManageCaptainActions } from './hooks/use-manage-captain-actions'
-import { useDeparturePaymentNote } from './hooks/use-departure-payment-note'
+import { useManageCaptainActions } from '../hooks/use-manage-captain-actions'
+import { useDeparturePaymentNote } from '../hooks/use-departure-payment-note'
 
 export const ManageCaptainActions = () => {
 	const departurePaymentNote = useDeparturePaymentNote()

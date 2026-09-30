@@ -1,5 +1,5 @@
 import { AppRoutes } from '@/routes'
-import { GlobalErrorBoundary } from '@/components/ui/global-error-boundary'
+import { GlobalErrorBoundary } from '@/shared/components/errors'
 
 /**
  * Main Application Component
@@ -7,12 +7,10 @@ import { GlobalErrorBoundary } from '@/components/ui/global-error-boundary'
  * Route configuration and rendering with global error handling.
  * User data refresh (including email verification) is handled by AuthContextProvider.
  */
-const App = () => {
+export const App = () => {
 	return (
 		<GlobalErrorBoundary>
 			<AppRoutes />
 		</GlobalErrorBoundary>
 	)
 }
-
-export default App

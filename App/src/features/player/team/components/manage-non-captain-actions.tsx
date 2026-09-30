@@ -1,3 +1,4 @@
+import { useUserStatus } from '@/shared/hooks'
 import { useCallback, useMemo, useState } from 'react'
 import { updateTeamRosterViaFunction } from '@/firebase/collections/functions'
 import { toast } from 'sonner'
@@ -14,8 +15,7 @@ import {
 import { useTeamsContext } from '@/providers'
 import { errorMessage, logger } from '@/shared/utils'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
-import { useUserStatus } from '@/shared/hooks/use-user-status'
-import { useDeparturePaymentNote } from './hooks/use-departure-payment-note'
+import { useDeparturePaymentNote } from '../hooks/use-departure-payment-note'
 
 export const ManageNonCaptainActions = () => {
 	const { currentSeasonTeamsQuerySnapshot } = useTeamsContext()

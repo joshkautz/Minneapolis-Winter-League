@@ -2,6 +2,11 @@
  * Application constants and configuration
  */
 
+import {
+	MIN_CONTRIBUTION_CENTS,
+	MIN_SIGNED_PLAYERS,
+	REGISTRATION_SPOTS,
+} from '../shared/teamPaymentRules.js'
 import { getStripeSecretKey, getStripeWebhookSecret } from './environment.js'
 
 // Firebase Configuration (static - no env vars needed)
@@ -17,7 +22,7 @@ export const FIREBASE_CONFIG = {
 
 // Business Logic Constants (static)
 export const TEAM_CONFIG = {
-	MIN_PLAYERS_FOR_REGISTRATION: 10,
+	MIN_PLAYERS_FOR_REGISTRATION: MIN_SIGNED_PLAYERS,
 	/**
 	 * How long a Checkout session stays open. Kept as short as Stripe allows,
 	 * because the balance a contribution was validated against goes stale
@@ -30,12 +35,9 @@ export const TEAM_CONFIG = {
 	 * this long after it (see shared/registrationWindow.ts).
 	 */
 	CHECKOUT_SESSION_LIFETIME_SECONDS: 31 * 60,
-	REGISTERED_TEAMS_FOR_LOCK: 12,
-	/**
-	 * Smallest team contribution accepted, in cents. Below this the card
-	 * processing fee takes a disproportionate share of the money.
-	 */
-	MIN_CONTRIBUTION_CENTS: 1_000,
+	REGISTERED_TEAMS_FOR_LOCK: REGISTRATION_SPOTS,
+	/** See shared/teamPaymentRules.ts, which the App shares. */
+	MIN_CONTRIBUTION_CENTS,
 } as const
 
 // Email Configuration

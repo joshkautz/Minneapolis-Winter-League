@@ -1,6 +1,6 @@
 import { useUserStatus } from '@/shared/hooks'
 import { TeamManagementView, TeamOptionsView } from './components'
-import { usePaymentReturnToast } from './use-payment-return-toast'
+import { usePaymentReturnToast } from './hooks/use-payment-return-toast'
 
 /**
  * Main component for team management

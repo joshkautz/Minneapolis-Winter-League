@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { LoadingSpinner } from '@/shared/components'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { SeparatorWithText } from '@/components/ui/separator-with-text'
+import { SeparatorWithText } from '../separator-with-text'
 import {
 	Sheet,
 	SheetContent,
@@ -184,7 +184,6 @@ const MobileNavigationContent = ({
 						className='px-3 py-2 rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 focus:outline-none focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-0 focus-visible:ring-inset cursor-pointer flex items-center justify-between'
 					>
 						{label}
-						{/* {(label === 'Players' || label === 'News') && <NewBadge />} */}
 					</Link>
 				))}
 

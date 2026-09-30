@@ -11,16 +11,16 @@ import {
 	type DocumentReference,
 	type Query,
 } from 'firebase/firestore'
-import { httpsCallable } from 'firebase/functions'
 
-import { firestore, functions } from '../app'
+import { firestore } from '../app'
 import {
-	PlayerRankingDocument,
-	PlayerRankingHistoryDocument,
-	RankingsCalculationDocument,
-	SeasonRankingDocument,
 	Collections,
-} from '../../types'
+	SEASON_RANKINGS_SUBCOLLECTION,
+	type PlayerRankingDocument,
+	type PlayerRankingHistoryDocument,
+	type RankingsCalculationDocument,
+	type SeasonRankingDocument,
+} from '@/types'
 
 /**
  * Creates a query for current player rankings
@@ -37,7 +37,12 @@ export const seasonRankingsQuery = (
 	seasonId: string
 ): Query<SeasonRankingDocument> =>
 	query(
-		collection(firestore, Collections.SEASONS, seasonId, Collections.RANKINGS),
+		collection(
+			firestore,
+			Collections.SEASONS,
+			seasonId,
+			SEASON_RANKINGS_SUBCOLLECTION
+		),
 		orderBy('rank', 'asc')
 	) as Query<SeasonRankingDocument>
 
@@ -50,7 +55,7 @@ export const seasonRankingRef = (
 		firestore,
 		Collections.SEASONS,
 		seasonId,
-		Collections.RANKINGS,
+		SEASON_RANKINGS_SUBCOLLECTION,
 		playerId
 	) as DocumentReference<SeasonRankingDocument>
 
@@ -75,20 +80,3 @@ export const playerRankingsCalculationsQuery =
 			limit(20)
 		) as Query<RankingsCalculationDocument>
 	}
-
-/**
- * Calls the Firebase Function to completely rebuild Player Rankings from scratch
- * Processes all games grouped by rounds in chronological order using TrueSkill algorithm.
- *
- * Note: Incremental updates were deprecated because TrueSkill requires accurate
- * sigma (uncertainty) tracking across all games for proper rating calculations.
- * Full rebuilds ensure correct sigma values are maintained.
- */
-export const rebuildPlayerRankings = httpsCallable<
-	Record<string, never>, // No parameters needed - decay is always applied
-	{
-		calculationId: string
-		status: string
-		message: string
-	}
->(functions, 'rebuildPlayerRankings')

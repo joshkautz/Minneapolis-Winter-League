@@ -3,9 +3,9 @@
  */
 
 import { Component, ErrorInfo, ReactNode } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from './card'
-import { Alert, AlertDescription } from './alert'
-import { Button } from './button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { NewVersionAvailable } from './new-version-available'
 import { isStaleDeploymentError } from '@/shared/utils/stale-deployment'

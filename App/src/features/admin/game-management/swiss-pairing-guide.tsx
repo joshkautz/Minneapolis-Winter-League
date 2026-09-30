@@ -29,8 +29,7 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Badge } from '@/components/ui/badge'
-import { useSwissStandings } from '@/shared/hooks'
-import { useMonradPairings } from '@/shared/hooks/use-monrad-pairings'
+import { useSwissStandings, useMonradPairings } from '@/shared/hooks'
 import { type QuerySnapshot } from 'firebase/firestore'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { GameDocument, TeamSeasonDocument } from '@/types'

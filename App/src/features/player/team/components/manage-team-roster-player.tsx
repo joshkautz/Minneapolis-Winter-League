@@ -17,7 +17,6 @@ import {
 	DestructiveConfirmationDialog,
 	LoadingSpinner,
 } from '@/shared/components'
-import { usePendingAction } from '@/shared/hooks/use-pending-action'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
@@ -29,9 +28,12 @@ import {
 import { PlayerDocument } from '@/types'
 import { playerSeasonRef } from '@/firebase/collections/players'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
-import { useUserStatus } from '@/shared/hooks/use-user-status'
-import { useDeparturePaymentNote } from './hooks/use-departure-payment-note'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { useDeparturePaymentNote } from '../hooks/use-departure-payment-note'
+import {
+	useQueryErrorHandler,
+	usePendingAction,
+	useUserStatus,
+} from '@/shared/hooks'
 
 export const ManageTeamRosterPlayer = ({
 	playerRef,

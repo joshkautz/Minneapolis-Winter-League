@@ -9,7 +9,7 @@ import { Collections, SiteSettingsDocument } from '@/types'
 /**
  * Document ID for theme settings
  */
-export const THEME_SETTINGS_DOC_ID = 'theme'
+const THEME_SETTINGS_DOC_ID = 'theme'
 
 /**
  * Gets the document reference for theme settings

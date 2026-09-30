@@ -1,4 +1,4 @@
-import { useScheduleData } from '@/shared/hooks/use-schedule-data'
+import { useScheduleData } from '@/shared/hooks'
 import { ScheduleGrid } from './schedule-grid'
 import { ScheduleLoadingState } from './schedule-loading-state'
 import { ScheduleEmptyState } from './schedule-empty-state'

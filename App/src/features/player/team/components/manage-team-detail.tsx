@@ -9,7 +9,6 @@ import {
 } from '@/firebase/collections/teams'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { LoadingButton, TeamLogo } from '@/shared/components'
-import { usePendingAction } from '@/shared/hooks/use-pending-action'
 import {
 	PlayerDocument,
 	TeamSeasonDocument,
@@ -17,7 +16,7 @@ import {
 	OfferStatus,
 } from '@/types'
 import { Link } from 'react-router-dom'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { useQueryErrorHandler, usePendingAction } from '@/shared/hooks'
 
 export const ManageTeamDetail = ({
 	handleRequest,

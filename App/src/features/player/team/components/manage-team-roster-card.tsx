@@ -1,3 +1,4 @@
+import { useUserStatus } from '@/shared/hooks'
 import { ReactNode, useMemo } from 'react'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
 import { useCollection } from 'react-firebase-hooks/firestore'
@@ -11,7 +12,6 @@ import {
 	usesTeamPayments,
 } from '@/shared/utils'
 import { TeamRosterDocument } from '@/types'
-import { useUserStatus } from '@/shared/hooks/use-user-status'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	teamRosterSubcollection,

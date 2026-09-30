@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 import { TeamFormData, teamFormSchema } from '@/shared/utils/validation'
-import { editTeamViaFunction } from '@/firebase/collections/functions'
+import { updateTeamViaFunction } from '@/firebase/collections/functions'
 import { fileToBase64, logger, errorMessage } from '@/shared/utils'
 import type { FormResult } from '@/shared/types'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
@@ -63,7 +63,7 @@ export const useManageEditTeamForm = ({
 			setIsSubmitting(true)
 
 			try {
-				const result = await editTeamViaFunction({
+				const result = await updateTeamViaFunction({
 					teamId: canonicalTeamId,
 					seasonId,
 					name: data.name,

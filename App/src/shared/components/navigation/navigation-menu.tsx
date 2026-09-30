@@ -23,9 +23,6 @@ export const NavigationMenu = ({ items }: NavigationMenuProps) => {
 					}
 				>
 					{entry.label}
-					{/* {(entry.label === 'Players' || entry.label === 'News') && (
-						<NewBadge />
-					)} */}
 				</NavLink>
 			))}
 		</nav>

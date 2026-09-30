@@ -13,7 +13,7 @@ import {
 import { deleteUnregisteredTeamViaFunction } from '@/firebase/collections/functions'
 import { LoadingButton } from '@/shared/components'
 import { errorMessage, logger } from '@/shared/utils'
-import { useRosterSize } from './use-roster-size'
+import { useRosterSize } from '../hooks/use-roster-size'
 
 const players = (count: number): string =>
 	`${count} player${count === 1 ? '' : 's'}`

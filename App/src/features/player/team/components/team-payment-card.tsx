@@ -1,11 +1,10 @@
+import { useUserStatus, useRerenderAt } from '@/shared/hooks'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 import { Timestamp } from 'firebase/firestore'
 import { toast } from 'sonner'
 import { CheckCircle, CreditCard, Info } from 'lucide-react'
 import { useSeasonsContext, useTeamsContext } from '@/providers'
-import { useUserStatus } from '@/shared/hooks/use-user-status'
-import { useRerenderAt } from '@/shared/hooks/use-rerender-at'
 import {
 	LoadingButton,
 	LoadingSpinner,

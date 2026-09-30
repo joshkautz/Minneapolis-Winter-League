@@ -6,7 +6,7 @@
  * and gives them the one button that fixes it.
  */
 
-import { Button } from './button'
+import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
 
 const handleReload = () => {

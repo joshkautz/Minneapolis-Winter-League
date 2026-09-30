@@ -302,7 +302,8 @@ imports by relative path: `shared/imageRules.ts` for uploads,
 `shared/nameRules.ts` for player and team names (checked with
 `validateAndNormalizeName` and `validateTeamName` from `shared/names.ts`),
 `shared/textRules.ts` for the length of badge, news, post and reply text
-(checked with `requireText` from `shared/textFields.ts`), and `waiver/`.
+(checked with `requireText` from `shared/textFields.ts`),
+`shared/teamPaymentRules.ts` for the team-payment limits, and `waiver/`.
 Add a new field's limits there rather than restating them. The profanity
 filter is a dependency, so each side builds its own from the shared
 exceptions list; admins skip it, never the length rules.

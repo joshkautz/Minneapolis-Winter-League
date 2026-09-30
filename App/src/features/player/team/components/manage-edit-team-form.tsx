@@ -8,8 +8,8 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { ImageField, LoadingSpinner, LoadingButton } from '@/shared/components'
-import { useManageEditTeamForm } from './hooks/use-manage-edit-team-form'
-import { useTeamManagement } from './hooks/use-team-management'
+import { useManageEditTeamForm } from '../hooks/use-manage-edit-team-form'
+import { useTeamManagement } from '../hooks/use-team-management'
 import type { FormResult } from '@/shared/types'
 
 interface ManageEditTeamFormProps {

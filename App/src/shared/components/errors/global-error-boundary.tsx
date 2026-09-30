@@ -7,9 +7,9 @@
 
 import { ReactNode } from 'react'
 import { ErrorBoundary } from './error-boundary'
-import { Card, CardContent, CardHeader, CardTitle } from './card'
-import { Alert, AlertDescription } from './alert'
-import { Button } from './button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 
 interface GlobalErrorBoundaryProps {

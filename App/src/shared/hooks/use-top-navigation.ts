@@ -6,7 +6,7 @@ import {
 	useSeasonsContext,
 } from '@/providers'
 import { logger, usesTeamPayments, errorMessage } from '@/shared/utils'
-import { useResponsiveDrawer } from '@/shared/hooks'
+import { useResponsiveDrawer } from './use-responsive-drawer'
 
 /**
  * Custom hook for navigation logic

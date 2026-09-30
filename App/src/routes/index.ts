@@ -5,5 +5,4 @@
  */
 
 export { AppRoutes } from './app-routes'
-export { PublicRoute, AuthenticatedRoute } from './route-wrappers'
 export * from './route-components'

@@ -18,8 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
 import { LoadingButton } from '@/shared/components'
-import { usePendingAction } from '@/shared/hooks/use-pending-action'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { useQueryErrorHandler, usePendingAction } from '@/shared/hooks'
 
 export const ManageInvitePlayerDetail = ({
 	teamQueryDocumentSnapshot,

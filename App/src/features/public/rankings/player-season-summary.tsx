@@ -26,7 +26,7 @@ const Stat = ({ label, value }: { label: string; value: React.ReactNode }) => (
 )
 
 /** "+1.77" in green or "-0.12" in red, with an arrow for screen readers. */
-export const RatingChange = ({ change }: { change: number }) => {
+const RatingChange = ({ change }: { change: number }) => {
 	if (Math.abs(change) < 0.005) {
 		return <span className='text-muted-foreground'>0.00</span>
 	}

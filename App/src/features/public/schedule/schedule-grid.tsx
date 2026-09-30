@@ -1,5 +1,5 @@
+import { useScheduleData } from '@/shared/hooks'
 import { ScheduleCard } from './schedule-card'
-import { useScheduleData } from '@/shared/hooks/use-schedule-data'
 
 /**
  * ScheduleGrid Component

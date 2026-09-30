@@ -1,7 +1,7 @@
 /**
  * Shared type definitions for player-related Firebase functions
  * These types must match exactly with the Firebase function implementations
- * in Functions/src/functions/players/
+ * in Functions/src/functions/user/players/
  */
 
 /**
@@ -19,7 +19,7 @@ export interface CreatePlayerRequest {
 
 /**
  * Response interface for creating a player
- * Must match Functions/src/functions/players/create.ts success response exactly
+ * Must match Functions/src/functions/user/players/create.ts success response exactly
  */
 export interface CreatePlayerResponse {
 	success: boolean
@@ -29,7 +29,7 @@ export interface CreatePlayerResponse {
 
 /**
  * Request interface for updating a player
- * Must match Functions/src/functions/players/update.ts UpdatePlayerRequest exactly
+ * Must match Functions/src/functions/user/players/update.ts UpdatePlayerRequest exactly
  */
 export interface UpdatePlayerRequest {
 	playerId?: string // Optional - defaults to authenticated user
@@ -39,7 +39,7 @@ export interface UpdatePlayerRequest {
 
 /**
  * Response interface for updating a player
- * Must match Functions/src/functions/players/update.ts success response exactly
+ * Must match Functions/src/functions/user/players/update.ts success response exactly
  */
 export interface UpdatePlayerResponse {
 	success: boolean
