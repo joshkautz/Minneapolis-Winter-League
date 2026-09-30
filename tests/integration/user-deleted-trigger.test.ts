@@ -10,7 +10,7 @@ import {
 /**
  * userDeleted tears down everything belonging to a deleted account: roster
  * entries across every team, the player's season subdocs, their offers, the
- * player document and local Stripe records.
+ * player document, their private contact record and local Stripe records.
  *
  * It reaches across collections by reference, so the failure that matters is
  * it touching the wrong player. Each test here seeds a second player and
@@ -39,10 +39,14 @@ const fire = (uid: string) =>
 const seedPlayerEverywhere = async (uid: string): Promise<void> => {
 	await playerRef(uid).set({
 		admin: false,
-		email: `${uid}@example.com`,
 		firstname: 'Test',
 		lastname: 'Player',
 	})
+	// Their email, kept off the public player document.
+	await firestore
+		.collection('playerContacts')
+		.doc(uid)
+		.set({ email: `${uid}@example.com` })
 
 	// On two teams across two seasons.
 	for (const [teamId, seasonId] of [
@@ -223,6 +227,17 @@ describe('userDeleted', () => {
 		expect((await teamSeasonRef(firestore, TEAM, SEASON).get()).exists).toBe(
 			true
 		)
+	})
+
+	it('deletes the private contact record, which holds their email', async () => {
+		await fire(VICTIM)
+
+		expect((await firestore.doc(`playerContacts/${VICTIM}`).get()).exists).toBe(
+			false
+		)
+		expect(
+			(await firestore.doc(`playerContacts/${BYSTANDER}`).get()).exists
+		).toBe(true)
 	})
 
 	it('deletes the leaderboard entry, which shows the player’s name', async () => {

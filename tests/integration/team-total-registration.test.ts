@@ -65,7 +65,7 @@ const seedPlayer = async (
 	await firestore
 		.collection('players')
 		.doc(playerId)
-		.set({ admin: false, banned: false, email: `${playerId}@example.com` })
+		.set({ admin: false, banned: false })
 	await teamRosterEntryRef(firestore, TEAM, SEASON, playerId).set({
 		player: firestore.collection('players').doc(playerId),
 		dateJoined: Timestamp.now(),

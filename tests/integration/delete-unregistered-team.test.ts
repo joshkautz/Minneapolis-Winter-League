@@ -94,13 +94,11 @@ beforeEach(async () => {
 	await seedAuthUser(ADMIN, true)
 	await firestore.doc(`players/${ADMIN}`).set({
 		admin: true,
-		email: `${ADMIN}@example.com`,
 		firstname: 'Ada',
 		lastname: 'Admin',
 	})
 	await firestore.doc(`players/${PLAYER}`).set({
 		admin: false,
-		email: `${PLAYER}@example.com`,
 		firstname: 'Pat',
 		lastname: 'Lee',
 	})

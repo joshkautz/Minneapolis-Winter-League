@@ -51,7 +51,7 @@ const seedQualifyingRoster = async (teamId: string, count: number) => {
 		await firestore
 			.collection('players')
 			.doc(playerId)
-			.set({ admin: false, email: `${playerId}@example.com`, banned: false })
+			.set({ admin: false, banned: false })
 		await teamRosterEntryRef(firestore, teamId, SEASON, playerId).set({
 			player: firestore.collection('players').doc(playerId),
 			dateJoined: Timestamp.now(),

@@ -128,7 +128,7 @@ beforeAll(() => {
 
 beforeEach(async () => {
 	await resetFirestore(firestore)
-	await playerRef(ADMIN).set({ admin: true, email: `${ADMIN}@example.com` })
+	await playerRef(ADMIN).set({ admin: true })
 	await seasonRef().set({ name: '2030 Winter' })
 	await seedTeam(TEAM)
 	await seedTeam(OTHER_TEAM)

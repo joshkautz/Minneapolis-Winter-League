@@ -79,7 +79,6 @@ beforeEach(async () => {
 	})
 	await firestore.collection('players').doc(PLAYER).set({
 		admin: false,
-		email: 'p@example.com',
 		firstname: 'P',
 		lastname: 'One',
 	})

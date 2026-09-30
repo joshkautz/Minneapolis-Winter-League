@@ -52,7 +52,6 @@ const seedPlayer = async (
 ) => {
 	await playerRef(playerId).set({
 		admin: options.admin ?? false,
-		email: `${playerId}@example.com`,
 		firstname: 'Test',
 		lastname: 'Player',
 		// Only set when specified, so "not migrated" is representable.

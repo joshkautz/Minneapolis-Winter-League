@@ -73,7 +73,6 @@ const seedTeamWithRoster = async (
 	for (const playerId of playerIds) {
 		await playerRef(playerId).set({
 			admin: false,
-			email: `${playerId}@example.com`,
 			firstname: playerId,
 			lastname: 'Player',
 		})
@@ -168,7 +167,6 @@ beforeEach(async () => {
 	await resetFirestore(firestore)
 	await playerRef(ADMIN).set({
 		admin: true,
-		email: `${ADMIN}@example.com`,
 		firstname: 'Admin',
 		lastname: 'User',
 	})
@@ -514,7 +512,6 @@ describe('rebuildPlayerRankings', () => {
 		})
 		await playerRef('w3').set({
 			admin: false,
-			email: 'w3@example.com',
 			firstname: 'w3',
 			lastname: 'Player',
 		})
@@ -748,8 +745,8 @@ describe('rebuildPlayerRankings: histories and season standings', () => {
 		expect((await seasonStandings('season-2')).has('l2')).toBe(false)
 		// l1 played both seasons, so their history shows the game's new date.
 		expect(
-			(await playerHistory('l1'))!.rounds.map(
-				(round: { date: Timestamp }) => round.date.toDate().toISOString()
+			(await playerHistory('l1'))!.rounds.map((round: { date: Timestamp }) =>
+				round.date.toDate().toISOString()
 			)
 		).toEqual(['2029-01-05T18:00:00.000Z', '2030-01-12T18:00:00.000Z'])
 	})

@@ -40,7 +40,6 @@ const readPlayer = async (playerId = PLAYER) =>
 const seedPlayer = async (playerId: string, admin = false) => {
 	await playerRef(playerId).set({
 		admin,
-		email: `${playerId}@example.com`,
 		firstname: 'Existing',
 		lastname: 'Name',
 	})

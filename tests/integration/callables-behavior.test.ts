@@ -62,7 +62,6 @@ const seedPlayer = async (
 		.doc(uid)
 		.set({
 			admin: opts.admin ?? false,
-			email: `${uid}@example.com`,
 			firstname: 'Test',
 			lastname: 'Player',
 		})
