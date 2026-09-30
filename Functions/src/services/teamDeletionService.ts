@@ -16,6 +16,7 @@
 
 import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
+import { deleteInBatches } from '../shared/batches.js'
 import {
 	Collections,
 	TEAM_SEASONS_SUBCOLLECTION,
@@ -51,6 +52,17 @@ export interface TeamDeletionResult {
 /** Logos written by createTeam and updateTeam; nothing outside it is a logo. */
 const TEAM_LOGO_PREFIX = 'teams/'
 
+/** A deletion the team's state does not allow, found inside the transaction. */
+class DeletionRefused extends Error {
+	constructor(
+		readonly code: 'not-found' | 'failed-precondition',
+		message: string
+	) {
+		super(message)
+		this.name = 'DeletionRefused'
+	}
+}
+
 interface DeleteOptions {
 	/** Skip the "team is registered" guard. Used by the registration-lock cleanup. */
 	skipRegisteredCheck?: boolean
@@ -74,107 +86,84 @@ export async function deleteTeamSeasonWithCleanup(
 	let logoDeleted = false
 
 	try {
-		const teamSeasonSnap = await teamSeasonDocRef.get()
-		if (!teamSeasonSnap.exists) {
-			return {
-				teamId,
-				seasonId,
-				teamName,
-				success: false,
-				playersUpdated: 0,
-				offersDeleted: 0,
-				logoDeleted: false,
-				errorCode: 'not-found',
-				error: 'This team is no longer in that season. Reload the page.',
-			}
-		}
-
-		const teamSeasonData = teamSeasonSnap.data()
-		teamName = teamSeasonData?.name ?? 'Unknown'
-
-		if (!options?.skipRegisteredCheck && teamSeasonData?.registered) {
-			return {
-				teamId,
-				seasonId,
-				teamName,
-				success: false,
-				playersUpdated: 0,
-				offersDeleted: 0,
-				logoDeleted: false,
-				errorCode: 'failed-precondition',
-				error: 'A registered team cannot be deleted.',
-			}
-		}
-
-		// Money must be settled before anything is deleted. Every route that
-		// removes a team-season is a route to losing track of a contribution,
-		// and three of the four go through here — so the invariant lives here
-		// rather than being remembered at each call site.
-		const contributionsSnap = await teamSeasonDocRef
-			.collection(CONTRIBUTIONS_SUBCOLLECTION)
-			.get()
-		const contributions = contributionsSnap.docs.map(
-			(doc) => doc.data() as TeamContributionDocument
-		)
-
-		if (holdsMoney(contributions)) {
-			return {
-				teamId,
-				seasonId,
-				teamName,
-				success: false,
-				playersUpdated: 0,
-				offersDeleted: 0,
-				logoDeleted: false,
-				errorCode: 'failed-precondition',
-				error:
-					'Cannot delete a team that still holds money. ' +
-					'Refund its contributions first.',
-			}
-		}
-
-		// 1. Read the roster (player IDs) before we delete it.
-		const rosterSnap = await teamSeasonDocRef.collection('roster').get()
-		const rosterPlayerIds = rosterSnap.docs.map((d) => d.id)
-
-		// 2. Apply the cleanup writes in a transaction so the team season,
-		// roster, and player season updates are atomic.
-		await firestore.runTransaction(async (transaction) => {
-			// Firestore requires every read in a transaction to happen before
-			// any write. This previously deleted each roster entry and then
-			// read that player's season subdoc inside the same loop, so the
-			// second iteration — in fact the first, since the read followed a
-			// delete — failed with "Firestore transactions require all reads
-			// to be executed before all writes." Every team has at least its
-			// captain on the roster, so team deletion failed outright.
-			//
-			// Phase 1: read every player season subdoc.
-			const playerSeasonDocRefs = rosterPlayerIds.map((playerId) =>
-				playerSeasonRef(firestore, playerId, seasonId)
-			)
-			const playerSeasonSnaps = await Promise.all(
-				playerSeasonDocRefs.map((ref) => transaction.get(ref))
-			)
-
-			// Phase 2: apply every write.
-			rosterPlayerIds.forEach((playerId, index) => {
-				const rosterEntryRef = teamSeasonDocRef
-					.collection('roster')
-					.doc(playerId)
-				transaction.delete(rosterEntryRef)
-
-				if (playerSeasonSnaps[index].exists) {
-					transaction.update(playerSeasonDocRefs[index], {
-						team: null,
-						captain: false,
-					})
-					playersUpdated++
+		// Every check and write happens in one transaction: checked outside
+		// it, a payment recorded between the check and the delete was left
+		// charged under a team-season that no longer existed, where nothing
+		// would ever refund it.
+		const teamSeasonData = await firestore.runTransaction(
+			async (transaction) => {
+				// A retried transaction starts its count again.
+				playersUpdated = 0
+				// Firestore requires every read in a transaction to happen
+				// before any write. Reading each player's season subdoc after
+				// deleting a roster entry once failed every team deletion.
+				const [teamSeasonSnap, contributionsSnap, rosterSnap] =
+					await Promise.all([
+						transaction.get(teamSeasonDocRef),
+						transaction.get(
+							teamSeasonDocRef.collection(CONTRIBUTIONS_SUBCOLLECTION)
+						),
+						transaction.get(teamSeasonDocRef.collection('roster')),
+					])
+				if (!teamSeasonSnap.exists) {
+					throw new DeletionRefused(
+						'not-found',
+						'This team is no longer in that season. Reload the page.'
+					)
 				}
-			})
+				const data = teamSeasonSnap.data()
+				teamName = data?.name ?? 'Unknown'
 
-			// Delete the season subdoc itself.
-			transaction.delete(teamSeasonDocRef)
-		})
+				if (!options?.skipRegisteredCheck && data?.registered) {
+					throw new DeletionRefused(
+						'failed-precondition',
+						'A registered team cannot be deleted.'
+					)
+				}
+
+				// Money must be settled before anything is deleted. Every route
+				// that removes a team-season is a route to losing track of a
+				// contribution, and three of the four go through here — so the
+				// invariant lives here rather than at each call site.
+				if (
+					holdsMoney(
+						contributionsSnap.docs.map(
+							(doc) => doc.data() as TeamContributionDocument
+						)
+					)
+				) {
+					throw new DeletionRefused(
+						'failed-precondition',
+						'Cannot delete a team that still holds money. ' +
+							'Refund its contributions first.'
+					)
+				}
+
+				const rosterPlayerIds = rosterSnap.docs.map((d) => d.id)
+				const playerSeasonDocRefs = rosterPlayerIds.map((playerId) =>
+					playerSeasonRef(firestore, playerId, seasonId)
+				)
+				const playerSeasonSnaps = await Promise.all(
+					playerSeasonDocRefs.map((ref) => transaction.get(ref))
+				)
+
+				// Every write, after every read.
+				rosterPlayerIds.forEach((playerId, index) => {
+					transaction.delete(
+						teamSeasonDocRef.collection('roster').doc(playerId)
+					)
+					if (playerSeasonSnaps[index].exists) {
+						transaction.update(playerSeasonDocRefs[index], {
+							team: null,
+							captain: false,
+						})
+						playersUpdated++
+					}
+				})
+				transaction.delete(teamSeasonDocRef)
+				return data
+			}
+		)
 
 		// 3. Delete the logo, once the season is gone. Before it, a failed
 		// transaction would leave a team whose logo no longer exists.
@@ -193,14 +182,11 @@ export async function deleteTeamSeasonWithCleanup(
 			.where('season', '==', teamSeasonData?.season)
 			.get()
 
-		if (!offersQuery.empty) {
-			const batch = firestore.batch()
-			for (const offerDoc of offersQuery.docs) {
-				batch.delete(offerDoc.ref)
-				offersDeleted++
-			}
-			await batch.commit()
-		}
+		// In batches: a team's offers grow with the season.
+		offersDeleted = await deleteInBatches(
+			firestore,
+			offersQuery.docs.map((doc) => doc.ref)
+		)
 
 		logger.info('Successfully deleted team season with cleanup', {
 			teamId,
@@ -221,6 +207,19 @@ export async function deleteTeamSeasonWithCleanup(
 			logoDeleted,
 		}
 	} catch (error) {
+		if (error instanceof DeletionRefused) {
+			return {
+				teamId,
+				seasonId,
+				teamName,
+				success: false,
+				playersUpdated: 0,
+				offersDeleted: 0,
+				logoDeleted: false,
+				errorCode: error.code,
+				error: error.message,
+			}
+		}
 		const errorMessage =
 			error instanceof Error ? error.message : 'Unknown error'
 

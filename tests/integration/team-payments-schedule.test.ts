@@ -216,6 +216,20 @@ describe('the hourly sweep', () => {
 		expect(stripeCalls()).toEqual([])
 	})
 
+	it('retries a registered team’s refund of what it paid beyond its fee', async () => {
+		// The excess is refunded when the team registers; if that fails past
+		// the trigger's retries, the sweep is what finishes it.
+		await seedTeam('team-a', true)
+		await seasonRef().update({ registeredTeamCount: 1 })
+		await pay('pi_a', TOTAL, 'team-a')
+		await pay('pi_b', 20_000, 'team-a')
+
+		const result = await sweepTeamPayments({ now: AFTER_CLOSE })
+
+		expect(result.teamsChecked).toBe(1)
+		expect(stripeCalls()).toEqual(['refund pi_b 20000'])
+	})
+
 	it('skips teams that hold no money', async () => {
 		await seedTeam('team-a')
 		await pay('pi_a', 60_000, 'team-a')
