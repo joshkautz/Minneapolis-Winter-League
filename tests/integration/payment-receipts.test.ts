@@ -1,7 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
-import { addPayment, failNext, resetFakeStripe } from './fake-stripe.js'
+import {
+	addPayment,
+	failNext,
+	fakeStripe,
+	resetFakeStripe,
+} from './fake-stripe.js'
 import { fakeResend, setEmailMode } from './email-helpers.js'
 import {
 	recordContribution,
@@ -15,6 +20,10 @@ import {
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
 import { recordContributionFromStripe } from '../../Functions/src/services/teamContributionIntake.js'
+import {
+	refundContribution,
+	settleTeamSeason,
+} from '../../Functions/src/services/teamSettlementService.js'
 import { deliverQueuedEmail } from '../../Functions/src/email/sender.js'
 
 /**
@@ -300,16 +309,29 @@ describe('a refund', () => {
 		expect(await outbox()).toHaveLength(1)
 	})
 
-	it('still receipts a refund after the team has been deleted', async () => {
+	it('still names the team in a refund receipt after the team is deleted', async () => {
+		// A team that missed out is deleted once refunded; the name is also
+		// on the payment our checkout created.
 		await pay('pi_1', 1_000)
+		const intent = fakeStripe.intents.get('pi_1')
+		if (intent) intent.description = 'Team registration: Chao World, 2026 Fall'
 		const before = await current('pi_1')
 		await teamSeasonRef(firestore, TEAM, SEASON).delete()
 
-		await fire('pi_1', before, { ...before, status: 'refunded' })
+		await fire('pi_1', before, {
+			...before,
+			status: 'refunded',
+			refundCause: 'season-full',
+		})
 
 		expect(
 			(await outbox()).find((m) => m.template === 'teamRefundReceipt')?.props
-		).toMatchObject({ teamName: null, amount: '$10.00', standing: null })
+		).toMatchObject({
+			teamName: 'Chao World',
+			cause: 'season-full',
+			amount: '$10.00',
+			standing: null,
+		})
 	})
 })
 
@@ -346,5 +368,111 @@ describe('a payment with no team to credit', () => {
 				}),
 			}),
 		])
+	})
+})
+
+describe('why a refund was made', () => {
+	/** Settles the team, running the receipt trigger for each change. */
+	const settleAndReceipt = async (): Promise<void> => {
+		const before = new Map(
+			(
+				await teamContributionsCollection(firestore, TEAM, SEASON).get()
+			).docs.map((doc) => [doc.id, doc.data()])
+		)
+		await settleTeamSeason(TEAM, SEASON, { firestore })
+		for (const [id, data] of before) await fire(id, data, await current(id))
+	}
+
+	const refundReceipts = async () =>
+		(await outbox()).filter((m) => m.template === 'teamRefundReceipt')
+
+	it('refunds what a registered team was paid beyond its fee, and says so', async () => {
+		await pay('pi_1', 60_000)
+		await pay('pi_2', 60_000)
+		await teamSeasonRef(firestore, TEAM, SEASON).update({ registered: true })
+
+		await settleAndReceipt()
+
+		expect((await current('pi_2'))?.refundCause).toBe('excess')
+		const [receipt] = await refundReceipts()
+		expect(receipt.props).toMatchObject({
+			amount: '$200.00',
+			originallyPaid: '$600.00',
+			fullRefund: false,
+			cause: 'excess',
+			teamRegistered: true,
+			// A registered team is in; its money is not counted out again.
+			standing: null,
+		})
+	})
+
+	it('refunds a team that missed out on a full season, and says so', async () => {
+		await pay('pi_1', 1_000)
+		await seasonRef().update({ registeredTeamCount: 12 })
+
+		await settleAndReceipt()
+
+		expect((await current('pi_1'))?.refundCause).toBe('season-full')
+		expect((await refundReceipts())[0].props).toMatchObject({
+			cause: 'season-full',
+			fullRefund: true,
+		})
+	})
+
+	it('refunds a team once registration has closed, and says so', async () => {
+		await pay('pi_1', 1_000)
+		await seasonRef().update({
+			registrationEnd: Timestamp.fromMillis(Date.now() - 1_000),
+		})
+
+		await settleAndReceipt()
+
+		expect((await refundReceipts())[0].props.cause).toBe('registration-closed')
+	})
+
+	it('refunds a payer who left the team, and says so', async () => {
+		await pay('pi_1', 1_000)
+		await teamRosterEntryRef(firestore, TEAM, SEASON, PAYER).delete()
+
+		await settleAndReceipt()
+
+		expect((await refundReceipts())[0].props.cause).toBe('left-team')
+	})
+
+	it('records an admin’s refund as theirs', async () => {
+		await pay('pi_1', 1_000)
+		const before = await current('pi_1')
+		const { FakeStripe } = await import('./fake-stripe.js')
+
+		await refundContribution(firestore, new FakeStripe() as never, {
+			teamId: TEAM,
+			seasonId: SEASON,
+			paymentIntentId: 'pi_1',
+		})
+		await fire('pi_1', before, await current('pi_1'))
+
+		expect((await refundReceipts())[0].props).toMatchObject({
+			cause: 'admin',
+			// The team is still in the running, so where it stands is shown.
+			standing: expect.objectContaining({ paid: '$0.00' }),
+		})
+	})
+
+	it('reaches a team that missed out with the reason and no invitation to pay again', async () => {
+		await setEmailMode(firestore, 'live')
+		await pay('pi_1', 1_000)
+		await seasonRef().update({ registeredTeamCount: 12 })
+		await settleAndReceipt()
+		const [receipt] = await refundReceipts()
+		const resend = fakeResend()
+
+		await deliverQueuedEmail(firestore, receipt.id, resend)
+
+		const { text } = resend.sent[0].email
+		expect(text).toContain(
+			'Every team spot in the 2026 Fall season filled before Chao World registered'
+		)
+		expect(text).not.toContain('to go')
+		expect(text).not.toContain('See your team')
 	})
 })

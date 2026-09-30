@@ -14,7 +14,9 @@
  *
  * Retried on failure. Both steps are idempotent: settlement reads Stripe
  * before refunding, and the cascade only ever finds the teams a previous
- * attempt did not finish.
+ * attempt did not finish. The two are independent: a failure settling the
+ * newly registered team does not hold up everyone else's refunds, and both
+ * failures are thrown together at the end.
  */
 
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore'
@@ -45,6 +47,9 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 		// A throw is only retried with this set; see .claude/rules/functions.md.
 		retry: true,
 		secrets: ['STRIPE_SECRET_KEY'],
+		// The cascade refunds every team that missed out, one Stripe call
+		// after another, which the 60-second default does not leave room for.
+		timeoutSeconds: 540,
 	},
 	async (event) => {
 		const { teamId: paramTeamId, seasonId: paramSeasonId } = event.params
@@ -74,31 +79,36 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 			const firestore = getFirestore()
 
 			// The team is in, so its money is kept. A no-op for a season on
-			// per-player pricing.
-			await settleTeamSeason(teamId, seasonId)
+			// per-player pricing. A failure here is thrown at the end, after
+			// the cascade, so it cannot hold up the other teams' refunds.
+			let ownSettlementError: unknown = null
+			try {
+				await settleTeamSeason(teamId, seasonId)
+			} catch (error) {
+				ownSettlementError = error
+			}
+			const rethrowOwn = (): void => {
+				if (ownSettlementError) throw ownSettlementError
+			}
 
 			const currentSeason = await getCurrentSeason()
 			if (!currentSeason || currentSeason.id !== seasonId) {
 				// Only the current season triggers the lock cascade.
-				return
+				return rethrowOwn()
 			}
 
-			// Count registered teams in this season via the per-team season subcollection.
+			// The season's own count of claimed spots, which only registration
+			// changes and never gives back; a recount of registered teams
+			// would drop if one were later deleted or merged.
+			const registeredTeamCount = currentSeason.registeredTeamCount ?? 0
+			logger.info(`Current registered team count: ${registeredTeamCount}`)
+
+			if (registeredTeamCount < LOCK_THRESHOLD) {
+				return rethrowOwn()
+			}
 			const seasonDocRef = firestore
 				.collection(Collections.SEASONS)
 				.doc(seasonId)
-			const registeredSnapshot = await firestore
-				.collectionGroup(TEAM_SEASONS_SUBCOLLECTION)
-				.where('season', '==', seasonDocRef)
-				.where('registered', '==', true)
-				.get()
-
-			const registeredTeamCount = registeredSnapshot.size
-			logger.info(`Current registered team count: ${registeredTeamCount}`)
-
-			if (registeredTeamCount !== LOCK_THRESHOLD) {
-				return
-			}
 
 			logger.info(`${LOCK_THRESHOLD} teams registered! Locking registration...`)
 
@@ -109,7 +119,7 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 				.where('registered', '==', false)
 				.get()
 
-			if (unregisteredSnapshot.empty) return
+			if (unregisteredSnapshot.empty) return rethrowOwn()
 
 			const pairs = unregisteredSnapshot.docs.map((d) => ({
 				teamId: canonicalTeamIdFromTeamSeasonDoc(
@@ -164,9 +174,19 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 				throw new Error(
 					`Could not refund the money of ${settlementFailures.length} ` +
 						`unregistered team(s): ` +
-						settlementFailures.map((f) => `${f.teamId} (${f.error})`).join('; ')
+						settlementFailures
+							.map((f) => `${f.teamId} (${f.error})`)
+							.join('; ') +
+						(ownSettlementError
+							? `; and could not settle the registered team: ${
+									ownSettlementError instanceof Error
+										? ownSettlementError.message
+										: String(ownSettlementError)
+								}`
+							: '')
 				)
 			}
+			rethrowOwn()
 		} catch (error) {
 			// Rethrown so the platform retries. Money kept from a team that is
 			// out of the season is exactly what this must not do.

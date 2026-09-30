@@ -12,7 +12,7 @@
  * See docs/TEAM_PAYMENTS.md, "Returning money that should not be kept".
  */
 
-import type { ContributionStatus } from '../types.js'
+import type { ContributionStatus, RefundCause } from '../types.js'
 
 /**
  * What should happen to a team's money as a whole.
@@ -25,6 +25,22 @@ import type { ContributionStatus } from '../types.js'
  *   left put in.
  */
 export type SettlementDisposition = 'keep' | 'refund' | 'pending'
+
+/** Why a team that is out is refunded: its season filled, or closed. */
+export type OutCause = Extract<
+	RefundCause,
+	'season-full' | 'registration-closed'
+>
+
+/** Why `decideDisposition` would refund an unregistered team. */
+export function outCauseOf(state: {
+	spotsClaimed: number
+	spotsAvailable: number
+}): OutCause {
+	return state.spotsClaimed >= state.spotsAvailable
+		? 'season-full'
+		: 'registration-closed'
+}
 
 export function decideDisposition(state: {
 	registered: boolean
@@ -59,6 +75,8 @@ export interface SettlementAction {
 	type: 'refund'
 	paymentIntentId: string
 	amountCents: number
+	/** Why, recorded on the contribution so its receipt can say. */
+	cause: RefundCause
 }
 
 export interface SettlementPlan {
@@ -132,6 +150,9 @@ function planKeep(
 				type: 'refund',
 				paymentIntentId: contribution.paymentIntentId,
 				amountCents: refundCents,
+				// Kept last, a leaver is refunded because the rest of the team
+				// covers the total without them.
+				cause: contribution.payerOnRoster ? 'excess' : 'left-team',
 			})
 		}
 	}
@@ -141,12 +162,14 @@ function planKeep(
 
 /** Refund everything the team holds. */
 function planRefundAll(
-	contributions: PlannedContribution[]
+	contributions: PlannedContribution[],
+	cause: RefundCause
 ): SettlementAction[] {
 	return inCommitOrder(paidOnly(contributions)).map((contribution) => ({
 		type: 'refund',
 		paymentIntentId: contribution.paymentIntentId,
 		amountCents: contribution.amountCents,
+		cause,
 	}))
 }
 
@@ -163,16 +186,29 @@ export function planSettlement(params: {
 	contributions: PlannedContribution[]
 	disposition: SettlementDisposition
 	totalCents: number
+	/** For `refund`: why the team is out (see `outCauseOf`). */
+	outCause?: OutCause
 }): SettlementPlan {
-	const { contributions, disposition, totalCents } = params
+	const {
+		contributions,
+		disposition,
+		totalCents,
+		outCause = 'season-full',
+	} = params
 	switch (disposition) {
 		case 'keep':
 			return planKeep(contributions, totalCents)
 		case 'refund':
-			return { actions: planRefundAll(contributions), shortfallCents: 0 }
+			return {
+				actions: planRefundAll(contributions, outCause),
+				shortfallCents: 0,
+			}
 		case 'pending':
 			return {
-				actions: planRefundAll(contributions.filter((c) => !c.payerOnRoster)),
+				actions: planRefundAll(
+					contributions.filter((c) => !c.payerOnRoster),
+					'left-team'
+				),
 				shortfallCents: 0,
 			}
 	}

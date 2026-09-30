@@ -410,6 +410,37 @@ describe('onTeamRegistrationChange', () => {
 			expect(entries.pi_a2.status).toBe('refunded')
 		})
 
+		it('refunds the teams that missed out even when the new team’s own settlement fails', async () => {
+			// The registered team paid over its total, and refunding the
+			// excess fails. That must not keep everyone else's money.
+			await pay('pi_winner_extra', 30_000)
+			failNext('refund', 'pi_winner_extra')
+
+			await expect(fire(TEAM)).rejects.toThrow()
+
+			expect((await ledger('loser-a')).pi_a1.status).toBe('refunded')
+			expect(
+				(await teamSeasonRef(firestore, 'loser-b', SEASON).get()).exists
+			).toBe(false)
+			expect((await ledger()).pi_winner_extra.status).toBe('paid')
+
+			// The platform's retry refunds the excess.
+			await fire(TEAM)
+			expect((await ledger()).pi_winner_extra.status).toBe('refunded')
+		})
+
+		it('counts the season’s claimed spots, not the registered teams left', async () => {
+			// A registered team deleted or merged away afterwards leaves eleven
+			// registered team-seasons, but twelve spots are still taken.
+			await teamSeasonRef(firestore, 'reg-1', SEASON).delete()
+
+			await fire(TEAM)
+
+			expect(
+				(await teamSeasonRef(firestore, 'loser-a', SEASON).get()).exists
+			).toBe(false)
+		})
+
 		it('keeps a team whose money could not be refunded, and retries', async () => {
 			// Deleting it would lose track of money it still holds.
 			failNext('refund', 'pi_b1')

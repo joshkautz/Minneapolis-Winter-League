@@ -177,6 +177,7 @@ export const TEMPLATES = {
 			paidOn: 'Thursday, October 1, 2026',
 			paymentMethod: 'Visa •••• 4242',
 			receiptUrl: 'https://pay.stripe.com/receipts/sample',
+			teamRegistered: false,
 			standing: {
 				paid: '$750.00',
 				fee: '$1,000.00',
@@ -195,6 +196,8 @@ export const TEMPLATES = {
 		sample: {
 			teamName: 'Frost Giants',
 			seasonName: '2026 Fall',
+			cause: 'excess',
+			teamRegistered: true,
 			amount: '$250.00',
 			refundedOn: 'Saturday, October 31, 2026',
 			originallyPaid: '$250.00',

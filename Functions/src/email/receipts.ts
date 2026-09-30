@@ -133,6 +133,17 @@ export function paymentMethodOf(
 	return wallet ? `${wallet} (${cardText})` : cardText
 }
 
+/**
+ * The team named in a payment's description, which our checkout writes as
+ * "Team registration: <team>, <season>". Null for any other description.
+ */
+export function teamNameFromDescription(
+	description: string | null | undefined
+): string | null {
+	const match = description?.match(/^Team registration: (.+), [^,]+$/)
+	return match?.[1] ?? null
+}
+
 /** The charge behind a PaymentIntent retrieved with its latest charge. */
 const chargeOf = (paymentIntent: Stripe.PaymentIntent): Stripe.Charge | null =>
 	typeof paymentIntent.latest_charge === 'object'
@@ -221,11 +232,20 @@ export async function queueContributionReceipt(
 	const season = seasonSnap.data() as SeasonDocument | undefined
 	const teamSeason = teamSeasonSnap.data() as TeamSeasonDocument | undefined
 	const charge = chargeOf(paymentIntent)
+	const teamRegistered = teamSeason?.registered === true
+	// A registered team is simply in: its receipts say so rather than count
+	// what it has paid, which after a leaver can read short of a total that
+	// no longer matters.
 	const standing =
-		season && teamSeason
+		season && teamSeason && !teamRegistered
 			? await standingOf(firestore, teamId, seasonId, season)
 			: null
-	const teamName = teamSeason?.name ?? 'your team'
+	// The team-season is gone once a team that missed out is deleted, but
+	// the name is on the payment our checkout created.
+	const teamName =
+		teamSeason?.name ??
+		teamNameFromDescription(paymentIntent.description) ??
+		'your team'
 	const seasonName = season?.name ?? 'this season'
 	const id = receiptMailId(paymentIntentId, receipt, after)
 	const to = { playerId: contribution.player.id }
@@ -238,6 +258,7 @@ export async function queueContributionReceipt(
 			props: {
 				teamName,
 				seasonName,
+				teamRegistered,
 				amount: formatMoney(contribution.amountCents),
 				paidOn: receiptDate(contribution.createdAt?.toDate() ?? new Date()),
 				paymentMethod: paymentMethodOf(charge),
@@ -251,8 +272,10 @@ export async function queueContributionReceipt(
 		to,
 		template: 'teamRefundReceipt',
 		props: {
-			teamName: teamSeason ? teamName : null,
+			teamName,
 			seasonName,
+			cause: contribution.refundCause ?? null,
+			teamRegistered,
 			amount: formatMoney(receipt.refundedCents),
 			refundedOn: receiptDate(contribution.updatedAt?.toDate() ?? new Date()),
 			originallyPaid: formatMoney(
@@ -293,8 +316,10 @@ export async function queueUnattributableRefundReceipt(
 		to: { playerId },
 		template: 'teamRefundReceipt',
 		props: {
-			teamName: null,
+			teamName: teamNameFromDescription(paymentIntent.description),
 			seasonName: season?.name ?? 'this season',
+			cause: 'team-deleted',
+			teamRegistered: false,
 			amount: formatMoney(amountCents),
 			refundedOn: receiptDate(new Date()),
 			originallyPaid: formatMoney(amountCents),

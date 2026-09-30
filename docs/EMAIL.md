@@ -220,8 +220,15 @@ Stripe's Dashboard). They are `account` email, so they cannot be turned off.
   refund receipt itself.
 - **What.** The amount, date, card, and where the team stands: its paid total
   against the fee, and how many of the ten players it needs have signed,
-  counted as registration counts them. Each links to Stripe's receipt page
-  for the official record.
+  counted as registration counts them; a registered team is simply said to
+  be registered. Each links to Stripe's receipt page for the official record.
+- **Why a refund.** Settlement writes the refund's cause on the contribution
+  (`refundCause`: excess, left-team, season-full, registration-closed, admin)
+  just before asking Stripe for it, so whichever of Stripe's event and the
+  settlement records the refund, the receipt can say why. A team that is out
+  gets the reason and no standing or "see your team", since paying again
+  cannot help; a refund made in the Stripe Dashboard has no cause and gets a
+  plain receipt.
 - **Once only.** Each receipt has a stable mail id (`receipt-{pi}`,
   `refund-{pi}-{status}-{amount}`), so a retried trigger sends nothing new.
 
