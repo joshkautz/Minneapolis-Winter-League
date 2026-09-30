@@ -21,6 +21,7 @@ import {
 	type SeasonDocument,
 	type TeamContributionDocument,
 	type TeamSeasonDocument,
+	ROSTER_SUBCOLLECTION,
 } from '../types.js'
 import { playerSeasonRef, teamSeasonRef } from '../shared/database.js'
 import {
@@ -41,7 +42,7 @@ export const formatMoney = (cents: number): string =>
 	dollars.format(cents / 100)
 
 /** "Tuesday, September 29, 2026", on Minneapolis's calendar. */
-export const receiptDate = (date: Date): string =>
+const receiptDate = (date: Date): string =>
 	new Intl.DateTimeFormat('en-US', {
 		weekday: 'long',
 		month: 'long',
@@ -161,7 +162,7 @@ async function standingOf(
 	const teamSeasonDoc = teamSeasonRef(firestore, teamId, seasonId)
 	const [contributions, roster] = await Promise.all([
 		teamContributionsCollection(firestore, teamId, seasonId).get(),
-		teamSeasonDoc.collection('roster').get(),
+		teamSeasonDoc.collection(ROSTER_SUBCOLLECTION).get(),
 	])
 	const rosterIds = new Set(roster.docs.map((doc) => doc.id))
 	const playerSeasons = await Promise.all(

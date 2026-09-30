@@ -19,10 +19,8 @@ import {
 import { canonicalTeamIdFromTeamSeasonDoc } from '../../../shared/database.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import {
-	calculateSwissRankings,
-	SwissRanking,
-} from '../../../services/swissRankings/index.js'
+import { calculateSwissRankings } from '../../../services/swissRankings/calculator.js'
+import type { SwissRanking } from '../../../services/swissRankings/types.js'
 
 interface GetSwissRankingsRequest {
 	/** Season document ID */

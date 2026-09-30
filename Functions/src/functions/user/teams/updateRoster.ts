@@ -33,6 +33,7 @@ import {
 	Collections,
 	type PlayerSeasonDocument,
 	type SeasonDocument,
+	ROSTER_SUBCOLLECTION,
 } from '../../../types.js'
 import { countsTowardRegistration } from '../../../services/teamRegistrationService.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
@@ -129,7 +130,7 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 					await Promise.all([
 						txn.get(teamSeasonDocRef),
 						txn.get(teamRosterEntryRef(firestore, teamId, seasonId, playerId)),
-						txn.get(teamSeasonDocRef.collection('roster')),
+						txn.get(teamSeasonDocRef.collection(ROSTER_SUBCOLLECTION)),
 					])
 				if (!teamSeasonSnap.exists) {
 					throw new HttpsError('not-found', 'Team not found for this season')

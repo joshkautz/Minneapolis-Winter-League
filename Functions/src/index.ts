@@ -1,40 +1,10 @@
 /**
- * Firebase Functions Entry Point
+ * The deploy manifest: every Cloud Function is exported from here, and a
+ * function that is not exported is not deployed.
  *
- * This file serves as the main entry point for all Firebase Functions.
- * Functions are organized by access level and domain:
- *
- * TRIGGERS:
- * - Authentication triggers (user lifecycle events)
- * - Document triggers (Firestore document changes)
- * - Payment triggers (payment processing events)
- *
- * API ENDPOINTS:
- * - Webhooks (external service callbacks)
- *
- * CALLABLE FUNCTIONS (ADMIN-ONLY):
- * - Player management (email updates, admin status, verification)
- * - Team management (unregistered team deletion)
- * - Game management (CRUD operations)
- * - News management (CRUD operations)
- * - Season management (CRUD operations with auto player integration)
- * - Player rankings (rebuild and update)
- * - Badge management (CRUD operations, award/revoke badges)
- * - Posts management (delete posts and replies)
- *
- * CALLABLE FUNCTIONS (USER-ACCESSIBLE):
- * - Player management (CRUD operations)
- * - Team management (CRUD operations)
- * - Offer management (invitation/request system)
- * - Storage management (file upload/download)
- * - Waivers (signing in the app)
- * - Posts management (create/update posts and replies)
- *
- * This organization provides:
- * - Clear separation between admin and user functions
- * - Easy to find and maintain functions
- * - Consistent naming conventions
- * - Type safety and error handling
+ * Exports are grouped by kind (triggers, HTTP endpoints, admin callables,
+ * player callables) under the banners below. docs/functions/README.md lists
+ * what each one does.
  */
 
 import { initializeApp } from './initializeApp.js'

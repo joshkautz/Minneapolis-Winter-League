@@ -30,6 +30,7 @@ import {
 	type PlayerSeasonDocument,
 	type SeasonDocument,
 	type TeamContributionDocument,
+	ROSTER_SUBCOLLECTION,
 } from '../types.js'
 import {
 	paidByRosterCents,
@@ -197,7 +198,7 @@ async function claimSpotIfQualified(
 				: undefined
 
 		const rosterSnap = await transaction.get(
-			teamSeasonDocRef.collection('roster')
+			teamSeasonDocRef.collection(ROSTER_SUBCOLLECTION)
 		)
 		const playerSeasons = await Promise.all(
 			rosterSnap.docs.map((rosterDoc) =>

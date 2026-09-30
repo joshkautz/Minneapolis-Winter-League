@@ -9,7 +9,6 @@ import {
 	Button,
 	Container,
 	Head,
-	Hr,
 	Html,
 	Img,
 	Link,
@@ -159,8 +158,6 @@ export const TextLink = ({
 	</Link>
 )
 
-export const Divider = (): ReactElement => <Hr style={divider} />
-
 // ---- Styles ---------------------------------------------------------------
 
 const body = {
@@ -253,8 +250,6 @@ const factLabel = {
 	letterSpacing: '0.04em',
 	textTransform: 'uppercase' as const,
 }
-
-const divider = { borderColor: COLORS.border, margin: '24px 0' }
 
 const footerSection = { padding: '24px 8px 0', textAlign: 'center' as const }
 

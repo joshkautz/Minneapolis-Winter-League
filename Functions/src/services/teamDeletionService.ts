@@ -21,6 +21,7 @@ import {
 	Collections,
 	TEAM_SEASONS_SUBCOLLECTION,
 	type TeamContributionDocument,
+	ROSTER_SUBCOLLECTION,
 } from '../types.js'
 import {
 	playerSeasonRef,
@@ -103,7 +104,7 @@ export async function deleteTeamSeasonWithCleanup(
 						transaction.get(
 							teamSeasonDocRef.collection(CONTRIBUTIONS_SUBCOLLECTION)
 						),
-						transaction.get(teamSeasonDocRef.collection('roster')),
+						transaction.get(teamSeasonDocRef.collection(ROSTER_SUBCOLLECTION)),
 					])
 				if (!teamSeasonSnap.exists) {
 					throw new DeletionRefused(
@@ -150,7 +151,7 @@ export async function deleteTeamSeasonWithCleanup(
 				// Every write, after every read.
 				rosterPlayerIds.forEach((playerId, index) => {
 					transaction.delete(
-						teamSeasonDocRef.collection('roster').doc(playerId)
+						teamSeasonDocRef.collection(ROSTER_SUBCOLLECTION).doc(playerId)
 					)
 					if (playerSeasonSnaps[index].exists) {
 						transaction.update(playerSeasonDocRefs[index], {

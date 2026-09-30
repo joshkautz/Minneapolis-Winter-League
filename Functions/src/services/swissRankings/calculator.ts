@@ -169,21 +169,3 @@ function createEmptyStats(teamId: string): SwissTeamStats {
 		opponentIds: [],
 	}
 }
-
-/**
- * Get the initial seeding rank for a team (used when team has no games)
- *
- * @param teamId - Team document ID
- * @param swissInitialSeeding - Array of team IDs in seeding order
- * @returns Seed position (1-based) or null if not found
- */
-export function getInitialSeedingRank(
-	teamId: string,
-	swissInitialSeeding: string[] | undefined
-): number | null {
-	if (!swissInitialSeeding || swissInitialSeeding.length === 0) {
-		return null
-	}
-	const index = swissInitialSeeding.indexOf(teamId)
-	return index >= 0 ? index + 1 : null
-}

@@ -54,11 +54,10 @@ export async function validateAdminUser(
 ): Promise<string> {
 	validateAuthentication(auth)
 
-	if (!auth?.uid) {
-		throw new HttpsError('unauthenticated', 'Authentication required')
-	}
-
-	const userDoc = await firestore.collection('players').doc(auth.uid).get()
+	const userDoc = await firestore
+		.collection(Collections.PLAYERS)
+		.doc(auth.uid)
+		.get()
 
 	if (
 		!userDoc.exists ||

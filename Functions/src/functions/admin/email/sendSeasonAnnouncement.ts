@@ -21,6 +21,7 @@ import { EMAIL_CONFIG, FIREBASE_CONFIG } from '../../../config/constants.js'
 import { Collections, type SeasonDocument } from '../../../types.js'
 import {
 	announcementRecipients,
+	AnnouncementNotReadyError,
 	seasonAnnouncementProps,
 } from '../../../email/announcement.js'
 import { mailDocument, mailRef } from '../../../email/outbox.js'
@@ -69,9 +70,15 @@ export const sendSeasonAnnouncement = onCall<SendSeasonAnnouncementRequest>(
 		try {
 			props = seasonAnnouncementProps(season)
 		} catch (error) {
+			if (error instanceof AnnouncementNotReadyError) {
+				throw new HttpsError('failed-precondition', error.message)
+			}
+			logger.error('Could not build the season announcement', error, {
+				seasonId,
+			})
 			throw new HttpsError(
-				'failed-precondition',
-				error instanceof Error ? error.message : String(error)
+				'internal',
+				'The announcement could not be prepared. Please try again.'
 			)
 		}
 

@@ -32,6 +32,7 @@ import { firestore } from '../app'
 import {
 	Collections,
 	SeasonDocument,
+	ROSTER_SUBCOLLECTION,
 	TEAM_SEASONS_SUBCOLLECTION,
 	TeamDocument,
 	TeamRosterDocument,
@@ -181,7 +182,7 @@ export const teamRosterSubcollection = (
 		teamId,
 		TEAM_SEASONS_SUBCOLLECTION,
 		seasonId,
-		'roster'
+		ROSTER_SUBCOLLECTION
 	) as CollectionReference<TeamRosterDocument>
 }
 

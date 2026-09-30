@@ -26,7 +26,6 @@ import {
 import { isPlayerBanned, validateAuthentication } from '../../../shared/auth.js'
 import {
 	getCurrentSeason,
-	getCurrentSeasonRef,
 	playerSeasonRef,
 	teamSeasonRef,
 } from '../../../shared/database.js'
@@ -83,7 +82,9 @@ export const createOffer = onCall<CreateOfferRequest>(
 			if (!currentSeason) {
 				throw new HttpsError('failed-precondition', 'No current season found')
 			}
-			const seasonRef = await getCurrentSeasonRef()
+			const seasonRef = firestore
+				.collection(Collections.SEASONS)
+				.doc(currentSeason.id)
 
 			// Setup references
 			const playerRef = firestore.collection(Collections.PLAYERS).doc(playerId)

@@ -24,6 +24,7 @@ import {
 	PLAYER_SEASONS_SUBCOLLECTION,
 	type DocumentReference,
 	type PlayerDocument,
+	ROSTER_SUBCOLLECTION,
 } from '../types.js'
 import { playerContactRef } from '../shared/database.js'
 
@@ -46,7 +47,7 @@ export async function deletePlayerAccountData(
 	// bypasses shared/membership.ts on purpose: that helper keeps the player
 	// side in step with the team side, and the player side is deleted next.
 	const rosterEntries = await firestore
-		.collectionGroup('roster')
+		.collectionGroup(ROSTER_SUBCOLLECTION)
 		.where('player', '==', playerRef)
 		.get()
 	for (const entry of rosterEntries.docs) await entry.ref.delete()

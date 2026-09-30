@@ -5,7 +5,7 @@ import { initTestApp } from './helpers.js'
  * Which triggers the platform retries.
  *
  * A Gen 2 event trigger that throws is **not** retried unless it sets
- * `retry: true`, and nothing in the code makes that obvious: a handler that
+ * `retry: true` (a v1 trigger, `failurePolicy`), and nothing in the code makes that obvious: a handler that
  * rethrows "so the trigger retries" does nothing of the kind without the
  * flag. Several did exactly that until this suite existed.
  *
@@ -32,13 +32,14 @@ const RETRIED = [
 	// Queues a payment's or refund's receipt, under a stable mail id, so a
 	// retry after it was queued queues nothing.
 	'emailContributionReceipt',
+	// Removes a deleted account's data; a second run finds nothing to do.
+	'userDeleted',
 ]
 
 /** Not retried, each for a stated reason. */
 const NOT_RETRIED: Record<string, string> = {
 	onOfferUpdated:
 		'throws on offers that can never succeed (already on a team, team not in the season); retrying would repeat the failure for a day',
-	userDeleted: 'a v1 Auth trigger, which this suite does not govern',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -49,6 +49,7 @@ import {
 	type PlayerSeasonDocument,
 	type SeasonDocument,
 	type WaiverSignatureDocument,
+	ROSTER_SUBCOLLECTION,
 } from '../../../types.js'
 import { currentWaiverVersion } from '../../../waiver/versions.js'
 import { waiverFingerprint } from '../../../waiver/fingerprint.js'
@@ -658,7 +659,7 @@ async function readPlayerUpdate(
 		if (current.captain === true && oldTeamId) {
 			const roster = await txn.get(
 				teamSeasonRef(firestore, oldTeamId, update.seasonId).collection(
-					'roster'
+					ROSTER_SUBCOLLECTION
 				)
 			)
 			const teammates = await Promise.all(

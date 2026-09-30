@@ -20,6 +20,8 @@ import {
 	TeamDocument,
 	TeamRosterDocument,
 	TeamSeasonDocument,
+	ROSTER_SUBCOLLECTION,
+	TEAM_BADGES_SUBCOLLECTION,
 } from '../types.js'
 import { logger } from 'firebase-functions/v2'
 
@@ -61,7 +63,7 @@ export function teamRosterEntryRef(
 		.doc(teamId)
 		.collection(TEAM_SEASONS_SUBCOLLECTION)
 		.doc(seasonId)
-		.collection('roster')
+		.collection(ROSTER_SUBCOLLECTION)
 		.doc(playerId) as DocumentReference<TeamRosterDocument>
 }
 
@@ -73,7 +75,7 @@ export function teamBadgeRef(
 	return firestore
 		.collection(Collections.TEAMS)
 		.doc(teamId)
-		.collection('badges')
+		.collection(TEAM_BADGES_SUBCOLLECTION)
 		.doc(badgeId) as DocumentReference<TeamBadgeDocument>
 }
 
@@ -125,20 +127,6 @@ export function canonicalTeamIdFromTeamSeasonDoc(
 }
 
 /**
- * Derive the canonical team document reference from a team-season subdoc
- * snapshot. Prefer this helper over reaching into `doc.ref.parent.parent`.
- */
-export function canonicalTeamRefFromTeamSeasonDoc(
-	doc:
-		| QueryDocumentSnapshot<TeamSeasonDocument>
-		| DocumentSnapshot<TeamSeasonDocument>
-): DocumentReference<TeamDocument> {
-	const teamRef = doc.ref.parent.parent
-	if (!teamRef) throw new Error('TeamSeasonDocument has no parent team')
-	return teamRef as DocumentReference<TeamDocument>
-}
-
-/**
  * Derive the canonical player id from a player-season subdoc snapshot.
  * Prefer this helper over reaching into `doc.ref.parent.parent.id`.
  */
@@ -150,21 +138,6 @@ export function canonicalPlayerIdFromPlayerSeasonDoc(
 	const playerRef = doc.ref.parent.parent
 	if (!playerRef) throw new Error('PlayerSeasonDocument has no parent player')
 	return playerRef.id
-}
-
-/**
- * Derive the canonical player document reference from a player-season
- * subdoc snapshot. Prefer this helper over reaching into
- * `doc.ref.parent.parent`.
- */
-export function canonicalPlayerRefFromPlayerSeasonDoc(
-	doc:
-		| QueryDocumentSnapshot<PlayerSeasonDocument>
-		| DocumentSnapshot<PlayerSeasonDocument>
-): DocumentReference<PlayerDocument> {
-	const playerRef = doc.ref.parent.parent
-	if (!playerRef) throw new Error('PlayerSeasonDocument has no parent player')
-	return playerRef as DocumentReference<PlayerDocument>
 }
 
 /**
@@ -189,24 +162,6 @@ export async function getCurrentSeason(): Promise<SeasonDocument | null> {
 		return { ...seasonData, id: seasonDoc.id }
 	} catch (error) {
 		logger.error('Error getting current season:', error)
-		throw new Error('Failed to get current season')
+		throw new Error('Failed to get current season', { cause: error })
 	}
-}
-
-/**
- * Gets the current season document reference
- */
-export async function getCurrentSeasonRef(): Promise<FirebaseFirestore.DocumentReference> {
-	const firestore = getFirestore()
-	const seasonsSnapshot = await firestore
-		.collection(Collections.SEASONS)
-		.orderBy('dateStart', 'desc')
-		.limit(1)
-		.get()
-
-	if (seasonsSnapshot.empty) {
-		throw new Error('No current season found')
-	}
-
-	return seasonsSnapshot.docs[0].ref
 }

@@ -190,7 +190,7 @@ export const teamRefundReceiptSubject = ({
 	teamName ? `Refund: ${amount} from ${teamName}` : `Refund: ${amount}`
 
 /** Why the money came back, in a sentence; null when it is not known. */
-export function refundReason({
+function refundExplanation({
 	cause,
 	teamName,
 	seasonName,
@@ -240,7 +240,7 @@ export const TeamRefundReceipt = ({
 	siteUrl,
 	footer,
 }: TeamRefundReceiptProps & EmailContextProps): ReactElement => {
-	const reason = refundReason({
+	const reason = refundExplanation({
 		cause,
 		teamName,
 		seasonName,

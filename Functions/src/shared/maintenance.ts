@@ -6,7 +6,8 @@
  * migration script can write to canonical collections without racing or
  * being amplified by trigger fan-out.
  *
- * The flag doc is write-locked to admins by firestore.rules.
+ * firestore.rules denies every client write to it, admins' included; set it
+ * with scripts/production/set-maintenance.js.
  */
 
 import type { Firestore } from 'firebase-admin/firestore'

@@ -30,6 +30,7 @@ import {
 	type SeasonDocument,
 	type TeamContributionDocument,
 	type TeamSeasonDocument,
+	ROSTER_SUBCOLLECTION,
 } from '../types.js'
 import {
 	ContributionNotFoundError,
@@ -113,7 +114,9 @@ export async function settleTeamSeason(
 						teamContributionsCollection(firestore, teamId, seasonId)
 					),
 					transaction.get(
-						teamSeasonRef(firestore, teamId, seasonId).collection('roster')
+						teamSeasonRef(firestore, teamId, seasonId).collection(
+							ROSTER_SUBCOLLECTION
+						)
 					),
 				]),
 			{ readOnly: true }

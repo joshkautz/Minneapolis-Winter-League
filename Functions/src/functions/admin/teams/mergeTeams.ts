@@ -54,6 +54,8 @@ import {
 	type TeamBadgeDocument,
 	type TeamContributionDocument,
 	type TeamSeasonDocument,
+	ROSTER_SUBCOLLECTION,
+	TEAM_BADGES_SUBCOLLECTION,
 } from '../../../types.js'
 
 interface MergeTeamsRequest {
@@ -196,16 +198,18 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				FirebaseFirestore.QueryDocumentSnapshot[]
 			>()
 			for (const teamSeasonDoc of losingTeamSeasonsSnap.docs) {
-				const rosterSnap = await teamSeasonDoc.ref.collection('roster').get()
+				const rosterSnap = await teamSeasonDoc.ref
+					.collection(ROSTER_SUBCOLLECTION)
+					.get()
 				rosterByLosingSeasonId.set(teamSeasonDoc.id, rosterSnap.docs)
 			}
 
 			// ---- Pre-load badges from both teams ----------------------------
 			const [losingBadgesSnap, winningBadgesSnap] = await Promise.all([
-				losingTeamRef.collection('badges').get() as Promise<
+				losingTeamRef.collection(TEAM_BADGES_SUBCOLLECTION).get() as Promise<
 					FirebaseFirestore.QuerySnapshot<TeamBadgeDocument>
 				>,
-				winningTeamRef.collection('badges').get() as Promise<
+				winningTeamRef.collection(TEAM_BADGES_SUBCOLLECTION).get() as Promise<
 					FirebaseFirestore.QuerySnapshot<TeamBadgeDocument>
 				>,
 			])

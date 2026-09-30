@@ -6,7 +6,7 @@
 import type { Firestore } from 'firebase-admin/firestore'
 import type { EmailSettingsDocument, MailStatus } from '../types.js'
 
-export const EMAIL_SETTINGS_PATH = 'system/email'
+const EMAIL_SETTINGS_PATH = 'system/email'
 
 export const EMAIL_OFF: EmailSettingsDocument = {
 	mode: 'off',

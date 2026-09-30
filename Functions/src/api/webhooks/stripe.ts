@@ -10,8 +10,12 @@ import { onRequest } from 'firebase-functions/v2/https'
 import { getFirestore, FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG, getStripeConfig } from '../../config/constants.js'
+import { Collections } from '../../types.js'
 import { handleFunctionError } from '../../shared/errors.js'
-import { TEAM_CONTRIBUTION_KIND } from '../../shared/stripe.js'
+import {
+	createStripeClient,
+	TEAM_CONTRIBUTION_KIND,
+} from '../../shared/stripe.js'
 import { reconcileContribution } from '../../services/teamSettlementService.js'
 import { recordContributionFromStripe } from '../../services/teamContributionIntake.js'
 import Stripe from 'stripe'
@@ -40,9 +44,7 @@ export const stripeWebhook = onRequest(
 			}
 
 			const stripeConfig = getStripeConfig()
-			const stripe = new Stripe(stripeConfig.SECRET_KEY, {
-				apiVersion: stripeConfig.API_VERSION,
-			})
+			const stripe = createStripeClient()
 
 			// Get the signature header for verification.
 			// Stripe v22 tightened the constructEvent signature to accept
@@ -117,10 +119,10 @@ export const stripeWebhook = onRequest(
 )
 
 /**
- * Handle checkout.session.completed event
+ * Handle a completed per-player registration checkout.
  *
- * Creates a payment document in Firestore to trigger the onPaymentCreated flow.
- * This replaces the functionality previously provided by the Firebase Stripe Extension.
+ * Creates `stripe/{uid}/payments/{sessionId}`, which triggers
+ * onPaymentCreated. Team contributions never reach here.
  */
 async function handleCheckoutSessionCompleted(
 	session: Stripe.Checkout.Session
@@ -136,8 +138,8 @@ async function handleCheckoutSessionCompleted(
 	}
 
 	try {
-		// Create payment document in the new structure
-		// This triggers the onPaymentCreated function
+		// The payment document triggers onPaymentCreated, which marks the
+		// player paid for the season.
 		const paymentData = {
 			sessionId: session.id,
 			status: session.payment_status,
@@ -154,7 +156,7 @@ async function handleCheckoutSessionCompleted(
 		}
 
 		await firestore
-			.collection('stripe')
+			.collection(Collections.STRIPE)
 			.doc(firebaseUID)
 			.collection('payments')
 			.doc(session.id)

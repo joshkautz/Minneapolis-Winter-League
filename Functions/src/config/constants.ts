@@ -67,11 +67,17 @@ export const GAME_CONFIG = {
 	ALLOWED_FIELDS: [1, 2, 3],
 } as const
 
+/**
+ * The Stripe API version the code is written against. The webhook endpoint
+ * must be on the same one; see .claude/rules/functions.md before moving it.
+ */
+export const STRIPE_API_VERSION = '2026-08-26.dahlia' as const
+
 // Stripe Configuration (lazy-loaded)
 export function getStripeConfig(): {
 	readonly SECRET_KEY: string
 	readonly WEBHOOK_SECRET: string
-	readonly API_VERSION: '2026-08-26.dahlia'
+	readonly API_VERSION: typeof STRIPE_API_VERSION
 } {
 	return {
 		// Getters, so a function that declares only STRIPE_SECRET_KEY never
@@ -82,6 +88,6 @@ export function getStripeConfig(): {
 		get WEBHOOK_SECRET(): string {
 			return getStripeWebhookSecret()
 		},
-		API_VERSION: '2026-08-26.dahlia' as const,
+		API_VERSION: STRIPE_API_VERSION,
 	} as const
 }

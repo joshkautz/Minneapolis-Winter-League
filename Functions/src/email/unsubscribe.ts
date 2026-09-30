@@ -19,7 +19,7 @@ import { EMAIL_CONFIG } from '../config/constants.js'
 import { playerContactRef } from '../shared/database.js'
 import type { OptionalEmailCategory, PlayerContactDocument } from '../types.js'
 
-export const OPTIONAL_CATEGORIES: readonly OptionalEmailCategory[] = [
+const OPTIONAL_CATEGORIES: readonly OptionalEmailCategory[] = [
 	'announcements',
 	'registration',
 	'teams',

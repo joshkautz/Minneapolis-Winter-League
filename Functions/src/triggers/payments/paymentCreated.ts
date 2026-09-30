@@ -45,7 +45,7 @@ export const onPaymentCreated = onDocumentCreated(
 
 			// Get payment document
 			const paymentDoc = await firestore
-				.collection('stripe')
+				.collection(Collections.STRIPE)
 				.doc(uid)
 				.collection('payments')
 				.doc(paymentId)

@@ -6,6 +6,7 @@ import type { Firestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import Stripe from 'stripe'
 import { getStripeConfig } from '../config/constants.js'
+import { Collections } from '../types.js'
 
 /** Stripe client pinned to the API version the code was written against. */
 export function createStripeClient(): Stripe {
@@ -58,7 +59,7 @@ export async function getOrCreateStripeCustomer(
 	params: { userId: string; email: string | undefined }
 ): Promise<string> {
 	const { userId, email } = params
-	const customerDocRef = firestore.collection('stripe').doc(userId)
+	const customerDocRef = firestore.collection(Collections.STRIPE).doc(userId)
 
 	return firestore.runTransaction(async (transaction) => {
 		const customerDoc = await transaction.get(customerDocRef)
