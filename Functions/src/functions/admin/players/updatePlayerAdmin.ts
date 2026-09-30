@@ -53,6 +53,7 @@ import {
 } from '../../../types.js'
 import { currentWaiverVersion } from '../../../waiver/versions.js'
 import { waiverFingerprint } from '../../../waiver/fingerprint.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface SeasonUpdate {
 	seasonId: string
@@ -513,15 +514,10 @@ export const updatePlayerAdmin = onCall<
 				changes,
 			}
 		} catch (error) {
-			logger.error('Error updating player', {
-				playerId,
-				adminUserId: auth?.uid,
-				error: error instanceof Error ? error.message : 'Unknown error',
-			})
-			if (error instanceof HttpsError) throw error
-			throw new HttpsError(
-				'internal',
-				'The player’s changes could not be saved. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The player’s changes could not be saved. Please try again.',
+				{ playerId, adminUserId: auth?.uid }
 			)
 		}
 	}

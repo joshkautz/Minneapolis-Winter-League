@@ -10,6 +10,7 @@ import { validateAdminUser } from '../../../shared/auth.js'
 import { parseImageUpload, storeImage } from '../../../shared/images.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface CreateBadgeRequest {
 	name: string
@@ -129,23 +130,10 @@ export const createBadge = onCall<CreateBadgeRequest>(
 				message: 'Badge created successfully',
 			}
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error creating badge:', {
-				userId: auth?.uid,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The badge could not be created. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The badge could not be created. Please try again.',
+				{ userId: auth?.uid }
 			)
 		}
 	}

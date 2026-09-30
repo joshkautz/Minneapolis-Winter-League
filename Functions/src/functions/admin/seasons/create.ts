@@ -7,7 +7,7 @@
  * `collectionGroup('teamSeasons')` query at read time.
  */
 
-import { onCall, HttpsError } from 'firebase-functions/v2/https'
+import { onCall } from 'firebase-functions/v2/https'
 import { getFirestore, WriteBatch } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
@@ -21,6 +21,7 @@ import { validateAdminUser } from '../../../shared/auth.js'
 import { validateTeamRegistrationTotal } from '../../../shared/seasonPricing.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { parseSeasonInput } from '../../../shared/seasonInput.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface CreateSeasonRequest {
 	name: string
@@ -176,17 +177,10 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				seasonId: seasonRef.id,
 			} as CreateSeasonResponse
 		} catch (error) {
-			if (error instanceof HttpsError) throw error
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-			logger.error('Error creating season:', {
-				name,
-				userId: auth?.uid,
-				error: errorMessage,
-			})
-			throw new HttpsError(
-				'internal',
-				'The season could not be created. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The season could not be created. Please try again.',
+				{ name, userId: auth?.uid }
 			)
 		}
 	}

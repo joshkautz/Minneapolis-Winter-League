@@ -8,6 +8,7 @@ import { logger } from 'firebase-functions/v2'
 import { Collections, ThemeVariant, THEME_VARIANTS } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface UpdateSiteSettingsRequest {
 	themeVariant: ThemeVariant
@@ -72,23 +73,10 @@ export const updateSiteSettings = onCall<UpdateSiteSettingsRequest>(
 				message: `Theme variant updated to ${themeVariant}`,
 			}
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error updating site settings:', {
-				userId: auth?.uid,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The site settings could not be saved. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The site settings could not be saved. Please try again.',
+				{ userId: auth?.uid }
 			)
 		}
 	}

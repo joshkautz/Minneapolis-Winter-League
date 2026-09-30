@@ -12,6 +12,7 @@ import {
 } from '../../../shared/auth.js'
 import { validateAndNormalizeName } from '../../../shared/names.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 /**
  * Request interface for updating a player
@@ -111,20 +112,10 @@ export const updatePlayer = onCall<UpdatePlayerRequest>(
 				message: 'Player updated successfully',
 			}
 		} catch (error) {
-			logger.error('Error updating player:', {
-				targetPlayerId,
-				updatedBy: userId,
-				error: error instanceof Error ? error.message : 'Unknown error',
-			})
-
-			// Re-throw HttpsError as-is, wrap other errors
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			throw new HttpsError(
-				'internal',
-				'Your profile could not be saved. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'Your profile could not be saved. Please try again.',
+				{ targetPlayerId, updatedBy: userId }
 			)
 		}
 	}

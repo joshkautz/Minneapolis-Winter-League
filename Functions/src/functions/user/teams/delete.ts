@@ -15,6 +15,7 @@ import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { deleteTeamSeasonWithCleanup } from '../../../services/teamDeletionService.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface DeleteTeamRequest {
 	teamId: string
@@ -126,18 +127,10 @@ export const deleteTeam = onCall<DeleteTeamRequest>(
 				message: 'Team deleted successfully',
 			}
 		} catch (error) {
-			if (error instanceof HttpsError) throw error
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-			logger.error('Error deleting team:', {
-				teamId,
-				seasonId,
-				userId,
-				error: errorMessage,
-			})
-			throw new HttpsError(
-				'internal',
-				'The team could not be deleted. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The team could not be deleted. Please try again.',
+				{ teamId, seasonId, userId }
 			)
 		}
 	}

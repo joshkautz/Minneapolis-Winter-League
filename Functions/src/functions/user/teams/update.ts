@@ -22,6 +22,7 @@ import { validateAuthentication } from '../../../shared/auth.js'
 import { playerSeasonRef, teamSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { validateTeamName } from '../../../shared/names.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface EditTeamRequest {
 	teamId: string
@@ -129,18 +130,10 @@ export const updateTeam = onCall<EditTeamRequest>(
 
 			return { success: true, teamId, seasonId, message }
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-			logger.error('Error updating team:', {
-				teamId,
-				seasonId,
-				userId,
-				error: errorMessage,
-			})
-			if (error instanceof HttpsError) throw error
-			throw new HttpsError(
-				'internal',
-				'Your team could not be saved. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'Your team could not be saved. Please try again.',
+				{ teamId, seasonId, userId }
 			)
 		}
 	}

@@ -20,6 +20,7 @@ import {
 	GameType,
 	TEAM_SEASONS_SUBCOLLECTION,
 } from '../../../types.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 /**
  * Request interface for updating a game
@@ -355,22 +356,10 @@ export const updateGame = onCall<
 				message: 'Game updated successfully',
 			}
 		} catch (error) {
-			logger.error('Error updating game', {
-				gameId,
-				adminUserId: auth?.uid,
-				error: error instanceof Error ? error.message : 'Unknown error',
-				stack: error instanceof Error ? error.stack : undefined,
-			})
-
-			// Re-throw HttpsError as-is
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Wrap other errors
-			throw new HttpsError(
-				'internal',
-				'The game could not be saved. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The game could not be saved. Please try again.',
+				{ gameId, adminUserId: auth?.uid }
 			)
 		}
 	}

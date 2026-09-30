@@ -11,6 +11,7 @@ import { logger } from 'firebase-functions/v2'
 import { Collections, GameDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 /**
  * Request interface
@@ -85,20 +86,10 @@ export const deleteGame = onCall<DeleteGameRequest>(
 				gameId,
 			}
 		} catch (error) {
-			logger.error('Error deleting game', {
-				error: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined,
-			})
-
-			// Re-throw HttpsError as-is so the client keeps the real code;
-			// anything else is an unexpected failure.
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			throw new HttpsError(
-				'internal',
-				'The game could not be deleted. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The game could not be deleted. Please try again.',
+				{ adminUserId: request.auth?.uid, gameId: request.data?.gameId }
 			)
 		}
 	}

@@ -37,6 +37,7 @@ import {
 	queueOfferSentEmails,
 	readTeamOfferContext,
 } from '../../../email/teamOfferEmails.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface CreateOfferRequest {
 	playerId: string
@@ -258,26 +259,10 @@ export const createOffer = onCall<CreateOfferRequest>(
 				}
 			})
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error creating offer:', {
-				playerId,
-				teamId,
-				type,
-				userId,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The invitation or request could not be sent. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The invitation or request could not be sent. Please try again.',
+				{ playerId, teamId, type, userId }
 			)
 		}
 	}

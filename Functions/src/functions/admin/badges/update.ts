@@ -14,6 +14,7 @@ import {
 } from '../../../shared/images.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface UpdateBadgeRequest {
 	badgeId: string
@@ -159,24 +160,10 @@ export const updateBadge = onCall<UpdateBadgeRequest>(
 				message: 'Badge updated successfully',
 			}
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error updating badge:', {
-				userId: auth?.uid,
-				badgeId: data.badgeId,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The badge could not be saved. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The badge could not be saved. Please try again.',
+				{ userId: auth?.uid, badgeId: data.badgeId }
 			)
 		}
 	}

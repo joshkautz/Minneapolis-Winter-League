@@ -8,6 +8,7 @@ import { logger } from 'firebase-functions/v2'
 import { Collections, PLAYER_SEASONS_SUBCOLLECTION } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface DeleteSeasonRequest {
 	seasonId: string
@@ -110,24 +111,10 @@ export const deleteSeason = onCall<DeleteSeasonRequest>(
 				message: `Season "${seasonName}" deleted successfully and removed from ${playersUpdated} players`,
 			} as DeleteSeasonResponse
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error deleting season:', {
-				seasonId,
-				userId: auth?.uid,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The season could not be deleted. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The season could not be deleted. Please try again.',
+				{ seasonId, userId: auth?.uid }
 			)
 		}
 	}

@@ -24,6 +24,7 @@ import {
 	queueOfferWithdrawnEmails,
 	readTeamOfferContext,
 } from '../../../email/teamOfferEmails.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface UpdateOfferRequest {
 	offerId: string
@@ -291,25 +292,10 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 				}
 			})
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error updating offer:', {
-				offerId,
-				status,
-				userId: auth?.uid,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The invitation or request could not be answered. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The invitation or request could not be answered. Please try again.',
+				{ offerId, status, userId: auth?.uid }
 			)
 		}
 	}

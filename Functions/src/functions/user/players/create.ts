@@ -15,6 +15,7 @@ import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { validateBasicAuthentication } from '../../../shared/auth.js'
 import { playerContactRef } from '../../../shared/database.js'
 import { validateAndNormalizeName } from '../../../shared/names.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 /**
  * Request interface for creating a player
@@ -143,20 +144,10 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 						: 'Player created successfully (no active seasons currently)',
 			}
 		} catch (error) {
-			logger.error('Error creating player:', {
-				userId,
-				email,
-				error: error instanceof Error ? error.message : 'Unknown error',
-			})
-
-			// Re-throw HttpsError as-is, wrap other errors
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			throw new HttpsError(
-				'internal',
-				'Your player profile could not be created. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'Your player profile could not be created. Please try again.',
+				{ userId }
 			)
 		}
 	}

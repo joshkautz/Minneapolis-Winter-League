@@ -14,6 +14,7 @@ import {
 } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface DeletePostRequest {
 	postId: string
@@ -108,22 +109,10 @@ export const deletePost = onCall<
 				repliesDeleted,
 			}
 		} catch (error) {
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error deleting post:', {
-				userId: auth?.uid,
-				postId: data.postId,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The post could not be deleted. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The post could not be deleted. Please try again.',
+				{ userId: auth?.uid, postId: data.postId }
 			)
 		}
 	}

@@ -16,6 +16,7 @@ import {
 	GameType,
 	TEAM_SEASONS_SUBCOLLECTION,
 } from '../../../types.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 /**
  * Request interface for creating a game
@@ -252,21 +253,10 @@ export const createGame = onCall<
 				message: `Game created successfully on Field ${field}`,
 			}
 		} catch (error) {
-			logger.error('Error creating game', {
-				adminUserId: auth?.uid,
-				error: error instanceof Error ? error.message : 'Unknown error',
-				stack: error instanceof Error ? error.stack : undefined,
-			})
-
-			// Re-throw HttpsError as-is
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Wrap other errors
-			throw new HttpsError(
-				'internal',
-				'The game could not be created. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The game could not be created. Please try again.',
+				{ adminUserId: auth?.uid }
 			)
 		}
 	}

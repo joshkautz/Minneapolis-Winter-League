@@ -21,6 +21,7 @@ import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { calculateSwissRankings } from '../../../services/swissRankings/calculator.js'
 import type { SwissRanking } from '../../../services/swissRankings/types.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface GetSwissRankingsRequest {
 	/** Season document ID */
@@ -138,24 +139,10 @@ export const getSwissRankings = onCall<GetSwissRankingsRequest>(
 				totalTeams: teamIds.length,
 			} as GetSwissRankingsResponse
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error getting Swiss rankings:', {
-				seasonId,
-				userId: auth?.uid,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The Swiss rankings could not be worked out. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The Swiss rankings could not be worked out. Please try again.',
+				{ seasonId, userId: auth?.uid }
 			)
 		}
 	}

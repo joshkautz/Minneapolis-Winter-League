@@ -9,6 +9,7 @@ import { Collections, SeasonDocument } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface UpdateNewsRequest {
 	newsId: string
@@ -119,24 +120,10 @@ export const updateNews = onCall<UpdateNewsRequest>(
 				message: 'News post updated successfully',
 			}
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error updating news post:', {
-				newsId: data.newsId,
-				userId: auth?.uid,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The news post could not be saved. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The news post could not be saved. Please try again.',
+				{ newsId: data.newsId, userId: auth?.uid }
 			)
 		}
 	}

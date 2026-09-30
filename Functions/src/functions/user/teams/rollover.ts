@@ -37,6 +37,7 @@ import {
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 import { addPlayerToTeam } from '../../../shared/membership.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface RolloverTeamRequest {
 	originalTeamId: string
@@ -219,23 +220,10 @@ export const rolloverTeam = onCall<RolloverTeamRequest>(
 				message: 'Team rolled over successfully',
 			}
 		} catch (error) {
-			// Re-throw HttpsErrors so the code this function chose — not-found,
-			// failed-precondition, already-exists — reaches the client. Without
-			// this, every deliberate rejection arrived as `internal` and the UI
-			// could not tell "registration has closed" from a server fault.
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			logger.error('Error rolling over team:', {
-				userId,
-				originalTeamId,
-				seasonId,
-				error: error instanceof Error ? error.message : 'Unknown error',
-			})
-			throw new HttpsError(
-				'internal',
-				'Your team could not be rolled over. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'Your team could not be rolled over. Please try again.',
+				{ userId, originalTeamId, seasonId }
 			)
 		}
 	}

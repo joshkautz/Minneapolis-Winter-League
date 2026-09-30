@@ -37,6 +37,7 @@ import {
 } from '../../../types.js'
 import { countsTowardRegistration } from '../../../services/teamRegistrationService.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface UpdateTeamRosterRequest {
 	teamId: string
@@ -234,17 +235,10 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 			logger.info(`Team roster ${action}`, { teamId, playerId, userId })
 			return ROSTER_RESULTS[action]
 		} catch (error) {
-			if (error instanceof HttpsError) throw error
-			logger.error('Error updating team roster:', {
-				teamId,
-				playerId,
-				action,
-				userId,
-				error: error instanceof Error ? error.message : 'Unknown error',
-			})
-			throw new HttpsError(
-				'internal',
-				'The roster could not be changed. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The roster could not be changed. Please try again.',
+				{ teamId, playerId, action, userId }
 			)
 		}
 	}

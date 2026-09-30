@@ -11,6 +11,7 @@ import { Collections, SeasonDocument, SeasonFormat } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { teamSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface SetSwissSeedingRequest {
 	seasonId: string
@@ -97,17 +98,10 @@ export const setSwissSeeding = onCall<SetSwissSeedingRequest>(
 				teamsSeeded: teamSeeding.length,
 			} as SetSwissSeedingResponse
 		} catch (error) {
-			if (error instanceof HttpsError) throw error
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-			logger.error('Error setting Swiss seeding:', {
-				seasonId,
-				userId: auth?.uid,
-				error: errorMessage,
-			})
-			throw new HttpsError(
-				'internal',
-				'The seeding could not be saved. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The seeding could not be saved. Please try again.',
+				{ seasonId, userId: auth?.uid }
 			)
 		}
 	}

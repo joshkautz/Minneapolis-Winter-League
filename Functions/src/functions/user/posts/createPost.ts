@@ -19,6 +19,7 @@ import {
 } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { requireText, TEXT_RULES } from '../../../shared/textFields.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface CreatePostRequest {
 	content: string
@@ -113,22 +114,10 @@ export const createPost = onCall<
 				message: 'Post created successfully',
 			}
 		} catch (error) {
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error creating post:', {
-				userId: auth?.uid,
-				seasonId: data.seasonId,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'Your post could not be published. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'Your post could not be published. Please try again.',
+				{ userId: auth?.uid, seasonId: data.seasonId }
 			)
 		}
 	}

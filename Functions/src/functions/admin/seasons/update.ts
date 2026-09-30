@@ -13,6 +13,7 @@ import {
 } from '../../../shared/seasonPricing.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { parseSeasonInput } from '../../../shared/seasonInput.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface UpdateSeasonRequest {
 	seasonId: string
@@ -154,25 +155,10 @@ export const updateSeason = onCall<UpdateSeasonRequest>(
 				message: `Season "${season.name}" updated successfully`,
 			} as UpdateSeasonResponse
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error updating season:', {
-				seasonId,
-				name,
-				userId: auth?.uid,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The season could not be saved. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The season could not be saved. Please try again.',
+				{ seasonId, name, userId: auth?.uid }
 			)
 		}
 	}

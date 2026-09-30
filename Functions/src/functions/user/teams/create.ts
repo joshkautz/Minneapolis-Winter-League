@@ -35,6 +35,7 @@ import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 import { addPlayerToTeam } from '../../../shared/membership.js'
 import { validateTeamName } from '../../../shared/names.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface CreateTeamRequest {
 	name: string
@@ -189,23 +190,10 @@ export const createTeam = onCall<CreateTeamRequest>(
 				message: 'Team created successfully',
 			}
 		} catch (error) {
-			// Re-throw HttpsErrors so the code this function chose — not-found,
-			// failed-precondition, already-exists — reaches the client. Without
-			// this, every deliberate rejection arrived as `internal` and the UI
-			// could not tell "registration has closed" from a server fault.
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			logger.error('Error creating team:', {
-				userId,
-				teamName: name,
-				error: error instanceof Error ? error.message : 'Unknown error',
-			})
-
-			throw new HttpsError(
-				'internal',
-				'Your team could not be created. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'Your team could not be created. Please try again.',
+				{ userId, teamName: name }
 			)
 		}
 	}

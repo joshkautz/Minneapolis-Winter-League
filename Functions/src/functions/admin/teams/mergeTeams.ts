@@ -57,6 +57,7 @@ import {
 	ROSTER_SUBCOLLECTION,
 	TEAM_BADGES_SUBCOLLECTION,
 } from '../../../types.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface MergeTeamsRequest {
 	/** Canonical id of the team to keep */
@@ -473,18 +474,14 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				rewrittenPlayerSeasons,
 			}
 		} catch (error) {
-			if (error instanceof HttpsError) throw error
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-			logger.error('Error merging teams:', {
-				winningTeamId: request.data?.winningTeamId,
-				losingTeamId: request.data?.losingTeamId,
-				adminUserId: request.auth?.uid,
-				error: errorMessage,
-			})
-			throw new HttpsError(
-				'internal',
-				'The teams could not be merged. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The teams could not be merged. Please try again.',
+				{
+					winningTeamId: request.data?.winningTeamId,
+					losingTeamId: request.data?.losingTeamId,
+					adminUserId: request.auth?.uid,
+				}
 			)
 		}
 	}

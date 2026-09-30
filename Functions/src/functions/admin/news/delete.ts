@@ -8,6 +8,7 @@ import { logger } from 'firebase-functions/v2'
 import { Collections } from '../../../types.js'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
 interface DeleteNewsRequest {
 	newsId: string
@@ -67,24 +68,10 @@ export const deleteNews = onCall<DeleteNewsRequest>(
 				message: 'News post deleted successfully',
 			}
 		} catch (error) {
-			// If it's already an HttpsError, just re-throw it
-			if (error instanceof HttpsError) {
-				throw error
-			}
-
-			// Otherwise, log and convert to HttpsError
-			const errorMessage =
-				error instanceof Error ? error.message : 'Unknown error'
-
-			logger.error('Error deleting news post:', {
-				newsId: data.newsId,
-				userId: auth?.uid,
-				error: errorMessage,
-			})
-
-			throw new HttpsError(
-				'internal',
-				'The news post could not be deleted. Please try again.'
+			rethrowAsHttpsError(
+				error,
+				'The news post could not be deleted. Please try again.',
+				{ newsId: data.newsId, userId: auth?.uid }
 			)
 		}
 	}
