@@ -65,7 +65,7 @@ during account setup. Everything else requires a verified one.
 | `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                                                                                                        |
 | `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes, and settles a new payment                                                                                                 |
 | `emailContributionReceipt`                   | the same contributions path, written                   | Emails the payer a receipt for each payment and refund                                                                                                                         |
-| `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Refunds the new team's excess; at twelve, refunds and removes the unregistered ones                                                                                            |
+| `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Tells the new team's roster, refunds its excess; at twelve, refunds, tells and removes the unregistered ones                                                                   |
 | `onPaymentCreated`                           | `stripe/{uid}/payments/{id}` created                   | Marks a per-player registration paid                                                                                                                                           |
 
 Every trigger honours the migration kill-switch,
@@ -110,11 +110,11 @@ Paying is different: only admins may pay before registration opens (see
 
 ## Scheduled functions
 
-| Function                     | Runs                  | Does                                                                   |
-| ---------------------------- | --------------------- | ---------------------------------------------------------------------- |
-| `sweepTeamPaymentsHourly`    | every hour            | Refunds every unregistered team holding money once registration closes |
-| `reconcileTeamPaymentsDaily` | 04:00 America/Chicago | Repairs any disagreement between Stripe and the contribution ledger    |
-| `rebuildRankingsNightly`     | 23:00 America/Chicago | Rebuilds every ranking, so standings follow the evening's scores       |
+| Function                     | Runs                  | Does                                                                                                                   |
+| ---------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `sweepTeamPaymentsHourly`    | every hour            | Refunds every unregistered team holding money once registration (and its 31-minute grace) closes, and tells its roster |
+| `reconcileTeamPaymentsDaily` | 04:00 America/Chicago | Repairs any disagreement between Stripe and the contribution ledger                                                    |
+| `rebuildRankingsNightly`     | 23:00 America/Chicago | Rebuilds every ranking, so standings follow the evening's scores                                                       |
 
 All honour the kill-switch too. A failed run is not retried by the
 scheduler; the next run is the retry.

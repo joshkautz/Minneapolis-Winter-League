@@ -18,6 +18,18 @@ export const FIREBASE_CONFIG = {
 // Business Logic Constants (static)
 export const TEAM_CONFIG = {
 	MIN_PLAYERS_FOR_REGISTRATION: 10,
+	/**
+	 * How long a Checkout session stays open. Kept as short as Stripe allows,
+	 * because the balance a contribution was validated against goes stale
+	 * while the session is open. Stripe's floor is thirty minutes, measured
+	 * against its own clock; the extra minute keeps drift in ours from
+	 * putting the value under the floor, which would fail every checkout.
+	 *
+	 * It is also how long after registration closes a payment can still
+	 * complete a team: a checkout opened just before the close can be paid
+	 * this long after it (see shared/registrationWindow.ts).
+	 */
+	CHECKOUT_SESSION_LIFETIME_SECONDS: 31 * 60,
 	REGISTERED_TEAMS_FOR_LOCK: 12,
 	/**
 	 * Smallest team contribution accepted, in cents. Below this the card

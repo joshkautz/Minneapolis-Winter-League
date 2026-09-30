@@ -20,6 +20,10 @@ import {
 	type Firestore,
 } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
+import {
+	canRegisterAt,
+	type RegistrationTrigger,
+} from '../shared/registrationWindow.js'
 import { TEAM_CONFIG } from '../config/constants.js'
 import {
 	Collections,
@@ -77,12 +81,29 @@ export function countsTowardRegistration(
  */
 export async function updateTeamRegistrationStatus(
 	teamId: string,
-	seasonId: string
+	seasonId: string,
+	options: {
+		/** What changed: a new payment may complete a team just after the close. */
+		trigger?: RegistrationTrigger
+		now?: Date
+	} = {}
 ): Promise<void> {
 	const firestore = getFirestore()
 
 	try {
-		const result = await claimSpotIfQualified(firestore, teamId, seasonId)
+		const result = await claimSpotIfQualified(firestore, teamId, seasonId, {
+			trigger: options.trigger ?? 'other',
+			now: options.now ?? new Date(),
+		})
+
+		if (result.outcome === 'registration-closed') {
+			logger.info('Team qualified after registration closed', {
+				teamId,
+				seasonId,
+				qualifyingPlayers: result.qualifyingPlayers,
+			})
+			return
+		}
 
 		if (result.outcome === 'registered') {
 			logger.info('Team registered', {
@@ -133,6 +154,7 @@ type ClaimOutcome =
 			paidCents: number
 			requiredCents: number
 	  }
+	| { outcome: 'registration-closed'; qualifyingPlayers: number }
 	| { outcome: 'already-registered' }
 	| { outcome: 'no-team-season' }
 
@@ -142,7 +164,8 @@ type ClaimOutcome =
 async function claimSpotIfQualified(
 	firestore: Firestore,
 	teamId: string,
-	seasonId: string
+	seasonId: string,
+	{ trigger, now }: { trigger: RegistrationTrigger; now: Date }
 ): Promise<ClaimOutcome> {
 	const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
 	const seasonDocRef = firestore.collection(Collections.SEASONS).doc(seasonId)
@@ -219,6 +242,18 @@ async function claimSpotIfQualified(
 					requiredCents: teamTotalCents,
 				}
 			}
+		}
+
+		// Registration closes when the season says, for a team-payment season:
+		// a late waiver or roster change cannot register a team, and a late
+		// payment only within the grace a checkout opened in time needs.
+		// Earlier seasons, on per-player pricing, stay open to admin fixes.
+		if (
+			teamTotalCents !== undefined &&
+			seasonData &&
+			!canRegisterAt(seasonData, now, trigger)
+		) {
+			return { outcome: 'registration-closed', qualifyingPlayers }
 		}
 
 		// Absent on seasons created before the counter existed; the backfill in

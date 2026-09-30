@@ -14,6 +14,14 @@ import {
 } from './templates/SeasonAnnouncement.js'
 import { TestEmail, type TestEmailProps } from './templates/TestEmail.js'
 import {
+	TeamMissedOut,
+	teamMissedOutSubject,
+	TeamRegistered,
+	teamRegisteredSubject,
+	type TeamMissedOutProps,
+	type TeamRegisteredProps,
+} from './templates/TeamRegistration.js'
+import {
 	TeamPaymentReceipt,
 	teamPaymentReceiptSubject,
 	TeamRefundReceipt,
@@ -161,6 +169,29 @@ export const TEMPLATES = {
 			playerName: 'Alex Chen',
 			joinedTeamName: 'Snow Owls',
 			offerType: 'invitation',
+		},
+	}),
+	teamRegistered: define<TeamRegisteredProps>({
+		category: 'teams',
+		subject: teamRegisteredSubject,
+		footerReason: 'You are receiving this because you are on this team.',
+		component: TeamRegistered,
+		sample: {
+			teamName: 'Frost Giants',
+			seasonName: '2026 Fall',
+			gameNights: 'November 7, 14 and 21, and December 5, 12 and 19',
+		},
+	}),
+	teamMissedOut: define<TeamMissedOutProps>({
+		category: 'teams',
+		subject: teamMissedOutSubject,
+		footerReason: 'You are receiving this because you were on this team.',
+		component: TeamMissedOut,
+		sample: {
+			teamName: 'Frost Giants',
+			seasonName: '2026 Fall',
+			reason: 'season-full',
+			refunding: true,
 		},
 	}),
 	teamPaymentReceipt: define<TeamPaymentReceiptProps>({

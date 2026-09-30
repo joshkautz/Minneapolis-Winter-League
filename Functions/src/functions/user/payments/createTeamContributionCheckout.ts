@@ -92,16 +92,8 @@ interface CreateTeamContributionCheckoutResponse {
 	sessionId: string
 }
 
-/**
- * How long a Checkout session stays open. Kept as short as Stripe allows,
- * because the balance a contribution was validated against goes stale while
- * the session is open.
- *
- * Stripe's floor is thirty minutes, measured against its own clock. The
- * extra minute keeps a few seconds of drift in ours from putting the value
- * under the floor, which would fail every checkout outright.
- */
-const CHECKOUT_SESSION_LIFETIME_SECONDS = 31 * 60
+const CHECKOUT_SESSION_LIFETIME_SECONDS =
+	TEAM_CONFIG.CHECKOUT_SESSION_LIFETIME_SECONDS
 
 /**
  * How much longer than its session a reservation lasts before the session

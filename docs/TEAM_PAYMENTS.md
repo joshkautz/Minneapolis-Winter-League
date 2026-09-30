@@ -331,6 +331,16 @@ checks the season's own `registeredTeamCount` (at least twelve, so two teams
 registering together cannot skip it), and refunds those teams even when
 settling the newly registered one fails.
 
+**Registration closes at `registrationEnd`,** with one grace. Checkout
+refuses to open after the close, and a session lasts 31 minutes, so a
+checkout opened just before the close can be paid just after it. A new
+payment can therefore still complete a team for 31 minutes after the close
+(`canRegisterAt` in `shared/registrationWindow.ts`); a waiver signed or a
+player added after the close cannot. Unregistered teams are refunded only
+once that grace has passed (`registrationOverAt`), so settlement never
+refunds a team in the middle of registering on a late payment. Seasons on
+per-player pricing keep no such close, so admins can still fix them.
+
 ## Two consequences that are easy to miss
 
 ### "Fully registered player" has to stop meaning "paid"

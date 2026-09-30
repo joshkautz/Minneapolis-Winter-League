@@ -26,6 +26,7 @@ import {
 import { CONTRIBUTIONS_SUBCOLLECTION } from '../shared/contributions.js'
 import { canonicalTeamIdFromTeamSeasonDoc } from '../shared/database.js'
 import { settleTeamSeason } from './teamSettlementService.js'
+import { queueTeamMissedOutEmails } from '../email/teamRegistrationEmails.js'
 
 export interface TeamWithMoney {
 	teamId: string
@@ -148,6 +149,17 @@ export async function sweepTeamPayments(
 			})
 			if (outcome.outcome === 'settled' && outcome.actionsApplied > 0) {
 				teamsActedOn += 1
+				// A team refunded because it is out is told so. The lock tells
+				// teams that miss a full season; this reaches those left when
+				// registration closes. Keyed per team, so nobody hears twice.
+				if (outcome.outCause) {
+					await queueTeamMissedOutEmails(firestore, {
+						teamId,
+						seasonId,
+						reason: outcome.outCause,
+						refunding: true,
+					})
+				}
 			}
 		} catch (error) {
 			failures.push({

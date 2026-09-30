@@ -28,12 +28,8 @@ import {
 	teamContributionsCollection,
 } from '../shared/contributions.js'
 import { countsTowardRegistration } from '../services/teamRegistrationService.js'
-import { queueEmail, type QueuedEmail } from './outbox.js'
-import type { TemplateName } from './templates.js'
+import { queueEmailOnce } from './outbox.js'
 import type { TeamStanding } from './templates/Receipts.js'
-
-/** Firestore's code for creating a document that already exists. */
-const ALREADY_EXISTS = 6
 
 const dollars = new Intl.NumberFormat('en-US', {
 	style: 'currency',
@@ -189,22 +185,6 @@ async function standingOf(
 	}
 }
 
-/** Queues an email once; a second attempt with the same id changes nothing. */
-async function queueOnce<Name extends TemplateName>(
-	firestore: Firestore,
-	email: QueuedEmail<Name>
-): Promise<'queued' | 'already-queued'> {
-	try {
-		await queueEmail(firestore, email)
-		return 'queued'
-	} catch (error) {
-		if ((error as { code?: number }).code === ALREADY_EXISTS) {
-			return 'already-queued'
-		}
-		throw error
-	}
-}
-
 /** Sends the receipt a change to a team's contribution calls for. */
 export async function queueContributionReceipt(
 	firestore: Firestore,
@@ -251,7 +231,7 @@ export async function queueContributionReceipt(
 	const to = { playerId: contribution.player.id }
 
 	if (receipt.kind === 'payment') {
-		return queueOnce(firestore, {
+		return queueEmailOnce(firestore, {
 			id,
 			to,
 			template: 'teamPaymentReceipt',
@@ -267,7 +247,7 @@ export async function queueContributionReceipt(
 			},
 		})
 	}
-	return queueOnce(firestore, {
+	return queueEmailOnce(firestore, {
 		id,
 		to,
 		template: 'teamRefundReceipt',
@@ -311,7 +291,7 @@ export async function queueUnattributableRefundReceipt(
 				await firestore.collection(Collections.SEASONS).doc(seasonId).get()
 			).data() as SeasonDocument | undefined)
 		: undefined
-	return queueOnce(firestore, {
+	return queueEmailOnce(firestore, {
 		id: `refund-unattributable-${paymentIntent.id}`,
 		to: { playerId },
 		template: 'teamRefundReceipt',

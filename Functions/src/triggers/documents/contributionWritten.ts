@@ -17,10 +17,15 @@
  *
  * It then settles the team whenever a new payment lands. A payment can land
  * where it is no longer wanted: on a team that registered while the payer
- * was on the Checkout page, in a season that filled up, after registration
- * closed, from a payer who left the team mid-checkout. Settlement refunds it
- * or keeps it, by the same rules as everywhere else. Refunds settlement makes
- * itself do not settle again.
+ * was on the Checkout page, in a season that filled up, from a payer who
+ * left the team mid-checkout. Settlement refunds it or keeps it, by the same
+ * rules as everywhere else. Refunds settlement makes itself do not settle
+ * again.
+ *
+ * A payment from a checkout opened before registration closed can still
+ * complete its team: checkouts cannot open after the close and last at most
+ * 31 minutes, so a new payment registers a team up to then, and no later.
+ * Waivers and roster changes stop counting at the close itself.
  */
 
 import { onDocumentWritten } from 'firebase-functions/v2/firestore'
@@ -58,9 +63,14 @@ export const updateTeamRegistrationOnContributionChange = onDocumentWritten(
 		if (!statusChanged && !amountChanged) return
 
 		try {
-			await updateTeamRegistrationStatus(teamId, seasonId)
-
 			const newPayment = after?.status === 'paid' && before === undefined
+			// A new payment may complete a team shortly after registration
+			// closes, from a checkout opened before it (see
+			// shared/registrationWindow.ts).
+			await updateTeamRegistrationStatus(teamId, seasonId, {
+				trigger: newPayment ? 'payment' : 'other',
+			})
+
 			if (newPayment) {
 				await settleTeamSeason(teamId, seasonId)
 			}

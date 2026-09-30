@@ -292,6 +292,17 @@ describe('an unregistered team', () => {
 		expect(stripeCalls()).toEqual(['refund pi_1 60000'])
 	})
 
+	it('is not refunded while a checkout opened before the close could still complete it', async () => {
+		// Ten minutes after the close, a payment from a checkout opened in time
+		// may yet register the team; refunding now could refund it mid-way.
+		await pay('pi_1', 60_000)
+		const close = (await seasonRef().get()).data()?.registrationEnd.toMillis()
+
+		await settle(TEAM, new Date(close + 10 * 60_000))
+
+		expect(stripeCalls()).toEqual([])
+	})
+
 	it('is refunded only what is left of a payment partly refunded already', async () => {
 		await seasonRef().update({ registeredTeamCount: LOCK })
 		await pay('pi_1', 60_000)
@@ -323,6 +334,30 @@ describe('onTeamRegistrationChange', () => {
 				after: { exists: true, data: () => ({ registered: true }) },
 			},
 		})
+
+	it('does not tell an earlier season’s roster it has registered', async () => {
+		// An admin correcting an old season flips its flag; that is no news.
+		await firestore
+			.collection('seasons')
+			.doc('later')
+			.set({
+				name: '2031 Winter',
+				dateStart: Timestamp.fromMillis(Date.now() + 400 * DAY_MS),
+				registrationStart: Timestamp.now(),
+				registrationEnd: Timestamp.fromMillis(Date.now() + 500 * DAY_MS),
+				teamRegistrationTotalCents: TOTAL,
+			})
+		await seedTeam(TEAM, true)
+		await pay('pi_1', TOTAL)
+
+		await fire(TEAM)
+
+		expect(
+			(await firestore.collection('mail').get()).docs.filter(
+				(doc) => doc.get('template') === 'teamRegistered'
+			)
+		).toHaveLength(0)
+	})
 
 	it('refunds what the team that just registered paid over its total', async () => {
 		await seedTeam(TEAM, true)
@@ -439,6 +474,35 @@ describe('onTeamRegistrationChange', () => {
 			expect(
 				(await teamSeasonRef(firestore, 'loser-a', SEASON).get()).exists
 			).toBe(false)
+		})
+
+		it('tells the new team’s players they are in, and each losing team’s that it is out', async () => {
+			await fire(TEAM)
+
+			const mail = async (id: string) =>
+				(await firestore.collection('mail').doc(id).get()).data()
+			expect(
+				await mail(`team-registered-${SEASON}-${TEAM}-payer`)
+			).toMatchObject({ template: 'teamRegistered', toPlayerId: 'payer' })
+			expect(
+				await mail(`team-missed-out-${SEASON}-loser-a-payer`)
+			).toMatchObject({
+				template: 'teamMissedOut',
+				props: { teamName: 'loser-a', reason: 'season-full', refunding: true },
+			})
+			expect(
+				await mail(`team-missed-out-${SEASON}-loser-b-payer`)
+			).toBeDefined()
+		})
+
+		it('tells each player once, however often the lock runs', async () => {
+			await fire(TEAM)
+			await fire(TEAM)
+
+			const missedOut = (await firestore.collection('mail').get()).docs.filter(
+				(doc) => doc.get('template') === 'teamMissedOut'
+			)
+			expect(missedOut).toHaveLength(2)
 		})
 
 		it('keeps a team whose money could not be refunded, and retries', async () => {

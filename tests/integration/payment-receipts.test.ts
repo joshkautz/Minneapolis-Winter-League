@@ -422,7 +422,8 @@ describe('why a refund was made', () => {
 	it('refunds a team once registration has closed, and says so', async () => {
 		await pay('pi_1', 1_000)
 		await seasonRef().update({
-			registrationEnd: Timestamp.fromMillis(Date.now() - 1_000),
+			// Closed an hour ago: past the grace a late checkout gets.
+			registrationEnd: Timestamp.fromMillis(Date.now() - 60 * 60_000),
 		})
 
 		await settleAndReceipt()

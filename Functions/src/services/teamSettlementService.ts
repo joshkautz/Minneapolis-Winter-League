@@ -42,11 +42,13 @@ import {
 	decideDisposition,
 	outCauseOf,
 	planSettlement,
+	type OutCause,
 	type PlannedContribution,
 	type SettlementAction,
 	type SettlementDisposition,
 } from '../shared/settlement.js'
 import { createStripeClient } from '../shared/stripe.js'
+import { registrationOverAt } from '../shared/registrationWindow.js'
 
 export type SettlementOutcome =
 	| { outcome: 'not-team-payments' }
@@ -54,6 +56,8 @@ export type SettlementOutcome =
 	| {
 			outcome: 'settled'
 			disposition: SettlementDisposition
+			/** For a team that is out: why. */
+			outCause: OutCause | null
 			actionsApplied: number
 			shortfallCents: number
 	  }
@@ -132,11 +136,11 @@ export async function settleTeamSeason(
 		registered: teamSeason.registered === true,
 		spotsClaimed: season?.registeredTeamCount ?? 0,
 		spotsAvailable: TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK,
-		registrationClosed:
-			season?.registrationEnd !== undefined &&
-			now.getTime() > season.registrationEnd.toMillis(),
+		// Only once late payments can no longer complete a team.
+		registrationClosed: season ? registrationOverAt(season, now) : false,
 	}
 	const disposition = decideDisposition(standing)
+	const outCause = disposition === 'refund' ? outCauseOf(standing) : null
 
 	const plan = planSettlement({
 		contributions: contributionsSnap.docs.map((doc) =>
@@ -144,7 +148,7 @@ export async function settleTeamSeason(
 		),
 		disposition,
 		totalCents,
-		outCause: outCauseOf(standing),
+		outCause: outCause ?? undefined,
 	})
 
 	if (plan.shortfallCents > 0) {
@@ -160,6 +164,7 @@ export async function settleTeamSeason(
 		return {
 			outcome: 'settled',
 			disposition,
+			outCause,
 			actionsApplied: 0,
 			shortfallCents: plan.shortfallCents,
 		}
@@ -209,6 +214,7 @@ export async function settleTeamSeason(
 	return {
 		outcome: 'settled',
 		disposition,
+		outCause,
 		actionsApplied,
 		shortfallCents: plan.shortfallCents,
 	}

@@ -31,7 +31,8 @@ vi.mock('firebase-admin/firestore', () => ({
 	Timestamp: { fromMillis: (m: number) => ({ toMillis: () => m }) },
 }))
 
-vi.mock('../../config/constants.js', () => ({
+vi.mock('../../config/constants.js', async (importOriginal) => ({
+	...(await importOriginal<typeof import('../../config/constants.js')>()),
 	FIREBASE_CONFIG: { REGION: 'us-central1' },
 	getStripeConfig: () => ({
 		SECRET_KEY: 'sk_test_x',
