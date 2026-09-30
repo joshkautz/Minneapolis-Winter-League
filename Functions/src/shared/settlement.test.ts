@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import type { RefundCause } from '../types.js'
 import {
 	contributionStateFromPaymentIntent,
 	decideDisposition,
+	outCauseOf,
 	planSettlement,
 	type PlannedContribution,
 	type SettlementDisposition,
@@ -39,10 +41,19 @@ const contribution = (
 const leaver = (amountCents: number) =>
 	contribution(amountCents, { payerOnRoster: false })
 
-const refund = (c: PlannedContribution, amountCents = c.amountCents) => ({
+/**
+ * The refund of `c`. Its cause defaults to what a registered team's refund
+ * would be: the excess for someone on it, their leaving for someone not.
+ */
+const refund = (
+	c: PlannedContribution,
+	amountCents = c.amountCents,
+	cause: RefundCause = c.payerOnRoster ? 'excess' : 'left-team'
+) => ({
 	type: 'refund',
 	paymentIntentId: c.paymentIntentId,
 	amountCents,
+	cause,
 })
 
 const plan = (
@@ -196,7 +207,10 @@ describe('refund', () => {
 		const b = contribution(40_000)
 
 		expect(plan([b, a], 'refund')).toEqual({
-			actions: [refund(a), refund(b)],
+			actions: [
+				refund(a, a.amountCents, 'season-full'),
+				refund(b, b.amountCents, 'season-full'),
+			],
 			shortfallCents: 0,
 		})
 	})
@@ -237,8 +251,8 @@ describe('a payer who has left the team', () => {
 		const stays = contribution(30_000)
 
 		expect(plan([gone, stays], 'refund').actions).toEqual([
-			refund(gone),
-			refund(stays),
+			refund(gone, gone.amountCents, 'season-full'),
+			refund(stays, stays.amountCents, 'season-full'),
 		])
 	})
 
@@ -320,4 +334,37 @@ describe('contributionStateFromPaymentIntent', () => {
 			).toBeNull()
 		}
 	)
+})
+
+describe('why money is refunded', () => {
+	it('names the season filling as the cause once every spot is taken', () => {
+		expect(outCauseOf({ spotsClaimed: 12, spotsAvailable: 12 })).toBe(
+			'season-full'
+		)
+	})
+
+	it('names registration closing as the cause while spots remain', () => {
+		expect(outCauseOf({ spotsClaimed: 7, spotsAvailable: 12 })).toBe(
+			'registration-closed'
+		)
+	})
+
+	it('refunds a team that is out with the cause it was given', () => {
+		const payment = contribution(TOTAL)
+		expect(
+			planSettlement({
+				contributions: [payment],
+				disposition: 'refund',
+				totalCents: TOTAL,
+				outCause: 'registration-closed',
+			}).actions
+		).toEqual([refund(payment, TOTAL, 'registration-closed')])
+	})
+
+	it('refunds a leaver from a team still in the running for leaving', () => {
+		const gone = leaver(20_000)
+		expect(plan([gone, contribution(TOTAL)], 'pending').actions).toEqual([
+			refund(gone, 20_000, 'left-team'),
+		])
+	})
 })

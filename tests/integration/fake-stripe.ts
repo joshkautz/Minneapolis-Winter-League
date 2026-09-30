@@ -28,6 +28,8 @@ export interface FakePaymentIntent {
 	amount: number
 	amount_received: number
 	metadata: Record<string, string>
+	/** What our checkout sets: "Team registration: <team>, <season>". */
+	description?: string
 	latest_charge: {
 		id: string
 		amount_refunded: number

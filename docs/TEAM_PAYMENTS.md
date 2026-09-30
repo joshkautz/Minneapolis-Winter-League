@@ -321,6 +321,16 @@ take the same care as the triggers: pinned region, idempotent by
 construction (settling an already-settled team is a no-op), and honouring the
 migration kill-switch.
 
+Every refund records its cause on the contribution (`refundCause`) before
+Stripe is asked for it, for the refund receipt. Settlement reads the season,
+team-season, ledger and roster in one read-only transaction: read separately,
+a team taking the twelfth spot between the reads looked unregistered in a
+full season and was refunded as it got in. The lock that clears the teams
+that missed out (`onTeamRegistrationChange`) runs for up to nine minutes,
+checks the season's own `registeredTeamCount` (at least twelve, so two teams
+registering together cannot skip it), and refunds those teams even when
+settling the newly registered one fails.
+
 ## Two consequences that are easy to miss
 
 ### "Fully registered player" has to stop meaning "paid"

@@ -40,6 +40,7 @@ import { teamSeasonRef } from '../shared/database.js'
 import {
 	contributionStateFromPaymentIntent,
 	decideDisposition,
+	outCauseOf,
 	planSettlement,
 	type PlannedContribution,
 	type SettlementAction,
@@ -93,13 +94,26 @@ export async function settleTeamSeason(
 	const firestore = options.firestore ?? getFirestore()
 	const now = options.now ?? new Date()
 
+	// One consistent snapshot. Read separately, a team taking the twelfth
+	// spot between the reads looked unregistered in a full season, and its
+	// whole payment was refunded the moment it got in.
 	const [seasonSnap, teamSeasonSnap, contributionsSnap, rosterSnap] =
-		await Promise.all([
-			firestore.collection(Collections.SEASONS).doc(seasonId).get(),
-			teamSeasonRef(firestore, teamId, seasonId).get(),
-			teamContributionsCollection(firestore, teamId, seasonId).get(),
-			teamSeasonRef(firestore, teamId, seasonId).collection('roster').get(),
-		])
+		await firestore.runTransaction(
+			(transaction) =>
+				Promise.all([
+					transaction.get(
+						firestore.collection(Collections.SEASONS).doc(seasonId)
+					),
+					transaction.get(teamSeasonRef(firestore, teamId, seasonId)),
+					transaction.get(
+						teamContributionsCollection(firestore, teamId, seasonId)
+					),
+					transaction.get(
+						teamSeasonRef(firestore, teamId, seasonId).collection('roster')
+					),
+				]),
+			{ readOnly: true }
+		)
 	// Roster entries are keyed by player id.
 	const rosterPlayerIds = new Set(rosterSnap.docs.map((doc) => doc.id))
 
@@ -114,14 +128,15 @@ export async function settleTeamSeason(
 	}
 	const teamSeason = teamSeasonSnap.data() as TeamSeasonDocument
 
-	const disposition = decideDisposition({
+	const standing = {
 		registered: teamSeason.registered === true,
 		spotsClaimed: season?.registeredTeamCount ?? 0,
 		spotsAvailable: TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK,
 		registrationClosed:
 			season?.registrationEnd !== undefined &&
 			now.getTime() > season.registrationEnd.toMillis(),
-	})
+	}
+	const disposition = decideDisposition(standing)
 
 	const plan = planSettlement({
 		contributions: contributionsSnap.docs.map((doc) =>
@@ -129,6 +144,7 @@ export async function settleTeamSeason(
 		),
 		disposition,
 		totalCents,
+		outCause: outCauseOf(standing),
 	})
 
 	if (plan.shortfallCents > 0) {
@@ -157,7 +173,12 @@ export async function settleTeamSeason(
 	// for a team with a handful of payments.
 	for (const action of plan.actions) {
 		try {
-			const paymentIntent = await applyAction(stripe, action)
+			const paymentIntent = await applyAction(
+				stripe,
+				firestore,
+				{ teamId, seasonId },
+				action
+			)
 			await reconcileContribution(firestore, {
 				teamId,
 				seasonId,
@@ -221,9 +242,15 @@ async function retrieveWithCharge(
 /**
  * Refunds what an action asks for, or as much of it as Stripe still holds,
  * and returns the PaymentIntent as it stands afterwards.
+ *
+ * The refund's cause is written on the contribution first. Stripe's own
+ * refund event can reach the ledger before this settlement does, and
+ * whichever of them records the refund, its receipt then finds the cause.
  */
 async function applyAction(
 	stripe: Stripe,
+	firestore: Firestore,
+	team: { teamId: string; seasonId: string },
 	action: SettlementAction
 ): Promise<Stripe.PaymentIntent> {
 	const { paymentIntentId } = action
@@ -233,6 +260,10 @@ async function applyAction(
 	const refundableCents = state?.status === 'paid' ? state.amountCents : 0
 	const refundCents = Math.min(action.amountCents, refundableCents)
 	if (refundCents <= 0) return before
+
+	await teamContributionsCollection(firestore, team.teamId, team.seasonId)
+		.doc(paymentIntentId)
+		.update({ refundCause: action.cause })
 
 	await stripe.refunds.create(
 		{ payment_intent: paymentIntentId, amount: refundCents },
@@ -338,11 +369,17 @@ export async function refundContribution(
 		return { outcome: 'stripe-disagreed', stripeStatus: current.status }
 	}
 
-	const paymentIntent = await applyAction(stripe, {
-		type: 'refund',
-		paymentIntentId,
-		amountCents: contribution.amountCents,
-	})
+	const paymentIntent = await applyAction(
+		stripe,
+		firestore,
+		{ teamId, seasonId },
+		{
+			type: 'refund',
+			paymentIntentId,
+			amountCents: contribution.amountCents,
+			cause: 'admin',
+		}
+	)
 	await reconcileContribution(firestore, { teamId, seasonId, paymentIntent })
 
 	return contributionStateFromPaymentIntent(paymentIntent)?.status ===

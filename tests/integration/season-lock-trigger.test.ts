@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { Timestamp, type Firestore } from 'firebase-admin/firestore'
+import { FieldValue, Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
 import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import { teamSeasonRef } from '../../Functions/src/shared/database.js'
@@ -60,6 +60,13 @@ const seedTeams = async (
 			registered,
 			registeredDate: registered ? Timestamp.now() : null,
 		})
+		// A team registers by claiming a spot on the season, as
+		// claimSpotIfQualified does; the lock reads that count.
+		if (registered) {
+			await seasonRef().update({
+				registeredTeamCount: FieldValue.increment(1),
+			})
+		}
 	}
 	return ids
 }
@@ -110,15 +117,18 @@ describe('onTeamRegistrationChange', () => {
 		}
 	})
 
-	it(`does nothing past ${LOCK}, so a later change cannot re-run the lock`, async () => {
-		// The check is an equality, not a threshold: once the lock has run,
-		// a thirteenth registration must not delete anything again.
-		await seedTeams('reg', LOCK + 1, true)
+	it(`clears only unregistered teams when it runs again past ${LOCK}`, async () => {
+		// Once the season is full, every run clears whatever unregistered
+		// teams remain, and never touches a registered one.
+		const registered = await seedTeams('reg', LOCK + 1, true)
 		const unregistered = await seedTeams('unreg', 2, false)
 
 		await fire('reg-0', false, true)
 
 		for (const teamId of unregistered) {
+			expect(await teamSeasonExists(teamId)).toBe(false)
+		}
+		for (const teamId of registered) {
 			expect(await teamSeasonExists(teamId)).toBe(true)
 		}
 	})

@@ -335,6 +335,13 @@ export interface TeamRosterDocument extends DocumentData {
 export type ContributionStatus = 'paid' | 'refunded'
 
 /**
+ * Why money was given back: more than the team needed, the payer left, the
+ * season filled or closed without the team, or an admin did it by hand.
+ */
+export type RefundCause =
+	'excess' | 'left-team' | 'season-full' | 'registration-closed' | 'admin'
+
+/**
  * One payment toward a team's registration total.
  *
  * Stored at `teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}`.
@@ -365,6 +372,12 @@ export interface TeamContributionDocument extends DocumentData {
 	 * Absent while the two are the same.
 	 */
 	paidAmountCents?: number
+	/**
+	 * Why its latest refund was made, recorded just before asking Stripe for
+	 * it, so the refund receipt can say. Absent for a refund made in the
+	 * Stripe Dashboard.
+	 */
+	refundCause?: RefundCause
 	/** Set when an admin refunded this contribution by hand. */
 	refundedBy?: DocumentReference<PlayerDocument>
 	refundReason?: string

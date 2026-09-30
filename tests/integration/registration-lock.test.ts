@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
-import { Timestamp, type Firestore } from 'firebase-admin/firestore'
+import { FieldValue, Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
 import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import { onTeamRegistrationChange } from '../../Functions/src/index.js'
@@ -41,6 +41,11 @@ const seedTeam = async (teamId: string, registered: boolean) => {
 		registeredDate: registered ? Timestamp.now() : null,
 		placement: null,
 	})
+	// A team registers by claiming a spot on the season, as
+	// claimSpotIfQualified does; the lock reads that count.
+	if (registered) {
+		await seasonRef().update({ registeredTeamCount: FieldValue.increment(1) })
+	}
 }
 
 /** Fires the trigger for a team whose flag just flipped false -> true. */
@@ -115,24 +120,10 @@ describe('the twelve-team lock', () => {
 		expect(await teamsInSeason()).toContain('hopeful')
 	})
 
-	it('does not stop a thirteenth team registering', async () => {
-		// Nothing consults the cap when a team becomes registered —
-		// `updateTeamRegistrationStatus` only counts the roster. The cap is a
-		// cleanup pass that runs afterwards, so the season can hold more
-		// registered teams than it has spots.
-		for (let i = 0; i < THRESHOLD; i++) {
-			await seedTeam(`registered-${i}`, true)
-		}
-		await seedTeam('thirteenth', true)
-
-		expect(await registeredCount()).toBe(THRESHOLD + 1)
-	})
-
-	it('never locks at all if the count overshoots the threshold', async () => {
-		// The guard is `count !== THRESHOLD`, an exact match. Two teams
-		// completing close together both see 13 by the time their trigger
-		// queries, so neither locks, and the unregistered teams are never
-		// cleared. Registration silently stays open.
+	it('still locks if the count overshoots the threshold', async () => {
+		// The guard was once `count !== THRESHOLD`: two teams completing
+		// close together both saw 13, neither locked, and registration
+		// silently stayed open. It is now `>=`.
 		for (let i = 0; i < THRESHOLD + 1; i++) {
 			await seedTeam(`registered-${i}`, true)
 		}
@@ -140,10 +131,10 @@ describe('the twelve-team lock', () => {
 
 		await fireRegistered(`registered-${THRESHOLD}`)
 
-		expect(await teamsInSeason()).toContain('hopeful')
+		expect(await teamsInSeason()).not.toContain('hopeful')
 	})
 
-	it('leaves the season open when both of two simultaneous teams overshoot', async () => {
+	it('closes the season when both of two simultaneous teams overshoot', async () => {
 		// The same race from both sides: teams 12 and 13 flip registered at
 		// almost the same moment, so both triggers observe 13.
 		for (let i = 0; i < THRESHOLD - 1; i++) {
@@ -157,7 +148,7 @@ describe('the twelve-team lock', () => {
 		await fireRegistered('thirteenth')
 
 		expect(await registeredCount()).toBe(THRESHOLD + 1)
-		expect(await teamsInSeason()).toContain('hopeful')
+		expect(await teamsInSeason()).not.toContain('hopeful')
 	})
 
 	it('ignores a flag that was already true', async () => {
