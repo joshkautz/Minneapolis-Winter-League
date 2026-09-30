@@ -257,8 +257,8 @@ async function claimSpotIfQualified(
 			return { outcome: 'registration-closed', qualifyingPlayers }
 		}
 
-		// Absent on seasons created before the counter existed; the backfill in
-		// scripts/migrations/2026-registered-team-count sets it.
+		// Absent on a season created before the counter existed (#1404); every
+		// season since starts at zero, and the old ones were backfilled.
 		const spotsClaimed = seasonData?.registeredTeamCount ?? 0
 
 		if (spotsClaimed >= TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK) {

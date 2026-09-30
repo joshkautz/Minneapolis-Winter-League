@@ -259,12 +259,13 @@ If a real name is reported as blocked, add it to the list in **both** files.
 
 ## Swiss-format season
 
-Outstanding items carried over from the original plan — details and suggested
-implementations are in `docs/historical/IMPROVEMENTS.md`:
+Outstanding items carried over from the original plan:
 
-- Teams with no games yet should appear in standings at their seeding rank.
-  The backend `getInitialSeedingRank` already exists but is unused.
+- Teams with no games yet should appear in standings at their seeding rank,
+  their position in the season's `swissInitialSeeding` list.
 - Drag-and-drop seeding, replacing the current up/down arrow buttons.
 - Visual indicator of the current round in the matchup pattern table.
 - Optional: auto-generate round matchups from current Swiss rankings.
 - Optional: head-to-head or Sonneborn-Berger as an additional tiebreaker.
+- Optional: show the Swiss score and Buchholz breakdown in the public
+  standings, which today show the same columns as a round-robin season.

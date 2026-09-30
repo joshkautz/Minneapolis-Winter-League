@@ -43,14 +43,21 @@ project or the data lands in a different namespace.
 Scripts under `scripts/production/` read and write live data. They must be
 idempotent, log what they are about to change, and be runnable against the
 emulators first. Never hardcode absolute filesystem paths — resolve relative to
-the repository root:
+the repository root, which is two levels above a script in
+`scripts/production/`:
 
 ```js
 const repoRoot = path.resolve(
 	path.dirname(fileURLToPath(import.meta.url)),
+	'..',
 	'..'
 )
 ```
+
+A one-off migration goes in `scripts/production/` too, and is deleted once it
+has run in production — git history keeps it. Code that still has to cope
+with the shape it replaced says so in a comment citing the PR, not the
+script's path.
 
 ## CI scripts
 

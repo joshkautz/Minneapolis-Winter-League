@@ -30,7 +30,7 @@
 		"deploy:hosting": "firebase deploy --only hosting",
 		"deploy:functions": "firebase deploy --only functions",
 		"deploy:firestore": "firebase deploy --only firestore",
-		"email:preview": "npm run build --workspace=Functions && node scripts/email-preview.mjs"
+		"email:preview": "npm run build --workspace=Functions && node scripts/email-preview.js"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.5",

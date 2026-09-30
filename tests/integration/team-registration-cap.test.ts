@@ -187,9 +187,8 @@ describe('claiming a registration spot', () => {
 	})
 
 	it('treats a missing counter as zero spots claimed', async () => {
-		// Seasons created before the counter existed. The backfill in
-		// scripts/migrations/2026-registered-team-count sets it, but the gate
-		// must not fall over in the meantime.
+		// A season created before the counter existed (#1404). Those were
+		// backfilled, but the gate must never depend on it.
 		await seasonRef().set({ name: '2030 Winter', dateStart: Timestamp.now() })
 		await seedTeam('team-a')
 		await seedQualifyingRoster('team-a', MIN)

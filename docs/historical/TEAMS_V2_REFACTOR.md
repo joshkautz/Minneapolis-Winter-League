@@ -1,7 +1,10 @@
 # 2026 Teams + Players Data Model Refactor — Resumption Roadmap
 
-**Last updated**: All code gates pass. Ready for emulator smoke testing and
-production cutover.
+> **Historical.** This migration ran in production in April 2026. It is kept
+> as the design record behind the `playerSeasons` / `teamSeasons` / `roster`
+> data model. The scripts it names under `scripts/migrations/` have since
+> been deleted (git history has them), and the maintenance switch is now
+> `scripts/production/set-maintenance.js`.
 
 ## Seasons subcollection rename (pre-cutover cleanup)
 

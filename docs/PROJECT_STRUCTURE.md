@@ -60,8 +60,8 @@ project ids, so they never touch the development emulators' data.
 
 `scripts/seed-emulator.sh` builds a synthetic dataset offline and is the
 normal way to get local data. `scripts/production/` reads and writes the live
-project and needs gcloud credentials. `scripts/migrations/` holds one-off
-data migrations that have already run in production. `scripts/ci/` holds the
+project and needs gcloud credentials. One-off data migrations are deleted
+once they have run; git history keeps them. `scripts/ci/` holds the
 deploy guard CI runs before deploying Functions. Conventions are in
 `.claude/rules/scripts.md`.
 

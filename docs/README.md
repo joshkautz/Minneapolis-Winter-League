@@ -10,7 +10,7 @@ Documentation for the Minneapolis Winter League application, grouped by area.
 | [`app/`](./app/)               | React front end — layout, data access, routing, feature notes      |
 | [`functions/`](./functions/)   | Cloud Functions — what exists, player ranking algorithm            |
 | [`firebase/`](./firebase/)     | The data model, indexes, authentication                            |
-| [`historical/`](./historical/) | Completed migrations and superseded plans, kept for context        |
+| [`historical/`](./historical/) | The teams-v2 design record and the retired karma leaderboard       |
 
 Top-level documents: [Project Structure](./PROJECT_STRUCTURE.md),
 [Security Guidelines](./SECURITY.md), [Roadmap](./ROADMAP.md),
@@ -54,5 +54,6 @@ These documents drifted badly once before: the index linked to nine files that
 had been moved, and the setup guide documented ten npm scripts that did not
 exist. When you change behavior, update the document in the same commit, and
 verify any command you write by running it. If a document describes something
-that has already happened and will not happen again, move it to
-`historical/` rather than leaving it to rot in place.
+that has already happened and will not happen again, delete it — git history
+keeps it — unless it is the design record behind code that still exists, in
+which case move it to `historical/` with a note saying so.
