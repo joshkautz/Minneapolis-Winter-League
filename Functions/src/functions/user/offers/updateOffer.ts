@@ -26,6 +26,32 @@ import {
 } from '../../../email/teamOfferEmails.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
+/**
+ * What the other side of an offer is told when it is answered, if anything.
+ *
+ * Rejecting is emailed as declined. Canceling by the side that sent the
+ * offer withdraws it, emailed only if its sending was. Canceling by the side
+ * it was sent to — a captain canceling a player's request, which the App
+ * declines instead — turns it down. An admin on neither side is cleaning up,
+ * and nobody is told. Accepting is emailed by the onOfferUpdated trigger.
+ */
+function offerAnswerEmail({
+	status,
+	isSender,
+	isRecipient,
+	sentQuietly,
+}: {
+	status: UpdateOfferRequest['status']
+	isSender: boolean
+	isRecipient: boolean
+	sentQuietly: boolean
+}): 'declined' | 'withdrawn' | null {
+	if (status === OfferStatus.REJECTED) return 'declined'
+	if (status !== OfferStatus.CANCELED) return null
+	if (isSender) return sentQuietly ? null : 'withdrawn'
+	return isRecipient ? 'declined' : null
+}
+
 interface UpdateOfferRequest {
 	offerId: string
 	status: OfferStatus.ACCEPTED | OfferStatus.REJECTED | OfferStatus.CANCELED
@@ -37,7 +63,9 @@ interface UpdateOfferRequest {
  *
  * Security validations:
  * - User must be authenticated and email verified
- * - User must be authorized for this offer (player for invitation, captain for request)
+ * - User must be authorized for this offer: an invitation is answered by its
+ *   player and withdrawn by any captain of the team; a request is answered
+ *   by the team's captains and withdrawn by its player
  * - When accepting: target player must not be banned for the season
  * - Registration must not have ended
  * - Offer must exist and be in pending status
@@ -46,7 +74,9 @@ interface UpdateOfferRequest {
  *
  * Declining emails whoever sent the offer, and withdrawing it emails whoever
  * it was sent to; accepting is emailed by the onOfferUpdated trigger, once
- * the player is really on the team.
+ * the player is really on the team. An invitation is the team's, not the
+ * captain's who happened to send it, so any of its captains may withdraw it
+ * and the player is told either way.
  */
 export const updateOffer = onCall<UpdateOfferRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
@@ -139,6 +169,28 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 				const isCreator =
 					offerData.createdBy && offerData.createdBy.id === userId
 
+				// Whether the caller captains the offer's team this season: they
+				// answer its requests and may withdraw any of its invitations.
+				const callerSeasonData = (
+					await transaction.get(
+						playerSeasonRef(firestore, userId, offerData.season.id)
+					)
+				).data()
+				const isTeamCaptain =
+					callerSeasonData?.team?.id === offerData.team.id &&
+					callerSeasonData?.captain === true
+
+				// The side that sent the offer withdraws it; the side it was sent
+				// to answers it. The team sends an invitation, the player a request.
+				const isSender =
+					offerData.type === OfferType.INVITATION
+						? Boolean(isCreator) || isTeamCaptain
+						: Boolean(isCreator)
+				const isRecipient =
+					offerData.type === OfferType.INVITATION
+						? userId === offerData.player.id
+						: isTeamCaptain
+
 				// If user is admin, allow them to update any offer
 				if (isAdmin) {
 					logger.info(`Admin user updating offer`, {
@@ -150,25 +202,24 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 				} else {
 					// Validate authorization based on offer type and action for non-admin users
 					if (offerData.type === OfferType.INVITATION) {
-						// Player can accept/reject invitations sent to them
-						// Creator (captain) can cancel their own invitations
+						// The player accepts or rejects an invitation sent to them;
+						// any captain of the team can withdraw it.
 						const canRespondAsRecipient =
-							userId === offerData.player.id &&
+							isRecipient &&
 							(status === OfferStatus.ACCEPTED ||
 								status === OfferStatus.REJECTED)
-						const canCancelAsCreator =
-							isCreator && status === OfferStatus.CANCELED
+						const canWithdraw = isSender && status === OfferStatus.CANCELED
 
-						if (!canRespondAsRecipient && !canCancelAsCreator) {
-							if (status === OfferStatus.CANCELED && !isCreator) {
+						if (!canRespondAsRecipient && !canWithdraw) {
+							if (status === OfferStatus.CANCELED) {
 								throw new HttpsError(
 									'permission-denied',
-									'Only the invitation creator can cancel this invitation'
+									'Only a captain of the team can cancel this invitation'
 								)
-							} else if (status === OfferStatus.REJECTED && isCreator) {
+							} else if (status === OfferStatus.REJECTED && isSender) {
 								throw new HttpsError(
 									'permission-denied',
-									'Creators should use canceled status instead of rejected to cancel their invitations'
+									'Captains should use canceled status instead of rejected to cancel their invitations'
 								)
 							} else {
 								throw new HttpsError(
@@ -186,18 +237,7 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 						if (canCancelAsCreator) {
 							// Allow creator to cancel their own request
 						} else {
-							// Captain check: read the caller's player season subdoc and
-							// confirm they are a captain on the offer's target team for
-							// the offer's season.
-							const callerSeasonSnap = await transaction.get(
-								playerSeasonRef(firestore, userId, offerData.season.id)
-							)
-							const callerSeasonData = callerSeasonSnap.data()
-							const userIsCaptain =
-								callerSeasonData?.team?.id === offerData.team.id &&
-								callerSeasonData?.captain === true
-
-							if (!userIsCaptain) {
+							if (!isTeamCaptain) {
 								if (status === OfferStatus.REJECTED) {
 									throw new HttpsError(
 										'permission-denied',
@@ -219,20 +259,12 @@ export const updateOffer = onCall<UpdateOfferRequest>(
 					}
 				}
 
-				// What the other side is told, if anything. A captain canceling a
-				// player's request (the App declines instead) turns it down, so it
-				// is emailed as declined. Only the sender withdrawing their own
-				// offer is emailed as withdrawn, and only if its sending was; an
-				// admin canceling someone else's offer is cleaning up.
-				const emailed: 'declined' | 'withdrawn' | null =
-					status === OfferStatus.REJECTED ||
-					(status === OfferStatus.CANCELED && !isCreator && !isAdmin)
-						? 'declined'
-						: status === OfferStatus.CANCELED &&
-							  isCreator &&
-							  offerData.sentQuietly !== true
-							? 'withdrawn'
-							: null
+				const emailed = offerAnswerEmail({
+					status,
+					isSender,
+					isRecipient,
+					sentQuietly: offerData.sentQuietly === true,
+				})
 				// Read what the email needs before writing.
 				const emailContext = emailed
 					? await readTeamOfferContext(transaction, firestore, {
