@@ -29,12 +29,15 @@ Firestore query builders in `src/firebase/collections/`. See the
 
 **`Functions/`** — one callable per file under
 `src/functions/{user,admin}/<domain>/`, triggers under `src/triggers/`, the
-Stripe webhook under `src/api/`, and multi-step logic under `src/services/`.
+HTTP endpoints (the Stripe and Resend webhooks, one-click unsubscribe) under
+`src/api/`, the email outbox and templates under `src/email/`, and multi-step
+logic under `src/services/`.
 `src/index.ts` is the deploy manifest: a function not exported there is not
 deployed. See the [Functions reference](./functions/README.md).
 
 The two share code in one direction only: the App imports the waiver's text
-and signing rules from `Functions/src/waiver/`, which is why
+and signing rules from `Functions/src/waiver/`, and the upload, name, text and
+team-payment limits from `Functions/src/shared/*Rules.ts`, which is why
 `App/tsconfig.json` sets `rootDir` to the repository root. The `Collections`
 enum and document types are deliberately duplicated in `App/src/types.ts`
 and `Functions/src/types.ts`, and must be kept in step by hand.

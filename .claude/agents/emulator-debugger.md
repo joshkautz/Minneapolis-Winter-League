@@ -11,9 +11,15 @@ error, then narrow.
 
 ## Ground truth for this repo
 
-- Node 22 (`.nvmrc`). Emulators need a JDK on PATH.
-- Ports: Auth 9099, Functions 5001, Firestore 8080, Hosting 5005, Storage 9199,
-  UI 4000, hub 4400. Defined in `firebase.json`.
+- Node 22 (`.nvmrc`). Emulators need JDK 21 or later on PATH.
+- Ports: Auth 9099, Functions 5001, Firestore 8080, Hosting 5005, Storage 9199
+  (set in `firebase.json`); the UI on 4000 and the hub on 4400 are the
+  emulator defaults.
+- The Functions emulator runs against the **production** project and fetches
+  any secret missing from `Functions/.secret.local` from production Secret
+  Manager. `config/environment.ts` refuses a live Stripe key there, and email
+  is never sent from the emulator — but check this first when an emulated
+  function behaves as if it reached a real service.
 - Project id is `minnesota-winter-league`, with `singleProjectMode: true`.
   Admin scripts that use a different id write to a namespace the app cannot see.
 - `npm run dev` runs three things concurrently: the Functions tsc watch, the

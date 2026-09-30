@@ -1,7 +1,7 @@
 # Roadmap
 
-Planned work. Ideas that have been superseded or already shipped belong in
-`docs/historical/`, not here.
+Planned work. Ideas that have been superseded or already shipped are deleted
+from here; git history keeps them.
 
 ## Badges
 
@@ -11,8 +11,8 @@ Badges already implemented are marked `x`. The rest are designed but not built.
 | ---- | ------------------- | --------------------------------------------------------------- |
 | x    | Early Bird          | First team to fully register for the season                     |
 | x    | Close Call          | Last team to fully register for the season                      |
-| x    | Pillar of Community | Start the season with the most karma                            |
-| x    | Private Property    | Start the season with zero karma                                |
+| x    | Pillar of Community | Start the season with the most karma (karma is retired)         |
+| x    | Private Property    | Start the season with zero karma (karma is retired)             |
 | x    | Welcome             | Start the season as a new team                                  |
 | x    | Veteran             | Start the season as a rolled-over team                          |
 | x    | Thin Ice            | Roster a previously banned or suspended player                  |
@@ -80,8 +80,9 @@ Signed in the app since 2026 Fall: `docs/WAIVERS.md`. Left:
 
 - **Emergency contacts for game day.** They are collected with each waiver
   but only visible one player at a time; organizers would want them by team.
-- **A copy by email.** Players can print or save their copy; emailing one
-  needs an email provider the project does not have.
+- **A copy by email.** Players can print or save their copy. Emailing one
+  is now a matter of a template and a `queueEmail` from `signWaiver`
+  (`docs/EMAIL.md`).
 - **Captains reminding teammates** who have not signed.
 
 ### Waiver review
@@ -183,7 +184,7 @@ that is deliberately not fixed — are in `CLAUDE.md`.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 46.
+- **Deeper callable behaviour.** The authorization sweep covers all 48.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
   `updatePlayerAdmin`, `rolloverTeam` and the three game callables have
   behavioural tests. The rest are covered only at the gate; `deletePlayer`,

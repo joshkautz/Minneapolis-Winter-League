@@ -18,8 +18,11 @@ week.
 into the database, and each one authorizes its caller itself with the
 validators in `Functions/src/shared/auth.ts`:
 
-- a signed-in user with a **verified email** for nearly everything
-  (`createPlayer` alone accepts an unverified one, since it runs at sign-up);
+- a signed-in user with a **verified email** for nearly everything. The
+  exceptions are listed in `ALLOWS_UNVERIFIED_EMAIL` in the authorization
+  test: creating, updating and deleting your own player, which run before
+  or without verification, and your own email preferences, which the link
+  in an email opens;
 - `admin: true` on the caller's player document for the admin callables —
   there are no Auth custom claims;
 - not `banned`, for anything that joins, pays or posts.
@@ -44,7 +47,8 @@ by `tests/rules/firestore.test.ts`:
 | `dropbox/{uid}` — pre-2026 waiver records    | that player                        |
 | `players/{uid}/waiverSignatures`             | that player and admins             |
 | a team-season's `contributions`, `checkouts` | that season's roster and admins    |
-| `system/maintenance` — the kill-switch       | admins, and no client may write it |
+| `system/*` — the kill-switch and email mode  | admins, and no client may write it |
+| `mail/` — the email outbox                   | nobody; Functions only             |
 
 Emails are kept off the public player document for the same reason: anyone
 with the web config can list `players`. Waiver signatures carry
@@ -79,7 +83,8 @@ See `docs/TEAM_PAYMENTS.md` for the full design.
 
 ## Secrets
 
-Stripe's key and webhook secret are Firebase secrets, mounted only on the
-functions that declare them. Nothing secret is committed: the App's
+Stripe's key and webhook secret, and Resend's API key and webhook secret,
+are Firebase secrets, mounted only on the functions that declare them
+(`docs/setup/ENVIRONMENT_VARIABLES.md` lists them). Nothing secret is committed: the App's
 `VITE_FIREBASE_*` values are the public web config, and
 `Functions/.secret.local` is gitignored.

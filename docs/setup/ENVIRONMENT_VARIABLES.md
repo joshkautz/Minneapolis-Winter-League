@@ -145,11 +145,13 @@ import.meta.env.SSR // true if server-side rendering
 
 ## Functions secrets
 
-Functions read two secrets, declared per function in its `secrets` option:
+Functions read four secrets, declared per function in its `secrets` option:
 
 ```bash
 STRIPE_SECRET_KEY       # a restricted key; see .claude/rules/functions.md
-STRIPE_WEBHOOK_SECRET   # the webhook endpoint's signing secret
+STRIPE_WEBHOOK_SECRET   # the Stripe webhook endpoint's signing secret
+RESEND_API_KEY          # a send-only key for the email outbox
+RESEND_WEBHOOK_SECRET   # the Resend delivery webhook's signing secret
 ```
 
 In production they are Firebase secrets, set with
@@ -158,3 +160,5 @@ In production they are Firebase secrets, set with
 fetched from production Secret Manager with your own credentials, so the
 emulator refuses a live Stripe key (`sk_live_`, `rk_live_`) and uses a
 placeholder instead. Put a test-mode key there to exercise payments locally.
+Resend has no test mode, so the emulator never calls it: the sender records
+each email instead of sending it (`docs/EMAIL.md`).
