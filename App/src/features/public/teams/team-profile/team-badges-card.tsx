@@ -245,7 +245,7 @@ export const TeamBadgesCard = ({
 											className='w-80 z-40'
 											side='top'
 											align='center'
-											avoidCollisions={false}
+											collisionPadding={16}
 										>
 											<div className='space-y-2'>
 												<div className='flex items-start justify-between gap-2'>
