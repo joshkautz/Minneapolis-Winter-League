@@ -160,14 +160,15 @@ export async function rebuildBadges(
 	// The images of badges that used to be uploaded by hand. Deleted after
 	// the documents, so a failure here leaves a stray file, never a badge
 	// pointing at a missing image.
-	const bucket = getStorage().bucket()
-	await Promise.all(
-		plan.retire
-			.filter(({ storagePath }) => storagePath)
-			.map(({ storagePath }) =>
-				bucket.file(storagePath as string).delete({ ignoreNotFound: true })
-			)
+	const images = plan.retire.flatMap(({ storagePath }) =>
+		storagePath ? [storagePath] : []
 	)
+	if (images.length > 0) {
+		const bucket = getStorage().bucket()
+		await Promise.all(
+			images.map((image) => bucket.file(image).delete({ ignoreNotFound: true }))
+		)
+	}
 
 	logger.info('Badges rebuilt', summary)
 	return summary

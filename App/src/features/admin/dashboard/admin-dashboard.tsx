@@ -263,13 +263,13 @@ export const AdminDashboard = () => {
 					</CardHeader>
 					<CardContent className='space-y-4'>
 						<p className='text-sm text-muted-foreground'>
-							Create and manage badges that can be awarded to teams for special
-							accomplishments.
+							See every badge and how often it has been earned, and rebuild the
+							awards, which happens on its own every night.
 						</p>
 						<Button asChild className='w-full'>
 							<Link to='/admin/badge-management'>
 								<Award className='h-4 w-4 mr-2' />
-								Manage Badges
+								View Badges
 							</Link>
 						</Button>
 					</CardContent>

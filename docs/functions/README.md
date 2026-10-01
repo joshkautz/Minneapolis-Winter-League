@@ -34,7 +34,7 @@ Functions/src/
 
 ## Callables
 
-48 in total, every one covered by the authorization sweep in
+44 in total, every one covered by the authorization sweep in
 `tests/integration/callables-authorization.test.ts`, which fails when one is
 missing from it. Each lives in the file named after it.
 
@@ -52,7 +52,7 @@ missing from it. Each lives in the file named after it.
 | Rankings      |                                                                                            | `rebuildPlayerRankings`                                                               |
 | Email         |                                                                                            | `sendSeasonAnnouncement`, `sendEmailPreview`                                          |
 | News          |                                                                                            | `createNews`, `updateNews`, `deleteNews`                                              |
-| Badges        |                                                                                            | `createBadge`, `updateBadge`, `deleteBadge`, `awardBadge`, `revokeBadge`              |
+| Badges        |                                                                                            | `rebuildBadges` (awards every badge by rule; see [BADGES.md](../BADGES.md))           |
 | Site settings |                                                                                            | `updateSiteSettings`                                                                  |
 
 `createPlayer`, `updatePlayer` and `deletePlayer` accept an unverified email,
@@ -121,6 +121,7 @@ Paying is different: only admins may pay before registration opens (see
 | `sweepTeamPaymentsHourly`    | every hour            | Refunds every unregistered team holding money once registration (and its 31-minute grace) closes, and tells its roster |
 | `reconcileTeamPaymentsDaily` | 04:00 America/Chicago | Repairs any disagreement between Stripe and the contribution ledger                                                    |
 | `rebuildRankingsNightly`     | 23:00 America/Chicago | Rebuilds every ranking, so standings follow the evening's scores                                                       |
+| `awardBadgesNightly`         | 23:30 America/Chicago | Awards every badge by rule, after the rankings it reads; see [BADGES.md](../BADGES.md)                                 |
 
 All honour the kill-switch too. A failed run is not retried by the
 scheduler; the next run is the retry.
@@ -161,6 +162,9 @@ them and a forged request, and it runs before any read or write.
 | `services/teamPaymentsReconciliation`   | Checking Stripe and the ledger against each other                                                                                                              |
 | `services/playerRankings`               | The TrueSkill rankings rebuild: a pure engine and its projections, loaded and saved around it — see [PLAYER_RANKING_ALGORITHM.md](PLAYER_RANKING_ALGORITHM.md) |
 | `services/swissRankings`                | Swiss-format standings                                                                                                                                         |
+| `services/badges`                       | The badges rebuild: one pure rule per badge, the data they read, and the writes that make awards match — see [BADGES.md](../BADGES.md)                         |
+| `badges/catalog`                        | Every badge's name, description, tier and thresholds; the App and the art script import it                                                                     |
+| `shared/leagueCalendar`                 | Minneapolis calendar days: game nights, the Thanksgiving break, dates in messages                                                                              |
 | `shared/auth`                           | `validateAuthentication`, `validateAdminUser`, `validateNotBanned` and friends                                                                                 |
 | `shared/membership`                     | Writing both sides of the player↔team relationship atomically                                                                                                  |
 | `shared/contributions`                  | The team contribution ledger and its arithmetic                                                                                                                |
@@ -172,7 +176,7 @@ them and a forged request, and it runs before any read or write.
 | `shared/database`                       | Document reference builders and the current-season lookup                                                                                                      |
 | `shared/gameSchedule`                   | The Saturday time slots and fields a game may be scheduled in                                                                                                  |
 | `shared/images`, `shared/imageRules`    | Checking an uploaded image (PNG, JPEG, GIF or WebP, up to 5 MB) and storing it; the App imports the rules                                                      |
-| `shared/textFields`, `shared/textRules` | Length rules for badge, news, post and reply text; the App imports the rules                                                                                   |
+| `shared/textFields`, `shared/textRules` | Length rules for season, news, post and reply text; the App imports the rules                                                                                  |
 | `shared/seasonInput`                    | Checking a season's name, dates and Stripe prices, for createSeason and updateSeason alike                                                                     |
 | `shared/registrationWindow`             | Refusing a request once registration has closed, with the date in the reader's zone                                                                            |
 | `shared/checkoutReservations`           | Where a team-season's open checkout reservations live, and the sum they reserve                                                                                |

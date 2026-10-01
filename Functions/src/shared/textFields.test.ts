@@ -22,8 +22,8 @@ describe('requireText', () => {
 
 	it('names a missing field', () => {
 		for (const value of [undefined, null, 42, '   ']) {
-			expect(() => requireText(value, TEXT_RULES.badgeName)).toThrow(
-				'Name is required.'
+			expect(() => requireText(value, TEXT_RULES.newsTitle)).toThrow(
+				'Title is required.'
 			)
 		}
 	})

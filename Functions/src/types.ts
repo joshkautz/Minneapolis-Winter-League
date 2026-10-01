@@ -275,8 +275,8 @@ export interface PlayerSeasonDocument extends DocumentData {
  * Per-season state lives in the `teams/{teamId}/teamSeasons/{seasonId}` subcollection
  * (see TeamSeasonDocument). The roster lives in
  * `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` (see TeamRosterDocument).
- * Badges live in `teams/{teamId}/badges/{badgeId}` and span the team's entire
- * history (see TeamBadgeDocument).
+ * Badges live in `teams/{teamId}/badges/{badgeId}_{seasonId}`, one per
+ * badge and season it was earned in (see TeamBadgeDocument).
  */
 export interface TeamDocument extends DocumentData {
 	/** Timestamp when the team was first created */

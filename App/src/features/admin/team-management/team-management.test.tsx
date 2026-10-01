@@ -72,9 +72,6 @@ vi.mock('@/providers', () => ({
 }))
 
 // The other dialogs have suites of their own.
-vi.mock('./components/team-badges-dialog', () => ({
-	TeamBadgesDialog: () => null,
-}))
 vi.mock('./components/team-edit-dialog', () => ({ TeamEditDialog: () => null }))
 vi.mock('./components/merge-teams-dialog', () => ({
 	MergeTeamsDialog: () => null,

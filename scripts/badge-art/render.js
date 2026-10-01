@@ -2,15 +2,16 @@
 /**
  * Renders the league's badge artwork with GIMP.
  *
- *   node scripts/badge-art/render.js            every badge, plus sheet.png
+ *   node scripts/badge-art/render.js            every badge, plus a review sheet
  *   node scripts/badge-art/render.js bagel ...  just those badges
  *
- * Each badge is described in badges.js: its tier (which sets the rim), its
- * emblem, its sky and the scene drawn around the duck. This script writes the
- * Lucide icons those need as SVGs, then drives GIMP's Script-Fu with
- * draw.scm to compose every badge the same way. Output goes to
- * scripts/badge-art/out/, which is gitignored: the PNGs are uploaded as
- * badge images, and this script is how to make them again.
+ * The badges themselves — ids, names and tiers — are defined once, in
+ * Functions/src/badges/catalog.ts. badges.js describes how each one looks:
+ * its emblem, its sky and the scene drawn around the duck. This script writes
+ * the Lucide icons those need as SVGs, then drives GIMP's Script-Fu with
+ * draw.scm to compose every badge the same way, writing
+ * App/public/badges/<id>.webp, which the site serves. The review sheet and
+ * the icon SVGs go to scripts/badge-art/out/, which is gitignored.
  *
  * Needs GIMP 3 (GIMP_CONSOLE overrides where to find gimp-console). Script-Fu
  * is used rather than Python-Fu because it is built into GIMP, so nothing
@@ -22,11 +23,13 @@ import { createHash } from 'node:crypto'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { BADGES, TIERS } from './badges.js'
+import { BADGES as CATALOG } from '../../Functions/src/badges/catalog.ts'
+import { ART, TIERS } from './badges.js'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(here, '..', '..')
 const out = path.join(here, 'out')
+const published = path.join(repoRoot, 'App/public/badges')
 const iconDir = path.join(out, 'icons')
 const lucideIcons = path.join(
 	repoRoot,
@@ -105,9 +108,24 @@ async function drawCall(element) {
 	}
 }
 
+/** Each catalog badge with its artwork; every badge must have exactly one. */
+function badgesWithArt() {
+	const art = new Map(ART.map((entry) => [entry.id, entry]))
+	const missing = CATALOG.filter((badge) => !art.has(badge.id))
+	const extra = ART.filter((entry) => !CATALOG.some((b) => b.id === entry.id))
+	if (missing.length || extra.length) {
+		throw new Error(
+			`Badge art and catalog disagree. No art for: ${missing.map((b) => b.id).join(', ') || 'none'}; art for no badge: ${extra.map((a) => a.id).join(', ') || 'none'}`
+		)
+	}
+	return CATALOG.map((badge) => ({ ...badge, ...art.get(badge.id) }))
+}
+
+const publishedFile = (badge) => path.join(published, `${badge.id}.webp`)
+
 async function badgeProgram(badge) {
 	const tier = TIERS[badge.tier]
-	if (!tier) throw new Error(`${badge.id}: unknown tier ${badge.tier}`)
+	if (!tier) throw new Error(`${badge.id}: no rim for tier ${badge.tier}`)
 	const emblem = await iconFile({ icon: badge.emblem, ...EMBLEM })
 	const scene = await Promise.all((badge.scene ?? []).map(drawCall))
 	const props = await Promise.all((badge.props ?? []).map(drawCall))
@@ -116,26 +134,26 @@ async function badgeProgram(badge) {
 		...scene,
 		`(badge-duck img ${str(duck)})`,
 		...props,
-		`(badge-finish img ${str(emblem)} ${rgb(tier.light)} ${rgb(tier.dark)} ${str(path.join(out, `${badge.id}.png`))}))`,
+		`(badge-finish img ${str(emblem)} ${rgb(tier.light)} ${rgb(tier.dark)} ${str(publishedFile(badge))}))`,
 	].join('\n')
 }
 
 async function main() {
+	const all = badgesWithArt()
 	const wanted = process.argv.slice(2)
 	const badges = wanted.length
-		? BADGES.filter((badge) => wanted.includes(badge.id))
-		: BADGES
-	const unknown = wanted.filter(
-		(id) => !BADGES.some((badge) => badge.id === id)
-	)
+		? all.filter((badge) => wanted.includes(badge.id))
+		: all
+	const unknown = wanted.filter((id) => !all.some((badge) => badge.id === id))
 	if (unknown.length) throw new Error(`No such badge: ${unknown.join(', ')}`)
 
 	mkdirSync(iconDir, { recursive: true })
+	mkdirSync(published, { recursive: true })
 	const programs = await Promise.all(badges.map(badgeProgram))
 	const sheet = wanted.length
 		? []
 		: [
-				`(contact-sheet (list ${badges.map((badge) => str(path.join(out, `${badge.id}.png`))).join(' ')}) (list ${badges.map((badge) => str(badge.name)).join(' ')}) 6 300 ${str(path.join(out, 'sheet.png'))})`,
+				`(contact-sheet (list ${badges.map((badge) => str(publishedFile(badge))).join(' ')}) (list ${badges.map((badge) => str(badge.name)).join(' ')}) 6 300 ${str(path.join(out, 'sheet.png'))})`,
 			]
 	const script = [
 		`(load ${str(path.join(here, 'draw.scm'))})`,
@@ -155,7 +173,7 @@ async function main() {
 		],
 		{ stdio: ['ignore', 'inherit', 'inherit'] }
 	)
-	console.log(`Rendered ${badges.length} badge(s) to ${out}`)
+	console.log(`Rendered ${badges.length} badge(s) to ${published}`)
 }
 
 await main()

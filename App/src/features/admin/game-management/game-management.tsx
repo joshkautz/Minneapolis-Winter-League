@@ -68,6 +68,7 @@ import {
 	SeasonDocument,
 	SeasonFormat,
 	TeamSeasonDocument,
+	type GameForfeit,
 } from '@/types'
 import { Timestamp } from 'firebase/firestore'
 import { SwissPairingGuide } from './swiss-pairing-guide'
@@ -83,7 +84,12 @@ interface GameFormData {
 	awayScore: string
 	type: string
 	seasonId: string
+	/** Which side forfeited, or NO_FORFEIT. */
+	forfeit: string
 }
+
+/** The forfeit select's value for a game neither team forfeited. */
+const NO_FORFEIT = 'none'
 
 const INITIAL_FORM_DATA: GameFormData = {
 	date: '',
@@ -95,7 +101,12 @@ const INITIAL_FORM_DATA: GameFormData = {
 	awayScore: '',
 	type: '',
 	seasonId: '',
+	forfeit: NO_FORFEIT,
 }
+
+/** The form's forfeit value as the callables take it. */
+const forfeitOf = (value: string): GameForfeit | null =>
+	value === 'home' || value === 'away' ? value : null
 
 export const GameManagement = () => {
 	const navigate = useNavigate()
@@ -391,6 +402,7 @@ export const GameManagement = () => {
 					awayScore,
 					type: formData.type as 'regular' | 'playoff',
 					seasonId: formData.seasonId,
+					forfeit: forfeitOf(formData.forfeit),
 				})
 
 				toast.success('Success', {
@@ -407,6 +419,7 @@ export const GameManagement = () => {
 					awayScore,
 					type: formData.type as 'regular' | 'playoff',
 					seasonId: formData.seasonId,
+					forfeit: forfeitOf(formData.forfeit),
 				})
 
 				toast.success('Success', {
@@ -448,6 +461,7 @@ export const GameManagement = () => {
 			awayScore: game.awayScore !== null ? game.awayScore.toString() : '',
 			type: game.type,
 			seasonId: game.season.id,
+			forfeit: game.forfeit ?? NO_FORFEIT,
 		})
 		setEditingGameId(game.id)
 		setFormDialogOpen(true)
@@ -691,7 +705,7 @@ export const GameManagement = () => {
 											<TableCell>{teamLabel(game, 'away')}</TableCell>
 											<TableCell>
 												{game.homeScore !== null && game.awayScore !== null ? (
-													`${game.homeScore} - ${game.awayScore}`
+													`${game.homeScore} - ${game.awayScore}${game.forfeit ? ` (${game.forfeit} forfeit)` : ''}`
 												) : (
 													<span className='text-muted-foreground'>
 														Not played yet
@@ -923,6 +937,27 @@ export const GameManagement = () => {
 										}
 									/>
 								</div>
+							</div>
+
+							<div className='space-y-2'>
+								<Label htmlFor='forfeit'>Forfeit</Label>
+								<Select
+									value={formData.forfeit}
+									onValueChange={(value) => handleInputChange('forfeit', value)}
+								>
+									<SelectTrigger id='forfeit' className='w-full'>
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value={NO_FORFEIT}>No forfeit</SelectItem>
+										<SelectItem value='home'>Home team forfeited</SelectItem>
+										<SelectItem value='away'>Away team forfeited</SelectItem>
+									</SelectContent>
+								</Select>
+								<p className='text-xs text-muted-foreground'>
+									A forfeit's score still counts in the standings, but no badge
+									is won or lost by it.
+								</p>
 							</div>
 						</form>
 					</div>

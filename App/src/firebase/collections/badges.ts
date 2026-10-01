@@ -1,5 +1,6 @@
 /**
- * Badge-related Firestore operations
+ * Badge queries. Badges are defined in code (`@/shared/badges`) and awarded
+ * by the badges rebuild; Firestore holds only who earned what.
  */
 
 import {
@@ -8,58 +9,28 @@ import {
 	orderBy,
 	type Query,
 	type DocumentReference,
-	type CollectionReference,
 } from 'firebase/firestore'
 
 import { firestore } from '../app'
 import {
-	BadgeDocument,
+	BadgeStatsDocument,
 	TeamBadgeDocument,
 	TeamDocument,
 	Collections,
+	TEAM_BADGES_SUBCOLLECTION,
 } from '@/types'
 
-/**
- * Creates a query for all badges
- * Ordered by creation date (newest first)
- */
-export const allBadgesQuery = (): Query<BadgeDocument> => {
-	return query(
-		collection(firestore, Collections.BADGES),
-		orderBy('createdAt', 'desc')
-	) as Query<BadgeDocument>
-}
+/** How many teams have earned each badge, one document per badge. */
+export const badgeStatsQuery = (): Query<BadgeStatsDocument> =>
+	collection(firestore, Collections.BADGES) as Query<BadgeStatsDocument>
 
-/**
- * Gets a reference to the badges subcollection for a specific team
- *
- * @param teamRef - Reference to the team document
- */
-const getTeamBadgesCollectionRef = (
-	teamRef: DocumentReference<TeamDocument> | undefined
-): CollectionReference<TeamBadgeDocument> | undefined => {
-	if (!teamRef) return undefined
-	return collection(
-		teamRef,
-		Collections.BADGES
-	) as CollectionReference<TeamBadgeDocument>
-}
-
-/**
- * Creates a query for all badges awarded to a specific team
- * Ordered by awarded date (newest first)
- *
- * @param teamRef - Reference to the team document
- */
+/** Every badge a team has earned, one per badge and season, newest first. */
 export const teamBadgesQuery = (
 	teamRef: DocumentReference<TeamDocument> | undefined
-): Query<TeamBadgeDocument> | undefined => {
-	if (!teamRef) return undefined
-	const badgesCollection = getTeamBadgesCollectionRef(teamRef)
-	if (!badgesCollection) return undefined
-
-	return query(
-		badgesCollection,
-		orderBy('awardedAt', 'desc')
-	) as Query<TeamBadgeDocument>
-}
+): Query<TeamBadgeDocument> | undefined =>
+	teamRef
+		? (query(
+				collection(teamRef, TEAM_BADGES_SUBCOLLECTION),
+				orderBy('earnedAt', 'desc')
+			) as Query<TeamBadgeDocument>)
+		: undefined

@@ -7,14 +7,16 @@
 ;   (flair-...)                                            props in front of it
 ;   (badge-finish img emblem-path rim-light rim-dark out)  emblem and export
 ;
-; Everything is drawn on a 1024px canvas. The sky is the circle centred at
+; Everything is drawn on a 1024px canvas and exported as a 256px WebP: the
+; site shows badges at 64px or less, so that covers a 4x screen. The sky is the circle centred at
 ; (512, 512) with radius 444, and every scene element is clipped to it, so
 ; nothing spills onto the rim or past the round crop the site applies.
 
 (define badge-size 1024)
 (define sky-x 68)
 (define sky-diameter 888)
-(define export-size 512)
+(define export-size 256)
+(define export-quality 90)
 (define emblem-size 196)
 
 (define (circle-select img op x y d)
@@ -160,7 +162,7 @@
     (gimp-layer-set-offsets layer (round (- 744 (/ emblem-size 2))) (round (- 744 (/ emblem-size 2)))))
   (gimp-image-merge-visible-layers img CLIP-TO-IMAGE)
   (gimp-image-scale img export-size export-size)
-  (file-png-export #:run-mode RUN-NONINTERACTIVE #:image img #:file out)
+  (file-webp-export #:run-mode RUN-NONINTERACTIVE #:image img #:file out #:quality export-quality)
   (gimp-image-delete img))
 
 ; A grid of finished badges with each name beneath, for reviewing the set.

@@ -107,6 +107,7 @@ subcollection under the latter.
 | Front end          | [App overview](./docs/app/README.md)                                                                                    |
 | Payments, waivers  | [Team payments](./docs/TEAM_PAYMENTS.md) · [Waivers](./docs/WAIVERS.md)                                                 |
 | Email              | [Email](./docs/EMAIL.md)                                                                                                |
+| Badges             | [Badges](./docs/BADGES.md)                                                                                              |
 | Planned work       | [Roadmap](./docs/ROADMAP.md)                                                                                            |
 
 Working in this repo with Claude Code? [`CLAUDE.md`](./CLAUDE.md) carries the

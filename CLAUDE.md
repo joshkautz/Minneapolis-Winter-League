@@ -79,6 +79,9 @@ Per-season state hangs off subcollections rather than the parent document:
   that season, written by the rankings rebuild
 - `player-ranking-history/{playerId}` — one player's rating, rank and season
   rank after every round, so their charts are one read
+- `teams/{teamId}/badges/{badgeId}_{seasonId}` — a badge the team earned that
+  season, written only by the badges rebuild from rules over the data (see
+  `docs/BADGES.md`); no badge is awarded by hand
 - `teams/{teamId}/teamSeasons/{seasonId}` — per-season team participation
 - `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` — membership join
 - `teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}` —

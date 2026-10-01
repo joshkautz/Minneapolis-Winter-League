@@ -1,6 +1,6 @@
 /**
- * Length rules for the text admins and players write: season names, badges,
- * news, posts and replies.
+ * Length rules for the text admins and players write: season names, news,
+ * posts and replies.
  *
  * The App imports this file (`App/src/shared/text-rules.ts`) so a form can
  * refuse text in the same words the server would. Keep it free of imports:
@@ -16,8 +16,6 @@ export interface TextRule {
 
 export const TEXT_RULES = {
 	seasonName: { label: 'Season name', min: 3, max: 100 },
-	badgeName: { label: 'Name', min: 3, max: 100 },
-	badgeDescription: { label: 'Description', min: 10, max: 500 },
 	newsTitle: { label: 'Title', min: 3, max: 200 },
 	newsContent: { label: 'Content', min: 10, max: 10_000 },
 	postContent: { label: 'Post content', min: 10, max: 2_000 },

@@ -173,18 +173,17 @@ service cloud.firestore {
       allow delete: if false; // Functions only
     }
 
+    // How many teams have earned each badge. Badges are defined in code and
+    // awarded only by the badges rebuild.
     match /badges/{badgeId} {
       allow read: if true;
-      allow create: if false; // Use createBadge
-      allow update: if false; // Use updateBadge
-      allow delete: if false; // Use deleteBadge
+      allow write: if false; // Functions only
     }
 
-    match /teams/{teamId}/badges/{badgeId} {
+    // A badge a team earned in a season, written only by the badges rebuild.
+    match /teams/{teamId}/badges/{awardId} {
       allow read: if true;
-      allow create: if false; // Use awardBadge
-      allow update: if false; // Badges are immutable once awarded
-      allow delete: if false; // Use revokeBadge
+      allow write: if false; // Functions only
     }
 
     // Collection-group access. Firestore rules require an explicit recursive

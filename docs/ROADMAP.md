@@ -5,35 +5,24 @@ from here; git history keeps them.
 
 ## Badges
 
-Badges already implemented are marked `x`. The rest are designed but not built.
+Twenty-seven badges are awarded automatically: `docs/BADGES.md`. Ideas from
+the original list not yet built, each a rule and a piece of art away:
 
-| Done | Badge               | Condition                                                       |
-| ---- | ------------------- | --------------------------------------------------------------- |
-| x    | Early Bird          | First team to fully register for the season                     |
-| x    | Close Call          | Last team to fully register for the season                      |
-| x    | Pillar of Community | Start the season with the most karma (karma is retired)         |
-| x    | Private Property    | Start the season with zero karma (karma is retired)             |
-| x    | Welcome             | Start the season as a new team                                  |
-| x    | Veteran             | Start the season as a rolled-over team                          |
-| x    | Thin Ice            | Roster a previously banned or suspended player                  |
-| x    | Schooled            | Lose to a team of high schoolers                                |
-| x    | Imposters           | Caught with a player changing their name                        |
-| x    | Merciless           | Beat a team by 15 points                                        |
-| x    | Speedrun            | Participate in a game with at least 27 points scored            |
-|      | Just Warming Up     | Score 5 or fewer points in a game                               |
-|      | Show Off            | Score 18 or more points in a game                               |
-|      | Streaker            | Win 10 games in a row                                           |
-|      | Also a Streaker     | Lose 10 games in a row                                          |
-|      | Consistent          | Score the same number of points twice in one night              |
-|      | Dishonor            | Forfeit a game                                                  |
-|      | Usurpers            | Roll over a team and have no previous captains                  |
-|      | Kings of the North  | Have the top ranked player on your team after the season starts |
-|      | Addicted            | Team exists for 3 seasons in a row                              |
-|      | Dinosaurs           | Team has competed in 10 different seasons                       |
-|      | Forefathers         | Team played in the inaugural season                             |
-|      | 20XX                | Play in the 20XX season                                         |
-|      | Improvement         | Place higher than last season                                   |
-|      | Growing Pains       | Place lower than last season                                    |
+| Badge           | Condition                                 |
+| --------------- | ----------------------------------------- |
+| Addicted        | Team exists for 3 seasons in a row        |
+| Dinosaurs       | Team has competed in 10 different seasons |
+| Forefathers     | Team played in the inaugural season       |
+| 20XX            | Play in the 20XX season                   |
+| Improvement     | Place higher than last season             |
+| Also a Streaker | Lose 10 games in a row                    |
+| Growing Pains   | Place lower than last season              |
+
+Decided against, so not to be proposed again: Schooled, Imposters and Thin
+Ice (they reward behaviour the league does not want), anything from karma
+(retired), Buzzer Beater (registration fills at once), Clean Sweep and
+Consistent (too common to mean much), and Rough Night, Winless and
+Dishonor (they single out the worst results).
 
 ## Team-level payment ($1,000 collective)
 
@@ -184,7 +173,7 @@ that is deliberately not fixed — are in `CLAUDE.md`.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 48.
+- **Deeper callable behaviour.** The authorization sweep covers all 44.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
   `updatePlayerAdmin`, `rolloverTeam` and the three game callables have
   behavioural tests. The rest are covered only at the gate; `deletePlayer`,

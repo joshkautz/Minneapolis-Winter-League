@@ -12,8 +12,10 @@
  * y 217–807, with its eyes near (431, 466) and (587, 466); the emblem bubble
  * covers x and y 574–914.
  *
- * The badges' names, rules and descriptions live in Functions; `id` must match
- * the badge id there.
+ * The badges themselves — ids, names, tiers and rules — live in Functions
+ * (`Functions/src/badges/catalog.ts`); each entry here is matched to one by
+ * `id`, and render.js refuses to run if any badge has no art or any art no
+ * badge. The tier decides the rim.
  */
 
 /** Rim metals, from the most common badges to the rarest. */
@@ -113,12 +115,10 @@ const icons = (seed, count, icon, style) =>
 		strokeWidth: style.strokeWidth,
 	}))
 
-export const BADGES = [
+export const ART = [
 	// ---- Rare ---------------------------------------------------------------
 	{
 		id: 'champions',
-		name: 'Champions',
-		tier: 'rare',
 		emblem: 'trophy',
 		sky: ['#fff6d4', '#e9a91f'],
 		scene: [
@@ -128,8 +128,6 @@ export const BADGES = [
 	},
 	{
 		id: 'runner-up',
-		name: 'Runner-up',
-		tier: 'rare',
 		emblem: 'medal',
 		sky: ['#f6f8fb', '#8e9db3'],
 		scene: [
@@ -144,8 +142,6 @@ export const BADGES = [
 	},
 	{
 		id: 'dynasty',
-		name: 'Dynasty',
-		tier: 'rare',
 		emblem: 'crown',
 		sky: ['#f1e6ff', '#5f3596'],
 		scene: [
@@ -173,8 +169,6 @@ export const BADGES = [
 	},
 	{
 		id: 'perfect-season',
-		name: 'Perfect Season',
-		tier: 'rare',
 		emblem: 'gem',
 		sky: ['#e9fff8', '#2b6c96'],
 		scene: [
@@ -212,8 +206,6 @@ export const BADGES = [
 	},
 	{
 		id: 'bagel',
-		name: 'Bagel',
-		tier: 'rare',
 		emblem: 'donut',
 		sky: ['#fff1f6', '#e98aab'],
 		scene: icons(16, 11, 'donut', {
@@ -226,8 +218,6 @@ export const BADGES = [
 	},
 	{
 		id: 'early-bird',
-		name: 'Early Bird',
-		tier: 'rare',
 		emblem: 'bird',
 		sky: ['#fff2c4', '#ef7f62'],
 		scene: [
@@ -278,8 +268,6 @@ export const BADGES = [
 	},
 	{
 		id: 'close-call',
-		name: 'Close Call',
-		tier: 'rare',
 		emblem: 'alarm-clock',
 		sky: ['#e8edff', '#3d4a8c'],
 		scene: [
@@ -312,8 +300,6 @@ export const BADGES = [
 	},
 	{
 		id: 'celebrity',
-		name: 'Celebrity',
-		tier: 'rare',
 		emblem: 'star',
 		sky: ['#fff4e0', '#7a3f8f'],
 		scene: [
@@ -339,8 +325,6 @@ export const BADGES = [
 	},
 	{
 		id: 'rising-stars',
-		name: 'Rising Stars',
-		tier: 'rare',
 		emblem: 'trending-up',
 		sky: ['#ecebff', '#33378a'],
 		scene: [
@@ -410,8 +394,6 @@ export const BADGES = [
 	// ---- Uncommon -----------------------------------------------------------
 	{
 		id: 'podium',
-		name: 'Podium',
-		tier: 'uncommon',
 		emblem: 'award',
 		sky: ICY,
 		scene: [
@@ -461,8 +443,6 @@ export const BADGES = [
 	},
 	{
 		id: 'giant-slayer',
-		name: 'Giant Slayer',
-		tier: 'uncommon',
 		emblem: 'sword',
 		sky: ['#eef2f6', '#4f5f72'],
 		scene: [
@@ -492,8 +472,6 @@ export const BADGES = [
 	},
 	{
 		id: 'merciless',
-		name: 'Merciless',
-		tier: 'uncommon',
 		emblem: 'skull',
 		sky: ['#ffe4e1', '#8f1b1f'],
 		scene: [
@@ -509,8 +487,6 @@ export const BADGES = [
 	},
 	{
 		id: 'bounce-back',
-		name: 'Bounce Back',
-		tier: 'uncommon',
 		emblem: 'rotate-ccw',
 		sky: ICY,
 		scene: [
@@ -539,8 +515,6 @@ export const BADGES = [
 	},
 	{
 		id: 'frozen-out',
-		name: 'Frozen Out',
-		tier: 'uncommon',
 		emblem: 'snowflake',
 		sky: ['#f2fbff', '#2a78b0'],
 		scene: [
@@ -564,8 +538,6 @@ export const BADGES = [
 	},
 	{
 		id: 'hot-streak',
-		name: 'Hot Streak',
-		tier: 'uncommon',
 		emblem: 'flame',
 		sky: ['#fff3da', '#ef6f22'],
 		scene: [
@@ -592,8 +564,6 @@ export const BADGES = [
 	},
 	{
 		id: 'show-off',
-		name: 'Show Off',
-		tier: 'uncommon',
 		emblem: 'sparkles',
 		sky: ['#feeaff', '#ad46cf'],
 		scene: [
@@ -609,8 +579,6 @@ export const BADGES = [
 	},
 	{
 		id: 'speedrunners',
-		name: 'Speedrunners',
-		tier: 'uncommon',
 		emblem: 'zap',
 		sky: ['#eef7ff', '#3b7cc8'],
 		scene: [
@@ -653,8 +621,6 @@ export const BADGES = [
 	},
 	{
 		id: 'fresh-faces',
-		name: 'Fresh Faces',
-		tier: 'uncommon',
 		emblem: 'sprout',
 		sky: ['#f2fff0', '#5aa95e'],
 		scene: [
@@ -687,8 +653,6 @@ export const BADGES = [
 	},
 	{
 		id: 'reunion-tour',
-		name: 'Reunion Tour',
-		tier: 'uncommon',
 		emblem: 'handshake',
 		sky: ['#fff4e6', '#e07a50'],
 		scene: [
@@ -722,8 +686,6 @@ export const BADGES = [
 	},
 	{
 		id: 'old-guard',
-		name: 'Old Guard',
-		tier: 'uncommon',
 		emblem: 'castle',
 		sky: ['#fbe9d7', '#5f4f8c'],
 		scene: [
@@ -764,8 +726,6 @@ export const BADGES = [
 	// ---- Common -------------------------------------------------------------
 	{
 		id: 'universe-point',
-		name: 'Universe Point',
-		tier: 'common',
 		emblem: 'target',
 		sky: ICY,
 		scene: [
@@ -779,8 +739,6 @@ export const BADGES = [
 	},
 	{
 		id: 'just-warming-up',
-		name: 'Just Warming Up',
-		tier: 'common',
 		emblem: 'thermometer',
 		sky: ['#fff5e8', '#e3955a'],
 		scene: [
@@ -824,8 +782,6 @@ export const BADGES = [
 	},
 	{
 		id: 'welcome',
-		name: 'Welcome',
-		tier: 'common',
 		emblem: 'party-popper',
 		sky: ICY,
 		scene: [
@@ -854,8 +810,6 @@ export const BADGES = [
 	},
 	{
 		id: 'veteran',
-		name: 'Veteran',
-		tier: 'common',
 		emblem: 'shield-check',
 		sky: ['#eef3fa', '#46699e'],
 		scene: [
@@ -881,8 +835,6 @@ export const BADGES = [
 	// ---- Fall ---------------------------------------------------------------
 	{
 		id: 'turkey-bowl',
-		name: 'Turkey Bowl',
-		tier: 'fall',
 		emblem: 'drumstick',
 		sky: ['#fff1df', '#d65d2a'],
 		scene: scatter(28, 14, ({ x, y, random, index }) => ({
@@ -898,8 +850,6 @@ export const BADGES = [
 	},
 	{
 		id: 'opening-night',
-		name: 'Opening Night',
-		tier: 'fall',
 		emblem: 'flag',
 		sky: ['#5568c0', '#121a3d'],
 		scene: [
@@ -912,8 +862,6 @@ export const BADGES = [
 	},
 	{
 		id: 'last-dance',
-		name: 'Last Dance',
-		tier: 'fall',
 		emblem: 'music',
 		sky: ['#f4e8ff', '#5a2a80'],
 		scene: [
