@@ -383,12 +383,22 @@ describe('withdrawing', () => {
 		})
 	})
 
-	it('emails nobody when withdrawing is refused', async () => {
-		// Only the captain who sent an invitation can withdraw it.
+	it('tells the player when a co-captain withdraws another captain’s invitation', async () => {
+		// An invitation is the team's: every captain sees it and can cancel it.
 		await createOffer(CAPTAIN, 'invitation')
 		await clearOutbox()
 
-		expect(await answer(CO_CAPTAIN, 'canceled')).toBe('permission-denied')
+		expect(await answer(CO_CAPTAIN, 'canceled')).toBeNull()
+
+		expect(await sentTo()).toEqual([[PLAYER, 'teamInvitationWithdrawn']])
+	})
+
+	it('emails nobody when withdrawing is refused', async () => {
+		// A teammate who is not a captain cannot withdraw the team's invitation.
+		await createOffer(CAPTAIN, 'invitation')
+		await clearOutbox()
+
+		expect(await answer(TEAMMATE, 'canceled')).toBe('permission-denied')
 
 		expect(await outbox()).toEqual([])
 	})
@@ -403,6 +413,20 @@ describe('withdrawing', () => {
 		expect(await answer(CAPTAIN, 'canceled')).toBeNull()
 
 		expect(await sentTo()).toEqual([[PLAYER, 'teamRequestDeclined']])
+	})
+
+	it('tells the player when an admin who captains the team withdraws its invitation', async () => {
+		// An admin's cancel is cleanup only when they are on neither side.
+		await firestore
+			.collection('players')
+			.doc(CO_CAPTAIN)
+			.set({ admin: true }, { merge: true })
+		await createOffer(CAPTAIN, 'invitation')
+		await clearOutbox()
+
+		expect(await answer(CO_CAPTAIN, 'canceled')).toBeNull()
+
+		expect(await sentTo()).toEqual([[PLAYER, 'teamInvitationWithdrawn']])
 	})
 
 	it('emails nobody when an admin cancels someone else’s offer', async () => {

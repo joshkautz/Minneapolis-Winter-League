@@ -196,10 +196,13 @@ by an admin, does the same through `cancelPendingOffersForPlayer`
   therefore emailed all three times, so the player's last email is the
   invitation. Past the limit an offer goes out with no email and is marked
   `sentQuietly`, and withdrawing it then emails nobody either.
-- **Only the sender withdrawing is emailed as withdrawn.** A captain canceling
-  a player's request through the API (the App declines requests instead) is
-  emailed as declined; an admin canceling someone else's offer sends
-  nothing.
+- **Only the sending side withdrawing is emailed as withdrawn.** An
+  invitation is the team's, so any of its captains can withdraw it, not only
+  the one who sent it, and the player is told either way. A captain
+  canceling a player's request through the API (the App declines requests
+  instead) is emailed as declined. An admin on neither side canceling an
+  offer is cleaning up, and sends nothing; an admin who captains the team is
+  a captain like any other.
 - **Admin roster edits send nothing** about the roster itself: they are as
   often corrections to past seasons. Only the offers they close are told.
 
