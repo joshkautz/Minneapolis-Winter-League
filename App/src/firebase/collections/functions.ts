@@ -290,8 +290,6 @@ interface MergeTeamsResponse {
 	winningTeamId: string
 	losingTeamId: string
 	movedTeamSeasons: number
-	movedBadges: number
-	badgesDeduped: number
 	rewrittenGames: number
 	rewrittenOffers: number
 	rewrittenPlayerSeasons: number

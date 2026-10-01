@@ -15,11 +15,14 @@ import {
 	FieldValue,
 	Timestamp,
 	type CollectionReference,
-	type DocumentData,
 	type DocumentReference,
 	type Firestore,
 } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
+import {
+	trackedBulkWriter,
+	type TrackedWriter,
+} from '../../../shared/batches.js'
 import { Collections, SEASON_RANKINGS_SUBCOLLECTION } from '../../../types.js'
 import type { RankingProjections } from '../engine/projections.js'
 
@@ -31,41 +34,9 @@ interface SaveParams {
 	calculationId: string
 }
 
-interface Writer {
-	set(ref: DocumentReference, data: DocumentData): void
-	delete(ref: DocumentReference): void
-	/** Flushes every write, throwing if any failed. */
-	finish(): Promise<void>
-}
-
-/**
- * A BulkWriter whose failures are not lost: `close()` resolves even when
- * writes failed, so each write's promise is kept and checked afterwards.
- */
-function trackedWriter(firestore: Firestore): Writer {
-	const writer = firestore.bulkWriter()
-	const writes: Promise<unknown>[] = []
-	return {
-		set: (ref, data) => void writes.push(writer.set(ref, data)),
-		delete: (ref) => void writes.push(writer.delete(ref)),
-		finish: async (): Promise<void> => {
-			await writer.close()
-			const failed = (await Promise.allSettled(writes)).filter(
-				(result): result is PromiseRejectedResult =>
-					result.status === 'rejected'
-			)
-			if (failed.length > 0) {
-				throw new Error(
-					`${failed.length} of ${writes.length} rankings writes failed: ${String(failed[0].reason)}`
-				)
-			}
-		},
-	}
-}
-
 /** Deletes every document in `collection` whose id is not in `keep`. */
 async function deleteAllBut(
-	writer: Writer,
+	writer: TrackedWriter,
 	collection: CollectionReference,
 	keep: ReadonlySet<string>
 ): Promise<number> {
@@ -80,7 +51,7 @@ export async function saveRankings(
 	params: SaveParams
 ): Promise<void> {
 	const { projections, playerNames, calculationId } = params
-	const writer = trackedWriter(firestore)
+	const writer = trackedBulkWriter(firestore, 'rankings')
 	const lastUpdated = FieldValue.serverTimestamp()
 	const nameOf = (playerId: string): string => playerNames.get(playerId) ?? ''
 	const playerRef = (playerId: string): DocumentReference =>

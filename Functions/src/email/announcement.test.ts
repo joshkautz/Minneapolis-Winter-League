@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import {
-	describeGameNights,
-	gameNightsOf,
-	thanksgivingSaturday,
-} from './announcement.js'
+import { describeGameNights, gameNightsOf } from './announcement.js'
+import { thanksgivingSaturday } from '../shared/leagueCalendar.js'
 
 const day = (iso: string): Date => new Date(`${iso}T00:00:00Z`)
 const isoDays = (dates: Date[]): string[] =>

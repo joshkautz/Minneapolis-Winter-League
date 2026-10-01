@@ -16,7 +16,7 @@ import {
 
 /**
  * `mergeTeams` is the widest write in the codebase. One call moves every
- * team-season subdoc and its roster, moves badges, rewrites every game and
+ * team-season subdoc and its roster, rewrites every game and
  * offer that referenced the losing team, re-points every player's season
  * subdoc through the membership helpers, and then recursively deletes the
  * losing team.
@@ -35,8 +35,6 @@ let firestore: Firestore
 
 type MergeResponse = {
 	movedTeamSeasons: number
-	movedBadges: number
-	badgesDeduped: number
 	rewrittenGames: number
 	rewrittenOffers: number
 	rewrittenPlayerSeasons: number
@@ -346,77 +344,19 @@ describe('mergeTeams', () => {
 		).toBe(`teams/${WINNER}`)
 	})
 
-	it('moves badges the winner does not already hold', async () => {
+	it('leaves badges to the badges rebuild, deleting the losing team’s', async () => {
+		// Badges are derived from each season's games and rosters, so the next
+		// rebuild awards the winner what the merged seasons earned; copying
+		// the losing team's would only duplicate it.
 		await teamRef(LOSER)
 			.collection('badges')
-			.doc('badge-1')
-			.set({
-				badge: firestore.collection('badges').doc('badge-1'),
-				awardedAt: Timestamp.fromMillis(1_000),
-				awardedBy: playerRef(ADMIN),
-				seasonId: SEASON,
-			})
-
-		const result = await merge()
-
-		expect(result.movedBadges).toBe(1)
-		expect(
-			(await teamRef(WINNER).collection('badges').doc('badge-1').get()).exists
-		).toBe(true)
-	})
-
-	it('keeps the earlier award when both teams hold a badge', async () => {
-		// Badges like "Forefathers" are about when a team first earned them,
-		// so a merge should end up with the older of the two dates.
-		for (const [teamId, millis] of [
-			[WINNER, 5_000],
-			[LOSER, 1_000],
-		] as const) {
-			await teamRef(teamId)
-				.collection('badges')
-				.doc('badge-1')
-				.set({
-					badge: firestore.collection('badges').doc('badge-1'),
-					awardedAt: Timestamp.fromMillis(millis),
-					awardedBy: playerRef(ADMIN),
-					seasonId: SEASON,
-				})
-		}
-
-		const result = await merge()
-		const badge = await teamRef(WINNER)
-			.collection('badges')
-			.doc('badge-1')
-			.get()
-
-		expect(result.badgesDeduped).toBe(1)
-		expect(result.movedBadges).toBe(0)
-		expect(badge.data()?.awardedAt.toMillis()).toBe(1_000)
-	})
-
-	it('keeps the winner’s award when it is the earlier one', async () => {
-		for (const [teamId, millis] of [
-			[WINNER, 1_000],
-			[LOSER, 5_000],
-		] as const) {
-			await teamRef(teamId)
-				.collection('badges')
-				.doc('badge-1')
-				.set({
-					badge: firestore.collection('badges').doc('badge-1'),
-					awardedAt: Timestamp.fromMillis(millis),
-					awardedBy: playerRef(ADMIN),
-					seasonId: SEASON,
-				})
-		}
+			.doc(`welcome_${SEASON}`)
+			.set({ badgeId: 'welcome', seasonId: SEASON, reason: 'First season.' })
 
 		await merge()
-		const badge = await teamRef(WINNER)
-			.collection('badges')
-			.doc('badge-1')
-			.get()
 
-		expect(badge.data()?.awardedAt.toMillis()).toBe(1_000)
+		expect((await teamRef(WINNER).collection('badges').get()).size).toBe(0)
+		expect((await teamRef(LOSER).collection('badges').get()).size).toBe(0)
 	})
 
 	it('back-fills the winner’s founding date from an older losing team', async () => {

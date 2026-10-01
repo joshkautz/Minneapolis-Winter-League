@@ -155,7 +155,7 @@ export const MergeTeamsDialog = ({
 				losingTeamId: selectedLosingTeamId,
 			})
 			toast.success('Teams merged successfully', {
-				description: `Moved ${result.movedTeamSeasons} season(s), ${result.movedBadges} badge(s), rewrote ${result.rewrittenGames} game(s), ${result.rewrittenOffers} offer(s), ${result.rewrittenPlayerSeasons} player-season(s).`,
+				description: `Moved ${result.movedTeamSeasons} season(s), rewrote ${result.rewrittenGames} game(s), ${result.rewrittenOffers} offer(s), ${result.rewrittenPlayerSeasons} player-season(s).`,
 			})
 			setSelectedLosingTeamId('')
 			onOpenChange(false)

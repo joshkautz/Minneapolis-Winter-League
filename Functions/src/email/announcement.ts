@@ -4,6 +4,12 @@ import type { Firestore } from 'firebase-admin/firestore'
 import { FIREBASE_CONFIG, TEAM_CONFIG } from '../config/constants.js'
 import { playerContactRef, playerRef } from '../shared/database.js'
 import {
+	DAY_MS,
+	isSaturday,
+	leagueCalendarDay,
+	thanksgivingSaturday,
+} from '../shared/leagueCalendar.js'
+import {
 	ROSTER_SUBCOLLECTION,
 	type PlayerContactDocument,
 	type PlayerDocument,
@@ -20,31 +26,6 @@ const leagueDay = (date: Date): string =>
 		day: 'numeric',
 		timeZone: FIREBASE_CONFIG.TIME_ZONE,
 	}).format(date)
-
-/** The calendar day an instant falls on in Minneapolis, as UTC midnight. */
-const leagueCalendarDay = (instant: Date): Date => {
-	const parts = new Intl.DateTimeFormat('en-US', {
-		year: 'numeric',
-		month: 'numeric',
-		day: 'numeric',
-		timeZone: FIREBASE_CONFIG.TIME_ZONE,
-	}).formatToParts(instant)
-	const part = (type: Intl.DateTimeFormatPartTypes): number =>
-		Number(parts.find((p) => p.type === type)?.value)
-	return new Date(Date.UTC(part('year'), part('month') - 1, part('day')))
-}
-
-const DAY_MS = 24 * 60 * 60 * 1000
-const SATURDAY = 6
-const THURSDAY = 4
-const NOVEMBER = 10
-
-/** The Saturday after Thanksgiving (the fourth Thursday of November). */
-export const thanksgivingSaturday = (year: number): Date => {
-	const firstWeekday = new Date(Date.UTC(year, NOVEMBER, 1)).getUTCDay()
-	const firstThursday = 1 + ((THURSDAY - firstWeekday + 7) % 7)
-	return new Date(Date.UTC(year, NOVEMBER, firstThursday + 21 + 2))
-}
 
 /**
  * The season's game nights: every Saturday from its first day to its last,
@@ -63,7 +44,7 @@ export function gameNightsOf(
 		day.getTime() <= last;
 		day = new Date(day.getTime() + DAY_MS)
 	) {
-		if (day.getUTCDay() !== SATURDAY) continue
+		if (!isSaturday(day)) continue
 		if (
 			day.getTime() === thanksgivingSaturday(day.getUTCFullYear()).getTime()
 		) {

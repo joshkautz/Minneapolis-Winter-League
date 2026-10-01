@@ -4,8 +4,9 @@
  * Merges a "losing" team into a "winning" team. After the operation:
  *   - Every `teams/{losingId}/teamSeasons/{sid}` subdoc is moved under
  *     `teams/{winningId}/teamSeasons/{sid}` (roster subcollection included).
- *   - Every badge from the losing team is moved to the winning team,
- *     deduping by `badgeId` and keeping the earlier `awardedAt`.
+ *   - Badges are not moved: they are derived from each season's games and
+ *     rosters, so the next badges rebuild awards the winning team whatever
+ *     the merged seasons earned.
  *   - Every `games.home|away` and `offers.team` reference to the losing
  *     team is rewritten to point at the winning team.
  *   - Every `players/{uid}/playerSeasons/{sid}.team` pointing at the losing
@@ -29,7 +30,6 @@ import { isMigrationInProgress } from '../../../shared/maintenance.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	playerSeasonRef,
-	teamBadgeRef,
 	teamRef,
 	teamRosterEntryRef,
 	teamSeasonRef,
@@ -51,11 +51,9 @@ import {
 	type OfferDocument,
 	type PlayerSeasonDocument,
 	type SeasonDocument,
-	type TeamBadgeDocument,
 	type TeamContributionDocument,
 	type TeamSeasonDocument,
 	ROSTER_SUBCOLLECTION,
-	TEAM_BADGES_SUBCOLLECTION,
 } from '../../../types.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
@@ -72,8 +70,6 @@ interface MergeTeamsResponse {
 	winningTeamId: string
 	losingTeamId: string
 	movedTeamSeasons: number
-	movedBadges: number
-	badgesDeduped: number
 	rewrittenGames: number
 	rewrittenOffers: number
 	rewrittenPlayerSeasons: number
@@ -205,20 +201,6 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				rosterByLosingSeasonId.set(teamSeasonDoc.id, rosterSnap.docs)
 			}
 
-			// ---- Pre-load badges from both teams ----------------------------
-			const [losingBadgesSnap, winningBadgesSnap] = await Promise.all([
-				losingTeamRef.collection(TEAM_BADGES_SUBCOLLECTION).get() as Promise<
-					FirebaseFirestore.QuerySnapshot<TeamBadgeDocument>
-				>,
-				winningTeamRef.collection(TEAM_BADGES_SUBCOLLECTION).get() as Promise<
-					FirebaseFirestore.QuerySnapshot<TeamBadgeDocument>
-				>,
-			])
-			const winningBadgesByBadgeId = new Map<string, TeamBadgeDocument>()
-			for (const b of winningBadgesSnap.docs) {
-				winningBadgesByBadgeId.set(b.id, b.data())
-			}
-
 			// ---- Pre-load games referencing losing team ---------------------
 			const [gamesHomeSnap, gamesAwaySnap] = await Promise.all([
 				firestore
@@ -276,47 +258,6 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				}
 				await batch.commit()
 				movedTeamSeasons++
-			}
-
-			// 6c: Move / dedup badges.
-			let movedBadges = 0
-			let badgesDeduped = 0
-			if (losingBadgesSnap.size > 0) {
-				let batch = firestore.batch()
-				let ops = 0
-				for (const badgeDoc of losingBadgesSnap.docs) {
-					const badgeId = badgeDoc.id
-					const losingData = badgeDoc.data()
-					const existingOnWinner = winningBadgesByBadgeId.get(badgeId)
-
-					if (existingOnWinner) {
-						const existingAt =
-							existingOnWinner.awardedAt?.toMillis?.() ?? Infinity
-						const losingAt = losingData.awardedAt?.toMillis?.() ?? Infinity
-						if (losingAt < existingAt) {
-							// Losing team's copy is earlier — keep losing team's copy.
-							batch.set(
-								teamBadgeRef(firestore, winningTeamId, badgeId),
-								losingData
-							)
-							ops++
-						}
-						badgesDeduped++
-					} else {
-						batch.set(
-							teamBadgeRef(firestore, winningTeamId, badgeId),
-							losingData
-						)
-						ops++
-						movedBadges++
-					}
-					if (ops >= BATCH_LIMIT) {
-						await batch.commit()
-						batch = firestore.batch()
-						ops = 0
-					}
-				}
-				if (ops > 0) await batch.commit()
 			}
 
 			// 6d: Rewrite games.
@@ -454,8 +395,6 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				winningTeamId,
 				losingTeamId,
 				movedTeamSeasons,
-				movedBadges,
-				badgesDeduped,
 				rewrittenGames,
 				rewrittenOffers,
 				rewrittenPlayerSeasons,
@@ -467,8 +406,6 @@ export const mergeTeams = onCall<MergeTeamsRequest>(
 				winningTeamId,
 				losingTeamId,
 				movedTeamSeasons,
-				movedBadges,
-				badgesDeduped,
 				rewrittenGames,
 				rewrittenOffers,
 				rewrittenPlayerSeasons,

@@ -10,10 +10,16 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { isGameField, parseGameKickoff } from '../../../shared/gameSchedule.js'
+import {
+	FORFEIT_NEEDS_BOTH_TEAMS,
+	isGameField,
+	parseForfeit,
+	parseGameKickoff,
+} from '../../../shared/gameSchedule.js'
 import {
 	Collections,
 	GameType,
+	type GameForfeit,
 	TEAM_SEASONS_SUBCOLLECTION,
 } from '../../../types.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
@@ -38,6 +44,8 @@ interface CreateGameRequest {
 	timestamp: string
 	/** Season ID for the game */
 	seasonId: string
+	/** Which side forfeited, if either did */
+	forfeit?: GameForfeit | null
 }
 
 /**
@@ -57,6 +65,7 @@ interface CreateGameResponse {
  * - User must have admin privileges (admin: true in player document)
  * - Field must be 1, 2, or 3
  * - Scores must be non-negative numbers
+ * - A forfeit must name a side, and the game must have both teams
  * - Season must exist
  * - Teams must exist (if provided)
  * - No duplicate game at same time and field
@@ -116,6 +125,11 @@ export const createGame = onCall<
 				'invalid-argument',
 				'Away score must be null or a non-negative number'
 			)
+		}
+
+		const forfeit = parseForfeit(data.forfeit)
+		if (forfeit && (!homeTeamId || !awayTeamId)) {
+			throw new HttpsError('invalid-argument', FORFEIT_NEEDS_BOTH_TEAMS)
 		}
 
 		if (!isGameField(field)) {
@@ -218,6 +232,7 @@ export const createGame = onCall<
 				type,
 				date: Timestamp.fromDate(gameDate),
 				season: seasonRef,
+				forfeit,
 			}
 
 			// Use transaction to atomically check-and-create

@@ -24,6 +24,7 @@ import {
 	TEAM_BADGES_SUBCOLLECTION,
 } from '../types.js'
 import { logger } from 'firebase-functions/v2'
+import { awardId } from '../badges/catalog.js'
 
 // ---- Canonical document reference helpers ---------------------------------
 //
@@ -67,16 +68,18 @@ export function teamRosterEntryRef(
 		.doc(playerId) as DocumentReference<TeamRosterDocument>
 }
 
+/** A badge a team earned in a season. */
 export function teamBadgeRef(
 	firestore: FirebaseFirestore.Firestore,
 	teamId: string,
-	badgeId: string
+	badgeId: string,
+	seasonId: string
 ): DocumentReference<TeamBadgeDocument> {
 	return firestore
 		.collection(Collections.TEAMS)
 		.doc(teamId)
 		.collection(TEAM_BADGES_SUBCOLLECTION)
-		.doc(badgeId) as DocumentReference<TeamBadgeDocument>
+		.doc(awardId(badgeId, seasonId)) as DocumentReference<TeamBadgeDocument>
 }
 
 export function playerRef(
