@@ -336,18 +336,6 @@ export const BADGES = [
 				opacity: 1,
 			}),
 		],
-		props: [
-			{
-				kind: 'icon',
-				icon: 'glasses',
-				x: 509,
-				y: 470,
-				size: 300,
-				stroke: '#111827',
-				fill: '#1f2937',
-				strokeWidth: 2.2,
-			},
-		],
 	},
 	{
 		id: 'rising-stars',
@@ -527,8 +515,8 @@ export const BADGES = [
 		sky: ICY,
 		scene: [
 			{ kind: 'rect', colour: '#dceaf7', x: 0, y: 790, w: 1024, h: 240 },
-			// A disc's path: down from the upper left, a bounce off the snow,
-			// and back up into the duck's reach.
+			// A path down from the upper left, a bounce off the snow, and back
+			// up again.
 			...[
 				[120, 250],
 				[130, 340],
@@ -547,18 +535,6 @@ export const BADGES = [
 				d: 20,
 				opacity: 0.55,
 			})),
-		],
-		props: [
-			{ kind: 'ellipse', colour: '#ff6b35', x: 320, y: 585, w: 130, h: 46 },
-			{
-				kind: 'ellipse',
-				colour: '#ffffff',
-				x: 320,
-				y: 579,
-				w: 90,
-				h: 18,
-				opacity: 0.5,
-			},
 		],
 	},
 	{
