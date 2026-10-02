@@ -5,12 +5,15 @@
  * leaderboard, each player's history and each season's standings. The same
  * rebuild runs every night on its own (`triggers/scheduled/
  * rebuildRankingsNightly.ts`); this is the button for running it now.
+ * Afterwards it updates every generated season, whose standings order reads
+ * the ratings.
  *
  * Security validations:
  * - Caller must be an admin
  * - Refused while another rebuild is running, so two never interleave writes
  */
 
+import { logger } from 'firebase-functions/v2'
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { getFirestore } from 'firebase-admin/firestore'
 import { validateAdminUser } from '../../../shared/auth.js'
@@ -20,6 +23,7 @@ import {
 	rebuildRankings,
 	type RebuildResult,
 } from '../../../services/playerRankings/rebuild.js'
+import { updateAutomaticSeasons } from '../../../services/schedule/sync.js'
 
 export const rebuildPlayerRankings = onCall(
 	{
@@ -37,6 +41,20 @@ export const rebuildPlayerRankings = onCall(
 			)
 		}
 
-		return await rebuildRankings(adminId)
+		const result = await rebuildRankings(adminId)
+		if (result.status !== 'failed') {
+			// A generated season's standings order reads the new ratings. The
+			// rankings are rebuilt either way, so a failure here is logged,
+			// and the next game write or nightly rebuild catches up.
+			try {
+				await updateAutomaticSeasons(getFirestore())
+			} catch (error) {
+				logger.error('Generated seasons not updated after a rebuild', {
+					adminId,
+					error: error instanceof Error ? error.message : String(error),
+				})
+			}
+		}
+		return result
 	}
 )

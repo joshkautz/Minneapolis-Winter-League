@@ -35,16 +35,16 @@ below. The "Read" column is what `firestore.rules` allows a client.
 
 Per-season state hangs off subcollections rather than the parent document:
 
-| Path                                                    | Holds                                                                   | Read                |
-| ------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------- |
-| `players/{uid}/playerSeasons/{seasonId}`                | `team`, `captain`, `paid`, `signed`                                     | anyone              |
-| `players/{uid}/waiverSignatures/{id}`                   | The evidence behind `signed`                                            | that player, admins |
-| `teams/{teamId}/teamSeasons/{seasonId}`                 | Name, logo, `registered`, placement (written by the automatic playoffs) | anyone              |
-| `teams/{teamId}/teamSeasons/{seasonId}/roster/{uid}`    | Membership, and nothing else                                            | anyone              |
-| `teams/{teamId}/teamSeasons/{seasonId}/contributions/…` | Team payments, keyed by PaymentIntent id                                | that roster, admins |
-| `teams/{teamId}/teamSeasons/{seasonId}/checkouts/open`  | Contributions reserved while payers are on Stripe                       | that roster, admins |
-| `teams/{teamId}/badges/{badgeId}_{seasonId}`            | A badge the team earned that season, and how                            | anyone              |
-| `seasons/{seasonId}/rankings/{uid}`                     | A rostered player's rank and record that season                         | anyone              |
+| Path                                                    | Holds                                                                                         | Read                |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------- |
+| `players/{uid}/playerSeasons/{seasonId}`                | `team`, `captain`, `paid`, `signed`                                                           | anyone              |
+| `players/{uid}/waiverSignatures/{id}`                   | The evidence behind `signed`                                                                  | that player, admins |
+| `teams/{teamId}/teamSeasons/{seasonId}`                 | Name, logo, `registered`, placement, `standingsRank` (both written by the automatic playoffs) | anyone              |
+| `teams/{teamId}/teamSeasons/{seasonId}/roster/{uid}`    | Membership, and nothing else                                                                  | anyone              |
+| `teams/{teamId}/teamSeasons/{seasonId}/contributions/…` | Team payments, keyed by PaymentIntent id                                                      | that roster, admins |
+| `teams/{teamId}/teamSeasons/{seasonId}/checkouts/open`  | Contributions reserved while payers are on Stripe                                             | that roster, admins |
+| `teams/{teamId}/badges/{badgeId}_{seasonId}`            | A badge the team earned that season, and how                                                  | anyone              |
+| `seasons/{seasonId}/rankings/{uid}`                     | A rostered player's rank and record that season                                               | anyone              |
 
 A ban is account-wide and lives on `players/{uid}.banned`, not on a
 player-season.

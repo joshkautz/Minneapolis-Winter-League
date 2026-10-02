@@ -4,7 +4,8 @@
  * Recomputes every ranking at 11pm, after the evening's games, so standings
  * and charts follow the scores without anyone pressing Rebuild. On a night
  * with no new scores it writes what was already there: the output depends
- * only on the games and rosters.
+ * only on the games and rosters. Then brings every generated season up to
+ * date, whose standings order reads the ratings (docs/SCHEDULING.md).
  */
 
 import { onSchedule } from 'firebase-functions/v2/scheduler'
@@ -16,6 +17,7 @@ import {
 	isRebuildRunning,
 	rebuildRankings,
 } from '../../services/playerRankings/rebuild.js'
+import { updateAutomaticSeasons } from '../../services/schedule/sync.js'
 
 export const rebuildRankingsNightly = onSchedule(
 	{
@@ -48,5 +50,7 @@ export const rebuildRankingsNightly = onSchedule(
 				`Nightly rankings rebuild failed (${result.calculationId})`
 			)
 		}
+		// A generated season's standings order reads the new ratings.
+		await updateAutomaticSeasons(getFirestore())
 	}
 )

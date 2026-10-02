@@ -2,43 +2,26 @@ import { type QuerySnapshot } from 'firebase/firestore'
 import { TeamSeasonDocument } from '@/types'
 import { TeamStanding } from '@/shared/hooks'
 import { SharedStandingsTable } from './shared-standings-table'
+import { byStandings } from './standings-order'
 
 export const StandingsTable = ({
 	standings,
+	ranks,
 	teamsQuerySnapshot,
 }: {
 	standings: {
 		[key: string]: TeamStanding
 	}
+	/** Each team's `standingsRank`, which orders a generated season. */
+	ranks: ReadonlyMap<string, number>
 	teamsQuerySnapshot: QuerySnapshot<TeamSeasonDocument> | undefined
-}) => {
-	const sortByWinsThenDiff = (
-		a: [string, TeamStanding],
-		b: [string, TeamStanding]
-	) => {
-		if (a[1].wins > b[1].wins) {
-			return -1
-		}
-		if (a[1].wins < b[1].wins) {
-			return 1
-		}
-		if (a[1].differential > b[1].differential) {
-			return -1
-		}
-		if (a[1].differential < b[1].differential) {
-			return 1
-		}
-		return 0
-	}
-
-	return (
-		<SharedStandingsTable
-			data={standings}
-			teamsQuerySnapshot={teamsQuerySnapshot}
-			sortFunction={sortByWinsThenDiff}
-			rankColumnHeader='Rank'
-			useTeamPlacement={false}
-			aria-label='Regular season standings showing team rankings, wins, losses, and point differential'
-		/>
-	)
-}
+}) => (
+	<SharedStandingsTable
+		data={standings}
+		teamsQuerySnapshot={teamsQuerySnapshot}
+		sortFunction={byStandings(ranks)}
+		rankColumnHeader='Rank'
+		useTeamPlacement={false}
+		aria-label='Regular season standings showing team rankings, wins, losses, and point differential'
+	/>
+)

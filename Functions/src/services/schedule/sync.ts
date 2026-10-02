@@ -19,6 +19,9 @@ import {
 	type Transaction,
 } from 'firebase-admin/firestore'
 import { HttpsError } from 'firebase-functions/v2/https'
+import { logger } from 'firebase-functions/v2'
+import { TRUESKILL_CONSTANTS } from '../playerRankings/constants.js'
+import { seedTeams } from './standings.js'
 import { leagueDayKey, leagueNights } from '../../shared/leagueCalendar.js'
 import { gameSlotId } from '../../shared/gameSchedule.js'
 import {
@@ -40,6 +43,7 @@ import {
 	planPlayoffs,
 	planRegularSeason,
 	ScheduleError,
+	scoredGame,
 	splitNights,
 	stageOf,
 	stageStarted,
@@ -87,6 +91,8 @@ export interface PlayoffsSummary {
 	 * they are because their night had already begun.
 	 */
 	kept: string[]
+	/** Team-seasons whose `standingsRank` was written. */
+	ranksSet: number
 	/** What the next step waits for; null once the season is decided. */
 	waitingFor: string | null
 }
@@ -98,6 +104,8 @@ interface SeasonState {
 	nights: SeasonNights
 	teams: ScheduleTeam[]
 	games: StoredGame[]
+	/** Each team's stored `standingsRank`. */
+	ranks: Map<string, number | null>
 }
 
 const day = (date: Date): string => date.toISOString().slice(0, 10)
@@ -173,13 +181,21 @@ async function readSeason(
 	const games = gameDocs.docs.map((doc) =>
 		storedGame(doc.id, doc.data() as GameDocument)
 	)
-	return { seasonRef, season, nights, teams, games }
+	const ranks = new Map(
+		teamDocs.docs.map((doc) => [
+			canonicalTeamIdFromTeamSeasonDoc(doc),
+			doc.data().standingsRank ?? null,
+		])
+	)
+	return { seasonRef, season, nights, teams, games, ranks }
 }
 
 /**
- * Each registered team's average player rating: the mean all-time rating
- * of its rostered players who have one. Only the seeding's last
- * tiebreakers use it.
+ * Each registered team's average player rating: the mean all-time rating of
+ * its rostered players, a player new to the league counting at the rating
+ * every player starts from. Before the first game it is the whole of the
+ * standings' order; after, only an exact tie's last tiebreaker. Null for a
+ * team with nobody rostered.
  */
 async function teamRatings(
 	firestore: Firestore,
@@ -210,10 +226,9 @@ async function teamRatings(
 	}
 	return new Map(
 		rosters.map(({ teamId, playerIds: ids }) => {
-			const ratings = ids.flatMap((id) => {
-				const rating = rated.get(id)
-				return rating === undefined ? [] : [rating]
-			})
+			const ratings = ids.map(
+				(id) => rated.get(id) ?? TRUESKILL_CONSTANTS.INITIAL_MU
+			)
 			return [
 				teamId,
 				ratings.length > 0
@@ -285,7 +300,7 @@ export async function generateRegularSeason(
 	seasonId: string,
 	{ dryRun = false }: { dryRun?: boolean } = {}
 ): Promise<GeneratedSchedule> {
-	return firestore.runTransaction(async (tx) => {
+	const generated = await firestore.runTransaction(async (tx) => {
 		const state = await readSeason(firestore, seasonId, new Map(), tx)
 		if (state.season.format === SeasonFormat.SWISS) {
 			throw new HttpsError(
@@ -322,15 +337,10 @@ export async function generateRegularSeason(
 			games: planned.map((game) => summarize(game, state.teams)),
 		}
 	})
-}
-
-/** Whether the regular season is over, without reading inside a transaction. */
-const regularSeasonOver = (games: readonly StoredGame[]): boolean => {
-	const regular = games.filter((game) => game.type === GameType.REGULAR)
-	return (
-		regular.length > 0 &&
-		regular.every((game) => game.homeScore !== null && game.awayScore !== null)
-	)
+	// The standings' order before the first game, so the page has one at
+	// once rather than when the first game write fires the trigger.
+	if (!dryRun) await updatePlayoffs(firestore, seasonId)
+	return generated
 }
 
 /**
@@ -346,9 +356,8 @@ export async function updatePlayoffs(
 	seasonId: string,
 	{ dryRun = false }: { dryRun?: boolean } = {}
 ): Promise<PlayoffsSummary> {
-	// Ratings break only exact ties in the seeding, and only matter once the
-	// regular season is over; they are not written here, so reading them
-	// outside the transaction cannot race it.
+	// Ratings are not written here, so reading them outside the transaction
+	// cannot race it; a rebuild that changes them runs this again.
 	const before = await readSeason(firestore, seasonId, new Map())
 	if (!before.season.automaticPlayoffs) {
 		throw new HttpsError(
@@ -356,13 +365,11 @@ export async function updatePlayoffs(
 			"This season's schedule was not generated, so its playoffs are not automatic."
 		)
 	}
-	const ratings = regularSeasonOver(before.games)
-		? await teamRatings(
-				firestore,
-				seasonId,
-				before.teams.map((team) => team.teamId)
-			)
-		: new Map<string, number | null>()
+	const ratings = await teamRatings(
+		firestore,
+		seasonId,
+		before.teams.map((team) => team.teamId)
+	)
 
 	return firestore.runTransaction(async (tx) => {
 		const state = await readSeason(firestore, seasonId, ratings, tx)
@@ -379,6 +386,7 @@ export async function updatePlayoffs(
 			placementsSet: 0,
 			conflicts: [],
 			kept: [],
+			ranksSet: 0,
 			waitingFor: plan.waitingFor,
 		}
 		const bySlot = new Map(
@@ -451,7 +459,58 @@ export async function updatePlayoffs(
 			}
 		}
 
+		// The regular season's order as it stands, which pool night is drawn
+		// from; once pool night has begun, the order it was drawn in.
+		if (!started.pool) {
+			const regular = state.games
+				.filter((game) => game.type === GameType.REGULAR)
+				.flatMap((game) => {
+					const scored = scoredGame(game)
+					return scored ? [scored] : []
+				})
+			seedTeams(state.teams, regular).forEach((teamId, index) => {
+				const rank = index + 1
+				if (state.ranks.get(teamId) === rank) return
+				summary.ranksSet++
+				writes.push(() =>
+					tx.update(teamSeasonRef(firestore, teamId, seasonId), {
+						standingsRank: rank,
+					})
+				)
+			})
+		}
+
 		if (!dryRun) for (const write of writes) write()
 		return summary
 	})
+}
+
+/**
+ * Updates every generated season, for when what they depend on besides
+ * their games changes: the ratings, after a rankings rebuild. A season that
+ * cannot be scheduled is logged and skipped.
+ */
+export async function updateAutomaticSeasons(
+	firestore: Firestore
+): Promise<PlayoffsSummary[]> {
+	const seasons = await firestore
+		.collection(Collections.SEASONS)
+		.where('automaticPlayoffs', '==', true)
+		.get()
+	const summaries: PlayoffsSummary[] = []
+	for (const season of seasons.docs) {
+		try {
+			summaries.push(await updatePlayoffs(firestore, season.id))
+		} catch (error) {
+			if (error instanceof HttpsError && error.code === 'failed-precondition') {
+				logger.warn('Playoffs not updated: the season cannot be scheduled', {
+					seasonId: season.id,
+					reason: error.message,
+				})
+				continue
+			}
+			throw error
+		}
+	}
+	return summaries
 }
