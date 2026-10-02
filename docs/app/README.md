@@ -19,7 +19,7 @@ App/src/
   features/player/      signed-in pages: profile, manage team, waiver
   features/admin/       one directory per admin screen; admin/shared holds the
                         back button and season filter they share
-  providers/            auth, seasons, teams, offers, games, badges, site settings, theme
+  providers/            auth, seasons, teams, offers, games, site settings, theme
   firebase/             SDK setup and typed query builders per collection
   shared/               components, hooks and utils used by more than one feature
   components/ui/        shadcn/ui primitives
@@ -66,15 +66,20 @@ and says why it cannot be used.
 Rules both sides enforce are written once, in Functions, and imported here
 by relative path so a form refuses in the server's own words:
 
-| App module              | From `Functions/src/`  | Rules                                         |
-| ----------------------- | ---------------------- | --------------------------------------------- |
-| `shared/image-rules.ts` | `shared/imageRules.ts` | Upload types and size                         |
-| `shared/name-rules.ts`  | `shared/nameRules.ts`  | Player and team names, and the profanity list |
-| `shared/text-rules.ts`  | `shared/textRules.ts`  | Badge, news, post and reply lengths           |
-| `shared/waiver.ts`      | `waiver/`              | The waiver's text and signing rules           |
+| App module                      | From `Functions/src/`        | Rules                                                         |
+| ------------------------------- | ---------------------------- | ------------------------------------------------------------- |
+| `shared/image-rules.ts`         | `shared/imageRules.ts`       | Upload types and size                                         |
+| `shared/name-rules.ts`          | `shared/nameRules.ts`        | Player and team names, and the profanity list                 |
+| `shared/text-rules.ts`          | `shared/textRules.ts`        | Season name, news, post and reply lengths                     |
+| `shared/waiver.ts`              | `waiver/`                    | The waiver's text and signing rules                           |
+| `shared/game-rules.ts`          | `shared/gameRules.ts`        | Kickoffs, fields and the league's time zone                   |
+| `shared/league-calendar.ts`     | `shared/leagueCalendar.ts`   | The league's nights and clock                                 |
+| `shared/badges.ts`              | `badges/catalog.ts`          | Every badge's name, tier and thresholds                       |
+| `shared/utils/team-payments.ts` | `shared/teamPaymentRules.ts` | Registration spots, signed players, the smallest contribution |
 
-Those files have no imports, which is what makes loading them from the
-other workspace safe. The server's copy is the control; the App's check is
+Those files import nothing but each other (`leagueCalendar.ts` imports
+`gameRules.ts`), which is what makes loading them from the other workspace
+safe. The server's copy is the control; the App's check is
 a convenience.
 
 ## Routing, code splitting and errors
@@ -113,10 +118,12 @@ admins can delete either.
 
 **Games** (`features/admin/game-management`). Games are played on Saturdays at
 6:00, 6:45, 7:30 or 8:15pm Central, on fields 1 to 3, one game per field per
-slot. The form sends the kickoff with the admin's UTC offset, and
-`createGame` / `updateGame` check the wall-clock day and time in that string
-(`Functions/src/shared/gameSchedule.ts`), so a slot stays the same slot across
-the November DST change. A game's teams can be left empty as a placeholder;
+slot (`Functions/src/shared/gameRules.ts`). The form sends the kickoff on the
+league's clock with Minneapolis's offset that day (`leagueTimeIso`), whatever
+the admin's own zone, and `createGame` / `updateGame` check the wall-clock day
+and time in that string (`Functions/src/shared/gameSchedule.ts`), so a slot
+stays the same slot across the November DST change. A traditional season's
+games are generated instead (docs/SCHEDULING.md). A game's teams can be left empty as a placeholder;
 the team names are copied onto the game (`homeName`, `awayName`) so the
 schedule renders without a join.
 

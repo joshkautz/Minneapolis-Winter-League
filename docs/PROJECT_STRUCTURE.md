@@ -36,8 +36,10 @@ logic under `src/services/`.
 deployed. See the [Functions reference](./functions/README.md).
 
 The two share code in one direction only: the App imports the waiver's text
-and signing rules from `Functions/src/waiver/`, and the upload, name, text and
-team-payment limits from `Functions/src/shared/*Rules.ts`, which is why
+and signing rules from `Functions/src/waiver/`, the upload, name, text,
+game-slot and team-payment rules from `Functions/src/shared/*Rules.ts`, the
+league calendar from `Functions/src/shared/leagueCalendar.ts` and the badge
+catalog from `Functions/src/badges/catalog.ts`, which is why
 `App/tsconfig.json` sets `rootDir` to the repository root. The `Collections`
 enum and document types are deliberately duplicated in `App/src/types.ts`
 and `Functions/src/types.ts`, and must be kept in step by hand.

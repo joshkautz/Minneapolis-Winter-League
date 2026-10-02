@@ -57,8 +57,9 @@ why they are a separate, private subcollection (`docs/WAIVERS.md`).
 
 ## Files
 
-Storage holds public images: team logos and badges. Clients never upload.
-The team and badge callables take the image as base64, check it against
+Storage holds public team logos; badge artwork is committed under
+`App/public/badges/` and served by Hosting. Clients never upload.
+`createTeam` and `updateTeam` take the image as base64, check it against
 `Functions/src/shared/imageRules.ts` — PNG, JPEG, GIF or WebP, at most 5 MB;
 SVG is refused because it can carry script — then write it with the Admin
 SDK and make it public. The client never names a file: `updateTeam` used to

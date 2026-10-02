@@ -143,7 +143,8 @@ teamSeasons, roster, playerSeasons) but three gaps remain:
 There is currently one cloud environment. `.firebaserc` has `staging` and
 `development` aliases, but `minnesota-winter-league-staging` and
 `minnesota-winter-league-dev` do not exist, and `App/.env.staging` points at
-production — so `npm run build:staging` builds against production.
+production — so `npm run build:staging --workspace=App` builds against
+production.
 
 This also means **PR preview channels are not isolated**: they serve a new
 frontend against the production database, so clicking through a preview
@@ -165,7 +166,7 @@ Until then, the emulators are the only safe place to exercise writes.
 
 ## Testing
 
-About 1,700 tests across four suites, all run by `npm run verify`. Every callable is
+About 2,150 tests across four suites, all run by `npm run verify`. Every callable is
 covered for authorization, **every trigger** has a suite, and the emulator
 suites are mutation-tested. The conventions that keep them worth having —
 mutation testing, the emulator's missing batch limit, and pinning behaviour
@@ -175,12 +176,15 @@ Still uncovered, in rough priority order:
 
 - **Deeper callable behaviour.** The authorization sweep covers all 46.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
-  `updatePlayerAdmin`, `rolloverTeam` and the three game callables have
-  behavioural tests. The rest are covered only at the gate; `deletePlayer`,
-  `updateTeamRoster`'s admin counterpart and the badge callables are the next
-  most consequential.
-- **App components.** Only the shell is mounted. The admin screens carry the
-  most complex state and have no tests.
+  `updatePlayerAdmin`, `updateTeamAdmin`, `rolloverTeam`, `deletePlayer`,
+  `signWaiver`, the season callables, `setSwissSeeding`,
+  `createTeamContributionCheckout`, the five game callables and
+  `rebuildBadges` have behavioural tests. The rest are covered only at the
+  gate; the news and post callables are the most used of them.
+- **App components.** The shell, the shared components, team management and
+  its dialogs, the schedule card, the badges card, the waiver form and the
+  account and email settings are mounted in tests. Most admin screens — game,
+  season, player and news management — carry complex state and have none.
 - **End-to-end.** No test drives a browser against the emulators.
 - **App-to-callable payloads.** Nothing checks what a wrapper in
   `App/src/firebase/collections/functions.ts` sends against the request type

@@ -33,7 +33,9 @@ report only findings you can justify from the code. Rank by severity.
 
 - Required fields checked before use; `HttpsError('invalid-argument', ...)` on
   failure, not a thrown string or a returned error object.
-- Uploaded blobs: content type is verified to be `image/*` and size bounded.
+- Uploaded images go through `parseImageUpload` (`shared/images.ts`): one of
+  the types in `shared/imageRules.ts` (PNG, JPEG, GIF, WebP — never SVG),
+  within its size limit.
 - Anything interpolated into a document path is validated — a caller-supplied
   id that reaches `.doc()` unchecked can address an arbitrary document.
 

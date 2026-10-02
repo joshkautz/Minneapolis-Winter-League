@@ -413,23 +413,21 @@ That last one about recruiting settles the ordering: **teams are ranked by when 
 both conditions**, not by when their money arrived. Paying first buys nothing
 on its own.
 
-## The twelve-team cap has to move first
+## Resolved: the twelve-team cap
 
-The cap is enforced by `onTeamRegistrationChange`, which counts registered
-teams after the fact and deletes the rest. Three properties make it unfit to
-decide a race for money, all pinned in
-`tests/integration/registration-lock.test.ts`:
+The cap used to be enforced only by `onTeamRegistrationChange`, which counted
+registered teams after the fact and deleted the rest: nothing stopped a
+thirteenth team registering, two teams completing together could both slip
+past its exact `!== 12` guard, and as a trigger it could never be
+authoritative about who was twelfth. Under team payments that would have left
+a thirteenth team holding money.
 
-- Nothing stops a thirteenth team registering — the cap is never consulted
-  when a team's `registered` flag is set.
-- The lock's guard is an exact `!== 12`, so two teams completing together
-  both see thirteen and neither locks. Registration stays open silently.
-- It is a Firestore trigger: it runs after the write and can retry, so it can
-  never be authoritative about who was twelfth.
-
-Today that costs a team a spot it thought it had. Under this design it means a
-thirteenth team is holding money that should never have been taken. **The cap must be enforced in the same transaction that registers a
-team**, before any of this ships. See the roadmap entry.
+Since phase 0a a spot is claimed in the same transaction that registers a
+team, against `seasons/{seasonId}.registeredTeamCount`
+(`services/teamRegistration.ts`, pinned by
+`tests/integration/team-registration-cap.test.ts`). The trigger is now only
+the cleanup that refunds and removes the teams that missed out
+(`tests/integration/registration-lock.test.ts`).
 
 ## Resolved: holds and the seven-day window
 
@@ -440,8 +438,8 @@ Contributions are no longer holds; see "Why not card holds".
 What the Stripe account needed, and where each item stands.
 
 - **Webhook events — done.** The team flow needs
-  `checkout.session.completed` and `charge.refunded`; the product and price
-  events mirror the catalog. The endpoint also still receives
+  `checkout.session.completed` and `charge.refunded`, the only events the
+  handler acts on. The endpoint also still receives
   `payment_intent.canceled` and `payment_intent.succeeded`, from the hold
   design, which the handler now ignores. It is on API version `2026-08-26.dahlia`, the SDK's, since
   September 2026; see "Changing the Stripe API version" in

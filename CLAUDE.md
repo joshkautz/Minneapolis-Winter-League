@@ -36,10 +36,12 @@ npm run lint:fix       # eslint --fix across both workspaces
 ```
 
 Run `npm run verify` before declaring work finished, and check its exit
-status rather than the tail of its output. CI runs the same checks: both
-workflows run format, lint, typecheck, unit tests and build for each
-workspace, then the rules and integration suites, so a formatting slip
-fails the deploy.
+status rather than the tail of its output. CI runs the same checks: each
+workflow runs format, lint, typecheck, unit tests and build per workspace,
+and the rules and integration suites in a parallel job. A formatting slip
+fails that workspace's deploy, but on `main` a failing rules or integration
+suite blocks only the Firestore rules and indexes deploy — Hosting and
+Functions still deploy — so merge only once the PR's checks have passed.
 
 ## Architecture: Functions-first
 
@@ -73,6 +75,8 @@ Per-season state hangs off subcollections rather than the parent document:
   (a ban is **not** season state — it lives on `players/{uid}.banned`)
 - `players/{uid}/waiverSignatures/{id}` — the evidence behind `signed`;
   **private** to the player and admins (see `docs/WAIVERS.md`)
+- `badges/{badgeId}` — how many teams have earned each badge, written by the
+  badges rebuild (the awards themselves are under each team, below)
 - `rankings/{playerId}` — the all-time leaderboard, written by the rankings
   rebuild
 - `seasons/{seasonId}/rankings/{playerId}` — a rostered player's standing in
@@ -154,12 +158,12 @@ already allowed.
 
 Four suites (~2,100 tests), all run by `npm run verify`:
 
-| Suite           | Location                      | Covers                                                  |
-| --------------- | ----------------------------- | ------------------------------------------------------- |
-| App             | `App/src/**/*.test.{ts,tsx}`  | Validation schemas, season helpers, hooks, app shell    |
-| Functions       | `Functions/src/**/*.test.ts`  | Auth validators, webhook guards, TrueSkill, batch sizes |
-| Firestore rules | `tests/rules/*.test.ts`       | The deny-all-writes invariant                           |
-| Integration     | `tests/integration/*.test.ts` | Real Functions code against the emulator                |
+| Suite           | Location                      | Covers                                                                                                   |
+| --------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------- |
+| App             | `App/src/**/*.test.{ts,tsx}`  | Validation schemas, season helpers, hooks, app shell                                                     |
+| Functions       | `Functions/src/**/*.test.ts`  | Auth validators, webhook guards, TrueSkill, schedule tables and seeding, badge rules, email, batch sizes |
+| Firestore rules | `tests/rules/*.test.ts`       | The deny-all-writes invariant                                                                            |
+| Integration     | `tests/integration/*.test.ts` | Real Functions code against the emulator                                                                 |
 
 Every callable is covered for authorization and every trigger has a suite.
 Behavioural coverage is deeper on the operations that span documents —
