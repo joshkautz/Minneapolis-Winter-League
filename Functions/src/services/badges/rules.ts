@@ -26,6 +26,7 @@ import {
 	WARMING_UP_POINTS,
 } from '../../badges/catalog.js'
 import { REGISTRATION_SPOTS } from '../../shared/teamPaymentRules.js'
+import { RATING_PRECISION_MULTIPLIER } from '../playerRankings/constants.js'
 import {
 	leagueDayKey,
 	leagueMonthDay,
@@ -623,35 +624,75 @@ const reunionTour: Rule = (view) => {
 	})
 }
 
-/** The season's top-rated rostered player as it began, by all-time rating. */
+/**
+ * A rating rounded the way the rankings round it before comparing, so two
+ * players the leaderboard ranks equal are equal here too.
+ */
+const ratingKey = (rating: number): number =>
+	Math.round(rating * RATING_PRECISION_MULTIPLIER)
+
+/** How many tied names a reason lists before it counts the rest. */
+const CELEBRITY_NAMES_LISTED = 3
+
+/** "A", "A and B", "A, B and C". */
+const listOf = (names: string[]): string =>
+	names.length <= 1
+		? (names[0] ?? '')
+		: `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
+
+/**
+ * The season's top-rated rostered player as it began, by all-time rating.
+ *
+ * Players who have played every game together have exactly the same rating,
+ * so the top is often shared, and every team rostering a player at the top
+ * earns it: in 2025 Fall, Nipull and Zander Stack$ each had a player rated
+ * 35.15, which a strict "highest" gave to whichever was read first.
+ */
 const celebrity: Rule = (view) => {
 	if (!seasonStarted(view)) return []
 	const firstGame = view.allResults[0]?.game.date ?? view.season.dateStart
-	let best: { playerId: string; rating: number; teamIds: string[] } | null =
-		null
-	for (const team of view.teams.values()) {
-		for (const playerId of team.roster) {
+	const rated = registeredTeams(view).flatMap((team) =>
+		team.roster.flatMap((playerId) => {
 			const rating = view.facts.ratingBefore(playerId, firstGame)
-			if (rating === null) continue
-			if (!best || rating > best.rating) {
-				best = { playerId, rating, teamIds: [team.teamId] }
-			} else if (best.playerId === playerId) {
-				best.teamIds.push(team.teamId)
-			}
-		}
-	}
-	if (!best) return []
-	const name =
-		view.facts.playerNames.get(best.playerId) ?? 'The top-rated player'
-	return best.teamIds.map((teamId) =>
-		award(
-			view,
-			'celebrity',
-			teamId,
-			view.season.dateStart,
-			`${name} was the top-rated player as ${view.season.name} began.`
-		)
+			return rating === null
+				? []
+				: [{ teamId: team.teamId, playerId, key: ratingKey(rating) }]
+		})
 	)
+	if (rated.length === 0) return []
+	const top = Math.max(...rated.map((entry) => entry.key))
+	const atTop = rated.filter((entry) => entry.key === top)
+	const tiedLeagueWide = new Set(atTop.map((entry) => entry.playerId)).size > 1
+
+	// A player on two teams' rosters that season earns it for both.
+	const playersByTeam = new Map<string, Set<string>>()
+	for (const { teamId, playerId } of atTop) {
+		playersByTeam.set(
+			teamId,
+			(playersByTeam.get(teamId) ?? new Set()).add(playerId)
+		)
+	}
+	return [...playersByTeam].map(([teamId, playerIds]) => {
+		const names = [...playerIds]
+			.map(
+				(id) => view.facts.playerNames.get(id)?.trim() || 'An unnamed player'
+			)
+			.sort((a, b) => a.localeCompare(b))
+		let reason: string
+		if (!tiedLeagueWide) {
+			reason = `${names[0]} was the top-rated player as ${view.season.name} began`
+		} else if (names.length === 1) {
+			reason = `${names[0]} was tied for the top rating as ${view.season.name} began`
+		} else {
+			const others = names.length - (CELEBRITY_NAMES_LISTED - 1)
+			const who =
+				names.length <= CELEBRITY_NAMES_LISTED
+					? listOf(names)
+					: `${names.slice(0, CELEBRITY_NAMES_LISTED - 1).join(', ')} and ${others} teammates`
+			reason = `${who} were tied for the top rating as ${view.season.name} began`
+		}
+		return award(view, 'celebrity', teamId, view.season.dateStart, reason)
+	})
 }
 
 /** The team whose players' ratings rose most on average over the season. */

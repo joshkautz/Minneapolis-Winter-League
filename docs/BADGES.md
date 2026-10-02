@@ -108,6 +108,25 @@ Thresholds are constants in the catalog.
 The thresholds were set against every game played since 2023 so that each
 tier's badges are about as rare as its name says.
 
+### Celebrity and Rising Stars
+
+Both read the ratings, among the season's registered teams.
+
+**Celebrity** is often shared. Players who have played every game together
+have exactly the same rating, so the top of the leaderboard is usually a
+whole team's core, and a player who changes teams takes that rating along.
+Every team rostering a player at the top rating earns it, comparing ratings
+as the rankings do, so players ranked equal are equal here. In 2025 Fall,
+Nipull and Zander Stack$ each had a player rated 35.15; before ties were
+shared, only whichever was read first was awarded.
+
+**Rising Stars** goes to the team whose players' ratings rose most on
+average, from the season's start (after the carry-over into it) to its end.
+It favours a team that outplays its rating, not the strongest team: a
+favourite gains little for winning as expected, and a rating moves less the
+more games are behind it. The league's top-rated core rarely wins it for
+that reason, however well it plays.
+
 ### If a rebuild fails or is slow
 
 A rebuild is safe to run again: it only ever moves the stored awards towards

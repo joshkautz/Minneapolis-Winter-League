@@ -570,6 +570,113 @@ describe('roster and history badges', () => {
 		)
 	})
 
+	/** A Celebrity league: one game on opening night, these ratings before it. */
+	const celebrityLeague = (
+		teamSeasons: BadgeTeamSeason[],
+		ratings: Record<string, number>,
+		names: Record<string, string> = {}
+	): BadgeFacts =>
+		facts({
+			teamSeasons,
+			games: [game('a', 10, 'b', 5, at('2026-11-07'))],
+			ratingBefore: (playerId) => ratings[playerId] ?? null,
+			playerNames: new Map(Object.entries(names)),
+		})
+
+	it('awards Celebrity to every team with a player tied for the top rating', () => {
+		// 2025 Fall: Nipull and Zander Stack$ each had a player at 35.15, and
+		// only the first one read was awarded.
+		const f = celebrityLeague(
+			[
+				team('a', { roster: ['first'] }),
+				team('b', { roster: ['second', 'solid'] }),
+				team('c', { roster: ['solid2'] }),
+			],
+			{ first: 35.15, second: 35.15, solid: 30, solid2: 30 },
+			{ first: 'Andy First', second: 'Sam Second' }
+		)
+		expect(earned('celebrity', f)).toEqual(['a@fall', 'b@fall'])
+		const reasons = awardsFor(f)
+			.filter((award) => award.badgeId === 'celebrity')
+			.map((award) => award.reason)
+			.sort()
+		expect(reasons).toEqual([
+			'Andy First was tied for the top rating as fall name began.',
+			'Sam Second was tied for the top rating as fall name began.',
+		])
+	})
+
+	it('ties Celebrity ratings the way the rankings round them', () => {
+		const tied = celebrityLeague(
+			[team('a', { roster: ['x'] }), team('b', { roster: ['y'] })],
+			{ x: 35.000000001, y: 35 }
+		)
+		expect(earned('celebrity', tied)).toEqual(['a@fall', 'b@fall'])
+		const apart = celebrityLeague(
+			[team('a', { roster: ['x'] }), team('b', { roster: ['y'] })],
+			{ x: 35.00001, y: 35 }
+		)
+		expect(earned('celebrity', apart)).toEqual(['a@fall'])
+	})
+
+	it('names every tied teammate in a Celebrity reason, up to three', () => {
+		const three = celebrityLeague(
+			[team('a', { roster: ['p1', 'p2', 'p3', 'low'] })],
+			{ p1: 40, p2: 40, p3: 40, low: 20 },
+			{ p1: 'Cy', p2: 'Al', p3: 'Bo' }
+		)
+		expect(reasonOf('celebrity', three)).toBe(
+			'Al, Bo and Cy were tied for the top rating as fall name began.'
+		)
+		const five = celebrityLeague(
+			[team('a', { roster: ['p1', 'p2', 'p3', 'p4', 'p5'] })],
+			{ p1: 40, p2: 40, p3: 40, p4: 40, p5: 40 },
+			{ p1: 'Ed', p2: 'Al', p3: 'Di', p4: 'Bo', p5: 'Cy' }
+		)
+		expect(reasonOf('celebrity', five)).toBe(
+			'Al, Bo and 3 teammates were tied for the top rating as fall name began.'
+		)
+	})
+
+	it('awards Celebrity to both teams of a top player rostered on two', () => {
+		const f = celebrityLeague(
+			[
+				team('a', { roster: ['star', 'star'] }),
+				team('b', { roster: ['star'] }),
+			],
+			{ star: 40 },
+			{ star: 'Sky Star' }
+		)
+		expect(earned('celebrity', f)).toEqual(['a@fall', 'b@fall'])
+		expect(
+			awardsFor(f)
+				.filter((award) => award.badgeId === 'celebrity')
+				.map((award) => award.reason)
+		).toEqual([
+			'Sky Star was the top-rated player as fall name began.',
+			'Sky Star was the top-rated player as fall name began.',
+		])
+	})
+
+	it('awards Celebrity only among registered teams', () => {
+		const f = celebrityLeague(
+			[
+				team('a', { roster: ['solid'] }),
+				team('b', { roster: ['star'], registered: false }),
+			],
+			{ star: 40, solid: 30 }
+		)
+		expect(earned('celebrity', f)).toEqual(['a@fall'])
+	})
+
+	it('awards no Celebrity before the season starts', () => {
+		const f = {
+			...celebrityLeague([team('a', { roster: ['star'] })], { star: 40 }),
+			now: new Date('2026-11-01T00:00:00Z'),
+		}
+		expect(earned('celebrity', f)).toEqual([])
+	})
+
 	it('awards Rising Stars to the team whose ratings rose most, after the season', () => {
 		const f = facts({
 			teamSeasons: [
