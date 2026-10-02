@@ -59,7 +59,7 @@ interface ProcessedOffer {
 	createdAt: Date
 	createdByName: string
 	seasonName: string
-	/** For ordering by season: names sort "2026 Spring" after "2026 Fall". */
+	/** For ordering by season: names sort "Season 10" before "Season 2". */
 	seasonStartMillis: number
 }
 

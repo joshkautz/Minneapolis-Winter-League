@@ -92,7 +92,7 @@ const RegisteredCallout = ({
 	seasonName: string
 }): ReactElement => (
 	<Callout title={`${teamName} is registered`}>
-		{teamName} has its spot in the {seasonName} season.
+		{teamName} has its spot in {seasonName}.
 	</Callout>
 )
 
@@ -209,9 +209,9 @@ function refundExplanation({
 				? `You left ${team}, and the rest of the team covers its fee without your payment.`
 				: `You left ${team} before it registered, so your payment no longer counts toward it.`
 		case 'season-full':
-			return `Every team spot in the ${seasonName} season filled before ${team} registered, so its payments have been refunded.`
+			return `Every team spot in ${seasonName} filled before ${team} registered, so its payments have been refunded.`
 		case 'registration-closed':
-			return `Registration for the ${seasonName} season closed before ${team} registered, so its payments have been refunded.`
+			return `Registration for ${seasonName} closed before ${team} registered, so its payments have been refunded.`
 		case 'team-deleted':
 			return `${teamName ?? 'The team you paid toward'} no longer existed when your payment went through, so it was refunded straight away.`
 		case 'admin':

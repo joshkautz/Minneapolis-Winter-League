@@ -602,7 +602,7 @@ async function createSeasons() {
 
 	const seasonsData = [
 		{
-			name: '2023 Fall',
+			name: 'Season 1',
 			dateStart: createDate('2023-11-04'),
 			dateEnd: createDate('2023-12-16'),
 			registrationStart: createDate('2023-10-01'),
@@ -610,7 +610,7 @@ async function createSeasons() {
 			teams: [],
 		},
 		{
-			name: '2024 Fall',
+			name: 'Season 2',
 			dateStart: createDate('2024-11-02'),
 			dateEnd: createDate('2024-12-14'),
 			registrationStart: createDate('2024-10-01'),
@@ -618,7 +618,7 @@ async function createSeasons() {
 			teams: [],
 		},
 		{
-			name: '2025 Fall',
+			name: 'Season 3',
 			dateStart: createDate('2025-11-01'),
 			dateEnd: createDate('2025-12-13'),
 			registrationStart: createDate('2025-10-01'),
@@ -626,7 +626,7 @@ async function createSeasons() {
 			teams: [],
 		},
 		{
-			name: '2026 Winter',
+			name: 'Season 4',
 			dateStart: createDate('2026-02-07'),
 			dateEnd: createDate('2026-03-21'),
 			registrationStart: createDate('2026-01-01'),

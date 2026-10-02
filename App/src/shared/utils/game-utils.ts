@@ -78,7 +78,7 @@ export const teamRecordsBySeason = (
 
 /**
  * Orders entries newest season first, by when each season starts — not by
- * name, which puts "2026 Spring" after "2026 Fall". Seasons with no known
+ * name, which puts "Season 10" before "Season 2". Seasons with no known
  * start sort last.
  */
 export const sortBySeasonStartDesc = <T>(

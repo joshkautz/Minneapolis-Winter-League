@@ -71,7 +71,7 @@ const queueToPlayer = async () =>
 			to: { playerId: PLAYER },
 			template: 'seasonAnnouncement',
 			props: {
-				seasonName: '2026 Fall',
+				seasonName: 'Season 5',
 				registrationOpens: 'Thursday, October 1',
 				registrationCloses: 'Saturday, October 31',
 				gameNights: 'November 7, 14 and 21, and December 5, 12 and 19',
@@ -158,7 +158,7 @@ describe('deliverQueuedEmail', () => {
 		expect(key).toBe(id)
 		expect(email.to).toBe('player-1@example.com')
 		expect(email.subject).toBe(
-			'2026 Fall Season registration opens Thursday, October 1'
+			'Season 5 registration opens Thursday, October 1'
 		)
 		expect(email.text).toContain('Hi Firstplayer-1,')
 		expect((await mail(id))?.providerId).toBe('resend-1')
@@ -358,7 +358,7 @@ describe('sendSeasonAnnouncement', () => {
 			.collection('seasons')
 			.doc(SEASON)
 			.set({
-				name: '2026 Fall',
+				name: 'Season 5',
 				dateStart: Timestamp.fromDate(new Date('2026-11-07T06:00:00Z')),
 				dateEnd: Timestamp.fromDate(new Date('2026-12-20T06:00:00Z')),
 				registrationStart: Timestamp.fromDate(new Date('2026-10-01T05:00:00Z')),
@@ -439,7 +439,7 @@ describe('sendSeasonAnnouncement', () => {
 		const mails = await queued()
 		expect(mails.map((m) => m.toPlayerId).sort()).toEqual(['old-timer', PLAYER])
 		expect(mails[0].props).toMatchObject({
-			seasonName: '2026 Fall',
+			seasonName: 'Season 5',
 			registrationOpens: 'Thursday, October 1',
 			registrationCloses: 'Saturday, October 31',
 			gameNights: 'November 7, 14 and 21, and December 5, 12 and 19',

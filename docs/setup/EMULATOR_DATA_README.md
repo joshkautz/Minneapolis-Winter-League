@@ -39,7 +39,7 @@ It produces:
 | Collection | Count | Notes                                               |
 | ---------- | ----- | --------------------------------------------------- |
 | Auth users | 480   | Verified emails, no passwords set                   |
-| Seasons    | 4     | 2023 Fall through 2026 Winter                       |
+| Seasons    | 4     | Season 1 through Season 4                           |
 | Teams      | 36    | Across the active seasons, with full rosters        |
 | Players    | 480   | One per Auth user, varied payment and waiver states |
 | Games      | 216   | Mix of completed (with scores) and upcoming         |

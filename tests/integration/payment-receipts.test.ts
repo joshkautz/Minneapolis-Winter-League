@@ -144,7 +144,7 @@ beforeEach(async () => {
 	await resetFirestore(firestore)
 	resetFakeStripe()
 	await seasonRef().set({
-		name: '2026 Fall',
+		name: 'Season 5',
 		dateStart: Timestamp.now(),
 		registrationStart: Timestamp.now(),
 		registrationEnd: Timestamp.fromMillis(Date.now() + 864e6),
@@ -184,7 +184,7 @@ describe('a payment', () => {
 			category: 'account',
 			props: {
 				teamName: 'Chao World',
-				seasonName: '2026 Fall',
+				seasonName: 'Season 5',
 				amount: '$10.00',
 				paymentMethod: 'Visa •••• 4242',
 				receiptUrl: 'https://pay.stripe.com/receipts/pi_1',
@@ -314,7 +314,7 @@ describe('a refund', () => {
 		// on the payment our checkout created.
 		await pay('pi_1', 1_000)
 		const intent = fakeStripe.intents.get('pi_1')
-		if (intent) intent.description = 'Team registration: Chao World, 2026 Fall'
+		if (intent) intent.description = 'Team registration: Chao World, Season 5'
 		const before = await current('pi_1')
 		await teamSeasonRef(firestore, TEAM, SEASON).delete()
 
@@ -363,7 +363,7 @@ describe('a payment with no team to credit', () => {
 				template: 'teamRefundReceipt',
 				props: expect.objectContaining({
 					teamName: null,
-					seasonName: '2026 Fall',
+					seasonName: 'Season 5',
 					amount: '$25.00',
 				}),
 			}),
@@ -471,7 +471,7 @@ describe('why a refund was made', () => {
 
 		const { text } = resend.sent[0].email
 		expect(text).toContain(
-			'Every team spot in the 2026 Fall season filled before Chao World registered'
+			'Every team spot in Season 5 filled before Chao World registered'
 		)
 		expect(text).not.toContain('to go')
 		expect(text).not.toContain('See your team')

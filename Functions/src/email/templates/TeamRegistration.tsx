@@ -42,8 +42,7 @@ const greeting = (name: string | null): string => (name ? `Hi ${name},` : 'Hi,')
 export const teamRegisteredSubject = ({
 	teamName,
 	seasonName,
-}: TeamRegisteredProps): string =>
-	`${teamName} is registered for the ${seasonName} Season`
+}: TeamRegisteredProps): string => `${teamName} is registered for ${seasonName}`
 
 export const TeamRegistered = ({
 	teamName,
@@ -54,7 +53,7 @@ export const TeamRegistered = ({
 	footer,
 }: TeamRegisteredProps & EmailContextProps): ReactElement => (
 	<EmailLayout
-		preview={`${teamName} has its spot in the ${seasonName} Season.`}
+		preview={`${teamName} has its spot in ${seasonName}.`}
 		siteUrl={siteUrl}
 		footer={footer}
 	>
@@ -62,7 +61,7 @@ export const TeamRegistered = ({
 		<Paragraph>{greeting(recipientFirstName)}</Paragraph>
 		<Paragraph>
 			{teamName} has its fee paid and its players signed, and it has claimed a
-			spot in the {seasonName} Season. You&apos;re registered.
+			spot in {seasonName}. You&apos;re registered.
 		</Paragraph>
 		<Facts
 			rows={[
@@ -86,7 +85,7 @@ export const teamMissedOutSubject = ({
 	teamName,
 	seasonName,
 }: TeamMissedOutProps): string =>
-	`${teamName} did not get a spot in the ${seasonName} Season`
+	`${teamName} did not get a spot in ${seasonName}`
 
 export const TeamMissedOut = ({
 	teamName,
@@ -100,8 +99,8 @@ export const TeamMissedOut = ({
 	<EmailLayout
 		preview={
 			reason === 'season-full'
-				? `Every spot in the ${seasonName} Season filled before ${teamName} registered.`
-				: `Registration for the ${seasonName} Season closed before ${teamName} registered.`
+				? `Every spot in ${seasonName} filled before ${teamName} registered.`
+				: `Registration for ${seasonName} closed before ${teamName} registered.`
 		}
 		siteUrl={siteUrl}
 		footer={footer}
@@ -110,8 +109,8 @@ export const TeamMissedOut = ({
 		<Paragraph>{greeting(recipientFirstName)}</Paragraph>
 		<Paragraph>
 			{reason === 'season-full'
-				? `Every team spot in the ${seasonName} Season filled before ${teamName} had its fee paid and ten players signed, so ${teamName} will not play this season.`
-				: `Registration for the ${seasonName} Season closed before ${teamName} had its fee paid and ten players signed, so ${teamName} will not play this season.`}
+				? `Every team spot in ${seasonName} filled before ${teamName} had its fee paid and ten players signed, so ${teamName} will not play this season.`
+				: `Registration for ${seasonName} closed before ${teamName} had its fee paid and ten players signed, so ${teamName} will not play this season.`}
 		</Paragraph>
 		{refunding && (
 			<Callout title='Payments are being refunded'>
