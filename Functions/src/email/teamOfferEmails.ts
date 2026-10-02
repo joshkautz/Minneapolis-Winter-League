@@ -45,11 +45,10 @@ import {
 	teamSeasonRef,
 } from '../shared/database.js'
 import { queueEmailInTransaction } from './outbox.js'
+import { DAY_MS } from '../shared/leagueCalendar.js'
 
 /** How many "sent" emails a player and a team get a day, per kind of offer. */
 export const OFFER_SEND_EMAILS_PER_DAY = 2
-
-const DAY_MS = 24 * 60 * 60 * 1000
 
 /**
  * Whether sending an offer emails the other side, and the times to record

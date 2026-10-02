@@ -3,12 +3,12 @@ import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
 import { updateTeamRegistrationStatus } from '../../Functions/src/services/teamRegistration.js'
 import { isMigrationInProgress } from '../../Functions/src/shared/maintenance.js'
-import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import {
 	playerSeasonRef,
 	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
+import { MIN_SIGNED_PLAYERS } from '../../Functions/src/shared/teamPaymentRules.js'
 
 /**
  * Team registration is the rule that decides whether a team counts as
@@ -19,7 +19,7 @@ import {
  * test suite exercises it.
  */
 
-const MIN = TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
+const MIN = MIN_SIGNED_PLAYERS
 
 let firestore: Firestore
 const SEASON = 'season-1'

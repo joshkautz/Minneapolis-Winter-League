@@ -1,12 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
-import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import {
 	playerSeasonRef,
 	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
+import { MIN_SIGNED_PLAYERS } from '../../Functions/src/shared/teamPaymentRules.js'
 
 /**
  * Firestore trigger tests.
@@ -21,7 +21,7 @@ import {
  * early-return without writing, or the migration races its own fan-out.
  */
 
-const MIN = TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
+const MIN = MIN_SIGNED_PLAYERS
 
 let firestore: Firestore
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -3,10 +3,11 @@ import type { CallableRequest } from 'firebase-functions/v2/https'
 import { getAuth } from 'firebase-admin/auth'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import {
-	type Callable,
+	DAY_MS,
 	initTestApp,
 	resetFirestore,
 	seedAuthUser,
+	type Callable,
 } from './helpers.js'
 import {
 	playerSeasonRef,
@@ -25,7 +26,6 @@ import {
 const PLAYER = 'player-1'
 const CURRENT = 'season-now'
 const PAST = 'season-past'
-const DAY_MS = 24 * 60 * 60 * 1000
 
 let firestore: Firestore
 let deletePlayer: Callable

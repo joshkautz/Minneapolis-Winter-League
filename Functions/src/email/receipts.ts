@@ -14,7 +14,7 @@
 
 import type { Firestore } from 'firebase-admin/firestore'
 import type Stripe from 'stripe'
-import { FIREBASE_CONFIG, TEAM_CONFIG } from '../config/constants.js'
+import { FIREBASE_CONFIG } from '../config/constants.js'
 import {
 	Collections,
 	type PlayerSeasonDocument,
@@ -31,6 +31,7 @@ import {
 import { countsTowardRegistration } from '../services/teamRegistration.js'
 import { queueEmailOnce } from './outbox.js'
 import type { TeamStanding } from './templates/Receipts.js'
+import { MIN_SIGNED_PLAYERS } from '../shared/teamPaymentRules.js'
 
 const dollars = new Intl.NumberFormat('en-US', {
 	style: 'currency',
@@ -182,7 +183,7 @@ async function standingOf(
 				season
 			)
 		).length,
-		signedPlayersNeeded: TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION,
+		signedPlayersNeeded: MIN_SIGNED_PLAYERS,
 	}
 }
 

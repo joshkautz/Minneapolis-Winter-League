@@ -3,11 +3,12 @@ import type { CallableRequest } from 'firebase-functions/v2/https'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import {
 	authed,
-	type Callable,
+	DAY_MS,
 	errorCodeFrom,
 	initTestApp,
 	resetFirestore,
 	seedAuthUser,
+	type Callable,
 } from './helpers.js'
 import { playerSeasonRef } from '../../Functions/src/shared/database.js'
 import { waiverFingerprint } from '../../Functions/src/waiver/fingerprint.js'
@@ -27,7 +28,6 @@ import {
 
 const SEASON = 'season-1'
 const PLAYER = 'player-1'
-const DAY_MS = 24 * 60 * 60 * 1000
 
 let firestore: Firestore
 let signWaiver: Callable

@@ -13,6 +13,9 @@ import type { CallableRequest } from 'firebase-functions/v2/https'
 
 export const PROJECT_ID = 'mwl-integration-test'
 
+/** A day, for moving dates in fixtures. */
+export { DAY_MS } from '../../Functions/src/shared/leagueCalendar.js'
+
 /** Points the Admin SDK at the emulator and initialises the default app. */
 export function initTestApp(): Firestore {
 	process.env.FIRESTORE_EMULATOR_HOST ??= '127.0.0.1:8080'

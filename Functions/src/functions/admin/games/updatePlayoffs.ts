@@ -20,7 +20,7 @@ import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
 import {
-	updatePlayoffs as update,
+	syncPlayoffs,
 	type PlayoffsSummary,
 } from '../../../services/schedule/sync.js'
 
@@ -45,7 +45,7 @@ export const updatePlayoffs = onCall<UpdatePlayoffsRequest>(
 		}
 
 		try {
-			return await update(firestore, seasonId, { dryRun })
+			return await syncPlayoffs(firestore, seasonId, { dryRun })
 		} catch (error) {
 			rethrowAsHttpsError(
 				error,

@@ -79,6 +79,7 @@ import {
 } from '../../../types.js'
 import type Stripe from 'stripe'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
+import { REGISTRATION_SPOTS } from '../../../shared/teamPaymentRules.js'
 
 interface CreateTeamContributionCheckoutRequest {
 	/** Proposed contribution, in cents. Validated against the live balance. */
@@ -112,7 +113,7 @@ const CURRENCY = 'usd'
  */
 const PAYMENT_EXPLANATION =
 	`Your card is charged now. If you leave the team before it registers, or ` +
-	`it does not get one of the ${TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK} ` +
+	`it does not get one of the ${REGISTRATION_SPOTS} ` +
 	`spots, you are refunded in full. Refunds take 5 to 10 business days to ` +
 	`reach your card.`
 
@@ -205,10 +206,7 @@ export const createTeamContributionCheckout = onCall<
 			)
 		}
 
-		if (
-			(currentSeason.registeredTeamCount ?? 0) >=
-			TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
-		) {
+		if ((currentSeason.registeredTeamCount ?? 0) >= REGISTRATION_SPOTS) {
 			throw new HttpsError(
 				'failed-precondition',
 				'Every spot this season has been taken'

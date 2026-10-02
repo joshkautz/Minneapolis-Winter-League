@@ -3,6 +3,7 @@ import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { teamSeasonRef } from '../../Functions/src/shared/database.js'
 import {
 	authed,
+	DAY_MS,
 	errorCodeFrom,
 	initTestApp,
 	resetFirestore,
@@ -20,7 +21,6 @@ import {
 
 const ADMIN = 'admin-1'
 const SEASON = 'season-1'
-const DAY_MS = 86_400_000
 
 let firestore: Firestore
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

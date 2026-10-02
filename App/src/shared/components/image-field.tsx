@@ -27,7 +27,7 @@ interface ImageFieldProps {
 }
 
 /**
- * An image picker for team logos and badge images. A file that breaks the
+ * An image picker for team logos. A file that breaks the
  * upload rules is refused as soon as it is chosen, with the reason shown
  * under the field, so the form never sends an image the server would turn
  * away.

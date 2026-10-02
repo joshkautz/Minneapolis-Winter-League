@@ -1,13 +1,16 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
-import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import { updateTeamRegistrationStatus } from '../../Functions/src/services/teamRegistration.js'
 import {
 	playerSeasonRef,
 	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
+import {
+	MIN_SIGNED_PLAYERS,
+	REGISTRATION_SPOTS,
+} from '../../Functions/src/shared/teamPaymentRules.js'
 
 /**
  * Registering a team is a race for a limited number of spots, and it is about
@@ -20,8 +23,8 @@ import {
  * documents what that trigger does and does not guarantee.
  */
 
-const MIN = TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
-const CAP = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
+const MIN = MIN_SIGNED_PLAYERS
+const CAP = REGISTRATION_SPOTS
 const SEASON = 'season-1'
 
 let firestore: Firestore

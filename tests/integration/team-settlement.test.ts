@@ -1,7 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import type { Request, Response } from 'firebase-functions/v2/https'
-import { initTestApp, resetFirestore, ledgerPaidCents } from './helpers.js'
+import {
+	DAY_MS,
+	initTestApp,
+	ledgerPaidCents,
+	resetFirestore,
+} from './helpers.js'
 import {
 	addPayment,
 	failNext,
@@ -9,7 +14,6 @@ import {
 	gateRetrieves,
 	resetFakeStripe,
 } from './fake-stripe.js'
-import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import {
 	recordContribution,
 	setContributionStatus,
@@ -24,6 +28,7 @@ import {
 	SettlementIncompleteError,
 	settleTeamSeason,
 } from '../../Functions/src/services/teamSettlement.js'
+import { REGISTRATION_SPOTS } from '../../Functions/src/shared/teamPaymentRules.js'
 
 /**
  * Settlement against a Stripe that keeps state.
@@ -40,10 +45,9 @@ vi.mock('stripe', async () => ({
 }))
 
 const TOTAL = 100_000
-const LOCK = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
+const LOCK = REGISTRATION_SPOTS
 const SEASON = 'season-1'
 const TEAM = 'team-1'
-const DAY_MS = 24 * 60 * 60 * 1000
 
 let firestore: Firestore
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

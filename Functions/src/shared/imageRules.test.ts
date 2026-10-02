@@ -30,9 +30,9 @@ describe('imageProblem', () => {
 		expect(
 			imageProblem(
 				{ sizeBytes: 12 * 1024 * 1024, contentType: 'image/jpeg' },
-				'The badge image'
+				'The logo'
 			)
-		).toMatch(/^The badge image is 12\.0 MB/)
+		).toMatch(/^The logo is 12\.0 MB/)
 	})
 
 	it('refuses SVG, which can carry script', () => {

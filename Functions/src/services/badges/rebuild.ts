@@ -63,7 +63,7 @@ const unchanged = (stored: TeamBadgeDocument, award: Award): boolean =>
 	stored.earnedAt?.toMillis?.() === award.earnedAt.getTime()
 
 /** What a rebuild would write, without writing it. */
-export async function planBadges(
+async function planBadges(
 	firestore: Firestore,
 	now: Date
 ): Promise<BadgesPlan> {
@@ -116,7 +116,7 @@ export async function planBadges(
  * production rebuild, on 1 October 2026, stalled on its last few deletes and
  * timed out silently.
  */
-export const BADGE_WRITES_DEADLINE_MS = 240_000
+const BADGE_WRITES_DEADLINE_MS = 240_000
 
 /**
  * Deletes the badge documents for badges no longer defined, and the images

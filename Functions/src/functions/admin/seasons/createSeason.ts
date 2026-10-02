@@ -5,6 +5,13 @@
  * subdoc for every existing player. The legacy `seasons.teams[]` array is no
  * longer maintained — the list of teams in a season is derived from the
  * `collectionGroup('teamSeasons')` query at read time.
+ *
+ * Security validations:
+ * - Caller must be an admin
+ * - Name, dates and Stripe prices pass `parseSeasonInput` (the dates in
+ *   order, the name within its length rules)
+ * - A team registration total, when given, passes
+ *   `validateTeamRegistrationTotal`
  */
 
 import { onCall } from 'firebase-functions/v2/https'

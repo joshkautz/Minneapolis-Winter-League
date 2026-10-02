@@ -1,5 +1,5 @@
 /**
- * Receiving and storing an uploaded image: a team logo or a badge image.
+ * Receiving and storing an uploaded image: a team's logo.
  *
  * The App sends the file as base64 with its content type. These check it
  * against `imageRules.ts`, the same rules the App applies before sending,
@@ -85,20 +85,5 @@ export async function storeImage(
 			'internal',
 			`${subject} could not be saved, so nothing was changed. Please try again.`
 		)
-	}
-}
-
-/**
- * Deletes a stored image that nothing points to any more. Best effort: a
- * file left behind costs little, so a failure is logged, not thrown.
- */
-export async function deleteStoredImage(storagePath: string): Promise<void> {
-	try {
-		await getStorage().bucket().file(storagePath).delete()
-	} catch (error) {
-		logger.warn('Could not delete a replaced image', {
-			storagePath,
-			error: error instanceof Error ? error.message : String(error),
-		})
 	}
 }

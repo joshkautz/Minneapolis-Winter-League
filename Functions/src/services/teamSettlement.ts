@@ -24,7 +24,6 @@
 import { getFirestore, type Firestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import type Stripe from 'stripe'
-import { TEAM_CONFIG } from '../config/constants.js'
 import {
 	Collections,
 	type SeasonDocument,
@@ -50,6 +49,7 @@ import {
 } from '../shared/settlement.js'
 import { createStripeClient } from '../shared/stripe.js'
 import { registrationOverAt } from '../shared/registrationWindow.js'
+import { REGISTRATION_SPOTS } from '../shared/teamPaymentRules.js'
 
 export type SettlementOutcome =
 	| { outcome: 'not-team-payments' }
@@ -138,7 +138,7 @@ export async function settleTeamSeason(
 	const standing = {
 		registered: teamSeason.registered === true,
 		spotsClaimed: season?.registeredTeamCount ?? 0,
-		spotsAvailable: TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK,
+		spotsAvailable: REGISTRATION_SPOTS,
 		// Only once late payments can no longer complete a team.
 		registrationClosed: season ? registrationOverAt(season, now) : false,
 	}

@@ -6,7 +6,7 @@
  * 1. Settles that team's money. Under team payments this is where a team
  *    that paid more than its total is refunded the excess, latest payments
  *    first.
- * 2. When the threshold (12 registered teams) is reached, refunds every
+ * 2. When every registration spot is claimed (`REGISTRATION_SPOTS`), refunds every
  *    unregistered team's money and then deletes those team-seasons. The
  *    refund has to come first — deletion refuses a team still holding
  *    money — and a team whose refund fails is left in place for the retry
@@ -27,7 +27,7 @@ import {
 	TEAM_SEASONS_SUBCOLLECTION,
 	TeamSeasonDocument,
 } from '../../types.js'
-import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../config/constants.js'
+import { FIREBASE_CONFIG } from '../../config/constants.js'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
 	getCurrentSeason,
@@ -42,6 +42,7 @@ import {
 	queueTeamRegisteredEmails,
 } from '../../email/teamRegistrationEmails.js'
 import { teamContributionsCollection } from '../../shared/contributions.js'
+import { REGISTRATION_SPOTS } from '../../shared/teamPaymentRules.js'
 
 /** Whether anyone's money is still paid toward the team. */
 async function holdsPaidMoney(
@@ -54,8 +55,6 @@ async function holdsPaidMoney(
 		.get()
 	return !paid.empty
 }
-
-const LOCK_THRESHOLD = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
 
 export const onTeamRegistrationChange = onDocumentUpdated(
 	{
@@ -127,14 +126,16 @@ export const onTeamRegistrationChange = onDocumentUpdated(
 			const registeredTeamCount = currentSeason.registeredTeamCount ?? 0
 			logger.info(`Current registered team count: ${registeredTeamCount}`)
 
-			if (registeredTeamCount < LOCK_THRESHOLD) {
+			if (registeredTeamCount < REGISTRATION_SPOTS) {
 				return rethrowOwn()
 			}
 			const seasonDocRef = firestore
 				.collection(Collections.SEASONS)
 				.doc(seasonId)
 
-			logger.info(`${LOCK_THRESHOLD} teams registered! Locking registration...`)
+			logger.info(
+				`${REGISTRATION_SPOTS} teams registered! Locking registration...`
+			)
 
 			// Find all UNREGISTERED team-season subdocs for this season.
 			const unregisteredSnapshot = await firestore

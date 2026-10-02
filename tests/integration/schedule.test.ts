@@ -10,8 +10,8 @@ import {
 	type Callable,
 } from './helpers.js'
 import {
-	updateAutomaticSeasons,
-	updatePlayoffs,
+	syncAutomaticSeasons,
+	syncPlayoffs,
 } from '../../Functions/src/services/schedule/sync.js'
 
 /**
@@ -245,9 +245,9 @@ describe('the automatic playoffs', () => {
 		const regular = await games()
 		await scoreAll(regular)
 		await Promise.all([
-			updatePlayoffs(firestore, SEASON),
-			updatePlayoffs(firestore, SEASON),
-			updatePlayoffs(firestore, SEASON),
+			syncPlayoffs(firestore, SEASON),
+			syncPlayoffs(firestore, SEASON),
+			syncPlayoffs(firestore, SEASON),
 		])
 		expect(await playoffGames('pool-')).toHaveLength(12)
 	})
@@ -268,11 +268,11 @@ describe('the automatic playoffs', () => {
 
 	it('re-pairs pool night after a corrected score, until a game of it is played', async () => {
 		await scoreAll(await games())
-		await updatePlayoffs(firestore, SEASON)
+		await syncPlayoffs(firestore, SEASON)
 		const before = await pairing()
 
 		await reverseTheSeason()
-		const summary = await updatePlayoffs(firestore, SEASON)
+		const summary = await syncPlayoffs(firestore, SEASON)
 		const after = await pairing()
 
 		const changed = [...after].filter(
@@ -284,13 +284,13 @@ describe('the automatic playoffs', () => {
 
 	it('keeps pool night as paired once one of its games is played', async () => {
 		await scoreAll(await games())
-		await updatePlayoffs(firestore, SEASON)
+		await syncPlayoffs(firestore, SEASON)
 		const before = await pairing()
 		const opener = (await games((d) => d.playoffSlot === 'pool-r1-f1'))[0]
 		await opener.ref.update({ homeScore: 13, awayScore: 9 })
 
 		await reverseTheSeason()
-		const summary = await updatePlayoffs(firestore, SEASON)
+		const summary = await syncPlayoffs(firestore, SEASON)
 
 		// Re-pairing the rest would have teams meet twice or play three times.
 		expect(await pairing()).toEqual(before)
@@ -300,21 +300,21 @@ describe('the automatic playoffs', () => {
 
 	it('runs the season through to every team’s placement', async () => {
 		await scoreAll(await games())
-		await updatePlayoffs(firestore, SEASON)
+		await syncPlayoffs(firestore, SEASON)
 		await scoreAll(await playoffGames('pool-'))
-		await updatePlayoffs(firestore, SEASON)
+		await syncPlayoffs(firestore, SEASON)
 
 		const firstRounds = await playoffGames('championship-')
 		expect(firstRounds).toHaveLength(6)
 		await scoreAll(firstRounds)
-		await updatePlayoffs(firestore, SEASON)
+		await syncPlayoffs(firestore, SEASON)
 
 		const championship = await playoffGames('championship-')
 		expect(championship).toHaveLength(12)
 		await scoreAll(
 			championship.filter((d) => /-r[34]-/.test(d.data().playoffSlot))
 		)
-		const summary = await updatePlayoffs(firestore, SEASON)
+		const summary = await syncPlayoffs(firestore, SEASON)
 
 		expect(summary).toMatchObject({ placementsSet: 12, waitingFor: null })
 		const placements = await Promise.all(
@@ -330,7 +330,7 @@ describe('the automatic playoffs', () => {
 		expect((await teamSeason(champion).get()).data()?.placement).toBe(1)
 
 		// Nothing left to do.
-		expect(await updatePlayoffs(firestore, SEASON)).toMatchObject({
+		expect(await syncPlayoffs(firestore, SEASON)).toMatchObject({
 			created: 0,
 			updated: 0,
 			placementsSet: 0,
@@ -357,7 +357,7 @@ describe('the automatic playoffs', () => {
 				awayScore: null,
 			})
 
-		const summary = await updatePlayoffs(firestore, SEASON)
+		const summary = await syncPlayoffs(firestore, SEASON)
 
 		expect(summary.conflicts).toEqual(['pool-r1-f1'])
 		expect(summary.created).toBe(11)
@@ -373,16 +373,16 @@ describe('the automatic playoffs', () => {
 				field: 3,
 				date: Timestamp.fromDate(new Date('2026-12-05T23:00:00Z')),
 			})
-		const next = await updatePlayoffs(firestore, SEASON)
+		const next = await syncPlayoffs(firestore, SEASON)
 		expect(next).toMatchObject({ created: 1, conflicts: [] })
 		expect(await bySlot('pool-r1-f1')).toMatchObject({ field: 1 })
 	})
 
 	it('never creates a second game where a moved one now stands', async () => {
 		await scoreAll(await games())
-		await updatePlayoffs(firestore, SEASON)
+		await syncPlayoffs(firestore, SEASON)
 		await scoreAll(await playoffGames('pool-'))
-		await updatePlayoffs(firestore, SEASON)
+		await syncPlayoffs(firestore, SEASON)
 		// Field 1's opener is moved into its 7:30 slot, not yet created.
 		const opener = (
 			await games((d) => d.playoffSlot === 'championship-r1-f1')
@@ -392,7 +392,7 @@ describe('the automatic playoffs', () => {
 		})
 		await scoreAll(await playoffGames('championship-'))
 
-		const summary = await updatePlayoffs(firestore, SEASON)
+		const summary = await syncPlayoffs(firestore, SEASON)
 
 		expect(summary.conflicts).toContain('championship-r3-f1')
 		const atSlot = await games(
@@ -420,6 +420,24 @@ describe('the automatic playoffs', () => {
 		})
 
 		expect(await playoffGames('pool-')).toHaveLength(12)
+	})
+
+	it('ignores a write that changes nothing the schedule reads', async () => {
+		const regular = await games()
+		await scoreAll(regular)
+		const game = (await regular[0].ref.get()).data()
+
+		// The regular season is over, but this write only renames a team.
+		await manifest.updatePlayoffsOnGameChange.run({
+			id: 'evt-rename',
+			params: { gameId: regular[0].id },
+			data: {
+				before: { exists: true, data: () => game },
+				after: { exists: true, data: () => ({ ...game, homeName: 'New' }) },
+			},
+		})
+
+		expect(await playoffGames('pool-')).toHaveLength(0)
 	})
 
 	it('leaves a season it cannot schedule alone, without throwing', async () => {
@@ -472,7 +490,7 @@ describe('the standings order', () => {
 	it('follows the scores, and is pool night’s seeding at the end', async () => {
 		await generate()
 		await scoreAll(await games())
-		await updatePlayoffs(firestore, SEASON)
+		await syncPlayoffs(firestore, SEASON)
 
 		const rank = await ranks()
 		const opener = await bySlot('pool-r1-f1')
@@ -483,7 +501,7 @@ describe('the standings order', () => {
 	it('keeps the order pool night was drawn in once it begins', async () => {
 		await generate()
 		await scoreAll(await games())
-		await updatePlayoffs(firestore, SEASON)
+		await syncPlayoffs(firestore, SEASON)
 		const drawn = await ranks()
 		const opener = (await games((d) => d.playoffSlot === 'pool-r1-f1'))[0]
 		await opener.ref.update({ homeScore: 13, awayScore: 9 })
@@ -491,7 +509,7 @@ describe('the standings order', () => {
 		await scoreAll(await games((d) => d.type === 'regular'), (home, away) =>
 			home > away ? 'home' : 'away'
 		)
-		await updatePlayoffs(firestore, SEASON)
+		await syncPlayoffs(firestore, SEASON)
 
 		expect(await ranks()).toEqual(drawn)
 	})
@@ -500,7 +518,7 @@ describe('the standings order', () => {
 		await generate()
 		await firestore.collection('rankings').doc('player-12').set({ rating: 99 })
 
-		const [summary] = await updateAutomaticSeasons(firestore)
+		const [summary] = await syncAutomaticSeasons(firestore)
 
 		expect(summary.ranksSet).toBeGreaterThan(0)
 		expect((await ranks())['team-12']).toBe(1)

@@ -23,7 +23,7 @@ import {
 	rebuildRankings,
 	type RebuildResult,
 } from '../../../services/playerRankings/rebuild.js'
-import { updateAutomaticSeasons } from '../../../services/schedule/sync.js'
+import { syncAutomaticSeasons } from '../../../services/schedule/sync.js'
 
 export const rebuildPlayerRankings = onCall(
 	{
@@ -47,7 +47,7 @@ export const rebuildPlayerRankings = onCall(
 			// rankings are rebuilt either way, so a failure here is logged,
 			// and the next game write or nightly rebuild catches up.
 			try {
-				await updateAutomaticSeasons(getFirestore())
+				await syncAutomaticSeasons(getFirestore())
 			} catch (error) {
 				logger.error('Generated seasons not updated after a rebuild', {
 					adminId,

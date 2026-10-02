@@ -1,5 +1,5 @@
 /**
- * What an uploaded image may be: team logos and badge images alike.
+ * What an uploaded image may be: a team's logo, the only upload there is.
  *
  * The App imports this file (`App/src/shared/image-rules.ts`) so that a
  * form refuses an image with the same words the server would, before it is
@@ -32,7 +32,7 @@ export const formatMegabytes = (bytes: number): string =>
 
 /**
  * Why an image cannot be used, or null if it can. `subject` names it for
- * the message, capitalised: "The logo", "The badge image".
+ * the message, capitalised: "The logo".
  */
 export const imageProblem = (
 	image: { sizeBytes: number; contentType: string },

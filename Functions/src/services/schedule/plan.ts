@@ -6,7 +6,7 @@
  * `sync.ts` only has to make Firestore match what these return.
  */
 
-import { GAME_CONFIG } from '../../config/constants.js'
+import { GAME_FIELDS, GAME_TIME_SLOTS } from '../../shared/gameRules.js'
 import { leagueInstant } from '../../shared/leagueCalendar.js'
 import { GameType } from '../../types.js'
 import {
@@ -97,7 +97,7 @@ const requireFullLeague = (teams: readonly ScheduleTeam[]): void => {
 
 /** Round 1 is the first time slot, 6:00pm. */
 const kickoff = (night: Date, round: number): Date =>
-	leagueInstant(night, GAME_CONFIG.ALLOWED_TIME_SLOTS[round])
+	leagueInstant(night, GAME_TIME_SLOTS[round])
 
 /** A night's games from a numbered table, numbers resolved by `teamAt`. */
 const nightOf = (
@@ -110,7 +110,7 @@ const nightOf = (
 	table.flatMap((round, roundIndex) =>
 		round.map(([home, away], fieldIndex) => ({
 			date: kickoff(night, roundIndex),
-			field: GAME_CONFIG.ALLOWED_FIELDS[fieldIndex],
+			field: GAME_FIELDS[fieldIndex],
 			type,
 			homeTeamId: teamAt(home),
 			awayTeamId: teamAt(away),
@@ -121,7 +121,7 @@ const nightOf = (
 export type PlayoffStage = 'pool' | 'championship'
 
 /** "pool-r1-f2": round and field, both from 1. */
-export const playoffSlot = (
+const playoffSlot = (
 	stage: PlayoffStage,
 	roundIndex: number,
 	fieldIndex: number
@@ -240,11 +240,7 @@ export function planPlayoffs(
 		plan.waitingFor = 'every pool-night game to have a score'
 		return plan
 	}
-	const bySlot = new Map(
-		games
-			.filter((game) => game.playoffSlot)
-			.map((game) => [game.playoffSlot as string, game])
-	)
+	const bySlot = gamesBySlot(games)
 	const poolOrders = poolsAsPlayed(bySlot)
 	if (!poolOrders) {
 		plan.waitingFor =
@@ -253,7 +249,7 @@ export function planPlayoffs(
 	}
 	const placements = new Map<string, number>()
 	const waiting: string[] = []
-	GAME_CONFIG.ALLOWED_FIELDS.forEach((field, fieldIndex) => {
+	GAME_FIELDS.forEach((field, fieldIndex) => {
 		CHAMPIONSHIP_POOL_GAMES.forEach(([homePool, awayPool], roundIndex) => {
 			plan.games.push({
 				date: kickoff(nights.championshipNight, roundIndex),
@@ -383,6 +379,16 @@ function poolsAsPlayed(
 	const everyone = orders.flat()
 	return new Set(everyone).size === everyone.length ? orders : null
 }
+
+/** The generated playoff games, by their slot. */
+export const gamesBySlot = (
+	games: readonly StoredGame[]
+): Map<string, StoredGame> =>
+	new Map(
+		games.flatMap((game) =>
+			game.playoffSlot ? [[game.playoffSlot, game] as const] : []
+		)
+	)
 
 /** "pool" for "pool-r1-f2". */
 export const stageOf = (slot: string): PlayoffStage =>

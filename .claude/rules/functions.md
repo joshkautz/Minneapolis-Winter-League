@@ -29,7 +29,9 @@ Functions/src/
   shared/               small helpers: auth, database refs, membership, names,
                         text and image rules, season input, the registration
                         window, contributions and settlement arithmetic,
-                        gameSchedule, returnUrls, stripe, storage, the
+                        gameRules and gameSchedule (kickoffs, fields, a
+                        game's slot), leagueCalendar (game nights, the
+                        Thanksgiving break), returnUrls, stripe, storage, the
                         maintenance kill-switch
   config/               constants.ts (static) and environment.ts (secrets)
   types.ts              Collections enum and document interfaces
@@ -221,8 +223,8 @@ evaluates to `undefined` at runtime. Code written against the old shape fails
 silently rather than loudly — the rankings pipeline read it for months and
 produced an empty leaderboard without erroring.
 
-Read rosters through `loadRosterPlayerRefs` or a `.collection('roster')` query
-off `teamSeasonRef`, and never write either side of the player↔team
+Read rosters with a `.collection(ROSTER_SUBCOLLECTION)` query off
+`teamSeasonRef`, or `teamRosterEntryRef` for one entry, and never write either side of the player↔team
 relationship directly — `shared/membership.ts` writes both atomically.
 
 ## Email
@@ -314,7 +316,9 @@ imports by relative path: `shared/imageRules.ts` for uploads,
 `validateAndNormalizeName` and `validateTeamName` from `shared/names.ts`),
 `shared/textRules.ts` for the length of season, news, post and reply text
 (checked with `requireText` from `shared/textFields.ts`),
-`shared/teamPaymentRules.ts` for the team-payment limits, and `waiver/`.
+`shared/teamPaymentRules.ts` for the team-payment limits (import them from
+there, not through `config/constants.ts`), `shared/gameRules.ts` for game
+kickoffs and fields, and `waiver/`.
 Add a new field's limits there rather than restating them. The profanity
 filter is a dependency, so each side builds its own from the shared
 exceptions list; admins skip it, never the length rules.

@@ -20,6 +20,13 @@
  * Refuses the merge (failed-precondition) if either team is missing, the
  * two ids match, or any season has a `teamSeasons` subdoc on BOTH teams
  * (the admin must manually resolve season collisions first).
+ *
+ * Security validations:
+ * - Caller must be an admin
+ * - Refused while the migration kill-switch is set
+ * - Both team ids are required, must differ, and must exist
+ * - No season may be on both teams, and the losing team may hold no money
+ *   in any season
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'

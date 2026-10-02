@@ -1,7 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
-import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import { updateTeamRegistrationStatus } from '../../Functions/src/services/teamRegistration.js'
 import {
 	recordContribution,
@@ -15,6 +14,7 @@ import {
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
 import { addPayment, fakeStripe, resetFakeStripe } from './fake-stripe.js'
+import { MIN_SIGNED_PLAYERS } from '../../Functions/src/shared/teamPaymentRules.js'
 
 // The contribution trigger settles a team once it registers, which calls
 // Stripe. Without this the suite would reach the real API.
@@ -36,7 +36,7 @@ vi.mock('stripe', async () => ({
  * team-registration-cap.test.ts.
  */
 
-const MIN = TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
+const MIN = MIN_SIGNED_PLAYERS
 const TOTAL = 100_000
 const SEASON = 'season-1'
 const TEAM = 'team-1'

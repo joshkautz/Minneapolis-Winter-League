@@ -3,14 +3,14 @@ import { FieldValue, Timestamp, type Firestore } from 'firebase-admin/firestore'
 import type { Request, Response } from 'firebase-functions/v2/https'
 import {
 	authed,
+	DAY_MS,
 	errorCodeFrom,
 	initTestApp,
+	ledgerPaidCents,
 	resetFirestore,
 	seedAuthUser,
 	type Callable,
-	ledgerPaidCents,
 } from './helpers.js'
-import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import {
 	recordContribution,
 	setContributionStatus,
@@ -26,6 +26,11 @@ import {
 	teamRosterEntryRef,
 	teamSeasonRef,
 } from '../../Functions/src/shared/database.js'
+import {
+	MIN_CONTRIBUTION_CENTS,
+	MIN_SIGNED_PLAYERS,
+	REGISTRATION_SPOTS,
+} from '../../Functions/src/shared/teamPaymentRules.js'
 
 /**
  * Taking a team contribution: the callable that opens a Checkout session,
@@ -72,7 +77,6 @@ const TEAM = 'team-1'
 const OTHER_TEAM = 'team-2'
 const PAYER = 'payer'
 const RETURN = 'https://mplswinterleague.com/teams/team-1'
-const DAY_MS = 24 * 60 * 60 * 1000
 
 let firestore: Firestore
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -371,7 +375,7 @@ describe('createTeamContributionCheckout', () => {
 		})
 
 		it.each([
-			['below the floor', TEAM_CONFIG.MIN_CONTRIBUTION_CENTS - 1],
+			['below the floor', MIN_CONTRIBUTION_CENTS - 1],
 			['zero', 0],
 			['negative', -5_000],
 			['fractional', 1_000.5],
@@ -510,14 +514,14 @@ describe('createTeamContributionCheckout', () => {
 
 		it('refuses once every spot has been taken', async () => {
 			await seasonRef().update({
-				registeredTeamCount: TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK,
+				registeredTeamCount: REGISTRATION_SPOTS,
 			})
 			expect(await codeOf()).toBe('failed-precondition')
 		})
 
 		it('allows the last open spot to be chased', async () => {
 			await seasonRef().update({
-				registeredTeamCount: TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK - 1,
+				registeredTeamCount: REGISTRATION_SPOTS - 1,
 			})
 			await run()
 			expect(sessionsCreate).toHaveBeenCalledTimes(1)
@@ -1093,7 +1097,7 @@ describe('stripeWebhook: a completed team contribution', () => {
 		// one payer covers the lot, and the contribution trigger claims the
 		// spot. Functions do not run in this emulator, so the trigger is
 		// fired by hand with what the ledger write would have delivered.
-		for (let i = 0; i < TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION; i++) {
+		for (let i = 0; i < MIN_SIGNED_PLAYERS; i++) {
 			await seedMember(`signed-${i}`, TEAM, { signed: true })
 		}
 		paymentIntentsRetrieve.mockResolvedValue(
