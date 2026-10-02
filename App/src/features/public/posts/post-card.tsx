@@ -36,6 +36,7 @@ import {
 import { logger, errorMessage, formatRelativeTimestamp } from '@/shared/utils'
 import { useAuthorName } from '@/shared/hooks'
 import { TEXT_RULES, textProblem } from '@/shared/text-rules'
+import { LoadingButton } from '@/shared/components'
 
 /**
  * Posts outlive the account that wrote them, so a deleted player's posts and
@@ -192,17 +193,15 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 								>
 									Cancel
 								</Button>
-								<Button
+								<LoadingButton
 									size='sm'
 									onClick={handleEditSubmit}
-									disabled={!isEditValid || isSubmittingEdit}
+									loading={isSubmittingEdit}
+									loadingText='Saving...'
+									disabled={!isEditValid}
 								>
-									{isSubmittingEdit ? (
-										<Loader2 className='h-4 w-4 animate-spin' />
-									) : (
-										'Save'
-									)}
-								</Button>
+									Save
+								</LoadingButton>
 							</div>
 						</div>
 					</div>
@@ -269,17 +268,15 @@ export const PostCard = ({ post, postId, currentUserId }: PostCardProps) => {
 											<p className='text-xs text-muted-foreground'>
 												{replyContent.trim().length}/{MAX_REPLY_LENGTH}
 											</p>
-											<Button
+											<LoadingButton
 												size='sm'
 												onClick={handleReplySubmit}
-												disabled={!isReplyValid || isSubmittingReply}
+												loading={isSubmittingReply}
+												loadingText='Replying...'
+												disabled={!isReplyValid}
 											>
-												{isSubmittingReply ? (
-													<Loader2 className='h-4 w-4 animate-spin' />
-												) : (
-													'Reply'
-												)}
-											</Button>
+												Reply
+											</LoadingButton>
 										</div>
 									</div>
 								)}
@@ -403,17 +400,15 @@ const ReplyItem = ({
 							>
 								Cancel
 							</Button>
-							<Button
+							<LoadingButton
 								size='sm'
 								onClick={handleEditSubmit}
-								disabled={!isEditValid || isSubmitting}
+								loading={isSubmitting}
+								loadingText='Saving...'
+								disabled={!isEditValid}
 							>
-								{isSubmitting ? (
-									<Loader2 className='h-4 w-4 animate-spin' />
-								) : (
-									'Save'
-								)}
-							</Button>
+								Save
+							</LoadingButton>
 						</div>
 					</div>
 				</div>

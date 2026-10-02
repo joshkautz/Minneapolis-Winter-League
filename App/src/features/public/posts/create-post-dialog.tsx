@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Loader2 } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,6 +16,7 @@ import {
 import { createPostViaFunction } from '@/firebase/collections/functions'
 import { logger, errorMessage } from '@/shared/utils'
 import { TEXT_RULES, textProblem } from '@/shared/text-rules'
+import { LoadingButton } from '@/shared/components'
 
 interface CreatePostDialogProps {
 	seasonId: string
@@ -117,19 +118,14 @@ export const CreatePostDialog = ({
 					>
 						Cancel
 					</Button>
-					<Button
+					<LoadingButton
 						onClick={handleSubmit}
-						disabled={!isValidLength || isSubmitting}
+						loading={isSubmitting}
+						loadingText='Posting...'
+						disabled={!isValidLength}
 					>
-						{isSubmitting ? (
-							<>
-								<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-								Posting...
-							</>
-						) : (
-							'Post'
-						)}
-					</Button>
+						Post
+					</LoadingButton>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>

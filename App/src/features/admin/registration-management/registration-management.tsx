@@ -5,7 +5,7 @@
  * and players who are on a team but not fully registered
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { Users, Loader2, ArrowUpDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -82,9 +82,10 @@ export const RegistrationManagement = () => {
 		currentSeasonQueryDocumentSnapshot,
 	} = useSeasonsContext()
 
-	const [filterSeasonId, setFilterSeasonId] = useState<string>(
-		() => currentSeasonQueryDocumentSnapshot?.id || ''
-	)
+	// The season shown: the admin's choice, else the current one.
+	const [chosenFilterSeasonId, setFilterSeasonId] = useState('')
+	const filterSeasonId =
+		chosenFilterSeasonId || currentSeasonQueryDocumentSnapshot?.id || ''
 	const [sortConfig, setSortConfig] = useState<{
 		field: SortField
 		direction: SortDirection
@@ -117,17 +118,6 @@ export const RegistrationManagement = () => {
 		component: 'RegistrationManagement',
 		errorLabel: 'playerSeasons',
 	})
-
-	useEffect(() => {
-		if (currentSeasonQueryDocumentSnapshot?.id && !filterSeasonId) {
-			const timer = setTimeout(
-				() => setFilterSeasonId(currentSeasonQueryDocumentSnapshot.id),
-				0
-			)
-			return () => clearTimeout(timer)
-		}
-		return undefined
-	}, [currentSeasonQueryDocumentSnapshot?.id, filterSeasonId])
 
 	const seasons = seasonsSnapshot?.docs.map((doc) => ({
 		id: doc.id,

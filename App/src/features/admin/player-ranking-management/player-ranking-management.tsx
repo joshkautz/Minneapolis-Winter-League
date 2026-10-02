@@ -18,7 +18,6 @@ import {
 	logger,
 } from '@/shared/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -47,6 +46,7 @@ import {
 } from 'lucide-react'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import { BackToAdminButton } from '@/features/admin/shared'
+import { LoadingButton } from '@/shared/components'
 
 export const PlayerRankingManagement = () => {
 	const [isCalculating, setIsCalculating] = useState(false)
@@ -228,23 +228,16 @@ export const PlayerRankingManagement = () => {
 					</p>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button
+							<LoadingButton
 								onClick={handleRebuildRankings}
-								disabled={isCalculating}
+								loading={isCalculating}
+								loadingText='Starting...'
 								className='flex items-center justify-center gap-2'
 								size='lg'
-								aria-busy={isCalculating}
 							>
-								{isCalculating ? (
-									<RefreshCw
-										className='h-4 w-4 animate-spin'
-										aria-hidden='true'
-									/>
-								) : (
-									<RefreshCcw className='h-4 w-4' aria-hidden='true' />
-								)}
-								{isCalculating ? 'Starting...' : 'Rebuild All Rankings'}
-							</Button>
+								<RefreshCcw className='h-4 w-4' aria-hidden='true' />
+								Rebuild All Rankings
+							</LoadingButton>
 						</TooltipTrigger>
 						<TooltipContent side='bottom' align='start'>
 							<p className='max-w-xs'>

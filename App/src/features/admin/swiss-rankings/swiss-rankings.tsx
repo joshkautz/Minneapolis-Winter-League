@@ -23,7 +23,12 @@ import {
 } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PageContainer, PageHeader, TeamLogo } from '@/shared/components'
+import {
+	LoadingButton,
+	PageContainer,
+	PageHeader,
+	TeamLogo,
+} from '@/shared/components'
 import {
 	Table,
 	TableBody,
@@ -368,18 +373,16 @@ export const SwissRankings = () => {
 									</Badge>
 								)}
 							</div>
-							<Button
+							<LoadingButton
 								onClick={handleSaveSeeding}
-								disabled={isSavingSeeding || seedingOrder.length === 0}
+								loading={isSavingSeeding}
+								loadingText='Saving...'
+								disabled={seedingOrder.length === 0}
 								size='sm'
 							>
-								{isSavingSeeding ? (
-									<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-								) : (
-									<Save className='h-4 w-4 mr-2' />
-								)}
+								<Save className='h-4 w-4 mr-2' />
 								Save Seeding
-							</Button>
+							</LoadingButton>
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
