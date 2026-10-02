@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/table'
 import { LoadingButton } from '@/shared/components'
 import { usePendingAction } from '@/shared/hooks'
-import { errorMessage } from '@/shared/utils'
+import { errorMessage, REGISTRATION_SPOTS } from '@/shared/utils'
 import {
 	generateScheduleViaFunction,
 	updatePlayoffsViaFunction,
@@ -155,10 +155,10 @@ const GenerateSchedule = ({ season }: { season: Season }) => {
 					Generate {season.name}&apos;s schedule
 				</CardTitle>
 				<CardDescription>
-					Creates every regular-season game for the twelve registered teams: two
-					back-to-back games a night, no rematches, early and late nights shared
-					evenly. Pool night, championship night and the final placements then
-					follow from the scores on their own.
+					Creates every regular-season game for the {REGISTRATION_SPOTS}{' '}
+					registered teams: two back-to-back games a night, no rematches, early
+					and late nights shared evenly. Pool night, championship night and the
+					final placements then follow from the scores on their own.
 				</CardDescription>
 			</CardHeader>
 			<CardContent>

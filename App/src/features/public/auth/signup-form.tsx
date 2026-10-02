@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button'
 import { LoadingButton } from '@/shared/components'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -9,25 +8,16 @@ import {
 	FormLabel,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { useSignupForm } from '@/features/public/auth'
-import { errorMessage } from '@/shared/utils'
+import { useSignupForm } from './use-signup-form'
+import { errorMessage, LEAGUE_CONTACT } from '@/shared/utils'
+import { PROFANE_NAME_MESSAGE } from '@/shared/utils/validation'
 
 interface SignupFormProps {
 	onSuccess: () => void
-	onNameAppeal?: (data: {
-		firstName: string
-		lastName: string
-		email: string
-	}) => void
 }
 
-/**
- * Signup Form Component
- *
- * Provides user registration functionality with form validation.
- * Refactored to use custom hook for better separation of concerns.
- */
-export const SignupForm = ({ onSuccess, onNameAppeal }: SignupFormProps) => {
+/** Creates an account: name, email and password, validated as typed. */
+export const SignupForm = ({ onSuccess }: SignupFormProps) => {
 	const { form, onSubmit, isLoading, error } = useSignupForm({ onSuccess })
 
 	// Collect all validation error messages in field order with field labels
@@ -44,23 +34,12 @@ export const SignupForm = ({ onSuccess, onNameAppeal }: SignupFormProps) => {
 		})
 		.filter(Boolean)
 
-	// Check if there are profanity-related validation errors
-	const firstNameError = form.formState.errors.firstName?.message
-	const lastNameError = form.formState.errors.lastName?.message
-	const hasProfanityError =
-		firstNameError?.includes('inappropriate language') ||
-		lastNameError?.includes('inappropriate language')
-
-	const handleAppeal = () => {
-		if (onNameAppeal) {
-			const formData = form.getValues()
-			onNameAppeal({
-				firstName: formData.firstName,
-				lastName: formData.lastName,
-				email: formData.email,
-			})
-		}
-	}
+	// The filter refuses some real names. An admin can set any name, so say
+	// who to ask rather than leave the player stuck.
+	const nameRefused = [
+		form.formState.errors.firstName?.message,
+		form.formState.errors.lastName?.message,
+	].includes(PROFANE_NAME_MESSAGE)
 
 	return (
 		<Card>
@@ -163,20 +142,11 @@ export const SignupForm = ({ onSuccess, onNameAppeal }: SignupFormProps) => {
 						)}
 					</form>
 				</Form>
-				{hasProfanityError && onNameAppeal && (
-					<div className='text-center text-sm'>
-						<p className='text-muted-foreground mb-2'>
-							Your name was flagged by our content filter. If you believe this
-							is an error, you can submit an appeal.
-						</p>
-						<Button
-							variant='link'
-							onClick={handleAppeal}
-							className='px-0 underline'
-						>
-							Submit Appeal
-						</Button>
-					</div>
+				{nameRefused && (
+					<p className='text-center text-sm text-muted-foreground'>
+						Our content filter flagged your name. If it is your real name, email{' '}
+						{LEAGUE_CONTACT} and we will set it for you.
+					</p>
 				)}
 			</CardContent>
 		</Card>

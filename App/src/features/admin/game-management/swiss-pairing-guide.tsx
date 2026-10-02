@@ -29,7 +29,11 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Badge } from '@/components/ui/badge'
-import { useSwissStandings, useMonradPairings } from '@/shared/hooks'
+import {
+	SWISS_TEAMS,
+	useMonradPairings,
+	useSwissStandings,
+} from '@/shared/hooks'
 import { type QuerySnapshot } from 'firebase/firestore'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { GameDocument, TeamSeasonDocument } from '@/types'
@@ -94,9 +98,9 @@ export const SwissPairingGuide = ({
 						Swiss Pairing Guide
 					</CardTitle>
 					<CardDescription>
-						{teamsQuerySnapshot && teamsQuerySnapshot.docs.length >= 12
+						{teamsQuerySnapshot && teamsQuerySnapshot.docs.length >= SWISS_TEAMS
 							? 'No standings data available yet. Pairings will appear after games are played.'
-							: `Need 12 teams for Swiss pairings. Currently have ${teamsQuerySnapshot?.docs.length || 0} teams.`}
+							: `Need ${SWISS_TEAMS} teams for Swiss pairings. Currently have ${teamsQuerySnapshot?.docs.length || 0} teams.`}
 					</CardDescription>
 				</CardHeader>
 			</Card>

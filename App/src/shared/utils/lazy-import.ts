@@ -10,17 +10,28 @@ import React, { lazy } from 'react'
  * const Home = lazyImport(() => import('@/components/home/home'), 'Home')
  */
 
+/** The names of a module's exports that are components. */
+type ComponentExports<T> = {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- a component of any props
+	[K in keyof T]: T[K] extends React.ComponentType<any> ? K : never
+}[keyof T]
+
+/**
+ * A feature's index can export hooks and helpers beside its pages; only the
+ * named export has to be a component.
+ */
 export const lazyImport = <
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- React.ComponentType requires any for generic component props
-	T extends Record<string, React.ComponentType<any>>,
-	K extends keyof T,
+	T extends Record<string, unknown>,
+	K extends ComponentExports<T>,
 >(
 	importFn: () => Promise<T>,
 	namedExport: K
-): React.LazyExoticComponent<T[K]> => {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- as above
+): React.LazyExoticComponent<T[K] & React.ComponentType<any>> => {
 	return lazy(() =>
 		importFn().then((module) => ({
-			default: module[namedExport],
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- as above
+			default: module[namedExport] as T[K] & React.ComponentType<any>,
 		}))
 	)
 }

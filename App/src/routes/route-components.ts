@@ -48,9 +48,8 @@ export const Posts = lazyImport(
 	'Posts'
 )
 
-// The feature's index also exports a hook, so this loads the page file.
 export const EmailPreferences = lazyImport(
-	() => import('@/features/public/email-preferences/email-preferences-page'),
+	() => import('@/features/public/email-preferences'),
 	'EmailPreferencesPage'
 )
 
@@ -65,14 +64,12 @@ export const ManageTeam = lazyImport(
 	() => import('@/features/player/team'),
 	'ManageTeam'
 )
-// The waiver feature's index also exports hooks, which lazyImport's
-// component-only module type refuses, so these load the page files.
 export const Waiver = lazyImport(
-	() => import('@/features/player/waiver/waiver-page'),
+	() => import('@/features/player/waiver'),
 	'WaiverPage'
 )
 export const WaiverCopy = lazyImport(
-	() => import('@/features/player/waiver/waiver-copy'),
+	() => import('@/features/player/waiver'),
 	'WaiverCopy'
 )
 

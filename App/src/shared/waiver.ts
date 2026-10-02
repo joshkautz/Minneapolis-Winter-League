@@ -13,14 +13,12 @@ import { PARTICIPANT_PLACEHOLDER } from '../../../Functions/src/waiver/versions'
 
 export {
 	CURRENT_WAIVER_VERSION_ID,
-	PARTICIPANT_PLACEHOLDER,
 	WAIVER_VERSIONS,
 	currentWaiverVersion,
 	type WaiverParagraph,
 	type WaiverVersion,
 } from '../../../Functions/src/waiver/versions'
 export {
-	ADULT_AGE,
 	WAIVER_LIMITS,
 	isIsoDate,
 	isMinorOn,

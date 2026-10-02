@@ -55,7 +55,7 @@ export interface MonradScheduleResult {
  * - Middle (ranks 5-6, 9-10): Play each other
  * - Developing (ranks 7-8, 11-12): Play each other
  */
-const SCHEDULE_TEMPLATE: Array<{
+export const SWISS_SCHEDULE_TEMPLATE: Array<{
 	round: number
 	field: 'A' | 'B' | 'C'
 	rank1: number
@@ -78,6 +78,11 @@ const SCHEDULE_TEMPLATE: Array<{
 	{ round: 4, field: 'B', rank1: 9, rank2: 10 },
 	{ round: 4, field: 'C', rank1: 11, rank2: 12 },
 ]
+
+/** How many teams the template pairs: one for each rank it names. */
+export const SWISS_TEAMS = Math.max(
+	...SWISS_SCHEDULE_TEMPLATE.map((slot) => Math.max(slot.rank1, slot.rank2))
+)
 
 /**
  * Build a map of season matchups from completed games
@@ -186,7 +191,7 @@ export const useMonradPairings = (
 		const teamRounds = new Map<string, number[]>()
 		let repeatCount = 0
 
-		for (const slot of SCHEDULE_TEMPLATE) {
+		for (const slot of SWISS_SCHEDULE_TEMPLATE) {
 			const team1Id = rankToTeam.get(slot.rank1)
 			const team2Id = rankToTeam.get(slot.rank2)
 
@@ -241,6 +246,3 @@ export const useMonradPairings = (
 		}
 	}, [standings, gamesQuerySnapshot, teamsQuerySnapshot])
 }
-
-// Legacy export for backwards compatibility
-export type Pairing = ScheduledGame

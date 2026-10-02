@@ -15,7 +15,11 @@ export { useStandings } from './use-standings'
 export type { TeamStanding } from './use-standings'
 export { useSwissStandings, sortBySwissScore } from './use-swiss-standings'
 export type { SwissTeamStanding } from './use-swiss-standings'
-export { useMonradPairings } from './use-monrad-pairings'
+export {
+	SWISS_SCHEDULE_TEMPLATE,
+	SWISS_TEAMS,
+	useMonradPairings,
+} from './use-monrad-pairings'
 export { usePlayersSearch } from './use-players-search'
 export { useScheduleData } from './use-schedule-data'
 export { useUserStatus } from './use-user-status'
