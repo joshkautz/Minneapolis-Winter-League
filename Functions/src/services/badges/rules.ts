@@ -111,11 +111,6 @@ interface SeasonView {
 	earlierSeasons: Map<string, BadgeTeamSeason[]>
 	/** The season before this one, if any. */
 	previous: BadgeSeason | undefined
-	/**
-	 * Whether there are earlier seasons to compare with. The first season on
-	 * record has none, so nobody in it can be told apart as new.
-	 */
-	hasHistory: boolean
 	teamName: (teamId: string) => string
 }
 
@@ -519,7 +514,7 @@ const closeCall: Rule = (view) => {
 // ---- Roster and history badges ------------------------------------------------
 
 const welcome: Rule = (view) =>
-	!seasonStarted(view) || !view.hasHistory
+	!seasonStarted(view)
 		? []
 		: registeredTeams(view)
 				.filter((team) => seasonsRegisteredBefore(view, team.teamId) === 0)
@@ -567,7 +562,7 @@ const oldGuard: Rule = (view) =>
 				)
 
 const freshFaces: Rule = (view) => {
-	if (!seasonStarted(view) || !view.hasHistory) return []
+	if (!seasonStarted(view)) return []
 	const veterans = new Set(
 		view.facts.teamSeasons
 			.filter((ts) => earlierThan(view, ts.seasonId))
@@ -774,7 +769,6 @@ function viewOf(facts: BadgeFacts, index: number): SeasonView {
 		allResults,
 		earlierSeasons,
 		previous: index > 0 ? facts.seasons[index - 1] : undefined,
-		hasHistory: index > 0,
 		teamName: (teamId) => teams.get(teamId)?.name ?? 'a former team',
 	}
 }

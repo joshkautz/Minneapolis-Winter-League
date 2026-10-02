@@ -66,9 +66,10 @@ then vanish:
 | The season to end                                | Rising Stars                                                      |
 | A placement to be set                            | Champions, Runner-up, Podium, Dynasty                             |
 
-The first season on record has nothing earlier to compare with, so it awards
-no Welcome or Fresh Faces. A registration date after the season began is
-ignored rather than trusted: 2023 Fall has one from the following summer.
+2023 Fall was the league's first season, so every team in it earned Welcome
+and every player was new to the league. A registration date after the season
+began is ignored rather than trusted: 2023 Fall has one from the following
+summer.
 
 ## The badges
 
@@ -106,6 +107,24 @@ Thresholds are constants in the catalog.
 
 The thresholds were set against every game played since 2023 so that each
 tier's badges are about as rare as its name says.
+
+### If a rebuild fails or is slow
+
+A rebuild is safe to run again: it only ever moves the stored awards towards
+what the rules produce, so a second run finishes whatever a first left
+undone. Each run logs `Badges planned` (what it will change), `Badge awards
+written` and `Badges rebuilt`, each with how long it took, and every write
+that fails is logged as `A badge write failed` with its document, error code
+and whether it will be retried. Writes are retried at most five times, and
+only for errors worth retrying; if they have not all finished within four
+minutes the run fails saying how many had, rather than being cut off by the
+server's limit with no message. The Rebuild button waits as long as the
+server allows.
+
+The first production rebuild, on 1 October 2026, stalled on its last few
+deletes and was cut off at nine minutes with nothing logged; a second run
+finished them in three seconds. That is what the logging and the deadline
+are for.
 
 ## Artwork
 

@@ -34,6 +34,7 @@ const fakeFirestore = (failWrites: boolean): Firestore => {
 					: Promise.resolve(),
 			delete: () => Promise.resolve(),
 			close: () => Promise.resolve(),
+			onWriteError: () => undefined,
 		}),
 	} as unknown as Firestore
 }

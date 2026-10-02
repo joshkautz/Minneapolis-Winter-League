@@ -886,6 +886,13 @@ export const deleteSeasonViaFunction = async (
 	return result.data
 }
 
+/**
+ * How long to wait for a rebuild: the 540 seconds those callables are given
+ * on the server. The SDK's default of 70 reports a rebuild that is still
+ * running as failed, as the first badges rebuild was.
+ */
+const REBUILD_TIMEOUT_MS = 540_000
+
 //////////////////////////////////////////////////////////////////////////////
 // BADGES (ADMIN ONLY)
 //////////////////////////////////////////////////////////////////////////////
@@ -918,7 +925,7 @@ export const rebuildBadgesViaFunction = async (
 	const rebuildBadges = httpsCallable<
 		RebuildBadgesRequest,
 		RebuildBadgesResponse
-	>(functions, 'rebuildBadges')
+	>(functions, 'rebuildBadges', { timeout: REBUILD_TIMEOUT_MS })
 	const result = await rebuildBadges(data)
 	return result.data
 }
@@ -1426,7 +1433,7 @@ export const rebuildPlayerRankingsViaFunction =
 		const rebuild = httpsCallable<
 			Record<string, never>,
 			RebuildPlayerRankingsResponse
-		>(functions, 'rebuildPlayerRankings')
+		>(functions, 'rebuildPlayerRankings', { timeout: REBUILD_TIMEOUT_MS })
 		const result = await rebuild({})
 		return result.data
 	}

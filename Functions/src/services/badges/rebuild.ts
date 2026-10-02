@@ -21,7 +21,7 @@ import {
 import { getStorage } from 'firebase-admin/storage'
 import { logger } from 'firebase-functions/v2'
 import { BADGES, awardId } from '../../badges/catalog.js'
-import { trackedBulkWriter } from '../../shared/batches.js'
+import { deleteInBatches, trackedBulkWriter } from '../../shared/batches.js'
 import { teamBadgeRef } from '../../shared/database.js'
 import {
 	Collections,
@@ -109,11 +109,51 @@ export async function planBadges(
 	}
 }
 
+/**
+ * How long the award writes may take. Well inside the callable's and the
+ * schedule's 540 seconds, so a stalled write fails with a message saying how
+ * far it got instead of the request being killed without one: the first
+ * production rebuild, on 1 October 2026, stalled on its last few deletes and
+ * timed out silently.
+ */
+export const BADGE_WRITES_DEADLINE_MS = 240_000
+
+/**
+ * Deletes the badge documents for badges no longer defined, and the images
+ * that were uploaded for them. Images go first: if a run dies between the
+ * two, the document is still there to point the next run at the image.
+ * Done the other way, the image would be left with nothing referring to it.
+ */
+export async function retireBadges(
+	firestore: Pick<Firestore, 'batch'>,
+	bucket: {
+		file(path: string): {
+			delete(options: { ignoreNotFound: boolean }): Promise<unknown>
+		}
+	} | null,
+	retire: BadgesPlan['retire']
+): Promise<void> {
+	const images = retire.flatMap(({ storagePath }) =>
+		storagePath ? [storagePath] : []
+	)
+	if (images.length > 0) {
+		if (!bucket) throw new Error('Retired badges have images but no bucket')
+		await Promise.all(
+			images.map((image) => bucket.file(image).delete({ ignoreNotFound: true }))
+		)
+	}
+	await deleteInBatches(
+		firestore,
+		retire.map(({ ref }) => ref)
+	)
+}
+
 /** Makes the stored awards match the rules, unless `dryRun`. */
 export async function rebuildBadges(
 	firestore: Firestore,
 	{ now = new Date(), dryRun = false }: { now?: Date; dryRun?: boolean } = {}
 ): Promise<BadgesSummary> {
+	const started = Date.now()
 	const plan = await planBadges(firestore, now)
 	const byBadge: Record<string, number> = {}
 	for (const award of plan.awards) {
@@ -127,8 +167,18 @@ export async function rebuildBadges(
 		retiredBadges: plan.retire.length,
 		byBadge,
 	}
+	logger.info('Badges planned', {
+		dryRun,
+		ms: Date.now() - started,
+		awards: summary.awards,
+		created: summary.created,
+		updated: summary.updated,
+		removed: summary.removed,
+		retiredBadges: summary.retiredBadges,
+	})
 	if (dryRun) return summary
 
+	const writesStarted = Date.now()
 	const writer = trackedBulkWriter(firestore, 'badge')
 	const updatedAt = FieldValue.serverTimestamp()
 	for (const award of [...plan.create, ...plan.update]) {
@@ -145,7 +195,6 @@ export async function rebuildBadges(
 		)
 	}
 	for (const ref of plan.remove) writer.delete(ref)
-
 	for (const badge of BADGES) {
 		const earned = plan.awards.filter((award) => award.badgeId === badge.id)
 		writer.set(firestore.collection(Collections.BADGES).doc(badge.id), {
@@ -154,22 +203,23 @@ export async function rebuildBadges(
 			updatedAt,
 		})
 	}
-	for (const { ref } of plan.retire) writer.delete(ref)
-	await writer.finish()
+	await writer.finish({ deadlineMs: BADGE_WRITES_DEADLINE_MS })
+	logger.info('Badge awards written', { ms: Date.now() - writesStarted })
 
-	// The images of badges that used to be uploaded by hand. Deleted after
-	// the documents, so a failure here leaves a stray file, never a badge
-	// pointing at a missing image.
-	const images = plan.retire.flatMap(({ storagePath }) =>
-		storagePath ? [storagePath] : []
-	)
-	if (images.length > 0) {
-		const bucket = getStorage().bucket()
-		await Promise.all(
-			images.map((image) => bucket.file(image).delete({ ignoreNotFound: true }))
+	if (plan.retire.length > 0) {
+		const retireStarted = Date.now()
+		const hasImages = plan.retire.some(({ storagePath }) => storagePath)
+		await retireBadges(
+			firestore,
+			hasImages ? getStorage().bucket() : null,
+			plan.retire
 		)
+		logger.info('Retired badges removed', {
+			ms: Date.now() - retireStarted,
+			count: plan.retire.length,
+		})
 	}
 
-	logger.info('Badges rebuilt', summary)
+	logger.info('Badges rebuilt', { ...summary, ms: Date.now() - started })
 	return summary
 }
