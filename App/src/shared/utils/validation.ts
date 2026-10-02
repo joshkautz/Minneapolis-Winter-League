@@ -20,6 +20,13 @@ const filter = new Filter()
 filter.removeWords(...REAL_NAMES_WRONGLY_FLAGGED)
 
 // Common validation schemas using Zod v4 best practices
+/**
+ * What a player is told when the profanity filter refuses their name. The
+ * signup form recognizes it to say how to get a real name set anyway.
+ */
+export const PROFANE_NAME_MESSAGE =
+	'Name contains inappropriate language. Please choose a different name.'
+
 export const emailSchema = z
 	.string({
 		error: (issue) => {
@@ -92,8 +99,7 @@ export const nameSchema = z
 				error: 'Name cannot contain consecutive hyphens or apostrophes',
 			})
 			.refine((name) => !filter.isProfane(name), {
-				error:
-					'Name contains inappropriate language. Please choose a different name.',
+				error: PROFANE_NAME_MESSAGE,
 			})
 	)
 	.transform(formatPlayerName)

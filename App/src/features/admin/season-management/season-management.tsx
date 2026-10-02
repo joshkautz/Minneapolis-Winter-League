@@ -538,7 +538,7 @@ export const SeasonManagement = () => {
 							</Label>
 							<Input
 								id='name'
-								placeholder='e.g., Winter 2025'
+								placeholder='e.g., Season 6'
 								value={formName}
 								onChange={(e) => setFormName(e.target.value)}
 								maxLength={TEXT_RULES.seasonName.max}

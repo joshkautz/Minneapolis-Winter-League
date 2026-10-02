@@ -25,21 +25,8 @@ export const formatTimestamp = (
 	})
 }
 
-/**
- * Format a date to a readable date string
- */
-export const formatDate = (date: Date): string => {
-	return date.toLocaleDateString('en-US', {
-		month: 'long',
-		day: 'numeric',
-		year: 'numeric',
-	})
-}
-
-/**
- * Format a date to include time
- */
-export const formatDateTime = (date: Date): string => {
+/** "November 7, 2026 at 6:00 PM". */
+const formatDateTime = (date: Date): string => {
 	return date.toLocaleDateString('en-US', {
 		month: 'long',
 		day: 'numeric',

@@ -12,16 +12,6 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 	const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login')
 	const [showResetPassword, setShowResetPassword] = useState(false)
 
-	const handleNameAppeal = (data: {
-		firstName: string
-		lastName: string
-		email: string
-	}) => {
-		// Show message using a modal or toast instead of alert
-		// This is intentionally a no-op since name appeals should be handled by the form
-		void data
-	}
-
 	if (showResetPassword) {
 		return (
 			<ResetPasswordForm
@@ -48,7 +38,7 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 				/>
 			</TabsContent>
 			<TabsContent value='signup'>
-				<SignupForm onSuccess={onSuccess} onNameAppeal={handleNameAppeal} />
+				<SignupForm onSuccess={onSuccess} />
 			</TabsContent>
 		</Tabs>
 	)

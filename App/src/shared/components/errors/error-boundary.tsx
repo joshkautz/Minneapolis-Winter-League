@@ -140,24 +140,3 @@ export class ErrorBoundary extends Component<Props, State> {
 		return this.props.children
 	}
 }
-
-/**
- * Hook-based error boundary wrapper for functional components
- */
-interface ErrorBoundaryWrapperProps {
-	children: ReactNode
-	fallback?: ReactNode
-	onError?: (error: Error, errorInfo: ErrorInfo) => void
-}
-
-export const ErrorBoundaryWrapper = ({
-	children,
-	fallback,
-	onError,
-}: ErrorBoundaryWrapperProps) => {
-	return (
-		<ErrorBoundary fallback={fallback} onError={onError}>
-			{children}
-		</ErrorBoundary>
-	)
-}

@@ -6,8 +6,6 @@ import { logger } from '@/shared/utils'
 import { loginFormSchema, type LoginFormData } from '@/shared/utils/validation'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 
-export type { LoginFormData } from '@/shared/utils/validation'
-
 interface UseLoginFormProps {
 	onSuccess: () => void
 }

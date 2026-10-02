@@ -10,8 +10,6 @@ import {
 	type SignupFormData,
 } from '@/shared/utils/validation'
 
-export type { SignupFormData } from '@/shared/utils/validation'
-
 interface UseSignupFormProps {
 	onSuccess: () => void
 }

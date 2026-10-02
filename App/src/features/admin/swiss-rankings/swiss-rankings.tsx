@@ -10,7 +10,7 @@ import { Trophy, Loader2, GripVertical, Save, Info } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { logger, cn, errorMessage } from '@/shared/utils'
-import { useQueryErrorHandler } from '@/shared/hooks'
+import { SWISS_SCHEDULE_TEMPLATE, useQueryErrorHandler } from '@/shared/hooks'
 import { useSeasonsContext } from '@/providers'
 import {
 	canonicalTeamIdFromTeamSeasonDoc,
@@ -44,16 +44,19 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { SeasonDocument, SeasonFormat, TeamSeasonDocument } from '@/types'
 import { BackToAdminButton } from '@/features/admin/shared'
 
-/**
- * Swiss matchup pattern for 12 teams across 3 fields
- * Each cell shows [seed vs seed]
- */
-const SWISS_MATCHUP_PATTERN = [
-	{ round: 1, fieldA: [1, 2], fieldB: [6, 5], fieldC: [7, 8] },
-	{ round: 2, fieldA: [1, 3], fieldB: [6, 10], fieldC: [7, 11] },
-	{ round: 3, fieldA: [2, 4], fieldB: [5, 9], fieldC: [8, 12] },
-	{ round: 4, fieldA: [3, 4], fieldB: [9, 10], fieldC: [11, 12] },
-]
+const SWISS_FIELDS = ['A', 'B', 'C'] as const
+
+/** The pairing guide's template, a row per round, for the seed table. */
+const SWISS_MATCHUP_ROUNDS = [
+	...new Set(SWISS_SCHEDULE_TEMPLATE.map((slot) => slot.round)),
+].map((round) => ({
+	round,
+	fields: SWISS_FIELDS.map((field) =>
+		SWISS_SCHEDULE_TEMPLATE.find(
+			(slot) => slot.round === round && slot.field === field
+		)
+	),
+}))
 
 export const SwissRankings = () => {
 	// Get seasons from context
@@ -474,26 +477,20 @@ export const SwissRankings = () => {
 									</TableRow>
 								</TableHeader>
 								<TableBody>
-									{SWISS_MATCHUP_PATTERN.map((row) => (
+									{SWISS_MATCHUP_ROUNDS.map((row) => (
 										<TableRow key={row.round}>
 											<TableCell className='font-medium'>
 												Round {row.round}
 											</TableCell>
-											<TableCell className='text-center'>
-												<Badge variant='outline'>
-													Seed {row.fieldA[0]} vs Seed {row.fieldA[1]}
-												</Badge>
-											</TableCell>
-											<TableCell className='text-center'>
-												<Badge variant='outline'>
-													Seed {row.fieldB[0]} vs Seed {row.fieldB[1]}
-												</Badge>
-											</TableCell>
-											<TableCell className='text-center'>
-												<Badge variant='outline'>
-													Seed {row.fieldC[0]} vs Seed {row.fieldC[1]}
-												</Badge>
-											</TableCell>
+											{row.fields.map((slot, index) => (
+												<TableCell key={index} className='text-center'>
+													{slot && (
+														<Badge variant='outline'>
+															Seed {slot.rank1} vs Seed {slot.rank2}
+														</Badge>
+													)}
+												</TableCell>
+											))}
 										</TableRow>
 									))}
 								</TableBody>

@@ -9,8 +9,6 @@ import {
 } from '@/shared/utils/validation'
 import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 
-export type { ResetPasswordFormData } from '@/shared/utils/validation'
-
 interface UseResetPasswordFormProps {
 	onSuccess: () => void
 }
