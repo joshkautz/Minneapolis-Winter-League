@@ -27,12 +27,9 @@ import { VALID_PAYLOADS } from './payloads.js'
 
 /** Requires validateAdminUser: admin-only operations. */
 const ADMIN_CALLABLES = [
-	'awardBadge',
-	'createBadge',
 	'createGame',
 	'createNews',
 	'createSeason',
-	'deleteBadge',
 	'deleteGame',
 	'deleteNews',
 	'deletePost',
@@ -42,13 +39,12 @@ const ADMIN_CALLABLES = [
 	'getPlayerAuthInfo',
 	'getSwissRankings',
 	'mergeTeams',
+	'rebuildBadges',
 	'rebuildPlayerRankings',
 	'sendEmailPreview',
 	'sendSeasonAnnouncement',
 	'refundTeamContribution',
-	'revokeBadge',
 	'setSwissSeeding',
-	'updateBadge',
 	'updateGame',
 	'updateNews',
 	'updatePlayerAdmin',
@@ -103,6 +99,7 @@ const NON_CALLABLES = new Set([
 	'sendQueuedEmail',
 	'emailContributionReceipt',
 	'rebuildRankingsNightly',
+	'awardBadgesNightly',
 	'sweepTeamPaymentsHourly',
 	'stripeWebhook',
 	'resendWebhook',
@@ -187,8 +184,8 @@ describe('the sweep covers every callable in the deploy manifest', () => {
 		expect(missing).toEqual([])
 	})
 
-	it('covers all 48 callables', () => {
-		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(48)
+	it('covers all 44 callables', () => {
+		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(44)
 	})
 
 	it('has a valid payload for every callable', () => {

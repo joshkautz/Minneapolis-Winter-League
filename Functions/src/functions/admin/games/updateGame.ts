@@ -14,10 +14,16 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
-import { isGameField, parseGameKickoff } from '../../../shared/gameSchedule.js'
+import {
+	FORFEIT_NEEDS_BOTH_TEAMS,
+	isGameField,
+	parseForfeit,
+	parseGameKickoff,
+} from '../../../shared/gameSchedule.js'
 import {
 	Collections,
 	GameType,
+	type GameForfeit,
 	TEAM_SEASONS_SUBCOLLECTION,
 } from '../../../types.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
@@ -44,6 +50,8 @@ interface UpdateGameRequest {
 	timestamp?: string
 	/** Season ID for the game */
 	seasonId?: string
+	/** Which side forfeited, null for neither; omitted to leave it as is */
+	forfeit?: GameForfeit | null
 }
 
 /**
@@ -136,6 +144,9 @@ export const updateGame = onCall<
 			)
 		}
 
+		const forfeit =
+			data.forfeit === undefined ? undefined : parseForfeit(data.forfeit)
+
 		if (field !== undefined && !isGameField(field)) {
 			logger.warn('Invalid field provided', { field })
 			throw new HttpsError('invalid-argument', 'Field must be 1, 2, or 3')
@@ -187,6 +198,9 @@ export const updateGame = onCall<
 			}
 			if (type !== undefined) {
 				updateData.type = type
+			}
+			if (forfeit !== undefined) {
+				updateData.forfeit = forfeit
 			}
 
 			// Use transaction for all database operations to ensure atomicity
@@ -303,6 +317,17 @@ export const updateGame = onCall<
 
 				await resolveTeamSide('home', homeTeamId)
 				await resolveTeamSide('away', awayTeamId)
+
+				// A forfeit, new or kept, needs both sides on the game as updated.
+				const effectiveForfeit =
+					forfeit === undefined ? (existingGameData.forfeit ?? null) : forfeit
+				const hasSide = (side: 'home' | 'away'): boolean =>
+					side in updateData
+						? updateData[side] !== null
+						: Boolean(existingGameData[side])
+				if (effectiveForfeit && (!hasSide('home') || !hasSide('away'))) {
+					throw new HttpsError('invalid-argument', FORFEIT_NEEDS_BOTH_TEAMS)
+				}
 
 				// Check for duplicate game if date or field changed
 				const updatedField = field ?? existingGameData.field

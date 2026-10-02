@@ -275,8 +275,8 @@ export interface PlayerSeasonDocument extends DocumentData {
  * Per-season state lives in the `teams/{teamId}/teamSeasons/{seasonId}` subcollection
  * (see TeamSeasonDocument). The roster lives in
  * `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` (see TeamRosterDocument).
- * Badges live in `teams/{teamId}/badges/{badgeId}` and span the team's entire
- * history (see TeamBadgeDocument).
+ * Badges live in `teams/{teamId}/badges/{badgeId}_{seasonId}`, one per
+ * badge and season it was earned in (see TeamBadgeDocument).
  */
 export interface TeamDocument extends DocumentData {
 	/** Timestamp when the team was first created */
@@ -563,6 +563,11 @@ export interface GameDocument extends DocumentData {
 	season: DocumentReference<SeasonDocument>
 	/** Type of game: regular season or playoff */
 	type: GameType
+	/**
+	 * Which team forfeited, if either did. The recorded score stands for the
+	 * standings, but badges ignore the game: neither team really played it.
+	 */
+	forfeit?: GameForfeit | null
 }
 
 /**
@@ -661,49 +666,37 @@ export interface ReplyDocument extends DocumentData {
 	updatedAt: Timestamp
 }
 
+/** Which side of a game forfeited it. */
+export type GameForfeit = 'home' | 'away'
+
 /**
- * Badge document structure representing a badge that can be awarded to teams
+ * `badges/{badgeId}`: how many teams have earned a badge, for the share the
+ * team page shows. The badges themselves are defined in code
+ * (`Functions/src/badges/catalog.ts`); the rebuild writes these counts.
  */
-export interface BadgeDocument extends DocumentData {
-	/** Unique badge identifier */
-	badgeId: string
-	/** Badge name/title */
-	name: string
-	/** Description of what the badge represents */
-	description: string
-	/** URL to the badge image */
-	imageUrl: string | null
-	/** Storage path for the badge image (for file management) */
-	storagePath: string | null
-	/** Timestamp when the badge was created */
-	createdAt: Timestamp
-	/** Reference to the admin player who created the badge */
-	createdBy: DocumentReference<PlayerDocument>
-	/** Timestamp when the badge was last updated */
+export interface BadgeStatsDocument extends DocumentData {
+	/** Distinct teams that have earned the badge at least once. */
+	teamsEarned: number
+	/** Every time it has been earned, counting each season separately. */
+	timesEarned: number
 	updatedAt: Timestamp
-	/** Statistics about badge awards (optional for backward compatibility) */
-	stats?: {
-		/** Number of unique teamIds that have been awarded this badge */
-		totalTeamsAwarded: number
-		/** Timestamp when stats were last updated */
-		lastUpdated: Timestamp
-	}
 }
 
 /**
- * Team badge document representing a badge awarded to a canonical team.
- * Stored as a subcollection under `teams/{teamId}/badges/{badgeId}`. Tied to
- * the team's identity, not to a specific season instance.
+ * `teams/{teamId}/badges/{badgeId}_{seasonId}`: a badge a team earned in a
+ * season. Written only by the badges rebuild, which derives every award from
+ * the games, rosters and registrations, so a team can earn the same badge in
+ * several seasons.
  */
 export interface TeamBadgeDocument extends DocumentData {
-	/** Reference to the badge definition */
-	badge: DocumentReference<BadgeDocument>
-	/** Timestamp when the badge was awarded to the team */
-	awardedAt: Timestamp
-	/** Reference to the admin player who awarded the badge */
-	awardedBy: DocumentReference<PlayerDocument>
-	/** Season id during which this badge was earned (denormalized for filtering) */
+	badgeId: string
 	seasonId: string
+	season: DocumentReference<SeasonDocument>
+	/** When the team qualified: the game, registration or season that did it. */
+	earnedAt: Timestamp
+	/** How it was earned, as the team page shows it. */
+	reason: string
+	updatedAt: Timestamp
 }
 
 /**

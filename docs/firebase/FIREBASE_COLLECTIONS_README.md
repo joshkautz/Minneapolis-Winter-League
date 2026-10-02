@@ -20,7 +20,7 @@ below. The "Read" column is what `firestore.rules` allows a client.
 | `games`                  | Kickoff, field, teams, scores                                                            | anyone              | `createGame`, `updateGame`, `deleteGame`                                                                  |
 | `news`                   | Admin announcements for a season                                                         | anyone              | `createNews`, `updateNews`, `deleteNews`                                                                  |
 | `posts`                  | Message board posts, with `replies` beneath                                              | anyone              | the post and reply callables                                                                              |
-| `badges`                 | Badge definitions                                                                        | anyone              | `createBadge`, `updateBadge`, `deleteBadge`                                                               |
+| `badges`                 | How many teams have earned each badge; badges themselves are defined in code             | anyone              | the badges rebuild                                                                                        |
 | `rankings`               | Each player's current all-time TrueSkill rating                                          | anyone              | the rankings rebuild                                                                                      |
 | `player-ranking-history` | Each player's rating and ranks after every round                                         | anyone              | the rankings rebuild                                                                                      |
 | `rankings-calculations`  | Progress of a rankings rebuild                                                           | anyone              | the rankings rebuild                                                                                      |
@@ -43,7 +43,7 @@ Per-season state hangs off subcollections rather than the parent document:
 | `teams/{teamId}/teamSeasons/{seasonId}/roster/{uid}`    | Membership, and nothing else                      | anyone              |
 | `teams/{teamId}/teamSeasons/{seasonId}/contributions/…` | Team payments, keyed by PaymentIntent id          | that roster, admins |
 | `teams/{teamId}/teamSeasons/{seasonId}/checkouts/open`  | Contributions reserved while payers are on Stripe | that roster, admins |
-| `teams/{teamId}/badges/{badgeId}`                       | Badges awarded to a team                          | anyone              |
+| `teams/{teamId}/badges/{badgeId}_{seasonId}`            | A badge the team earned that season, and how      | anyone              |
 | `seasons/{seasonId}/rankings/{uid}`                     | A rostered player's rank and record that season   | anyone              |
 
 A ban is account-wide and lives on `players/{uid}.banned`, not on a

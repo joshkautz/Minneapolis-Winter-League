@@ -147,7 +147,8 @@ Validation both sides enforce is written once in Functions and imported
 through `@/shared/image-rules`, `@/shared/name-rules`, `@/shared/text-rules`
 and `@/shared/waiver`; the team-payment limits (the smallest contribution,
 signed players, registration spots) come the same way, through
-`@/shared/utils/team-payments`. Use those constants — for a field's
+`@/shared/utils/team-payments`, and every badge's name and description
+through `@/shared/badges`. Use those constants — for a field's
 `maxLength` and counter too — rather than restating a limit. A new rule goes
 in the Functions file, which must stay free of imports.
 

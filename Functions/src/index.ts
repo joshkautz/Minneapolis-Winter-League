@@ -35,6 +35,7 @@ export { onPaymentCreated } from './triggers/payments/onPaymentCreated.js'
 export { sweepTeamPaymentsHourly } from './triggers/scheduled/sweepTeamPaymentsHourly.js'
 export { reconcileTeamPaymentsDaily } from './triggers/scheduled/reconcileTeamPaymentsDaily.js'
 export { rebuildRankingsNightly } from './triggers/scheduled/rebuildRankingsNightly.js'
+export { awardBadgesNightly } from './triggers/scheduled/awardBadgesNightly.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // API ENDPOINTS
@@ -116,12 +117,8 @@ export { createGame } from './functions/admin/games/createGame.js'
 export { updateGame } from './functions/admin/games/updateGame.js'
 export { deleteGame } from './functions/admin/games/deleteGame.js'
 
-// Badge management functions (admin-only)
-export { createBadge } from './functions/admin/badges/createBadge.js'
-export { updateBadge } from './functions/admin/badges/updateBadge.js'
-export { deleteBadge } from './functions/admin/badges/deleteBadge.js'
-export { awardBadge } from './functions/admin/badges/awardBadge.js'
-export { revokeBadge } from './functions/admin/badges/revokeBadge.js'
+// Badges (admin-only): every badge is awarded by its rule, never by hand
+export { rebuildBadges } from './functions/admin/badges/rebuildBadges.js'
 
 // Site settings functions (admin-only)
 export { updateSiteSettings } from './functions/admin/siteSettings/updateSiteSettings.js'

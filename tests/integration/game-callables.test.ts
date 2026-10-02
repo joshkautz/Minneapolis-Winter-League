@@ -554,3 +554,65 @@ describe('deleteGame', () => {
 		expect(recreated.gameId).toBe(gameId)
 	})
 })
+
+describe('forfeits', () => {
+	it('records which side forfeited, and none by default', async () => {
+		const { gameId: forfeited } = await call<{ gameId: string }>(
+			createGame,
+			validGame({ homeScore: 10, awayScore: 0, forfeit: 'away' })
+		)
+		const { gameId: played } = await call<{ gameId: string }>(
+			createGame,
+			validGame({ field: 2 })
+		)
+
+		expect((await readGame(forfeited))?.forfeit).toBe('away')
+		expect((await readGame(played))?.forfeit).toBeNull()
+	})
+
+	it('refuses a forfeit that names neither side', async () => {
+		expect(
+			await errorCodeFrom(createGame, {
+				auth: authed(ADMIN),
+				data: validGame({ forfeit: 'both' }),
+			})
+		).toBe('invalid-argument')
+	})
+
+	it('refuses a forfeit on a game missing a team', async () => {
+		expect(
+			await errorCodeFrom(createGame, {
+				auth: authed(ADMIN),
+				data: validGame({ awayTeamId: null, forfeit: 'home' }),
+			})
+		).toBe('invalid-argument')
+	})
+
+	it('sets and clears a forfeit on update, leaving it alone when omitted', async () => {
+		const { gameId } = await call<{ gameId: string }>(createGame, validGame())
+
+		await call(updateGame, { gameId, forfeit: 'home' })
+		expect((await readGame(gameId))?.forfeit).toBe('home')
+
+		await call(updateGame, { gameId, homeScore: 0, awayScore: 10 })
+		expect((await readGame(gameId))?.forfeit).toBe('home')
+
+		await call(updateGame, { gameId, forfeit: null })
+		expect((await readGame(gameId))?.forfeit).toBeNull()
+	})
+
+	it('refuses to remove a team from a forfeited game', async () => {
+		const { gameId } = await call<{ gameId: string }>(
+			createGame,
+			validGame({ forfeit: 'away' })
+		)
+
+		expect(
+			await errorCodeFrom(updateGame, {
+				auth: authed(ADMIN),
+				data: { gameId, awayTeamId: null },
+			})
+		).toBe('invalid-argument')
+		expect((await readGame(gameId))?.away.path).toBe('teams/away-team')
+	})
+})

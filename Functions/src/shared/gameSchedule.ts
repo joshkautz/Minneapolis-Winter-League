@@ -12,6 +12,7 @@
 
 import { HttpsError } from 'firebase-functions/v2/https'
 import { GAME_CONFIG } from '../config/constants.js'
+import type { GameForfeit } from '../types.js'
 
 const ISO_WALL_CLOCK = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
 
@@ -58,3 +59,20 @@ export function parseGameKickoff(timestamp: string): Date {
 /** Whether `field` is one of the league's numbered fields. */
 export const isGameField = (field: unknown): field is number =>
 	(GAME_CONFIG.ALLOWED_FIELDS as readonly unknown[]).includes(field)
+
+/**
+ * Checks a game's `forfeit`: which side forfeited, or null for neither.
+ * Throws `invalid-argument` for anything else.
+ */
+export function parseForfeit(value: unknown): GameForfeit | null {
+	if (value === null || value === undefined) return null
+	if (value === 'home' || value === 'away') return value
+	throw new HttpsError(
+		'invalid-argument',
+		'Forfeit must be "home", "away" or empty.'
+	)
+}
+
+/** A forfeit names the side that gave up the game, so both sides are needed. */
+export const FORFEIT_NEEDS_BOTH_TEAMS =
+	'A forfeit needs both teams on the game.'

@@ -15,12 +15,15 @@ Functions/src/
   functions/user/<domain>/    callables available to signed-in players
   triggers/{auth,documents,payments}/   Firestore and lifecycle triggers
   triggers/scheduled/   onSchedule functions (the team payments sweep and
-                        reconciliation, the nightly rankings rebuild)
+                        reconciliation, the nightly rankings and badges
+                        rebuilds)
   api/webhooks/         the Stripe and Resend HTTP endpoints
   services/             multi-step domain logic: team registration, team payments
                         (checkout reservations, intake, settlement, sweep,
                         reconciliation), team and account deletion, rankings
   waiver/               the waiver's text and signing rules, also imported by the App
+  badges/catalog.ts     every badge, imported by the App and scripts/badge-art; the
+                        rules that award them are in services/badges/
   email/                the outbox, sender, switch, unsubscribe and React templates
   shared/               small helpers: auth, database refs, membership, names,
                         text and image rules, season input, the registration
@@ -308,7 +311,7 @@ Rules both sides need are written once, in an import-free module the App
 imports by relative path: `shared/imageRules.ts` for uploads,
 `shared/nameRules.ts` for player and team names (checked with
 `validateAndNormalizeName` and `validateTeamName` from `shared/names.ts`),
-`shared/textRules.ts` for the length of badge, news, post and reply text
+`shared/textRules.ts` for the length of season, news, post and reply text
 (checked with `requireText` from `shared/textFields.ts`),
 `shared/teamPaymentRules.ts` for the team-payment limits, and `waiver/`.
 Add a new field's limits there rather than restating them. The profanity

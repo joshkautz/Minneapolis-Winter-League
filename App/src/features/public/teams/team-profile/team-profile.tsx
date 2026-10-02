@@ -1,13 +1,9 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
-import {
-	getCountFromServer,
-	Timestamp,
-	type DocumentSnapshot,
-} from 'firebase/firestore'
+import { Timestamp, type DocumentSnapshot } from 'firebase/firestore'
 import { CheckCircledIcon } from '@radix-ui/react-icons'
-import { Award, Lock, Loader2, Calendar, Trophy } from 'lucide-react'
+import { Calendar, Trophy } from 'lucide-react'
 import { NotificationCard, TeamLogo } from '@/shared/components'
 import { gamesByTeamQuery } from '@/firebase/collections/games'
 import {
@@ -17,9 +13,7 @@ import {
 	teamRosterSubcollection,
 	teamsInSeasonQuery,
 	canonicalTeamIdFromTeamSeasonDoc,
-	allTeamsQuery,
 } from '@/firebase/collections/teams'
-import { teamBadgesQuery } from '@/firebase/collections/badges'
 import {
 	hasAssignedTeams,
 	getTeamRole,
@@ -30,26 +24,13 @@ import {
 	GameDocument,
 	TeamDocument,
 	TeamSeasonDocument,
-	BadgeDocument,
-	TeamBadgeDocument,
 	TeamRosterDocument,
 } from '@/types'
 import { TeamRosterPlayer } from './team-roster-player'
 import { TeamHistory } from './team-history'
-import { useSeasonsContext, useBadgesContext } from '@/providers'
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover'
-import {
-	Drawer,
-	DrawerContent,
-	DrawerHeader,
-	DrawerTitle,
-	DrawerDescription,
-} from '@/components/ui/drawer'
-import { useIsMobile, useQueryErrorHandler } from '@/shared/hooks'
+import { TeamBadgesCard } from './team-badges-card'
+import { useSeasonsContext } from '@/providers'
+import { useQueryErrorHandler } from '@/shared/hooks'
 
 const RESULT = {
 	VS: 'vs',
@@ -106,28 +87,6 @@ export const TeamProfile = () => {
 	const { id, seasonId: seasonIdParam } = useParams()
 	const { currentSeasonQueryDocumentSnapshot, seasonsQuerySnapshot } =
 		useSeasonsContext()
-	const { allBadgesQuerySnapshot: allBadgesSnapshot } = useBadgesContext()
-	// How many teams there have ever been, for the share of teams holding
-	// each badge. Counted on the server: it used to be a live listener on
-	// every team document, held by the provider on every page.
-	const [totalTeams, setTotalTeams] = useState<number>()
-	useEffect(() => {
-		let cancelled = false
-		getCountFromServer(allTeamsQuery())
-			.then((snapshot) => {
-				if (!cancelled) setTotalTeams(snapshot.data().count)
-			})
-			.catch((error) => {
-				logger.error('Failed to count teams', error, {
-					component: 'TeamProfile',
-				})
-				// Badges still show; their percentages read 0%.
-				if (!cancelled) setTotalTeams(0)
-			})
-		return () => {
-			cancelled = true
-		}
-	}, [])
 
 	// `:seasonId` is optional in the route. When omitted we render the team's
 	// current-season subdoc; when provided we render that historical season.
@@ -167,11 +126,6 @@ export const TeamProfile = () => {
 			: undefined
 	)
 
-	// Fetch team badges
-	const [teamBadgesSnapshot, , teamBadgesError] = useCollection(
-		teamBadgesQuery(teamDocumentSnapshot?.ref)
-	)
-
 	useQueryErrorHandler({
 		error: teamError,
 		component: 'TeamProfile',
@@ -197,12 +151,6 @@ export const TeamProfile = () => {
 		errorLabel: 'games',
 	})
 
-	useQueryErrorHandler({
-		error: teamBadgesError,
-		component: 'TeamProfile',
-		errorLabel: 'team badges',
-	})
-
 	useEffect(() => {
 		if (teamSeasonError) {
 			logger.error('Failed to load team season', teamSeasonError, {
@@ -218,77 +166,6 @@ export const TeamProfile = () => {
 			})
 		}
 	}, [rosterError])
-
-	// Enhanced badge interface with earned status and percentage
-	interface EnhancedBadge {
-		id: string
-		name: string
-		description: string
-		imageUrl: string | null
-		isEarned: boolean
-		awardedAt: Date | null
-		percentageEarned: number // Percentage of unique teams that have this badge
-	}
-
-	// Process all badges with stats (percentage, earned status) - synchronously via useMemo
-	const allBadgesWithStats = useMemo((): EnhancedBadge[] | null => {
-		// Return null while waiting for data (distinct from empty array = no badges)
-		if (!allBadgesSnapshot || totalTeams === undefined || !teamBadgesSnapshot) {
-			return null
-		}
-
-		const totalUniqueTeams = totalTeams
-
-		// Create a set of earned badge IDs for this team
-		const earnedBadgeIds = new Set(teamBadgesSnapshot.docs.map((doc) => doc.id))
-
-		// Process each badge
-		const results = allBadgesSnapshot.docs.map((badgeDoc) => {
-			const badgeData = badgeDoc.data() as BadgeDocument
-			const badgeId = badgeDoc.id
-
-			// Check if this team has earned this badge
-			const isEarned = earnedBadgeIds.has(badgeId)
-
-			// Get awarded date if earned
-			let awardedAt: Date | null = null
-			if (isEarned) {
-				const teamBadgeDoc = teamBadgesSnapshot.docs.find(
-					(doc) => doc.id === badgeId
-				)
-				if (teamBadgeDoc) {
-					const teamBadgeData = teamBadgeDoc.data() as TeamBadgeDocument
-					awardedAt = teamBadgeData.awardedAt.toDate()
-				}
-			}
-
-			// Calculate percentage using pre-calculated stats
-			// Fallback to 0 for badges created before stats field was added
-			const totalTeamsAwarded = badgeData.stats?.totalTeamsAwarded ?? 0
-			const percentageEarned =
-				totalUniqueTeams > 0 ? (totalTeamsAwarded / totalUniqueTeams) * 100 : 0
-
-			return {
-				id: badgeId,
-				name: badgeData.name,
-				description: badgeData.description,
-				imageUrl: badgeData.imageUrl,
-				isEarned,
-				awardedAt,
-				percentageEarned,
-			} as EnhancedBadge
-		})
-
-		// Sort badges: earned first (alphabetical), then unearned (alphabetical)
-		return results.sort((a, b) => {
-			// First, sort by earned status (earned = true comes first)
-			if (a.isEarned !== b.isEarned) {
-				return a.isEarned ? -1 : 1
-			}
-			// Then sort alphabetically by name within each group
-			return a.name.localeCompare(b.name)
-		})
-	}, [allBadgesSnapshot, totalTeams, teamBadgesSnapshot])
 
 	const isLoading = useMemo(
 		() =>
@@ -309,11 +186,6 @@ export const TeamProfile = () => {
 	)
 
 	// Badges are loading until we have processed data (null = still loading)
-	const badgesLoading = allBadgesWithStats === null
-
-	// Responsive badge interaction: Popover on desktop, Drawer on mobile
-	const isMobile = useIsMobile()
-	const [selectedBadge, setSelectedBadge] = useState<EnhancedBadge | null>(null)
 
 	const teamSeasonData = teamSeasonSnapshot?.data() as
 		TeamSeasonDocument | undefined
@@ -433,171 +305,7 @@ export const TeamProfile = () => {
 
 			<div className='max-w-[1040px] mx-auto'>
 				<div className='flex justify-center items-start gap-4 flex-wrap mb-4'>
-					{/* Badges Card */}
-					<NotificationCard
-						title={'Badges'}
-						description={
-							badgesLoading
-								? 'Loading badges...'
-								: `${allBadgesWithStats.filter((b) => b.isEarned).length} of ${allBadgesWithStats.length} earned`
-						}
-						className={'flex-1 basis-full shrink-0 max-w-full min-w-[360px]'}
-					>
-						{badgesLoading ? (
-							<div className='flex items-center justify-center py-8'>
-								<Loader2
-									className='h-8 w-8 animate-spin text-muted-foreground'
-									aria-label='Loading badges'
-								/>
-							</div>
-						) : allBadgesWithStats.length > 0 ? (
-							<div
-								className='flex flex-wrap gap-3 py-2'
-								role='list'
-								aria-label='Team badges'
-							>
-								{allBadgesWithStats.map((badge) => {
-									// Shared badge button element
-									const badgeButton = (
-										<button
-											type='button'
-											role='listitem'
-											className='relative flex items-center justify-center w-16 h-16 cursor-pointer transition-shadow flex-shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 hover:ring-2 hover:ring-primary/50 hover:ring-offset-2'
-											aria-label={
-												badge.isEarned
-													? `${badge.name} - Earned. Click for details.`
-													: `${badge.name} - Locked. Click for details.`
-											}
-											onClick={
-												isMobile ? () => setSelectedBadge(badge) : undefined
-											}
-										>
-											{/* Badge Image */}
-											{badge.imageUrl ? (
-												<img
-													src={badge.imageUrl}
-													alt=''
-													role='presentation'
-													className={`w-full h-full object-cover rounded-full ${
-														!badge.isEarned ? 'grayscale opacity-40' : ''
-													}`}
-												/>
-											) : (
-												<div
-													className={`w-full h-full bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center ${
-														!badge.isEarned ? 'grayscale opacity-40' : ''
-													}`}
-													aria-hidden='true'
-												>
-													<Award
-														className={`h-6 w-6 ${
-															badge.isEarned
-																? 'text-amber-600'
-																: 'text-muted-foreground'
-														}`}
-													/>
-												</div>
-											)}
-
-											{/* Lock Icon for Unearned Badges */}
-											{!badge.isEarned && (
-												<div className='absolute inset-0 flex items-center justify-center'>
-													<div className='bg-background/80 backdrop-blur-sm rounded-full p-2'>
-														<Lock className='h-4 w-4 text-muted-foreground' />
-													</div>
-												</div>
-											)}
-										</button>
-									)
-
-									// Mobile: render button that opens drawer
-									if (isMobile) {
-										return (
-											<div key={badge.id} role='listitem'>
-												{badgeButton}
-											</div>
-										)
-									}
-
-									// Desktop: wrap in Popover
-									return (
-										<Popover key={badge.id}>
-											<PopoverTrigger asChild>{badgeButton}</PopoverTrigger>
-											<PopoverContent
-												className='w-80 z-40'
-												side='top'
-												align='center'
-												avoidCollisions={false}
-											>
-												<div className='space-y-2'>
-													<div className='flex items-start justify-between gap-2'>
-														<h4 className='text-sm font-semibold'>
-															{badge.name}
-														</h4>
-														{badge.imageUrl && (
-															<img
-																src={badge.imageUrl}
-																alt=''
-																role='presentation'
-																className='w-8 h-8 object-cover rounded-full flex-shrink-0'
-															/>
-														)}
-													</div>
-													<p className='text-xs text-muted-foreground'>
-														{badge.description}
-													</p>
-													<div className='pt-2 border-t space-y-1'>
-														<div className='flex justify-between text-xs'>
-															<span className='text-muted-foreground'>
-																Status:
-															</span>
-															<span
-																className={
-																	badge.isEarned
-																		? 'text-green-600 dark:text-green-400 font-medium'
-																		: 'text-muted-foreground'
-																}
-															>
-																{badge.isEarned ? 'Earned' : 'Locked'}
-															</span>
-														</div>
-														<div className='flex justify-between text-xs'>
-															<span className='text-muted-foreground'>
-																Date awarded:
-															</span>
-															<span className='text-muted-foreground'>
-																{badge.isEarned && badge.awardedAt
-																	? badge.awardedAt.toLocaleDateString()
-																	: 'Locked'}
-															</span>
-														</div>
-														<div className='flex justify-between text-xs'>
-															<span className='text-muted-foreground'>
-																Teams with badge:
-															</span>
-															<span className='text-muted-foreground'>
-																{badge.percentageEarned.toFixed(1)}%
-															</span>
-														</div>
-													</div>
-												</div>
-											</PopoverContent>
-										</Popover>
-									)
-								})}
-							</div>
-						) : (
-							<div className='text-center py-8'>
-								<Award
-									className='h-12 w-12 mx-auto text-muted-foreground/50 mb-3'
-									aria-hidden='true'
-								/>
-								<p className='text-sm text-muted-foreground'>
-									No badges in the system yet
-								</p>
-							</div>
-						)}
-					</NotificationCard>
+					<TeamBadgesCard teamRef={teamDocumentSnapshot?.ref} />
 
 					{/* Roster Card */}
 					<NotificationCard
@@ -749,81 +457,6 @@ export const TeamProfile = () => {
 					)}
 				</div>
 			</div>
-
-			{/* Mobile Badge Details Drawer */}
-			<Drawer
-				open={!!selectedBadge}
-				onOpenChange={(open) => !open && setSelectedBadge(null)}
-			>
-				<DrawerContent>
-					<DrawerHeader className='text-left'>
-						<div className='flex items-start justify-between gap-4'>
-							<div className='flex-1'>
-								<DrawerTitle>{selectedBadge?.name}</DrawerTitle>
-								<DrawerDescription className='mt-2'>
-									{selectedBadge?.description}
-								</DrawerDescription>
-							</div>
-							{selectedBadge?.imageUrl ? (
-								<img
-									src={selectedBadge.imageUrl}
-									alt=''
-									role='presentation'
-									className={`w-16 h-16 object-cover rounded-full flex-shrink-0 ${
-										!selectedBadge?.isEarned ? 'grayscale opacity-40' : ''
-									}`}
-								/>
-							) : (
-								<div
-									className={`w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center flex-shrink-0 ${
-										!selectedBadge?.isEarned ? 'grayscale opacity-40' : ''
-									}`}
-								>
-									<Award
-										className={`h-8 w-8 ${
-											selectedBadge?.isEarned
-												? 'text-amber-600'
-												: 'text-muted-foreground'
-										}`}
-									/>
-								</div>
-							)}
-						</div>
-					</DrawerHeader>
-					<div className='px-4 pb-6 space-y-3'>
-						<div className='flex justify-between py-2 border-b'>
-							<span className='text-sm text-muted-foreground'>Status</span>
-							<span
-								className={`text-sm font-medium ${
-									selectedBadge?.isEarned
-										? 'text-green-600 dark:text-green-400'
-										: 'text-muted-foreground'
-								}`}
-							>
-								{selectedBadge?.isEarned ? 'Earned' : 'Locked'}
-							</span>
-						</div>
-						<div className='flex justify-between py-2 border-b'>
-							<span className='text-sm text-muted-foreground'>
-								Date awarded
-							</span>
-							<span className='text-sm'>
-								{selectedBadge?.isEarned && selectedBadge?.awardedAt
-									? selectedBadge.awardedAt.toLocaleDateString()
-									: 'Locked'}
-							</span>
-						</div>
-						<div className='flex justify-between py-2'>
-							<span className='text-sm text-muted-foreground'>
-								Teams with badge
-							</span>
-							<span className='text-sm'>
-								{selectedBadge?.percentageEarned.toFixed(1)}%
-							</span>
-						</div>
-					</div>
-				</DrawerContent>
-			</Drawer>
 		</div>
 	)
 }

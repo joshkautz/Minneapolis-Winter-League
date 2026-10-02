@@ -12,7 +12,6 @@ import {
 	RefreshCw,
 	CheckCircle,
 	Shield,
-	Award,
 	Pencil,
 	Combine,
 	Wallet,
@@ -47,7 +46,6 @@ import {
 } from '@/components/ui/table'
 import { TeamDocument, TeamSeasonDocument } from '@/types'
 import { useQueryErrorHandler } from '@/shared/hooks'
-import { TeamBadgesDialog } from './components/team-badges-dialog'
 import { TeamEditDialog } from './components/team-edit-dialog'
 import { MergeTeamsDialog } from './components/merge-teams-dialog'
 import { TeamPaymentsDialog } from './components/team-payments-dialog'
@@ -97,13 +95,6 @@ export const TeamManagement = () => {
 	// refuses any other.
 	const isCurrentSeasonSelected =
 		!!selectedSeasonId && selectedSeasonId === currentSeasonId
-
-	// State for badge management dialog
-	const [teamForBadges, setTeamForBadges] = useState<{
-		id: string
-		name: string
-		ref: DocumentReference<TeamDocument>
-	} | null>(null)
 
 	// State for edit dialog
 	const [teamToEdit, setTeamToEdit] = useState<{
@@ -176,18 +167,6 @@ export const TeamManagement = () => {
 
 	const handleDeleteClick = (team: TeamRow) => {
 		setTeamToDelete({ id: team.id, name: team.name })
-	}
-
-	const handleManageBadgesClick = (
-		teamId: string,
-		teamName: string,
-		teamRef: DocumentReference<TeamDocument>
-	) => {
-		setTeamForBadges({
-			id: teamId,
-			name: teamName,
-			ref: teamRef,
-		})
 	}
 
 	const handleMergeClick = (team: TeamRow) => {
@@ -351,20 +330,6 @@ export const TeamManagement = () => {
 														<Pencil className='h-4 w-4 mr-2' />
 														Edit
 													</Button>
-													<Button
-														variant='outline'
-														size='sm'
-														onClick={() =>
-															handleManageBadgesClick(
-																team.id,
-																team.name,
-																team.ref
-															)
-														}
-													>
-														<Award className='h-4 w-4 mr-2' />
-														Badges
-													</Button>
 													{selectedSeasonUsesTeamPayments && (
 														<Button
 															variant='outline'
@@ -473,20 +438,6 @@ export const TeamManagement = () => {
 														<Pencil className='h-4 w-4 mr-2' />
 														Edit
 													</Button>
-													<Button
-														variant='outline'
-														size='sm'
-														onClick={() =>
-															handleManageBadgesClick(
-																team.id,
-																team.name,
-																team.ref
-															)
-														}
-													>
-														<Award className='h-4 w-4 mr-2' />
-														Badges
-													</Button>
 													{selectedSeasonUsesTeamPayments && (
 														<Button
 															variant='outline'
@@ -536,18 +487,6 @@ export const TeamManagement = () => {
 				seasonId={selectedSeasonId}
 				onClose={() => setTeamToDelete(null)}
 			/>
-
-			{/* Badge Management Dialog */}
-			{teamForBadges && (
-				<TeamBadgesDialog
-					open={!!teamForBadges}
-					onOpenChange={(open) => !open && setTeamForBadges(null)}
-					teamId={teamForBadges.id}
-					teamName={teamForBadges.name}
-					teamRef={teamForBadges.ref}
-					seasonId={selectedSeasonId}
-				/>
-			)}
 
 			{/* Team Payments Dialog */}
 			{teamForPayments && selectedSeasonId && (

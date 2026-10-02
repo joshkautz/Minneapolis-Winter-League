@@ -1,29 +1,20 @@
 /**
  * Badge Management admin component
  *
- * Allows admins to create, edit, and delete badges
+ * Every badge is defined in code and awarded by its rule, nightly at 11:30pm.
+ * This page lists them with how often each has been earned, and rebuilds
+ * the awards now: first as a preview of what would change, then for real.
  */
 
 import { useState } from 'react'
-import { getDoc } from 'firebase/firestore'
-import {
-	Award,
-	Plus,
-	Pencil,
-	Trash2,
-	Image as ImageIcon,
-	X,
-	Trophy,
-} from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useCollection } from 'react-firebase-hooks/firestore'
+import { Award, RefreshCcw, Search } from 'lucide-react'
 import { toast } from 'sonner'
-import { formatDistanceToNow } from 'date-fns'
 
-import { useBadgesContext } from '@/providers'
+import { badgeStatsQuery } from '@/firebase/collections/badges'
 import {
-	createBadgeViaFunction,
-	updateBadgeViaFunction,
-	deleteBadgeViaFunction,
+	rebuildBadgesViaFunction,
+	type RebuildBadgesResponse,
 } from '@/firebase/collections/functions'
 import {
 	Card,
@@ -32,16 +23,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import {
-	PageContainer,
-	PageHeader,
-	DestructiveConfirmationDialog,
-	ImageField,
-	LoadingButton,
-	LoadingSpinner,
-	QueryError,
-} from '@/shared/components'
 import {
 	Table,
 	TableBody,
@@ -50,537 +31,155 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/ui/table'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
-import { BadgeDocument, PlayerDocument } from '@/types'
-import { fileToBase64, logger, errorMessage } from '@/shared/utils'
-import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
-import { Badge } from '@/components/ui/badge'
-import {
-	BackToAdminButton,
-	useAdminSeasonFilter,
-} from '@/features/admin/shared'
-import { TEXT_RULES, textProblem } from '@/shared/text-rules'
+import { LoadingButton, PageContainer, PageHeader } from '@/shared/components'
+import { BADGES, TIER_LABELS, badgeImageUrl } from '@/shared/badges'
+import { errorMessage, logger } from '@/shared/utils'
+import { useQueryErrorHandler, usePendingAction } from '@/shared/hooks'
+import type { BadgeStatsDocument } from '@/types'
+import { BackToAdminButton } from '@/features/admin/shared'
 
-interface ProcessedBadge {
-	id: string
-	name: string
-	description: string
-	imageUrl: string | null
-	createdByName: string
-	createdAt: Date
-}
-
-type DialogMode = 'create' | 'edit' | 'closed'
+const changes = (result: RebuildBadgesResponse): string =>
+	`${result.created} new, ${result.updated} changed, ${result.removed} removed`
 
 export const BadgeManagement = () => {
-	const navigate = useNavigate()
-	const { seasons, seasonsError, selectedSeasonId, setSelectedSeasonId } =
-		useAdminSeasonFilter()
-	const {
-		allBadgesQuerySnapshot: badgesSnapshot,
-		allBadgesQuerySnapshotLoading: badgesLoading,
-		allBadgesQuerySnapshotError: badgesError,
-	} = useBadgesContext()
+	const [stats, , statsError] = useCollection(badgeStatsQuery())
+	const [preview, setPreview] = useState<RebuildBadgesResponse | null>(null)
+	const previewing = usePendingAction()
+	const rebuilding = usePendingAction()
 
 	useQueryErrorHandler({
-		error: seasonsError,
+		error: statsError,
 		component: 'BadgeManagement',
-		errorLabel: 'seasons',
+		errorLabel: 'badge totals',
 	})
 
-	// Process badges to resolve references.
-	//
-	// useResolvedSnapshot derives the loading flag from which snapshot the
-	// rows belong to, so there is no synchronous setState in an effect, and a
-	// slow resolve for a superseded snapshot cannot overwrite newer rows.
-	const { items: badgesList, isProcessing } = useResolvedSnapshot(
-		badgesSnapshot,
-		async (snapshot) => {
-			const results = await Promise.all(
-				snapshot.docs.map(async (badgeDoc) => {
-					const badgeData = badgeDoc.data() as BadgeDocument
-					const badgeId = badgeDoc.id
-
-					try {
-						// Fetch creator data
-						const creatorDoc = await getDoc(badgeData.createdBy)
-						const creatorData = creatorDoc.data() as PlayerDocument | undefined
-						const createdByName = creatorData
-							? `${creatorData.firstname} ${creatorData.lastname}`
-							: 'Unknown'
-
-						return {
-							id: badgeId,
-							name: badgeData.name,
-							description: badgeData.description,
-							imageUrl: badgeData.imageUrl,
-							createdByName,
-							createdAt: badgeData.createdAt.toDate(),
-						} as ProcessedBadge
-					} catch (error) {
-						logger.error(`Error processing badge ${badgeId}`, error as Error)
-						return {
-							id: badgeId,
-							name: badgeData.name,
-							description: badgeData.description,
-							imageUrl: badgeData.imageUrl,
-							createdByName: 'Unknown',
-							createdAt: badgeData.createdAt.toDate(),
-						} as ProcessedBadge
-					}
-				})
-			)
-
-			return results
-		}
+	const statsById = new Map(
+		stats?.docs.map((doc) => [doc.id, doc.data() as BadgeStatsDocument]) ?? []
 	)
 
-	// Dialog state
-	const [dialogMode, setDialogMode] = useState<DialogMode>('closed')
-	const [selectedBadge, setSelectedBadge] = useState<ProcessedBadge | null>(
-		null
-	)
-	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-	const [badgeToDelete, setBadgeToDelete] = useState<ProcessedBadge | null>(
-		null
-	)
-
-	// Form state
-	const [formData, setFormData] = useState({
-		name: '',
-		description: '',
-		imageFile: null as File | null,
-		removeImage: false,
-	})
-
-	// Loading states
-	const [isSubmitting, setIsSubmitting] = useState(false)
-
-	// Reset form
-	const resetForm = () => {
-		setFormData({
-			name: '',
-			description: '',
-			imageFile: null,
-			removeImage: false,
-		})
-		setSelectedBadge(null)
-		setDialogMode('closed')
-	}
-
-	// Open create dialog
-	const handleCreate = () => {
-		resetForm()
-		setDialogMode('create')
-	}
-
-	// Open edit dialog
-	const handleEdit = (badge: ProcessedBadge) => {
-		setSelectedBadge(badge)
-		setFormData({
-			name: badge.name,
-			description: badge.description,
-			imageFile: null,
-			removeImage: false,
-		})
-		setDialogMode('edit')
-	}
-
-	// Submit form
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault()
-
-		const problem =
-			textProblem(formData.name, TEXT_RULES.badgeName) ??
-			textProblem(formData.description, TEXT_RULES.badgeDescription)
-		if (problem) {
-			toast.error(problem)
-			return
-		}
-
-		setIsSubmitting(true)
-
+	const rebuild = (dryRun: boolean) => async (): Promise<boolean> => {
 		try {
-			if (dialogMode === 'create') {
-				// Create badge
-				let imageBlob: string | undefined
-				let imageContentType: string | undefined
-
-				if (formData.imageFile) {
-					imageBlob = await fileToBase64(formData.imageFile)
-					imageContentType = formData.imageFile.type
-				}
-
-				const result = await createBadgeViaFunction({
-					name: formData.name,
-					description: formData.description,
-					imageBlob,
-					imageContentType,
-				})
-
-				toast.success(result.message)
-			} else if (dialogMode === 'edit' && selectedBadge) {
-				// Update badge
-				let imageBlob: string | undefined
-				let imageContentType: string | undefined
-
-				if (formData.imageFile) {
-					imageBlob = await fileToBase64(formData.imageFile)
-					imageContentType = formData.imageFile.type
-				}
-
-				// Prepare update payload
-				const updatePayload = {
-					badgeId: selectedBadge.id,
-					name:
-						formData.name.trim() !== selectedBadge.name
-							? formData.name.trim()
-							: undefined,
-					description:
-						formData.description.trim() !== selectedBadge.description
-							? formData.description.trim()
-							: undefined,
-					imageBlob,
-					imageContentType,
-					removeImage: formData.removeImage,
-				}
-
-				const result = await updateBadgeViaFunction(updatePayload)
-
-				toast.success(result.message)
+			const result = await rebuildBadgesViaFunction({ dryRun })
+			if (dryRun) {
+				setPreview(result)
+			} else {
+				setPreview(null)
+				toast.success('Badges rebuilt', { description: changes(result) })
 			}
-
-			resetForm()
+			return true
 		} catch (error) {
-			logger.error('Error saving badge', error as Error)
-
-			toast.error(
-				dialogMode === 'create'
-					? 'Badge creation failed'
-					: 'Badge update failed',
-				{
-					description: errorMessage(
-						error,
-						'The badge could not be saved. Please try again.'
-					),
-				}
-			)
-		} finally {
-			setIsSubmitting(false)
-		}
-	}
-
-	// Handle delete
-	const handleDeleteClick = (badge: ProcessedBadge) => {
-		setBadgeToDelete(badge)
-		setDeleteDialogOpen(true)
-	}
-
-	const confirmDelete = async () => {
-		if (!badgeToDelete) return
-
-		try {
-			const result = await deleteBadgeViaFunction({
-				badgeId: badgeToDelete.id,
-			})
-			toast.success(result.message)
-			setDeleteDialogOpen(false)
-			setBadgeToDelete(null)
-		} catch (error) {
-			logger.error('Error deleting badge', error as Error)
-
-			toast.error('Badge deletion failed', {
+			logger.error('Badges rebuild failed', error, { dryRun })
+			toast.error(dryRun ? 'Preview failed' : 'Rebuild failed', {
 				description: errorMessage(
 					error,
-					'The badge could not be deleted. Please try again.'
+					'The badges could not be rebuilt. Please try again.'
 				),
 			})
+			return false
 		}
-	}
-
-	// Loading state
-	if (badgesLoading || isProcessing) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<Card>
-					<CardContent className='p-6 text-center'>
-						<LoadingSpinner size='lg' />
-					</CardContent>
-				</Card>
-			</div>
-		)
-	}
-
-	// Error state
-	if (badgesError) {
-		return (
-			<div className='container mx-auto px-4 py-8'>
-				<QueryError
-					error={badgesError}
-					title='Error Loading Badges'
-					onRetry={() => navigate(0)}
-				/>
-			</div>
-		)
 	}
 
 	return (
 		<PageContainer withSpacing withGap>
 			<PageHeader
 				title='Badge Management'
-				description='Create and manage badges that can be awarded to teams for special accomplishments'
+				description='Every badge is awarded automatically by its rule, every night at 11:30pm'
 				icon={Award}
 			/>
 
-			{/* Back to Dashboard */}
 			<div className='flex items-center justify-between gap-4'>
 				<BackToAdminButton />
-				<Button onClick={handleCreate}>
-					<Plus className='h-4 w-4 mr-2' />
-					Create Badge
-				</Button>
 			</div>
 
-			{/* Badges Table */}
 			<Card>
 				<CardHeader>
-					<div className='flex items-center justify-between'>
-						<div>
-							<CardTitle className='flex items-center gap-2'>
-								<Trophy className='h-5 w-5' />
-								Badges ({badgesList.length})
-							</CardTitle>
-							<CardDescription>
-								View and manage all badges in the system
-							</CardDescription>
-						</div>
-						<Select
-							value={selectedSeasonId}
-							onValueChange={(value) => setSelectedSeasonId(value)}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder='Filter by season' />
-							</SelectTrigger>
-							<SelectContent>
-								{seasons?.map((season) => (
-									<SelectItem key={season.id} value={season.id}>
-										{season.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
+					<CardTitle>Rebuild now</CardTitle>
+					<CardDescription>
+						Works out every award from the games, rosters, registrations and
+						ratings, then makes the teams' badges match. Preview first to see
+						what would change; nothing is written until you rebuild.
+					</CardDescription>
 				</CardHeader>
-				<CardContent>
-					{badgesList.length === 0 ? (
-						<div className='text-center py-12'>
-							<Award className='h-12 w-12 mx-auto text-muted-foreground mb-4' />
-							<p className='text-muted-foreground'>
-								No badges created yet. Create your first badge to get started.
-							</p>
-						</div>
-					) : (
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead className='w-[80px]'>Image</TableHead>
-									<TableHead>Name</TableHead>
-									<TableHead>Description</TableHead>
-									<TableHead className='w-[150px]'>Created By</TableHead>
-									<TableHead className='w-[120px]'>Created</TableHead>
-									<TableHead className='w-[180px] text-right'>
-										Actions
-									</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{badgesList.map((badge) => (
-									<TableRow key={badge.id}>
-										<TableCell>
-											{badge.imageUrl ? (
-												<img
-													src={badge.imageUrl}
-													alt={badge.name}
-													className='w-12 h-12 object-cover rounded'
-												/>
-											) : (
-												<div className='w-12 h-12 bg-muted rounded flex items-center justify-center'>
-													<ImageIcon className='h-6 w-6 text-muted-foreground' />
-												</div>
-											)}
-										</TableCell>
-										<TableCell className='font-medium'>{badge.name}</TableCell>
-										<TableCell className='max-w-md truncate'>
-											{badge.description}
-										</TableCell>
-										<TableCell>{badge.createdByName}</TableCell>
-										<TableCell className='text-muted-foreground text-sm'>
-											{formatDistanceToNow(badge.createdAt, {
-												addSuffix: true,
-											})}
-										</TableCell>
-										<TableCell className='text-right'>
-											<div className='flex items-center justify-end gap-2'>
-												<Button
-													variant='outline'
-													size='sm'
-													onClick={() => handleEdit(badge)}
-												>
-													<Pencil className='h-4 w-4' />
-												</Button>
-												<Button
-													variant='outline'
-													size='sm'
-													onClick={() => handleDeleteClick(badge)}
-												>
-													<Trash2 className='h-4 w-4' />
-												</Button>
-											</div>
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
+				<CardContent className='space-y-4'>
+					<div className='flex flex-wrap gap-2'>
+						<LoadingButton
+							variant='outline'
+							loading={previewing.pending}
+							loadingText='Previewing...'
+							disabled={rebuilding.pending}
+							onClick={() => previewing.run(rebuild(true))}
+						>
+							<Search className='h-4 w-4 mr-2' aria-hidden='true' />
+							Preview changes
+						</LoadingButton>
+						<LoadingButton
+							loading={rebuilding.pending}
+							loadingText='Rebuilding...'
+							disabled={previewing.pending}
+							onClick={() => rebuilding.run(rebuild(false))}
+						>
+							<RefreshCcw className='h-4 w-4 mr-2' aria-hidden='true' />
+							Rebuild badges
+						</LoadingButton>
+					</div>
+					{preview && (
+						<p className='text-sm' role='status'>
+							A rebuild would award {preview.awards} badges in all:{' '}
+							{changes(preview)}.
+						</p>
 					)}
 				</CardContent>
 			</Card>
 
-			{/* Create/Edit Dialog */}
-			<Dialog
-				open={dialogMode === 'create' || dialogMode === 'edit'}
-				onOpenChange={() => resetForm()}
-			>
-				<DialogContent className='max-w-2xl'>
-					<DialogHeader>
-						<DialogTitle>
-							{dialogMode === 'create' ? 'Create New Badge' : 'Edit Badge'}
-						</DialogTitle>
-						<DialogDescription>
-							{dialogMode === 'create'
-								? 'Create a new badge that can be awarded to teams'
-								: 'Update the badge details'}
-						</DialogDescription>
-					</DialogHeader>
-
-					<form onSubmit={handleSubmit}>
-						<div className='space-y-4 py-4'>
-							<div className='space-y-2'>
-								<Label htmlFor='name'>
-									Badge Name <span className='text-red-500'>*</span>
-								</Label>
-								<Input
-									id='name'
-									value={formData.name}
-									onChange={(e) =>
-										setFormData((prev) => ({ ...prev, name: e.target.value }))
-									}
-									placeholder='Enter badge name'
-									maxLength={TEXT_RULES.badgeName.max}
-									required
-								/>
-							</div>
-
-							<div className='space-y-2'>
-								<Label htmlFor='description'>
-									Badge Description <span className='text-red-500'>*</span>
-								</Label>
-								<Textarea
-									id='description'
-									value={formData.description}
-									onChange={(e) =>
-										setFormData((prev) => ({
-											...prev,
-											description: e.target.value,
-										}))
-									}
-									placeholder='Enter badge description'
-									rows={3}
-									maxLength={TEXT_RULES.badgeDescription.max}
-									required
-								/>
-							</div>
-
-							<ImageField
-								label='Badge Image (Optional)'
-								subject='The badge image'
-								currentUrl={
-									formData.removeImage ? null : selectedBadge?.imageUrl
-								}
-								onFileChange={(file: File | undefined) =>
-									setFormData((prev) => ({
-										...prev,
-										imageFile: file ?? null,
-										removeImage: file ? false : prev.removeImage,
-									}))
-								}
-								disabled={isSubmitting}
-								previewAlt={selectedBadge?.name ?? 'Badge image preview'}
-								emptyLabel='No image'
-							>
-								{dialogMode === 'edit' &&
-									selectedBadge?.imageUrl &&
-									!formData.removeImage && (
-										<Button
-											type='button'
-											variant='outline'
-											size='sm'
-											onClick={() =>
-												setFormData((prev) => ({ ...prev, removeImage: true }))
-											}
-										>
-											<X className='h-4 w-4 mr-2' />
-											Remove Current Image
-										</Button>
-									)}
-								{formData.removeImage && (
-									<Badge variant='destructive'>Image will be removed</Badge>
-								)}
-							</ImageField>
-						</div>
-
-						<DialogFooter>
-							<LoadingButton
-								type='submit'
-								loading={isSubmitting}
-								loadingText={
-									dialogMode === 'create' ? 'Creating Badge...' : 'Saving...'
-								}
-								className='w-full'
-							>
-								{dialogMode === 'create' ? 'Create Badge' : 'Save Changes'}
-							</LoadingButton>
-						</DialogFooter>
-					</form>
-				</DialogContent>
-			</Dialog>
-
-			{/* Delete Confirmation Dialog */}
-			<DestructiveConfirmationDialog
-				open={deleteDialogOpen}
-				onOpenChange={setDeleteDialogOpen}
-				onConfirm={confirmDelete}
-				title='Delete Badge'
-				description={`Are you sure you want to delete "${badgeToDelete?.name}"? This will also remove it from all teams that have been awarded this badge. This action cannot be undone.`}
-			>
-				<></>
-			</DestructiveConfirmationDialog>
+			<Card>
+				<CardHeader>
+					<CardTitle>Badges</CardTitle>
+					<CardDescription>
+						{BADGES.length} badges. A team can earn each one once a season.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Badge</TableHead>
+								<TableHead>Tier</TableHead>
+								<TableHead className='text-right'>Teams</TableHead>
+								<TableHead className='text-right'>Times earned</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
+							{BADGES.map((badge) => (
+								<TableRow key={badge.id}>
+									<TableCell>
+										<div className='flex items-center gap-3'>
+											<img
+												src={badgeImageUrl(badge.id)}
+												alt=''
+												role='presentation'
+												className='w-10 h-10 rounded-full flex-shrink-0'
+											/>
+											<div>
+												<div className='font-medium'>{badge.name}</div>
+												<div className='text-xs text-muted-foreground'>
+													{badge.description}
+												</div>
+											</div>
+										</div>
+									</TableCell>
+									<TableCell>{TIER_LABELS[badge.tier]}</TableCell>
+									<TableCell className='text-right'>
+										{statsById.get(badge.id)?.teamsEarned ?? 0}
+									</TableCell>
+									<TableCell className='text-right'>
+										{statsById.get(badge.id)?.timesEarned ?? 0}
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
+				</CardContent>
+			</Card>
 		</PageContainer>
 	)
 }

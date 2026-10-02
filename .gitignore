@@ -83,3 +83,6 @@ scripts/production/data/**
 .claude/settings.local.json
 .claude/worktrees/
 .email-previews/
+
+# Rendered badge artwork (scripts/badge-art/render.js)
+scripts/badge-art/out/

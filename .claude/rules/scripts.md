@@ -65,3 +65,12 @@ script's path.
 `Functions/dist`, so they run after the Functions build. Keep the decision
 logic in exported pure functions and the I/O in `main()`, guarded so importing
 the file does not run it — the tests in `tests/integration/` import them.
+
+## Badge artwork
+
+`scripts/badge-art/render.js` draws every badge with GIMP's Script-Fu and
+writes `App/public/badges/<id>.webp`, which is committed: the site serves
+those files. Names and tiers come from `Functions/src/badges/catalog.ts`,
+imported directly (Node strips its types); `badges.js` holds only the art.
+Re-render after changing either, and look at `out/sheet.png` before
+committing. See `docs/BADGES.md`.

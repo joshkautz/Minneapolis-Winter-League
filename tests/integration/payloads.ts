@@ -20,14 +20,7 @@ const LATER = new Date('2030-03-01T00:00:00.000Z')
 
 export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	// --- admin: badges -----------------------------------------------------
-	awardBadge: { badgeId: 'badge-1', teamId: 'team-1', seasonId: 'season-1' },
-	createBadge: {
-		name: 'Early Bird',
-		description: 'First team to fully register for the season.',
-	},
-	deleteBadge: { badgeId: 'badge-1' },
-	revokeBadge: { badgeId: 'badge-1', teamId: 'team-1' },
-	updateBadge: { badgeId: 'badge-1', name: 'Early Birds' },
+	rebuildBadges: { dryRun: true },
 
 	// --- admin: games ------------------------------------------------------
 	createGame: {
