@@ -7,6 +7,7 @@ import type { QuerySnapshot } from 'firebase/firestore'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import type { TeamStanding } from '@/shared/hooks'
 import type { GameDocument, TeamSeasonDocument } from '@/types'
+import { LEAGUE_TIME_ZONE } from '@/shared/game-rules'
 
 /** Each team's `standingsRank`, for those that have one. */
 export const standingsRanks = (
@@ -63,7 +64,7 @@ export const nightsIn = (
 	new Set(
 		(games?.docs ?? []).map((doc) =>
 			doc.data().date.toDate().toLocaleDateString('en-CA', {
-				timeZone: 'America/Chicago',
+				timeZone: LEAGUE_TIME_ZONE,
 			})
 		)
 	).size

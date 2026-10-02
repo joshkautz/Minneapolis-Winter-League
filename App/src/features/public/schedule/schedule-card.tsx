@@ -12,6 +12,7 @@ import { useTeamsContext } from '@/providers'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TeamIcon } from './team-icon'
+import { LEAGUE_TIME_ZONE } from '@/shared/game-rules'
 
 export const ScheduleCard = ({
 	games,
@@ -34,6 +35,7 @@ export const ScheduleCard = ({
 						.find((game) => game)
 						?.date.toDate()
 						.toLocaleString(undefined, {
+							timeZone: LEAGUE_TIME_ZONE,
 							weekday: 'long', // Full weekday name
 							month: 'long', // Full month name
 							day: 'numeric', // Day of the month

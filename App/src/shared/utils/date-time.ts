@@ -2,10 +2,12 @@ import { formatDistanceToNow } from 'date-fns'
 /**
  * Date and time utilities
  *
- * Reusable functions for formatting and manipulating dates
+ * Dates and times are shown on Minneapolis's clock, the league's, whatever
+ * the reader's own: a 6:00pm kickoff reads 6:00pm everywhere.
  */
 
 import { Timestamp } from '@/types'
+import { LEAGUE_TIME_ZONE } from '@/shared/game-rules'
 
 /**
  * Format a Firebase Timestamp to a readable date string
@@ -19,6 +21,7 @@ export const formatTimestamp = (
 
 	const date = new Date(timestamp.seconds * 1000)
 	return date.toLocaleDateString('en-US', {
+		timeZone: LEAGUE_TIME_ZONE,
 		month: 'long',
 		day: 'numeric',
 		year: 'numeric',
@@ -28,6 +31,7 @@ export const formatTimestamp = (
 /** "November 7, 2026 at 6:00 PM". */
 const formatDateTime = (date: Date): string => {
 	return date.toLocaleDateString('en-US', {
+		timeZone: LEAGUE_TIME_ZONE,
 		month: 'long',
 		day: 'numeric',
 		year: 'numeric',
@@ -54,6 +58,7 @@ export const formatTimestampWithTime = (
 /** A short date for tables: "Sep 25, 2026". */
 export const formatShortDate = (date: Date): string =>
 	date.toLocaleDateString('en-US', {
+		timeZone: LEAGUE_TIME_ZONE,
 		year: 'numeric',
 		month: 'short',
 		day: 'numeric',
@@ -61,7 +66,19 @@ export const formatShortDate = (date: Date): string =>
 
 /** A clock time for tables: "02:30 PM". */
 export const formatClockTime = (date: Date): string =>
-	date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+	date.toLocaleTimeString('en-US', {
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZone: LEAGUE_TIME_ZONE,
+	})
+
+/** A kickoff: "6:00 PM". */
+export const formatKickoffTime = (date: Date): string =>
+	date.toLocaleTimeString('en-US', {
+		hour: 'numeric',
+		minute: '2-digit',
+		timeZone: LEAGUE_TIME_ZONE,
+	})
 
 /** How long ago, for feeds: "3 hours ago". */
 export const formatRelativeTime = (date: Date): string => {

@@ -4,6 +4,8 @@
 
 import { getStripeSecretKey, getStripeWebhookSecret } from './environment.js'
 
+import { LEAGUE_TIME_ZONE } from '../shared/gameRules.js'
+
 // Firebase Configuration (static - no env vars needed)
 export const FIREBASE_CONFIG = {
 	REGION: 'us-central1',
@@ -12,7 +14,7 @@ export const FIREBASE_CONFIG = {
 	 * in messages are shown in it unless the caller sends its own zone.
 	 * `waiver/rules.ts` holds the same value, since that file cannot import.
 	 */
-	TIME_ZONE: 'America/Chicago',
+	TIME_ZONE: LEAGUE_TIME_ZONE,
 } as const
 
 // Business Logic Constants (static)

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { leagueInstant, leagueNights } from './leagueCalendar.js'
+import {
+	leagueInstant,
+	leagueTimeIso,
+	leagueNights,
+	leagueSaturdays,
+	leagueWallClock,
+} from './leagueCalendar.js'
 
 /** Minneapolis midnight, as the season documents store their dates. */
 const midnight = (day: string, offsetHours = 6): Date =>
@@ -83,6 +89,45 @@ describe('leagueInstant', () => {
 	it('reads it on the day the clocks go back', () => {
 		expect(leagueInstant(new Date('2026-11-01T00:00:00Z'), '18:45')).toEqual(
 			new Date('2026-11-02T00:45:00Z')
+		)
+	})
+})
+
+describe('leagueSaturdays', () => {
+	it('keeps the Saturday after Thanksgiving, which leagueNights drops', () => {
+		const start = midnight('2026-11-07')
+		const end = midnight('2026-12-20')
+		expect(days(leagueSaturdays(start, end))).toContain('2026-11-28')
+		expect(days(leagueNights(start, end))).not.toContain('2026-11-28')
+	})
+})
+
+describe('leagueWallClock', () => {
+	it('reads an instant on Minneapolis’s calendar and clock', () => {
+		expect(leagueWallClock(new Date('2026-11-08T02:15:00Z'))).toEqual({
+			day: '2026-11-07',
+			time: '20:15',
+		})
+		expect(leagueWallClock(new Date('2026-03-14T23:00:00Z'))).toEqual({
+			day: '2026-03-14',
+			time: '18:00',
+		})
+	})
+})
+
+describe('leagueTimeIso', () => {
+	it('writes the league’s offset that day, either side of daylight saving', () => {
+		expect(leagueTimeIso('2026-11-07', '18:00')).toBe(
+			'2026-11-07T18:00:00.000-06:00'
+		)
+		expect(leagueTimeIso('2026-03-14', '20:15')).toBe(
+			'2026-03-14T20:15:00.000-05:00'
+		)
+	})
+
+	it('names the same instant as leagueInstant', () => {
+		expect(new Date(leagueTimeIso('2026-12-19', '20:15'))).toEqual(
+			leagueInstant(new Date('2026-12-19T00:00:00Z'), '20:15')
 		)
 	})
 })
