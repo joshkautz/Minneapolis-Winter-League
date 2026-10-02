@@ -127,6 +127,37 @@ describe('deleteUnregisteredTeam', () => {
 		).toBeNull()
 	})
 
+	it('deletes the team itself when that season was its only one', async () => {
+		await seedTeamSeason(CURRENT)
+
+		await run({ teamId: TEAM, seasonId: CURRENT })
+
+		// Left behind, it was counted among the teams every badge share
+		// divides by, so Welcome could never reach 100%.
+		expect((await firestore.doc(`teams/${TEAM}`).get()).exists).toBe(false)
+	})
+
+	it('keeps a team that has another season', async () => {
+		await seedTeamSeason(PAST)
+		await seedTeamSeason(CURRENT)
+
+		await run({ teamId: TEAM, seasonId: CURRENT })
+
+		expect((await firestore.doc(`teams/${TEAM}`).get()).exists).toBe(true)
+		expect(await teamSeasonExists(PAST)).toBe(true)
+	})
+
+	it('keeps a team that holds a badge', async () => {
+		await seedTeamSeason(CURRENT)
+		await firestore
+			.doc(`teams/${TEAM}/badges/welcome_${PAST}`)
+			.set({ badgeId: 'welcome', seasonId: PAST })
+
+		await run({ teamId: TEAM, seasonId: CURRENT })
+
+		expect((await firestore.doc(`teams/${TEAM}`).get()).exists).toBe(true)
+	})
+
 	it('refuses a past season rather than deleting the current one', async () => {
 		await seedTeamSeason(PAST)
 		await seedTeamSeason(CURRENT)

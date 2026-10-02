@@ -71,6 +71,15 @@ and every player was new to the league. A registration date after the season
 began is ignored rather than trusted: Season 1 has one from the following
 summer.
 
+### The share on the team page
+
+"78% of teams have earned it" is the teams that have earned the badge out of
+every team there is (`badges/{badgeId}.teamsEarned` over a count of `teams`).
+A badge that waits for a season to start counts a new team only once its
+first season has begun: on 2 October 2026 Welcome stood at 25 of 32 because
+six teams new for Season 5 had not played yet. Deleting a team's last season
+deletes the team, so a team that never played does not hold a share down.
+
 ## The badges
 
 Thresholds are constants in the catalog.

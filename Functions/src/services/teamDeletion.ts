@@ -1,15 +1,15 @@
 /**
  * Team season deletion service
  *
- * Deletes a team's participation in a specific season. The canonical team
- * parent document (`teams/{teamId}`) is left untouched even if this season
- * was its only participation — pruning a team across all of history is a
- * separate (and currently unimplemented) admin operation.
+ * Deletes a team's participation in a specific season. When that season was
+ * the team's last, and it has no badges, the team itself (`teams/{teamId}`)
+ * goes too: left behind it is a team with no history that every count of
+ * teams still includes — badge shares divide by them.
  *
  * Operations performed:
  *  1. Delete the team's roster subcollection for this season
  *  2. Clear `team` and `captain` from each affected player's season subdoc
- *  3. Delete the team's season subdoc
+ *  3. Delete the team's season subdoc, and the team if nothing else is left
  *  4. Delete offers referencing (team, season)
  *  5. Delete the season-specific logo from Storage (best effort)
  */
@@ -19,6 +19,7 @@ import { logger } from 'firebase-functions/v2'
 import { deleteInBatches } from '../shared/batches.js'
 import {
 	Collections,
+	TEAM_BADGES_SUBCOLLECTION,
 	TEAM_SEASONS_SUBCOLLECTION,
 	type TeamContributionDocument,
 	ROSTER_SUBCOLLECTION,
@@ -41,6 +42,8 @@ export interface TeamDeletionResult {
 	playersUpdated: number
 	offersDeleted: number
 	logoDeleted: boolean
+	/** The season was the team's last, so `teams/{teamId}` was deleted too. */
+	teamDeleted: boolean
 	/**
 	 * Why it failed. A refusal (`not-found`, `failed-precondition`) carries a
 	 * message fit to show the caller; `internal` carries the raw error for the
@@ -85,6 +88,7 @@ export async function deleteTeamSeasonWithCleanup(
 	let playersUpdated = 0
 	let offersDeleted = 0
 	let logoDeleted = false
+	let teamDeleted = false
 
 	try {
 		// Every check and write happens in one transaction: checked outside
@@ -95,17 +99,29 @@ export async function deleteTeamSeasonWithCleanup(
 			async (transaction) => {
 				// A retried transaction starts its count again.
 				playersUpdated = 0
+				teamDeleted = false
 				// Firestore requires every read in a transaction to happen
 				// before any write. Reading each player's season subdoc after
 				// deleting a roster entry once failed every team deletion.
-				const [teamSeasonSnap, contributionsSnap, rosterSnap] =
-					await Promise.all([
-						transaction.get(teamSeasonDocRef),
-						transaction.get(
-							teamSeasonDocRef.collection(CONTRIBUTIONS_SUBCOLLECTION)
-						),
-						transaction.get(teamSeasonDocRef.collection(ROSTER_SUBCOLLECTION)),
-					])
+				const [
+					teamSeasonSnap,
+					contributionsSnap,
+					rosterSnap,
+					allSeasonsSnap,
+					badgeSnap,
+				] = await Promise.all([
+					transaction.get(teamSeasonDocRef),
+					transaction.get(
+						teamSeasonDocRef.collection(CONTRIBUTIONS_SUBCOLLECTION)
+					),
+					transaction.get(teamSeasonDocRef.collection(ROSTER_SUBCOLLECTION)),
+					transaction.get(
+						teamCanonicalRef.collection(TEAM_SEASONS_SUBCOLLECTION)
+					),
+					transaction.get(
+						teamCanonicalRef.collection(TEAM_BADGES_SUBCOLLECTION).limit(1)
+					),
+				])
 				if (!teamSeasonSnap.exists) {
 					throw new DeletionRefused(
 						'not-found',
@@ -162,6 +178,15 @@ export async function deleteTeamSeasonWithCleanup(
 					}
 				})
 				transaction.delete(teamSeasonDocRef)
+				// A badge is only ever earned in a registered season, so a team
+				// with one has history worth keeping; check anyway.
+				const otherSeasons = allSeasonsSnap.docs.filter(
+					(doc) => doc.id !== seasonId
+				)
+				if (otherSeasons.length === 0 && badgeSnap.empty) {
+					transaction.delete(teamCanonicalRef)
+					teamDeleted = true
+				}
 				return data
 			}
 		)
@@ -196,6 +221,7 @@ export async function deleteTeamSeasonWithCleanup(
 			playersUpdated,
 			offersDeleted,
 			logoDeleted,
+			teamDeleted,
 		})
 
 		return {
@@ -206,6 +232,7 @@ export async function deleteTeamSeasonWithCleanup(
 			playersUpdated,
 			offersDeleted,
 			logoDeleted,
+			teamDeleted,
 		}
 	} catch (error) {
 		if (error instanceof DeletionRefused) {
@@ -217,6 +244,7 @@ export async function deleteTeamSeasonWithCleanup(
 				playersUpdated: 0,
 				offersDeleted: 0,
 				logoDeleted: false,
+				teamDeleted: false,
 				errorCode: error.code,
 				error: error.message,
 			}
@@ -239,6 +267,7 @@ export async function deleteTeamSeasonWithCleanup(
 			playersUpdated,
 			offersDeleted,
 			logoDeleted,
+			teamDeleted: false,
 			errorCode: 'internal',
 			error: errorMessage,
 		}
