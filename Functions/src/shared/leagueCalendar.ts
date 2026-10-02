@@ -1,9 +1,12 @@
 /**
  * Days on Minneapolis's calendar: the game nights, the Thanksgiving break,
  * and the dates badges and emails name.
+ *
+ * The App imports this file for its game form and home page, so it may
+ * import only `gameRules.ts`, which imports nothing.
  */
 
-import { FIREBASE_CONFIG } from '../config/constants.js'
+import { LEAGUE_TIME_ZONE } from './gameRules.js'
 
 const SATURDAY = 6
 const THURSDAY = 4
@@ -16,7 +19,7 @@ export const leagueCalendarDay = (instant: Date): Date => {
 		year: 'numeric',
 		month: 'numeric',
 		day: 'numeric',
-		timeZone: FIREBASE_CONFIG.TIME_ZONE,
+		timeZone: LEAGUE_TIME_ZONE,
 	}).formatToParts(instant)
 	const part = (type: Intl.DateTimeFormatPartTypes): number =>
 		Number(parts.find((p) => p.type === type)?.value)
@@ -32,7 +35,7 @@ export const leagueMonthDay = (instant: Date): string =>
 	new Intl.DateTimeFormat('en-US', {
 		month: 'long',
 		day: 'numeric',
-		timeZone: FIREBASE_CONFIG.TIME_ZONE,
+		timeZone: LEAGUE_TIME_ZONE,
 	}).format(instant)
 
 /** The Saturday after Thanksgiving (the fourth Thursday of November). */
@@ -45,26 +48,29 @@ export const thanksgivingSaturday = (year: number): Date => {
 /** Whether a calendar day (as UTC midnight) is a Saturday. */
 export const isSaturday = (day: Date): boolean => day.getUTCDay() === SATURDAY
 
-/** The calendar days a season's games are played on, as UTC midnights. */
-export const leagueNights = (dateStart: Date, dateEnd: Date): Date[] => {
-	const nights: Date[] = []
+/** Every Saturday of a season, its first and last days included, as UTC midnights. */
+export const leagueSaturdays = (dateStart: Date, dateEnd: Date): Date[] => {
+	const saturdays: Date[] = []
 	const last = leagueCalendarDay(dateEnd).getTime()
 	for (
 		let day = leagueCalendarDay(dateStart).getTime();
 		day <= last;
 		day += DAY_MS
 	) {
-		const night = new Date(day)
-		// The league takes the Saturday after Thanksgiving off.
-		if (
-			isSaturday(night) &&
-			day !== thanksgivingSaturday(night.getUTCFullYear()).getTime()
-		) {
-			nights.push(night)
-		}
+		if (isSaturday(new Date(day))) saturdays.push(new Date(day))
 	}
-	return nights
+	return saturdays
 }
+
+/**
+ * The calendar days a season's games are played on, as UTC midnights: its
+ * Saturdays, except the one after Thanksgiving, which the league takes off.
+ */
+export const leagueNights = (dateStart: Date, dateEnd: Date): Date[] =>
+	leagueSaturdays(dateStart, dateEnd).filter(
+		(night) =>
+			night.getTime() !== thanksgivingSaturday(night.getUTCFullYear()).getTime()
+	)
 
 /** How far Minneapolis's clock is from UTC at an instant, in milliseconds. */
 const minneapolisOffsetMs = (instant: Date): number => {
@@ -76,7 +82,7 @@ const minneapolisOffsetMs = (instant: Date): number => {
 		minute: 'numeric',
 		second: 'numeric',
 		hourCycle: 'h23',
-		timeZone: FIREBASE_CONFIG.TIME_ZONE,
+		timeZone: LEAGUE_TIME_ZONE,
 	}).formatToParts(instant)
 	const part = (type: Intl.DateTimeFormatPartTypes): number =>
 		Number(parts.find((p) => p.type === type)?.value)
@@ -108,4 +114,43 @@ export const leagueInstant = (day: Date, time: string): Date => {
 	// change; taking it again at the first guess settles it.
 	const guess = wallClock - minneapolisOffsetMs(new Date(wallClock))
 	return new Date(wallClock - minneapolisOffsetMs(new Date(guess)))
+}
+
+/** "2026-11-07" and "18:45": an instant as Minneapolis's calendar and clock read it. */
+export const leagueWallClock = (
+	instant: Date
+): { day: string; time: string } => {
+	const parts = new Intl.DateTimeFormat('en-US', {
+		hour: '2-digit',
+		minute: '2-digit',
+		hourCycle: 'h23',
+		timeZone: LEAGUE_TIME_ZONE,
+	}).formatToParts(instant)
+	const part = (type: Intl.DateTimeFormatPartTypes): string =>
+		parts.find((p) => p.type === type)?.value ?? '00'
+	return {
+		day: leagueDayKey(instant),
+		time: `${part('hour')}:${part('minute')}`,
+	}
+}
+
+/**
+ * A Minneapolis wall-clock time with that day's offset,
+ * "2026-11-07T18:00:00.000-06:00": the form `createGame` and `updateGame`
+ * take a kickoff in, and an exact instant for any other date an admin
+ * enters. Built from the league's clock, not the browser's, so an admin
+ * anywhere means the same instant.
+ */
+export const leagueTimeIso = (day: string, time: string): string => {
+	const [year, month, date] = day.split('-').map(Number)
+	const kickoff = leagueInstant(new Date(Date.UTC(year, month - 1, date)), time)
+	const [hours, minutes] = time.split(':').map(Number)
+	const offsetMinutes = Math.round(
+		(Date.UTC(year, month - 1, date, hours, minutes) - kickoff.getTime()) /
+			60_000
+	)
+	const sign = offsetMinutes < 0 ? '-' : '+'
+	const absolute = Math.abs(offsetMinutes)
+	const offset = `${sign}${String(Math.floor(absolute / 60)).padStart(2, '0')}:${String(absolute % 60).padStart(2, '0')}`
+	return `${day}T${time}:00.000${offset}`
 }

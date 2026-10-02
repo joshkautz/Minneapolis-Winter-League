@@ -11,7 +11,12 @@ import { useCollection } from 'react-firebase-hooks/firestore'
 import { playerRankingsCalculationsQuery } from '@/firebase/collections/player-rankings'
 import { rebuildPlayerRankingsViaFunction } from '@/firebase/collections/functions'
 import { RankingsCalculationDocument, Timestamp } from '@/types'
-import { logger, errorMessage } from '@/shared/utils'
+import {
+	errorMessage,
+	formatKickoffTime,
+	formatShortDate,
+	logger,
+} from '@/shared/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -140,7 +145,8 @@ export const PlayerRankingManagement = () => {
 	const formatDate = (timestamp: Timestamp | null | undefined) => {
 		if (!timestamp) return 'N/A'
 		try {
-			return timestamp.toDate().toLocaleString()
+			const date = timestamp.toDate()
+			return `${formatShortDate(date)} ${formatKickoffTime(date)}`
 		} catch {
 			return 'Invalid date'
 		}

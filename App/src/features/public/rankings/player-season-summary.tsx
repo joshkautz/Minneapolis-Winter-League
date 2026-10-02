@@ -15,6 +15,7 @@ import {
 import { cn } from '@/shared/utils'
 import type { SeasonRankingDocument } from '@/types'
 import type { SeasonSlot } from './ranking-helpers'
+import { LEAGUE_TIME_ZONE } from '@/shared/game-rules'
 
 const Stat = ({ label, value }: { label: string; value: React.ReactNode }) => (
 	<div className='rounded-lg border bg-muted/20 p-3 text-center'>
@@ -115,11 +116,13 @@ export const PlayerSeasonSummary = ({
 									<TableRow key={round.roundId}>
 										<TableCell className='whitespace-nowrap'>
 											{kickoff.toLocaleDateString('en-US', {
+												timeZone: LEAGUE_TIME_ZONE,
 												month: 'short',
 												day: 'numeric',
 											})}{' '}
 											<span className='text-muted-foreground'>
 												{kickoff.toLocaleTimeString('en-US', {
+													timeZone: LEAGUE_TIME_ZONE,
 													hour: 'numeric',
 													minute: '2-digit',
 												})}

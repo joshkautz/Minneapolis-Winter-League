@@ -31,6 +31,7 @@ import { TeamHistory } from './team-history'
 import { TeamBadgesCard } from './team-badges-card'
 import { useSeasonsContext } from '@/providers'
 import { useQueryErrorHandler } from '@/shared/hooks'
+import { LEAGUE_TIME_ZONE } from '@/shared/game-rules'
 
 const RESULT = {
 	VS: 'vs',
@@ -410,6 +411,7 @@ export const TeamProfile = () => {
 													className='shrink-0'
 												>
 													{gameDate.toLocaleDateString('en-US', {
+														timeZone: LEAGUE_TIME_ZONE,
 														month: 'short',
 														day: 'numeric',
 													})}
@@ -417,6 +419,7 @@ export const TeamProfile = () => {
 												<span className='shrink-0'>•</span>
 												<span className='shrink-0'>
 													{gameDate.toLocaleTimeString('en-US', {
+														timeZone: LEAGUE_TIME_ZONE,
 														hour: 'numeric',
 														minute: '2-digit',
 													})}

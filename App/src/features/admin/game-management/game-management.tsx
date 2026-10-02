@@ -6,7 +6,6 @@
 
 import { useState, useEffect } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { Edit, Trash2, Calendar, Plus, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -61,7 +60,17 @@ import {
 	PageHeader,
 	QueryError,
 } from '@/shared/components'
-import { logger, errorMessage } from '@/shared/utils'
+import {
+	logger,
+	errorMessage,
+	formatKickoffTime,
+	formatShortDate,
+} from '@/shared/utils'
+import {
+	leagueTimeIso,
+	leagueSaturdays,
+	leagueWallClock,
+} from '@/shared/league-calendar'
 import { useQueryErrorHandler } from '@/shared/hooks'
 import {
 	GameDocument,
@@ -227,40 +236,25 @@ export const GameManagement = () => {
 		setFormData((prev) => ({ ...prev, [field]: value }))
 	}
 
-	// Generate Saturdays based on the selected season's date range
-	const getSaturdays = () => {
-		const saturdays: { date: string; display: string }[] = []
-
-		// Get the selected season
+	// Every Saturday of the selected season, on Minneapolis's calendar.
+	// Calendar days are UTC midnights, so they are named in UTC.
+	const getSaturdays = (): { date: string; display: string }[] => {
 		const selectedSeason = seasons?.find(
 			(season) => season.id === formData.seasonId
 		)
-
-		if (!selectedSeason) {
-			return saturdays
-		}
-
-		// Get start and end dates from the season
-		const startDate = selectedSeason.dateStart.toDate()
-		const endDate = selectedSeason.dateEnd.toDate()
-
-		// Start from the first day of the start date
-		const currentDate = new Date(startDate)
-		currentDate.setHours(0, 0, 0, 0)
-
-		// Find all Saturdays between start and end dates
-		while (currentDate <= endDate) {
-			if (currentDate.getDay() === 6) {
-				// 6 = Saturday
-				const dateStr = format(currentDate, 'yyyy-MM-dd')
-				const displayStr = format(currentDate, 'MMMM d, yyyy')
-				saturdays.push({ date: dateStr, display: displayStr })
-			}
-			// Move to next day
-			currentDate.setDate(currentDate.getDate() + 1)
-		}
-
-		return saturdays
+		if (!selectedSeason) return []
+		return leagueSaturdays(
+			selectedSeason.dateStart.toDate(),
+			selectedSeason.dateEnd.toDate()
+		).map((day) => ({
+			date: day.toISOString().slice(0, 10),
+			display: day.toLocaleDateString('en-US', {
+				month: 'long',
+				day: 'numeric',
+				year: 'numeric',
+				timeZone: 'UTC',
+			}),
+		}))
 	}
 
 	const saturdays = getSaturdays()
@@ -387,14 +381,9 @@ export const GameManagement = () => {
 				return
 			}
 
-			// Create ISO timestamp with timezone offset
-			const dateObj = new Date(`${formData.date}T${formData.time}`)
-			const timezoneOffset = -dateObj.getTimezoneOffset()
-			const offsetHours = Math.floor(Math.abs(timezoneOffset) / 60)
-			const offsetMinutes = Math.abs(timezoneOffset) % 60
-			const offsetSign = timezoneOffset >= 0 ? '+' : '-'
-			const offsetString = `${offsetSign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`
-			const timestamp = `${formData.date}T${formData.time}:00.000${offsetString}`
+			// On the league's clock, not the browser's: the server checks the
+			// wall-clock time written here against the league's kickoffs.
+			const timestamp = leagueTimeIso(formData.date, formData.time)
 
 			if (editingGameId) {
 				// Update existing game
@@ -453,13 +442,11 @@ export const GameManagement = () => {
 	}
 
 	const handleEditGame = (game: GameDocument & { id: string }) => {
-		const gameDate = game.date.toDate()
-		const dateStr = format(gameDate, 'yyyy-MM-dd')
-		const timeStr = format(gameDate, 'HH:mm')
+		const { day, time } = leagueWallClock(game.date.toDate())
 
 		setFormData({
-			date: dateStr,
-			time: timeStr,
+			date: day,
+			time,
 			homeTeamId: game.home?.id || '',
 			awayTeamId: game.away?.id || '',
 			field: game.field.toString(),
@@ -524,15 +511,10 @@ export const GameManagement = () => {
 		setGameToDelete(null)
 	}
 
-	const formatDate = (timestamp: Timestamp) => {
-		const date = timestamp.toDate()
-		return format(date, 'MMM dd, yyyy')
-	}
-
-	const formatTime = (timestamp: Timestamp) => {
-		const date = timestamp.toDate()
-		return format(date, 'h:mm a')
-	}
+	const formatDate = (timestamp: Timestamp) =>
+		formatShortDate(timestamp.toDate())
+	const formatTime = (timestamp: Timestamp) =>
+		formatKickoffTime(timestamp.toDate())
 
 	const filteredGames = games
 		? games.filter(

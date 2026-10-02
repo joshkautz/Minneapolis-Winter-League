@@ -4,6 +4,12 @@
  * stay free of imports.
  */
 
+/**
+ * The league plays in Minneapolis: its nights, kickoffs and the dates shown
+ * to players are on this clock, whatever the reader's own.
+ */
+export const LEAGUE_TIME_ZONE = 'America/Chicago'
+
 /** Kickoffs on Minneapolis's clock, in order: a night's rounds. */
 export const GAME_TIME_SLOTS = ['18:00', '18:45', '19:30', '20:15'] as const
 

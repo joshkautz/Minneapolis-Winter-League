@@ -42,6 +42,7 @@ import {
 	type GenerateScheduleResponse,
 } from '@/firebase/collections/functions'
 import { SeasonFormat, type SeasonDocument } from '@/types'
+import { LEAGUE_TIME_ZONE } from '@/shared/game-rules'
 
 type Season = SeasonDocument & { id: string }
 
@@ -52,7 +53,7 @@ type Season = SeasonDocument & { id: string }
 const kickoffTime = new Intl.DateTimeFormat('en-US', {
 	hour: 'numeric',
 	minute: '2-digit',
-	timeZone: 'America/Chicago',
+	timeZone: LEAGUE_TIME_ZONE,
 })
 
 /** "Saturday, December 12", from "2026-12-12". */

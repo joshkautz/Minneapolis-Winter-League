@@ -6,6 +6,7 @@
  */
 
 export {
+	LEAGUE_TIME_ZONE,
 	GAME_FIELDS,
 	GAME_TIME_SLOTS,
 	gameTimeLabel,

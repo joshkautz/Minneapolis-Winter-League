@@ -13,6 +13,7 @@ import {
 	ChartTooltip,
 } from '@/components/ui/chart'
 import type { GameResult } from './ranking-helpers'
+import { LEAGUE_TIME_ZONE } from '@/shared/game-rules'
 
 export interface ChartPoint {
 	/** When the round was played, as an ISO timestamp */
@@ -86,6 +87,7 @@ export const RatingHistoryChart = ({
 					minTickGap={32}
 					tickFormatter={(value) =>
 						new Date(value).toLocaleDateString('en-US', {
+							timeZone: LEAGUE_TIME_ZONE,
 							month: 'short',
 							day: 'numeric',
 							year: 'numeric',
@@ -119,6 +121,7 @@ export const RatingHistoryChart = ({
 							<div className='rounded-lg border bg-background p-3 shadow-md'>
 								<p className='mb-2 text-sm font-medium'>
 									{when.toLocaleDateString('en-US', {
+										timeZone: LEAGUE_TIME_ZONE,
 										weekday: 'short',
 										month: 'short',
 										day: 'numeric',
@@ -126,6 +129,7 @@ export const RatingHistoryChart = ({
 									})}{' '}
 									•{' '}
 									{when.toLocaleTimeString('en-US', {
+										timeZone: LEAGUE_TIME_ZONE,
 										hour: 'numeric',
 										minute: '2-digit',
 										hour12: true,

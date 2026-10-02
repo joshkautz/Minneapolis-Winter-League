@@ -9,16 +9,18 @@ import { getDocs } from 'firebase/firestore'
 import { Calendar, Plus, Edit, Trash2, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { format } from 'date-fns'
 
 import {
 	CENTS_PER_DOLLAR,
-	formatDollars,
-	logger,
 	MIN_SIGNED_PLAYERS,
-	usesTeamPayments,
 	errorMessage,
+	formatDollars,
+	formatKickoffTime,
+	formatShortDate,
+	logger,
+	usesTeamPayments,
 } from '@/shared/utils'
+import { leagueTimeIso, leagueWallClock } from '@/shared/league-calendar'
 import { useQueryErrorHandler, useResolvedSnapshot } from '@/shared/hooks'
 import { useSeasonsContext } from '@/providers'
 import { teamsInSeasonQuery } from '@/firebase/collections/teams'
@@ -175,18 +177,18 @@ export const SeasonManagement = () => {
 		}
 	)
 
-	const formatDateTime = (date: Date) => {
-		return format(date, 'MMM dd, yyyy h:mm a')
-	}
+	const formatDateTime = (date: Date) =>
+		`${formatShortDate(date)} ${formatKickoffTime(date)}`
 
+	// The date fields read and write Minneapolis's clock, not the browser's,
+	// so a season starts at the league's midnight wherever an admin is.
 	const formatDateForInput = (date: Date) => {
-		// Format as "YYYY-MM-DDTHH:mm" for datetime-local input
-		const year = date.getFullYear()
-		const month = String(date.getMonth() + 1).padStart(2, '0')
-		const day = String(date.getDate()).padStart(2, '0')
-		const hours = String(date.getHours()).padStart(2, '0')
-		const minutes = String(date.getMinutes()).padStart(2, '0')
-		return `${year}-${month}-${day}T${hours}:${minutes}`
+		const { day, time } = leagueWallClock(date)
+		return `${day}T${time}`
+	}
+	const parseDateInput = (value: string) => {
+		const [day, time] = value.split('T')
+		return new Date(leagueTimeIso(day, time))
 	}
 
 	const openCreateDialog = () => {
@@ -304,10 +306,10 @@ export const SeasonManagement = () => {
 
 			const data = {
 				name: formName.trim(),
-				dateStart: new Date(formDateStart),
-				dateEnd: new Date(formDateEnd),
-				registrationStart: new Date(formRegistrationStart),
-				registrationEnd: new Date(formRegistrationEnd),
+				dateStart: parseDateInput(formDateStart),
+				dateEnd: parseDateInput(formDateEnd),
+				registrationStart: parseDateInput(formRegistrationStart),
+				registrationEnd: parseDateInput(formRegistrationEnd),
 				// Per-team seasons do not use a Stripe price.
 				stripe: formPricing === 'player' ? stripeConfig : undefined,
 				format: formFormat,

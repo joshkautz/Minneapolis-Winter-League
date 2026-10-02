@@ -148,9 +148,21 @@ through `@/shared/image-rules`, `@/shared/name-rules`, `@/shared/text-rules`
 and `@/shared/waiver`; the team-payment limits (the smallest contribution,
 signed players, registration spots) come the same way, through
 `@/shared/utils/team-payments`, and every badge's name and description
-through `@/shared/badges`. Use those constants — for a field's
-`maxLength` and counter too — rather than restating a limit. A new rule goes
-in the Functions file, which must stay free of imports.
+through `@/shared/badges`; the game kickoffs, fields and the league's time
+zone through `@/shared/game-rules`; and the league's nights and clock
+through `@/shared/league-calendar`. Use those constants — for a field's
+`maxLength` and counter too — rather than restating a limit, a season fact
+or a count. A new rule goes in the Functions file, which must stay free of
+imports (`leagueCalendar.ts` may import only `gameRules.ts`).
+
+## Dates and times
+
+Show them on Minneapolis's clock, the league's, whatever the reader's zone:
+use the `@/shared/utils` formatters (`formatShortDate`, `formatKickoffTime`,
+`formatTimestamp` …), or pass `timeZone: LEAGUE_TIME_ZONE` to a
+`toLocale*` call. A date an admin enters is read on the same clock
+(`leagueTimeIso`, `leagueWallClock`); building one from the browser's local
+time schedules a different instant for an admin outside Central time.
 
 ## Providers
 

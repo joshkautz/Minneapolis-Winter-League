@@ -2,14 +2,35 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Link } from 'react-router-dom'
 import { ShieldCheck } from 'lucide-react'
 import { Snowflake } from './snowflake'
+import { useSeasonsContext } from '@/providers'
+import {
+	formatDollars,
+	MIN_SIGNED_PLAYERS,
+	REGISTRATION_SPOTS,
+} from '@/shared/utils'
+import { GAME_TIME_SLOTS, gameTimeLabel } from '@/shared/game-rules'
+import { daysInWords, seasonFacts } from './season-facts'
 
 /**
  * LeagueDetailsSection Component
  *
- * Contains the league overview, the season details card, and how teams
- * register. Extracted from main Home component.
+ * The league overview, the current season's details and how teams register.
+ * The season's name, nights, break, length and fee come from the season
+ * itself, and the team limits from the registration rules, so creating the
+ * next season updates them; the rest is copy written for the season.
  */
 export const LeagueDetailsSection = () => {
+	const { currentSeasonQueryDocumentSnapshot } = useSeasonsContext()
+	const season = currentSeasonQueryDocumentSnapshot?.data()
+	const facts = season
+		? seasonFacts(season.dateStart.toDate(), season.dateEnd.toDate())
+		: null
+	const teamFee =
+		season?.teamRegistrationTotalCents !== undefined
+			? formatDollars(season.teamRegistrationTotalCents)
+			: null
+	const firstKickoff = gameTimeLabel(GAME_TIME_SLOTS[0])
+
 	return (
 		<div
 			className={
@@ -46,7 +67,7 @@ export const LeagueDetailsSection = () => {
 					>
 						<CardHeader>
 							<CardTitle className={'text-2xl font-bold self-center'}>
-								Season 5
+								{season?.name ?? 'This season'}
 							</CardTitle>
 						</CardHeader>
 						<CardContent className={'flex flex-col gap-4'}>
@@ -54,12 +75,16 @@ export const LeagueDetailsSection = () => {
 								<p className={'w-16 mr-2 font-bold min-w-16'}>What:</p>
 								<span>{`5v5 Indoor Open Ultimate on Artificial Grass Fields.`}</span>
 							</div>
-							<div className={'flex'}>
-								<p className={'w-16 mr-2 font-bold min-w-16'}>When:</p>
-								<span>
-									{`Saturdays, November 7th, 14th, 21st and December 5th, 12th, 19th. No games November 28th or December 26th.`}
-								</span>
-							</div>
+							{facts && facts.nights.length > 0 && (
+								<div className={'flex'}>
+									<p className={'w-16 mr-2 font-bold min-w-16'}>When:</p>
+									<span>
+										{`Saturdays, ${daysInWords(facts.nights)}.`}
+										{facts.breaks.length > 0 &&
+											` No games ${daysInWords(facts.breaks)}.`}
+									</span>
+								</div>
+							)}
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>Where:</p>
 								<span>
@@ -79,15 +104,17 @@ export const LeagueDetailsSection = () => {
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>Games:</p>
 								<span>
-									{`Two 40-minute games every Saturday, 5:30–9:00pm. Fields open at 5:30 for warm-ups; the first games start at 6:00pm.`}
+									{`Two 40-minute games every Saturday, 5:30–9:00pm. Fields open at 5:30 for warm-ups; the first games start at ${firstKickoff}.`}
 								</span>
 							</div>
-							<div className={'flex'}>
-								<p className={'w-16 mr-2 font-bold min-w-16'}>Cost:</p>
-								<span>
-									{`$1,000 per team for 6 weeks of games, split however your team likes.`}
-								</span>
-							</div>
+							{teamFee && facts && (
+								<div className={'flex'}>
+									<p className={'w-16 mr-2 font-bold min-w-16'}>Cost:</p>
+									<span>
+										{`${teamFee} per team for ${facts.nights.length} weeks of games, split however your team likes.`}
+									</span>
+								</div>
+							)}
 							<div className={'flex'}>
 								<p className={'w-16 mr-2 font-bold min-w-16'}>What's New?</p>
 								<span>
@@ -101,11 +128,20 @@ export const LeagueDetailsSection = () => {
 					>
 						<p className={'text-2xl font-bold'}>Teams</p>
 						<p>
-							Minneapolis Winter League has room for <b>12 teams</b>, with a{' '}
-							<b>10-player minimum</b> and no roster maximum. A team registers
-							once <b>10 of its players have signed their waiver</b> and the
-							team has paid <b>$1,000</b>, split however it likes. The first
-							twelve teams to do both are in.
+							Minneapolis Winter League has room for{' '}
+							<b>{REGISTRATION_SPOTS} teams</b>, with a{' '}
+							<b>{MIN_SIGNED_PLAYERS}-player minimum</b> and no roster maximum.
+							A team registers once{' '}
+							<b>
+								{MIN_SIGNED_PLAYERS} of its players have signed their waiver
+							</b>
+							{teamFee ? (
+								<>
+									{' '}
+									and the team has paid <b>{teamFee}</b>, split however it likes
+								</>
+							) : null}
+							. The first {REGISTRATION_SPOTS} teams to do both are in.
 						</p>
 						<div className='flex gap-3 rounded-xl border border-accent/60 bg-accent/15 p-4'>
 							<ShieldCheck
