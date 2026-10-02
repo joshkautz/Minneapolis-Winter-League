@@ -56,6 +56,16 @@ export function parseGameKickoff(timestamp: string): Date {
 	return kickoff
 }
 
+/**
+ * A new game's document id: one per season, kickoff and field, so two games
+ * cannot be created in the same slot.
+ */
+export const gameSlotId = (
+	seasonId: string,
+	kickoff: Date,
+	field: number
+): string => `${seasonId}_${kickoff.toISOString()}_${field}`
+
 /** Whether `field` is one of the league's numbered fields. */
 export const isGameField = (field: unknown): field is number =>
 	(GAME_CONFIG.ALLOWED_FIELDS as readonly unknown[]).includes(field)

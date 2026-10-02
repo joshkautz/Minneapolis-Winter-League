@@ -44,3 +44,68 @@ export const thanksgivingSaturday = (year: number): Date => {
 
 /** Whether a calendar day (as UTC midnight) is a Saturday. */
 export const isSaturday = (day: Date): boolean => day.getUTCDay() === SATURDAY
+
+/** The calendar days a season's games are played on, as UTC midnights. */
+export const leagueNights = (dateStart: Date, dateEnd: Date): Date[] => {
+	const nights: Date[] = []
+	const last = leagueCalendarDay(dateEnd).getTime()
+	for (
+		let day = leagueCalendarDay(dateStart).getTime();
+		day <= last;
+		day += DAY_MS
+	) {
+		const night = new Date(day)
+		// The league takes the Saturday after Thanksgiving off.
+		if (
+			isSaturday(night) &&
+			day !== thanksgivingSaturday(night.getUTCFullYear()).getTime()
+		) {
+			nights.push(night)
+		}
+	}
+	return nights
+}
+
+/** How far Minneapolis's clock is from UTC at an instant, in milliseconds. */
+const minneapolisOffsetMs = (instant: Date): number => {
+	const parts = new Intl.DateTimeFormat('en-US', {
+		year: 'numeric',
+		month: 'numeric',
+		day: 'numeric',
+		hour: 'numeric',
+		minute: 'numeric',
+		second: 'numeric',
+		hourCycle: 'h23',
+		timeZone: FIREBASE_CONFIG.TIME_ZONE,
+	}).formatToParts(instant)
+	const part = (type: Intl.DateTimeFormatPartTypes): number =>
+		Number(parts.find((p) => p.type === type)?.value)
+	const asUtc = Date.UTC(
+		part('year'),
+		part('month') - 1,
+		part('day'),
+		part('hour'),
+		part('minute'),
+		part('second')
+	)
+	return asUtc - Math.floor(instant.getTime() / 1000) * 1000
+}
+
+/**
+ * The instant a Minneapolis wall-clock time ("18:45") falls at on a
+ * calendar day (as UTC midnight), either side of a daylight-saving change.
+ */
+export const leagueInstant = (day: Date, time: string): Date => {
+	const [hours, minutes] = time.split(':').map(Number)
+	const wallClock = Date.UTC(
+		day.getUTCFullYear(),
+		day.getUTCMonth(),
+		day.getUTCDate(),
+		hours,
+		minutes
+	)
+	// The offset at the wall-clock reading is right except within hours of a
+	// change; taking it again at the first guess settles it.
+	const guess = wallClock - minneapolisOffsetMs(new Date(wallClock))
+	return new Date(wallClock - minneapolisOffsetMs(new Date(guess)))
+}

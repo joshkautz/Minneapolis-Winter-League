@@ -72,6 +72,7 @@ import {
 } from '@/types'
 import { Timestamp } from 'firebase/firestore'
 import { SwissPairingGuide } from './swiss-pairing-guide'
+import { SeasonScheduleCard } from './season-schedule-card'
 import { BackToAdminButton } from '@/features/admin/shared'
 
 interface GameFormData {
@@ -631,6 +632,14 @@ export const GameManagement = () => {
 							typeof SwissPairingGuide
 						>[0]['teamsQuerySnapshot']
 					}
+				/>
+			)}
+
+			{/* Generating a traditional season, and its automatic playoffs */}
+			{filteredSeason && !gamesLoading && (
+				<SeasonScheduleCard
+					season={filteredSeason}
+					gameCount={filteredGames.length}
 				/>
 			)}
 

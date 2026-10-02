@@ -32,6 +32,9 @@ const RETRIED = [
 	// Queues a payment's or refund's receipt, under a stable mail id, so a
 	// retry after it was queued queues nothing.
 	'emailContributionReceipt',
+	// Creates the playoff games and placements the scores decide, in a
+	// transaction that only creates what is missing.
+	'updatePlayoffsOnGameChange',
 	// Removes a deleted account's data; a second run finds nothing to do.
 	'userDeleted',
 ]
