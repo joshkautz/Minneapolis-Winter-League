@@ -39,7 +39,7 @@ Firestore rules and indexes deploy from CI as well, gated on the rules test
 suite. To deploy them out of band:
 
 ```bash
-firebase deploy --only firestore
+npm run deploy:firestore
 ```
 
 ## Related

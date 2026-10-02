@@ -140,7 +140,8 @@ must never be committed.
 Firebase config per mode; `App/.env.test` holds fake values for Vitest. See
 [Environment Variables](./ENVIRONMENT_VARIABLES.md).
 
-Functions secrets (Stripe) are managed with
+Functions secrets (Stripe and Resend: `STRIPE_SECRET_KEY`,
+`STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`) are managed with
 `firebase functions:secrets:set` and read through
 `Functions/src/config/environment.ts`. They are never committed.
 
@@ -156,7 +157,7 @@ lsof -nP -iTCP:8080 -sTCP:LISTEN
 Or clear them all at once:
 
 ```bash
-npx kill-port 5173 4000 8080 5001 9099 9199
+npx kill-port 5173 4000 5005 8080 5001 9099 9199
 ```
 
 **The app shows no data.** There is no seed data. Run `npm run seed`, or

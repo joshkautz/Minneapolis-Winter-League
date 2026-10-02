@@ -27,7 +27,8 @@ match /thing/{thingId} {
 Keep the trailing comment naming the callable that owns the write. Name the
 function as it is actually exported from `Functions/src/index.ts`.
 
-Per-user private data (`stripe/{uid}`, `dropbox/{uid}`) is gated on
+Per-user private data (`stripe/{uid}`, and the historical `dropbox/{uid}`
+waiver records from before September 2026, which nothing writes) is gated on
 `request.auth.uid == uid` for reads and denied for writes.
 
 `playerContacts/{uid}` holds the player's email, readable by that player and
@@ -44,9 +45,10 @@ A team-season's `contributions` and `checkouts` are readable only by that
 season's roster and admins, and deliberately have no collection-group rule, so
 no one can list every team's money at once.
 
-`system/maintenance`, the migration kill-switch, is readable by admins and
-writable by no client. Setting it stops every trigger; the migration script
-flips it with the Admin SDK.
+`system/{document}` — `system/maintenance`, the migration kill-switch, and
+`system/email`, the sending mode — is readable by admins and writable by no
+client. `scripts/production/set-maintenance.js` and `set-email-mode.js` set
+them with the Admin SDK; the kill-switch stops every trigger while set.
 
 The catch-all `match /{document=**} { allow read, write: if false; }` at the
 bottom must stay last.

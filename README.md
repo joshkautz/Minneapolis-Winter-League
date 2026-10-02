@@ -58,19 +58,26 @@ for day-to-day development.
 
 Run from the repository root.
 
-| Command                    | What it does                                                      |
-| -------------------------- | ----------------------------------------------------------------- |
-| `npm run dev`              | Emulators, Functions watch and Vite, together                     |
-| `npm run seed`             | Populate the emulators with synthetic data                        |
-| `npm run seed:attach`      | Reseed emulators that are already running                         |
-| `npm run emulators:clean`  | Discard local emulator data and start empty                       |
-| `npm run data:refresh`     | Clone production into the emulators (needs gcloud credentials)    |
-| `npm run verify`           | format, lint, typecheck, unit, rules and integration tests, build |
-| `npm test`                 | Unit tests for both workspaces, single run                        |
-| `npm run test:rules`       | Firestore rules tests (boots the emulator itself)                 |
-| `npm run test:integration` | Functions against the emulators                                   |
-| `npm run build`            | Production build of both workspaces                               |
-| `npm run deploy`           | Deploy everything via the Firebase CLI                            |
+| Command                    | What it does                                                                        |
+| -------------------------- | ----------------------------------------------------------------------------------- |
+| `npm run dev`              | Emulators, Functions watch and Vite, together                                       |
+| `npm run emulators:start`  | Emulators alone, loading `.emulator/` when it holds a snapshot                      |
+| `npm run functions:watch`  | Rebuild Functions on every change                                                   |
+| `npm run seed`             | Populate the emulators with synthetic data                                          |
+| `npm run seed:attach`      | Reseed emulators that are already running                                           |
+| `npm run emulators:clean`  | Discard local emulator data and start empty                                         |
+| `npm run data:refresh`     | Clone production into the emulators (needs gcloud credentials)                      |
+| `npm run verify`           | format, lint, typecheck, unit, rules and integration tests, build                   |
+| `npm run format:fix`       | Prettier over both workspaces (`format:check` only checks)                          |
+| `npm run lint:fix`         | ESLint fixes over both workspaces (`lint:check` only checks)                        |
+| `npm test`                 | Unit tests for both workspaces, single run                                          |
+| `npm run test:rules`       | Firestore rules tests (boots the emulator itself)                                   |
+| `npm run test:integration` | Functions against the emulators                                                     |
+| `npm run test:watch`       | App unit tests, re-run on change                                                    |
+| `npm run email:preview`    | Render every email template to `.email-previews/`                                   |
+| `npm run build`            | Production build of both workspaces                                                 |
+| `npm run deploy`           | Deploy everything via the Firebase CLI                                              |
+| `npm run deploy:firestore` | Deploy only Firestore rules and indexes (also `deploy:hosting`, `deploy:functions`) |
 
 ## Architecture
 
@@ -108,6 +115,7 @@ subcollection under the latter.
 | Payments, waivers  | [Team payments](./docs/TEAM_PAYMENTS.md) · [Waivers](./docs/WAIVERS.md)                                                 |
 | Email              | [Email](./docs/EMAIL.md)                                                                                                |
 | Badges             | [Badges](./docs/BADGES.md)                                                                                              |
+| Scheduling         | [Scheduling](./docs/SCHEDULING.md)                                                                                      |
 | Planned work       | [Roadmap](./docs/ROADMAP.md)                                                                                            |
 
 Working in this repo with Claude Code? [`CLAUDE.md`](./CLAUDE.md) carries the
@@ -128,7 +136,7 @@ Firestore rules and indexes deploy from CI too, in a job gated on the rules
 test suite. To deploy them out of band:
 
 ```bash
-firebase deploy --only firestore
+npm run deploy:firestore
 ```
 
 ## Contributing
@@ -140,4 +148,4 @@ firebase deploy --only firestore
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+GPL-3.0 — see [LICENSE](LICENSE).

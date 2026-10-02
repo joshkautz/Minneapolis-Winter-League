@@ -21,8 +21,9 @@ player document, not an Auth custom claim. See [SECURITY.md](../SECURITY.md).
 Most league data is public to read; SECURITY.md lists the exceptions, and
 `tests/rules/firestore.test.ts` pins each.
 
-Storage holds public images — team logos and badges — written by Functions
-and served by public URL; `storage.rules` denies every client write.
+Storage holds public team logos, written by Functions and served by public
+URL (badge artwork is committed under `App/public/badges/`); `storage.rules`
+denies every client write.
 
 ## One environment
 
