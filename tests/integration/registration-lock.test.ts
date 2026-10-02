@@ -1,9 +1,9 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { FieldValue, Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
-import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import { onTeamRegistrationChange } from '../../Functions/src/index.js'
 import { teamSeasonRef } from '../../Functions/src/shared/database.js'
+import { REGISTRATION_SPOTS } from '../../Functions/src/shared/teamPaymentRules.js'
 
 /**
  * The twelve-team cap.
@@ -20,7 +20,7 @@ import { teamSeasonRef } from '../../Functions/src/shared/database.js'
  * guarantee. See docs/TEAM_PAYMENTS.md.
  */
 
-const THRESHOLD = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
+const THRESHOLD = REGISTRATION_SPOTS
 const SEASON = 'season-1'
 
 let firestore: Firestore

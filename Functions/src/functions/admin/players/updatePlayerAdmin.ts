@@ -17,6 +17,16 @@
  * applied whole or refused whole. Firebase Authentication cannot join it:
  * its likely refusals are checked before the transaction, and the email
  * change itself is made after, followed by the private contact email.
+ *
+ * Security validations:
+ * - Caller must be an admin
+ * - At least one field must change; each given field has the right type,
+ *   names pass the name rules (profanity exempt for admins) and an email is
+ *   well formed and not already another account's
+ * - Each season is named once, already exists on the player, and any team
+ *   given takes part in it
+ * - The last admin cannot lose admin, nor a team its last captain
+ * - Email and verification changes need the player to have a sign-in
  */
 
 import { getAuth } from 'firebase-admin/auth'

@@ -74,6 +74,11 @@ import { Timestamp } from 'firebase/firestore'
 import { SwissPairingGuide } from './swiss-pairing-guide'
 import { SeasonScheduleCard } from './season-schedule-card'
 import { BackToAdminButton } from '@/features/admin/shared'
+import {
+	GAME_FIELDS,
+	GAME_TIME_SLOTS,
+	gameTimeLabel,
+} from '@/shared/game-rules'
 
 interface GameFormData {
 	date: string
@@ -259,12 +264,12 @@ export const GameManagement = () => {
 	}
 
 	const saturdays = getSaturdays()
-	const timeOptions = [
-		{ value: '18:00', display: '6:00 PM' },
-		{ value: '18:45', display: '6:45 PM' },
-		{ value: '19:30', display: '7:30 PM' },
-		{ value: '20:15', display: '8:15 PM' },
-	]
+	const timeOptions = GAME_TIME_SLOTS.map((slot) => ({
+		value: slot,
+		display: gameTimeLabel(slot)
+			.replace(/(am|pm)$/, ' $1')
+			.toUpperCase(),
+	}))
 
 	const openCreateDialog = () => {
 		setFormDialogOpen(true)
@@ -842,9 +847,11 @@ export const GameManagement = () => {
 											<SelectValue placeholder='Select a field' />
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value='1'>Field 1</SelectItem>
-											<SelectItem value='2'>Field 2</SelectItem>
-											<SelectItem value='3'>Field 3</SelectItem>
+											{GAME_FIELDS.map((field) => (
+												<SelectItem key={field} value={String(field)}>
+													Field {field}
+												</SelectItem>
+											))}
 										</SelectContent>
 									</Select>
 								</div>

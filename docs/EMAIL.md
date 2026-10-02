@@ -40,7 +40,7 @@ through again.
 
 Sent is not delivered: Resend accepts an email and then delivers it, or it
 bounces, is blocked, or is marked as spam. Its webhook reports each of these
-to `resendWebhook` (`api/webhooks/resend.ts`, at
+to `resendWebhook` (`api/webhooks/resendWebhook.ts`, at
 `mplswinterleague.com/resendWebhook`), which checks the signature against
 `RESEND_WEBHOOK_SECRET` before anything else and records the report on the
 mail document with that `providerId` as `delivery`: `delivered`, `delayed`,

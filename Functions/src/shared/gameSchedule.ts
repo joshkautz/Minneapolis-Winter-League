@@ -11,17 +11,19 @@
  */
 
 import { HttpsError } from 'firebase-functions/v2/https'
-import { GAME_CONFIG } from '../config/constants.js'
+import {
+	GAME_FIELDS,
+	GAME_TIME_SLOTS,
+	GAME_TIMES_IN_WORDS,
+} from './gameRules.js'
+import { isSaturday } from './leagueCalendar.js'
 import type { GameForfeit } from '../types.js'
 
 const ISO_WALL_CLOCK = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/
 
-/** `Date.getUTCDay()` for Saturday. */
-const SATURDAY = 6
-
 /**
  * Parses and checks a game's kickoff, throwing `invalid-argument` unless it is
- * a valid timestamp on a Saturday in one of `GAME_CONFIG.ALLOWED_TIME_SLOTS`.
+ * a valid timestamp on a Saturday in one of `GAME_TIME_SLOTS`.
  */
 export function parseGameKickoff(timestamp: string): Date {
 	const kickoff = new Date(timestamp)
@@ -35,10 +37,10 @@ export function parseGameKickoff(timestamp: string): Date {
 	const [, year, month, day, hours, minutes] = wallClock
 
 	// The calendar date as written, independent of any timezone.
-	const weekday = new Date(
+	const calendarDay = new Date(
 		Date.UTC(Number(year), Number(month) - 1, Number(day))
-	).getUTCDay()
-	if (weekday !== SATURDAY) {
+	)
+	if (!isSaturday(calendarDay)) {
 		throw new HttpsError(
 			'invalid-argument',
 			`Games can only be scheduled on Saturdays (received ${year}-${month}-${day})`
@@ -46,10 +48,10 @@ export function parseGameKickoff(timestamp: string): Date {
 	}
 
 	const slot = `${hours}:${minutes}`
-	if (!(GAME_CONFIG.ALLOWED_TIME_SLOTS as readonly string[]).includes(slot)) {
+	if (!(GAME_TIME_SLOTS as readonly string[]).includes(slot)) {
 		throw new HttpsError(
 			'invalid-argument',
-			`Games can only be scheduled at 6:00pm, 6:45pm, 7:30pm, or 8:15pm CT (received: ${slot})`
+			`Games can only be scheduled at ${GAME_TIMES_IN_WORDS} CT (received: ${slot})`
 		)
 	}
 
@@ -68,7 +70,7 @@ export const gameSlotId = (
 
 /** Whether `field` is one of the league's numbered fields. */
 export const isGameField = (field: unknown): field is number =>
-	(GAME_CONFIG.ALLOWED_FIELDS as readonly unknown[]).includes(field)
+	(GAME_FIELDS as readonly unknown[]).includes(field)
 
 /**
  * Checks a game's `forfeit`: which side forfeited, or null for neither.

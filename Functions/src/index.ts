@@ -43,9 +43,9 @@ export { awardBadgesNightly } from './triggers/scheduled/awardBadgesNightly.js'
 //////////////////////////////////////////////////////////////////////////////
 
 // Webhooks
-export { stripeWebhook } from './api/webhooks/stripe.js'
+export { stripeWebhook } from './api/webhooks/stripeWebhook.js'
 export { emailUnsubscribe } from './api/emailUnsubscribe.js'
-export { resendWebhook } from './api/webhooks/resend.js'
+export { resendWebhook } from './api/webhooks/resendWebhook.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // CALLABLE FUNCTIONS

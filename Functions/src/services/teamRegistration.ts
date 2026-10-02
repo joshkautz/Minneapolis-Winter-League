@@ -24,7 +24,6 @@ import {
 	canRegisterAt,
 	type RegistrationTrigger,
 } from '../shared/registrationWindow.js'
-import { TEAM_CONFIG } from '../config/constants.js'
 import {
 	Collections,
 	type PlayerSeasonDocument,
@@ -37,6 +36,10 @@ import {
 	teamContributionsCollection,
 } from '../shared/contributions.js'
 import { playerSeasonRef, teamSeasonRef } from '../shared/database.js'
+import {
+	MIN_SIGNED_PLAYERS,
+	REGISTRATION_SPOTS,
+} from '../shared/teamPaymentRules.js'
 
 /**
  * Whether a player counts toward their team's ten, under whichever rule the
@@ -219,7 +222,7 @@ async function claimSpotIfQualified(
 				)
 		).length
 
-		if (qualifyingPlayers < TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION) {
+		if (qualifyingPlayers < MIN_SIGNED_PLAYERS) {
 			return { outcome: 'not-qualified', qualifyingPlayers }
 		}
 
@@ -261,7 +264,7 @@ async function claimSpotIfQualified(
 		// season since starts at zero, and the old ones were backfilled.
 		const spotsClaimed = seasonData?.registeredTeamCount ?? 0
 
-		if (spotsClaimed >= TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK) {
+		if (spotsClaimed >= REGISTRATION_SPOTS) {
 			return { outcome: 'season-full', qualifyingPlayers, spotsClaimed }
 		}
 

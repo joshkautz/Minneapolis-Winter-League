@@ -5,8 +5,9 @@
  * Both run in a transaction that reads the season's games and teams and
  * writes what `plan.ts` calls for, so two score entries at once cannot
  * create the same game twice. The writes are bounded by the twelve-team
- * schedule — at most 61 for a season, 12 at a time for the playoffs — so a
- * transaction's 500-write limit is never near.
+ * schedule — 49 to generate a season, and under 50 for any one playoff
+ * update (its games, placements and standings ranks) — so a transaction's
+ * 500-write limit is never near.
  */
 
 import {
@@ -43,6 +44,7 @@ import {
 	planPlayoffs,
 	planRegularSeason,
 	ScheduleError,
+	gamesBySlot,
 	scoredGame,
 	splitNights,
 	stageOf,
@@ -108,7 +110,12 @@ interface SeasonState {
 	ranks: Map<string, number | null>
 }
 
-const day = (date: Date): string => date.toISOString().slice(0, 10)
+/**
+ * "2026-11-07", for a calendar day held as UTC midnight (a night from
+ * `leagueNights`). Not `leagueDayKey`, which takes an instant: on a UTC
+ * midnight that gives Minneapolis's previous day.
+ */
+const calendarDayKey = (day: Date): string => day.toISOString().slice(0, 10)
 
 /** A ScheduleError as the callable's refusal; anything else rethrown. */
 const asPrecondition = (error: unknown): never => {
@@ -331,15 +338,30 @@ export async function generateRegularSeason(
 		}
 		return {
 			seasonId,
-			regularNights: state.nights.regular.map(day),
-			poolNight: day(state.nights.poolNight),
-			championshipNight: day(state.nights.championshipNight),
+			regularNights: state.nights.regular.map(calendarDayKey),
+			poolNight: calendarDayKey(state.nights.poolNight),
+			championshipNight: calendarDayKey(state.nights.championshipNight),
 			games: planned.map((game) => summarize(game, state.teams)),
 		}
 	})
 	// The standings' order before the first game, so the page has one at
 	// once rather than when the first game write fires the trigger.
-	if (!dryRun) await updatePlayoffs(firestore, seasonId)
+	if (!dryRun) {
+		// The games are created; ranks the trigger also writes are a bonus
+		// here, so a failure is logged rather than reported as the schedule
+		// failing, which an admin's retry would then refuse.
+		try {
+			await syncPlayoffs(firestore, seasonId)
+		} catch (error) {
+			logger.warn(
+				'Standings order not written after generating; the trigger will',
+				{
+					seasonId,
+					error: error instanceof Error ? error.message : String(error),
+				}
+			)
+		}
+	}
 	return generated
 }
 
@@ -351,7 +373,7 @@ export async function generateRegularSeason(
  * night's pairing is fixed; games already played are never touched, and
  * nothing is ever deleted. Safe to run any number of times.
  */
-export async function updatePlayoffs(
+export async function syncPlayoffs(
 	firestore: Firestore,
 	seasonId: string,
 	{ dryRun = false }: { dryRun?: boolean } = {}
@@ -389,11 +411,7 @@ export async function updatePlayoffs(
 			ranksSet: 0,
 			waitingFor: plan.waitingFor,
 		}
-		const bySlot = new Map(
-			state.games
-				.filter((game) => game.playoffSlot)
-				.map((game) => [game.playoffSlot as string, game])
-		)
+		const bySlot = gamesBySlot(state.games)
 		const storedIds = new Set(state.games.map((game) => game.id))
 		// A slot is taken by any game at its time and field, wherever that
 		// game's id says it was first created.
@@ -486,11 +504,36 @@ export async function updatePlayoffs(
 }
 
 /**
- * Updates every generated season, for when what they depend on besides
- * their games changes: the ratings, after a rankings rebuild. A season that
- * cannot be scheduled is logged and skipped.
+ * `syncPlayoffs`, logging and skipping a season that cannot be scheduled
+ * (not twelve teams, an unsupported number of nights) instead of throwing:
+ * for callers that run on their own, where a retry would fail the same way.
+ * Null when skipped.
  */
-export async function updateAutomaticSeasons(
+export async function syncPlayoffsIfSchedulable(
+	firestore: Firestore,
+	seasonId: string,
+	context: Record<string, unknown> = {}
+): Promise<PlayoffsSummary | null> {
+	try {
+		return await syncPlayoffs(firestore, seasonId)
+	} catch (error) {
+		if (error instanceof HttpsError && error.code === 'failed-precondition') {
+			logger.warn('Playoffs not updated: the season cannot be scheduled', {
+				...context,
+				seasonId,
+				reason: error.message,
+			})
+			return null
+		}
+		throw error
+	}
+}
+
+/**
+ * Syncs every generated season, for when what they depend on besides their
+ * games changes: the ratings, after a rankings rebuild.
+ */
+export async function syncAutomaticSeasons(
 	firestore: Firestore
 ): Promise<PlayoffsSummary[]> {
 	const seasons = await firestore
@@ -499,18 +542,8 @@ export async function updateAutomaticSeasons(
 		.get()
 	const summaries: PlayoffsSummary[] = []
 	for (const season of seasons.docs) {
-		try {
-			summaries.push(await updatePlayoffs(firestore, season.id))
-		} catch (error) {
-			if (error instanceof HttpsError && error.code === 'failed-precondition') {
-				logger.warn('Playoffs not updated: the season cannot be scheduled', {
-					seasonId: season.id,
-					reason: error.message,
-				})
-				continue
-			}
-			throw error
-		}
+		const summary = await syncPlayoffsIfSchedulable(firestore, season.id)
+		if (summary) summaries.push(summary)
 	}
 	return summaries
 }

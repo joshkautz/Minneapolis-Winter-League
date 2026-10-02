@@ -16,13 +16,13 @@
  */
 
 import { FieldValue, type Firestore } from 'firebase-admin/firestore'
-import { TEAM_CONFIG } from '../config/constants.js'
 import {
 	Collections,
 	TEAM_SEASONS_SUBCOLLECTION,
 	type ContributionStatus,
 	type TeamContributionDocument,
 } from '../types.js'
+import { MIN_CONTRIBUTION_CENTS } from './teamPaymentRules.js'
 
 export const CONTRIBUTIONS_SUBCOLLECTION = 'contributions'
 
@@ -115,7 +115,7 @@ export function contributionAmountError(
 		return 'Contribution must be a whole number of dollars.'
 	}
 
-	const floor = Math.min(TEAM_CONFIG.MIN_CONTRIBUTION_CENTS, remainingCents)
+	const floor = Math.min(MIN_CONTRIBUTION_CENTS, remainingCents)
 	if (amountCents < floor) {
 		return `Contribution must be at least ${formatDollars(floor)}.`
 	}

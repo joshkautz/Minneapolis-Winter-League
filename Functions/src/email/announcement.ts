@@ -1,7 +1,7 @@
 /** Who the new-season announcement goes to, and what it says. */
 
 import type { Firestore } from 'firebase-admin/firestore'
-import { FIREBASE_CONFIG, TEAM_CONFIG } from '../config/constants.js'
+import { FIREBASE_CONFIG } from '../config/constants.js'
 import { playerContactRef, playerRef } from '../shared/database.js'
 import {
 	DAY_MS,
@@ -17,6 +17,10 @@ import {
 	type TeamRosterDocument,
 } from '../types.js'
 import type { SeasonAnnouncementProps } from './templates/SeasonAnnouncement.js'
+import {
+	MIN_SIGNED_PLAYERS,
+	REGISTRATION_SPOTS,
+} from '../shared/teamPaymentRules.js'
 
 /** "Thursday, October 1", on Minneapolis's calendar. */
 const leagueDay = (date: Date): string =>
@@ -118,8 +122,8 @@ export function seasonAnnouncementProps(
 		registrationCloses: leagueDay(season.registrationEnd.toDate()),
 		gameNights: describeGameNights(nights),
 		skipsThanksgiving,
-		teamSpots: TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK,
-		minimumSignedPlayers: TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION,
+		teamSpots: REGISTRATION_SPOTS,
+		minimumSignedPlayers: MIN_SIGNED_PLAYERS,
 	}
 }
 

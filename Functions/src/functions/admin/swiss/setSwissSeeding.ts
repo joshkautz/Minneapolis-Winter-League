@@ -2,6 +2,13 @@
  * Set Swiss Seeding callable function
  *
  * Writes per-team-season `swissSeed` values to each team's season subdoc.
+ *
+ * Security validations:
+ * - Caller must be an admin
+ * - The seeding is a list of distinct team ids, at most one per
+ *   registration spot, which also bounds the batch
+ * - The season must exist and be Swiss
+ * - Every team must take part in the season
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -12,6 +19,7 @@ import { validateAdminUser } from '../../../shared/auth.js'
 import { teamSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
+import { REGISTRATION_SPOTS } from '../../../shared/teamPaymentRules.js'
 
 interface SetSwissSeedingRequest {
 	seasonId: string
@@ -43,6 +51,12 @@ export const setSwissSeeding = onCall<SetSwissSeedingRequest>(
 		if (teamSeeding.length === 0) {
 			throw new HttpsError('invalid-argument', 'Team seeding cannot be empty')
 		}
+		if (teamSeeding.length > REGISTRATION_SPOTS) {
+			throw new HttpsError(
+				'invalid-argument',
+				`A season seeds at most ${REGISTRATION_SPOTS} teams.`
+			)
+		}
 		const uniqueTeams = new Set(teamSeeding)
 		if (uniqueTeams.size !== teamSeeding.length) {
 			throw new HttpsError(
@@ -68,21 +82,21 @@ export const setSwissSeeding = onCall<SetSwissSeedingRequest>(
 				)
 			}
 
-			// Validate every supplied team has a season subdoc for this season,
-			// then write the seed value to that subdoc.
-			const batch = firestore.batch()
-			for (let i = 0; i < teamSeeding.length; i++) {
-				const tid = teamSeeding[i]
-				const tsRef = teamSeasonRef(firestore, tid, seasonId)
-				const snap = await tsRef.get()
-				if (!snap.exists) {
-					throw new HttpsError(
-						'invalid-argument',
-						`Team ${tid} is not participating in this season`
-					)
-				}
-				batch.update(tsRef, { swissSeed: i + 1 })
+			// Every supplied team must take part in the season; read them all
+			// at once, then write each its seed.
+			const refs = teamSeeding.map((teamId) =>
+				teamSeasonRef(firestore, teamId, seasonId)
+			)
+			const snaps = await firestore.getAll(...refs)
+			const missing = teamSeeding.find((_, i) => !snaps[i].exists)
+			if (missing) {
+				throw new HttpsError(
+					'invalid-argument',
+					`Team ${missing} is not participating in this season`
+				)
 			}
+			const batch = firestore.batch()
+			refs.forEach((ref, i) => batch.update(ref, { swissSeed: i + 1 }))
 			await batch.commit()
 
 			logger.info('Swiss seeding set', {

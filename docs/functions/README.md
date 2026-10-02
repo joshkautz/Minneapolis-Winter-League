@@ -22,7 +22,7 @@ Functions/src/
   triggers/auth/            Auth lifecycle triggers
   triggers/documents/       Firestore document triggers
   triggers/payments/        the per-player payment trigger
-  triggers/scheduled/       the payments sweep and reconciliation, the nightly rankings rebuild
+  triggers/scheduled/       the payments sweep and reconciliation, the nightly rankings and badges rebuilds
   api/                      HTTP endpoints: one-click unsubscribe, and the Stripe and Resend webhooks
   email/                    the outbox, sender, delivery reports, receipts and React templates
   waiver/                   the waiver's text and signing rules, also imported by the App
@@ -67,7 +67,7 @@ the sweep).
 | -------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `userDeleted`                                | Auth account deleted                                   | Deletes the player's data, keeping waivers; see [Account deletion](#account-deletion)                                                                                           |
 | `onOfferUpdated`                             | `offers/{offerId}` updated                             | On acceptance, adds the player to the roster, points their season record at the team, emails whoever sent the offer, and cancels the player's other offers, telling those teams |
-| `updateTeamRegistrationOnRosterChange`       | the same roster path, written                          | Recomputes registration; refunds a leaver's money on an unregistered team                                                                                                       |
+| `updateTeamRegistrationOnRosterChange`       | `teams/{t}/teamSeasons/{s}/roster/{p}` written         | Recomputes registration; refunds a leaver's money on an unregistered team                                                                                                       |
 | `updateTeamRegistrationOnPlayerChange`       | `players/{p}/playerSeasons/{s}` updated                | Recomputes registration when `paid` or `signed` changes                                                                                                                         |
 | `updateTeamRegistrationOnContributionChange` | `teams/{t}/teamSeasons/{s}/contributions/{pi}` written | Recomputes registration when a team's money changes, and settles a new payment                                                                                                  |
 | `emailContributionReceipt`                   | the same contributions path, written                   | Emails the payer a receipt for each payment and refund                                                                                                                          |
@@ -90,9 +90,10 @@ sign-in. An admin deleting a user from the Firebase console gets the same
 cleanup through `userDeleted`; the callable's deletion fires that trigger
 too, which finds nothing left.
 
-Both run `services/accountDeletion`. It deletes the player document,
-their player-seasons, their roster entries in every season, their open
-offers, their leaderboard entry and the site's copy of their Stripe records.
+Both run `services/accountDeletion`. It deletes the player document, their
+contact record (`playerContacts/{uid}`), their player-seasons, their roster
+entries in every season, every offer naming them, their leaderboard entry
+and the site's copy of their Stripe records.
 It keeps their waiver signatures ([WAIVERS.md](../WAIVERS.md)), their team
 contributions, which are the team's ledger, and their posts, which then show
 as from a former player.
@@ -176,7 +177,8 @@ them and a forged request, and it runs before any read or write.
 | `shared/seasonPricing`                  | Validating a season's team registration total, which cannot change once money depends on it                                                                    |
 | `shared/names`, `shared/nameRules`      | Player and team name validation; the App imports the rules                                                                                                     |
 | `shared/database`                       | Document reference builders and the current-season lookup                                                                                                      |
-| `shared/gameSchedule`                   | The Saturday time slots and fields a game may be scheduled in, and a game's per-slot id                                                                        |
+| `shared/gameRules`                      | The kickoffs and fields a game may be given; the App imports them                                                                                              |
+| `shared/gameSchedule`                   | Checking a game's kickoff and field against them, and a game's per-slot id                                                                                     |
 | `shared/images`, `shared/imageRules`    | Checking an uploaded image (PNG, JPEG, GIF or WebP, up to 5 MB) and storing it; the App imports the rules                                                      |
 | `shared/textFields`, `shared/textRules` | Length rules for season, news, post and reply text; the App imports the rules                                                                                  |
 | `shared/seasonInput`                    | Checking a season's name, dates and Stripe prices, for createSeason and updateSeason alike                                                                     |

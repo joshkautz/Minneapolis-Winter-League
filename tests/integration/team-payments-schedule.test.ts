@@ -2,11 +2,12 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import {
 	authed,
+	DAY_MS,
 	errorCodeFrom,
 	initTestApp,
+	ledgerPaidCents,
 	resetFirestore,
 	type Callable,
-	ledgerPaidCents,
 } from './helpers.js'
 import {
 	addPayment,
@@ -15,7 +16,6 @@ import {
 	fakeStripe,
 	resetFakeStripe,
 } from './fake-stripe.js'
-import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import {
 	recordContribution,
 	teamContributionsCollection,
@@ -31,6 +31,7 @@ import {
 	reconcileTeamPayments,
 	recentTeamPaymentsQuery,
 } from '../../Functions/src/services/teamPaymentsReconciliation.js'
+import { REGISTRATION_SPOTS } from '../../Functions/src/shared/teamPaymentRules.js'
 
 /**
  * The parts of settlement that run on a clock, and the admin's manual
@@ -47,9 +48,8 @@ vi.mock('stripe', async () => ({
 }))
 
 const TOTAL = 100_000
-const LOCK = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
+const LOCK = REGISTRATION_SPOTS
 const SEASON = 'season-1'
-const DAY_MS = 24 * 60 * 60 * 1000
 const REGISTRATION_END = Date.now() + 10 * DAY_MS
 // Once a checkout opened before the close could no longer complete a team.
 const AFTER_CLOSE = new Date(REGISTRATION_END + LATE_PAYMENT_GRACE_MS + 1000)

@@ -2,11 +2,6 @@
  * Application constants and configuration
  */
 
-import {
-	MIN_CONTRIBUTION_CENTS,
-	MIN_SIGNED_PLAYERS,
-	REGISTRATION_SPOTS,
-} from '../shared/teamPaymentRules.js'
 import { getStripeSecretKey, getStripeWebhookSecret } from './environment.js'
 
 // Firebase Configuration (static - no env vars needed)
@@ -21,8 +16,10 @@ export const FIREBASE_CONFIG = {
 } as const
 
 // Business Logic Constants (static)
+// The registration limits (signed players, spots, the smallest contribution)
+// are in shared/teamPaymentRules.ts, which the App shares; import them from
+// there.
 export const TEAM_CONFIG = {
-	MIN_PLAYERS_FOR_REGISTRATION: MIN_SIGNED_PLAYERS,
 	/**
 	 * How long a Checkout session stays open. Kept as short as Stripe allows,
 	 * because the balance a contribution was validated against goes stale
@@ -35,9 +32,6 @@ export const TEAM_CONFIG = {
 	 * this long after it (see shared/registrationWindow.ts).
 	 */
 	CHECKOUT_SESSION_LIFETIME_SECONDS: 31 * 60,
-	REGISTERED_TEAMS_FOR_LOCK: REGISTRATION_SPOTS,
-	/** See shared/teamPaymentRules.ts, which the App shares. */
-	MIN_CONTRIBUTION_CENTS,
 } as const
 
 // Email Configuration
@@ -61,11 +55,7 @@ export const VENUE = {
 	MAP_URL: 'https://maps.app.goo.gl/avAamyReCbGmz8jWA',
 } as const
 
-// Game Configuration
-export const GAME_CONFIG = {
-	ALLOWED_TIME_SLOTS: ['18:00', '18:45', '19:30', '20:15'],
-	ALLOWED_FIELDS: [1, 2, 3],
-} as const
+// When and where games are played: shared/gameRules.ts, which the App shares.
 
 /**
  * The Stripe API version the code is written against. The webhook endpoint

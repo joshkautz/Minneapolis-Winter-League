@@ -8,6 +8,8 @@ import {
 	SCHEDULE_TEAMS,
 	type NumberedNight,
 } from './templates.js'
+import { GAME_FIELDS, GAME_TIME_SLOTS } from '../../shared/gameRules.js'
+import { REGISTRATION_SPOTS } from '../../shared/teamPaymentRules.js'
 
 /**
  * The schedule tables, held to what they promise. A mistyped number in a
@@ -15,7 +17,7 @@ import {
  */
 
 const TEAMS = Array.from({ length: SCHEDULE_TEAMS }, (_, i) => i + 1)
-const FIELDS = 3
+const FIELDS = GAME_FIELDS.length
 const pairKey = (a: number, b: number): string =>
 	a < b ? `${a}-${b}` : `${b}-${a}`
 
@@ -31,6 +33,25 @@ const roundsPlayed = (night: NumberedNight): Map<number, number[]> => {
 	)
 	return rounds
 }
+
+describe('the tables’ shape', () => {
+	it('has a round for every kickoff and a game for every field', () => {
+		expect(ROUNDS_PER_NIGHT).toBe(GAME_TIME_SLOTS.length)
+		for (const table of [
+			...Object.values(REGULAR_SEASON_TABLES),
+			[POOL_NIGHT],
+		]) {
+			for (const night of table) {
+				for (const round of night) expect(round).toHaveLength(FIELDS)
+			}
+		}
+	})
+
+	it('schedules as many teams as can register', () => {
+		// Raise the cap and the tables have to be redrawn; this says so.
+		expect(SCHEDULE_TEAMS).toBe(REGISTRATION_SPOTS)
+	})
+})
 
 describe.each(Object.entries(REGULAR_SEASON_TABLES))(
 	'the %s-night regular season',

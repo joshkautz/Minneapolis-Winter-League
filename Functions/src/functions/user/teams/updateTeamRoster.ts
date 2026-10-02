@@ -28,7 +28,7 @@ import {
 	removePlayerFromTeam,
 	setPlayerCaptainStatus,
 } from '../../../shared/membership.js'
-import { FIREBASE_CONFIG, TEAM_CONFIG } from '../../../config/constants.js'
+import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	Collections,
 	type PlayerSeasonDocument,
@@ -38,6 +38,7 @@ import {
 import { countsTowardRegistration } from '../../../services/teamRegistration.js'
 import { assertRegistrationOpen } from '../../../shared/registrationWindow.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
+import { MIN_SIGNED_PLAYERS } from '../../../shared/teamPaymentRules.js'
 
 interface UpdateTeamRosterRequest {
 	teamId: string
@@ -205,8 +206,7 @@ export const updateTeamRoster = onCall<UpdateTeamRosterRequest>(
 
 						// Would this departure drop a registered team below the minimum?
 						if (teamSeasonSnap.data()?.registered) {
-							const minPlayersRequired =
-								TEAM_CONFIG.MIN_PLAYERS_FOR_REGISTRATION
+							const minPlayersRequired = MIN_SIGNED_PLAYERS
 							const remainingRegistered = rosterSeasonSnaps.filter(
 								(snap, i) =>
 									rosterSnap.docs[i].id !== playerId &&

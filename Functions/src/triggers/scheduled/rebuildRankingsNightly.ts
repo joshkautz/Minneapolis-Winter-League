@@ -17,7 +17,7 @@ import {
 	isRebuildRunning,
 	rebuildRankings,
 } from '../../services/playerRankings/rebuild.js'
-import { updateAutomaticSeasons } from '../../services/schedule/sync.js'
+import { syncAutomaticSeasons } from '../../services/schedule/sync.js'
 
 export const rebuildRankingsNightly = onSchedule(
 	{
@@ -51,6 +51,6 @@ export const rebuildRankingsNightly = onSchedule(
 			)
 		}
 		// A generated season's standings order reads the new ratings.
-		await updateAutomaticSeasons(getFirestore())
+		await syncAutomaticSeasons(getFirestore())
 	}
 )

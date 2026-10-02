@@ -4,6 +4,13 @@
  * Deletes a team's participation in a specific season. Captain check reads
  * the player's season subdoc; the deletion service handles roster + offers
  * + storage cleanup.
+ *
+ * Security validations:
+ * - Caller must be signed in with a verified email
+ * - Team and season ids are required
+ * - Caller must be a captain of that team in that season
+ * - The team must not be registered, and registration must still be open
+ * - The deletion service refuses a team still holding money
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'

@@ -1,8 +1,8 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { FieldValue, Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { initTestApp, resetFirestore } from './helpers.js'
-import { TEAM_CONFIG } from '../../Functions/src/config/constants.js'
 import { teamSeasonRef } from '../../Functions/src/shared/database.js'
+import { REGISTRATION_SPOTS } from '../../Functions/src/shared/teamPaymentRules.js'
 
 /**
  * onTeamRegistrationChange is the season lock: once
@@ -14,7 +14,7 @@ import { teamSeasonRef } from '../../Functions/src/shared/database.js'
  * does *not* fire matter as much as the one where it does.
  */
 
-const LOCK = TEAM_CONFIG.REGISTERED_TEAMS_FOR_LOCK
+const LOCK = REGISTRATION_SPOTS
 
 let firestore: Firestore
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

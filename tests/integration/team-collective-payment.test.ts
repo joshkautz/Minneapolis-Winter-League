@@ -6,7 +6,13 @@ import {
 	type Firestore,
 } from 'firebase-admin/firestore'
 import type { Request, Response } from 'firebase-functions/v2/https'
-import { authed, initTestApp, resetFirestore, seedAuthUser } from './helpers.js'
+import {
+	authed,
+	DAY_MS,
+	initTestApp,
+	resetFirestore,
+	seedAuthUser,
+} from './helpers.js'
 import {
 	completeCheckout,
 	fakeStripe,
@@ -47,7 +53,6 @@ vi.mock('stripe', async () => ({
 const TOTAL = 100_000
 const SEASON = 'season-1'
 const TEAM = 'team-1'
-const DAY_MS = 24 * 60 * 60 * 1000
 const RETURN = 'https://mplswinterleague.com/manage'
 
 /** Eleven players; the last is the captain, so the others are free to leave. */
