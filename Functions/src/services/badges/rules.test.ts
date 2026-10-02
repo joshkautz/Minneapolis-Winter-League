@@ -489,7 +489,7 @@ describe('roster and history badges', () => {
 				team('c', { seasonId: SPRING.id }),
 			],
 		})
-		expect(earned('welcome', f)).toEqual(['b@spring', 'c@spring'])
+		expect(earned('welcome', f)).toEqual(['a@fall', 'b@spring', 'c@spring'])
 		expect(earned('veteran', f)).toEqual(['a@spring'])
 	})
 
@@ -528,11 +528,12 @@ describe('roster and history badges', () => {
 		expect(earned('fresh-faces', f)).toEqual(['b@spring'])
 	})
 
-	it('awards no Welcome or Fresh Faces in the first season on record', () => {
-		// With no earlier season, every team and player looks new.
+	it('awards Welcome and Fresh Faces in the league’s first season', () => {
+		// 2023 Fall was the first season the league played: every team and
+		// player in it really was new.
 		const f = facts({ teamSeasons: [team('a', { roster: roster('p', 12) })] })
-		expect(earned('welcome', f)).toEqual([])
-		expect(earned('fresh-faces', f)).toEqual([])
+		expect(earned('welcome', f)).toEqual(['a@fall'])
+		expect(earned('fresh-faces', f)).toEqual(['a@fall'])
 	})
 
 	it('awards Reunion Tour for five of one other team’s last-season players', () => {
