@@ -31,7 +31,12 @@ import {
 } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PageContainer, PageHeader, QueryError } from '@/shared/components'
+import {
+	LoadingButton,
+	PageContainer,
+	PageHeader,
+	QueryError,
+} from '@/shared/components'
 import {
 	Table,
 	TableBody,
@@ -781,18 +786,15 @@ export const SeasonManagement = () => {
 						>
 							Cancel
 						</Button>
-						<Button onClick={handleSubmit} disabled={isSubmitting}>
-							{isSubmitting ? (
-								<>
-									<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-									{dialogMode === 'create' ? 'Creating...' : 'Saving...'}
-								</>
-							) : (
-								<>
-									{dialogMode === 'create' ? 'Create Season' : 'Save Changes'}
-								</>
-							)}
-						</Button>
+						<LoadingButton
+							onClick={handleSubmit}
+							loading={isSubmitting}
+							loadingText={
+								dialogMode === 'create' ? 'Creating...' : 'Saving...'
+							}
+						>
+							{dialogMode === 'create' ? 'Create Season' : 'Save Changes'}
+						</LoadingButton>
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>

@@ -4,7 +4,7 @@
  * Allows administrators to create, edit, and delete games
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
 import { Edit, Trash2, Calendar, Plus, Loader2 } from 'lucide-react'
@@ -154,23 +154,12 @@ export const GameManagement = () => {
 	const [gameToDelete, setGameToDelete] = useState<
 		(GameDocument & { id: string }) | null
 	>(null)
-	const [filterSeasonId, setFilterSeasonId] = useState<string>(
-		() => currentSeasonQueryDocumentSnapshot?.id || ''
-	)
+	// The season the table shows: the admin's choice, else the current one.
+	const [chosenFilterSeasonId, setFilterSeasonId] = useState('')
+	const filterSeasonId =
+		chosenFilterSeasonId || currentSeasonQueryDocumentSnapshot?.id || ''
 	const [formDialogOpen, setFormDialogOpen] = useState(false)
 	const [isSubmitting, setIsSubmitting] = useState(false)
-
-	useEffect(() => {
-		// Update filter when current season changes and filter hasn't been manually set
-		if (currentSeasonQueryDocumentSnapshot?.id && !filterSeasonId) {
-			const timer = setTimeout(
-				() => setFilterSeasonId(currentSeasonQueryDocumentSnapshot.id),
-				0
-			)
-			return () => clearTimeout(timer)
-		}
-		return undefined
-	}, [currentSeasonQueryDocumentSnapshot?.id, filterSeasonId])
 
 	const games = gamesSnapshot?.docs.map((doc) => ({
 		id: doc.id,
@@ -183,11 +172,14 @@ export const GameManagement = () => {
 	const isLoading = gamesLoading
 
 	// Get the selected season's document reference for querying teams
+	// The form's season, else the table's: it decides which teams load, which
+	// the Swiss pairing guide also reads while no form is open.
+	const formSeasonId = formData.seasonId || filterSeasonId
 	const selectedSeasonDoc = seasons?.find(
-		(season) => season.id === formData.seasonId
+		(season) => season.id === formSeasonId
 	)
 	const selectedSeasonRef = selectedSeasonDoc
-		? seasonsSnapshot?.docs.find((doc) => doc.id === formData.seasonId)
+		? seasonsSnapshot?.docs.find((doc) => doc.id === formSeasonId)
 		: undefined
 
 	// Query teams for the selected season (for form dropdowns)
@@ -214,24 +206,6 @@ export const GameManagement = () => {
 		? [...teams].sort((a, b) => a.name.localeCompare(b.name))
 		: []
 
-	// Set current season as default when it loads (only set initial value)
-	const initialSeasonId = currentSeasonQueryDocumentSnapshot?.id
-	const [hasSetInitialFormSeason, setHasSetInitialFormSeason] = useState(false)
-
-	useEffect(() => {
-		if (initialSeasonId && !formData.seasonId && !hasSetInitialFormSeason) {
-			const timer = setTimeout(() => {
-				setFormData((prev) => ({
-					...prev,
-					seasonId: initialSeasonId,
-				}))
-				setHasSetInitialFormSeason(true)
-			}, 0)
-			return () => clearTimeout(timer)
-		}
-		return undefined
-	}, [initialSeasonId, formData.seasonId, hasSetInitialFormSeason])
-
 	const handleInputChange = (field: keyof GameFormData, value: string) => {
 		setFormData((prev) => ({ ...prev, [field]: value }))
 	}
@@ -239,9 +213,7 @@ export const GameManagement = () => {
 	// Every Saturday of the selected season, on Minneapolis's calendar.
 	// Calendar days are UTC midnights, so they are named in UTC.
 	const getSaturdays = (): { date: string; display: string }[] => {
-		const selectedSeason = seasons?.find(
-			(season) => season.id === formData.seasonId
-		)
+		const selectedSeason = seasons?.find((season) => season.id === formSeasonId)
 		if (!selectedSeason) return []
 		return leagueSaturdays(
 			selectedSeason.dateStart.toDate(),
@@ -539,12 +511,11 @@ export const GameManagement = () => {
 			}
 		: undefined
 
-	// Get teams for the filtered season. The teamsSnapshot above is keyed by
-	// the form's selected season; if the filter season matches, we can reuse
-	// it. Otherwise we'd need a separate query — but in practice the filter
-	// follows the form season, so reuse covers the common case.
+	// The filtered season's teams, for the Swiss pairing guide. The teams
+	// query follows the form's season, which is the filtered one whenever no
+	// form names another.
 	const filteredTeamsQuerySnapshot =
-		filterSeasonId === formData.seasonId ? teamsSnapshot : undefined
+		filterSeasonId === formSeasonId ? teamsSnapshot : undefined
 
 	const sortedGames = filteredGames.length
 		? [...filteredGames].sort((a, b) => {
@@ -969,16 +940,14 @@ export const GameManagement = () => {
 						>
 							Cancel
 						</Button>
-						<Button type='submit' form='game-form' disabled={isSubmitting}>
-							{isSubmitting ? (
-								<>
-									<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-									{editingGameId ? 'Updating...' : 'Creating...'}
-								</>
-							) : (
-								<>{editingGameId ? 'Update Game' : 'Create Game'}</>
-							)}
-						</Button>
+						<LoadingButton
+							type='submit'
+							form='game-form'
+							loading={isSubmitting}
+							loadingText={editingGameId ? 'Updating...' : 'Creating...'}
+						>
+							{editingGameId ? 'Update Game' : 'Create Game'}
+						</LoadingButton>
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>

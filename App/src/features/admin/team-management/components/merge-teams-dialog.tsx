@@ -11,7 +11,7 @@
 import { useMemo, useState } from 'react'
 import { useCollection } from 'react-firebase-hooks/firestore'
 import { toast } from 'sonner'
-import { Combine, Loader2, AlertTriangle } from 'lucide-react'
+import { Combine, AlertTriangle } from 'lucide-react'
 
 import { logger, errorMessage } from '@/shared/utils'
 import { TeamSeasonDocument } from '@/types'
@@ -39,6 +39,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { LoadingButton } from '@/shared/components'
 
 interface MergeTeamsDialogProps {
 	open: boolean
@@ -245,23 +246,16 @@ export const MergeTeamsDialog = ({
 							>
 								Cancel
 							</Button>
-							<Button
+							<LoadingButton
 								variant='destructive'
 								onClick={handleMerge}
-								disabled={!selectedLosingTeamId || isMerging}
+								loading={isMerging}
+								loadingText='Merging...'
+								disabled={!selectedLosingTeamId}
 							>
-								{isMerging ? (
-									<>
-										<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-										Merging...
-									</>
-								) : (
-									<>
-										<Combine className='h-4 w-4 mr-2' />
-										Merge
-									</>
-								)}
-							</Button>
+								<Combine className='h-4 w-4 mr-2' />
+								Merge
+							</LoadingButton>
 						</div>
 					</div>
 				</div>

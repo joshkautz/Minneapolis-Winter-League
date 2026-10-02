@@ -28,9 +28,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
+	DestructiveConfirmationDialog,
+	LoadingButton,
 	PageContainer,
 	PageHeader,
-	DestructiveConfirmationDialog,
 	QueryError,
 } from '@/shared/components'
 import {
@@ -563,16 +564,15 @@ export const NewsManagement = () => {
 						>
 							Cancel
 						</Button>
-						<Button onClick={handleSubmit} disabled={isSubmitting}>
-							{isSubmitting ? (
-								<>
-									<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-									{dialogMode === 'create' ? 'Creating...' : 'Updating...'}
-								</>
-							) : (
-								<>{dialogMode === 'create' ? 'Create Post' : 'Update Post'}</>
-							)}
-						</Button>
+						<LoadingButton
+							onClick={handleSubmit}
+							loading={isSubmitting}
+							loadingText={
+								dialogMode === 'create' ? 'Creating...' : 'Updating...'
+							}
+						>
+							{dialogMode === 'create' ? 'Create Post' : 'Update Post'}
+						</LoadingButton>
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>

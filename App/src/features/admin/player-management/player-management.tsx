@@ -17,7 +17,6 @@ import {
 	Shield,
 	Ban,
 	UserCog,
-	Loader2,
 	FileText,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -61,7 +60,12 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
-import { PageContainer, PageHeader, QueryError } from '@/shared/components'
+import {
+	LoadingButton,
+	PageContainer,
+	PageHeader,
+	QueryError,
+} from '@/shared/components'
 import { logger, errorMessage } from '@/shared/utils'
 import {
 	type EmailUndeliverable,
@@ -962,24 +966,17 @@ export const PlayerManagement = () => {
 								</div>
 
 								{/* Save Button */}
-								<Button
+								<LoadingButton
 									onClick={handleSave}
-									disabled={isSaving || !hasChanges}
+									loading={isSaving}
+									loadingText='Saving Changes...'
+									disabled={!hasChanges}
 									className='w-full'
 									size='lg'
 								>
-									{isSaving ? (
-										<>
-											<Loader2 className='h-4 w-4 mr-2 animate-spin' />
-											Saving Changes...
-										</>
-									) : (
-										<>
-											<Save className='h-4 w-4 mr-2' />
-											Save Changes
-										</>
-									)}
-								</Button>
+									<Save className='h-4 w-4 mr-2' />
+									Save Changes
+								</LoadingButton>
 							</div>
 						)}
 					</CardContent>

@@ -56,6 +56,7 @@ import { Separator } from '@/components/ui/separator'
 import { updateTeamAdminViaFunction } from '@/firebase/collections/functions'
 import { TeamRosterDocument } from '@/types'
 import { useQueryErrorHandler } from '@/shared/hooks'
+import { LoadingButton } from '@/shared/components'
 
 interface TeamEditDialogProps {
 	open: boolean
@@ -376,16 +377,14 @@ export const TeamEditDialog = ({
 											onChange={(e) => setTeamName(e.target.value)}
 											placeholder='Enter team name'
 										/>
-										<Button
+										<LoadingButton
 											onClick={handleSaveName}
-											disabled={!hasNameChanges || isSavingName}
+											loading={isSavingName}
+											loadingText='Saving...'
+											disabled={!hasNameChanges}
 										>
-											{isSavingName ? (
-												<Loader2 className='h-4 w-4 animate-spin' />
-											) : (
-												'Save'
-											)}
-										</Button>
+											Save
+										</LoadingButton>
 									</div>
 								</div>
 							</div>
@@ -426,7 +425,11 @@ export const TeamEditDialog = ({
 														)}
 													</div>
 													<div className='flex items-center gap-1'>
-														<Button
+														<LoadingButton
+															loading={
+																captainChangeInProgress === player.playerId
+															}
+															loadingText=''
 															size='sm'
 															variant='ghost'
 															onClick={() =>
@@ -449,14 +452,12 @@ export const TeamEditDialog = ({
 																	: 'Promote to captain:'
 															} ${player.playerName}`}
 														>
-															{captainChangeInProgress === player.playerId ? (
-																<Loader2 className='h-4 w-4 animate-spin' />
-															) : player.captain ? (
+															{player.captain ? (
 																<StarOff className='h-4 w-4' />
 															) : (
 																<Star className='h-4 w-4' />
 															)}
-														</Button>
+														</LoadingButton>
 														<Button
 															size='sm'
 															variant='ghost'
@@ -502,7 +503,7 @@ export const TeamEditDialog = ({
 													className='flex items-center justify-between p-3 hover:bg-muted/50'
 												>
 													<span>{player.playerName}</span>
-													<Button
+													<LoadingButton
 														size='sm'
 														variant='outline'
 														onClick={() =>
@@ -511,17 +512,13 @@ export const TeamEditDialog = ({
 																player.playerName
 															)
 														}
+														loading={addingPlayerId === player.playerId}
+														loadingText='Adding...'
 														disabled={isAddingPlayer}
 													>
-														{addingPlayerId === player.playerId ? (
-															<Loader2 className='h-4 w-4 animate-spin' />
-														) : (
-															<>
-																<UserPlus className='h-4 w-4 mr-1' />
-																Add
-															</>
-														)}
-													</Button>
+														<UserPlus className='h-4 w-4 mr-1' />
+														Add
+													</LoadingButton>
 												</div>
 											))}
 										</div>
