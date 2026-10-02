@@ -16,6 +16,12 @@ import { SwissStandingsTable } from './swiss-standings-table'
 import { ResultsTable } from './results-table'
 import { formatTimestamp } from '@/shared/utils'
 import { SeasonFormat } from '@/types'
+import {
+	nightsIn,
+	standingsRanks,
+	weeksLabel,
+	withRankedTeams,
+} from './standings-order'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
@@ -30,7 +36,13 @@ export const Standings = () => {
 	const isSwissFormat = seasonData?.format === SeasonFormat.SWISS
 
 	// Use appropriate standings hook based on format
-	const traditionalStandings = useStandings(regularSeasonGamesQuerySnapshot)
+	const ranks = standingsRanks(selectedSeasonTeamsQuerySnapshot)
+	const playedStandings = useStandings(regularSeasonGamesQuerySnapshot)
+	// A generated season lists every team from before its first game.
+	const traditionalStandings = withRankedTeams(playedStandings, ranks)
+	const noGamesPlayed = Object.keys(playedStandings).length === 0
+	const regularNights = nightsIn(regularSeasonGamesQuerySnapshot)
+	const playoffNights = nightsIn(playoffGamesQuerySnapshot)
 	const swissStandings = useSwissStandings(regularSeasonGamesQuerySnapshot)
 	const results = useStandings(playoffGamesQuerySnapshot)
 
@@ -55,7 +67,7 @@ export const Standings = () => {
 			) : !hasStandings && Object.keys(results).length === 0 ? (
 				<ComingSoon>
 					<p>
-						{`No standings yet exists for the season. Check back after games start on ${formatTimestamp(selectedSeasonQueryDocumentSnapshot?.data()?.dateStart)}.`}
+						{`No standings yet for this season. Check back after games start on ${formatTimestamp(selectedSeasonQueryDocumentSnapshot?.data()?.dateStart)}.`}
 					</p>
 				</ComingSoon>
 			) : (
@@ -66,7 +78,7 @@ export const Standings = () => {
 							<CardHeader>
 								<CardTitle className='flex items-center gap-2'>
 									<Trophy className='h-5 w-5' />
-									Weeks 1-5 (Regular Season)
+									{weeksLabel(1, regularNights)} (Regular Season)
 									{isSwissFormat && (
 										<Badge variant='outline' className='ml-2'>
 											Swiss Format
@@ -81,10 +93,20 @@ export const Standings = () => {
 										teamsQuerySnapshot={selectedSeasonTeamsQuerySnapshot}
 									/>
 								) : (
-									<StandingsTable
-										standings={traditionalStandings}
-										teamsQuerySnapshot={selectedSeasonTeamsQuerySnapshot}
-									/>
+									<>
+										{noGamesPlayed && ranks.size > 0 && (
+											<p className='text-sm text-muted-foreground mb-4'>
+												No games played yet: teams are ordered by their
+												players&apos; average rating, a player new to the league
+												counting at the starting rating.
+											</p>
+										)}
+										<StandingsTable
+											standings={traditionalStandings}
+											ranks={ranks}
+											teamsQuerySnapshot={selectedSeasonTeamsQuerySnapshot}
+										/>
+									</>
 								)}
 							</CardContent>
 						</Card>
@@ -96,7 +118,7 @@ export const Standings = () => {
 							<CardHeader>
 								<CardTitle className='flex items-center gap-2'>
 									<Trophy className='h-5 w-5' />
-									Weeks 6-7 (Playoffs)
+									{weeksLabel(regularNights + 1, playoffNights)} (Playoffs)
 								</CardTitle>
 							</CardHeader>
 							<CardContent>

@@ -9,7 +9,10 @@ import {
 	resetFirestore,
 	type Callable,
 } from './helpers.js'
-import { updatePlayoffs } from '../../Functions/src/services/schedule/sync.js'
+import {
+	updateAutomaticSeasons,
+	updatePlayoffs,
+} from '../../Functions/src/services/schedule/sync.js'
 
 /**
  * The generated schedule against the emulator: the regular season's games
@@ -426,6 +429,81 @@ describe('the automatic playoffs', () => {
 
 		await expect(fireTrigger(regular[0].id)).resolves.toBeUndefined()
 		expect(await playoffGames('pool-')).toHaveLength(0)
+	})
+})
+
+describe('the standings order', () => {
+	const ranks = async () =>
+		Object.fromEntries(
+			await Promise.all(
+				TEAM_IDS.map(async (id) => [
+					id,
+					(await teamSeason(id).get()).data()?.standingsRank,
+				])
+			)
+		)
+
+	it('ranks every team by its roster’s rating as soon as the season is generated', async () => {
+		// team-12's player is new to the league, so counts at the starting
+		// rating, 25: level with team-06, which registered first, and above
+		// team-07 (24).
+		await firestore.collection('rankings').doc('player-12').delete()
+		await generate()
+
+		const order = Object.entries(await ranks())
+			.sort((a, b) => a[1] - b[1])
+			.map(([id]) => id)
+		expect(order).toEqual([
+			'team-01',
+			'team-02',
+			'team-03',
+			'team-04',
+			'team-05',
+			'team-06',
+			'team-12',
+			'team-07',
+			'team-08',
+			'team-09',
+			'team-10',
+			'team-11',
+		])
+	})
+
+	it('follows the scores, and is pool night’s seeding at the end', async () => {
+		await generate()
+		await scoreAll(await games())
+		await updatePlayoffs(firestore, SEASON)
+
+		const rank = await ranks()
+		const opener = await bySlot('pool-r1-f1')
+		expect(rank[opener?.home.id]).toBe(1)
+		expect(rank[opener?.away.id]).toBe(8)
+	})
+
+	it('keeps the order pool night was drawn in once it begins', async () => {
+		await generate()
+		await scoreAll(await games())
+		await updatePlayoffs(firestore, SEASON)
+		const drawn = await ranks()
+		const opener = (await games((d) => d.playoffSlot === 'pool-r1-f1'))[0]
+		await opener.ref.update({ homeScore: 13, awayScore: 9 })
+
+		await scoreAll(await games((d) => d.type === 'regular'), (home, away) =>
+			home > away ? 'home' : 'away'
+		)
+		await updatePlayoffs(firestore, SEASON)
+
+		expect(await ranks()).toEqual(drawn)
+	})
+
+	it('reorders when the ratings change after a rankings rebuild', async () => {
+		await generate()
+		await firestore.collection('rankings').doc('player-12').set({ rating: 99 })
+
+		const [summary] = await updateAutomaticSeasons(firestore)
+
+		expect(summary.ranksSet).toBeGreaterThan(0)
+		expect((await ranks())['team-12']).toBe(1)
 	})
 })
 

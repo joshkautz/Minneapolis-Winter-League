@@ -40,7 +40,8 @@ async function updateSeason(
 		} else if (
 			summary.created > 0 ||
 			summary.updated > 0 ||
-			summary.placementsSet > 0
+			summary.placementsSet > 0 ||
+			summary.ranksSet > 0
 		) {
 			logger.info('Playoffs updated', { gameId, ...summary })
 		}

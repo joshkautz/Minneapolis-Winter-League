@@ -731,6 +731,8 @@ export interface UpdatePlayoffsResponse {
 	 * they are because their night had already begun.
 	 */
 	kept: string[]
+	/** Team-seasons whose standings order was written. */
+	ranksSet: number
 	/** What the next step waits for; null once the season is decided. */
 	waitingFor: string | null
 }

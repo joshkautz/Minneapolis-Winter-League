@@ -72,7 +72,9 @@ Once every regular-season game has a score, the teams are seeded 1 to 12:
 2. point differential — so far the order the Standings page shows;
 3. among teams still level, wins in the games between them;
 4. points scored;
-5. the roster's average player rating (all-time, from the rankings);
+5. the roster's average player rating (all-time, from the rankings), a
+   player new to the league counting at the rating everyone starts from,
+   25;
 6. who registered first.
 
 A game that ended level is a win for neither team.
@@ -88,6 +90,21 @@ most one round off.
 | 6:45  | 8 – 9   | 4 – 12  | 6 – 11  |
 | 7:30  | 1 – 9   | 5 – 12  | 7 – 10  |
 | 8:15  | 3 – 6   | 4 – 5   | 2 – 10  |
+
+## Standings
+
+Each team-season of a generated season carries `standingsRank`: its place
+in the regular season as it stands, by the seeding rules above, over the
+games scored so far. The Standings page lists teams in that order, so the
+table is pool night's seeding, and lists every team from the moment the
+season is generated: before the first game every team is 0–0, so the order
+is the rosters' average ratings.
+
+It is rewritten whenever a score changes and after every rankings rebuild
+(nightly, or the Rebuild button), since the ratings it reads change there.
+Once pool night has begun it stays as pool night was drawn. A season
+scheduled by hand has no ranks, and its table is ordered by wins and point
+differential as before.
 
 ## Championship night
 

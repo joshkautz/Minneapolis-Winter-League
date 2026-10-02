@@ -309,6 +309,14 @@ export interface TeamSeasonDocument extends DocumentData {
 	placement: number | null
 	/** Initial seed for Swiss-format seasons (nullable) */
 	swissSeed?: number | null
+	/**
+	 * In a generated season (`automaticPlayoffs`), the team's place in the
+	 * regular season as it stands, 1–12, with every seeding tiebreaker: the
+	 * Standings page's order, and pool night's seeds once the regular season
+	 * is over. Before the first game it is the roster's average rating
+	 * order. Kept as pool night was drawn once it begins (docs/SCHEDULING.md).
+	 */
+	standingsRank?: number | null
 }
 
 /**
