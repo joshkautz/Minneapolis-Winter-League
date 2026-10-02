@@ -72,7 +72,7 @@ describe('stripeWebhook', () => {
 	const load = async (): Promise<
 		(req: Request, resp: Response) => Promise<void>
 	> => {
-		const mod = await import('./stripe.js')
+		const mod = await import('./stripeWebhook.js')
 		return mod.stripeWebhook as unknown as (
 			req: Request,
 			resp: Response
