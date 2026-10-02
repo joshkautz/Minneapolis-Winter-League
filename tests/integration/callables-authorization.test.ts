@@ -14,7 +14,7 @@ import { VALID_PAYLOADS } from './payloads.js'
 /**
  * Authorization sweep across every callable.
  *
- * firestore.rules denies all client writes, so these 44 functions are the
+ * firestore.rules denies all client writes, so these 46 functions are the
  * entire write path into the database. Each one's first job is to reject a
  * caller who should not be there. Individual callables have their own deeper
  * tests; this file proves none of them is missing the gate altogether —
@@ -36,6 +36,7 @@ const ADMIN_CALLABLES = [
 	'deleteReply',
 	'deleteSeason',
 	'deleteUnregisteredTeam',
+	'generateSchedule',
 	'getPlayerAuthInfo',
 	'getSwissRankings',
 	'mergeTeams',
@@ -47,6 +48,7 @@ const ADMIN_CALLABLES = [
 	'setSwissSeeding',
 	'updateGame',
 	'updateNews',
+	'updatePlayoffs',
 	'updatePlayerAdmin',
 	'updateSeason',
 	'updateSiteSettings',
@@ -109,6 +111,7 @@ const NON_CALLABLES = new Set([
 	'updateTeamRegistrationOnContributionChange',
 	'updateTeamRegistrationOnPlayerChange',
 	'updateTeamRegistrationOnRosterChange',
+	'updatePlayoffsOnGameChange',
 	'userDeleted',
 ])
 
@@ -184,8 +187,8 @@ describe('the sweep covers every callable in the deploy manifest', () => {
 		expect(missing).toEqual([])
 	})
 
-	it('covers all 44 callables', () => {
-		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(44)
+	it('covers all 46 callables', () => {
+		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(46)
 	})
 
 	it('has a valid payload for every callable', () => {

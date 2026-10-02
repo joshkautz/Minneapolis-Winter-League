@@ -12,6 +12,7 @@ import { validateAdminUser } from '../../../shared/auth.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import {
 	FORFEIT_NEEDS_BOTH_TEAMS,
+	gameSlotId,
 	isGameField,
 	parseForfeit,
 	parseGameKickoff,
@@ -215,11 +216,10 @@ export const createGame = onCall<
 				awayName = (awaySeasonSubdoc.data()?.name as string) ?? null
 			}
 
-			// Create game document with deterministic ID to prevent race conditions
-			// ID format: {seasonId}_{timestamp}_{field} ensures uniqueness per slot
-			const gamesRef = firestore.collection(Collections.GAMES)
-			const gameId = `${seasonId}_${gameDate.toISOString()}_${field}`
-			const gameRef = gamesRef.doc(gameId)
+			// One id per slot, so a duplicate is caught atomically below.
+			const gameRef = firestore
+				.collection(Collections.GAMES)
+				.doc(gameSlotId(seasonId, gameDate, field))
 
 			const gameData = {
 				home: homeTeamRef,

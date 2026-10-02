@@ -58,13 +58,13 @@ the 10–0 games are almost certainly forfeits.
 Some badges wait for the season to reach a point, so they do not appear and
 then vanish:
 
-| Waits for                                        | Badges                                                            |
-| ------------------------------------------------ | ----------------------------------------------------------------- |
-| The season to start                              | Welcome, Veteran, Old Guard, Fresh Faces, Reunion Tour, Celebrity |
-| The regular season to end (playoffs, or the end) | Perfect Season, Last Dance                                        |
-| Registration to close, or every spot to be taken | Close Call                                                        |
-| The season to end                                | Rising Stars                                                      |
-| A placement to be set                            | Champions, Runner-up, Podium, Dynasty                             |
+| Waits for                                                | Badges                                                            |
+| -------------------------------------------------------- | ----------------------------------------------------------------- |
+| The season to start                                      | Welcome, Veteran, Old Guard, Fresh Faces, Reunion Tour, Celebrity |
+| The regular season to end (playoffs, or the end)         | Perfect Season, Last Dance                                        |
+| Registration to close, or every spot to be taken         | Close Call                                                        |
+| The season to end                                        | Rising Stars                                                      |
+| A placement to be set ([SCHEDULING.md](./SCHEDULING.md)) | Champions, Runner-up, Podium, Dynasty                             |
 
 Season 1 was the league's first season, so every team in it earned Welcome
 and every player was new to the league. A registration date after the season

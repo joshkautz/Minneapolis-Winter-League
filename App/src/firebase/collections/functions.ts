@@ -11,6 +11,7 @@ import {
 	OfferStatus,
 	OfferType,
 	type GameForfeit,
+	type GameType,
 	type OptionalEmailCategory,
 	type ThemeVariant,
 	type SeasonFormat,
@@ -665,6 +666,87 @@ export const deleteGameViaFunction = async (data: {
 		'deleteGame'
 	)
 	const result = await deleteGame(data)
+	return result.data
+}
+
+/** A generated game, as the schedule preview lists it. */
+export interface ScheduledGameSummary {
+	/** ISO 8601 kickoff. */
+	date: string
+	/** The night it is played on, "2026-11-07", on Minneapolis's calendar. */
+	night: string
+	field: number
+	type: GameType
+	homeTeamId: string
+	homeName: string
+	awayTeamId: string
+	awayName: string
+}
+
+export interface GenerateScheduleRequest {
+	seasonId: string
+	/** Return the games without creating them. */
+	dryRun?: boolean
+}
+
+export interface GenerateScheduleResponse {
+	seasonId: string
+	/** Calendar days, "2026-11-07". */
+	regularNights: string[]
+	poolNight: string
+	championshipNight: string
+	games: ScheduledGameSummary[]
+}
+
+/**
+ * Creates a traditional season's whole regular season and turns on its
+ * automatic playoffs; with `dryRun`, only returns the games for review.
+ */
+export const generateScheduleViaFunction = async (
+	data: GenerateScheduleRequest
+): Promise<GenerateScheduleResponse> => {
+	const generateSchedule = httpsCallable<
+		GenerateScheduleRequest,
+		GenerateScheduleResponse
+	>(functions, 'generateSchedule')
+	const result = await generateSchedule(data)
+	return result.data
+}
+
+export interface UpdatePlayoffsRequest {
+	seasonId: string
+	/** Report what would change without writing it. */
+	dryRun?: boolean
+}
+
+export interface UpdatePlayoffsResponse {
+	seasonId: string
+	created: number
+	updated: number
+	placementsSet: number
+	/** Playoff slots taken by a game entered by hand, left alone. */
+	conflicts: string[]
+	/**
+	 * Unplayed games a corrected score would now pair differently, kept as
+	 * they are because their night had already begun.
+	 */
+	kept: string[]
+	/** What the next step waits for; null once the season is decided. */
+	waitingFor: string | null
+}
+
+/**
+ * Brings a generated season's playoffs up to date with its scores now. The
+ * same update runs on its own whenever a game changes.
+ */
+export const updatePlayoffsViaFunction = async (
+	data: UpdatePlayoffsRequest
+): Promise<UpdatePlayoffsResponse> => {
+	const updatePlayoffs = httpsCallable<
+		UpdatePlayoffsRequest,
+		UpdatePlayoffsResponse
+	>(functions, 'updatePlayoffs')
+	const result = await updatePlayoffs(data)
 	return result.data
 }
 

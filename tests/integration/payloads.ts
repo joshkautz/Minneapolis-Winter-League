@@ -34,6 +34,8 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	},
 	deleteGame: { gameId: 'game-1' },
 	updateGame: { gameId: 'game-1', homeScore: 15, awayScore: 10 },
+	generateSchedule: { seasonId: 'season-1', dryRun: true },
+	updatePlayoffs: { seasonId: 'season-1', dryRun: true },
 
 	// --- admin: news -------------------------------------------------------
 	createNews: {

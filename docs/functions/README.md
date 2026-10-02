@@ -34,26 +34,26 @@ Functions/src/
 
 ## Callables
 
-44 in total, every one covered by the authorization sweep in
+46 in total, every one covered by the authorization sweep in
 `tests/integration/callables-authorization.test.ts`, which fails when one is
 missing from it. Each lives in the file named after it.
 
-| Domain        | User                                                                                       | Admin                                                                                 |
-| ------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| Players       | `createPlayer`, `updatePlayer`, `deletePlayer`                                             | `updatePlayerAdmin`, `getPlayerAuthInfo`                                              |
-| Teams         | `createTeam`, `rolloverTeam`, `updateTeam`, `deleteTeam`, `updateTeamRoster`               | `deleteUnregisteredTeam`, `updateTeamAdmin`, `mergeTeams`                             |
-| Offers        | `createOffer`, `updateOffer`                                                               |                                                                                       |
-| Payments      | `createStripeCheckout`, `createTeamContributionCheckout`, `cancelTeamContributionCheckout` | `refundTeamContribution`                                                              |
-| Waivers       | `signWaiver`                                                                               |                                                                                       |
-| Email         | `getEmailPreferences`, `updateEmailPreferences` (also by the link in an email, signed out) |                                                                                       |
-| Posts         | `createPost`, `updatePost`, `createReply`, `updateReply`                                   | `deletePost`, `deleteReply`                                                           |
-| Seasons       |                                                                                            | `createSeason`, `updateSeason`, `deleteSeason`, `setSwissSeeding`, `getSwissRankings` |
-| Games         |                                                                                            | `createGame`, `updateGame`, `deleteGame`                                              |
-| Rankings      |                                                                                            | `rebuildPlayerRankings`                                                               |
-| Email         |                                                                                            | `sendSeasonAnnouncement`, `sendEmailPreview`                                          |
-| News          |                                                                                            | `createNews`, `updateNews`, `deleteNews`                                              |
-| Badges        |                                                                                            | `rebuildBadges` (awards every badge by rule; see [BADGES.md](../BADGES.md))           |
-| Site settings |                                                                                            | `updateSiteSettings`                                                                  |
+| Domain        | User                                                                                       | Admin                                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Players       | `createPlayer`, `updatePlayer`, `deletePlayer`                                             | `updatePlayerAdmin`, `getPlayerAuthInfo`                                                                               |
+| Teams         | `createTeam`, `rolloverTeam`, `updateTeam`, `deleteTeam`, `updateTeamRoster`               | `deleteUnregisteredTeam`, `updateTeamAdmin`, `mergeTeams`                                                              |
+| Offers        | `createOffer`, `updateOffer`                                                               |                                                                                                                        |
+| Payments      | `createStripeCheckout`, `createTeamContributionCheckout`, `cancelTeamContributionCheckout` | `refundTeamContribution`                                                                                               |
+| Waivers       | `signWaiver`                                                                               |                                                                                                                        |
+| Email         | `getEmailPreferences`, `updateEmailPreferences` (also by the link in an email, signed out) |                                                                                                                        |
+| Posts         | `createPost`, `updatePost`, `createReply`, `updateReply`                                   | `deletePost`, `deleteReply`                                                                                            |
+| Seasons       |                                                                                            | `createSeason`, `updateSeason`, `deleteSeason`, `setSwissSeeding`, `getSwissRankings`                                  |
+| Games         |                                                                                            | `createGame`, `updateGame`, `deleteGame`, `generateSchedule`, `updatePlayoffs` (see [SCHEDULING.md](../SCHEDULING.md)) |
+| Rankings      |                                                                                            | `rebuildPlayerRankings`                                                                                                |
+| Email         |                                                                                            | `sendSeasonAnnouncement`, `sendEmailPreview`                                                                           |
+| News          |                                                                                            | `createNews`, `updateNews`, `deleteNews`                                                                               |
+| Badges        |                                                                                            | `rebuildBadges` (awards every badge by rule; see [BADGES.md](../BADGES.md))                                            |
+| Site settings |                                                                                            | `updateSiteSettings`                                                                                                   |
 
 `createPlayer`, `updatePlayer` and `deletePlayer` accept an unverified email,
 because they run during or before account setup, and so do
@@ -73,6 +73,7 @@ the sweep).
 | `emailContributionReceipt`                   | the same contributions path, written                   | Emails the payer a receipt for each payment and refund                                                                                                                          |
 | `onTeamRegistrationChange`                   | `teams/{t}/teamSeasons/{s}` updated                    | Tells the new team's roster, refunds its excess; at twelve, refunds, tells and removes the unregistered ones                                                                    |
 | `onPaymentCreated`                           | `stripe/{uid}/payments/{id}` created                   | Marks a per-player registration paid                                                                                                                                            |
+| `updatePlayoffsOnGameChange`                 | `games/{gameId}` written                               | In a generated season, creates the playoff games and placements the scores decide; see [SCHEDULING.md](../SCHEDULING.md)                                                        |
 
 Every trigger honours the migration kill-switch,
 `system/maintenance.migrationInProgress`, and returns without writing while it
@@ -162,6 +163,7 @@ them and a forged request, and it runs before any read or write.
 | `services/teamPaymentsReconciliation`   | Checking Stripe and the ledger against each other                                                                                                              |
 | `services/playerRankings`               | The TrueSkill rankings rebuild: a pure engine and its projections, loaded and saved around it — see [PLAYER_RANKING_ALGORITHM.md](PLAYER_RANKING_ALGORITHM.md) |
 | `services/swissRankings`                | Swiss-format standings                                                                                                                                         |
+| `services/schedule`                     | A traditional season's generated schedule: the tables, seeding, and the playoffs that follow from the scores — see [SCHEDULING.md](../SCHEDULING.md)           |
 | `services/badges`                       | The badges rebuild: one pure rule per badge, the data they read, and the writes that make awards match — see [BADGES.md](../BADGES.md)                         |
 | `badges/catalog`                        | Every badge's name, description, tier and thresholds; the App and the art script import it                                                                     |
 | `shared/leagueCalendar`                 | Minneapolis calendar days: game nights, the Thanksgiving break, dates in messages                                                                              |
@@ -174,7 +176,7 @@ them and a forged request, and it runs before any read or write.
 | `shared/seasonPricing`                  | Validating a season's team registration total, which cannot change once money depends on it                                                                    |
 | `shared/names`, `shared/nameRules`      | Player and team name validation; the App imports the rules                                                                                                     |
 | `shared/database`                       | Document reference builders and the current-season lookup                                                                                                      |
-| `shared/gameSchedule`                   | The Saturday time slots and fields a game may be scheduled in                                                                                                  |
+| `shared/gameSchedule`                   | The Saturday time slots and fields a game may be scheduled in, and a game's per-slot id                                                                        |
 | `shared/images`, `shared/imageRules`    | Checking an uploaded image (PNG, JPEG, GIF or WebP, up to 5 MB) and storing it; the App imports the rules                                                      |
 | `shared/textFields`, `shared/textRules` | Length rules for season, news, post and reply text; the App imports the rules                                                                                  |
 | `shared/seasonInput`                    | Checking a season's name, dates and Stripe prices, for createSeason and updateSeason alike                                                                     |

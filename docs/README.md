@@ -15,7 +15,7 @@ Documentation for the Minneapolis Winter League application, grouped by area.
 Top-level documents: [Project Structure](./PROJECT_STRUCTURE.md),
 [Security Guidelines](./SECURITY.md), [Roadmap](./ROADMAP.md),
 [Team Payments](./TEAM_PAYMENTS.md), [Waivers](./WAIVERS.md), [Email](./EMAIL.md),
-[Badges](./BADGES.md).
+[Badges](./BADGES.md), [Scheduling](./SCHEDULING.md).
 
 ## Start here
 

@@ -20,7 +20,8 @@ Functions/src/
   api/webhooks/         the Stripe and Resend HTTP endpoints
   services/             multi-step domain logic: team registration, team payments
                         (checkout reservations, intake, settlement, sweep,
-                        reconciliation), team and account deletion, rankings
+                        reconciliation), team and account deletion, rankings,
+                        the generated schedule and automatic playoffs
   waiver/               the waiver's text and signing rules, also imported by the App
   badges/catalog.ts     every badge, imported by the App and scripts/badge-art; the
                         rules that award them are in services/badges/

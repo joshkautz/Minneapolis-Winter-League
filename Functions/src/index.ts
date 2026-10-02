@@ -27,6 +27,7 @@ export { updateTeamRegistrationOnContributionChange } from './triggers/documents
 export { emailContributionReceipt } from './triggers/documents/emailContributionReceipt.js'
 export { onTeamRegistrationChange } from './triggers/documents/onTeamRegistrationChange.js'
 export { sendQueuedEmail } from './triggers/documents/sendQueuedEmail.js'
+export { updatePlayoffsOnGameChange } from './triggers/documents/updatePlayoffsOnGameChange.js'
 
 // Payment triggers
 export { onPaymentCreated } from './triggers/payments/onPaymentCreated.js'
@@ -116,6 +117,9 @@ export { refundTeamContribution } from './functions/admin/payments/refundTeamCon
 export { createGame } from './functions/admin/games/createGame.js'
 export { updateGame } from './functions/admin/games/updateGame.js'
 export { deleteGame } from './functions/admin/games/deleteGame.js'
+// The regular season generated once; the playoffs follow from its scores
+export { generateSchedule } from './functions/admin/games/generateSchedule.js'
+export { updatePlayoffs } from './functions/admin/games/updatePlayoffs.js'
 
 // Badges (admin-only): every badge is awarded by its rule, never by hand
 export { rebuildBadges } from './functions/admin/badges/rebuildBadges.js'

@@ -480,6 +480,13 @@ export interface SeasonDocument extends DocumentData {
 	stripe?: SeasonStripeConfig
 	/** Season format type - defaults to 'traditional' for backward compatibility */
 	format?: SeasonFormat
+	/**
+	 * Set when the regular season was generated (`generateSchedule`): its
+	 * pool night, championship night and placements then follow from the
+	 * scores on their own (docs/SCHEDULING.md). Unset for every season
+	 * scheduled by hand.
+	 */
+	automaticPlayoffs?: boolean
 }
 
 /**
@@ -568,6 +575,13 @@ export interface GameDocument extends DocumentData {
 	 * standings, but badges ignore the game: neither team really played it.
 	 */
 	forfeit?: GameForfeit | null
+	/**
+	 * Which generated playoff game this is, such as "pool-r1-f2" or
+	 * "championship-r4-f1" (round and field of the night's layout). Only on
+	 * games the automatic playoffs created; they find their games by it, so
+	 * an admin can still move one to another time or field.
+	 */
+	playoffSlot?: string | null
 }
 
 /**

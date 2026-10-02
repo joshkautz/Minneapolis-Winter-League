@@ -136,6 +136,10 @@ already allowed.
   sends unless `system/email.mode` allows it, the emulator never sends, and
   players are emailed only through the `mail/` outbox — never with the Resend
   CLI or MCP server, which are for setup and testing.
+- A season whose schedule was generated (`seasons/{id}.automaticPlayoffs`)
+  writes its own pool night, championship night and placements from the
+  scores, on every game write (docs/SCHEDULING.md). Don't enter those games
+  or placements by hand there: the next score puts the placements back.
 - `Functions/src/index.ts` is the deploy manifest. Forgetting to export is the
   most common way a new function silently does nothing.
 - `.emulator/` is gitignored and may hold real production data pulled down by
@@ -148,7 +152,7 @@ already allowed.
 
 ## Tests
 
-Four suites (~1,900 tests), all run by `npm run verify`:
+Four suites (~2,100 tests), all run by `npm run verify`:
 
 | Suite           | Location                      | Covers                                                  |
 | --------------- | ----------------------------- | ------------------------------------------------------- |
