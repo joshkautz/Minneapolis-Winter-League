@@ -206,8 +206,8 @@ computed only from what came before it.
 scaled by $0.8^n$, where $n$ counted seasons back from the newest one when the
 rebuild ran. Adding a season, even one with no games yet, changed $n$ for every
 past game, so every past rating and ranking shifted. Measured on production
-data, creating 2026 Fall moved 396 of 444 players, and 2025 Fall's final
-standings changed for 140 of its 189 players when 2026 Spring was added. The
+data, creating Season 5 moved 396 of 444 players, and Season 3's final
+standings changed for 140 of its 189 players when Season 4 was added. The
 discount also scaled only the rating movement, not the drop in uncertainty, so
 an old game still counted in full toward confidence.
 

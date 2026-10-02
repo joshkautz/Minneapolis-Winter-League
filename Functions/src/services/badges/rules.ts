@@ -467,7 +467,7 @@ const dynasty: Rule = (view) =>
 
 /**
  * Registered teams, earliest first. A date after the season began is not a
- * registration — 2023 Fall has one from the following summer — so it is left
+ * registration — Season 1 has one from the following summer — so it is left
  * out rather than trusted.
  */
 const registeredInOrder = (view: SeasonView): BadgeTeamSeason[] =>
@@ -645,7 +645,7 @@ const listOf = (names: string[]): string =>
  *
  * Players who have played every game together have exactly the same rating,
  * so the top is often shared, and every team rostering a player at the top
- * earns it: in 2025 Fall, Nipull and Zander Stack$ each had a player rated
+ * earns it: in Season 3, Nipull and Zander Stack$ each had a player rated
  * 35.15, which a strict "highest" gave to whichever was read first.
  */
 const celebrity: Rule = (view) => {

@@ -46,7 +46,7 @@ export const LeagueDetailsSection = () => {
 					>
 						<CardHeader>
 							<CardTitle className={'text-2xl font-bold self-center'}>
-								2026 Fall Season
+								Season 5
 							</CardTitle>
 						</CardHeader>
 						<CardContent className={'flex flex-col gap-4'}>

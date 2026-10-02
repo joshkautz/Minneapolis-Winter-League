@@ -26,7 +26,7 @@ Dishonor (they single out the worst results).
 
 ## Team-level payment ($1,000 collective)
 
-Live from 2026 Fall: `docs/TEAM_PAYMENTS.md`. A team registers
+Live from Season 5: `docs/TEAM_PAYMENTS.md`. A team registers
 when it has ten signed players **and** its players have collectively
 paid $1,000, in any split, replacing ten individual $100 payments.
 
@@ -37,7 +37,7 @@ whole settlement lifecycle: refunding any excess on registration, refunding
 the teams that miss the twelve-team lock and those unregistered when
 registration closes, refunding a payer who leaves, an admin refund, and a
 daily reconciliation with Stripe; the team payment card
-on My Team and the admin payments view, and cutover: 2026 Fall carries a
+on My Team and the admin payments view, and cutover: Season 5 carries a
 $1,000 total and the home page describes it. The twelve-team race was
 rehearsed on the emulators on 24 September 2026
 (`scripts/rehearse-registration-race.js`): fifteen simultaneous final
@@ -65,7 +65,7 @@ total.
 
 ## Waivers
 
-Signed in the app since 2026 Fall: `docs/WAIVERS.md`. Left:
+Signed in the app since Season 5: `docs/WAIVERS.md`. Left:
 
 - **Emergency contacts for game day.** They are collected with each waiver
   but only visible one player at a time; organizers would want them by team.

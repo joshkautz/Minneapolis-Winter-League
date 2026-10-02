@@ -38,9 +38,9 @@ describe('renderEmail', () => {
 	it('builds the announcement from its season', async () => {
 		const email = await render('seasonAnnouncement')
 		expect(email.subject).toBe(
-			'2026 Fall Season registration opens Thursday, October 1'
+			'Season 5 registration opens Thursday, October 1'
 		)
-		expect(email.text).toContain('2026 Fall Season is almost here')
+		expect(email.text).toContain('Season 5 is almost here')
 		expect(email.text).toContain('Hi Josh,')
 		// The fee is left for the site, where players see it in context.
 		expect(email.text).toContain('each team pays one fee')

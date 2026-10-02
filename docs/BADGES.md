@@ -66,9 +66,9 @@ then vanish:
 | The season to end                                | Rising Stars                                                      |
 | A placement to be set                            | Champions, Runner-up, Podium, Dynasty                             |
 
-2023 Fall was the league's first season, so every team in it earned Welcome
+Season 1 was the league's first season, so every team in it earned Welcome
 and every player was new to the league. A registration date after the season
-began is ignored rather than trusted: 2023 Fall has one from the following
+began is ignored rather than trusted: Season 1 has one from the following
 summer.
 
 ## The badges
@@ -116,7 +116,7 @@ Both read the ratings, among the season's registered teams.
 have exactly the same rating, so the top of the leaderboard is usually a
 whole team's core, and a player who changes teams takes that rating along.
 Every team rostering a player at the top rating earns it, comparing ratings
-as the rankings do, so players ranked equal are equal here. In 2025 Fall,
+as the rankings do, so players ranked equal are equal here. In Season 3,
 Nipull and Zander Stack$ each had a player rated 35.15; before ties were
 shared, only whichever was read first was awarded.
 

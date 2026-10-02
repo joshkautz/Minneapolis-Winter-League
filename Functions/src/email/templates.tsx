@@ -86,7 +86,7 @@ export const TEMPLATES = {
 			'You are receiving this because you have played in the Minneapolis Winter League.',
 		component: SeasonAnnouncement,
 		sample: {
-			seasonName: '2026 Fall',
+			seasonName: 'Season 5',
 			registrationOpens: 'Thursday, October 1',
 			registrationCloses: 'Saturday, October 31',
 			gameNights: 'November 7, 14 and 21, and December 5, 12 and 19',
@@ -102,7 +102,7 @@ export const TEMPLATES = {
 		component: TeamInvitation,
 		sample: {
 			teamName: 'Frost Giants',
-			seasonName: '2026 Fall',
+			seasonName: 'Season 5',
 			captainName: 'Sam Rivera',
 		},
 	}),
@@ -113,7 +113,7 @@ export const TEMPLATES = {
 		component: TeamJoinRequest,
 		sample: {
 			teamName: 'Frost Giants',
-			seasonName: '2026 Fall',
+			seasonName: 'Season 5',
 			playerName: 'Alex Chen',
 		},
 	}),
@@ -136,21 +136,21 @@ export const TEMPLATES = {
 		subject: teamRequestAcceptedSubject,
 		footerReason: 'You are receiving this because you asked to join a team.',
 		component: TeamRequestAccepted,
-		sample: { teamName: 'Frost Giants', seasonName: '2026 Fall' },
+		sample: { teamName: 'Frost Giants', seasonName: 'Season 5' },
 	}),
 	teamRequestDeclined: define<TeamRequestAnsweredProps>({
 		category: 'teams',
 		subject: teamRequestDeclinedSubject,
 		footerReason: 'You are receiving this because you asked to join a team.',
 		component: TeamRequestDeclined,
-		sample: { teamName: 'Frost Giants', seasonName: '2026 Fall' },
+		sample: { teamName: 'Frost Giants', seasonName: 'Season 5' },
 	}),
 	teamInvitationWithdrawn: define<TeamInvitationWithdrawnProps>({
 		category: 'teams',
 		subject: teamInvitationWithdrawnSubject,
 		footerReason: 'You are receiving this because a captain invited you.',
 		component: TeamInvitationWithdrawn,
-		sample: { teamName: 'Frost Giants', seasonName: '2026 Fall' },
+		sample: { teamName: 'Frost Giants', seasonName: 'Season 5' },
 	}),
 	teamRequestWithdrawn: define<TeamRequestWithdrawnProps>({
 		category: 'teams',
@@ -178,7 +178,7 @@ export const TEMPLATES = {
 		component: TeamRegistered,
 		sample: {
 			teamName: 'Frost Giants',
-			seasonName: '2026 Fall',
+			seasonName: 'Season 5',
 			gameNights: 'November 7, 14 and 21, and December 5, 12 and 19',
 		},
 	}),
@@ -189,7 +189,7 @@ export const TEMPLATES = {
 		component: TeamMissedOut,
 		sample: {
 			teamName: 'Frost Giants',
-			seasonName: '2026 Fall',
+			seasonName: 'Season 5',
 			reason: 'season-full',
 			refunding: true,
 		},
@@ -203,7 +203,7 @@ export const TEMPLATES = {
 		component: TeamPaymentReceipt,
 		sample: {
 			teamName: 'Frost Giants',
-			seasonName: '2026 Fall',
+			seasonName: 'Season 5',
 			amount: '$250.00',
 			paidOn: 'Thursday, October 1, 2026',
 			paymentMethod: 'Visa •••• 4242',
@@ -226,7 +226,7 @@ export const TEMPLATES = {
 		component: TeamRefundReceipt,
 		sample: {
 			teamName: 'Frost Giants',
-			seasonName: '2026 Fall',
+			seasonName: 'Season 5',
 			cause: 'excess',
 			teamRegistered: true,
 			amount: '$250.00',

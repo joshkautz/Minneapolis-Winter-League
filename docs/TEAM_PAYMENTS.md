@@ -1,6 +1,6 @@
 # Team-level payment design
 
-Live since 2026 Fall. It covers how a team reaches a **$1,000 collective
+Live since Season 5. It covers how a team reaches a **$1,000 collective
 total** paid by any combination of its players, replacing the old rule that
 ten individual players must each pay $100.
 

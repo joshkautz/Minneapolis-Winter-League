@@ -289,7 +289,7 @@ are made by hand.
 **The account is on Resend Pro** (since 27 September 2026): 50,000 emails a
 month, no daily limit, and 10 requests a second. The free plan's 100 a day
 would not cover it: the announcement goes to about 450 players, and the
-opening day of 2025 Fall registration saw 150 invitations and requests,
+opening day of Season 3 registration saw 150 invitations and requests,
 each an email or more. It could drop back to free between registration
 periods. Over a limit, Resend answers `daily_quota_exceeded` or
 `monthly_quota_exceeded`, which the sender retries for up to a day: the
