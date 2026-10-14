@@ -317,6 +317,11 @@ export interface TeamSeasonDocument extends DocumentData {
 	 * order. Kept as pool night was drawn once it begins (docs/SCHEDULING.md).
 	 */
 	standingsRank?: number | null
+	/**
+	 * When a captain last emailed the roster's unsigned players a waiver
+	 * reminder; another can be sent a day later (`remindUnsignedTeammates`).
+	 */
+	waiverReminderSentAt?: Timestamp | null
 }
 
 /**

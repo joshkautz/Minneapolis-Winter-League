@@ -66,6 +66,7 @@ export { rolloverTeam } from './functions/user/teams/rolloverTeam.js'
 export { updateTeam } from './functions/user/teams/updateTeam.js'
 export { deleteTeam } from './functions/user/teams/deleteTeam.js'
 export { updateTeamRoster } from './functions/user/teams/updateTeamRoster.js'
+export { remindUnsignedTeammates } from './functions/user/teams/remindUnsignedTeammates.js'
 
 // Team management functions (admin-only)
 export { deleteUnregisteredTeam } from './functions/admin/teams/deleteUnregisteredTeam.js'

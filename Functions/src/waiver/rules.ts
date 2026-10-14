@@ -31,6 +31,12 @@ export const WAIVER_LIMITS = {
 	MAX_PHONE_DIGITS: 15,
 } as const
 
+/**
+ * How long after a captain reminds a team's unsigned players before the
+ * team can send another round: a day, whichever captain sends it.
+ */
+export const WAIVER_REMINDER_COOLDOWN_MS = 24 * 60 * 60 * 1000
+
 export interface EmergencyContact {
 	name: string
 	relationship: string

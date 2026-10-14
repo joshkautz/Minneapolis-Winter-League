@@ -123,12 +123,26 @@ describe('errorMessage', () => {
 		)
 	})
 
+	it('shows a refusal that names a time, which is not a stack frame', () => {
+		const refusal =
+			'Your teammates were last reminded on Thursday at 7:42 PM. You can send another reminder after Friday at 7:42 PM.'
+		expect(
+			errorMessage(callableError('resource-exhausted', refusal), FALLBACK)
+		).toBe(refusal)
+	})
+
 	it('replaces technical text and non-errors with the fallback', () => {
 		expect(
 			errorMessage(
 				new TypeError("Cannot read properties of undefined (reading 'id')"),
 				FALLBACK
 			)
+		).toBe(FALLBACK)
+		expect(errorMessage(new Error('Failed at index.js:10:5'), FALLBACK)).toBe(
+			FALLBACK
+		)
+		expect(
+			errorMessage(new Error('Thrown at /src/app/main.ts:42'), FALLBACK)
 		).toBe(FALLBACK)
 		expect(errorMessage(undefined, FALLBACK)).toBe(FALLBACK)
 		expect(errorMessage({ weird: true }, FALLBACK)).toBe(FALLBACK)

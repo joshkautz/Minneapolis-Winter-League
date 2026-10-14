@@ -5,6 +5,7 @@ import { useCollection } from 'react-firebase-hooks/firestore'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
 import { NotificationCard, TeamLogo } from '@/shared/components'
 import { ManageTeamRosterPlayer } from './manage-team-roster-player'
+import { WaiverReminderButton } from './waiver-reminder-button'
 import {
 	formatDollars,
 	formatTimestamp,
@@ -27,6 +28,7 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 		isLoading,
 		isCaptain: isAuthenticatedUserCaptain,
 		currentSeasonData,
+		userSnapshot,
 	} = useUserStatus()
 
 	const team = useMemo(
@@ -98,7 +100,19 @@ export const ManageTeamRosterCard = ({ actions }: { actions: ReactNode }) => {
 			title={isLoading ? 'Loading...' : titleData}
 			moreActions={actions}
 			footerContent={
-				isAuthenticatedUserCaptain ? registrationStatus : undefined
+				isAuthenticatedUserCaptain ? (
+					<div className='space-y-3'>
+						{registrationStatus}
+						{currentSeasonData?.team && seasonId && userSnapshot && (
+							<WaiverReminderButton
+								teamRef={currentSeasonData.team}
+								seasonId={seasonId}
+								selfId={userSnapshot.id}
+								sentAt={team?.data().waiverReminderSentAt}
+							/>
+						)}
+					</div>
+				) : undefined
 			}
 			className='max-w-none'
 		>
