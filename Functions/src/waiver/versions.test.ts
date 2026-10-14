@@ -4,6 +4,7 @@ import {
 	PARTICIPANT_PLACEHOLDER,
 	WAIVER_VERSIONS,
 	currentWaiverVersion,
+	fillParticipant,
 } from './versions.js'
 import { waiverFingerprint } from './fingerprint.js'
 
@@ -50,5 +51,14 @@ describe('waiver versions', () => {
 			PARTICIPANT_PLACEHOLDER
 		)
 		expect(version.guardianAgreement).toContain(PARTICIPANT_PLACEHOLDER)
+	})
+
+	it('fills every blank with the participant’s name', () => {
+		expect(
+			fillParticipant(
+				`I, ${PARTICIPANT_PLACEHOLDER}, and ${PARTICIPANT_PLACEHOLDER}.`,
+				'Alex Chen'
+			)
+		).toBe('I, Alex Chen, and Alex Chen.')
 	})
 })

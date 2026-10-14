@@ -55,6 +55,12 @@ export interface WaiverVersion {
  */
 export const PARTICIPANT_PLACEHOLDER = '{participant}'
 
+/** Puts the participant's name where the original waiver has a blank. */
+export const fillParticipant = (
+	text: string,
+	participantName: string
+): string => text.split(PARTICIPANT_PLACEHOLDER).join(participantName)
+
 /** The text players signed through Dropbox Sign until September 2026. */
 const ORIGINAL: WaiverVersion = {
 	id: '2026-09-original',

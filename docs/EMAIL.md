@@ -252,6 +252,13 @@ Stripe's Dashboard). They are `account` email, so they cannot be turned off.
 - **Once only.** Each receipt has a stable mail id (`receipt-{pi}`,
   `refund-{pi}-{status}-{amount}`), so a retried trigger sends nothing new.
 
+## The signer's copy of the waiver
+
+`signWaiver` queues `waiverCopy` (`email/waiverCopy.ts`) in the transaction
+that records a signature, so each signer gets the text they agreed to. It is
+`account` email, which cannot be turned off. See "The signer's copy" in
+[WAIVERS.md](WAIVERS.md).
+
 ## The new-season announcement
 
 `sendSeasonAnnouncement({ seasonId, audience, dryRun })`, admin only, builds

@@ -56,6 +56,11 @@ import {
 	type TeamJoinRequestProps,
 	type TeamRequestAnsweredProps,
 } from './templates/TeamOffers.js'
+import {
+	WaiverCopy,
+	waiverCopySubject,
+	type WaiverCopyProps,
+} from './templates/WaiverCopy.js'
 
 /** What every template receives besides its own props. */
 export interface EmailContext {
@@ -241,6 +246,28 @@ export const TEMPLATES = {
 				signedPlayers: 10,
 				signedPlayersNeeded: 10,
 			},
+		},
+	}),
+	waiverCopy: define<WaiverCopyProps>({
+		// The signer's copy of an agreement, which they are owed whatever
+		// their email preferences, like a receipt.
+		category: 'account',
+		subject: waiverCopySubject,
+		footerReason:
+			'You are receiving this because you signed the league’s waiver.',
+		component: WaiverCopy,
+		sample: {
+			seasonName: 'Season 5',
+			versionId: '2026-09-original',
+			versionSha256:
+				'ca517f1cc18b6b19111a250b60e4814ad89b968b92c1c07bfb45b6470b47da23',
+			participantName: 'Alex Chen',
+			signerName: 'Alex Chen',
+			signerRole: 'participant',
+			guardianRelationship: null,
+			signedAt: 'Thursday, October 15, 2026 at 7:42 PM CDT',
+			playerId: 'sample-player',
+			signatureId: 'sample-signature',
 		},
 	}),
 	testEmail: define<TestEmailProps>({

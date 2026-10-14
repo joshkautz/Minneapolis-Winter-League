@@ -19,6 +19,8 @@
  *
  * Signing is idempotent: a player already signed for the season gets
  * `alreadySigned` and no second record, whatever the order of two requests.
+ * A new signature queues the signer's copy by email, in the same
+ * transaction, so a copy goes out only for a signature that was saved.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -53,6 +55,8 @@ import {
 	type WaiverSubmission,
 } from '../../../waiver/rules.js'
 import { waiverFingerprint } from '../../../waiver/fingerprint.js'
+import { queueEmailInTransaction } from '../../../email/outbox.js'
+import { waiverCopyEmail } from '../../../email/waiverCopy.js'
 
 export interface SignWaiverResponse {
 	success: true
@@ -152,6 +156,8 @@ export const signWaiver = onCall<WaiverSubmission>(
 		}
 
 		const minor = isMinorOn(submission.dateOfBirth, today)
+		const signerName = submission.signerName.trim()
+		const signerRole = minor ? 'guardian' : 'participant'
 		const version = currentWaiverVersion()
 		const seasonRef = firestore
 			.collection(Collections.SEASONS)
@@ -171,8 +177,8 @@ export const signWaiver = onCall<WaiverSubmission>(
 			recordedBy: uid,
 			signedAt: FieldValue.serverTimestamp(),
 			participantName,
-			signerName: submission.signerName.trim(),
-			signerRole: minor ? 'guardian' : 'participant',
+			signerName,
+			signerRole,
 			guardianRelationship: minor
 				? (submission.guardianRelationship?.trim() ?? null)
 				: null,
@@ -194,12 +200,27 @@ export const signWaiver = onCall<WaiverSubmission>(
 		// The player-season is read inside the transaction, so of two requests
 		// racing — a double tap, two open tabs — one records and the other sees
 		// it signed. The record is the reason `signed` is true, so both are
-		// written together or not at all.
+		// written together or not at all, and so is the signer's copy by email.
+		const copy = waiverCopyEmail({
+			playerId: uid,
+			signatureId: signatureRef.id,
+			seasonName: season.name,
+			record: {
+				versionId: version.id,
+				versionSha256: record.versionSha256,
+				participantName,
+				signerName,
+				signerRole,
+				guardianRelationship: record.guardianRelationship,
+			},
+			signedAt: new Date(),
+		})
 		const alreadySigned = await firestore.runTransaction(async (txn) => {
 			const playerSeasonSnap = await txn.get(playerSeasonDocRef)
 			if (playerSeasonSnap.data()?.signed === true) return true
 
 			txn.create(signatureRef, record)
+			queueEmailInTransaction(txn, firestore, copy)
 			if (playerSeasonSnap.exists) {
 				txn.update(playerSeasonDocRef, { signed: true })
 			} else {
