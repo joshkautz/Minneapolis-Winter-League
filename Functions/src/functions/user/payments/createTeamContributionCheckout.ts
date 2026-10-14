@@ -347,8 +347,10 @@ export const createTeamContributionCheckout = onCall<
 				mode: 'payment',
 				// Card only, wallets included: a card payment succeeds when
 				// Checkout completes, so the contribution is paid the moment it
-				// is recorded. Bank debits would take days to settle.
-				payment_method_types: ['card'],
+				// is recorded. Bank debits would take days to settle. This
+				// filters the methods enabled in the Dashboard's payment
+				// method settings, so cards and wallets must stay on there.
+				allowed_payment_method_types: ['card'],
 				line_items: [
 					{
 						quantity: 1,

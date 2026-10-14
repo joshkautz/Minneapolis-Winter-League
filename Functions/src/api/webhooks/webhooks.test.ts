@@ -37,7 +37,7 @@ vi.mock('../../config/constants.js', async (importOriginal) => ({
 	getStripeConfig: () => ({
 		SECRET_KEY: 'sk_test_x',
 		WEBHOOK_SECRET: 'whsec_x',
-		API_VERSION: '2026-08-26.dahlia',
+		API_VERSION: '2026-09-30.endive',
 	}),
 }))
 
