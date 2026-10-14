@@ -63,7 +63,7 @@ export const VENUE = {
  * The Stripe API version the code is written against. The webhook endpoint
  * must be on the same one; see .claude/rules/functions.md before moving it.
  */
-export const STRIPE_API_VERSION = '2026-08-26.dahlia' as const
+export const STRIPE_API_VERSION = '2026-09-30.endive' as const
 
 // Stripe Configuration (lazy-loaded)
 export function getStripeConfig(): {

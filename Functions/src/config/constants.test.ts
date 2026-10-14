@@ -36,7 +36,7 @@ describe('getStripeConfig', () => {
 	it('reads no secret until a secret field is accessed', async () => {
 		const { getStripeConfig } = await loadConstants()
 
-		expect(getStripeConfig().API_VERSION).toBe('2026-08-26.dahlia')
+		expect(getStripeConfig().API_VERSION).toBe('2026-09-30.endive')
 		expect(warn).not.toHaveBeenCalled()
 	})
 
@@ -47,7 +47,7 @@ describe('getStripeConfig', () => {
 		const config = getStripeConfig()
 
 		expect(config.SECRET_KEY).toBe('sk_live_present')
-		expect(config.API_VERSION).toBe('2026-08-26.dahlia')
+		expect(config.API_VERSION).toBe('2026-09-30.endive')
 		expect(warn).not.toHaveBeenCalled()
 	})
 

@@ -437,13 +437,15 @@ Contributions are no longer holds; see "Why not card holds".
 
 What the Stripe account needed, and where each item stands.
 
-- **Webhook events — done.** The team flow needs
+- **Webhook events — done.** The endpoint receives
   `checkout.session.completed` and `charge.refunded`, the only events the
-  handler acts on. The endpoint also still receives
-  `payment_intent.canceled` and `payment_intent.succeeded`, from the hold
-  design, which the handler now ignores. It is on API version `2026-08-26.dahlia`, the SDK's, since
-  September 2026; see "Changing the Stripe API version" in
+  handler acts on. It is on API version `2026-09-30.endive`, the SDK's,
+  since October 2026; see "Changing the Stripe API version" in
   `.claude/rules/functions.md`.
+- **Payment methods — cards and wallets on.** Checkout offers only cards
+  by filtering the methods enabled under Dashboard → Settings → Payment
+  methods, so Cards must stay on there, and Apple Pay and Google Pay for
+  the wallets.
 - **The "Team Registration" Product — not needed.** The callable creates it
   on first use under the fixed id `mwl_team_registration`.
 - **`automatic_delayed` capture and extended authorizations — not needed.**

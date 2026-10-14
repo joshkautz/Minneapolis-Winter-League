@@ -258,7 +258,7 @@ describe('createTeamContributionCheckout', () => {
 
 		it('limits payment to cards', async () => {
 			await run()
-			expect(sentSession().payment_method_types).toEqual(['card'])
+			expect(sentSession().allowed_payment_method_types).toEqual(['card'])
 		})
 
 		it('tells the payer when they would be refunded', async () => {
