@@ -9,8 +9,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCollection } from 'react-firebase-hooks/firestore'
-import { InlineMath, BlockMath } from 'react-katex'
-import 'katex/dist/katex.min.css'
+import { InlineMath, BlockMath } from './math'
 
 import {
 	currentPlayerRankingsQuery,
