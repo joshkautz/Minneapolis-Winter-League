@@ -41,11 +41,33 @@ export interface DeliveryReport {
 	undeliverable: boolean
 }
 
+/** The events about an email the league sent that change what it records. */
+const TRACKED_TYPES = [
+	'email.delivered',
+	'email.delivery_delayed',
+	'email.complained',
+	'email.bounced',
+	'email.suppressed',
+	'email.failed',
+] as const
+
+type TrackedEvent = Extract<
+	WebhookEventPayload,
+	{ type: (typeof TRACKED_TYPES)[number] }
+>
+
+/**
+ * Narrowed by type, not by the data's shape: inbox events carry an
+ * `email_id` too, but no recipients.
+ */
+const isTracked = (event: WebhookEventPayload): event is TrackedEvent =>
+	(TRACKED_TYPES as readonly string[]).includes(event.type)
+
 /** Reads a webhook event, or null for an event the league does not track. */
 export function deliveryReportOf(
 	event: WebhookEventPayload
 ): DeliveryReport | null {
-	if (!('email_id' in event.data)) return null
+	if (!isTracked(event)) return null
 	const base = {
 		emailId: event.data.email_id,
 		at: new Date(event.created_at),
@@ -80,8 +102,6 @@ export function deliveryReportOf(
 				detail: event.data.failed.reason,
 				undeliverable: false,
 			}
-		default:
-			return null
 	}
 }
 
