@@ -96,6 +96,17 @@ describe('deliveryReportOf', () => {
 		}
 	)
 
+	it('ignores an inbox event, which names an email but no recipient', () => {
+		// Resend 6.33 added inbox events whose data has an email_id and no
+		// `to`; reading recipients from them would throw.
+		const inbox = {
+			type: 'inbox.draft.sent',
+			created_at: '2026-10-14T12:00:00.000Z',
+			data: { email_id: 'email-1' },
+		} as unknown as Parameters<typeof deliveryReportOf>[0]
+		expect(deliveryReportOf(inbox)).toBeNull()
+	})
+
 	it('ignores events that are not about an email', () => {
 		expect(
 			deliveryReportOf({
