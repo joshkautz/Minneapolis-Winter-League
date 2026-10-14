@@ -67,8 +67,6 @@ total.
 
 Signed in the app since Season 5: `docs/WAIVERS.md`. Left:
 
-- **Emergency contacts for game day.** They are collected with each waiver
-  but only visible one player at a time; organizers would want them by team.
 - **Captains reminding teammates** who have not signed.
 
 ### Waiver review
@@ -171,7 +169,7 @@ that is deliberately not fixed — are in `CLAUDE.md`.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 46.
+- **Deeper callable behaviour.** The authorization sweep covers all 47.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
   `updatePlayerAdmin`, `updateTeamAdmin`, `rolloverTeam`, `deletePlayer`,
   `signWaiver`, the season callables, `setSwissSeeding`,

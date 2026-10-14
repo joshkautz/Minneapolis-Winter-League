@@ -1041,6 +1041,43 @@ export const signWaiverViaFunction = async (
 	return result.data
 }
 
+/**
+ * - `contacts`: signed in the app, with the contacts given then
+ * - `recorded`: an admin marked them signed, so the app holds no contacts
+ * - `unsigned`: no waiver for the season
+ */
+export type EmergencyContactStatus = 'contacts' | 'recorded' | 'unsigned'
+
+export interface EmergencyContactsResponse {
+	seasonName: string
+	teams: {
+		teamId: string
+		teamName: string
+		players: {
+			playerId: string
+			name: string
+			captain: boolean
+			status: EmergencyContactStatus
+			contacts: { name: string; relationship: string; phone: string }[]
+		}[]
+	}[]
+}
+
+/**
+ * Every registered team's roster for a season, with each player's
+ * emergency contacts from that season's waiver (admin only).
+ */
+export const getEmergencyContactsViaFunction = async (data: {
+	seasonId: string
+}): Promise<EmergencyContactsResponse> => {
+	const getEmergencyContacts = httpsCallable<
+		{ seasonId: string },
+		EmergencyContactsResponse
+	>(functions, 'getEmergencyContacts')
+	const result = await getEmergencyContacts(data)
+	return result.data
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // SITE SETTINGS FUNCTIONS (ADMIN ONLY)
 //////////////////////////////////////////////////////////////////////////////

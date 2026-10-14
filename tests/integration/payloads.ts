@@ -37,6 +37,9 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	generateSchedule: { seasonId: 'season-1', dryRun: true },
 	updatePlayoffs: { seasonId: 'season-1', dryRun: true },
 
+	// --- admin: waivers ----------------------------------------------------
+	getEmergencyContacts: { seasonId: 'season-1' },
+
 	// --- admin: news -------------------------------------------------------
 	createNews: {
 		title: 'Season starts soon',
