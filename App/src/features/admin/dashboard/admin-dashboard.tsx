@@ -22,6 +22,7 @@ import {
 	Award,
 	Palette,
 	RefreshCw,
+	HeartPulse,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 
@@ -249,6 +250,27 @@ export const AdminDashboard = () => {
 							<Link to='/admin/registration-management'>
 								<Users className='h-4 w-4 mr-2' />
 								Manage Registration
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* Emergency Contacts */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<HeartPulse className='h-5 w-5 text-red-600' />
+							Emergency Contacts
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							Every registered team&apos;s players with the emergency contacts
+							from their waiver, to print for game day.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/emergency-contacts'>
+								<HeartPulse className='h-4 w-4 mr-2' />
+								View Emergency Contacts
 							</Link>
 						</Button>
 					</CardContent>

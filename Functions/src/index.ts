@@ -105,6 +105,9 @@ export { updateEmailPreferences } from './functions/user/email/updateEmailPrefer
 // Waiver functions (user-accessible)
 export { signWaiver } from './functions/user/waivers/signWaiver.js'
 
+// Waiver functions (admin-only)
+export { getEmergencyContacts } from './functions/admin/waivers/getEmergencyContacts.js'
+
 // Payment functions (user-accessible)
 export { createStripeCheckout } from './functions/user/payments/createStripeCheckout.js'
 export { createTeamContributionCheckout } from './functions/user/payments/createTeamContributionCheckout.js'

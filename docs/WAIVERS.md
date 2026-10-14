@@ -21,6 +21,7 @@ reads, so nothing downstream changed.
 | The signature records              | `players/{uid}/waiverSignatures/{id}`                   |
 | Signing page, and the printed copy | `App/src/features/player/waiver/`                       |
 | The signer's copy by email         | `waiverCopy` (`email/waiverCopy.ts`), from `signWaiver` |
+| Emergency contacts by team         | Admin → Emergency Contacts, via `getEmergencyContacts`  |
 | Prompts to sign                    | Profile, My Team (both views), the notification badge   |
 
 The text and the rules are **one copy**, imported by the App from
@@ -56,6 +57,20 @@ The date of birth, address and emergency contacts stay out of the email;
 it links to the full record at `/waiver/copy/{uid}/{signatureId}`, which
 shows them and prints. An admin marking a player signed sends no copy:
 there is no signer to send it to.
+
+## Emergency contacts on game day
+
+Admin → Emergency Contacts (`/admin/emergency-contacts`) lists a season's
+registered teams, by name, with every rostered player and the emergency
+contacts from the waiver they signed that season; it prints, one team to a
+block, and each number can be tapped to call. It reads them through the
+admin-only `getEmergencyContacts` (`services/emergencyContacts.ts`), which
+logs who asked, rather than opening the private records to a client query.
+
+A player with no contacts says why: an admin marked them signed, so the app
+holds none, or they have not signed this season. Contacts from an earlier
+season's waiver are never shown, and a player's own signature is preferred
+to a later admin record. Captains see no contacts; only admins do.
 
 ## After an account is deleted
 

@@ -34,7 +34,7 @@ Functions/src/
 
 ## Callables
 
-46 in total, every one covered by the authorization sweep in
+47 in total, every one covered by the authorization sweep in
 `tests/integration/callables-authorization.test.ts`, which fails when one is
 missing from it. Each lives in the file named after it.
 
@@ -44,7 +44,7 @@ missing from it. Each lives in the file named after it.
 | Teams         | `createTeam`, `rolloverTeam`, `updateTeam`, `deleteTeam`, `updateTeamRoster`               | `deleteUnregisteredTeam`, `updateTeamAdmin`, `mergeTeams`                                                              |
 | Offers        | `createOffer`, `updateOffer`                                                               |                                                                                                                        |
 | Payments      | `createStripeCheckout`, `createTeamContributionCheckout`, `cancelTeamContributionCheckout` | `refundTeamContribution`                                                                                               |
-| Waivers       | `signWaiver`                                                                               |                                                                                                                        |
+| Waivers       | `signWaiver` (emails the signer a copy)                                                    | `getEmergencyContacts` (every registered team's contacts, for game day)                                                |
 | Email         | `getEmailPreferences`, `updateEmailPreferences` (also by the link in an email, signed out) |                                                                                                                        |
 | Posts         | `createPost`, `updatePost`, `createReply`, `updateReply`                                   | `deletePost`, `deleteReply`                                                                                            |
 | Seasons       |                                                                                            | `createSeason`, `updateSeason`, `deleteSeason`, `setSwissSeeding`, `getSwissRankings`                                  |

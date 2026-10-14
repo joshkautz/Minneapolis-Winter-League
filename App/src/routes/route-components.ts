@@ -104,6 +104,10 @@ export const PlayerRankingManagement = lazyImport(
 	() => import('@/features/admin/player-ranking-management'),
 	'PlayerRankingManagement'
 )
+export const EmergencyContacts = lazyImport(
+	() => import('@/features/admin/emergency-contacts'),
+	'EmergencyContacts'
+)
 export const RegistrationManagement = lazyImport(
 	() => import('@/features/admin/registration-management'),
 	'RegistrationManagement'

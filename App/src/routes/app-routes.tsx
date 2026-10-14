@@ -23,6 +23,7 @@ import {
 	SwissRankings,
 	GameManagement,
 	RegistrationManagement,
+	EmergencyContacts,
 	BadgeManagement,
 	SiteSettings,
 	Profile,
@@ -257,6 +258,14 @@ export const AppRoutes = () => {
 					element={
 						<AdminRoute>
 							<RegistrationManagement />
+						</AdminRoute>
+					}
+				/>
+				<Route
+					path='/admin/emergency-contacts'
+					element={
+						<AdminRoute>
+							<EmergencyContacts />
 						</AdminRoute>
 					}
 				/>
