@@ -1041,6 +1041,28 @@ export const signWaiverViaFunction = async (
 	return result.data
 }
 
+export interface RemindUnsignedTeammatesResponse {
+	/** How many teammates were emailed. */
+	sent: number
+	/** When the team may send reminders again, as an ISO string. */
+	nextReminderAt: string
+}
+
+/**
+ * Emails every unsigned player on the captain's team a reminder to sign
+ * this season's waiver; a team may send one round a day.
+ */
+export const remindUnsignedTeammatesViaFunction = async (data: {
+	teamId: string
+}): Promise<RemindUnsignedTeammatesResponse> => {
+	const remindUnsignedTeammates = httpsCallable<
+		{ teamId: string },
+		RemindUnsignedTeammatesResponse
+	>(functions, 'remindUnsignedTeammates')
+	const result = await remindUnsignedTeammates(data)
+	return result.data
+}
+
 /**
  * - `contacts`: signed in the app, with the contacts given then
  * - `recorded`: an admin marked them signed, so the app holds no contacts

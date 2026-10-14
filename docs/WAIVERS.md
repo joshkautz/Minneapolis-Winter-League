@@ -12,17 +12,18 @@ reads, so nothing downstream changed.
 
 ## Pieces
 
-| Piece                              | Where                                                   |
-| ---------------------------------- | ------------------------------------------------------- |
-| The text, as versioned data        | `Functions/src/waiver/versions.ts`                      |
-| The rules a submission must meet   | `Functions/src/waiver/rules.ts`                         |
-| Recording a signature              | `signWaiver` (`functions/user/waivers/signWaiver.ts`)   |
-| An admin marking someone signed    | `updatePlayerAdmin`, which also writes a record         |
-| The signature records              | `players/{uid}/waiverSignatures/{id}`                   |
-| Signing page, and the printed copy | `App/src/features/player/waiver/`                       |
-| The signer's copy by email         | `waiverCopy` (`email/waiverCopy.ts`), from `signWaiver` |
-| Emergency contacts by team         | Admin → Emergency Contacts, via `getEmergencyContacts`  |
-| Prompts to sign                    | Profile, My Team (both views), the notification badge   |
+| Piece                                 | Where                                                   |
+| ------------------------------------- | ------------------------------------------------------- |
+| The text, as versioned data           | `Functions/src/waiver/versions.ts`                      |
+| The rules a submission must meet      | `Functions/src/waiver/rules.ts`                         |
+| Recording a signature                 | `signWaiver` (`functions/user/waivers/signWaiver.ts`)   |
+| An admin marking someone signed       | `updatePlayerAdmin`, which also writes a record         |
+| The signature records                 | `players/{uid}/waiverSignatures/{id}`                   |
+| Signing page, and the printed copy    | `App/src/features/player/waiver/`                       |
+| The signer's copy by email            | `waiverCopy` (`email/waiverCopy.ts`), from `signWaiver` |
+| Emergency contacts by team            | Admin → Emergency Contacts, via `getEmergencyContacts`  |
+| Captains reminding unsigned teammates | My Team → roster card, via `remindUnsignedTeammates`    |
+| Prompts to sign                       | Profile, My Team (both views), the notification badge   |
 
 The text and the rules are **one copy**, imported by the App from
 `Functions/src/waiver/` (see `App/src/shared/waiver.ts`) rather than
@@ -71,6 +72,17 @@ A player with no contacts says why: an admin marked them signed, so the app
 holds none, or they have not signed this season. Contacts from an earlier
 season's waiver are never shown, and a player's own signature is preferred
 to a later admin record. Captains see no contacts; only admins do.
+
+## Reminding unsigned teammates
+
+A captain's roster card on My Team has a button to email every teammate who
+has not signed this season's waiver, counting this season's roster only and
+never the captain themselves. A team sends one round a day, whichever
+captain sends it (`WAIVER_REMINDER_COOLDOWN_MS` in `waiver/rules.ts`, shared
+with the App); until then the button says when the last went and when the
+next can. The server checks the captaincy, the cooldown and who has signed
+in the transaction that queues the emails. The email is a `registration`
+reminder; see "Waiver reminders" in [EMAIL.md](EMAIL.md).
 
 ## After an account is deleted
 

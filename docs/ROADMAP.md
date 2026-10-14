@@ -65,9 +65,9 @@ total.
 
 ## Waivers
 
-Signed in the app since Season 5: `docs/WAIVERS.md`. Left:
-
-- **Captains reminding teammates** who have not signed.
+Signed in the app since Season 5: `docs/WAIVERS.md`, with a copy emailed
+to each signer, emergency contacts by team for admins, and captains'
+reminders to unsigned teammates.
 
 ### Waiver review
 
@@ -169,7 +169,7 @@ that is deliberately not fixed — are in `CLAUDE.md`.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 47.
+- **Deeper callable behaviour.** The authorization sweep covers all 48.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
   `updatePlayerAdmin`, `updateTeamAdmin`, `rolloverTeam`, `deletePlayer`,
   `signWaiver`, the season callables, `setSwissSeeding`,

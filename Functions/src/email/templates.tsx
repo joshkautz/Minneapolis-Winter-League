@@ -57,6 +57,11 @@ import {
 	type TeamRequestAnsweredProps,
 } from './templates/TeamOffers.js'
 import {
+	WaiverReminder,
+	waiverReminderSubject,
+	type WaiverReminderProps,
+} from './templates/WaiverReminder.js'
+import {
 	WaiverCopy,
 	waiverCopySubject,
 	type WaiverCopyProps,
@@ -246,6 +251,21 @@ export const TEMPLATES = {
 				signedPlayers: 10,
 				signedPlayersNeeded: 10,
 			},
+		},
+	}),
+	waiverReminder: define<WaiverReminderProps>({
+		category: 'registration',
+		subject: waiverReminderSubject,
+		footerReason:
+			'You are receiving this because your captain sent a reminder to teammates who have not signed.',
+		component: WaiverReminder,
+		sample: {
+			teamName: 'Frost Giants',
+			seasonName: 'Season 5',
+			captainName: 'Sam Rivera',
+			teamRegistered: false,
+			signedPlayers: 7,
+			signedPlayersNeeded: 10,
 		},
 	}),
 	waiverCopy: define<WaiverCopyProps>({

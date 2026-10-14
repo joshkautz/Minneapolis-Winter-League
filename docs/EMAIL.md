@@ -223,6 +223,19 @@ A team's roster hears how its registration ended
 Each has a stable id per season, team and player, so neither the lock's
 retries nor a later sweep sends a second.
 
+## Waiver reminders
+
+A captain can email every teammate who has not signed this season's waiver
+from the roster card on My Team (`remindUnsignedTeammates`, template
+`waiverReminder`, `email/waiverReminder.ts`). It is `registration` email,
+which a player can turn off with the other registration reminders. A team
+sends one round a day, whichever of its captains sends it: the send is
+recorded on the team-season as `waiverReminderSentAt`, in the transaction
+that queues the emails, so two captains pressing at once send one round.
+The captain is never emailed their own reminder, and signed players are
+never emailed. See "Reminding unsigned teammates" in
+[WAIVERS.md](WAIVERS.md).
+
 ## Payment receipts
 
 The league sends its own receipts for team payments and refunds, from

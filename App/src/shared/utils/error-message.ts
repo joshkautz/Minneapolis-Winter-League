@@ -77,7 +77,9 @@ const TECHNICAL = [
 	/^Firebase:/,
 	/\((auth|firestore|functions|storage)\//,
 	/\b(TypeError|ReferenceError|SyntaxError|undefined|null|NaN)\b/,
-	/\bat \S+:\d+/,
+	// A stack frame names a file: "at app.js:10:5", "at /src/x.ts:3".
+	// A time a server wrote for people, "at 7:42 PM", has no path in it.
+	/\bat \S*[/.]\S*:\d+/,
 	/^[A-Z_]+$/,
 ]
 

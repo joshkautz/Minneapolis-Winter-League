@@ -149,6 +149,7 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 		action: 'remove',
 	},
 	rolloverTeam: { originalTeamId: 'team-1', seasonId: 'season-1' },
+	remindUnsignedTeammates: { teamId: 'team-1' },
 
 	// --- user: waivers -----------------------------------------------------
 	signWaiver: {
