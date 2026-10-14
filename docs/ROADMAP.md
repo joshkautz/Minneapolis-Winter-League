@@ -69,9 +69,6 @@ Signed in the app since Season 5: `docs/WAIVERS.md`. Left:
 
 - **Emergency contacts for game day.** They are collected with each waiver
   but only visible one player at a time; organizers would want them by team.
-- **A copy by email.** Players can print or save their copy. Emailing one
-  is now a matter of a template and a `queueEmail` from `signWaiver`
-  (`docs/EMAIL.md`).
 - **Captains reminding teammates** who have not signed.
 
 ### Waiver review

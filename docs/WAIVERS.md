@@ -12,15 +12,16 @@ reads, so nothing downstream changed.
 
 ## Pieces
 
-| Piece                              | Where                                                 |
-| ---------------------------------- | ----------------------------------------------------- |
-| The text, as versioned data        | `Functions/src/waiver/versions.ts`                    |
-| The rules a submission must meet   | `Functions/src/waiver/rules.ts`                       |
-| Recording a signature              | `signWaiver` (`functions/user/waivers/signWaiver.ts`) |
-| An admin marking someone signed    | `updatePlayerAdmin`, which also writes a record       |
-| The signature records              | `players/{uid}/waiverSignatures/{id}`                 |
-| Signing page, and the printed copy | `App/src/features/player/waiver/`                     |
-| Prompts to sign                    | Profile, My Team (both views), the notification badge |
+| Piece                              | Where                                                   |
+| ---------------------------------- | ------------------------------------------------------- |
+| The text, as versioned data        | `Functions/src/waiver/versions.ts`                      |
+| The rules a submission must meet   | `Functions/src/waiver/rules.ts`                         |
+| Recording a signature              | `signWaiver` (`functions/user/waivers/signWaiver.ts`)   |
+| An admin marking someone signed    | `updatePlayerAdmin`, which also writes a record         |
+| The signature records              | `players/{uid}/waiverSignatures/{id}`                   |
+| Signing page, and the printed copy | `App/src/features/player/waiver/`                       |
+| The signer's copy by email         | `waiverCopy` (`email/waiverCopy.ts`), from `signWaiver` |
+| Prompts to sign                    | Profile, My Team (both views), the notification badge   |
 
 The text and the rules are **one copy**, imported by the App from
 `Functions/src/waiver/` (see `App/src/shared/waiver.ts`) rather than
@@ -40,6 +41,21 @@ it needs Node's crypto.
 Records are private to the player and admins (`firestore.rules`) because of
 the personal data, unlike the public player document they sit under. They are
 never edited or deleted; a correction is a new record.
+
+## The signer's copy
+
+Each signature made in the app emails the signer their copy: the full text
+of the version they agreed to, what they affirmed (or, for a minor, the
+guardian's certification), who signed and when, and the version's SHA-256.
+It is queued in the transaction that records the signature, under the
+stable id `waiverCopy-{signatureId}`, so a copy goes out only for a saved
+signature and never twice. It is `account` email, which cannot be turned
+off, like a receipt.
+
+The date of birth, address and emergency contacts stay out of the email;
+it links to the full record at `/waiver/copy/{uid}/{signatureId}`, which
+shows them and prints. An admin marking a player signed sends no copy:
+there is no signer to send it to.
 
 ## After an account is deleted
 

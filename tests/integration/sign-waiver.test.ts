@@ -87,6 +87,15 @@ const readSignatures = async (playerId = PLAYER) =>
 			.get()
 	).docs.map((doc) => doc.data())
 
+/** The mail queued for the signer's copy, one per signature. */
+const readCopies = async () =>
+	(
+		await firestore
+			.collection('mail')
+			.where('template', '==', 'waiverCopy')
+			.get()
+	).docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+
 const isSigned = async (playerId = PLAYER): Promise<boolean | undefined> =>
 	(await playerSeasonRef(firestore, playerId, SEASON).get()).data()?.signed
 
@@ -174,6 +183,41 @@ describe('signWaiver', () => {
 		expect(record.signedAt).toBeInstanceOf(Timestamp)
 	})
 
+	it('queues the signer’s copy by email, for that signature', async () => {
+		await sign(adultSubmission())
+
+		const signatureId = (
+			await firestore
+				.collection('players')
+				.doc(PLAYER)
+				.collection('waiverSignatures')
+				.get()
+		).docs[0].id
+		const copies = await readCopies()
+		expect(copies).toHaveLength(1)
+		expect(copies[0]).toMatchObject({
+			id: `waiverCopy-${signatureId}`,
+			toPlayerId: PLAYER,
+			category: 'account',
+			status: 'queued',
+			props: {
+				seasonName: '2030 Fall',
+				versionId: CURRENT_WAIVER_VERSION_ID,
+				versionSha256: waiverFingerprint(currentWaiverVersion()),
+				participantName: 'Test Player',
+				signerName: 'Test Player',
+				signerRole: 'participant',
+				guardianRelationship: null,
+				playerId: PLAYER,
+				signatureId,
+			},
+		})
+		// The copy repeats the agreement, not the private details kept with it.
+		expect(JSON.stringify(copies[0].props)).not.toMatch(
+			/1990-05-17|Main St|555-0100/
+		)
+	})
+
 	it('records where the request came from, preferring the forwarded client', async () => {
 		await sign(adultSubmission(), {
 			headers: { 'x-forwarded-for': '203.0.113.9, 10.0.0.2' },
@@ -203,6 +247,7 @@ describe('signWaiver', () => {
 			alreadySigned: true,
 		})
 		expect(await readSignatures()).toHaveLength(1)
+		expect(await readCopies()).toHaveLength(1)
 	})
 
 	it('records one signature when two requests race', async () => {
@@ -214,6 +259,7 @@ describe('signWaiver', () => {
 
 		expect(results.map((r) => r.alreadySigned).sort()).toEqual([false, true])
 		expect(await readSignatures()).toHaveLength(1)
+		expect(await readCopies()).toHaveLength(1)
 	})
 
 	it('creates the player-season if it is missing', async () => {
@@ -266,6 +312,7 @@ describe('signWaiver', () => {
 			).code
 		).toBe('invalid-argument')
 		expect(await readSignatures()).toHaveLength(0)
+		expect(await readCopies()).toHaveLength(0)
 	})
 
 	it('refuses a banned player', async () => {
@@ -320,6 +367,12 @@ describe('signWaiver', () => {
 
 			expect(await isSigned()).toBe(true)
 			expect((await readSignatures())[0]).toMatchObject({
+				participantName: 'Test Player',
+				signerName: 'Pat Player',
+				signerRole: 'guardian',
+				guardianRelationship: 'Mother',
+			})
+			expect((await readCopies())[0].props).toMatchObject({
 				participantName: 'Test Player',
 				signerName: 'Pat Player',
 				signerRole: 'guardian',
@@ -413,6 +466,8 @@ describe('updatePlayerAdmin marking a player signed', () => {
 				emergencyContacts: [],
 			},
 		])
+		// The admin recorded it, so there is no signer to send a copy to.
+		expect(await readCopies()).toHaveLength(0)
 	})
 
 	it('adds no record when the player was already signed', async () => {

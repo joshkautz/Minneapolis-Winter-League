@@ -9,12 +9,11 @@
  * workspace safe.
  */
 
-import { PARTICIPANT_PLACEHOLDER } from '../../../Functions/src/waiver/versions'
-
 export {
 	CURRENT_WAIVER_VERSION_ID,
 	WAIVER_VERSIONS,
 	currentWaiverVersion,
+	fillParticipant,
 	type WaiverParagraph,
 	type WaiverVersion,
 } from '../../../Functions/src/waiver/versions'
@@ -28,7 +27,3 @@ export {
 	type WaiverField,
 	type WaiverSubmission,
 } from '../../../Functions/src/waiver/rules'
-
-/** Puts the participant's name where the original waiver has a blank. */
-export const fillParticipant = (text: string, participantName: string) =>
-	text.split(PARTICIPANT_PLACEHOLDER).join(participantName)
