@@ -85,6 +85,14 @@ export const SEASON_RANKINGS_SUBCOLLECTION = 'rankings'
 export const WAIVER_SIGNATURES_SUBCOLLECTION = 'waiverSignatures'
 
 /**
+ * Subcollection name for the history of a player's name, living under
+ * `players/{uid}/nameHistory/{entryId}`: one entry per change to the first
+ * name, last name or nickname, written with the change. Readable only by
+ * admins.
+ */
+export const NAME_HISTORY_SUBCOLLECTION = 'nameHistory'
+
+/**
  * Subcollection name for per-team per-season state, living under
  * `teams/{teamId}/teamSeasons/{seasonId}`. Renamed from `seasons` to
  * disambiguate `collectionGroup()` queries from the player-side subcollection.
@@ -171,6 +179,12 @@ export interface PlayerDocument extends DocumentData {
 	/** Player's last name */
 	lastname: string
 	/**
+	 * An optional nickname, shown in quotes between the real names. Unlike
+	 * the real names it can be changed at any time; it never appears on a
+	 * waiver.
+	 */
+	nickname?: string | null
+	/**
 	 * Whether the player is banned from the league.
 	 *
 	 * A ban is a fact about a person, not about a season. It lived on the
@@ -181,6 +195,29 @@ export interface PlayerDocument extends DocumentData {
 	 * set, and the next carry-forward re-applied it.
 	 */
 	banned: boolean
+}
+
+/** A player's name as it stood before or after one change. */
+export interface PlayerNameSnapshot {
+	firstname: string
+	lastname: string
+	nickname: string | null
+}
+
+/**
+ * One change to a player's name, at `players/{uid}/nameHistory/{entryId}`.
+ * Written in the same transaction or batch as the change, so the history
+ * and the name cannot disagree. `before` is null for the name given at
+ * sign-up.
+ */
+export interface NameHistoryDocument extends DocumentData {
+	before: PlayerNameSnapshot | null
+	after: PlayerNameSnapshot
+	/** Who made the change: the player, or the admin who edited them. */
+	changedBy: string
+	/** `signup`, the player's own profile, or an admin's edit. */
+	source: 'signup' | 'player' | 'admin'
+	changedAt: Timestamp
 }
 
 /**

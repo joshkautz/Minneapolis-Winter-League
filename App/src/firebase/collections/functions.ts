@@ -114,6 +114,8 @@ interface UpdatePlayerAdminRequest {
 	firstname?: string
 	/** Player's last name (optional) */
 	lastname?: string
+	/** A new nickname, or null or blank to clear it (optional) */
+	nickname?: string | null
 	/** Admin status (optional) */
 	admin?: boolean
 	/** Email address (optional, will sync with Firebase Auth) */
@@ -151,6 +153,8 @@ interface UpdatePlayerAdminResponse {
 		firstname?: { from: string; to: string }
 		/** Whether and how lastname was updated */
 		lastname?: { from: string; to: string }
+		/** Whether and how the nickname was updated */
+		nickname?: { from: string | null; to: string | null }
 		/** Whether and how email was updated */
 		email?: { from: string; to: string }
 		/** Whether and how admin status was updated */

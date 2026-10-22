@@ -8,6 +8,7 @@ import {
 	formatTimestamp,
 } from '@/shared/utils'
 import type { ContributionStatus, TeamContributionDocument } from '@/types'
+import { displayName } from '@/shared/name-rules'
 
 /**
  * A team's payments toward its registration total: who, how much, and where
@@ -37,7 +38,7 @@ const PayerName = ({
 	const player = playerSnapshot?.data()
 	return (
 		<span className='font-medium'>
-			{player ? `${player.firstname} ${player.lastname}` : 'A teammate'}
+			{player ? displayName(player) : 'A teammate'}
 		</span>
 	)
 }

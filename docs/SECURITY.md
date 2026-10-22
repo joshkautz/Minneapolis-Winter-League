@@ -46,6 +46,7 @@ by `tests/rules/firestore.test.ts`:
 | `stripe/{uid}` — checkouts and payments      | that player                        |
 | `dropbox/{uid}` — pre-2026 waiver records    | that player                        |
 | `players/{uid}/waiverSignatures`             | that player and admins             |
+| `players/{uid}/nameHistory`                  | admins only, not even the player   |
 | a team-season's `contributions`, `checkouts` | that season's roster and admins    |
 | `system/*` — the kill-switch and email mode  | admins, and no client may write it |
 | `mail/` — the email outbox                   | nobody; Functions only             |

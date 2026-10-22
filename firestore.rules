@@ -128,6 +128,14 @@ service cloud.firestore {
           && (request.auth.uid == playerId || isAdmin());
         allow write: if false; // Functions only
       }
+
+      // The history of the player's name, for admins to see who a player
+      // was before a change. Not even the player reads it. Written only by
+      // createPlayer, updatePlayer and updatePlayerAdmin, with each change.
+      match /nameHistory/{entryId} {
+        allow read: if isAuthenticated() && isAdmin();
+        allow write: if false; // Functions only
+      }
     }
     
     // A player's email. Kept off the public player document so that listing

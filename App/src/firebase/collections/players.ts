@@ -11,6 +11,7 @@ import {
 	or,
 	query,
 	and,
+	orderBy,
 	where,
 	type CollectionReference,
 	type DocumentReference,
@@ -28,6 +29,8 @@ import {
 	PlayerSeasonDocument,
 	SeasonDocument,
 	WAIVER_SIGNATURES_SUBCOLLECTION,
+	NAME_HISTORY_SUBCOLLECTION,
+	type NameHistoryDocument,
 	type PlayerContactDocument,
 	type WaiverSignatureDocument,
 } from '@/types'
@@ -90,6 +93,27 @@ export const allPlayerContactsQuery = (): Query<PlayerContactDocument> =>
 		firestore,
 		Collections.PLAYER_CONTACTS
 	) as Query<PlayerContactDocument>
+
+// ---- Name history (admins only) --------------------------------------------
+
+/**
+ * Every change to a player's name and nickname, newest first. Only an admin
+ * may read it; not even the player can.
+ */
+export const nameHistoryQuery = (
+	playerId: string | undefined
+): Query<NameHistoryDocument> | undefined => {
+	if (!playerId) return undefined
+	return query(
+		collection(
+			firestore,
+			Collections.PLAYERS,
+			playerId,
+			NAME_HISTORY_SUBCOLLECTION
+		),
+		orderBy('changedAt', 'desc')
+	) as Query<NameHistoryDocument>
+}
 
 // ---- Waiver signatures -----------------------------------------------------
 

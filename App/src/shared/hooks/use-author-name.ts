@@ -3,6 +3,7 @@ import type { DocumentReference } from 'firebase/firestore'
 import { useDocumentOnce } from 'react-firebase-hooks/firestore'
 import type { PlayerDocument } from '@/types'
 import { logger } from '@/shared/utils'
+import { displayName } from '@/shared/name-rules'
 
 /** Shown while the author's player document loads. */
 export const AUTHOR_LOADING = 'Loading...'
@@ -30,5 +31,5 @@ export const useAuthorName = (
 	if (error) return AUTHOR_UNKNOWN
 	if (loading || !snapshot) return AUTHOR_LOADING
 	const player = snapshot.data()
-	return player ? `${player.firstname} ${player.lastname}` : missingName
+	return player ? displayName(player) : missingName
 }

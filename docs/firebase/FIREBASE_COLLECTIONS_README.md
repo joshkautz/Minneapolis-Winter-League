@@ -39,6 +39,7 @@ Per-season state hangs off subcollections rather than the parent document:
 | ------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------- |
 | `players/{uid}/playerSeasons/{seasonId}`                | `team`, `captain`, `paid`, `signed`                                                           | anyone              |
 | `players/{uid}/waiverSignatures/{id}`                   | The evidence behind `signed`                                                                  | that player, admins |
+| `players/{uid}/nameHistory/{id}`                        | One entry per change to the name or nickname, written with it                                 | admins              |
 | `teams/{teamId}/teamSeasons/{seasonId}`                 | Name, logo, `registered`, placement, `standingsRank` (both written by the automatic playoffs) | anyone              |
 | `teams/{teamId}/teamSeasons/{seasonId}/roster/{uid}`    | Membership, and nothing else                                                                  | anyone              |
 | `teams/{teamId}/teamSeasons/{seasonId}/contributions/…` | Team payments, keyed by PaymentIntent id                                                      | that roster, admins |

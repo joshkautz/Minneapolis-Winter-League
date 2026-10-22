@@ -35,6 +35,8 @@ export interface UpdatePlayerRequest {
 	playerId?: string // Optional - defaults to authenticated user
 	firstname?: string
 	lastname?: string
+	/** A new nickname, or null or blank to clear it. */
+	nickname?: string | null
 }
 
 /**

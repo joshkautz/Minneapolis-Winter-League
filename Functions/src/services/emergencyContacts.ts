@@ -23,6 +23,7 @@ import {
 	type TeamSeasonDocument,
 	type WaiverSignatureDocument,
 } from '../types.js'
+import { displayName } from '../shared/nameRules.js'
 
 export interface EmergencyContact {
 	name: string
@@ -92,9 +93,7 @@ async function rosterContacts(
 	const contacts = signature?.emergencyContacts ?? []
 	return {
 		playerId,
-		name: player
-			? `${player.firstname} ${player.lastname}`.trim()
-			: 'Deleted account',
+		name: player ? displayName(player) : 'Deleted account',
 		captain: playerSeasonSnap.data()?.captain === true,
 		status: !signature
 			? 'unsigned'

@@ -11,6 +11,8 @@
 import { HttpsError } from 'firebase-functions/v2/https'
 import { Filter } from 'bad-words'
 import {
+	NAME_MIN_LENGTH,
+	NICKNAME_MAX_LENGTH,
 	PLAYER_NAME_CHARACTERS,
 	REAL_NAMES_WRONGLY_FLAGGED,
 	REPEATED_PUNCTUATION,
@@ -90,6 +92,42 @@ export function validateAndNormalizeName(
 	)
 
 	return formatPlayerName(name)
+}
+
+/**
+ * Validates an optional nickname, returning the value to store: null when
+ * it is cleared (null or blank). The same characters as a name, the same
+ * language check, a shorter limit, and no change of capitalization — a
+ * nickname is written as its owner likes it.
+ *
+ * @throws HttpsError('invalid-argument') when the nickname is not usable
+ */
+export function validateNickname(
+	value: unknown,
+	options: NameOptions = {}
+): string | null {
+	const label = 'Nickname'
+	if (value === null) return null
+	if (typeof value !== 'string') throw invalid(`${label} must be text.`)
+	const nickname = normalizeTypography(value).replace(/\s+/g, ' ').trim()
+	if (nickname === '') return null
+
+	if (nickname.length < NAME_MIN_LENGTH) {
+		throw invalid(`${label} must be at least ${NAME_MIN_LENGTH} characters`)
+	}
+	if (nickname.length > NICKNAME_MAX_LENGTH) {
+		throw invalid(`${label} must be at most ${NICKNAME_MAX_LENGTH} characters`)
+	}
+	if (!PLAYER_NAME_CHARACTERS.test(nickname)) {
+		throw invalid(
+			`${label} can only contain letters, spaces, hyphens, and apostrophes`
+		)
+	}
+	if (REPEATED_PUNCTUATION.test(nickname)) {
+		throw invalid(`${label} cannot contain consecutive hyphens or apostrophes`)
+	}
+	refuseProfanity(nickname, label, options, 'Please choose a different one.')
+	return nickname
 }
 
 /**

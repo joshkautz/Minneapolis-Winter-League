@@ -75,6 +75,8 @@ import {
 } from '@/types'
 import { usePlayerEmails, useQueryErrorHandler } from '@/shared/hooks'
 import { BackToAdminButton } from '@/features/admin/shared'
+import { displayName, NICKNAME_MAX_LENGTH } from '@/shared/name-rules'
+import { NameHistory } from './name-history'
 
 interface SeasonFormData {
 	seasonId: string
@@ -87,6 +89,8 @@ interface SeasonFormData {
 interface PlayerFormData {
 	firstname: string
 	lastname: string
+	/** Blank for none. */
+	nickname: string
 	email: string
 	admin: boolean
 	emailVerified: boolean
@@ -262,6 +266,7 @@ export const PlayerManagement = () => {
 				const newFormData = {
 					firstname: playerData.firstname,
 					lastname: playerData.lastname,
+					nickname: playerData.nickname ?? '',
 					email: contactSnap.data()?.email ?? '',
 					admin: playerData.admin,
 					emailVerified,
@@ -343,6 +348,7 @@ export const PlayerManagement = () => {
 				playerId: selectedPlayerId,
 				firstname: formData.firstname,
 				lastname: formData.lastname,
+				nickname: formData.nickname.trim() || null,
 				admin: formData.admin,
 				banned: formData.banned,
 				seasons: formData.seasons,
@@ -366,6 +372,14 @@ export const PlayerManagement = () => {
 
 			if (result.changes.lastname) {
 				changesList.push(`Last name changed to ${result.changes.lastname.to}`)
+			}
+
+			if (result.changes.nickname) {
+				changesList.push(
+					result.changes.nickname.to
+						? `Nickname changed to ${result.changes.nickname.to}`
+						: 'Nickname removed'
+				)
 			}
 
 			if (result.changes.email) {
@@ -539,7 +553,7 @@ export const PlayerManagement = () => {
 										>
 											<div className='flex flex-col items-start'>
 												<span className='font-medium'>
-													{player.firstname} {player.lastname}
+													{displayName(player)}
 												</span>
 												<span className='text-xs text-muted-foreground'>
 													{emails.get(player.id) ?? ''}
@@ -695,6 +709,22 @@ export const PlayerManagement = () => {
 													setFormData({
 														...formData,
 														lastname: e.target.value,
+													})
+												}
+											/>
+										</div>
+
+										<div className='space-y-2'>
+											<Label htmlFor='nickname'>Nickname</Label>
+											<Input
+												id='nickname'
+												value={formData.nickname}
+												maxLength={NICKNAME_MAX_LENGTH}
+												placeholder='None'
+												onChange={(e) =>
+													setFormData({
+														...formData,
+														nickname: e.target.value,
 													})
 												}
 											/>
@@ -912,6 +942,10 @@ export const PlayerManagement = () => {
 										</div>
 									</div>
 								</div>
+
+								<Separator />
+
+								<NameHistory playerId={selectedPlayerId} />
 
 								<Separator />
 

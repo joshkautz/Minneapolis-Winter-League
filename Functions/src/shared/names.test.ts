@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { validateAndNormalizeName, validateTeamName } from './names.js'
+import {
+	validateAndNormalizeName,
+	validateNickname,
+	validateTeamName,
+} from './names.js'
+import { displayName } from './nameRules.js'
 
 /**
  * The App's `nameSchema` applies the same rules (`nameRules.ts`), but it is
@@ -231,5 +236,67 @@ describe('validateTeamName', () => {
 
 	it('still holds an admin to the length limits', () => {
 		expect(codeOfTeam('a'.repeat(51), false)).toBe('invalid-argument')
+	})
+})
+
+describe('validateNickname', () => {
+	const nicknameCode = (value: unknown): string | null => {
+		try {
+			validateNickname(value)
+			return null
+		} catch (error) {
+			return (error as { code?: string }).code ?? 'unknown'
+		}
+	}
+
+	it('keeps the capitalization its owner chose', () => {
+		expect(validateNickname('nOPE')).toBe('nOPE')
+		expect(validateNickname('the  Second   Coming ')).toBe('the Second Coming')
+	})
+
+	it('clears the nickname for null or a blank one', () => {
+		expect(validateNickname(null)).toBeNull()
+		expect(validateNickname('   ')).toBeNull()
+	})
+
+	it('allows letters from any script, and a curly apostrophe', () => {
+		expect(validateNickname('天畅')).toBe('天畅')
+		expect(validateNickname('O’Dowd')).toBe("O'Dowd")
+	})
+
+	it('applies the name rules, with a shorter limit', () => {
+		expect(nicknameCode('S')).toBe('invalid-argument')
+		expect(nicknameCode('a'.repeat(31))).toBe('invalid-argument')
+		expect(nicknameCode('a'.repeat(30))).toBeNull()
+		expect(nicknameCode('Slotz2')).toBe('invalid-argument')
+		expect(nicknameCode('“Slotz”')).toBe('invalid-argument')
+		expect(nicknameCode('Sl--otz')).toBe('invalid-argument')
+		expect(nicknameCode(42)).toBe('invalid-argument')
+	})
+
+	it('refuses an obscenity, unless an admin sets it', () => {
+		expect(nicknameCode('shit')).toBe('invalid-argument')
+		expect(validateNickname('shit', { checkProfanity: false })).toBe('shit')
+	})
+})
+
+describe('displayName', () => {
+	it('puts a nickname in quotes between the real names', () => {
+		expect(
+			displayName({ firstname: 'Hayden', lastname: 'Smith', nickname: 'Slotz' })
+		).toBe('Hayden \u201cSlotz\u201d Smith')
+	})
+
+	it('is the real name alone without one', () => {
+		expect(displayName({ firstname: 'Hayden', lastname: 'Smith' })).toBe(
+			'Hayden Smith'
+		)
+		expect(
+			displayName({ firstname: 'Hayden', lastname: 'Smith', nickname: null })
+		).toBe('Hayden Smith')
+	})
+
+	it('leaves out a missing part rather than doubling a space', () => {
+		expect(displayName({ firstname: 'Hayden', lastname: '' })).toBe('Hayden')
 	})
 })

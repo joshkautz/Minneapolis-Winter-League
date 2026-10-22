@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useTeamsContext, useSeasonsContext } from '@/providers'
 import { LoadingButton } from '@/shared/components'
 import { useQueryErrorHandler, usePendingAction } from '@/shared/hooks'
+import { displayName } from '@/shared/name-rules'
 
 export const ManageInvitePlayerDetail = ({
 	teamQueryDocumentSnapshot,
@@ -78,7 +79,7 @@ export const ManageInvitePlayerDetail = ({
 	)
 
 	const playerData = playerQueryDocumentSnapshot.data()
-	const playerName = `${playerData.firstname} ${playerData.lastname}`
+	const playerName = displayName(playerData)
 	const playerInitials =
 		`${playerData.firstname[0]}${playerData.lastname[0]}`.toUpperCase()
 

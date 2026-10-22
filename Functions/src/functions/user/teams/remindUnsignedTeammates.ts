@@ -46,6 +46,7 @@ import {
 	type TeamRosterDocument,
 	type TeamSeasonDocument,
 } from '../../../types.js'
+import { displayName } from '../../../shared/nameRules.js'
 
 interface RemindUnsignedTeammatesRequest {
 	teamId: string
@@ -89,9 +90,7 @@ export const remindUnsignedTeammates = onCall<RemindUnsignedTeammatesRequest>(
 			.doc(captainId)
 			.get()
 		const captain = captainSnap.data() as PlayerDocument | undefined
-		const captainName = captain
-			? `${captain.firstname} ${captain.lastname}`.trim()
-			: 'Your captain'
+		const captainName = captain ? displayName(captain) : 'Your captain'
 
 		const teamSeasonDocRef = teamSeasonRef(firestore, teamId, season.id)
 		const rosterRef = teamSeasonDocRef.collection(ROSTER_SUBCOLLECTION)

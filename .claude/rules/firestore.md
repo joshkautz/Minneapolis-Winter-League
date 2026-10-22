@@ -41,6 +41,11 @@ subcollection is readable only by that player and admins. Never add a
 collection-group rule for it, and never copy those fields onto a public
 document.
 
+`players/{uid}/nameHistory` is readable only by admins, not the player. Every
+callable that writes `firstname`, `lastname` or `nickname` records the change
+there with `recordNameChange` (`shared/nameHistory.ts`), in the same
+transaction or batch; a new writer of a name must do the same.
+
 A team-season's `contributions` and `checkouts` are readable only by that
 season's roster and admins, and deliberately have no collection-group rule, so
 no one can list every team's money at once.

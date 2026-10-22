@@ -15,12 +15,17 @@
  *   settles it; the payer shows as "A teammate".
  * - **Posts and replies** stay on the message board without a name, since
  *   deleting a post would take other people's replies with it.
+ *
+ * The name history goes with the account: it is personal data kept only to
+ * tell admins who a player was, and the waiver signatures that stay already
+ * name them.
  */
 
 import type { Firestore } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions/v2'
 import {
 	Collections,
+	NAME_HISTORY_SUBCOLLECTION,
 	PLAYER_SEASONS_SUBCOLLECTION,
 	type DocumentReference,
 	type PlayerDocument,
@@ -31,6 +36,7 @@ import { playerContactRef } from '../shared/database.js'
 export interface AccountDeletionSummary {
 	rosterEntriesDeleted: number
 	playerSeasonsDeleted: number
+	nameHistoryDeleted: number
 	offersDeleted: number
 	playerDeleted: boolean
 }
@@ -57,6 +63,11 @@ export async function deletePlayerAccountData(
 		.get()
 	for (const season of playerSeasons.docs) await season.ref.delete()
 
+	const nameHistory = await playerRef
+		.collection(NAME_HISTORY_SUBCOLLECTION)
+		.get()
+	await Promise.all(nameHistory.docs.map((entry) => entry.ref.delete()))
+
 	const offers = await firestore
 		.collection(Collections.OFFERS)
 		.where('player', '==', playerRef)
@@ -76,6 +87,7 @@ export async function deletePlayerAccountData(
 	const summary = {
 		rosterEntriesDeleted: rosterEntries.size,
 		playerSeasonsDeleted: playerSeasons.size,
+		nameHistoryDeleted: nameHistory.size,
 		offersDeleted: offers.size,
 		playerDeleted: playerDoc.exists,
 	}

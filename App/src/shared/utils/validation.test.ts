@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+	nicknameSchema,
 	emailSchema,
 	nameSchema,
 	passwordSchema,
@@ -145,6 +146,28 @@ describe('nameSchema', () => {
 			expect(nameSchema.parse(name)).toBe(name)
 		}
 	)
+})
+
+describe('nicknameSchema', () => {
+	it('keeps the capitalization typed, collapsing spaces', () => {
+		expect(nicknameSchema.parse('  the   Second Coming ')).toBe(
+			'the Second Coming'
+		)
+		expect(nicknameSchema.parse('nOPE')).toBe('nOPE')
+	})
+
+	it('is blank for none', () => {
+		expect(nicknameSchema.parse('   ')).toBe('')
+	})
+
+	it('applies the name rules, with a shorter limit', () => {
+		expect(nicknameSchema.safeParse('S').success).toBe(false)
+		expect(nicknameSchema.safeParse('a'.repeat(31)).success).toBe(false)
+		expect(nicknameSchema.safeParse('Slotz2').success).toBe(false)
+		expect(nicknameSchema.safeParse('\u201cSlotz\u201d').success).toBe(false)
+		expect(nicknameSchema.safeParse('Shit').success).toBe(false)
+		expect(nicknameSchema.safeParse('天畅').success).toBe(true)
+	})
 })
 
 describe('teamNameSchema', () => {
