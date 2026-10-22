@@ -9,6 +9,7 @@ import { Filter } from 'bad-words'
 import {
 	NAME_MAX_LENGTH,
 	NAME_MIN_LENGTH,
+	NICKNAME_MAX_LENGTH,
 	PLAYER_NAME_CHARACTERS,
 	REAL_NAMES_WRONGLY_FLAGGED,
 	REPEATED_PUNCTUATION,
@@ -104,6 +105,41 @@ export const nameSchema = z
 	)
 	.transform(formatPlayerName)
 
+/**
+ * An optional nickname: blank means none. The same characters and language
+ * check as a name and a shorter limit, written as typed rather than
+ * capitalized (`validateNickname` in Functions is the copy that counts).
+ */
+export const nicknameSchema = z
+	.string()
+	.transform((value) => normalizeTypography(value).replace(/\s+/g, ' ').trim())
+	.pipe(
+		z.union([
+			z.literal(''),
+			z
+				.string()
+				.min(
+					NAME_MIN_LENGTH,
+					`Nickname must be at least ${NAME_MIN_LENGTH} characters`
+				)
+				.max(
+					NICKNAME_MAX_LENGTH,
+					`Nickname must be at most ${NICKNAME_MAX_LENGTH} characters`
+				)
+				.regex(
+					PLAYER_NAME_CHARACTERS,
+					'Nickname can only contain letters, spaces, hyphens, and apostrophes'
+				)
+				.refine((name) => !REPEATED_PUNCTUATION.test(name), {
+					error: 'Nickname cannot contain consecutive hyphens or apostrophes',
+				})
+				.refine((name) => !filter.isProfane(name), {
+					error:
+						'Nickname contains inappropriate language. Please choose a different one.',
+				}),
+		])
+	)
+
 export const teamNameSchema = z
 	.string({
 		error: (issue) => {
@@ -154,6 +190,8 @@ export const profileFormSchema = z.object({
 	email: emailSchema,
 })
 
+export const nicknameFormSchema = z.object({ nickname: nicknameSchema })
+
 /** Finishing a profile whose creation failed at sign-up. */
 export const completeProfileFormSchema = profileFormSchema.pick({
 	firstname: true,
@@ -174,6 +212,7 @@ export type LoginFormData = z.infer<typeof loginFormSchema>
 export type SignupFormData = z.infer<typeof signupFormSchema>
 export type ResetPasswordFormData = z.infer<typeof resetPasswordFormSchema>
 export type ProfileFormData = z.infer<typeof profileFormSchema>
+export type NicknameFormData = z.input<typeof nicknameFormSchema>
 export type CompleteProfileFormData = z.infer<typeof completeProfileFormSchema>
 export type TeamFormData = z.infer<typeof teamFormSchema>
 export type RolloverTeamFormData = z.infer<typeof rolloverTeamFormSchema>

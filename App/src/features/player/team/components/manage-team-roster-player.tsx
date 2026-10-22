@@ -34,6 +34,7 @@ import {
 	usePendingAction,
 	useUserStatus,
 } from '@/shared/hooks'
+import { displayName } from '@/shared/name-rules'
 
 export const ManageTeamRosterPlayer = ({
 	playerRef,
@@ -259,8 +260,9 @@ export const ManageTeamRosterPlayer = ({
 								to={`/players/${playerRef.id}`}
 								className='font-medium truncate hover:underline focus-visible:underline focus-visible:outline-none'
 							>
-								{playerSnapshot.data()?.firstname}{' '}
-								{playerSnapshot.data()?.lastname}
+								{displayName(
+									playerSnapshot.data() ?? { firstname: '', lastname: '' }
+								)}
 							</Link>
 							{isPlayerCaptain && (
 								<StarFilledIcon
@@ -288,8 +290,8 @@ export const ManageTeamRosterPlayer = ({
 										aria-busy={isChangingCaptain}
 										aria-label={
 											isChangingCaptain
-												? `Updating ${playerSnapshot.data()?.firstname} ${playerSnapshot.data()?.lastname}`
-												: `Manage ${playerSnapshot.data()?.firstname} ${playerSnapshot.data()?.lastname}`
+												? `Updating ${displayName(playerSnapshot.data() ?? { firstname: '', lastname: '' })}`
+												: `Manage ${displayName(playerSnapshot.data() ?? { firstname: '', lastname: '' })}`
 										}
 									>
 										{isChangingCaptain ? (

@@ -11,6 +11,7 @@ import { ManageInvitePlayerSearchBar } from './manage-invite-player-search-bar'
 import { usePlayersSearch, useDebounce, useUserStatus } from '@/shared/hooks'
 import { useTeamsContext } from '@/providers'
 import { canonicalTeamIdFromTeamSeasonDoc } from '@/firebase/collections/teams'
+import { displayName } from '@/shared/name-rules'
 
 export const ManageInvitePlayerList = () => {
 	const [search, setSearch] = useState('')
@@ -58,7 +59,7 @@ export const ManageInvitePlayerList = () => {
 					type: OfferType.INVITATION,
 				})
 				toast.success('Invite sent', {
-					description: `${playerQueryDocumentSnapshot.data().firstname} ${playerQueryDocumentSnapshot.data().lastname} has been invited to join ${teamQueryDocumentSnapshot?.data().name}.`,
+					description: `${displayName(playerQueryDocumentSnapshot.data())} has been invited to join ${teamQueryDocumentSnapshot?.data().name}.`,
 				})
 				return true
 			} catch (error: unknown) {

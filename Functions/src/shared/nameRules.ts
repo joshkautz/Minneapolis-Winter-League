@@ -51,6 +51,33 @@ export const formatPlayerName = (name: string): string =>
 				boundary + letter.toUpperCase()
 		)
 
+/**
+ * A nickname is optional and shown between the real names, so it is kept
+ * short: the real first and last name always appear in full beside it.
+ */
+export const NICKNAME_MAX_LENGTH = 30
+
+/** The parts of a player a displayed name is built from. */
+export interface NamedPlayer {
+	firstname: string
+	lastname: string
+	nickname?: string | null
+}
+
+/**
+ * How a player's name is shown: the real first and last name, with any
+ * nickname in quotes between them — Hayden “Slotz” Smith. The real name is
+ * never replaced, so a roster always says who is playing.
+ */
+export const displayName = ({
+	firstname,
+	lastname,
+	nickname,
+}: NamedPlayer): string =>
+	[firstname, nickname ? `\u201c${nickname}\u201d` : null, lastname]
+		.filter((part) => part && part.trim() !== '')
+		.join(' ')
+
 /** The length problem with a name, or null when it is long enough and short enough. */
 export const nameLengthProblem = (
 	name: string,

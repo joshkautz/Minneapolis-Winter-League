@@ -11,6 +11,7 @@ import { PlayerDocument, SeasonDocument } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { useSeasonsContext } from '@/providers'
 import { useQueryErrorHandler } from '@/shared/hooks'
+import { displayName } from '@/shared/name-rules'
 
 export const TeamRosterPlayer = ({
 	playerRef,
@@ -60,8 +61,9 @@ export const TeamRosterPlayer = ({
 							to={`/players/${playerRef.id}`}
 							className='hover:underline focus-visible:underline focus-visible:outline-none'
 						>
-							{playerSnapshot.data()?.firstname}{' '}
-							{playerSnapshot.data()?.lastname}
+							{displayName(
+								playerSnapshot.data() ?? { firstname: '', lastname: '' }
+							)}
 						</Link>
 						{isPlayerCaptain && <StarFilledIcon className='text-primary' />}
 					</div>

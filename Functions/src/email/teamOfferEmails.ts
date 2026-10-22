@@ -46,6 +46,7 @@ import {
 } from '../shared/database.js'
 import { queueEmailInTransaction } from './outbox.js'
 import { DAY_MS } from '../shared/leagueCalendar.js'
+import { displayName } from '../shared/nameRules.js'
 
 /** How many "sent" emails a player and a team get a day, per kind of offer. */
 export const OFFER_SEND_EMAILS_PER_DAY = 2
@@ -84,12 +85,15 @@ export interface TeamOfferContext {
 	captainIds: string[]
 }
 
-/** "First Last", as the league shows a player elsewhere. */
+/** The player's name as the league shows it elsewhere, nickname and all. */
 export const playerDisplayName = (
 	player: Partial<PlayerDocument> | undefined
 ): string =>
-	[player?.firstname, player?.lastname].filter(Boolean).join(' ').trim() ||
-	'A player'
+	displayName({
+		firstname: player?.firstname ?? '',
+		lastname: player?.lastname ?? '',
+		nickname: player?.nickname,
+	}) || 'A player'
 
 /** Reads the names and captains a team email needs. */
 export async function readTeamOfferContext(

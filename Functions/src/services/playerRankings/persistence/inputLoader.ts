@@ -17,6 +17,7 @@ import {
 	type EngineGame,
 	type EngineInput,
 } from '../engine/rankingEngine.js'
+import { displayName } from '../../../shared/nameRules.js'
 
 export interface LoadedRankingInput {
 	input: EngineInput
@@ -82,7 +83,7 @@ export async function loadRankingInput(
 		for (const snapshot of snapshots) {
 			const player = snapshot.data() as PlayerDocument | undefined
 			if (player) {
-				playerNames.set(snapshot.id, `${player.firstname} ${player.lastname}`)
+				playerNames.set(snapshot.id, displayName(player))
 			}
 		}
 	}

@@ -33,18 +33,26 @@ import { UserCog } from 'lucide-react'
 
 interface ProfileFormProps {
 	authenticatedUserSnapshot: DocumentSnapshot<PlayerDocument> | undefined
+	/**
+	 * The season whose signed waiver names the player, which locks their
+	 * name; null while they can still change it.
+	 */
+	lockedBySeasonName: string | null
 }
 
 /**
- * ProfileForm Component
+ * The player's real first and last name, and their sign-in email.
  *
- * Handles user profile editing (first name, last name, email)
- * Separated from main Profile component for better maintainability
- * Uses Firebase Function for secure server-side updates
+ * The name can be corrected until the player signs the current season's
+ * waiver, which names them; then it is shown read-only and an admin
+ * changes it on request. `updatePlayer` enforces the same. The nickname,
+ * which can always change, has its own form.
  */
 export const ProfileForm = ({
 	authenticatedUserSnapshot,
+	lockedBySeasonName,
 }: ProfileFormProps) => {
+	const locked = lockedBySeasonName !== null
 	// The email shown is the sign-in address; the player document does not
 	// carry it (it is private, in playerContacts).
 	const { authStateUser } = useAuthContext()
@@ -112,11 +120,9 @@ export const ProfileForm = ({
 								<FormItem>
 									<FormLabel>First Name</FormLabel>
 									<FormControl>
-										<Input {...field} />
+										<Input {...field} disabled={locked} />
 									</FormControl>
-									<FormDescription>
-										This is your publicly displayed first name.
-									</FormDescription>
+									<FormDescription>Your real first name.</FormDescription>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -128,11 +134,9 @@ export const ProfileForm = ({
 								<FormItem>
 									<FormLabel>Last Name</FormLabel>
 									<FormControl>
-										<Input {...field} />
+										<Input {...field} disabled={locked} />
 									</FormControl>
-									<FormDescription>
-										This is your publicly displayed last name.
-									</FormDescription>
+									<FormDescription>Your real last name.</FormDescription>
 									<FormMessage />
 								</FormItem>
 							)}
@@ -153,14 +157,21 @@ export const ProfileForm = ({
 								</FormItem>
 							)}
 						/>
-						<LoadingButton
-							disabled={!form.formState.isDirty}
-							type='submit'
-							loading={isSubmitting}
-							loadingText='Saving Changes...'
-						>
-							Save Changes
-						</LoadingButton>
+						{locked ? (
+							<p className='text-sm text-muted-foreground'>
+								Your name is on your signed waiver for {lockedBySeasonName}. To
+								change it, contact the league.
+							</p>
+						) : (
+							<LoadingButton
+								disabled={!form.formState.isDirty}
+								type='submit'
+								loading={isSubmitting}
+								loadingText='Saving Changes...'
+							>
+								Save Changes
+							</LoadingButton>
+						)}
 					</form>
 				</Form>
 			</CardContent>

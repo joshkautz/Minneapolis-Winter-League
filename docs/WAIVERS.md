@@ -44,6 +44,29 @@ Records are private to the player and admins (`firestore.rules`) because of
 the personal data, unlike the public player document they sit under. They are
 never edited or deleted; a correction is a new record.
 
+## The name locks once signed
+
+A waiver names the person who agreed to it, and a roster has to say who is
+really playing, so a player's first and last name lock once they sign the
+current season's waiver: the profile shows them read-only, and
+`updatePlayer` refuses a change ("Your name is on your signed waiver for
+Season 5. To change it, contact the league."). Before signing they can still
+correct a typo. An admin changes a locked name in the player editor — a
+legal change, a chosen name, a mistake.
+
+For fun there is an optional nickname, which can change at any time and is
+shown in quotes between the real names (Hayden “Slotz” Smith) wherever a
+name appears, through `displayName` in `shared/nameRules.ts`. It never
+appears on a waiver: `participantName` is always the real first and last
+name.
+
+Every change to a name or nickname, by sign-up, the player or an admin, is
+recorded under `players/{uid}/nameHistory` in the transaction that makes
+it, and shown to admins as "Name history" in the player editor. The history
+starts in October 2026; before that, a player's waiver shows the name they
+signed with, which is how four renamed players were identified that month.
+It is deleted with the account; the waivers that stay already name them.
+
 ## The signer's copy
 
 Each signature made in the app emails the signer their copy: the full text

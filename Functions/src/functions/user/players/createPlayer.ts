@@ -16,6 +16,7 @@ import { validateBasicAuthentication } from '../../../shared/auth.js'
 import { playerContactRef } from '../../../shared/database.js'
 import { validateAndNormalizeName } from '../../../shared/names.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
+import { nameSnapshot, recordNameChange } from '../../../shared/nameHistory.js'
 
 /**
  * Request interface for creating a player
@@ -109,6 +110,15 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 
 			const batch = firestore.batch()
 			batch.set(playerRef, player)
+			// The name given at sign-up opens the player's name history.
+			recordNameChange(
+				batch,
+				playerRef,
+				null,
+				nameSnapshot(player),
+				userId,
+				'signup'
+			)
 			batch.set(playerContactRef(firestore, userId), {
 				email: email.trim().toLowerCase(),
 			})

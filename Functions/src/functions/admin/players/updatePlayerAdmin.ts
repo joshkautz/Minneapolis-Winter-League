@@ -38,7 +38,11 @@ import {
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { validateAdminUser } from '../../../shared/auth.js'
-import { validateAndNormalizeName } from '../../../shared/names.js'
+import {
+	validateAndNormalizeName,
+	validateNickname,
+} from '../../../shared/names.js'
+import { nameSnapshot, recordNameChange } from '../../../shared/nameHistory.js'
 import { cancelPendingOffersForPlayer } from '../../../shared/offers.js'
 import {
 	playerContactRef,
@@ -77,6 +81,8 @@ interface UpdatePlayerAdminRequest {
 	playerId: string
 	firstname?: string
 	lastname?: string
+	/** A new nickname, or null or blank to clear it. */
+	nickname?: string | null
 	admin?: boolean
 	email?: string
 	emailVerified?: boolean
@@ -109,6 +115,7 @@ interface UpdatePlayerAdminResponse {
 	changes: {
 		firstname?: { from: string; to: string }
 		lastname?: { from: string; to: string }
+		nickname?: { from: string | null; to: string | null }
 		email?: { from: string; to: string }
 		admin?: { from: boolean; to: boolean }
 		emailVerified?: { from: boolean; to: boolean }
@@ -140,6 +147,7 @@ export const updatePlayerAdmin = onCall<
 			playerId,
 			firstname,
 			lastname,
+			nickname,
 			admin,
 			email,
 			emailVerified,
@@ -154,6 +162,7 @@ export const updatePlayerAdmin = onCall<
 		if (
 			firstname === undefined &&
 			lastname === undefined &&
+			nickname === undefined &&
 			admin === undefined &&
 			email === undefined &&
 			emailVerified === undefined &&
@@ -199,6 +208,10 @@ export const updatePlayerAdmin = onCall<
 				? validateAndNormalizeName(lastname, 'Last name', {
 						checkProfanity: false,
 					})
+				: undefined
+		const normalizedNickname =
+			nickname !== undefined
+				? validateNickname(nickname, { checkProfanity: false })
 				: undefined
 		if (admin !== undefined && typeof admin !== 'boolean') {
 			throw new HttpsError(
@@ -323,6 +336,34 @@ export const updatePlayerAdmin = onCall<
 						from: playerData.lastname || '',
 						to: normalizedLastname,
 					}
+				}
+				const currentNickname = playerData.nickname ?? null
+				if (
+					normalizedNickname !== undefined &&
+					normalizedNickname !== currentNickname
+				) {
+					updates.nickname = normalizedNickname
+					changes.nickname = {
+						from: currentNickname,
+						to: normalizedNickname,
+					}
+				}
+				if (changes.firstname || changes.lastname || changes.nickname) {
+					const before = nameSnapshot(playerData)
+					recordNameChange(
+						txn,
+						playerDocRef,
+						before,
+						{
+							firstname: changes.firstname?.to ?? before.firstname,
+							lastname: changes.lastname?.to ?? before.lastname,
+							nickname: changes.nickname
+								? changes.nickname.to
+								: before.nickname,
+						},
+						auth?.uid ?? '',
+						'admin'
+					)
 				}
 				if (admin !== undefined && admin !== playerData.admin) {
 					// Last-admin protection, the counterpart to the last-captain

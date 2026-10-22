@@ -75,6 +75,10 @@ Per-season state hangs off subcollections rather than the parent document:
   (a ban is **not** season state — it lives on `players/{uid}.banned`)
 - `players/{uid}/waiverSignatures/{id}` — the evidence behind `signed`;
   **private** to the player and admins (see `docs/WAIVERS.md`)
+- `players/{uid}/nameHistory/{id}` — every change to the player's name or
+  nickname, written with the change; readable by **admins only**. A player's
+  real name locks once they sign the current season's waiver; show names
+  with `displayName` (`shared/nameRules.ts`), which adds the nickname
 - `badges/{badgeId}` — how many teams have earned each badge, written by the
   badges rebuild (the awards themselves are under each team, below)
 - `rankings/{playerId}` — the all-time leaderboard, written by the rankings

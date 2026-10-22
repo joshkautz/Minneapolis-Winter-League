@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { logger } from '@/shared/utils'
 import { OfferDocument, TeamSeasonDocument } from '@/types'
 import { toast } from 'sonner'
+import { displayName } from '@/shared/name-rules'
 
 // Extended OfferDocument with UI-specific fields for display
 export interface OfferDocumentWithUI extends OfferDocument {
@@ -92,13 +93,13 @@ export const useOffer = (
 
 						const playerData = playerSnapshot.data()
 						if (playerData) {
-							playerName = `${playerData.firstname} ${playerData.lastname}`
+							playerName = displayName(playerData)
 						}
 
 						if (creatorSnapshot) {
 							const creatorData = creatorSnapshot.data()
 							if (creatorData) {
-								creatorName = `${creatorData.firstname} ${creatorData.lastname}`
+								creatorName = displayName(creatorData)
 							}
 						}
 					} catch (error) {

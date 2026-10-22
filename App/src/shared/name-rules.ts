@@ -8,9 +8,12 @@
 export {
 	NAME_MAX_LENGTH,
 	NAME_MIN_LENGTH,
+	NICKNAME_MAX_LENGTH,
 	PLAYER_NAME_CHARACTERS,
 	REAL_NAMES_WRONGLY_FLAGGED,
 	REPEATED_PUNCTUATION,
+	displayName,
 	formatPlayerName,
 	normalizeTypography,
+	type NamedPlayer,
 } from '../../../Functions/src/shared/nameRules'

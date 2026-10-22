@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { ProfileForm } from './profile-form'
+import { NicknameForm } from './nickname-form'
 import { ProfileActions } from './profile-actions'
 import { DeleteAccountSection } from './delete-account-section'
 import { EmailPreferencesSection } from './email-preferences-section'
@@ -50,8 +51,17 @@ export const Profile = () => {
 			/>
 
 			<div className='flex flex-col lg:flex-row items-stretch gap-6 w-full'>
-				<div className='w-full lg:flex-1'>
-					<ProfileForm authenticatedUserSnapshot={authenticatedUserSnapshot} />
+				<div className='w-full lg:flex-1 space-y-6'>
+					<ProfileForm
+						authenticatedUserSnapshot={authenticatedUserSnapshot}
+						lockedBySeasonName={
+							isAuthenticatedUserSigned
+								? (currentSeasonQueryDocumentSnapshot?.data().name ??
+									'this season')
+								: null
+						}
+					/>
+					<NicknameForm authenticatedUserSnapshot={authenticatedUserSnapshot} />
 				</div>
 
 				<div className='w-full lg:flex-1'>

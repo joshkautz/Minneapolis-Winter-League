@@ -91,6 +91,10 @@ beforeEach(async () => {
 			dateOfBirth: '1990-05-17',
 			mailingAddress: '123 Main St',
 		})
+		await setDoc(doc(db, 'players/user-1/nameHistory/entry-1'), {
+			before: { firstname: 'Real', lastname: 'Name', nickname: null },
+			after: { firstname: 'Fake', lastname: 'Name', nickname: null },
+		})
 		await setDoc(doc(db, 'system/maintenance'), { enabled: false })
 
 		// Team payments. user-1 is on team-1's roster for season-1 only.
@@ -311,6 +315,34 @@ describe('waiver signatures', () => {
 			setDoc(doc(verified('admin-1'), signature), { seasonId: 'season-2' })
 		)
 		await assertFails(deleteDoc(doc(verified('user-1'), signature)))
+	})
+})
+
+describe('name history', () => {
+	// What a player was called before each change, kept for admins to tell
+	// who a player really is. Not even the player reads it, and nobody
+	// writes it from the client: only the callables that change a name.
+	const entry = 'players/user-1/nameHistory/entry-1'
+	const history = 'players/user-1/nameHistory'
+
+	it('is readable by an admin', async () => {
+		await assertSucceeds(getDoc(doc(verified('admin-1'), entry)))
+		await assertSucceeds(getDocs(collection(verified('admin-1'), history)))
+	})
+
+	it('is not readable by the player it belongs to, or anyone else', async () => {
+		await assertFails(getDoc(doc(verified('user-1'), entry)))
+		await assertFails(getDocs(collection(verified('user-1'), history)))
+		await assertFails(getDoc(doc(verified('user-2'), entry)))
+		await assertFails(getDoc(doc(anonymous(), entry)))
+	})
+
+	it('cannot be written, even by an admin', async () => {
+		await assertFails(
+			setDoc(doc(verified('user-1'), `${history}/forged`), { after: {} })
+		)
+		await assertFails(setDoc(doc(verified('admin-1'), entry), { after: {} }))
+		await assertFails(deleteDoc(doc(verified('admin-1'), entry)))
 	})
 })
 
