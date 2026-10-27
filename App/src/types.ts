@@ -260,7 +260,7 @@ export interface EmailUndeliverable {
  * and whether it must carry an unsubscribe link and postal address.
  */
 export type EmailCategory =
-	'account' | 'teams' | 'registration' | 'announcements'
+	'account' | 'teams' | 'registration' | 'announcements' | 'games'
 
 export type OptionalEmailCategory = Exclude<EmailCategory, 'account'>
 

@@ -18,7 +18,12 @@ vi.mock('@/firebase/collections/functions', () => ({
 
 const { EmailPreferencesSection } = await import('./email-preferences-section')
 
-const ALL_ON = { announcements: true, registration: true, teams: true }
+const ALL_ON = {
+	announcements: true,
+	registration: true,
+	teams: true,
+	games: true,
+}
 
 const respond = (undeliverable: boolean) =>
 	getEmailPreferencesViaFunction.mockResolvedValue({

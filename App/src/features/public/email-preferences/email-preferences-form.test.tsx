@@ -18,7 +18,12 @@ vi.mock('sonner', () => ({
 
 const { EmailPreferencesForm } = await import('./email-preferences-form')
 
-const ALL_ON = { announcements: true, registration: true, teams: true }
+const ALL_ON = {
+	announcements: true,
+	registration: true,
+	teams: true,
+	games: true,
+}
 
 const renderForm = (
 	preferences = ALL_ON,
@@ -88,11 +93,17 @@ describe('EmailPreferencesForm', () => {
 			announcements: false,
 			registration: false,
 			teams: false,
+			games: false,
 		})
 	})
 
 	it('has nothing left to unsubscribe from once everything is off', () => {
-		renderForm({ announcements: false, registration: false, teams: false })
+		renderForm({
+			announcements: false,
+			registration: false,
+			teams: false,
+			games: false,
+		})
 
 		expect(
 			screen.getByRole('button', { name: 'Unsubscribe from all' })

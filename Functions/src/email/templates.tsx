@@ -57,6 +57,11 @@ import {
 	type TeamRequestAnsweredProps,
 } from './templates/TeamOffers.js'
 import {
+	GameNight,
+	gameNightSubject,
+	type GameNightProps,
+} from './templates/GameNight.js'
+import {
 	EmailVerification,
 	emailVerificationSubject,
 	PasswordReset,
@@ -264,6 +269,25 @@ export const TEMPLATES = {
 				signedPlayers: 10,
 				signedPlayersNeeded: 10,
 			},
+		},
+	}),
+	gameNight: define<GameNightProps>({
+		category: 'games',
+		subject: gameNightSubject,
+		footerReason:
+			'You are receiving this because you are on a team’s roster this season.',
+		component: GameNight,
+		sample: {
+			teamName: 'Frost Giants',
+			seasonName: 'Season 5',
+			nightDate: 'Saturday, November 14',
+			nightLabel: 'Week 2',
+			games: [
+				{ time: '6:00pm', field: 1, opponent: 'Snow Owls' },
+				{ time: '6:45pm', field: 2, opponent: 'Grey Duck' },
+			],
+			standing: 'Frost Giants is 1–1, 6th of 12 teams.',
+			note: null,
 		},
 	}),
 	emailVerification: define<AccountLinkProps>({

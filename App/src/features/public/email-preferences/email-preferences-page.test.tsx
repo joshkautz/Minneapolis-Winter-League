@@ -41,7 +41,12 @@ vi.mock('sonner', () => ({
 
 const { EmailPreferencesPage } = await import('./email-preferences-page')
 
-const ALL_ON = { announcements: true, registration: true, teams: true }
+const ALL_ON = {
+	announcements: true,
+	registration: true,
+	teams: true,
+	games: true,
+}
 const LINK = { playerId: 'player-1', token: 'token-1' }
 
 const openPage = (query = '?p=player-1&t=token-1&c=announcements') =>

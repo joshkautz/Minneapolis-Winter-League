@@ -114,6 +114,7 @@ const NON_CALLABLES = new Set([
 	'emailContributionReceipt',
 	'rebuildRankingsNightly',
 	'awardBadgesNightly',
+	'emailGameNightsWeekly',
 	'sweepTeamPaymentsHourly',
 	'stripeWebhook',
 	'resendWebhook',
