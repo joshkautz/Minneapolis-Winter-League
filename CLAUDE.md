@@ -148,6 +148,9 @@ already allowed.
   sends unless `system/email.mode` allows it, the emulator never sends, and
   players are emailed only through the `mail/` outbox — never with the Resend
   CLI or MCP server, which are for setup and testing.
+  The league, not Firebase, sends the confirm-email and password-reset
+  emails (docs/EMAIL.md, "Account emails"), so turning email `off` also
+  stops anyone confirming an account or resetting a password.
 - A season whose schedule was generated (`seasons/{id}.automaticPlayoffs`)
   writes its own pool night, championship night and placements from the
   scores, on every game write (docs/SCHEDULING.md). Don't enter those games

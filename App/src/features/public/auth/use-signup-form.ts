@@ -26,9 +26,6 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 		createUserWithEmailAndPasswordError,
 		createUserWithEmailAndPasswordLoading,
 		createUserWithEmailAndPasswordUser,
-		sendEmailVerification,
-		sendEmailVerificationSending,
-		sendEmailVerificationError,
 	} = useAuthContext()
 
 	const form = useForm<SignupFormData>({
@@ -43,7 +40,7 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 
 	const onSubmit = async (data: SignupFormData) => {
 		// Prevent multiple submissions while already processing
-		if (createUserWithEmailAndPasswordLoading || sendEmailVerificationSending) {
+		if (createUserWithEmailAndPasswordLoading) {
 			return
 		}
 
@@ -67,29 +64,8 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 					lastName: data.lastName,
 				})
 
-				// Send email verification
-				const emailVerificationSent = await sendEmailVerification()
-
-				if (emailVerificationSent) {
-					logger.userAction('email_verification_sent', 'SignupForm', {
-						userId: credential.user.uid,
-					})
-				} else {
-					logger.error(
-						'Email verification failed',
-						sendEmailVerificationError,
-						{
-							component: 'SignupForm',
-							action: 'email_verification',
-							userId: credential.user.uid,
-						}
-					)
-					toast.error(
-						'Account created but failed to send verification email. Please try again from your profile.'
-					)
-				}
-
-				// Create player document
+				// Create the player document, which also sends the email to
+				// confirm the address: the league sends it, not Firebase.
 				try {
 					await createPlayerViaFunction({
 						firstname: data.firstName,
@@ -158,15 +134,13 @@ export const useSignupForm = ({ onSuccess }: UseSignupFormProps) => {
 
 	// Combine form submission state with Firebase authentication state for comprehensive loading
 	const isLoading =
-		form.formState.isSubmitting ||
-		createUserWithEmailAndPasswordLoading ||
-		sendEmailVerificationSending
+		form.formState.isSubmitting || createUserWithEmailAndPasswordLoading
 
 	return {
 		form,
 		onSubmit,
 		isLoading,
-		error: createUserWithEmailAndPasswordError || sendEmailVerificationError,
+		error: createUserWithEmailAndPasswordError,
 		signupFormSchema,
 	}
 }

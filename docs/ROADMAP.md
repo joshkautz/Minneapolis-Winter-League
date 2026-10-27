@@ -169,7 +169,7 @@ that is deliberately not fixed — are in `CLAUDE.md`.
 
 Still uncovered, in rough priority order:
 
-- **Deeper callable behaviour.** The authorization sweep covers all 48.
+- **Deeper callable behaviour.** The authorization sweep covers all 50.
   `createTeam`, `deleteTeam`, `updateTeamRoster`, `createOffer`, `mergeTeams`,
   `updatePlayerAdmin`, `updateTeamAdmin`, `rolloverTeam`, `deletePlayer`,
   `signWaiver`, the season callables, `setSwissSeeding`,

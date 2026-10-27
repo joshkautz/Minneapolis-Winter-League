@@ -13,20 +13,13 @@ import {
 	useAuthState,
 	useCreateUserWithEmailAndPassword,
 	useSignInWithEmailAndPassword,
-	useSendPasswordResetEmail,
-	useSendEmailVerification,
 	useSignOut,
 } from 'react-firebase-hooks/auth'
 import { useCollection, useDocument } from 'react-firebase-hooks/firestore'
 
 // Winter League
 import { auth } from '@/firebase/app'
-import type {
-	ActionCodeSettings,
-	AuthError,
-	User,
-	UserCredential,
-} from 'firebase/auth'
+import type { AuthError, User, UserCredential } from 'firebase/auth'
 import {
 	getPlayerRef,
 	playerSeasonsSubcollection,
@@ -79,15 +72,6 @@ interface AuthContextValue {
 	signOut: () => Promise<boolean>
 	signOutLoading: boolean
 	signOutError: Error | AuthError | undefined
-	sendEmailVerification: () => Promise<boolean>
-	sendEmailVerificationSending: boolean
-	sendEmailVerificationError: Error | AuthError | undefined
-	sendPasswordResetEmail: (
-		email: string,
-		actionCodeSettings?: ActionCodeSettings | undefined
-	) => Promise<boolean>
-	sendPasswordResetEmailSending: boolean
-	sendPasswordResetEmailError: Error | AuthError | undefined
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -126,16 +110,8 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
 		signInWithEmailAndPasswordError,
 	] = useSignInWithEmailAndPassword(auth)
 	const [signOut, signOutLoading, signOutError] = useSignOut(auth)
-	const [
-		sendEmailVerification,
-		sendEmailVerificationSending,
-		sendEmailVerificationError,
-	] = useSendEmailVerification(auth)
-	const [
-		sendPasswordResetEmail,
-		sendPasswordResetEmailSending,
-		sendPasswordResetEmailError,
-	] = useSendPasswordResetEmail(auth)
+	// Verification and password-reset emails are sent by the league
+	// (sendVerificationEmail, requestPasswordReset), never by Firebase.
 
 	// State to track user data refreshes and trigger re-renders
 	const [userRefreshCount, setUserRefreshCount] = useState(0)
@@ -207,12 +183,6 @@ export const AuthContextProvider = ({ children }: PropsWithChildren) => {
 		signOut,
 		signOutLoading,
 		signOutError,
-		sendEmailVerification,
-		sendEmailVerificationSending,
-		sendEmailVerificationError,
-		sendPasswordResetEmail,
-		sendPasswordResetEmailSending,
-		sendPasswordResetEmailError,
 	}
 
 	return (

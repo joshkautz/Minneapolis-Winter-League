@@ -57,6 +57,13 @@ import {
 	type TeamRequestAnsweredProps,
 } from './templates/TeamOffers.js'
 import {
+	EmailVerification,
+	emailVerificationSubject,
+	PasswordReset,
+	passwordResetSubject,
+	type AccountLinkProps,
+} from './templates/AccountEmails.js'
+import {
 	WaiverReminder,
 	waiverReminderSubject,
 	type WaiverReminderProps,
@@ -82,6 +89,12 @@ export interface TemplateDefinition<Props> {
 	component: (props: Props & EmailContext) => ReactElement
 	/** Realistic props for previews and tests. */
 	sample: Props
+	/**
+	 * Props that work as a credential, such as a password-reset link. The
+	 * sender removes them from the outbox once the email is finished with,
+	 * so a used or failed link does not sit in Firestore.
+	 */
+	secretProps?: readonly (keyof Props & string)[]
 }
 
 const define = <Props,>(
@@ -252,6 +265,29 @@ export const TEMPLATES = {
 				signedPlayersNeeded: 10,
 			},
 		},
+	}),
+	emailVerification: define<AccountLinkProps>({
+		// Part of signing in, so it cannot be turned off.
+		category: 'account',
+		subject: emailVerificationSubject,
+		footerReason:
+			'You are receiving this because this address was used to create an account.',
+		component: EmailVerification,
+		sample: {
+			link: 'https://mplswinterleague.com/auth/action?mode=verifyEmail&oobCode=sample',
+		},
+		secretProps: ['link'],
+	}),
+	passwordReset: define<AccountLinkProps>({
+		category: 'account',
+		subject: passwordResetSubject,
+		footerReason:
+			'You are receiving this because someone asked to reset the password for this account.',
+		component: PasswordReset,
+		sample: {
+			link: 'https://mplswinterleague.com/auth/action?mode=resetPassword&oobCode=sample',
+		},
+		secretProps: ['link'],
 	}),
 	waiverReminder: define<WaiverReminderProps>({
 		category: 'registration',
