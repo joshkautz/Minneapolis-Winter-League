@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
+import { sendVerificationEmailViaFunction } from '@/firebase/collections/functions'
 import { logger, errorMessage } from '@/shared/utils'
 
 interface UseEmailVerificationProps {
@@ -8,118 +9,62 @@ interface UseEmailVerificationProps {
 }
 
 /**
- * Custom hook for email verification logic
- *
- * Encapsulates email verification sending logic and error handling
- * with proper Firebase state management.
+ * Sends the player another email to confirm their address. The league sends
+ * it (`sendVerificationEmail`), not Firebase, at most once every two
+ * minutes; a second press inside that just points at the one already sent.
  */
 export const useEmailVerification = ({
 	isAuthenticatedUserBanned,
 }: UseEmailVerificationProps) => {
-	const {
-		sendEmailVerification,
-		sendEmailVerificationSending,
-		sendEmailVerificationError,
-		authStateUser,
-	} = useAuthContext()
-
+	const { authStateUser, refreshUser } = useAuthContext()
+	const [isLoading, setIsLoading] = useState(false)
+	const [error, setError] = useState<Error | undefined>(undefined)
 	const [verificationEmailSent, setVerificationEmailSent] = useState(false)
-	const [wasRecentlySending, setWasRecentlySending] = useState(false)
 
 	const handleSendVerification = useCallback(async () => {
-		// Prevent multiple submissions while already processing
-		if (sendEmailVerificationSending || isAuthenticatedUserBanned) {
-			return
-		}
-
+		if (isLoading || isAuthenticatedUserBanned) return
+		setIsLoading(true)
+		setError(undefined)
 		try {
-			setVerificationEmailSent(false)
-			const result = await sendEmailVerification()
-
-			if (result) {
-				logger.userAction(
-					'email_verification_sent',
-					'EmailVerificationSection',
-					{
-						userId: authStateUser?.uid,
-					}
-				)
+			const { alreadyVerified } = await sendVerificationEmailViaFunction()
+			if (alreadyVerified) {
+				// Confirmed in another tab or on another device: catch up now
+				// rather than at the next periodic refresh.
+				await refreshUser()
+				toast.success('Your email is already confirmed.')
+				return
 			}
-		} catch (error) {
-			logger.error(
-				'Email verification failed',
-				error instanceof Error ? error : new Error(String(error)),
-				{
-					component: 'EmailVerificationSection',
-					userId: authStateUser?.uid,
-				}
-			)
-			toast.error('Failed to send verification email', {
-				description: 'Please try again later.',
-			})
-		}
-	}, [
-		sendEmailVerification,
-		sendEmailVerificationSending,
-		isAuthenticatedUserBanned,
-		authStateUser,
-	])
-
-	// Track when we're sending
-	useEffect(() => {
-		if (sendEmailVerificationSending) {
-			const timer = setTimeout(() => setWasRecentlySending(true), 0)
-			return () => clearTimeout(timer)
-		}
-		return undefined
-	}, [sendEmailVerificationSending])
-
-	// Handle successful verification email sent
-	useEffect(() => {
-		// If we were recently sending and now we're not, and there's no error
-		if (
-			wasRecentlySending &&
-			!sendEmailVerificationSending &&
-			!sendEmailVerificationError
-		) {
-			const timer = setTimeout(() => {
-				setVerificationEmailSent(true)
-				setWasRecentlySending(false)
-			}, 0)
+			setVerificationEmailSent(true)
 			toast.success('Verification email sent!', {
-				description: 'Check your inbox for the verification link.',
+				description:
+					'Check your inbox for the link. It can take a minute to arrive.',
 			})
-			return () => clearTimeout(timer)
-		}
-		return undefined
-	}, [
-		wasRecentlySending,
-		sendEmailVerificationSending,
-		sendEmailVerificationError,
-	])
-
-	// Handle errors
-	useEffect(() => {
-		if (sendEmailVerificationError) {
+			logger.userAction('email_verification_sent', 'EmailVerificationSection', {
+				userId: authStateUser?.uid,
+			})
+		} catch (sendError) {
+			setError(
+				sendError instanceof Error ? sendError : new Error(String(sendError))
+			)
+			logger.error('Email verification failed', sendError, {
+				component: 'EmailVerificationSection',
+				userId: authStateUser?.uid,
+			})
 			toast.error('Failed to send verification email', {
 				description: errorMessage(
-					sendEmailVerificationError,
+					sendError,
 					'The verification email could not be sent. Please try again later.'
 				),
 			})
-			const timer = setTimeout(() => {
-				setVerificationEmailSent(false)
-				setWasRecentlySending(false)
-			}, 0)
-			return () => clearTimeout(timer)
+		} finally {
+			setIsLoading(false)
 		}
-		return undefined
-	}, [sendEmailVerificationError])
+	}, [isLoading, isAuthenticatedUserBanned, refreshUser, authStateUser])
 
 	return {
 		handleSendVerification,
-		isLoading: sendEmailVerificationSending,
-		error: sendEmailVerificationError,
+		isLoading,
+		error,
 		verificationEmailSent,
 	}
 }

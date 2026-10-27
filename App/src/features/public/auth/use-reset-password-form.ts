@@ -1,113 +1,65 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
-import { useEffect } from 'react'
-import { useAuthContext } from '@/providers'
+import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
+import { requestPasswordResetViaFunction } from '@/firebase/collections/functions'
 import { errorMessage, logger } from '@/shared/utils'
 import {
 	resetPasswordFormSchema,
 	type ResetPasswordFormData,
 } from '@/shared/utils/validation'
-import { standardSchemaResolver } from '@hookform/resolvers/standard-schema'
 
 interface UseResetPasswordFormProps {
 	onSuccess: () => void
 }
 
 /**
- * Custom hook for reset password form logic
+ * Asks the league to email a password-reset link (`requestPasswordReset`),
+ * which it sends itself rather than through Firebase.
  *
- * Encapsulates form validation, submission logic, and error handling
- * for the password reset process.
+ * The server answers the same whether or not an account uses the address,
+ * so this says the same too: someone cannot learn here who has an account.
  */
 export const useResetPasswordForm = ({
 	onSuccess,
 }: UseResetPasswordFormProps) => {
-	const {
-		sendPasswordResetEmail,
-		sendPasswordResetEmailError,
-		sendPasswordResetEmailSending,
-	} = useAuthContext()
-
+	const [error, setError] = useState<Error | undefined>(undefined)
 	const form = useForm<ResetPasswordFormData>({
 		resolver: standardSchemaResolver(resetPasswordFormSchema),
-		defaultValues: {
-			email: '',
-		},
+		defaultValues: { email: '' },
 	})
 
 	const onSubmit = async (data: ResetPasswordFormData) => {
-		// Prevent multiple submissions while already processing
-		if (sendPasswordResetEmailSending) {
-			return
-		}
-
+		setError(undefined)
 		try {
-			const result = await sendPasswordResetEmail(data.email)
-
-			if (result) {
-				logger.userAction('password_reset_email_sent', 'ResetPasswordForm', {
-					email: data.email,
-				})
-			}
-		} catch (error) {
-			logger.error(
-				'Password reset failed',
-				error instanceof Error ? error : new Error(String(error)),
-				{
-					component: 'ResetPasswordForm',
-					email: data.email,
-				}
+			await requestPasswordResetViaFunction({ email: data.email })
+			logger.userAction('password_reset_requested', 'ResetPasswordForm')
+			toast.success('Check your email', {
+				description:
+					'If an account uses that address, a link to choose a new password is on its way. It works for an hour.',
+			})
+			onSuccess()
+		} catch (resetError) {
+			setError(
+				resetError instanceof Error ? resetError : new Error(String(resetError))
 			)
+			logger.error('Password reset failed', resetError, {
+				component: 'ResetPasswordForm',
+			})
 			toast.error('Failed to send reset email', {
 				description: errorMessage(
-					error,
+					resetError,
 					'The reset email could not be sent. Please try again.'
 				),
 			})
 		}
 	}
 
-	// Handle successful password reset email sending
-	useEffect(() => {
-		// Check if the form was submitted and no error occurred
-		if (
-			form.formState.isSubmitSuccessful &&
-			!sendPasswordResetEmailError &&
-			!sendPasswordResetEmailSending
-		) {
-			toast.success('Password reset email sent!', {
-				description:
-					'Check your inbox for instructions to reset your password.',
-			})
-			onSuccess()
-		}
-	}, [
-		form.formState.isSubmitSuccessful,
-		sendPasswordResetEmailError,
-		sendPasswordResetEmailSending,
-		onSuccess,
-	])
-
-	// Handle errors
-	useEffect(() => {
-		if (sendPasswordResetEmailError && form.formState.isSubmitted) {
-			toast.error('Failed to send reset email', {
-				description: errorMessage(
-					sendPasswordResetEmailError,
-					'The reset email could not be sent. Please try again.'
-				),
-			})
-		}
-	}, [sendPasswordResetEmailError, form.formState.isSubmitted])
-
-	// Combine form submission state with Firebase state for comprehensive loading
-	const isLoading = form.formState.isSubmitting || sendPasswordResetEmailSending
-
 	return {
 		form,
 		onSubmit,
-		isLoading,
-		error: sendPasswordResetEmailError,
+		isLoading: form.formState.isSubmitting,
+		error,
 		resetPasswordFormSchema,
 	}
 }

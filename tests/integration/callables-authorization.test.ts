@@ -14,7 +14,7 @@ import { VALID_PAYLOADS } from './payloads.js'
 /**
  * Authorization sweep across every callable.
  *
- * firestore.rules denies all client writes, so these 48 functions are the
+ * firestore.rules denies all client writes, so these 50 functions are the
  * entire write path into the database. Each one's first job is to reject a
  * caller who should not be there. Individual callables have their own deeper
  * tests; this file proves none of them is missing the gate altogether —
@@ -79,7 +79,15 @@ const USER_CALLABLES = [
 	'updateEmailPreferences',
 	'updateTeamRoster',
 	'remindUnsignedTeammates',
+	'sendVerificationEmail',
 ] as const
+
+/**
+ * Callables that need no sign-in at all, by design: a password reset is
+ * asked for by someone who cannot sign in. Each has its own suite proving
+ * what it does for a stranger (tests/integration/account-emails.test.ts).
+ */
+const SIGNED_OUT_CALLABLES = ['requestPasswordReset']
 
 /**
  * Callables that deliberately accept an unverified email: two run before or
@@ -94,6 +102,8 @@ const ALLOWS_UNVERIFIED_EMAIL = new Set([
 	// with no sign-in at all (tests/integration/email-preferences.test.ts).
 	'getEmailPreferences',
 	'updateEmailPreferences',
+	// Sending the email that verifies it.
+	'sendVerificationEmail',
 ])
 
 /** Triggers, webhooks and schedules: not callables, excluded from the sweep. */
@@ -173,6 +183,7 @@ describe('the sweep covers every callable in the deploy manifest', () => {
 		const classified = new Set<string>([
 			...ADMIN_CALLABLES,
 			...USER_CALLABLES,
+			...SIGNED_OUT_CALLABLES,
 			...NON_CALLABLES,
 		])
 		const unclassified = exported.filter((name) => !classified.has(name))
@@ -183,14 +194,20 @@ describe('the sweep covers every callable in the deploy manifest', () => {
 	})
 
 	it('lists only functions that actually exist', () => {
-		const missing = [...ADMIN_CALLABLES, ...USER_CALLABLES].filter(
-			(name) => typeof manifest[name]?.run !== 'function'
-		)
+		const missing = [
+			...ADMIN_CALLABLES,
+			...USER_CALLABLES,
+			...SIGNED_OUT_CALLABLES,
+		].filter((name) => typeof manifest[name]?.run !== 'function')
 		expect(missing).toEqual([])
 	})
 
-	it('covers all 48 callables', () => {
-		expect(ADMIN_CALLABLES.length + USER_CALLABLES.length).toBe(48)
+	it('covers all 50 callables', () => {
+		expect(
+			ADMIN_CALLABLES.length +
+				USER_CALLABLES.length +
+				SIGNED_OUT_CALLABLES.length
+		).toBe(50)
 	})
 
 	it('has a valid payload for every callable', () => {

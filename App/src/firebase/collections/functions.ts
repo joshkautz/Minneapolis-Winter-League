@@ -1067,6 +1067,43 @@ export const remindUnsignedTeammatesViaFunction = async (data: {
 	return result.data
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// ACCOUNT EMAILS (sent by the league, not Firebase)
+//////////////////////////////////////////////////////////////////////////////
+
+export interface SendVerificationEmailResponse {
+	/** The address was already confirmed: nothing was sent. */
+	alreadyVerified: boolean
+	/** False when one went out in the last two minutes. */
+	sent: boolean
+}
+
+/** Emails the signed-in player a link to confirm their address. */
+export const sendVerificationEmailViaFunction =
+	async (): Promise<SendVerificationEmailResponse> => {
+		const sendVerificationEmail = httpsCallable<
+			Record<string, never>,
+			SendVerificationEmailResponse
+		>(functions, 'sendVerificationEmail')
+		const result = await sendVerificationEmail({})
+		return result.data
+	}
+
+/**
+ * Emails a password-reset link to the account using `email`, if any. Needs
+ * no sign-in, and answers the same whether or not an account exists.
+ */
+export const requestPasswordResetViaFunction = async (data: {
+	email: string
+}): Promise<{ success: true }> => {
+	const requestPasswordReset = httpsCallable<
+		{ email: string },
+		{ success: true }
+	>(functions, 'requestPasswordReset')
+	const result = await requestPasswordReset(data)
+	return result.data
+}
+
 /**
  * - `contacts`: signed in the app, with the contacts given then
  * - `recorded`: an admin marked them signed, so the app holds no contacts

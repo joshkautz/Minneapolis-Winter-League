@@ -30,6 +30,7 @@ import {
 	ManageTeam,
 	Waiver,
 	WaiverCopy,
+	AuthAction,
 	NotFound,
 } from './route-components'
 
@@ -56,6 +57,14 @@ export const AppRoutes = () => {
 					element={
 						<PublicRoute>
 							<Home />
+						</PublicRoute>
+					}
+				/>
+				<Route
+					path='/auth/action'
+					element={
+						<PublicRoute>
+							<AuthAction />
 						</PublicRoute>
 					}
 				/>

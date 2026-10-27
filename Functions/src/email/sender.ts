@@ -17,7 +17,7 @@ import { Collections, type MailDocument, type MailStatus } from '../types.js'
 import { isUndeliverable } from './delivery.js'
 import { renderEmail, type RenderedEmail } from './render.js'
 import { deliveryFor, readEmailSettings } from './settings.js'
-import { isTemplateName, type TemplateName } from './templates.js'
+import { isTemplateName, TEMPLATES, type TemplateName } from './templates.js'
 import {
 	isOptionalCategory,
 	preferenceLinks,
@@ -55,11 +55,22 @@ export async function deliverQueuedEmail(
 	const mail = (await ref.get()).data() as MailDocument | undefined
 	if (!mail || mail.status !== 'queued') return mail?.status ?? 'failed'
 
+	// A one-time sign-in link is removed once the email is finished with,
+	// whatever happened to it. Kept under the emulator, where it is the only
+	// way to follow the link.
+	const secretProps = isTemplateName(mail.template)
+		? (TEMPLATES[mail.template].secretProps ?? [])
+		: []
 	const finish = async (
 		status: MailStatus,
 		fields: Partial<MailDocument> = {}
 	): Promise<MailStatus> => {
-		await ref.update({ status, ...fields })
+		const redactions = isRunningInEmulator()
+			? {}
+			: Object.fromEntries(
+					secretProps.map((prop) => [`props.${prop}`, FieldValue.delete()])
+				)
+		await ref.update({ status, ...fields, ...redactions })
 		return status
 	}
 

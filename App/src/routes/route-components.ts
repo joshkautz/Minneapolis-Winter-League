@@ -18,6 +18,10 @@ import { lazyImport } from '@/shared/utils'
 // Accessible without authentication
 
 export const Home = lazyImport(() => import('@/features/public/home'), 'Home')
+export const AuthAction = lazyImport(
+	() => import('@/features/public/auth-action'),
+	'AuthAction'
+)
 export const Schedule = lazyImport(
 	() => import('@/features/public/schedule'),
 	'Schedule'

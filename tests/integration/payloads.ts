@@ -150,6 +150,8 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 	},
 	rolloverTeam: { originalTeamId: 'team-1', seasonId: 'season-1' },
 	remindUnsignedTeammates: { teamId: 'team-1' },
+	sendVerificationEmail: {},
+	requestPasswordReset: { email: 'player-1@example.com' },
 
 	// --- user: waivers -----------------------------------------------------
 	signWaiver: {

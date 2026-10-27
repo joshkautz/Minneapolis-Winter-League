@@ -17,6 +17,7 @@ import { playerContactRef } from '../../../shared/database.js'
 import { validateAndNormalizeName } from '../../../shared/names.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
 import { nameSnapshot, recordNameChange } from '../../../shared/nameHistory.js'
+import { queueAccountEmail } from '../../../email/accountEmails.js'
 
 /**
  * Request interface for creating a player
@@ -47,7 +48,8 @@ interface CreatePlayerRequest {
  * - Player will receive future seasons when they are created by admins
  *
  * Note: Email verification is NOT required to allow newly registered users
- * to create their player profiles immediately after account creation.
+ * to create their player profiles immediately after account creation. It
+ * sends them the email to confirm their address, which Firebase used to.
  */
 export const createPlayer = onCall<CreatePlayerRequest>(
 	{ region: FIREBASE_CONFIG.REGION },
@@ -137,6 +139,21 @@ export const createPlayer = onCall<CreatePlayerRequest>(
 				batch.set(seasonSubRef, seasonData)
 			}
 			await batch.commit()
+
+			// The league sends the confirmation email, not Firebase. A failure
+			// here leaves a good account behind, so it is logged rather than
+			// thrown: the profile offers to send it again.
+			if (auth.token.email_verified !== true) {
+				await queueAccountEmail(firestore, 'emailVerification', {
+					uid: userId,
+					email: email.trim().toLowerCase(),
+				}).catch((error: unknown) =>
+					logger.error('Could not send the sign-up confirmation email', {
+						userId,
+						error,
+					})
+				)
+			}
 
 			logger.info(`Successfully created player: ${userId}`, {
 				email,

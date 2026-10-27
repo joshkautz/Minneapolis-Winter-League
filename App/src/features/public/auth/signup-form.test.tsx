@@ -14,9 +14,6 @@ vi.mock('@/providers', () => ({
 		createUserWithEmailAndPasswordError: undefined,
 		createUserWithEmailAndPasswordLoading: false,
 		createUserWithEmailAndPasswordUser: undefined,
-		sendEmailVerification: vi.fn(),
-		sendEmailVerificationSending: false,
-		sendEmailVerificationError: undefined,
 	}),
 }))
 vi.mock('@/firebase/collections/functions', () => ({

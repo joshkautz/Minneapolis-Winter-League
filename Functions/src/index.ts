@@ -103,6 +103,11 @@ export { sendEmailPreview } from './functions/admin/email/sendEmailPreview.js'
 export { getEmailPreferences } from './functions/user/email/getEmailPreferences.js'
 export { updateEmailPreferences } from './functions/user/email/updateEmailPreferences.js'
 
+// Account emails, sent by the league rather than Firebase. requestPasswordReset
+// needs no sign-in: whoever forgot their password cannot provide one.
+export { sendVerificationEmail } from './functions/user/auth/sendVerificationEmail.js'
+export { requestPasswordReset } from './functions/user/auth/requestPasswordReset.js'
+
 // Waiver functions (user-accessible)
 export { signWaiver } from './functions/user/waivers/signWaiver.js'
 

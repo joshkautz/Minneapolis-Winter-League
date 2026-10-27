@@ -77,6 +77,11 @@ node scripts/production/set-email-mode.js live --confirm-live
 Held email is never released when the switch turns on, so turning email on
 does not flood anyone with a backlog.
 
+**The switch covers sign-in email too.** Since October 2026 the league, not
+Firebase, sends the emails that confirm an address and reset a password
+(see "Account emails" below). With email `off` nobody can confirm a new
+account or reset a password; in `test` only the test recipients can.
+
 **Under the emulator nothing is ever sent.** The Functions emulator reads
 production secrets, and Resend has no test mode, so `deliverQueuedEmail`
 renders the email and records it as `emulated` instead. (A seeded emulator
@@ -264,6 +269,38 @@ Stripe's Dashboard). They are `account` email, so they cannot be turned off.
   plain receipt.
 - **Once only.** Each receipt has a stable mail id (`receipt-{pi}`,
   `refund-{pi}-{status}-{amount}`), so a retried trigger sends nothing new.
+
+## Account emails
+
+The emails that confirm a new address and reset a password are the league's,
+not Firebase's (`email/accountEmails.ts`, `templates/AccountEmails.tsx`).
+Firebase Auth still makes and checks the one-time codes; the league sends
+them and hosts the page they open.
+
+- **Confirming an address.** `createPlayer` sends `emailVerification` when a
+  player signs up; `sendVerificationEmail` sends another from the profile.
+- **Resetting a password.** `requestPasswordReset`, from "Forgot password?",
+  needs no sign-in and answers the same whether or not an account uses the
+  address, so it cannot reveal who has an account. It sends `passwordReset`
+  to that account's own address only.
+- **The link.** `generateEmailVerificationLink` / `generatePasswordResetLink`
+  make Firebase's link; its code is moved onto
+  `https://mplswinterleague.com/auth/action?mode=…&oobCode=…`, the App's page
+  (`features/public/auth-action`), which spends it with `applyActionCode` or
+  `verifyPasswordResetCode` and `confirmPasswordReset`, then signs the player
+  in after a reset. Firebase's own page and email templates are unused.
+- **Once every two minutes.** Each email's mail id is
+  `{template}-{uid}-{two-minute window}`, so repeated requests send nothing
+  new and the reset form cannot flood an inbox.
+- **The link leaves the outbox.** A template may list `secretProps`; the
+  sender removes them from the mail document once the email is sent, held
+  or failed, so a working reset link does not sit in Firestore. The emulator
+  keeps them, since there the outbox is the only way to follow the link.
+- **`account` email,** so it cannot be turned off, and like all email it is
+  not sent to a banned player or an address that bounced for good.
+
+In local development nothing is sent: open the link from the `mail`
+document's `props.link` in the emulator UI.
 
 ## The signer's copy of the waiver
 
