@@ -23,6 +23,7 @@ const OPTIONAL_CATEGORIES: readonly OptionalEmailCategory[] = [
 	'announcements',
 	'registration',
 	'teams',
+	'games',
 ]
 
 export const isOptionalCategory = (

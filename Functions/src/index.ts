@@ -37,6 +37,7 @@ export { sweepTeamPaymentsHourly } from './triggers/scheduled/sweepTeamPaymentsH
 export { reconcileTeamPaymentsDaily } from './triggers/scheduled/reconcileTeamPaymentsDaily.js'
 export { rebuildRankingsNightly } from './triggers/scheduled/rebuildRankingsNightly.js'
 export { awardBadgesNightly } from './triggers/scheduled/awardBadgesNightly.js'
+export { emailGameNightsWeekly } from './triggers/scheduled/emailGameNightsWeekly.js'
 
 //////////////////////////////////////////////////////////////////////////////
 // API ENDPOINTS

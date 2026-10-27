@@ -22,6 +22,12 @@ export const EMAIL_CATEGORIES: readonly {
 		label: 'Team updates',
 		description: 'Invitations, requests to join, and changes to your roster.',
 	},
+	{
+		category: 'games',
+		label: 'Game nights',
+		description:
+			'Your team’s games each Saturday, sent the Thursday before, and where your team stands.',
+	},
 ]
 
 export const isOptionalEmailCategory = (

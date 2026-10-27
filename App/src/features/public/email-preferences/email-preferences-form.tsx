@@ -16,6 +16,7 @@ const ALL_OFF: EmailPreferences = {
 	announcements: false,
 	registration: false,
 	teams: false,
+	games: false,
 }
 
 /**

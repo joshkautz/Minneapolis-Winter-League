@@ -14,11 +14,13 @@ describe('preferencesOf', () => {
 			announcements: true,
 			registration: true,
 			teams: true,
+			games: true,
 		})
 		expect(preferencesOf(undefined)).toEqual({
 			announcements: true,
 			registration: true,
 			teams: true,
+			games: true,
 		})
 	})
 
@@ -28,14 +30,22 @@ describe('preferencesOf', () => {
 				email: 'a@example.com',
 				emailPreferences: { announcements: false, teams: true },
 			})
-		).toEqual({ announcements: false, registration: true, teams: true })
+		).toEqual({
+			announcements: false,
+			registration: true,
+			teams: true,
+			games: true,
+		})
 	})
 })
 
 describe('isOptionalCategory', () => {
-	it.each(['announcements', 'registration', 'teams'])('accepts %s', (c) => {
-		expect(isOptionalCategory(c)).toBe(true)
-	})
+	it.each(['announcements', 'registration', 'teams', 'games'])(
+		'accepts %s',
+		(c) => {
+			expect(isOptionalCategory(c)).toBe(true)
+		}
+	)
 
 	it.each(['account', '', 'Announcements', undefined, 1, null])(
 		'refuses %s, which a player cannot turn off or does not exist',

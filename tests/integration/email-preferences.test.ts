@@ -32,7 +32,12 @@ import { unsubscribeTokenFor } from '../../Functions/src/email/unsubscribe.js'
 
 const PLAYER = 'player-1'
 const OTHER = 'player-2'
-const ALL_ON = { announcements: true, registration: true, teams: true }
+const ALL_ON = {
+	announcements: true,
+	registration: true,
+	teams: true,
+	games: true,
+}
 
 let firestore: Firestore
 let token: string
@@ -193,11 +198,17 @@ describe('updateEmailPreferences', () => {
 					announcements: false,
 					registration: false,
 					teams: false,
+					games: false,
 				},
 			})
 		)
 
-		expect(Object.values(response.preferences)).toEqual([false, false, false])
+		expect(Object.values(response.preferences)).toEqual([
+			false,
+			false,
+			false,
+			false,
+		])
 	})
 
 	it('resubscribes', async () => {
@@ -229,6 +240,7 @@ describe('updateEmailPreferences', () => {
 			announcements: true,
 			registration: false,
 			teams: false,
+			games: true,
 		})
 	})
 
