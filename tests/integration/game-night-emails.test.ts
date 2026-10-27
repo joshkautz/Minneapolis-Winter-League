@@ -6,8 +6,8 @@ import { queueGameNightEmails } from '../../Functions/src/email/gameNightEmails.
 
 /**
  * The Thursday game-night email, against the emulator. What matters: each
- * rostered player on a registered team that plays that Saturday gets one
- * email, nobody else gets any, a rerun sends nothing twice, and a week
+ * rostered player on a team that plays that Saturday gets one email, nobody
+ * else gets any, a rerun sends nothing twice, and a week
  * without a game night sends nothing at all. No email leaves: the sender
  * trigger is not running.
  */

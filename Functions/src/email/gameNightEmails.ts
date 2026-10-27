@@ -131,7 +131,6 @@ const nightDateOf = (nightKey: string): string =>
 
 /**
  * One team's email for the night, or null when it has no game that night.
- * Its record counts only games before the night.
  */
 export function teamGameNight({
 	team,
@@ -168,9 +167,9 @@ export function teamGameNight({
 		}
 	})
 
-	const nightStart = new Date(`${nightKey}T00:00:00Z`).getTime()
-	const earlier: ScoredGame[] = seasonGames.flatMap((game) =>
-		leagueCalendarDay(game.date).getTime() < nightStart &&
+	// Every score so far. The night's own games have none yet: the email
+	// goes out on the Thursday before.
+	const played: ScoredGame[] = seasonGames.flatMap((game) =>
 		game.homeTeamId &&
 		game.awayTeamId &&
 		game.homeScore !== null &&
@@ -187,13 +186,13 @@ export function teamGameNight({
 	)
 	const record = recordsOf(
 		teams.map((entry) => entry.teamId),
-		earlier
+		played
 	).get(team.teamId)
-	const played = record ? record.wins + record.losses > 0 : false
+	const hasPlayed = record ? record.wins + record.losses > 0 : false
 	const kind = kindOf(nightGames)
 	const rank = team.standingsRank
 
-	const standing = !played
+	const standing = !hasPlayed
 		? null
 		: kind === 'pool'
 			? `${team.name} finished the regular season ${record?.wins}–${record?.losses}${rank ? `, seeded ${ordinal(rank)}` : ''}.`
@@ -239,7 +238,7 @@ export const gameNightMailId = (
 
 /**
  * Queues the coming game night's email for every rostered player whose
- * registered team plays that night. With `dryRun`, counts without queueing.
+ * team plays that night. With `dryRun`, counts without queueing.
  */
 export async function queueGameNightEmails(
 	firestore: Firestore,
@@ -281,14 +280,14 @@ export async function queueGameNightEmails(
 		}
 	})
 
+	// Every team in the season: the ones with games that night are the
+	// ones emailed, whatever their registration says.
 	const teamSeasons = (
 		await firestore
 			.collectionGroup(TEAM_SEASONS_SUBCOLLECTION)
 			.where('season', '==', seasonRef)
 			.get()
-	).docs.filter(
-		(doc) => (doc.data() as TeamSeasonDocument).registered
-	) as QueryDocumentSnapshot<TeamSeasonDocument>[]
+	).docs as QueryDocumentSnapshot<TeamSeasonDocument>[]
 	const teams: SeasonTeam[] = teamSeasons.map((doc) => {
 		const data = doc.data()
 		return {

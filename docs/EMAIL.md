@@ -97,6 +97,7 @@ Each template has a category (`Functions/src/email/templates.tsx`):
 | `teams`         | Yes               | Yes                         | No             |
 | `registration`  | Yes               | Yes                         | No             |
 | `announcements` | Yes               | Yes                         | Yes            |
+| `games`         | Yes               | Yes                         | No             |
 
 A player's choices live on their private `playerContacts/{uid}` document as
 `emailPreferences` (absent means on), with `emailPreferencesUpdatedAt`. Every
@@ -269,6 +270,30 @@ Stripe's Dashboard). They are `account` email, so they cannot be turned off.
   plain receipt.
 - **Once only.** Each receipt has a stable mail id (`receipt-{pi}`,
   `refund-{pi}-{status}-{amount}`), so a retried trigger sends nothing new.
+
+## Game-night emails
+
+Every Thursday at noon (`emailGameNightsWeekly`), each rostered player on a
+team with games that Saturday gets one `gameNight` email
+(`email/gameNightEmails.ts`, `templates/GameNight.tsx`):
+
+- the team's games that night, with times, fields and opponents ("opponent
+  set by the results before it" where the playoffs have still to decide);
+- where it stands: its record and place in the standings, or on pool night
+  its record and seed; nothing before the first game;
+- on pool night, what pool night decides; on championship night, which
+  places its field plays for and how the first result sets the second game.
+
+It is `games` email, which a player can turn off ("Game nights" on the
+preferences page). A week with no game night — Thanksgiving, the
+off-season — sends nothing, and so does a night whose games do not exist
+yet. Each player's email has the id `gameNight-{season}-{night}-{player}`,
+so rerunning the job from Cloud Scheduler emails nobody twice. Pool night
+and championship night exist by Thursday: each is created from the scores
+of the Saturday before.
+
+About 180 emails go out each Thursday (182 for Season 5), more than Resend's free plan
+allows in a day (100), so keep the paid plan through the season.
 
 ## Account emails
 

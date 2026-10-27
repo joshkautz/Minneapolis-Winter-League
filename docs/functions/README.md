@@ -119,12 +119,13 @@ Paying is different: only admins may pay before registration opens (see
 
 ## Scheduled functions
 
-| Function                     | Runs                  | Does                                                                                                                   |
-| ---------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `sweepTeamPaymentsHourly`    | every hour            | Refunds every unregistered team holding money once registration (and its 31-minute grace) closes, and tells its roster |
-| `reconcileTeamPaymentsDaily` | 04:00 America/Chicago | Repairs any disagreement between Stripe and the contribution ledger                                                    |
-| `rebuildRankingsNightly`     | 23:00 America/Chicago | Rebuilds every ranking, so standings follow the evening's scores; then each generated season's standings order         |
-| `awardBadgesNightly`         | 23:30 America/Chicago | Awards every badge by rule, after the rankings it reads; see [BADGES.md](../BADGES.md)                                 |
+| Function                     | Runs                            | Does                                                                                                                   |
+| ---------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `sweepTeamPaymentsHourly`    | every hour                      | Refunds every unregistered team holding money once registration (and its 31-minute grace) closes, and tells its roster |
+| `reconcileTeamPaymentsDaily` | 04:00 America/Chicago           | Repairs any disagreement between Stripe and the contribution ledger                                                    |
+| `rebuildRankingsNightly`     | 23:00 America/Chicago           | Rebuilds every ranking, so standings follow the evening's scores; then each generated season's standings order         |
+| `awardBadgesNightly`         | 23:30 America/Chicago           | Awards every badge by rule, after the rankings it reads; see [BADGES.md](../BADGES.md)                                 |
+| `emailGameNightsWeekly`      | Thursdays 12:00 America/Chicago | Emails each rostered player their team's games that Saturday; see [EMAIL.md](../EMAIL.md)                              |
 
 All honour the kill-switch too. A failed run is not retried by the
 scheduler; the next run is the retry.
