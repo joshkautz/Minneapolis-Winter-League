@@ -113,8 +113,14 @@ only change needed when the linter catches up.
   `@google-cloud/storage` (under `firebase-admin`) still pins. The advisory
   is a missing bounds check in uuid's v3, v5 and v6 when a caller passes a
   buffer; gaxios calls only `v4()`, with no buffer.
+- **The deployed Functions:** `deepmerge` 4.3.1, under `html-to-text`, which
+  `@react-email/render` uses to write each email's plain-text part. Its
+  advisory (prototype poisoning in `mergeObject`) needs attacker-controlled
+  objects merged; `html-to-text` merges only its own fixed options. No
+  patched release exists yet (October 2026).
 
-Recheck when firebase-tools or `@google-cloud/storage` move to gaxios 7.
+Recheck when firebase-tools or `@google-cloud/storage` move to gaxios 7, and
+when `deepmerge` publishes a fix.
 
 ## Seeder gaps
 
