@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
@@ -71,7 +71,8 @@ describe('confirming an email', () => {
 		expect(await screen.findByText('Your email is confirmed')).toBeTruthy()
 		expect(applyActionCode).toHaveBeenCalledTimes(1)
 		expect(applyActionCode.mock.calls[0][1]).toBe('CODE')
-		expect(refreshUser).toHaveBeenCalled()
+		// The session catches up in an effect after the page says so.
+		await waitFor(() => expect(refreshUser).toHaveBeenCalled())
 		expect(
 			screen.getByRole('link', { name: 'Go to your profile' })
 		).toBeTruthy()
