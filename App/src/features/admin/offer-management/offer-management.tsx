@@ -24,6 +24,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { playerContactRef } from '@/firebase/collections/players'
+import { teamSeasonRef } from '@/firebase/collections/teams'
 import { allPendingOffersQuery } from '@/firebase/collections/offers'
 import { updateOfferViaFunction } from '@/firebase/collections/functions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -187,11 +188,15 @@ export const OfferManagement = () => {
 							: 'Unknown Player'
 						const playerEmail = contactDoc.data()?.email || 'N/A'
 
-						// Fetch team data
-						const teamDoc = await getDoc(offerData.team)
-						const teamData = teamDoc.data()
-						const teamName = teamData?.name || 'Unknown Team'
-						const teamId = teamDoc.id
+						// A team's name is per season, on its team-season: the
+						// team document has none. Reading `name` off the team
+						// document type-checked (it extends DocumentData) and was
+						// always undefined, so every offer said "Unknown Team".
+						const teamId = offerData.team.id
+						const teamSeasonDoc = await getDoc(
+							teamSeasonRef(teamId, offerData.season.id)
+						)
+						const teamName = teamSeasonDoc.data()?.name || 'Unknown Team'
 
 						// Fetch creator data (if exists)
 						let createdByName = 'System'
