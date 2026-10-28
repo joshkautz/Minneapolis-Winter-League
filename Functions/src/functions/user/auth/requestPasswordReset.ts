@@ -11,8 +11,8 @@
  *   it cannot be used to find out who has an account
  * - The link goes only to the account's own address, never one the caller
  *   chooses
- * - At most one email per account every two minutes, so it cannot flood
- *   someone's inbox
+ * - At most one email per account in ten minutes, counted from the last,
+ *   so it cannot flood someone's inbox
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -59,10 +59,11 @@ export const requestPasswordReset = onCall<RequestPasswordResetRequest>(
 		if (user.disabled || !user.email) return { success: true }
 
 		try {
-			const sent = await queueAccountEmail(getFirestore(), 'passwordReset', {
-				uid: user.uid,
-				email: user.email,
-			})
+			const { sent } = await queueAccountEmail(
+				getFirestore(),
+				'passwordReset',
+				{ uid: user.uid, email: user.email }
+			)
 			logger.info('Password reset requested', { uid: user.uid, sent })
 			return { success: true }
 		} catch (error) {

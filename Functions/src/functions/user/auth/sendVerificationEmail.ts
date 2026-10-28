@@ -10,7 +10,7 @@
  * - Caller must be signed in; an unverified email is the point, so it is
  *   allowed
  * - The link is for the caller's own account and goes to its own address
- * - At most one email per account every two minutes
+ * - At most one email per account in ten minutes, counted from the last
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -25,8 +25,12 @@ import { queueAccountEmail } from '../../../email/accountEmails.js'
 export interface SendVerificationEmailResponse {
 	/** False when the address was already confirmed: nothing to send. */
 	alreadyVerified: boolean
-	/** False when one went out in the last two minutes. */
+	/** False when one went out within the cooldown (ten minutes). */
 	sent: boolean
+	/** When the last one was sent, as an ISO string; null if none. */
+	lastSentAt: string | null
+	/** When another may be sent, as an ISO string; null if any time. */
+	nextAllowedAt: string | null
 }
 
 export const sendVerificationEmail = onCall(
@@ -42,10 +46,17 @@ export const sendVerificationEmail = onCall(
 				'Your account has no email address to confirm.'
 			)
 		}
-		if (user.emailVerified) return { alreadyVerified: true, sent: false }
+		if (user.emailVerified) {
+			return {
+				alreadyVerified: true,
+				sent: false,
+				lastSentAt: null,
+				nextAllowedAt: null,
+			}
+		}
 
 		try {
-			const sent = await queueAccountEmail(
+			const outcome = await queueAccountEmail(
 				getFirestore(),
 				'emailVerification',
 				{
@@ -53,8 +64,16 @@ export const sendVerificationEmail = onCall(
 					email: user.email,
 				}
 			)
-			logger.info('Verification email requested', { uid, sent })
-			return { alreadyVerified: false, sent }
+			logger.info('Verification email requested', {
+				uid,
+				sent: outcome.sent,
+			})
+			return {
+				alreadyVerified: false,
+				sent: outcome.sent,
+				lastSentAt: outcome.lastSentAt.toISOString(),
+				nextAllowedAt: outcome.nextAllowedAt.toISOString(),
+			}
 		} catch (error) {
 			rethrowAsHttpsError(
 				error,

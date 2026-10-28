@@ -314,9 +314,13 @@ them and hosts the page they open.
   (`features/public/auth-action`), which spends it with `applyActionCode` or
   `verifyPasswordResetCode` and `confirmPasswordReset`, then signs the player
   in after a reset. Firebase's own page and email templates are unused.
-- **Once every two minutes.** Each email's mail id is
-  `{template}-{uid}-{two-minute window}`, so repeated requests send nothing
-  new and the reset form cannot flood an inbox.
+- **One every ten minutes.** `accountEmails/{uid}` records when each kind
+  was last sent, and another of that kind waits until ten minutes have
+  passed, checked and recorded in the transaction that queues it, so two
+  presses at once send one. The profile says when the last one went and
+  when another can. (A version keyed on fixed two-minute windows let three
+  through in five minutes in October 2026.) The record is deleted with the
+  account.
 - **The link leaves the outbox.** A template may list `secretProps`; the
   sender removes them from the mail document once the email is sent, held
   or failed, so a working reset link does not sit in Firestore. The emulator

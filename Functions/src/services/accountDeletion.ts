@@ -80,6 +80,7 @@ export async function deletePlayerAccountData(
 
 	await deleteLocalStripeData(firestore, uid)
 	await playerContactRef(firestore, uid).delete()
+	await firestore.collection(Collections.ACCOUNT_EMAILS).doc(uid).delete()
 
 	const playerDoc = await playerRef.get()
 	if (playerDoc.exists) await playerRef.delete()

@@ -17,6 +17,11 @@ import {
 	sendVerificationEmail,
 } from '../../Functions/src/index.js'
 import { deliverQueuedEmail } from '../../Functions/src/email/sender.js'
+import {
+	ACCOUNT_EMAIL_COOLDOWN_MS,
+	queueAccountEmail,
+} from '../../Functions/src/email/accountEmails.js'
+import { deletePlayerAccountData } from '../../Functions/src/services/accountDeletion.js'
 
 /**
  * Email verification and password reset, sent by the league through the
@@ -86,10 +91,12 @@ describe('sendVerificationEmail', () => {
 		} as unknown as CallableRequest<never>) as Promise<{
 			sent: boolean
 			alreadyVerified: boolean
+			lastSentAt: string | null
+			nextAllowedAt: string | null
 		}>
 
 	it('queues a confirmation on the league’s own page, to the account', async () => {
-		await expect(send()).resolves.toEqual({
+		await expect(send()).resolves.toMatchObject({
 			alreadyVerified: false,
 			sent: true,
 		})
@@ -118,13 +125,20 @@ describe('sendVerificationEmail', () => {
 		})
 	})
 
-	it('sends one at a time, however often it is asked', async () => {
-		await send()
-		await expect(send()).resolves.toEqual({
+	it('sends one at a time, and says when the last went and the next can', async () => {
+		const first = await send()
+		const second = await send()
+
+		expect(second).toEqual({
 			alreadyVerified: false,
 			sent: false,
+			lastSentAt: first.lastSentAt,
+			nextAllowedAt: first.nextAllowedAt,
 		})
-
+		expect(
+			Date.parse(second.nextAllowedAt ?? '') -
+				Date.parse(second.lastSentAt ?? '')
+		).toBe(ACCOUNT_EMAIL_COOLDOWN_MS)
 		expect(await accountMail('emailVerification')).toHaveLength(1)
 	})
 
@@ -134,6 +148,8 @@ describe('sendVerificationEmail', () => {
 		await expect(send()).resolves.toEqual({
 			alreadyVerified: true,
 			sent: false,
+			lastSentAt: null,
+			nextAllowedAt: null,
 		})
 		expect(await accountMail('emailVerification')).toHaveLength(0)
 	})
@@ -216,6 +232,86 @@ describe('requestPasswordReset', () => {
 
 		expect(result.ok).toBe(true)
 		expect(result.body.email).toBe(`${PLAYER}@example.com`)
+	})
+})
+
+describe('the cooldown', () => {
+	const user = { uid: PLAYER, email: `${PLAYER}@example.com` }
+	const at = (iso: string) => new Date(iso)
+
+	it('counts from the last email, not from a window on the clock', async () => {
+		// October 2026: three in five minutes, the first at sign-up and two
+		// presses of the profile's button either side of a two-minute mark.
+		await queueAccountEmail(
+			firestore,
+			'emailVerification',
+			user,
+			at('2026-10-28T13:59:10Z')
+		)
+		const second = await queueAccountEmail(
+			firestore,
+			'emailVerification',
+			user,
+			at('2026-10-28T14:01:56Z')
+		)
+		const third = await queueAccountEmail(
+			firestore,
+			'emailVerification',
+			user,
+			at('2026-10-28T14:03:28Z')
+		)
+
+		expect([second.sent, third.sent]).toEqual([false, false])
+		expect(third.nextAllowedAt).toEqual(at('2026-10-28T14:09:10Z'))
+		expect(await accountMail('emailVerification')).toHaveLength(1)
+	})
+
+	it('sends another once ten minutes have passed', async () => {
+		await queueAccountEmail(
+			firestore,
+			'emailVerification',
+			user,
+			at('2026-10-28T13:59:10Z')
+		)
+		const later = await queueAccountEmail(
+			firestore,
+			'emailVerification',
+			user,
+			at('2026-10-28T14:09:10Z')
+		)
+
+		expect(later.sent).toBe(true)
+		expect(await accountMail('emailVerification')).toHaveLength(2)
+	})
+
+	it('sends one email when two requests arrive together', async () => {
+		const now = at('2026-10-28T14:00:00Z')
+		const outcomes = await Promise.all([
+			queueAccountEmail(firestore, 'passwordReset', user, now),
+			queueAccountEmail(firestore, 'passwordReset', user, now),
+		])
+
+		expect(outcomes.filter((outcome) => outcome.sent)).toHaveLength(1)
+		expect(await accountMail('passwordReset')).toHaveLength(1)
+	})
+
+	it('keeps each kind of email to its own cooldown', async () => {
+		const now = at('2026-10-28T14:00:00Z')
+		await queueAccountEmail(firestore, 'emailVerification', user, now)
+
+		await expect(
+			queueAccountEmail(firestore, 'passwordReset', user, now)
+		).resolves.toMatchObject({ sent: true })
+	})
+
+	it('forgets the account’s sends when it is deleted', async () => {
+		await queueAccountEmail(firestore, 'passwordReset', user)
+
+		await deletePlayerAccountData(firestore, PLAYER)
+
+		expect(
+			(await firestore.collection('accountEmails').doc(PLAYER).get()).exists
+		).toBe(false)
 	})
 })
 

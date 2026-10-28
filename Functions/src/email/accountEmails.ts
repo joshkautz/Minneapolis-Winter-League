@@ -10,17 +10,18 @@
  */
 
 import { getAuth } from 'firebase-admin/auth'
-import type { Firestore } from 'firebase-admin/firestore'
+import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { EMAIL_CONFIG } from '../config/constants.js'
 import { Collections } from '../types.js'
-import { queueEmailOnce, type Recipient } from './outbox.js'
+import { queueEmailInTransaction, type Recipient } from './outbox.js'
 
 /**
- * At most one of each email per account in this window. A double click or
- * an impatient second request sends nothing new, and nobody can use the
- * reset form to flood an inbox.
+ * How long after an account email before the account can be sent another
+ * of the same kind, counted from the last one sent. The first usually
+ * arrives within a minute; a second press before then only fills the
+ * inbox, and nobody can use the reset form to flood one.
  */
-export const ACCOUNT_EMAIL_INTERVAL_MS = 2 * 60 * 1000
+export const ACCOUNT_EMAIL_COOLDOWN_MS = 10 * 60 * 1000
 
 export type AccountEmail = 'emailVerification' | 'passwordReset'
 
@@ -49,13 +50,28 @@ export function leagueActionLink(
 	return link.toString()
 }
 
-/** The mail id for an account's email in the window `now` falls in. */
+/**
+ * The last-sent times, at `accountEmails/{uid}`: one field per kind of
+ * email. Written only here, in the transaction that queues the email.
+ */
+type AccountEmailTimes = Partial<Record<AccountEmail, Timestamp>>
+
+/** The mail id for an account's email sent at `now`. */
 export const accountEmailMailId = (
 	email: AccountEmail,
 	uid: string,
 	now: Date
-): string =>
-	`${email}-${uid}-${Math.floor(now.getTime() / ACCOUNT_EMAIL_INTERVAL_MS)}`
+): string => `${email}-${uid}-${now.getTime()}`
+
+/** What a request for an account email came to. */
+export interface AccountEmailOutcome {
+	/** False while the cooldown after the last one runs. */
+	sent: boolean
+	/** When the last one (perhaps this one) was sent. */
+	lastSentAt: Date
+	/** When another may be sent. */
+	nextAllowedAt: Date
+}
 
 /**
  * Who the email goes to: the player, when the account has a player
@@ -72,27 +88,57 @@ async function recipientFor(
 }
 
 /**
- * Makes a fresh one-time link for the account and queues its email,
- * unless one already went out in this window.
- *
- * @returns whether an email was queued
+ * Makes a fresh one-time link for the account and queues its email, unless
+ * the last of that kind went out within the cooldown. The check and the
+ * queueing are one transaction, so two requests at once send one email.
  */
 export async function queueAccountEmail(
 	firestore: Firestore,
 	email: AccountEmail,
 	user: { uid: string; email: string },
 	now: Date = new Date()
-): Promise<boolean> {
+): Promise<AccountEmailOutcome> {
+	const timesRef = firestore
+		.collection(Collections.ACCOUNT_EMAILS)
+		.doc(user.uid)
+	const lastSent = (
+		(await timesRef.get()).data() as AccountEmailTimes | undefined
+	)?.[email]?.toDate()
+	const cooling = (last: Date | undefined): last is Date =>
+		last !== undefined &&
+		now.getTime() - last.getTime() < ACCOUNT_EMAIL_COOLDOWN_MS
+	const refused = (last: Date): AccountEmailOutcome => ({
+		sent: false,
+		lastSentAt: last,
+		nextAllowedAt: new Date(last.getTime() + ACCOUNT_EMAIL_COOLDOWN_MS),
+	})
+	// Spares generating a link nobody will be sent; the transaction below
+	// is what actually decides.
+	if (cooling(lastSent)) return refused(lastSent)
+
 	const auth = getAuth()
 	const firebaseLink =
 		email === 'emailVerification'
 			? await auth.generateEmailVerificationLink(user.email)
 			: await auth.generatePasswordResetLink(user.email)
-	const outcome = await queueEmailOnce(firestore, {
-		id: accountEmailMailId(email, user.uid, now),
-		to: await recipientFor(firestore, user.uid, user.email),
-		template: email,
-		props: { link: leagueActionLink(firebaseLink, email) },
+	const to = await recipientFor(firestore, user.uid, user.email)
+
+	return firestore.runTransaction(async (txn) => {
+		const last = (
+			(await txn.get(timesRef)).data() as AccountEmailTimes | undefined
+		)?.[email]?.toDate()
+		if (cooling(last)) return refused(last)
+		queueEmailInTransaction(txn, firestore, {
+			id: accountEmailMailId(email, user.uid, now),
+			to,
+			template: email,
+			props: { link: leagueActionLink(firebaseLink, email) },
+		})
+		txn.set(timesRef, { [email]: Timestamp.fromDate(now) }, { merge: true })
+		return {
+			sent: true,
+			lastSentAt: now,
+			nextAllowedAt: new Date(now.getTime() + ACCOUNT_EMAIL_COOLDOWN_MS),
+		}
 	})
-	return outcome === 'queued'
 }

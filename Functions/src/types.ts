@@ -29,6 +29,12 @@ export type Timestamp = AdminTimestamp
 /////////////////////////////////////////////////////////////////
 
 export enum Collections {
+	/**
+	 * `accountEmails/{uid}` — when each account email (address confirmation,
+	 * password reset) was last sent to the account, so another waits out a
+	 * cooldown. Functions only; nobody else reads it.
+	 */
+	ACCOUNT_EMAILS = 'accountEmails',
 	BADGES = 'badges',
 	/**
 	 * `dropbox/{uid}/waivers` — records of waivers signed through Dropbox Sign

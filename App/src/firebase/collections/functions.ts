@@ -1074,8 +1074,12 @@ export const remindUnsignedTeammatesViaFunction = async (data: {
 export interface SendVerificationEmailResponse {
 	/** The address was already confirmed: nothing was sent. */
 	alreadyVerified: boolean
-	/** False when one went out in the last two minutes. */
+	/** False when one went out within the cooldown (ten minutes). */
 	sent: boolean
+	/** When the last one was sent, as an ISO string; null if none. */
+	lastSentAt: string | null
+	/** When another may be sent, as an ISO string; null if any time. */
+	nextAllowedAt: string | null
 }
 
 /** Emails the signed-in player a link to confirm their address. */
