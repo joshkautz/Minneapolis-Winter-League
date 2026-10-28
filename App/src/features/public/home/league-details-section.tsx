@@ -14,6 +14,7 @@ import {
 import { Timestamp } from 'firebase/firestore'
 import { GAME_TIME_SLOTS, gameTimeLabel } from '@/shared/game-rules'
 import { daysInWords, seasonFacts } from './season-facts'
+import { LeagueCostsDialog } from './league-costs-dialog'
 
 /**
  * LeagueDetailsSection Component
@@ -122,7 +123,8 @@ export const LeagueDetailsSection = () => {
 								<div className={'flex'}>
 									<p className={'w-16 mr-2 font-bold min-w-16'}>Cost:</p>
 									<span>
-										{`${teamFee} per team for ${facts.nights.length} weeks of games, split however your team likes.`}
+										{`${teamFee} per team for ${facts.nights.length} weeks of games, split however your team likes.`}{' '}
+										<LeagueCostsDialog />
 									</span>
 								</div>
 							)}

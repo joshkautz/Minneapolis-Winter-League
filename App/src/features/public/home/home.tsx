@@ -1,7 +1,6 @@
 import { Footer } from './footer'
 import { HeroSection } from './hero-section'
 import { LeagueDetailsSection } from './league-details-section'
-import { LeagueCostsSection } from './league-costs-section'
 import { WhyJoinSection } from './why-join-section'
 import { RegistrationSection } from './registration-section'
 
@@ -16,7 +15,6 @@ export const Home = () => {
 		<div className={'w-full bg-background text-foreground'}>
 			<HeroSection />
 			<LeagueDetailsSection />
-			<LeagueCostsSection />
 			<WhyJoinSection />
 			<RegistrationSection />
 			<Footer />

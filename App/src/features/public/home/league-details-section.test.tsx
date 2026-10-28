@@ -67,6 +67,14 @@ describe('LeagueDetailsSection', () => {
 		).toBeInTheDocument()
 	})
 
+	it('offers the cost breakdown beside the season’s cost', () => {
+		renderSection()
+		const button = screen.getByRole('button', {
+			name: 'Where your team fee goes',
+		})
+		expect(button.closest('span')).toHaveTextContent(/\$1,000 per team/)
+	})
+
 	it('says when last season’s top three have spots held', () => {
 		season = { ...SEASON_5, heldSpotTeamIds: ['a', 'b', 'c'] }
 		renderSection()

@@ -133,10 +133,11 @@ player id and token stand in for signing in. The same switches appear on the
 profile. See [EMAIL.md](../EMAIL.md).
 
 **Where the team fee goes** (`features/public/home/league-costs.ts`). The
-home page's cost breakdown is typed in from the league's budget
-spreadsheet, not read from the database: update `LEAGUE_COSTS` (the season,
-team count, fee and each category's total) when a new season's budget is
-set. The league reserve is worked out as whatever the fees leave over.
+breakdown, opened from the info button beside the home page's Cost, is
+typed in from the league's budget spreadsheet, not read from the database:
+update `LEAGUE_COSTS` (the season, team count, fee and each category's
+total) when a new season's budget is set. The league reserve is worked out
+as whatever the fees leave over.
 
 **Team payments and waivers** have their own documents:
 [TEAM_PAYMENTS.md](../TEAM_PAYMENTS.md) and [WAIVERS.md](../WAIVERS.md).

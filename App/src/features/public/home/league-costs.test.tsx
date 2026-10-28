@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { costBreakdown, LEAGUE_COSTS } from './league-costs'
-import { LeagueCostsSection } from './league-costs-section'
+import { LeagueCostsDialog } from './league-costs-dialog'
 
 /**
  * The public breakdown of the team fee. Whatever the season's costs, the
@@ -52,16 +53,30 @@ describe('costBreakdown', () => {
 	})
 })
 
-describe('LeagueCostsSection', () => {
-	it('lists every cost with its share, and totals to the fee', () => {
-		render(<LeagueCostsSection />)
+describe('LeagueCostsDialog', () => {
+	it('shows only its button until it is opened', () => {
+		render(<LeagueCostsDialog />)
 
-		const facility = screen.getByText('Facility').closest('tr')
+		expect(
+			screen.getByRole('button', { name: 'Where your team fee goes' })
+		).toBeTruthy()
+		expect(screen.queryByText('Facility')).toBeNull()
+	})
+
+	it('lists every cost with its share, and totals to the fee', async () => {
+		render(<LeagueCostsDialog />)
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Where your team fee goes' })
+		)
+
+		const dialog = screen.getByRole('dialog', {
+			name: 'Where your team fee goes',
+		})
+		const facility = within(dialog).getByText('Facility').closest('tr')
 		expect(facility).not.toBeNull()
 		expect(within(facility as HTMLElement).getByText('$760.02')).toBeTruthy()
 		expect(within(facility as HTMLElement).getByText('76%')).toBeTruthy()
-		expect(screen.getByText('League reserve')).toBeTruthy()
-		expect(screen.getByText('$1,000.00')).toBeTruthy()
-		expect(screen.getByText('$12,000.00')).toBeTruthy()
+		expect(within(dialog).getByText('League reserve')).toBeTruthy()
+		expect(within(dialog).getByText('$12,000.00')).toBeTruthy()
 	})
 })
