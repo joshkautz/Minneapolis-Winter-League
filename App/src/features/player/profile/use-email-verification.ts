@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import { useAuthContext } from '@/providers'
 import { sendVerificationEmailViaFunction } from '@/firebase/collections/functions'
-import { logger, errorMessage } from '@/shared/utils'
+import { logger, errorMessage, formatKickoffTime } from '@/shared/utils'
 
 interface UseEmailVerificationProps {
 	isAuthenticatedUserBanned: boolean
@@ -10,8 +10,8 @@ interface UseEmailVerificationProps {
 
 /**
  * Sends the player another email to confirm their address. The league sends
- * it (`sendVerificationEmail`), not Firebase, at most once every two
- * minutes; a second press inside that just points at the one already sent.
+ * it (`sendVerificationEmail`), not Firebase, at most once in ten minutes;
+ * a press inside that says when the last one went instead of sending more.
  */
 export const useEmailVerification = ({
 	isAuthenticatedUserBanned,
@@ -26,7 +26,8 @@ export const useEmailVerification = ({
 		setIsLoading(true)
 		setError(undefined)
 		try {
-			const { alreadyVerified } = await sendVerificationEmailViaFunction()
+			const { alreadyVerified, sent, lastSentAt, nextAllowedAt } =
+				await sendVerificationEmailViaFunction()
 			if (alreadyVerified) {
 				// Confirmed in another tab or on another device: catch up now
 				// rather than at the next periodic refresh.
@@ -35,6 +36,12 @@ export const useEmailVerification = ({
 				return
 			}
 			setVerificationEmailSent(true)
+			if (!sent && lastSentAt && nextAllowedAt) {
+				toast.info('A verification email is already on its way', {
+					description: `We sent one at ${formatKickoffTime(new Date(lastSentAt))}. Check your spam folder if it isn’t in your inbox. You can ask for another after ${formatKickoffTime(new Date(nextAllowedAt))}.`,
+				})
+				return
+			}
 			toast.success('Verification email sent!', {
 				description:
 					'Check your inbox for the link. It can take a minute to arrive.',

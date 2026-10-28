@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-	ACCOUNT_EMAIL_INTERVAL_MS,
-	accountEmailMailId,
-	leagueActionLink,
-} from './accountEmails.js'
+import { accountEmailMailId, leagueActionLink } from './accountEmails.js'
 import { TEMPLATES } from './templates.js'
 
 const FIREBASE_LINK =
@@ -53,23 +49,10 @@ describe('leagueActionLink', () => {
 })
 
 describe('accountEmailMailId', () => {
-	it('is the same within a window, so a second request sends nothing new', () => {
-		const start = new Date(10 * ACCOUNT_EMAIL_INTERVAL_MS)
-		const later = new Date(start.getTime() + ACCOUNT_EMAIL_INTERVAL_MS - 1)
-		const next = new Date(start.getTime() + ACCOUNT_EMAIL_INTERVAL_MS)
-
-		expect(accountEmailMailId('passwordReset', 'u1', later)).toBe(
-			accountEmailMailId('passwordReset', 'u1', start)
-		)
-		expect(accountEmailMailId('passwordReset', 'u1', next)).not.toBe(
-			accountEmailMailId('passwordReset', 'u1', start)
-		)
-	})
-
-	it('keeps each account and each kind of email apart', () => {
-		const now = new Date()
-		expect(accountEmailMailId('passwordReset', 'u1', now)).not.toBe(
-			accountEmailMailId('passwordReset', 'u2', now)
+	it('names each send apart, and each account and kind of email', () => {
+		const now = new Date('2026-10-28T14:01:56Z')
+		expect(accountEmailMailId('emailVerification', 'u1', now)).toBe(
+			`emailVerification-u1-${now.getTime()}`
 		)
 		expect(accountEmailMailId('passwordReset', 'u1', now)).not.toBe(
 			accountEmailMailId('emailVerification', 'u1', now)
