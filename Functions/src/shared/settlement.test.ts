@@ -68,6 +68,7 @@ describe('decideDisposition', () => {
 		spotsClaimed: 3,
 		spotsAvailable: 12,
 		registrationClosed: false,
+		waitingForHeldSpot: false,
 	}
 
 	it('keeps the money of a registered team', () => {
@@ -98,6 +99,28 @@ describe('decideDisposition', () => {
 		expect(decideDisposition({ ...state, registrationClosed: true })).toBe(
 			'refund'
 		)
+	})
+
+	it('keeps a team waiting for a held spot after registration closes', () => {
+		// It qualified in time; refunding it would take it out of the queue
+		// before the held spots it is waiting on are released.
+		expect(
+			decideDisposition({
+				...state,
+				waitingForHeldSpot: true,
+				registrationClosed: true,
+			})
+		).toBe('pending')
+	})
+
+	it('refunds a team waiting for a held spot once every spot is taken', () => {
+		expect(
+			decideDisposition({
+				...state,
+				waitingForHeldSpot: true,
+				spotsClaimed: 12,
+			})
+		).toBe('refund')
 	})
 
 	it('waits while an unregistered team is still in the running', () => {

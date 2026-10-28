@@ -33,6 +33,9 @@ import {
 	contributionAmountError,
 	formatDollars,
 	formatTimestamp,
+	formatTimestampWithTime,
+	heldSpotsEndMillis,
+	heldSpotsStand,
 	MIN_SIGNED_PLAYERS,
 	REGISTRATION_SPOTS,
 	suggestedContributionsCents,
@@ -262,6 +265,19 @@ export const TeamPaymentCard = () => {
 	const closed = now > season.registrationEnd
 	const full = (season.registeredTeamCount ?? 0) >= REGISTRATION_SPOTS
 
+	// Last season's top three have a spot held for them for registration's
+	// first week; a team that qualifies when only those are left waits.
+	const holds = heldSpotsStand(season)
+	const holdsEnd = formatTimestampWithTime(
+		Timestamp.fromMillis(heldSpotsEndMillis(season))
+	)
+	const held =
+		holds &&
+		!registered &&
+		!!teamId &&
+		!!season.heldSpotTeamIds?.includes(teamId)
+	const waiting = holds && teamSeason?.waitingForSpotSince != null
+
 	let status: ReactNode
 	if (registered) {
 		status = (
@@ -269,6 +285,18 @@ export const TeamPaymentCard = () => {
 				<CheckCircle className='h-4 w-4 !text-green-600 dark:!text-green-400' />
 				<AlertDescription className='!text-green-800 dark:!text-green-200'>
 					Your team is registered for {season.name}.
+				</AlertDescription>
+			</Alert>
+		)
+	} else if (waiting && !full) {
+		status = (
+			<Alert>
+				<Info className='h-4 w-4' />
+				<AlertDescription>
+					Your team has qualified, but every open spot is taken and the rest are
+					held for last season’s top three until {holdsEnd}. Any they do not
+					claim go to the teams waiting, in the order they qualified. If your
+					team does not get one, everything it paid is refunded in full.
 				</AlertDescription>
 			</Alert>
 		)
@@ -385,6 +413,17 @@ export const TeamPaymentCard = () => {
 							/>
 						</div>
 					</div>
+
+					{held && (
+						<Alert className='border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'>
+							<CheckCircle className='h-4 w-4 !text-green-600 dark:!text-green-400' />
+							<AlertDescription className='!text-green-800 dark:!text-green-200'>
+								As one of last season’s top three, your team has a spot held for
+								it until {holdsEnd}. After that it competes for the spots left
+								like any other team.
+							</AlertDescription>
+						</Alert>
+					)}
 
 					{status}
 

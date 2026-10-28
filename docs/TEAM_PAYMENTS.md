@@ -262,6 +262,64 @@ flip back if the roster later drops below ten signed players, so
 Only an admin can reverse it, deliberately, and that path settles the money —
 there is no way to un-register a team and leave $1,000 kept against it.
 
+### Held spots
+
+Since 28 October 2026, the teams that finished 1st, 2nd and 3rd in the
+previous season have a spot held for them in the next one, as a reward.
+The hold lasts a week from registration opening (`HELD_SPOT_DAYS`), or until
+registration closes, if that comes first. The fee is not waived: a held team
+registers exactly like any other, and the hold only guarantees there is a
+spot for it when it does.
+
+- **Which teams.** `createSeason` reads the placements of the season that
+  started before it and stores the top three's team ids on the new season
+  as `heldSpotTeamIds`. So create a season once the one before it has
+  finished; a placement changed afterwards does not move a hold, and if
+  there are no placements yet the response says no spots are held. A team
+  keeps its id when it rolls over, which is what carries the hold.
+- **While the holds stand**, a team that is not held can take a spot only
+  if one is left after the spots claimed and those still held for unregistered
+  held teams. A held team always has room, as its own spot is never counted
+  against it.
+- **Waiting.** A team that qualifies when only held spots are left is not
+  refused. Its team-season records `waitingForSpotSince`, when it qualified,
+  and its money is kept, even past registration closing
+  (`decideDisposition`): it qualified in time. A team that stops qualifying
+  — a player leaves, a waiver or payment is withdrawn — leaves the queue,
+  and waits from the new time if it qualifies again. So a team still
+  waiting qualified while it could register, including on a late payment
+  in the grace after the close, and is given its turn whenever the holds
+  end.
+- **Release.** The hourly sweep, before it settles anything, ends the holds
+  of any season whose week is up (`releaseHeldSpots`). It registers the
+  waiting teams one after another in the order they qualified, until the
+  season fills, and then sets `heldSpotsReleasedAt`. The holds end then, not
+  at the week's end itself, so a team qualifying in the hour between waits
+  its turn behind teams already waiting rather than jumping ahead of them.
+  The waiting teams are found by a query, so a team can start waiting
+  while the release runs; once the holds are over the waiting teams are
+  given a second turn, so it is not stranded with a spot open. If a
+  waiting team cannot be processed, the release stops at it so no later
+  team takes its spot, and the next run carries on; each season is
+  released on its own, and settlement runs whatever happens to the
+  release.
+- A held team that never registers simply gives its spot up. Waiting teams
+  that miss out are refunded when the twelfth team registers, like any
+  other team that misses out.
+
+Seasons created before held spots have no `heldSpotTeamIds`, and behave as
+they always did. Tests: `tests/integration/held-spots.test.ts`.
+
+Left as they are, being unlikely and lasting at most the week:
+
+- A held team that is deleted, or merged into another team, keeps its spot
+  held under its old id until the week is up. `mergeTeams` does not move
+  a hold to the surviving team.
+- There is no admin control to end the holds early or recompute them. A
+  waiting team whose turn keeps failing holds its season's release, and the
+  waiting teams' money, until the fault clears; each failed run throws, so
+  it shows in the logs.
+
 ## Returning money that should not be kept
 
 Three events oblige the league to give money back. The first two apply to

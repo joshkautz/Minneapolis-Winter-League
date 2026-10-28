@@ -29,6 +29,7 @@ import {
 	type PlayerSeasonDocument,
 	type SeasonDocument,
 	type TeamContributionDocument,
+	type TeamSeasonDocument,
 	ROSTER_SUBCOLLECTION,
 } from '../types.js'
 import {
@@ -37,6 +38,7 @@ import {
 } from '../shared/contributions.js'
 import { playerSeasonRef, teamSeasonRef } from '../shared/database.js'
 import {
+	hasOpenSpot,
 	MIN_SIGNED_PLAYERS,
 	REGISTRATION_SPOTS,
 } from '../shared/teamPaymentRules.js'
@@ -90,14 +92,20 @@ export async function updateTeamRegistrationStatus(
 		/** What changed: a new payment may complete a team just after the close. */
 		trigger?: RegistrationTrigger
 		now?: Date
+		/**
+		 * Set only by `releaseHeldSpots`, giving waiting teams their turn
+		 * before the holds are recorded as over (see `claimSpotIfQualified`).
+		 */
+		releasingHeldSpots?: boolean
 	} = {}
-): Promise<void> {
+): Promise<ClaimOutcome> {
 	const firestore = getFirestore()
 
 	try {
 		const result = await claimSpotIfQualified(firestore, teamId, seasonId, {
 			trigger: options.trigger ?? 'other',
 			now: options.now ?? new Date(),
+			releasingHeldSpots: options.releasingHeldSpots ?? false,
 		})
 
 		if (result.outcome === 'registration-closed') {
@@ -106,7 +114,7 @@ export async function updateTeamRegistrationStatus(
 				seasonId,
 				qualifyingPlayers: result.qualifyingPlayers,
 			})
-			return
+			return result
 		}
 
 		if (result.outcome === 'registered') {
@@ -116,7 +124,7 @@ export async function updateTeamRegistrationStatus(
 				qualifyingPlayers: result.qualifyingPlayers,
 				spotsClaimed: result.spotsClaimed,
 			})
-			return
+			return result
 		}
 
 		if (result.outcome === 'underfunded') {
@@ -127,7 +135,18 @@ export async function updateTeamRegistrationStatus(
 				paidCents: result.paidCents,
 				requiredCents: result.requiredCents,
 			})
-			return
+			return result
+		}
+
+		if (result.outcome === 'waiting-for-held-spot') {
+			logger.info('Team qualified; the spots left are held', {
+				teamId,
+				seasonId,
+				qualifyingPlayers: result.qualifyingPlayers,
+				spotsClaimed: result.spotsClaimed,
+				spotsHeldForOthers: result.spotsHeldForOthers,
+			})
+			return result
 		}
 
 		if (result.outcome === 'season-full') {
@@ -138,6 +157,7 @@ export async function updateTeamRegistrationStatus(
 				spotsClaimed: result.spotsClaimed,
 			})
 		}
+		return result
 	} catch (error) {
 		logger.error('Error updating team registration status:', {
 			teamId,
@@ -148,9 +168,15 @@ export async function updateTeamRegistrationStatus(
 	}
 }
 
-type ClaimOutcome =
+export type ClaimOutcome =
 	| { outcome: 'registered'; qualifyingPlayers: number; spotsClaimed: number }
 	| { outcome: 'season-full'; qualifyingPlayers: number; spotsClaimed: number }
+	| {
+			outcome: 'waiting-for-held-spot'
+			qualifyingPlayers: number
+			spotsClaimed: number
+			spotsHeldForOthers: number
+	  }
 	| { outcome: 'not-qualified'; qualifyingPlayers: number }
 	| {
 			outcome: 'underfunded'
@@ -164,12 +190,26 @@ type ClaimOutcome =
 
 /**
  * The transaction itself, separated so its outcomes can be asserted directly.
+ *
+ * **Held spots.** While a season's held spots stand (`heldSpotTeamIds`,
+ * until `heldSpotsReleasedAt` is set), a spot is held for each of last
+ * season's top three that has not registered yet, and no other team can
+ * take it. A team that qualifies when only held spots are left waits
+ * instead: the time is recorded on its team-season, and when the holds
+ * end, `releaseHeldSpots` registers the waiting teams in that order, with
+ * `releasingHeldSpots` set. Holds end when that has happened, not at
+ * `heldSpotsEndMs` itself, so a team qualifying in between queues behind
+ * the teams already waiting instead of jumping ahead of them.
  */
 async function claimSpotIfQualified(
 	firestore: Firestore,
 	teamId: string,
 	seasonId: string,
-	{ trigger, now }: { trigger: RegistrationTrigger; now: Date }
+	{
+		trigger,
+		now,
+		releasingHeldSpots,
+	}: { trigger: RegistrationTrigger; now: Date; releasingHeldSpots: boolean }
 ): Promise<ClaimOutcome> {
 	const teamSeasonDocRef = teamSeasonRef(firestore, teamId, seasonId)
 	const seasonDocRef = firestore.collection(Collections.SEASONS).doc(seasonId)
@@ -185,7 +225,8 @@ async function claimSpotIfQualified(
 		}
 
 		// A claimed spot is never given back, so there is nothing to recompute.
-		if (teamSeasonSnap.data()?.registered === true) {
+		const teamSeason = teamSeasonSnap.data() as TeamSeasonDocument
+		if (teamSeason.registered === true) {
 			return { outcome: 'already-registered' }
 		}
 
@@ -199,6 +240,21 @@ async function claimSpotIfQualified(
 			typeof seasonData?.teamRegistrationTotalCents === 'number'
 				? seasonData.teamRegistrationTotalCents
 				: undefined
+
+		// The held teams' own entries this season, to count the holds still
+		// standing; a held team that has registered no longer holds anything.
+		const holdsStand = !releasingHeldSpots && !seasonData?.heldSpotsReleasedAt
+		const heldForOthers = holdsStand
+			? (seasonData?.heldSpotTeamIds ?? []).filter((id) => id !== teamId)
+			: []
+		const heldTeamSeasons = await Promise.all(
+			heldForOthers.map((id) =>
+				transaction.get(teamSeasonRef(firestore, id, seasonId))
+			)
+		)
+		const spotsHeldForOthers = heldTeamSeasons.filter(
+			(snap) => snap.data()?.registered !== true
+		).length
 
 		const rosterSnap = await transaction.get(
 			teamSeasonDocRef.collection(ROSTER_SUBCOLLECTION)
@@ -222,7 +278,18 @@ async function claimSpotIfQualified(
 				)
 		).length
 
+		// A team waiting for a held spot that stops qualifying leaves the
+		// queue: should it qualify again, it waits from then. So a team still
+		// waiting has qualified without a break since a time registration
+		// was open.
+		const leaveQueue = (): void => {
+			if (teamSeason.waitingForSpotSince != null) {
+				transaction.update(teamSeasonDocRef, { waitingForSpotSince: null })
+			}
+		}
+
 		if (qualifyingPlayers < MIN_SIGNED_PLAYERS) {
+			leaveQueue()
 			return { outcome: 'not-qualified', qualifyingPlayers }
 		}
 
@@ -239,6 +306,7 @@ async function claimSpotIfQualified(
 			)
 
 			if (paid < teamTotalCents) {
+				leaveQueue()
 				return {
 					outcome: 'underfunded',
 					qualifyingPlayers,
@@ -252,9 +320,15 @@ async function claimSpotIfQualified(
 		// a late waiver or roster change cannot register a team, and a late
 		// payment only within the grace a checkout opened in time needs.
 		// Earlier seasons, on per-player pricing, stay open to admin fixes.
+		// A team waiting for a held spot qualified while it could register
+		// (see leaveQueue), so it is given its turn even if the holds outlast
+		// registration, or it qualified on a payment in the late grace.
+		const waitedInTime =
+			releasingHeldSpots && teamSeason.waitingForSpotSince != null
 		if (
 			teamTotalCents !== undefined &&
 			seasonData &&
+			!waitedInTime &&
 			!canRegisterAt(seasonData, now, trigger)
 		) {
 			return { outcome: 'registration-closed', qualifyingPlayers }
@@ -266,6 +340,21 @@ async function claimSpotIfQualified(
 
 		if (spotsClaimed >= REGISTRATION_SPOTS) {
 			return { outcome: 'season-full', qualifyingPlayers, spotsClaimed }
+		}
+
+		if (!hasOpenSpot({ spotsClaimed, spotsHeldForOthers })) {
+			// Its place in the queue is when it first qualified.
+			if (teamSeason.waitingForSpotSince == null) {
+				transaction.update(teamSeasonDocRef, {
+					waitingForSpotSince: FieldValue.serverTimestamp(),
+				})
+			}
+			return {
+				outcome: 'waiting-for-held-spot',
+				qualifyingPlayers,
+				spotsClaimed,
+				spotsHeldForOthers,
+			}
 		}
 
 		// ---- Writes. ----

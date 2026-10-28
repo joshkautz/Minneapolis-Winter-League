@@ -144,6 +144,51 @@ describe('createSeason pricing', () => {
 	})
 })
 
+describe('createSeason held spots', () => {
+	const create = () =>
+		call('createSeason', { name: '2026 Fall', ...dates }) as Promise<{
+			seasonId: string
+			message: string
+		}>
+
+	const place = async (teamId: string, placement: number | null) => {
+		await firestore.collection('teams').doc(teamId).set({ teamId })
+		await teamSeasonRef(firestore, teamId, SEASON).set({
+			season: firestore.collection('seasons').doc(SEASON),
+			name: teamId,
+			registered: true,
+			placement,
+		} as never)
+	}
+
+	it('holds spots for the season before’s top three', async () => {
+		await place('third', 3)
+		await place('champion', 1)
+		await place('fourth', 4)
+		await place('runner-up', 2)
+
+		const { seasonId, message } = await create()
+
+		expect((await seasonData(seasonId))?.heldSpotTeamIds).toEqual([
+			'champion',
+			'runner-up',
+			'third',
+		])
+		expect(message).not.toMatch(/No spots are held/)
+	})
+
+	it('says so when the season before has no placements yet', async () => {
+		await place('unplaced', null)
+
+		const { seasonId, message } = await create()
+
+		expect(await seasonData(seasonId)).not.toHaveProperty('heldSpotTeamIds')
+		expect(message).toMatch(
+			/No spots are held: 2025 Fall has no top three placements yet\./
+		)
+	})
+})
+
 describe('updateSeason pricing', () => {
 	const update = (extra: Record<string, unknown>) =>
 		call('updateSeason', {

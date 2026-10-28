@@ -5,9 +5,13 @@ import { Snowflake } from './snowflake'
 import { useSeasonsContext } from '@/providers'
 import {
 	formatDollars,
+	formatTimestampWithTime,
+	heldSpotsEndMillis,
+	heldSpotsStand,
 	MIN_SIGNED_PLAYERS,
 	REGISTRATION_SPOTS,
 } from '@/shared/utils'
+import { Timestamp } from 'firebase/firestore'
 import { GAME_TIME_SLOTS, gameTimeLabel } from '@/shared/game-rules'
 import { daysInWords, seasonFacts } from './season-facts'
 
@@ -30,6 +34,13 @@ export const LeagueDetailsSection = () => {
 			? formatDollars(season.teamRegistrationTotalCents)
 			: null
 	const firstKickoff = gameTimeLabel(GAME_TIME_SLOTS[0])
+	// Only while the season is holding spots for last season's top three.
+	const heldSpotsUntil =
+		season && heldSpotsStand(season)
+			? formatTimestampWithTime(
+					Timestamp.fromMillis(heldSpotsEndMillis(season))
+				)
+			: null
 
 	return (
 		<div
@@ -142,6 +153,14 @@ export const LeagueDetailsSection = () => {
 								</>
 							) : null}
 							. The first {REGISTRATION_SPOTS} teams to do both are in.
+							{heldSpotsUntil ? (
+								<>
+									{' '}
+									Last season&apos;s top three teams have a spot held for them
+									until {heldSpotsUntil}; any they leave go to the teams that
+									qualified while waiting, in order.
+								</>
+							) : null}
 						</p>
 						<div className='flex gap-3 rounded-xl border border-accent/60 bg-accent/15 p-4'>
 							<ShieldCheck

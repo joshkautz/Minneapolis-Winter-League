@@ -12,6 +12,11 @@
  *   order, the name within its length rules)
  * - A team registration total, when given, passes
  *   `validateTeamRegistrationTotal`
+ *
+ * The season holds a spot for each of the previous season's top three
+ * teams (`heldSpotTeamsFor`), worked out from that season's placements
+ * now, so create a season once the one before it has finished; the
+ * response says when there were none to hold spots for.
  */
 
 import { onCall } from 'firebase-functions/v2/https'
@@ -29,6 +34,7 @@ import { validateTeamRegistrationTotal } from '../../../shared/seasonPricing.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { parseSeasonInput } from '../../../shared/seasonInput.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
+import { heldSpotTeamsFor } from '../../../services/heldSpots.js'
 
 interface CreateSeasonRequest {
 	name: string
@@ -92,6 +98,15 @@ export const createSeason = onCall<CreateSeasonRequest>(
 					? undefined
 					: validateTeamRegistrationTotal(teamRegistrationTotalCents)
 
+			const held = await heldSpotTeamsFor(firestore, season.dateStart)
+			const heldSpotTeamIds = held.teamIds
+			// Said in the response, since an admin creating a season before the
+			// last one's placements are in would otherwise never know.
+			const heldSpotsNote =
+				held.previousSeason && heldSpotTeamIds.length === 0
+					? ` No spots are held: ${held.previousSeason.name} has no top three placements yet.`
+					: ''
+
 			const seasonData: SeasonDocument = {
 				name: season.name,
 				dateStart: season.dateStart,
@@ -103,6 +118,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				// Set explicitly so the twelve-spot claim never reads a missing
 				// counter as its own default.
 				registeredTeamCount: 0,
+				...(heldSpotTeamIds.length > 0 && { heldSpotTeamIds }),
 				...(teamTotalCents !== undefined && {
 					teamRegistrationTotalCents: teamTotalCents,
 				}),
@@ -126,7 +142,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 			if (playersSnapshot.empty) {
 				return {
 					success: true,
-					message: `Season "${season.name}" created successfully (no existing players to update)`,
+					message: `Season "${season.name}" created successfully (no existing players to update).${heldSpotsNote}`,
 					seasonId: seasonRef.id,
 				} as CreateSeasonResponse
 			}
@@ -180,7 +196,7 @@ export const createSeason = onCall<CreateSeasonRequest>(
 
 			return {
 				success: true,
-				message: `Season "${season.name}" created successfully and added to ${playersUpdated} players`,
+				message: `Season "${season.name}" created successfully and added to ${playersUpdated} players.${heldSpotsNote}`,
 				seasonId: seasonRef.id,
 			} as CreateSeasonResponse
 		} catch (error) {

@@ -391,6 +391,73 @@ describe('TeamPaymentCard', () => {
 		})
 	})
 
+	describe('held spots', () => {
+		const holding = (overrides: Record<string, unknown> = {}) =>
+			openSeason({ heldSpotTeamIds: [TEAM, 'team-2', 'team-3'], ...overrides })
+
+		it('tells a held team its spot is held', () => {
+			season = holding()
+			render(<TeamPaymentCard />)
+
+			expect(
+				screen.getByText(/your team has a spot held for it until/)
+			).toBeInTheDocument()
+			// Holding a spot is not registering: it still has to pay.
+			expect(screen.getByLabelText('Amount (dollars)')).toBeInTheDocument()
+		})
+
+		it('says nothing of a hold once the holds are released', () => {
+			season = holding({ heldSpotsReleasedAt: Timestamp.now() })
+			render(<TeamPaymentCard />)
+
+			expect(screen.queryByText(/spot held for it/)).not.toBeInTheDocument()
+		})
+
+		it('says nothing of a hold to a held team that has registered', () => {
+			season = holding()
+			teamSeason = { name: 'Frostbite', registered: true }
+			render(<TeamPaymentCard />)
+
+			expect(screen.queryByText(/spot held for it/)).not.toBeInTheDocument()
+		})
+
+		it('tells a waiting team where it stands, even after registration closes', () => {
+			season = openSeason({
+				heldSpotTeamIds: ['team-2', 'team-3', 'team-4'],
+				registrationEnd: Timestamp.fromMillis(Date.now() - 1000),
+			})
+			teamSeason = {
+				name: 'Frostbite',
+				registered: false,
+				waitingForSpotSince: Timestamp.now(),
+			}
+			contributions = [{ amountCents: TOTAL, status: 'paid' }]
+			render(<TeamPaymentCard />)
+
+			expect(
+				screen.getByText(/the rest are held for last season’s top three/)
+			).toBeInTheDocument()
+			expect(screen.queryByText(/Registration closed/)).not.toBeInTheDocument()
+		})
+
+		it('tells a waiting team it is out once the season fills', () => {
+			season = openSeason({
+				heldSpotTeamIds: ['team-2', 'team-3', 'team-4'],
+				registeredTeamCount: 12,
+			})
+			teamSeason = {
+				name: 'Frostbite',
+				registered: false,
+				waitingForSpotSince: Timestamp.now(),
+			}
+			render(<TeamPaymentCard />)
+
+			expect(
+				screen.getByText(/All 12 spots have been taken/)
+			).toBeInTheDocument()
+		})
+	})
+
 	describe('before registration opens', () => {
 		beforeEach(() => {
 			season = beforeOpening()

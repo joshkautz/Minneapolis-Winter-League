@@ -93,7 +93,10 @@ Per-season state hangs off subcollections rather than the parent document:
 - `teams/{teamId}/badges/{badgeId}_{seasonId}` — a badge the team earned that
   season, written only by the badges rebuild from rules over the data (see
   `docs/BADGES.md`); no badge is awarded by hand
-- `teams/{teamId}/teamSeasons/{seasonId}` — per-season team participation
+- `teams/{teamId}/teamSeasons/{seasonId}` — per-season team participation;
+  `waitingForSpotSince` marks a team queued for one of the spots a season
+  holds for the last season's top three (`seasons/{id}.heldSpotTeamIds`, see
+  `docs/TEAM_PAYMENTS.md`, "Held spots")
 - `teams/{teamId}/teamSeasons/{seasonId}/roster/{playerId}` — membership join
 - `teams/{teamId}/teamSeasons/{seasonId}/contributions/{paymentIntentId}` —
   team payments; **private** to that roster and admins, so no totals live on

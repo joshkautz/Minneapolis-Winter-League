@@ -63,6 +63,12 @@ Three decisions carry it:
 Also retires the per-player returning discount, which does not map onto a team
 total.
 
+**Held spots** for the previous season's top three (docs/TEAM_PAYMENTS.md,
+"Held spots") take effect from the first season created after Season 5.
+Left: a held team deleted or merged away keeps its spot held under its old
+id for the week, and there is no admin control to end or recompute the
+holds. Both last at most a week and need an unlikely event.
+
 ## Waivers
 
 Signed in the app since Season 5: `docs/WAIVERS.md`, with a copy emailed
