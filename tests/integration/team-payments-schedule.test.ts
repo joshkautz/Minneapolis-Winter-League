@@ -312,6 +312,23 @@ describe('the hourly sweep', () => {
 			await expect(run()).rejects.toThrow(/1 of 1 team/)
 		})
 
+		it('still settles every team when held spots cannot be released', async () => {
+			// A season whose holds are due but whose data is broken.
+			await firestore
+				.collection('seasons')
+				.doc('broken')
+				.set({
+					name: 'Broken',
+					dateStart: Timestamp.now(),
+					heldSpotTeamIds: ['team-x'],
+				})
+
+			await expect(run()).rejects.toThrow(
+				/Held spots failed to release for 1 season/
+			)
+			expect(stripeCalls()).toEqual(['refund pi_a 60000'])
+		})
+
 		it('does nothing while a migration is in progress', async () => {
 			await firestore
 				.doc('system/maintenance')

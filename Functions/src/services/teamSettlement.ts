@@ -141,6 +141,8 @@ export async function settleTeamSeason(
 		spotsAvailable: REGISTRATION_SPOTS,
 		// Only once late payments can no longer complete a team.
 		registrationClosed: season ? registrationOverAt(season, now) : false,
+		waitingForHeldSpot:
+			teamSeason.waitingForSpotSince != null && !season?.heldSpotsReleasedAt,
 	}
 	const disposition = decideDisposition(standing)
 	const outCause = disposition === 'refund' ? outCauseOf(standing) : null

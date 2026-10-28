@@ -22,7 +22,9 @@ import type { ContributionStatus, RefundCause } from '../types.js'
  * - `refund`: the team is not going to play — the season filled without it,
  *   or registration closed. Refund everything.
  * - `pending`: still in the running. Keep it, except what a payer who has
- *   left put in.
+ *   left put in. That includes a team waiting for a held spot, even once
+ *   registration has closed: it qualified in time and gets its turn when
+ *   the holds end.
  */
 export type SettlementDisposition = 'keep' | 'refund' | 'pending'
 
@@ -47,11 +49,13 @@ export function decideDisposition(state: {
 	spotsClaimed: number
 	spotsAvailable: number
 	registrationClosed: boolean
+	/** Qualified while only held spots were left, and the holds still stand. */
+	waitingForHeldSpot: boolean
 }): SettlementDisposition {
 	if (state.registered) return 'keep'
-	if (state.spotsClaimed >= state.spotsAvailable || state.registrationClosed) {
-		return 'refund'
-	}
+	if (state.spotsClaimed >= state.spotsAvailable) return 'refund'
+	if (state.waitingForHeldSpot) return 'pending'
+	if (state.registrationClosed) return 'refund'
 	return 'pending'
 }
 

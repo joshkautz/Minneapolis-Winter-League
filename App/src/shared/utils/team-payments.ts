@@ -21,12 +21,40 @@ import type {
 export const CENTS_PER_DOLLAR = 100
 
 import {
+	HELD_SPOT_DAYS,
+	HELD_SPOT_PLACEMENTS,
+	heldSpotsEndMs,
 	MIN_CONTRIBUTION_CENTS,
 	MIN_SIGNED_PLAYERS,
 	REGISTRATION_SPOTS,
 } from '../../../../Functions/src/shared/teamPaymentRules'
 
-export { MIN_CONTRIBUTION_CENTS, MIN_SIGNED_PLAYERS, REGISTRATION_SPOTS }
+export {
+	HELD_SPOT_DAYS,
+	HELD_SPOT_PLACEMENTS,
+	MIN_CONTRIBUTION_CENTS,
+	MIN_SIGNED_PLAYERS,
+	REGISTRATION_SPOTS,
+}
+
+/**
+ * Whether a season is still holding spots for last season's top three. The
+ * holds stand until the server records them released, which it does within
+ * the hour after `heldSpotsEndMillis`.
+ */
+export const heldSpotsStand = (
+	season: Pick<SeasonDocument, 'heldSpotTeamIds' | 'heldSpotsReleasedAt'>
+): boolean =>
+	(season.heldSpotTeamIds?.length ?? 0) > 0 && !season.heldSpotsReleasedAt
+
+/** When a season's held spots stop being held, in epoch milliseconds. */
+export const heldSpotsEndMillis = (
+	season: Pick<SeasonDocument, 'registrationStart' | 'registrationEnd'>
+): number =>
+	heldSpotsEndMs({
+		registrationStartMs: season.registrationStart.toMillis(),
+		registrationEndMs: season.registrationEnd.toMillis(),
+	})
 
 /**
  * Whether a season uses team-level pricing. Checked by type rather than

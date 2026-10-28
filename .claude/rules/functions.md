@@ -18,7 +18,8 @@ Functions/src/
                         reconciliation, the nightly rankings and badges
                         rebuilds, the Thursday game-night email)
   api/webhooks/         the Stripe and Resend HTTP endpoints
-  services/             multi-step domain logic: team registration, team payments
+  services/             multi-step domain logic: team registration and held
+                        spots, team payments
                         (checkout reservations, intake, settlement, sweep,
                         reconciliation), team and account deletion, rankings,
                         the generated schedule and automatic playoffs

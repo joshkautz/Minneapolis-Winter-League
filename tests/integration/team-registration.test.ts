@@ -136,7 +136,7 @@ describe('updateTeamRegistrationStatus', () => {
 	it('returns quietly when the team season does not exist', async () => {
 		await expect(
 			updateTeamRegistrationStatus('no-such-team', SEASON)
-		).resolves.toBeUndefined()
+		).resolves.toEqual({ outcome: 'no-team-season' })
 	})
 
 	it('leaves the document untouched when the status has not changed', async () => {

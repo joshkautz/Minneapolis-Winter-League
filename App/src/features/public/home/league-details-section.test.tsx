@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { Timestamp } from 'firebase/firestore'
 
 /**
  * The home page's season card, from the season document: Season 5's name,
@@ -12,12 +13,16 @@ const SEASON_5 = {
 	name: 'Season 5',
 	dateStart: { toDate: () => new Date('2026-11-07T06:00:00Z') },
 	dateEnd: { toDate: () => new Date('2026-12-20T06:00:00Z') },
+	registrationStart: Timestamp.fromDate(new Date('2026-10-01T17:00:00Z')),
+	registrationEnd: Timestamp.fromDate(new Date('2026-10-31T05:00:00Z')),
 	teamRegistrationTotalCents: 100_000,
 }
 
+let season: Record<string, unknown> = SEASON_5
+
 vi.mock('@/providers', () => ({
 	useSeasonsContext: () => ({
-		currentSeasonQueryDocumentSnapshot: { data: () => SEASON_5 },
+		currentSeasonQueryDocumentSnapshot: { data: () => season },
 	}),
 }))
 
@@ -31,6 +36,10 @@ const renderSection = () =>
 	)
 
 describe('LeagueDetailsSection', () => {
+	beforeEach(() => {
+		season = SEASON_5
+	})
+
 	it('states the season’s nights and break from its dates', () => {
 		renderSection()
 		expect(screen.getByText('Season 5')).toBeInTheDocument()
@@ -56,5 +65,24 @@ describe('LeagueDetailsSection', () => {
 		expect(
 			screen.getByText(/The first 12 teams to do both are in/)
 		).toBeInTheDocument()
+	})
+
+	it('says when last season’s top three have spots held', () => {
+		season = { ...SEASON_5, heldSpotTeamIds: ['a', 'b', 'c'] }
+		renderSection()
+		// A week from registration opening, on the league's clock.
+		expect(
+			screen.getByText(/top three teams have a spot held for them until/)
+		).toHaveTextContent(/October 8, 2026/)
+	})
+
+	it('says nothing of held spots once they are released', () => {
+		season = {
+			...SEASON_5,
+			heldSpotTeamIds: ['a', 'b', 'c'],
+			heldSpotsReleasedAt: Timestamp.now(),
+		}
+		renderSection()
+		expect(screen.queryByText(/spot held/)).not.toBeInTheDocument()
 	})
 })

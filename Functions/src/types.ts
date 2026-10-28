@@ -403,6 +403,13 @@ export interface TeamSeasonDocument extends DocumentData {
 	 * reminder; another can be sent a day later (`remindUnsignedTeammates`).
 	 */
 	waiverReminderSentAt?: Timestamp | null
+	/**
+	 * When the team qualified but could not register because the open spots
+	 * were taken and the rest held for last season's top three. While the
+	 * holds stand the team waits, its money kept; when they end, waiting
+	 * teams take what the held teams left, in this order.
+	 */
+	waitingForSpotSince?: Timestamp | null
 }
 
 /**
@@ -554,6 +561,18 @@ export interface SeasonDocument extends DocumentData {
 	 * Optional only for seasons created before it existed.
 	 */
 	registeredTeamCount?: number
+	/**
+	 * The teams with a spot held for them, by team id: the previous season's
+	 * top three (`HELD_SPOT_PLACEMENTS`), set when this season is created.
+	 * Absent on seasons from before held spots.
+	 */
+	heldSpotTeamIds?: string[]
+	/**
+	 * When the held spots stopped being held: set by the hourly sweep once
+	 * `heldSpotsEndMs` has passed and every team waiting for a spot has had
+	 * its turn, in the order it qualified.
+	 */
+	heldSpotsReleasedAt?: Timestamp | null
 	/**
 	 * The collective amount a team must pay to register, in cents.
 	 *

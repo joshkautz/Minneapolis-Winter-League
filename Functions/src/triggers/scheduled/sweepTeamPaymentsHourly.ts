@@ -6,6 +6,9 @@
  * registered when registration closes is refunded, within the hour. It also
  * finishes anything a trigger left undone. See services/teamPaymentsSweep.ts.
  *
+ * First it ends any held spots whose week is up (services/heldSpots.ts), so
+ * a team that waited for one is registered before settlement looks at it.
+ *
  * A failed run is not retried by the scheduler — the next hourly run is the
  * retry — but it throws, so the failure shows in the logs.
  */
@@ -16,6 +19,7 @@ import { logger } from 'firebase-functions/v2'
 import { FIREBASE_CONFIG } from '../../config/constants.js'
 import { isMigrationInProgress } from '../../shared/maintenance.js'
 import { sweepTeamPayments } from '../../services/teamPaymentsSweep.js'
+import { releaseHeldSpots } from '../../services/heldSpots.js'
 
 export const sweepTeamPaymentsHourly = onSchedule(
 	{
@@ -38,15 +42,26 @@ export const sweepTeamPaymentsHourly = onSchedule(
 			return
 		}
 
+		// A season whose holds could not be released keeps them, and its
+		// waiting teams their money, so settlement still runs for the rest.
+		const release = await releaseHeldSpots(getFirestore(), new Date())
 		const result = await sweepTeamPayments()
 
+		if (release.failures.length > 0) {
+			logger.error('Some held spots could not be released', {
+				failures: release.failures,
+			})
+		}
 		if (result.failures.length > 0) {
 			logger.error('Some teams could not be settled', {
 				failures: result.failures,
 			})
+		}
+		if (release.failures.length > 0 || result.failures.length > 0) {
 			throw new Error(
-				`Settlement failed for ${result.failures.length} of ` +
-					`${result.teamsChecked} team(s); the next run retries them`
+				`Held spots failed to release for ${release.failures.length} ` +
+					`season(s) and settlement failed for ${result.failures.length} ` +
+					`of ${result.teamsChecked} team(s); the next run retries them`
 			)
 		}
 	}

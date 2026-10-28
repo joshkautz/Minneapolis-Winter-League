@@ -205,7 +205,7 @@ describe('claiming a registration spot', () => {
 	it('does nothing for a team with no season record', async () => {
 		await expect(
 			updateTeamRegistrationStatus('ghost', SEASON)
-		).resolves.toBeUndefined()
+		).resolves.toEqual({ outcome: 'no-team-season' })
 		expect(await spotsClaimed()).toBe(0)
 	})
 })
