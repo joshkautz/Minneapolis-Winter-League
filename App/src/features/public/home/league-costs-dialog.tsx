@@ -1,4 +1,13 @@
-import { Receipt } from 'lucide-react'
+import { Info } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog'
 import {
 	Table,
 	TableBody,
@@ -23,34 +32,38 @@ const percent = (share: number): string =>
 	share < 0.01 ? '<1%' : `${Math.round(share * 100)}%`
 
 /**
- * Where a team's fee goes: what running last season cost, split across the
- * teams, with whatever is left as the league reserve. A table rather than a
- * pie or a stacked bar: the field rental is three quarters of it, and the
- * small costs would vanish as slivers. Each row's bar is its share of the
- * fee, with the amount and percentage written beside it.
+ * Where a team's fee goes, opened from the info button beside the season's
+ * cost: what running last season cost, split across the teams, with
+ * whatever is left as the league reserve. A table rather than a pie or a
+ * stacked bar: the field rental is three quarters of it, and the small
+ * costs would vanish as slivers. Each row's bar is its share of the fee,
+ * with the amount and percentage written beside it.
  */
-export const LeagueCostsSection = () => {
+export const LeagueCostsDialog = () => {
 	const lines = costBreakdown()
 	const { seasonName, teams, teamFeeCents } = LEAGUE_COSTS
 
 	return (
-		<section
-			id='costs'
-			aria-labelledby='costs-heading'
-			className='max-w-[968px] mx-auto px-6 pt-8 pb-28 lg:px-0'
-		>
-			<div className='flex flex-col gap-4 max-w-[800px] mx-auto'>
-				<h2
-					id='costs-heading'
-					className='flex items-center gap-3 text-3xl font-bold'
+		<Dialog>
+			<DialogTrigger asChild>
+				<Button
+					variant='ghost'
+					size='icon'
+					// The card's own text color: muted, it all but vanished on the card.
+					className='size-6 align-middle text-current'
+					aria-label='Where your team fee goes'
 				>
-					<Receipt className='h-7 w-7 shrink-0' aria-hidden='true' />
-					Where your team fee goes
-				</h2>
-				<p className='text-muted-foreground'>
-					Each team pays {dollars(teamFeeCents)}. Here is what running{' '}
-					{seasonName} costs, split evenly across its {teams} teams.
-				</p>
+					<Info aria-hidden='true' />
+				</Button>
+			</DialogTrigger>
+			<DialogContent className='max-h-[85vh] overflow-y-auto sm:max-w-2xl'>
+				<DialogHeader>
+					<DialogTitle>Where your team fee goes</DialogTitle>
+					<DialogDescription>
+						Each team pays {dollars(teamFeeCents)}. Here is what running{' '}
+						{seasonName} costs, split evenly across its {teams} teams.
+					</DialogDescription>
+				</DialogHeader>
 				<Table>
 					<TableHeader>
 						<TableRow>
@@ -112,7 +125,7 @@ export const LeagueCostsSection = () => {
 						</TableRow>
 					</TableFooter>
 				</Table>
-			</div>
-		</section>
+			</DialogContent>
+		</Dialog>
 	)
 }
