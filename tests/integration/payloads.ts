@@ -39,6 +39,7 @@ export const VALID_PAYLOADS: Record<string, Record<string, unknown>> = {
 
 	// --- admin: waivers ----------------------------------------------------
 	getEmergencyContacts: { seasonId: 'season-1' },
+	resolveBanReview: { playerId: 'player-1', decision: 'dismiss' },
 
 	// --- admin: news -------------------------------------------------------
 	createNews: {

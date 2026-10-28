@@ -67,6 +67,27 @@ starts in October 2026; before that, a player's waiver shows the name they
 signed with, which is how four renamed players were identified that month.
 It is deleted with the account; the waivers that stay already name them.
 
+## Banned players under a new account
+
+A ban is on the account, so a banned player can sign up again. Their waiver
+gives them away: when anyone signs, `signWaiver` compares the signature with
+every banned player's account and waivers (`services/banEvasion.ts`) on six
+things — full name, last name, date of birth, mailing address, emergency
+contact phone and the IP address it was signed from — after normalizing
+spelling, spacing and phone formats. Two or more in common (a full name is
+two: the last name too) flags the new account:
+
+- the waiver is signed as usual; nothing is refused;
+- `banReviews/{playerId}` records which banned account it resembles and what
+  they share, never the details; only admins can read it;
+- every admin is emailed (`banReviewAlert`);
+- Admin → Ban Reviews lists open flags, and `resolveBanReview` either bans
+  the account or marks it as someone else, which is not raised again for
+  the same banned accounts.
+
+It catches the casual second account. Someone set on it could sign with a
+friend's details, but that means falsifying a legal release.
+
 ## The signer's copy
 
 Each signature made in the app emails the signer their copy: the full text

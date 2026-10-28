@@ -20,7 +20,10 @@
  * Signing is idempotent: a player already signed for the season gets
  * `alreadySigned` and no second record, whatever the order of two requests.
  * A new signature queues the signer's copy by email, in the same
- * transaction, so a copy goes out only for a signature that was saved.
+ * transaction, so a copy goes out only for a signature that was saved. It
+ * is then compared with banned players' records, and one that resembles
+ * them is flagged for an admin (`services/banEvasion.ts`); it is signed
+ * either way.
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https'
@@ -57,6 +60,7 @@ import {
 import { waiverFingerprint } from '../../../waiver/fingerprint.js'
 import { queueEmailInTransaction } from '../../../email/outbox.js'
 import { waiverCopyEmail } from '../../../email/waiverCopy.js'
+import { flagBanEvasion } from '../../../services/banEvasion.js'
 
 export interface SignWaiverResponse {
 	success: true
@@ -239,6 +243,29 @@ export const signWaiver = onCall<WaiverSubmission>(
 			}
 			return false
 		})
+
+		// A new signature that resembles a banned player's is flagged for an
+		// admin. It never stops the signing, and a failure here is logged
+		// rather than thrown: the waiver is already saved.
+		if (!alreadySigned) {
+			await flagBanEvasion(firestore, {
+				playerId: uid,
+				signatureId: signatureRef.id,
+				seasonId: season.id,
+				candidate: {
+					name: participantName,
+					dateOfBirth: submission.dateOfBirth,
+					mailingAddress: submission.mailingAddress,
+					phones: submission.emergencyContacts.map((contact) => contact.phone),
+					ipAddress: clientIp(request.rawRequest),
+				},
+			}).catch((error: unknown) =>
+				logger.error('Could not check the waiver against banned players', {
+					uid,
+					error,
+				})
+			)
+		}
 
 		logger.info(alreadySigned ? 'Waiver already signed' : 'Waiver signed', {
 			uid,

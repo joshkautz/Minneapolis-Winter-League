@@ -108,6 +108,10 @@ export const PlayerRankingManagement = lazyImport(
 	() => import('@/features/admin/player-ranking-management'),
 	'PlayerRankingManagement'
 )
+export const BanReviews = lazyImport(
+	() => import('@/features/admin/ban-reviews'),
+	'BanReviews'
+)
 export const EmergencyContacts = lazyImport(
 	() => import('@/features/admin/emergency-contacts'),
 	'EmergencyContacts'

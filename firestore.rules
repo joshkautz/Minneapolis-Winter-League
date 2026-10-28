@@ -253,6 +253,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Players flagged as possibly a banned player under a new account.
+    // Admins decide them through resolveBanReview; only Functions write.
+    match /banReviews/{playerId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

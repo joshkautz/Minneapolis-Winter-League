@@ -30,6 +30,7 @@ import {
 	SeasonDocument,
 	WAIVER_SIGNATURES_SUBCOLLECTION,
 	NAME_HISTORY_SUBCOLLECTION,
+	type BanReviewDocument,
 	type NameHistoryDocument,
 	type PlayerContactDocument,
 	type WaiverSignatureDocument,
@@ -93,6 +94,18 @@ export const allPlayerContactsQuery = (): Query<PlayerContactDocument> =>
 		firestore,
 		Collections.PLAYER_CONTACTS
 	) as Query<PlayerContactDocument>
+
+// ---- Ban reviews (admins only) ---------------------------------------------
+
+/**
+ * Players flagged as possibly a banned player under a new account, still
+ * waiting for an admin's decision. Only an admin may run this query.
+ */
+export const openBanReviewsQuery = (): Query<BanReviewDocument> =>
+	query(
+		collection(firestore, Collections.BAN_REVIEWS),
+		where('status', '==', 'open')
+	) as Query<BanReviewDocument>
 
 // ---- Name history (admins only) --------------------------------------------
 

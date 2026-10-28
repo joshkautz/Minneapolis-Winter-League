@@ -23,6 +23,7 @@ import {
 	Palette,
 	RefreshCw,
 	HeartPulse,
+	ShieldAlert,
 } from 'lucide-react'
 import { PageContainer, PageHeader } from '@/shared/components'
 
@@ -250,6 +251,27 @@ export const AdminDashboard = () => {
 							<Link to='/admin/registration-management'>
 								<Users className='h-4 w-4 mr-2' />
 								Manage Registration
+							</Link>
+						</Button>
+					</CardContent>
+				</Card>
+				{/* Ban Reviews */}
+				<Card className='hover:shadow-lg transition-shadow'>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<ShieldAlert className='h-5 w-5 text-orange-600' />
+							Ban Reviews
+						</CardTitle>
+					</CardHeader>
+					<CardContent className='space-y-4'>
+						<p className='text-sm text-muted-foreground'>
+							New waivers that resemble a banned player&apos;s. Decide whether
+							each is the same person under a new account.
+						</p>
+						<Button asChild className='w-full'>
+							<Link to='/admin/ban-reviews'>
+								<ShieldAlert className='h-4 w-4 mr-2' />
+								Review Flagged Players
 							</Link>
 						</Button>
 					</CardContent>
