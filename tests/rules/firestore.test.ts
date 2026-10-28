@@ -95,6 +95,7 @@ beforeEach(async () => {
 			before: { firstname: 'Real', lastname: 'Name', nickname: null },
 			after: { firstname: 'Fake', lastname: 'Name', nickname: null },
 		})
+		await setDoc(doc(db, 'banReviews/user-1'), { status: 'open' })
 		await setDoc(doc(db, 'system/maintenance'), { enabled: false })
 
 		// Team payments. user-1 is on team-1's roster for season-1 only.
@@ -315,6 +316,24 @@ describe('waiver signatures', () => {
 			setDoc(doc(verified('admin-1'), signature), { seasonId: 'season-2' })
 		)
 		await assertFails(deleteDoc(doc(verified('user-1'), signature)))
+	})
+})
+
+describe('ban reviews', () => {
+	// Who a player may be under another account: for admins only, and
+	// written only by Functions.
+	const reviewPath = 'banReviews/user-1'
+
+	it('is readable by an admin and nobody else', async () => {
+		await assertSucceeds(getDoc(doc(verified('admin-1'), reviewPath)))
+		await assertFails(getDoc(doc(verified('user-1'), reviewPath)))
+		await assertFails(getDoc(doc(anonymous(), reviewPath)))
+	})
+
+	it('cannot be written, even by an admin', async () => {
+		await assertFails(
+			setDoc(doc(verified('admin-1'), reviewPath), { status: 'dismissed' })
+		)
 	})
 })
 

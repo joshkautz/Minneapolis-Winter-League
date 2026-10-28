@@ -45,6 +45,12 @@ export enum Collections {
 	ACCOUNT_EMAILS = 'accountEmails',
 	BADGES = 'badges',
 	/**
+	 * `banReviews/{playerId}` — a waiver signature that resembles a banned
+	 * player's, flagged for an admin to decide. Admins read it; only
+	 * Functions write it.
+	 */
+	BAN_REVIEWS = 'banReviews',
+	/**
 	 * `dropbox/{uid}/waivers` — records of waivers signed through Dropbox Sign
 	 * before September 2026. Kept, read-only, as history; nothing writes them.
 	 * Current signatures are `players/{uid}/waiverSignatures`.
@@ -201,6 +207,38 @@ export interface PlayerDocument extends DocumentData {
 	 * set, and the next carry-forward re-applied it.
 	 */
 	banned: boolean
+}
+
+/** What a new signature shares with a banned player's records. */
+export type BanMatchSignal =
+	| 'full name'
+	| 'last name'
+	| 'date of birth'
+	| 'mailing address'
+	| 'emergency contact phone'
+	| 'IP address'
+
+/**
+ * A player whose waiver resembles a banned player's, at
+ * `banReviews/{playerId}`: flagged by `signWaiver`, decided by an admin
+ * with `resolveBanReview`. It names the accounts and what they share, never
+ * the private details themselves.
+ */
+export interface BanReviewDocument extends DocumentData {
+	playerId: string
+	/** The name on the player's waiver when flagged. */
+	playerName: string
+	matches: {
+		bannedPlayerId: string
+		bannedPlayerName: string
+		signals: BanMatchSignal[]
+	}[]
+	signatureId: string
+	seasonId: string
+	status: 'open' | 'banned' | 'dismissed'
+	flaggedAt: Timestamp
+	resolvedAt?: Timestamp | null
+	resolvedBy?: string | null
 }
 
 /** A player's name as it stood before or after one change. */

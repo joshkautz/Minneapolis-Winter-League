@@ -24,6 +24,7 @@ import {
 	GameManagement,
 	RegistrationManagement,
 	EmergencyContacts,
+	BanReviews,
 	BadgeManagement,
 	SiteSettings,
 	Profile,
@@ -267,6 +268,14 @@ export const AppRoutes = () => {
 					element={
 						<AdminRoute>
 							<RegistrationManagement />
+						</AdminRoute>
+					}
+				/>
+				<Route
+					path='/admin/ban-reviews'
+					element={
+						<AdminRoute>
+							<BanReviews />
 						</AdminRoute>
 					}
 				/>

@@ -30,6 +30,8 @@ below. The "Read" column is what `firestore.rules` allows a client.
 | `system/maintenance`     | The migration kill-switch triggers honour                                                | admins              | `scripts/production/set-maintenance.js`, by hand                                                             |
 | `system/email`           | Whether email is sent: off, test or live                                                 | admins              | `scripts/production/set-email-mode.js`, by hand                                                              |
 | `mail`                   | The email outbox: one document per email                                                 | nobody (Functions)  | `queueEmail`, `sendQueuedEmail`                                                                              |
+| `banReviews`             | A new waiver resembling a banned player's, for an admin to decide                        | admins              | `signWaiver`, `resolveBanReview`                                                                             |
+| `accountEmails`          | When each account email was last sent to an account, for its cooldown                    | nobody (Functions)  | `sendVerificationEmail`, `requestPasswordReset`, `createPlayer`                                              |
 
 ## Per-season subcollections
 

@@ -57,6 +57,11 @@ import {
 	type TeamRequestAnsweredProps,
 } from './templates/TeamOffers.js'
 import {
+	BanReviewAlert,
+	banReviewAlertSubject,
+	type BanReviewAlertProps,
+} from './templates/BanReviewAlert.js'
+import {
 	GameNight,
 	gameNightSubject,
 	type GameNightProps,
@@ -269,6 +274,22 @@ export const TEMPLATES = {
 				signedPlayers: 10,
 				signedPlayersNeeded: 10,
 			},
+		},
+	}),
+	banReviewAlert: define<BanReviewAlertProps>({
+		// For admins, about keeping the league safe: not one to turn off.
+		category: 'account',
+		subject: banReviewAlertSubject,
+		footerReason: 'You are receiving this because you are a league admin.',
+		component: BanReviewAlert,
+		sample: {
+			playerName: 'Alex Chen',
+			matches: [
+				{
+					bannedPlayerName: 'Alex Chen',
+					signals: ['full name', 'last name', 'date of birth'],
+				},
+			],
 		},
 	}),
 	gameNight: define<GameNightProps>({

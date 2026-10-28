@@ -1067,6 +1067,22 @@ export const remindUnsignedTeammatesViaFunction = async (data: {
 	return result.data
 }
 
+/**
+ * An admin's decision on a player flagged as possibly a banned player under
+ * a new account: ban the account, or dismiss the review.
+ */
+export const resolveBanReviewViaFunction = async (data: {
+	playerId: string
+	decision: 'ban' | 'dismiss'
+}): Promise<{ status: 'open' | 'banned' | 'dismissed' }> => {
+	const resolveBanReview = httpsCallable<
+		{ playerId: string; decision: 'ban' | 'dismiss' },
+		{ status: 'open' | 'banned' | 'dismissed' }
+	>(functions, 'resolveBanReview')
+	const result = await resolveBanReview(data)
+	return result.data
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // ACCOUNT EMAILS (sent by the league, not Firebase)
 //////////////////////////////////////////////////////////////////////////////

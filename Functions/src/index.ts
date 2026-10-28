@@ -60,6 +60,7 @@ export { deletePlayer } from './functions/user/players/deletePlayer.js'
 // Player management functions (admin-only)
 export { updatePlayerAdmin } from './functions/admin/players/updatePlayerAdmin.js'
 export { getPlayerAuthInfo } from './functions/admin/players/getPlayerAuthInfo.js'
+export { resolveBanReview } from './functions/admin/players/resolveBanReview.js'
 
 // Team management functions (user-accessible)
 export { createTeam } from './functions/user/teams/createTeam.js'

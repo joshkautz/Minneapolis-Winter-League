@@ -34,7 +34,7 @@ Functions/src/
 
 ## Callables
 
-50 in total, every one covered by the authorization sweep in
+51 in total, every one covered by the authorization sweep in
 `tests/integration/callables-authorization.test.ts`, which fails when one is
 missing from it. Each lives in the file named after it.
 
