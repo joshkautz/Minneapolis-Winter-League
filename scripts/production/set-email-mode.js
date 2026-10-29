@@ -6,7 +6,7 @@
  *
  *   node scripts/production/set-email-mode.js status
  *   node scripts/production/set-email-mode.js off
- *   node scripts/production/set-email-mode.js test josh@mplsmallard.com [more...]
+ *   node scripts/production/set-email-mode.js test josh@joshkautz.com [more...]
  *   node scripts/production/set-email-mode.js live --confirm-live
  *
  * `live` sends email to players, so it needs --confirm-live. Uses ADC;

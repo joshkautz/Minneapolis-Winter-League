@@ -2,8 +2,9 @@
 
 The league sends email through [Resend](https://resend.com) from
 `notifications@mplswinterleague.com`, with replies going to
-leadership@mplsmallard.com. Every email is sent by Cloud Functions; nothing
-else emails players.
+group@greyduckalumni.com (`LEAGUE_CONTACT_EMAIL`, in
+`Functions/src/shared/leagueContact.ts`). Every email is sent by Cloud
+Functions; nothing else emails players.
 
 ## How an email is sent
 
@@ -70,7 +71,7 @@ It also protects the league's standing with mailbox providers:
 
 ```bash
 node scripts/production/set-email-mode.js status
-node scripts/production/set-email-mode.js test josh@mplsmallard.com
+node scripts/production/set-email-mode.js test josh@joshkautz.com
 node scripts/production/set-email-mode.js live --confirm-live
 ```
 

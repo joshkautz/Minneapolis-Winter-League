@@ -11,8 +11,10 @@
  * created.").
  */
 
-/** Where to turn when nothing on the page can fix it. */
-export const LEAGUE_CONTACT = 'leadership@mplsmallard.com'
+import { LEAGUE_CONTACT_EMAIL } from '../../../../Functions/src/shared/leagueContact'
+
+/** Where to turn when nothing on the page can fix it; the server's own. */
+export const LEAGUE_CONTACT = LEAGUE_CONTACT_EMAIL
 
 const NETWORK =
 	'We could not reach the server. Check your internet connection and try again.'

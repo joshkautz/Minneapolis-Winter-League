@@ -6,7 +6,7 @@ import {
 	waiverCopyEmail,
 	waiverCopyMailId,
 } from './waiverCopy.js'
-import { currentWaiverVersion, fillParticipant } from '../waiver/versions.js'
+import { WAIVER_VERSIONS, fillParticipant } from '../waiver/versions.js'
 
 const record = {
 	versionId: '2026-09-original',
@@ -57,7 +57,8 @@ describe('the waiver copy', () => {
 	})
 
 	it('carries the whole text the participant agreed to', async () => {
-		const version = currentWaiverVersion()
+		// The text of the version the signature records.
+		const version = WAIVER_VERSIONS[record.versionId]
 		const { text, subject } = await renderEmail(
 			'waiverCopy',
 			TEMPLATES.waiverCopy.sample,
@@ -77,7 +78,8 @@ describe('the waiver copy', () => {
 	})
 
 	it('shows a guardian’s certification, not an adult’s affirmation', async () => {
-		const version = currentWaiverVersion()
+		// The text of the version the signature records.
+		const version = WAIVER_VERSIONS[record.versionId]
 		const { text, html } = await renderEmail(
 			'waiverCopy',
 			{

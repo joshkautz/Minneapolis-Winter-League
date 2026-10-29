@@ -10,7 +10,10 @@ import {
 	seedAuthUser,
 } from './helpers.js'
 import { resolveBanReview, signWaiver } from '../../Functions/src/index.js'
-import { CURRENT_WAIVER_VERSION_ID } from '../../Functions/src/waiver/versions.js'
+import { waiverVersionForSeason } from '../../Functions/src/waiver/versions.js'
+
+/** Its seasons record no waiver version, so they are signed on the original. */
+const SEASON_WAIVER_VERSION_ID = waiverVersionForSeason({})!.id
 
 /**
  * A banned player signing up again under a new account. Their waiver is
@@ -37,7 +40,7 @@ const alerts = async () =>
 	).docs.map((doc) => doc.data())
 
 const submission = (overrides: Record<string, unknown> = {}) => ({
-	versionId: CURRENT_WAIVER_VERSION_ID,
+	versionId: SEASON_WAIVER_VERSION_ID,
 	dateOfBirth: '2001-04-09',
 	mailingAddress: '12 Elm St, Minneapolis, MN 55401',
 	emergencyContacts: [

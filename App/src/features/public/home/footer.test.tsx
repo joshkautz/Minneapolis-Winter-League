@@ -31,13 +31,26 @@ describe('Footer partners', () => {
 	})
 
 	it('no longer shows Minneapolis Mallard as a partner', () => {
-		// The league's contact address is still at mplsmallard.com; only the
-		// partnership ended.
 		render(<Footer />)
 
 		expect(screen.queryByRole('img', { name: /mallard/i })).toBeNull()
 		expect(
 			screen.queryByRole('link', { name: /minneapolis mallard/i })
 		).toBeNull()
+	})
+
+	it('gives the league’s contact address at Grey Duck Alumni', () => {
+		// Minneapolis Mallard, now Grey Duck Alumni, runs the league; nothing
+		// points at its old domain.
+		const { container } = render(<Footer />)
+
+		expect(
+			screen
+				.getByRole('link', {
+					name: 'Send email to Minneapolis Winter League leadership',
+				})
+				.getAttribute('href')
+		).toBe('mailto:group@greyduckalumni.com')
+		expect(container.innerHTML).not.toMatch(/mplsmallard/i)
 	})
 })

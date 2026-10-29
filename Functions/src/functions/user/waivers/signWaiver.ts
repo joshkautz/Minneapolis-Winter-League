@@ -11,7 +11,7 @@
  * - Caller must be authenticated with a verified email
  * - Caller must not be banned
  * - A season must exist, and must not have ended
- * - The version signed must be the current one
+ * - The version signed must be the season's own (`waiverVersionForSeason`)
  * - The submission must pass the rules in `waiver/rules.ts`, the same ones
  *   the form applies: an adult types the name on their profile, and anyone
  *   under 18 is signed for by a parent or guardian
@@ -47,10 +47,7 @@ import {
 	type SeasonDocument,
 	type WaiverSignatureDocument,
 } from '../../../types.js'
-import {
-	CURRENT_WAIVER_VERSION_ID,
-	currentWaiverVersion,
-} from '../../../waiver/versions.js'
+import { waiverVersionForSeason } from '../../../waiver/versions.js'
 import {
 	isMinorOn,
 	leagueToday,
@@ -116,19 +113,26 @@ export const signWaiver = onCall<WaiverSubmission>(
 		const submission = readSubmission(request.data)
 		const firestore = getFirestore()
 
-		if (submission.versionId !== CURRENT_WAIVER_VERSION_ID) {
-			// The page was loaded before the waiver changed. A reload shows the
-			// current text, which is the one to agree to.
-			throw new HttpsError(
-				'failed-precondition',
-				'The waiver has been updated. Reload the page to read and sign the current version.'
-			)
-		}
-
 		const season = (await getCurrentSeason()) as
 			(SeasonDocument & { id: string }) | null
 		if (!season) {
 			throw new HttpsError('failed-precondition', 'No current season found')
+		}
+
+		// Each season is signed on the version recorded when it was created.
+		const version = waiverVersionForSeason(season)
+		if (!version) {
+			throw new Error(
+				`Season ${season.id} names waiver version ${season.waiverVersionId}, which this build does not have`
+			)
+		}
+		if (submission.versionId !== version.id) {
+			// The page was loaded before the waiver changed, or before a new
+			// season began. A reload shows the text to agree to.
+			throw new HttpsError(
+				'failed-precondition',
+				'The waiver has been updated. Reload the page to read and sign the current version.'
+			)
 		}
 		if (season.dateEnd && season.dateEnd.toMillis() < Date.now()) {
 			throw new HttpsError(
@@ -162,7 +166,6 @@ export const signWaiver = onCall<WaiverSubmission>(
 		const minor = isMinorOn(submission.dateOfBirth, today)
 		const signerName = submission.signerName.trim()
 		const signerRole = minor ? 'guardian' : 'participant'
-		const version = currentWaiverVersion()
 		const seasonRef = firestore
 			.collection(Collections.SEASONS)
 			.doc(season.id) as DocumentReference<SeasonDocument>

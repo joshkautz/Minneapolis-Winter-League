@@ -23,6 +23,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LoadingButton } from '@/shared/components'
+import { LEAGUE_CONTACT } from '@/shared/utils'
 import { usePendingAction } from '@/shared/hooks'
 import { useDeleteAccount } from './use-delete-account'
 
@@ -64,9 +65,9 @@ export const DeleteAccountSection = ({
 						Email{' '}
 						<a
 							className='underline underline-offset-4'
-							href='mailto:leadership@mplsmallard.com'
+							href={`mailto:${LEAGUE_CONTACT}`}
 						>
-							leadership@mplsmallard.com
+							{LEAGUE_CONTACT}
 						</a>
 						.
 					</p>

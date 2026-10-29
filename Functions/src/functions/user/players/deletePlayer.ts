@@ -28,6 +28,7 @@ import { Collections, type SeasonDocument } from '../../../types.js'
 import { validateBasicAuthentication } from '../../../shared/auth.js'
 import { getCurrentSeason, playerSeasonRef } from '../../../shared/database.js'
 import { FIREBASE_CONFIG } from '../../../config/constants.js'
+import { LEAGUE_CONTACT_EMAIL } from '../../../shared/leagueContact.js'
 import { deletePlayerAccountData } from '../../../services/accountDeletion.js'
 
 /** How recently the caller must have signed in to delete their account. */
@@ -74,7 +75,7 @@ export const deletePlayer = onCall(
 		if (player?.banned === true) {
 			throw new HttpsError(
 				'failed-precondition',
-				'Your account is banned, so it can only be deleted by the league. Email leadership@mplsmallard.com.'
+				`Your account is banned, so it can only be deleted by the league. Email ${LEAGUE_CONTACT_EMAIL}.`
 			)
 		}
 		if (player?.admin === true) {

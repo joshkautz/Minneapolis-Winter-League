@@ -10,9 +10,9 @@
  */
 
 export {
-	CURRENT_WAIVER_VERSION_ID,
+	LATEST_WAIVER_VERSION_ID,
 	WAIVER_VERSIONS,
-	currentWaiverVersion,
+	waiverVersionForSeason,
 	fillParticipant,
 	type WaiverParagraph,
 	type WaiverVersion,

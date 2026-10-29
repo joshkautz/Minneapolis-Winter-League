@@ -238,7 +238,7 @@ describe('DeleteAccountSection', () => {
 			screen.queryByRole('button', { name: 'Delete account' })
 		).not.toBeInTheDocument()
 		expect(
-			screen.getByRole('link', { name: 'leadership@mplsmallard.com' })
+			screen.getByRole('link', { name: 'group@greyduckalumni.com' })
 		).toBeInTheDocument()
 	})
 })

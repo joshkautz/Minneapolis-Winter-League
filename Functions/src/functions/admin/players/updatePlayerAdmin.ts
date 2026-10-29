@@ -65,7 +65,7 @@ import {
 	type WaiverSignatureDocument,
 	ROSTER_SUBCOLLECTION,
 } from '../../../types.js'
-import { currentWaiverVersion } from '../../../waiver/versions.js'
+import { waiverVersionForSeason } from '../../../waiver/versions.js'
 import { waiverFingerprint } from '../../../waiver/fingerprint.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
 
@@ -470,6 +470,7 @@ export const updatePlayerAdmin = onCall<
 							playerDocRef.collection(WAIVER_SIGNATURES_SUBCOLLECTION).doc(),
 							adminWaiverRecord({
 								seasonId: update.seasonId,
+								waiverVersionId: season.waiverVersionId,
 								recordedBy: auth?.uid ?? '',
 								participantName:
 									`${playerData.firstname ?? ''} ${playerData.lastname ?? ''}`.trim(),
@@ -618,6 +619,8 @@ interface SeasonPlan {
 	current: PlayerSeasonDocument
 	seasonRef: DocumentReference<SeasonDocument>
 	seasonName: string
+	/** Which waiver version the season is signed on. */
+	waiverVersionId: string | null
 	/** Only read when the player is a captain there; otherwise true. */
 	oldTeamHasAnotherCaptain: boolean
 }
@@ -726,6 +729,7 @@ async function readPlayerUpdate(
 			current,
 			seasonRef,
 			seasonName: seasonDoc.data()?.name || update.seasonId,
+			waiverVersionId: seasonDoc.data()?.waiverVersionId ?? null,
 			oldTeamHasAnotherCaptain,
 		})
 	}
@@ -741,11 +745,21 @@ async function readPlayerUpdate(
 /** The waiver record left when an admin marks a player signed. */
 function adminWaiverRecord(params: {
 	seasonId: string
+	waiverVersionId: string | null
 	recordedBy: string
 	participantName: string
 	email: string | null
 }): Omit<WaiverSignatureDocument, 'signedAt'> & { signedAt: FieldValue } {
-	const version = currentWaiverVersion()
+	// The version that season is signed on, as a player's own signature
+	// would record.
+	const version = waiverVersionForSeason({
+		waiverVersionId: params.waiverVersionId,
+	})
+	if (!version) {
+		throw new Error(
+			`Season ${params.seasonId} names waiver version ${params.waiverVersionId}, which this build does not have`
+		)
+	}
 	return {
 		seasonId: params.seasonId,
 		versionId: version.id,

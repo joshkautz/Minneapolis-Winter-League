@@ -27,7 +27,10 @@ import {
 } from '../../Functions/src/shared/database.js'
 import { teamContributionsCollection } from '../../Functions/src/shared/contributions.js'
 import { openCheckoutsRef } from '../../Functions/src/shared/checkoutReservations.js'
-import { CURRENT_WAIVER_VERSION_ID } from '../../Functions/src/waiver/versions.js'
+import { waiverVersionForSeason } from '../../Functions/src/waiver/versions.js'
+
+/** Its seasons record no waiver version, so they are signed on the original. */
+const SEASON_WAIVER_VERSION_ID = waiverVersionForSeason({})!.id
 
 /**
  * A team paying for itself together, end to end.
@@ -226,7 +229,7 @@ const signWaiver = (playerId: string) =>
 			auth: authed(playerId),
 			rawRequest: { ip: '10.0.0.1', headers: { 'user-agent': 'Vitest' } },
 			data: {
-				versionId: CURRENT_WAIVER_VERSION_ID,
+				versionId: SEASON_WAIVER_VERSION_ID,
 				dateOfBirth: '1990-05-17',
 				mailingAddress: '123 Main St, Minneapolis, MN 55401',
 				emergencyContacts: [

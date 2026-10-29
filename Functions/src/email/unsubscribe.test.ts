@@ -109,7 +109,7 @@ describe('tokenMatches', () => {
 
 describe('maskEmail', () => {
 	it.each([
-		['josh@mplsmallard.com', 'j•••@mplsmallard.com'],
+		['josh@joshkautz.com', 'j•••@joshkautz.com'],
 		['a@b.co', 'a•••@b.co'],
 		['not-an-email', '•••'],
 	])('masks %s as %s', (email, masked) => {

@@ -1,3 +1,5 @@
+import { LEAGUE_CONTACT } from '@/shared/utils'
+
 /**
  * 404 Not Found page component
  *
@@ -18,8 +20,8 @@ export const NotFound = () => {
 
 				<p className='max-w-[380px]'>
 					If you think something is wrong, send us a message at{' '}
-					<a href='mailto:leadership@mplsmallard.com'>
-						<u>leadership@mplsmallard.com</u>
+					<a href={`mailto:${LEAGUE_CONTACT}`}>
+						<u>{LEAGUE_CONTACT}</u>
 					</a>
 				</p>
 			</div>

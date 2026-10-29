@@ -1,4 +1,5 @@
 import { useSiteSettings } from '@/providers/site-settings-context'
+import { LEAGUE_CONTACT } from '@/shared/utils'
 
 export const Footer = () => {
 	const { isValentine } = useSiteSettings()
@@ -23,7 +24,7 @@ export const Footer = () => {
 					<div className='space-y-6 text-center'>
 						<h3 className='text-lg font-semibold text-foreground'>Contact</h3>
 						<a
-							href='mailto:leadership@mplsmallard.com'
+							href={`mailto:${LEAGUE_CONTACT}`}
 							className='inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors duration-200'
 							aria-label='Send email to Minneapolis Winter League leadership'
 						>
@@ -41,7 +42,7 @@ export const Footer = () => {
 									d='M3 8l7.89 7.89a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
 								/>
 							</svg>
-							leadership@mplsmallard.com
+							{LEAGUE_CONTACT}
 						</a>
 					</div>
 
