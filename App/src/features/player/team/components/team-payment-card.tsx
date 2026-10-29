@@ -276,7 +276,7 @@ export const TeamPaymentCard = () => {
 		!registered &&
 		!!teamId &&
 		!!season.heldSpotTeamIds?.includes(teamId)
-	const waiting = holds && teamSeason?.waitingForSpotSince != null
+	const waiting = holds && Boolean(teamSeason?.waitingForSpotSince)
 
 	let status: ReactNode
 	if (registered) {

@@ -142,7 +142,7 @@ export async function settleTeamSeason(
 		// Only once late payments can no longer complete a team.
 		registrationClosed: season ? registrationOverAt(season, now) : false,
 		waitingForHeldSpot:
-			teamSeason.waitingForSpotSince != null && !season?.heldSpotsReleasedAt,
+			Boolean(teamSeason.waitingForSpotSince) && !season?.heldSpotsReleasedAt,
 	}
 	const disposition = decideDisposition(standing)
 	const outCause = disposition === 'refund' ? outCauseOf(standing) : null

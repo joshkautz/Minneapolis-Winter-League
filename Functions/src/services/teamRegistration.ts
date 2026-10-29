@@ -283,7 +283,7 @@ async function claimSpotIfQualified(
 		// waiting has qualified without a break since a time registration
 		// was open.
 		const leaveQueue = (): void => {
-			if (teamSeason.waitingForSpotSince != null) {
+			if (teamSeason.waitingForSpotSince) {
 				transaction.update(teamSeasonDocRef, { waitingForSpotSince: null })
 			}
 		}
@@ -324,7 +324,7 @@ async function claimSpotIfQualified(
 		// (see leaveQueue), so it is given its turn even if the holds outlast
 		// registration, or it qualified on a payment in the late grace.
 		const waitedInTime =
-			releasingHeldSpots && teamSeason.waitingForSpotSince != null
+			releasingHeldSpots && Boolean(teamSeason.waitingForSpotSince)
 		if (
 			teamTotalCents !== undefined &&
 			seasonData &&
@@ -344,7 +344,7 @@ async function claimSpotIfQualified(
 
 		if (!hasOpenSpot({ spotsClaimed, spotsHeldForOthers })) {
 			// Its place in the queue is when it first qualified.
-			if (teamSeason.waitingForSpotSince == null) {
+			if (!teamSeason.waitingForSpotSince) {
 				transaction.update(teamSeasonDocRef, {
 					waitingForSpotSince: FieldValue.serverTimestamp(),
 				})
