@@ -40,7 +40,7 @@ import {
 
 const ADMIN = 'admin-1'
 const PLAYER = 'player-1'
-const JOSH = 'josh@mplsmallard.com'
+const JOSH = 'josh@joshkautz.com'
 
 let firestore: Firestore
 const postal = EMAIL_CONFIG as { POSTAL_ADDRESS: string | null }

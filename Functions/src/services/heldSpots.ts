@@ -123,8 +123,8 @@ async function giveWaitingTeamsTheirTurn(
 			),
 			since: (doc.data() as TeamSeasonDocument).waitingForSpotSince,
 		}))
-		.filter(
-			(team): team is { teamId: string; since: Timestamp } => team.since != null
+		.filter((team): team is { teamId: string; since: Timestamp } =>
+			Boolean(team.since)
 		)
 		.sort((a, b) => a.since.toMillis() - b.since.toMillis())
 

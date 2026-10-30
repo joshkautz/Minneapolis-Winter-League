@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Timestamp, type Firestore } from 'firebase-admin/firestore'
 import { teamSeasonRef } from '../../Functions/src/shared/database.js'
+import { LATEST_WAIVER_VERSION_ID } from '../../Functions/src/waiver/versions.js'
 import {
 	authed,
 	DAY_MS,
@@ -117,6 +118,14 @@ describe('createSeason pricing', () => {
 			teamRegistrationTotalCents: 100_000,
 			registeredTeamCount: 0,
 		})
+	})
+
+	it('signs the new season on the latest waiver', async () => {
+		// Grey Duck Alumni's, from Season 6; Season 5 keeps the original.
+		const { seasonId } = await create()
+		expect((await seasonData(seasonId))?.waiverVersionId).toBe(
+			LATEST_WAIVER_VERSION_ID
+		)
 	})
 
 	it('creates a per-player season when no total is given', async () => {

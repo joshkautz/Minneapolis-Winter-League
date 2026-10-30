@@ -172,11 +172,25 @@ A published version never changes, because a signature is evidence of what
 was agreed only while the text behind its version id is the text the player
 saw. `versions.test.ts` pins each version's hash, so an edit fails CI.
 
+Each season is signed on one version, recorded on the season as
+`waiverVersionId` when `createSeason` makes it (`waiverVersionForSeason`).
+Seasons from before that field, Season 5 and earlier, are signed on the
+original. So a new version takes effect with the next season created, never
+partway through one.
+
 To change the waiver: add a new version to `WAIVER_VERSIONS`, point
-`CURRENT_WAIVER_VERSION_ID` at it, pin its hash in `versions.test.ts`, and
-keep every old version for as long as its signatures are kept. Players already
-signed for the season stay signed; decide separately whether a change needs
-everyone to sign again.
+`LATEST_WAIVER_VERSION_ID` at it, pin its hash in `versions.test.ts`, and
+keep every old version for as long as its signatures are kept. To move a
+season already under way, set its `waiverVersionId` too; its players already
+signed stay signed, so decide separately whether they need to sign again.
+
+| Version                    | Signed by           | Releases                                                   |
+| -------------------------- | ------------------- | ---------------------------------------------------------- |
+| `2026-09-original`         | Season 5 and before | Minneapolis Mallard, 4534 Washburn Ave N, Minneapolis      |
+| `2026-10-grey-duck-alumni` | Season 6 onward     | Grey Duck Alumni (the same entity, renamed), Golden Valley |
+
+The rename changed nothing else in the wording. Season 5's signatures stand:
+the league decided on 29 October 2026 that nobody re-signs.
 
 The checkbox labels and the electronic-signature consent are part of the
 version, since they are what a signer actually clicks.

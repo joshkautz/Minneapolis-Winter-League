@@ -35,6 +35,7 @@ import { FIREBASE_CONFIG } from '../../../config/constants.js'
 import { parseSeasonInput } from '../../../shared/seasonInput.js'
 import { rethrowAsHttpsError } from '../../../shared/errors.js'
 import { heldSpotTeamsFor } from '../../../services/heldSpots.js'
+import { LATEST_WAIVER_VERSION_ID } from '../../../waiver/versions.js'
 
 interface CreateSeasonRequest {
 	name: string
@@ -118,6 +119,8 @@ export const createSeason = onCall<CreateSeasonRequest>(
 				// Set explicitly so the twelve-spot claim never reads a missing
 				// counter as its own default.
 				registeredTeamCount: 0,
+				// Signed on the waiver in force today, for the whole season.
+				waiverVersionId: LATEST_WAIVER_VERSION_ID,
 				...(heldSpotTeamIds.length > 0 && { heldSpotTeamIds }),
 				...(teamTotalCents !== undefined && {
 					teamRegistrationTotalCents: teamTotalCents,

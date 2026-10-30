@@ -586,6 +586,12 @@ export interface SeasonDocument extends DocumentData {
 	 * Past seasons leave it unset and go on behaving as they always did.
 	 */
 	teamRegistrationTotalCents?: number
+	/**
+	 * The waiver version this season's players sign, recorded by
+	 * `createSeason` from `LATEST_WAIVER_VERSION_ID`. Absent on Season 5 and
+	 * earlier, which are signed on the original (`waiverVersionForSeason`).
+	 */
+	waiverVersionId?: string
 	/** Season end date */
 	dateEnd: Timestamp
 	/** Season start date */

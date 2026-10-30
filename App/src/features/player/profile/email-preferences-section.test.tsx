@@ -46,7 +46,7 @@ describe('EmailPreferencesSection', () => {
 				/Email to p•••@umn\.edu is bouncing, so the league cannot reach you/
 			)
 		).toBeTruthy()
-		expect(screen.getByText(/leadership@mplsmallard\.com/)).toBeTruthy()
+		expect(screen.getByText(/group@greyduckalumni\.com/)).toBeTruthy()
 	})
 
 	it('says nothing about bouncing for an address that works', async () => {

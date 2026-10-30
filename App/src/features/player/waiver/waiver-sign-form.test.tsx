@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { currentWaiverVersion } from '@/shared/waiver'
+import { LATEST_WAIVER_VERSION_ID, WAIVER_VERSIONS } from '@/shared/waiver'
 import { WaiverSignForm } from './waiver-sign-form'
 import type { WaiverFormValues } from './waiver-form-schema'
 
@@ -18,7 +18,7 @@ const renderForm = (
 ) => {
 	render(
 		<WaiverSignForm
-			version={currentWaiverVersion()}
+			version={WAIVER_VERSIONS[LATEST_WAIVER_VERSION_ID]}
 			participantName='Test Player'
 			today={TODAY}
 			onSubmit={onSubmit}
@@ -133,7 +133,7 @@ describe('WaiverSignForm', () => {
 	it('fills in the last signature’s details for a returning player', () => {
 		render(
 			<WaiverSignForm
-				version={currentWaiverVersion()}
+				version={WAIVER_VERSIONS[LATEST_WAIVER_VERSION_ID]}
 				participantName='Test Player'
 				today={TODAY}
 				defaultValues={{

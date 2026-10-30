@@ -10,11 +10,7 @@ import { useSeasonsContext } from '@/providers'
 import { LoadingSpinner, PageContainer, PageHeader } from '@/shared/components'
 import { useUserStatus } from '@/shared/hooks'
 import { errorMessage, formatTimestampWithTime, logger } from '@/shared/utils'
-import {
-	CURRENT_WAIVER_VERSION_ID,
-	currentWaiverVersion,
-	leagueToday,
-} from '@/shared/waiver'
+import { waiverVersionForSeason, leagueToday } from '@/shared/waiver'
 import { WaiverSignForm } from './waiver-sign-form'
 import { toSubmission, type WaiverFormValues } from './waiver-form-schema'
 import {
@@ -53,7 +49,8 @@ export const WaiverPage = () => {
 	// Read the clock once, when the page opens, rather than on every render.
 	const [now] = useState(() => Date.now())
 	const today = useMemo(() => leagueToday(new Date(now)), [now])
-	const version = currentWaiverVersion()
+	// Each season has its own version: the one in force when it was created.
+	const version = waiverVersionForSeason(season)
 	const thisSeasonsSignature = signatureForSeason(
 		signatures,
 		seasonSnapshot?.id
@@ -75,7 +72,7 @@ export const WaiverPage = () => {
 	const handleSubmit = async (values: WaiverFormValues): Promise<void> => {
 		try {
 			const result = await signWaiverViaFunction(
-				toSubmission(values, CURRENT_WAIVER_VERSION_ID, today)
+				toSubmission(values, version?.id ?? '', today)
 			)
 			toast.success(result.alreadySigned ? 'Already signed' : 'Waiver signed', {
 				description: result.alreadySigned
@@ -166,6 +163,13 @@ export const WaiverPage = () => {
 			<Notice>
 				{season.name} has ended. The waiver for the next season opens when it is
 				announced.
+			</Notice>
+		)
+	} else if (!version) {
+		body = (
+			<Notice>
+				This page is out of date. Reload it to read and sign the waiver for{' '}
+				{season.name}.
 			</Notice>
 		)
 	} else if (!isEmailVerified) {

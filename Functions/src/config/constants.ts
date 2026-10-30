@@ -5,6 +5,7 @@
 import { getStripeSecretKey, getStripeWebhookSecret } from './environment.js'
 
 import { LEAGUE_TIME_ZONE } from '../shared/gameRules.js'
+import { LEAGUE_CONTACT_EMAIL } from '../shared/leagueContact.js'
 
 // Firebase Configuration (static - no env vars needed)
 export const FIREBASE_CONFIG = {
@@ -40,7 +41,7 @@ export const TEAM_CONFIG = {
 export const EMAIL_CONFIG = {
 	FROM: 'Minneapolis Winter League <notifications@mplswinterleague.com>',
 	/** Replies reach the organizers, not an unread mailbox. */
-	REPLY_TO: 'leadership@mplsmallard.com',
+	REPLY_TO: LEAGUE_CONTACT_EMAIL,
 	SITE_URL: 'https://mplswinterleague.com',
 	/**
 	 * The postal address CAN-SPAM requires in every announcement: a street

@@ -13,8 +13,9 @@ import {
 import { playerSeasonRef } from '../../Functions/src/shared/database.js'
 import { waiverFingerprint } from '../../Functions/src/waiver/fingerprint.js'
 import {
-	CURRENT_WAIVER_VERSION_ID,
-	currentWaiverVersion,
+	LATEST_WAIVER_VERSION_ID,
+	WAIVER_VERSIONS,
+	waiverVersionForSeason,
 } from '../../Functions/src/waiver/versions.js'
 
 /**
@@ -33,7 +34,7 @@ let firestore: Firestore
 let signWaiver: Callable
 
 const adultSubmission = (overrides: Record<string, unknown> = {}) => ({
-	versionId: CURRENT_WAIVER_VERSION_ID,
+	versionId: LATEST_WAIVER_VERSION_ID,
 	dateOfBirth: '1990-05-17',
 	mailingAddress: '123 Main St, Minneapolis, MN 55401',
 	emergencyContacts: [
@@ -99,18 +100,25 @@ const readCopies = async () =>
 const isSigned = async (playerId = PLAYER): Promise<boolean | undefined> =>
 	(await playerSeasonRef(firestore, playerId, SEASON).get()).data()?.signed
 
+/** The season, with `overrides` laid over it; an undefined field is left out. */
 const seedSeason = (overrides: Record<string, unknown> = {}) =>
 	firestore
 		.collection('seasons')
 		.doc(SEASON)
-		.set({
-			name: '2030 Fall',
-			dateStart: Timestamp.fromMillis(Date.now() + 30 * DAY_MS),
-			dateEnd: Timestamp.fromMillis(Date.now() + 90 * DAY_MS),
-			registrationStart: Timestamp.fromMillis(Date.now() + 5 * DAY_MS),
-			registrationEnd: Timestamp.fromMillis(Date.now() + 20 * DAY_MS),
-			...overrides,
-		})
+		.set(
+			Object.fromEntries(
+				Object.entries({
+					name: '2030 Fall',
+					dateStart: Timestamp.fromMillis(Date.now() + 30 * DAY_MS),
+					dateEnd: Timestamp.fromMillis(Date.now() + 90 * DAY_MS),
+					registrationStart: Timestamp.fromMillis(Date.now() + 5 * DAY_MS),
+					registrationEnd: Timestamp.fromMillis(Date.now() + 20 * DAY_MS),
+					// As `createSeason` records it.
+					waiverVersionId: LATEST_WAIVER_VERSION_ID,
+					...overrides,
+				}).filter(([, value]) => value !== undefined)
+			)
+		)
 
 const seedPlayer = async (
 	uid: string,
@@ -163,8 +171,10 @@ describe('signWaiver', () => {
 		const [record] = await readSignatures()
 		expect(record).toMatchObject({
 			seasonId: SEASON,
-			versionId: CURRENT_WAIVER_VERSION_ID,
-			versionSha256: waiverFingerprint(currentWaiverVersion()),
+			versionId: LATEST_WAIVER_VERSION_ID,
+			versionSha256: waiverFingerprint(
+				WAIVER_VERSIONS[LATEST_WAIVER_VERSION_ID]
+			),
 			method: 'player',
 			recordedBy: PLAYER,
 			participantName: 'Test Player',
@@ -202,8 +212,10 @@ describe('signWaiver', () => {
 			status: 'queued',
 			props: {
 				seasonName: '2030 Fall',
-				versionId: CURRENT_WAIVER_VERSION_ID,
-				versionSha256: waiverFingerprint(currentWaiverVersion()),
+				versionId: LATEST_WAIVER_VERSION_ID,
+				versionSha256: waiverFingerprint(
+					WAIVER_VERSIONS[LATEST_WAIVER_VERSION_ID]
+				),
 				participantName: 'Test Player',
 				signerName: 'Test Player',
 				signerRole: 'participant',
@@ -302,11 +314,34 @@ describe('signWaiver', () => {
 		expect(await isSigned()).toBe(false)
 	})
 
+	it('signs a season that records no version on the original, as Season 5 is', async () => {
+		await seedSeason({ waiverVersionId: undefined })
+		const original = waiverVersionForSeason({})!
+
+		await sign(adultSubmission({ versionId: original.id }))
+
+		const [record] = await readSignatures()
+		expect(record).toMatchObject({
+			versionId: '2026-09-original',
+			versionSha256: waiverFingerprint(original),
+		})
+	})
+
+	it('refuses another season’s version of the waiver', async () => {
+		// The season is on the latest version; the page showed the original.
+		const error = await failure(
+			adultSubmission({ versionId: waiverVersionForSeason({})!.id })
+		)
+
+		expect(error.code).toBe('failed-precondition')
+		expect(await isSigned()).toBe(false)
+	})
+
 	it('refuses a malformed payload without writing anything', async () => {
 		expect(
 			(
 				await failure({
-					versionId: CURRENT_WAIVER_VERSION_ID,
+					versionId: LATEST_WAIVER_VERSION_ID,
 					emergencyContacts: 'not a list',
 				})
 			).code
@@ -457,7 +492,7 @@ describe('updatePlayerAdmin marking a player signed', () => {
 		expect(await readSignatures()).toMatchObject([
 			{
 				seasonId: SEASON,
-				versionId: CURRENT_WAIVER_VERSION_ID,
+				versionId: LATEST_WAIVER_VERSION_ID,
 				method: 'admin',
 				recordedBy: ADMIN,
 				participantName: 'Test Player',
@@ -468,6 +503,16 @@ describe('updatePlayerAdmin marking a player signed', () => {
 		])
 		// The admin recorded it, so there is no signer to send a copy to.
 		expect(await readCopies()).toHaveLength(0)
+	})
+
+	it('records the version that season is signed on', async () => {
+		await seedSeason({ waiverVersionId: undefined })
+
+		await markSigned(true)
+
+		expect(await readSignatures()).toMatchObject([
+			{ versionId: '2026-09-original', method: 'admin' },
+		])
 	})
 
 	it('adds no record when the player was already signed', async () => {
