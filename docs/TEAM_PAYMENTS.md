@@ -184,7 +184,8 @@ charge nobody expected is the one that gets disputed.
 A $1,000 line nobody recognises becomes a dispute, which costs the fee _and_
 the amount. The account's
 [statement descriptor](https://docs.stripe.com/get-started/account/statement-descriptors)
-reads "MINNEAPOLIS MALLARD".
+reads "MPLS WINTER LEAGUE", the league's name rather than the legal
+entity's (Grey Duck Alumni), because that is what a payer will recognise.
 
 ## Data model
 
@@ -512,7 +513,7 @@ What the Stripe account needed, and where each item stands.
 - **A restricted API key — done, September 2026.** `STRIPE_SECRET_KEY` is a
   restricted key; the account's standard secret key was rolled. Its
   permissions are listed in `.claude/rules/functions.md`.
-- **The statement descriptor — done.** It reads "MINNEAPOLIS MALLARD"; a
+- **The statement descriptor — done.** It reads "MPLS WINTER LEAGUE"; a
   charge nobody recognises becomes a dispute.
 - **Receipts are the league's, not Stripe's.** Stripe's customer emails for
   successful payments and refunds are turned off (Dashboard → Settings →
